@@ -258,7 +258,7 @@ Dependency order, then priority (🟢 before 🟡 before ⚪). `Grid`, `List` an
 
 ### Organism-tier build order
 
-Dependency order, then priority (🟢 before 🟡 before ⚪). Build one at a time, each with the full `06-engineering-standards.md` §9 pass; note any deviation here. `Dialog`, `AlertDialog`, `ConfirmDialog`, `Drawer`, `Menu`, `Toast`, `Form`, `Combobox`, `DatePicker`, `DataTable`, `Navbar` and `Sidebar` are built and Finalized, `FileUpload` is built and awaiting its Finalized declaration, and the rest are not started.
+Dependency order, then priority (🟢 before 🟡 before ⚪). Build one at a time, each with the full `06-engineering-standards.md` §9 pass; note any deviation here. `Dialog`, `AlertDialog`, `ConfirmDialog`, `Drawer`, `Menu`, `Toast`, `Form`, `Combobox`, `DatePicker`, `DataTable`, `Navbar`, `Sidebar` and `FileUpload` are built and Finalized, and the rest are not started.
 
 **🟢 core**
 1. Dialog — foundation for every modal (Radix Dialog, `Backdrop`, `CloseButton`, `ScrollArea`); built, review in [Dialog.md](component-reviews/Dialog.md)
@@ -271,7 +271,7 @@ Dependency order, then priority (🟢 before 🟡 before ⚪). Build one at a ti
 9. Calendar (molecule, prerequisite; built Finalized), then DatePicker — a field and a `Calendar` popover ([ADR-0082](adr/0082-datepicker-is-a-single-date-segmented-field-with-a-calendar-popover-and-an-explicit-format-over-a-masked-text-input-a-range-mode-or-a-date-time-field.md)); built and Finalized, review in [DatePicker.md](component-reviews/DatePicker.md)
 10. DataTable — needs `Table`, `Pagination`, `TableToolbar`, Menu and virtualization; built and Finalized, review in [DataTable.md](component-reviews/DataTable.md)
 11. Navbar (built and Finalized, review in [Navbar.md](component-reviews/Navbar.md)), 12. Sidebar — uses Menu and Drawer; built and Finalized, review in [Sidebar.md](component-reviews/Sidebar.md)
-13. FileUpload — built, review in [FileUpload.md](component-reviews/FileUpload.md)
+13. FileUpload — built and Finalized, review in [FileUpload.md](component-reviews/FileUpload.md)
 
 **🟡 v1.5**
 14. ContextMenu (on Menu), 15. MultiSelect (on Combobox), 16. DateRangePicker (on Calendar and DatePicker), 17. CommandPalette (Dialog plus Combobox-style search), 18. NavigationMenu (`Navbar` covers a bar of links; this is for mega-menu panels), 19. Stepper, 20. Timeline, 21. Tree / TreeView

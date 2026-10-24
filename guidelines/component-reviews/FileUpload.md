@@ -1,6 +1,6 @@
 # FileUpload — review findings
 
-Thirteenth organism, built 2026-10-24 with the `06-engineering-standards.md` §9 checklist applied as it was written. **Not yet declared Finalized**; the maintainer declares that.
+Thirteenth organism, built 2026-10-24 with the `06-engineering-standards.md` §9 checklist applied as it was written. **Finalized 2026-10-24**, at the maintainer's declaration after a final review whose eight findings were all fixed (below).
 
 ## Decisions
 - **The field never makes a request.** It holds a list of entries (`{ id, file, status, progress, error }`), shows them, and asks for removal and retry; the caller sends the files and writes `status` and `progress` back into `value`. Constraints (`accept`, `maxSize`, `minSize`, `maxFiles`, `validate`) are checked by the field for every source, and a refused file never enters the list: [ADR-0115](../adr/0115-fileupload-collects-files-and-shows-the-progress-it-is-given-and-never-uploads-them-over-owning-the-request.md).
