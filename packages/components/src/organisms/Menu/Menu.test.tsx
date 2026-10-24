@@ -1157,6 +1157,44 @@ describe("Menu", () => {
       expect(screen.getByRole("menu")).toBeInTheDocument();
     });
 
+    it("takes the menu under a sheet's submenu out of reach while it is open, and gives it back", async () => {
+      const user = userEvent.setup();
+      render(sheetTree());
+      await user.click(trigger());
+      const menu = await screen.findByRole("menu");
+      await user.click(await screen.findByRole("menuitem", { name: "Share" }));
+      const sub = (await screen.findAllByRole("menu"))[1] as HTMLElement;
+      await waitFor(() => expect(menu).toHaveAttribute("inert"));
+      expect(sub).not.toHaveAttribute("inert");
+      // focus was moved into the submenu before the menu was made inert
+      await waitFor(() => expect(sub.contains(document.activeElement)).toBe(true));
+      await user.click(within(sub).getByRole("menuitem", { name: "Back" }));
+      // (focus returning to the trigger is asserted in a real browser, which moves it the way a person's input does)
+      await waitFor(() => expect(menu).not.toHaveAttribute("inert"));
+    });
+
+    it("leaves a floating menu's parent alone while its submenu is open", async () => {
+      const user = userEvent.setup();
+      render(
+        <Menu>
+          <Menu.Trigger>Actions</Menu.Trigger>
+          <Menu.Content>
+            <Menu.Sub>
+              <Menu.SubTrigger>Share</Menu.SubTrigger>
+              <Menu.SubContent>
+                <Menu.Item>Email</Menu.Item>
+              </Menu.SubContent>
+            </Menu.Sub>
+          </Menu.Content>
+        </Menu>,
+      );
+      await user.click(trigger());
+      const menu = await screen.findByRole("menu");
+      await user.click(await screen.findByRole("menuitem", { name: "Share" }));
+      await screen.findByRole("menuitem", { name: "Email" });
+      expect(menu).not.toHaveAttribute("inert");
+    });
+
     it("takes the Back row's text from labels", async () => {
       const user = userEvent.setup();
       render(sheetTree({ labels: { back: "Zurück" } }));

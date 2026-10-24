@@ -859,6 +859,41 @@ describe("ContextMenu", () => {
     });
   });
 
+  describe("nested areas", () => {
+    function Nested() {
+      return (
+        <ContextMenu>
+          <ContextMenu.Trigger data-testid="outer" style={{ display: "block" }}>
+            Outer
+            <ContextMenu>
+              <ContextMenu.Trigger data-testid="inner">Inner</ContextMenu.Trigger>
+              <ContextMenu.Content aria-label="Inner menu">
+                <ContextMenu.Item>Inner action</ContextMenu.Item>
+              </ContextMenu.Content>
+            </ContextMenu>
+          </ContextMenu.Trigger>
+          <ContextMenu.Content aria-label="Outer menu">
+            <ContextMenu.Item>Outer action</ContextMenu.Item>
+          </ContextMenu.Content>
+        </ContextMenu>
+      );
+    }
+
+    it("opens only the innermost area's menu for a press inside it", async () => {
+      render(<Nested />);
+      fireEvent.contextMenu(screen.getByTestId("inner"));
+      expect(await screen.findByRole("menu", { name: "Inner menu" })).toBeInTheDocument();
+      expect(screen.queryByRole("menu", { name: "Outer menu" })).not.toBeInTheDocument();
+    });
+
+    it("opens the outer menu for a press on the outer area outside the inner one", async () => {
+      render(<Nested />);
+      fireEvent.contextMenu(screen.getByTestId("outer"));
+      expect(await screen.findByRole("menu", { name: "Outer menu" })).toBeInTheDocument();
+      expect(screen.queryByRole("menu", { name: "Inner menu" })).not.toBeInTheDocument();
+    });
+  });
+
   describe("StrictMode", () => {
     it("opens, moves and chooses under StrictMode", async () => {
       const user = userEvent.setup();

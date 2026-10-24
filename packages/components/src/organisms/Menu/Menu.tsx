@@ -874,7 +874,8 @@ MenuSeparator.displayName = "Menu.Separator";
 function MenuSub({ children, open, onOpenChange }: MenuSubProps) {
   const Primitive = useContext(MenuPrimitiveContext);
   const [isOpen, setOpen] = useControllableState(open, false, onOpenChange);
-  const value = useMemo(() => ({ open: isOpen, close: () => setOpen(false) }), [isOpen, setOpen]);
+  const triggerRef = useRef<HTMLElement | null>(null);
+  const value = useMemo(() => ({ open: isOpen, close: () => setOpen(false), triggerRef }), [isOpen, setOpen]);
   return (
     <MenuSubContext.Provider value={value}>
       <Primitive.Sub open={isOpen} onOpenChange={setOpen}>
@@ -894,9 +895,10 @@ const MenuSubTrigger = forwardRef<HTMLDivElement, MenuSubTriggerProps>(
     const size = useContext(MenuSizeContext);
     const { dir } = useContext(MenuRootContext);
     const sub = useContext(MenuSubContext);
+    const mergedRef = useMemo(() => mergeRefs(ref, sub?.triggerRef), [ref, sub?.triggerRef]);
     return (
       <Primitive.SubTrigger
-        ref={ref}
+        ref={mergedRef}
         disabled={disabled}
         className={cx(styles.item, className)}
         {...props}
@@ -945,10 +947,30 @@ const MenuSubContent = forwardRef<HTMLDivElement, MenuSubContentProps>(
     const { inputRef, sheet, labels, dir } = useContext(MenuRootContext);
     const sub = useContext(MenuSubContext);
     const resolved = size ?? parentSize;
+    // Held as state: the panel mounts a render after the submenu opens (the portal waits for its first commit).
+    const [panel, setPanel] = useState<HTMLDivElement | null>(null);
+    const mergedRef = useMemo(() => mergeRefs(ref, setPanel), [ref]);
+    // A sheet's submenu covers the menu it opened from, so that menu is taken out of reach of assistive technology and of
+    // Tab while the submenu is open (`inert`), and given back when it closes, with focus on the trigger. Focus is moved into
+    // the submenu first, since a press leaves it on the trigger, which is about to be inert.
+    const subOpen = sub?.open ?? false;
+    const subTriggerRef = sub?.triggerRef;
+    useEffect(() => {
+      const trigger = subTriggerRef?.current;
+      const covered = trigger?.closest('[role="menu"]');
+      if (!sheet || !subOpen || !panel || !trigger || !covered) return undefined;
+      if (!panel.contains(document.activeElement)) panel.focus({ preventScroll: true });
+      covered.setAttribute("inert", "");
+      return () => {
+        covered.removeAttribute("inert");
+        const active = document.activeElement;
+        if (!active || active === document.body || panel.contains(active)) trigger.focus({ preventScroll: true });
+      };
+    }, [sheet, subOpen, subTriggerRef, panel]);
     return (
       <Primitive.Portal container={container}>
         <Primitive.SubContent
-          ref={ref}
+          ref={mergedRef}
           alignOffset={alignOffset}
           collisionPadding={collisionPadding}
           className={cx(styles.content, sheet && styles.sheet, sizeClass[resolved], className)}

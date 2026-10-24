@@ -19,6 +19,7 @@ Fourteenth organism and the first 🟡 v1.5 one, built 2026-10-24 on `Menu`'s it
 - **The panel mounts a render after the root opens** (Radix's portal waits for its first commit), so the registration is a ref callback, not an effect.
 - **A menu opened with `open` or `defaultOpen` before any press has no position** and is drawn at the page's top-left corner, with a Radix development warning. `open` is documented as for following and closing it, and the hidden docs-only stories don't open it.
 - **The test browser's synthetic key events do not trigger the browser's own context-menu action,** so Shift+F10 could not be exercised for real; the unit tests send the `contextmenu` event the key sends.
+- **Two nested areas open only the innermost's menu** for a press inside it, and the outer's for a press outside the inner one (unit tests; Radix stops the outer one).
 - **A `div` with `tabIndex` inside `asChild` is flagged by accessibility lint** (a focusable element with no role): the examples put `tabIndex` on the trigger, and the Docs page says to give a plain box a role and a name.
 - **Closing with a real mouse leaves no focus ring on the row,** and the check holds that. It also passes without the `focus({ focusVisible: false })` call this component copies from `Menu`, in Chromium, so the call is defensive here rather than demonstrated; it was kept for parity.
 
@@ -36,5 +37,5 @@ Fourteenth organism and the first 🟡 v1.5 one, built 2026-10-24 on `Menu`'s it
 
 ## Open
 - **Not verified:** a real keyboard (Shift+F10 and the context-menu key), a real touch device and the long press on one, a screen reader's announcement of the menu opened from an area, Safari and Firefox (their handling of the `contextmenu` event on a focused element and of `focus({ focusVisible: false })`), Windows high contrast on a real machine, and the four themes by eye (Purple light and Emerald dark were looked at; the rest follow `Menu`'s measured pairings, which this component adds none to).
-- **Known gaps, named and not built:** swipe to dismiss and a drag handle on the sheet; the menu under a sheet's submenu is still in the accessibility tree; a configurable long-press time (Radix fixes it at 700ms); and a platform-aware shortcut hint.
+- **Known gaps, named and not built:** swipe to dismiss and a drag handle on the sheet; a configurable long-press time (Radix fixes it at 700ms); and a platform-aware shortcut hint.
 - **The Docs page's Properties tables for the shared parts are written beside `Menu`'s** (copies of its docs-only stories, with the names changed), and have to be kept in step with them.

@@ -984,13 +984,18 @@ export const SheetSubmenuCoversTheMenu: Story = {
     const rect = sub.getBoundingClientRect();
     await expect(Math.abs(rect.bottom - window.innerHeight)).toBeLessThan(1);
     await expect(Math.abs(rect.right - window.innerWidth)).toBeLessThan(1);
-    // the menu it opened from is hidden, not removed, so focus isn't lost with it
+    // the menu it opened from is hidden and out of reach (inert), and focus was moved into the submenu first
     await expect(getComputedStyle(menu).opacity).toBe("0");
+    await expect(menu).toHaveAttribute("inert");
+    await expect(sub.contains(document.activeElement)).toBe(true);
     const rows = within(sub).getAllByRole("menuitem");
     await expect(rows.map((row) => row.textContent)).toEqual(["Back", "Email"]);
     await realClick(rows[0] as HTMLElement);
     await waitFor(() => expect(body.queryByRole("menuitem", { name: "Email" })).toBeNull());
     await expect(getComputedStyle(menu).opacity).toBe("1");
+    await expect(menu).not.toHaveAttribute("inert");
+    // and focus is back on the trigger, where a keyboard or a screen reader can carry on
+    await waitFor(() => expect(share).toHaveFocus());
     await userEvent.keyboard("{Escape}");
     await waitFor(() => expect(body.queryByRole("menu")).toBeNull());
   },

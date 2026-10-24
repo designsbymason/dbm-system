@@ -394,7 +394,8 @@ Each demo has an area to press in. A story's menu is closed until you open it.
   it. In forced-colours mode the highlighted item is drawn with an outline in a system colour.
 - Every item is at least 24 × 24 CSS pixels at every size, and 48px tall in a sheet.
 - A sheet is the same `role="menu"`: the keys, typeahead and focus handling are the floating menu's. A submenu in a sheet is drawn over
-  the menu it opened from and starts on its "Back" row; the menu under it stays in the page, hidden from view, so focus isn't lost.
+  the menu it opened from and starts on its "Back" row; the menu under it is inert while the submenu is open, so neither Tab nor a screen
+  reader reaches it, and focus returns to its trigger when the submenu closes.
 - The menu is modal by default: the rest of the page is hidden from assistive technology and can't be pressed
   while it is open, and a press outside only closes it. Set `modal={false}` for a menu that coexists with the page.
 - Focus goes back to the element that had it when the menu opened. When the menu was opened on an area that

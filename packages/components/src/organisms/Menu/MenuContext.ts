@@ -72,6 +72,8 @@ export interface MenuSubContextValue {
   open: boolean;
   /** Closes the submenu: the "Back" row of a sheet. */
   close: () => void;
+  /** The submenu's trigger, which a sheet's submenu finds the menu it covers from, and gives focus back to. */
+  triggerRef: MutableRefObject<HTMLElement | null>;
 }
 
 export const MenuSubContext = createContext<MenuSubContextValue | null>(null);
