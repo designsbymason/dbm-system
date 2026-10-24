@@ -35,6 +35,16 @@ Thirteenth organism, built 2026-10-24 with the `06-engineering-standards.md` §9
 - **`FileUpload.Summary` and `showSummary`** (on by default): "2 of 4 uploaded, 1 failed" above the list once any file has started; plain text, not a live region.
 - **The Delete (or Backspace) key** on one of a row's buttons cancels an upload that can be cancelled and otherwise removes the file; the row hears it from the buttons inside it and takes no key of its own.
 
+## The final review's findings (all fixed)
+- **A Storybook-only control leaked into the Properties table** with no description (`maxSizeMb`, a Playground control that writes `maxSize` in bytes). It is hidden from the table at the meta level; its control and description stay on the Playground story.
+- **The image preview used a raw `<img>`** and its own failure state. It is now the `Image` atom (`alt=""`, `radius="sm"`, its own fallback icon on a quiet fill), found by the atom-reuse audit; the unit and browser checks measure the tile `Image` draws.
+- **A hardcoded `40ch` cap on the hint** is gone; the hint wraps inside the area.
+- **`FileUpload.Trigger` ignored a `size` it was given** after the spread, though the Docs say it takes `Button`'s props; its own `size` now wins over the field's.
+- **English joiners were outside `labels`:** `labels.uploaded` is now a function of the size and `labels.joinHint` joins the parts of the hint; the units stay with `formatSize`, which says so.
+- **The phone breakpoint's literal `639px`** carries the note that it is `breakpoint.sm` less a pixel.
+- **Two Playground controls showed nothing at rest** (`showSummary`, `showPreviews`): the Playground now starts with two finished files, one an image.
+- **Test gaps filled:** server render and hydration for the look, previews, folders, summary, duplicates, the page guard and a null button icon; the hover fill read from the stylesheet (a script's pointer events never match `:hover`; the check fails when the rule's colour is changed); a real clipboard paste; and a field nested inside another's row.
+
 ## Documentation
 - The Docs page's Code examples section opens with "Uploading the files": the two ways to get the files where they are going (let a form submit them, or send them yourself and write `status`, `progress` and `error` back), with a measured-progress recipe (`XMLHttpRequest`), an unmeasured one (`fetch`, with a presigned-address note) and the form route. It sits under Code examples as a sub-heading, since the page template's top-level sections are fixed.
 

@@ -77,8 +77,8 @@ const PER_COMPONENT_CSS_BUDGET_KB = 5;
 //   `IconButton` it draws with, 16.80KB measured (the same parts as `Navbar`'s 19.50KB, less its search sheet and rows).
 //   Sidebar (2026-10-21): shared group and section state, `peek`, the account part, group counts, the skeleton (the `Skeleton` atom) and the
 //   rail flyout's measured offset, 20.70KB measured; the budget is 22KB, the same as `Navbar`'s.
-//   FileUpload (2026-10-24): draws with `Button`, `IconButton`, `FieldError`, `ProgressBar`, `Icon` and `Text`, and holds the drop,
-//   paste, folder-reading, duplicate, cancel and preview code of its own, 9.82KB measured against the default 10KB. The budget is 14KB.
+//   FileUpload (2026-10-24): draws with `Button`, `IconButton`, `FieldError`, `ProgressBar`, `Icon`, `Image` and `Text`, and holds the
+//   drop, paste, folder-reading, duplicate, cancel and preview code of its own, 10.24KB measured against the default 10KB. The budget is 14KB.
 const JS_BUDGET_OVERRIDES_KB = { Calendar: 12, DataTable: 26, DatePicker: 18, FileUpload: 14, Navbar: 22, Sidebar: 22, TimeRangePicker: 12, Toolbar: 12 };
 
 // The same for CSS. `DataTable`'s bundle holds the stylesheets of the `Table`, `TableToolbar`, `Pagination`, `Select`,

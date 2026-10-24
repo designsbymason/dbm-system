@@ -32,7 +32,14 @@ const variants: Array<[string, FileUploadProps]> = [
   ["a sized field with an error", { size: "lg", hasError: true }],
   ["a disabled field", { disabled: true, value: entries }],
   ["a read-only field", { readOnly: true, value: entries }],
-  ["a field with retry", { value: entries, onRetry: () => undefined }],
+  ["a field with retry and cancel", { value: entries, onRetry: () => undefined, onCancel: () => undefined }],
+  ["every look of the drop area", { variant: "ghost" }],
+  ["a filled drop area", { variant: "filled" }],
+  ["previews of images", { showPreviews: true, value: [{ id: "i", file: new File(["x"], "photo.png", { type: "image/png" }), status: "done" }, ...entries] }],
+  ["folders allowed, no summary", { allowFolders: true, showSummary: false, value: entries }],
+  ["duplicates allowed and named types", { allowDuplicates: true, accept: ".pdf,image/*", acceptLabels: { ".pdf": "PDF documents" } }],
+  ["the page guard", { guardPage: true }],
+  ["a custom button icon", { triggerIcon: null }],
 ];
 
 afterEach(() => {

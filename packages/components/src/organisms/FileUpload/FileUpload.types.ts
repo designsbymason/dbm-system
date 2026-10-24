@@ -72,10 +72,12 @@ export interface FileUploadLabels {
   uploading: (name: string) => string;
   /** The status line of an uploading file. Receives the percentage as a plain number, or `undefined` when it can't be measured. @default (percent) => percent === undefined ? "Uploading…" : `Uploading… ${percent}%` */
   uploadingStatus: (percent: number | undefined) => string;
-  /** The status line of a file that was sent. @default "Uploaded" */
-  uploaded: string;
+  /** The status line of a file that was sent. Receives the file's size already formatted. @default (size) => `Uploaded · ${size}` */
+  uploaded: (size: string) => string;
   /** The status line of a file that failed and gave no reason. @default "Upload failed" */
   failed: string;
+  /** Joins the parts of the hint (the accepted types, the size limit, the file limit) into one line. @default (parts) => parts.join(" · ") */
+  joinHint: (parts: string[]) => string;
   /** The hint's part naming the accepted types. Receives the `accept` list. @default (types) => `Accepted: ${types}` */
   acceptedTypes: (types: string) => string;
   /** The hint's part naming the size limit. Receives the limit already formatted. @default (size) => `Up to ${size} each` */
@@ -282,7 +284,7 @@ export interface FileUploadProps
   formatNumber?: (value: number) => string;
   /**
    * Writes a size in bytes as text. The default gives `B`, `KB`, `MB` or `GB` in steps of 1024, with at most one
-   * decimal, through `formatNumber`.
+   * decimal, through `formatNumber`. Pass your own to change the units or the base.
    */
   formatSize?: (bytes: number) => string;
   /** The text the field writes itself, with English defaults. Pass only what you change. */

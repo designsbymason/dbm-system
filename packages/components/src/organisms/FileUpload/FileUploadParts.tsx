@@ -14,6 +14,7 @@ import type { ClipboardEvent, DragEvent, KeyboardEvent, MouseEvent } from "react
 import { Button } from "../../atoms/Button";
 import { FieldError } from "../../atoms/FieldError";
 import { Icon } from "../../atoms/Icon";
+import { Image } from "../../atoms/Image";
 import type { IconSize } from "../../atoms/Icon/Icon.types";
 import { IconButton } from "../../atoms/IconButton";
 import { ProgressBar } from "../../atoms/ProgressBar";
@@ -106,7 +107,7 @@ FileUploadHint.displayName = "FileUpload.Hint";
  * is "Choose files" unless you give children.
  */
 export const FileUploadTrigger = forwardRef<HTMLButtonElement, FileUploadTriggerProps>(
-  ({ children, onClick, variant = "secondary", leadingIcon, "aria-describedby": describedBy, ...props }, ref) => {
+  ({ children, onClick, variant = "secondary", size, leadingIcon, "aria-describedby": describedBy, ...props }, ref) => {
     const context = useFileUpload("FileUpload.Trigger");
     const merged = useMemo(() => mergeRefs(ref, context.triggerRef), [ref, context.triggerRef]);
     if (context.readOnly) return null;
@@ -119,7 +120,7 @@ export const FileUploadTrigger = forwardRef<HTMLButtonElement, FileUploadTrigger
         ref={merged}
         type="button"
         variant={variant}
-        size={context.size}
+        size={size ?? context.size}
         leadingIcon={chosen ?? undefined}
         disabled={context.disabled}
         aria-describedby={described}
@@ -240,7 +241,7 @@ export const FileUploadDropzone = forwardRef<HTMLDivElement, FileUploadDropzoneP
               {dragging ? context.labels.dropToAdd : context.labels.prompt(context.multiple)}
             </Text>
             <FileUploadTrigger />
-            <FileUploadHint className={styles.dropzoneHint} />
+            <FileUploadHint />
           </>
         )}
       </div>
@@ -352,8 +353,7 @@ export const FileUploadItem = forwardRef<HTMLLIElement, FileUploadItemProps>(({ 
   const name = entry.file.name;
   const isImage = entry.file.type.startsWith("image/");
   const sizeText = context.formatSize(entry.file.size);
-  const [previewFailed, setPreviewFailed] = useState(false);
-  const previewUrl = useObjectUrl(context.showPreviews && isImage && !previewFailed ? entry.file : null);
+  const previewUrl = useObjectUrl(context.showPreviews && isImage ? entry.file : null);
   const percent = entry.progress === undefined ? undefined : Math.round(Math.min(Math.max(entry.progress, 0), 100));
 
   return (
@@ -378,13 +378,8 @@ export const FileUploadItem = forwardRef<HTMLLIElement, FileUploadItemProps>(({ 
       className={cx(styles.item, sizeClass[size], status === "error" && styles.itemError, context.disabled && styles.disabled, className)}
     >
       {previewUrl ? (
-        <img
-          src={previewUrl}
-          alt=""
-          decoding="async"
-          className={styles.thumbnail}
-          onError={() => setPreviewFailed(true)}
-        />
+        // `Image` draws the picture, and its own fallback (an image icon on a quiet fill) if the picture can't be drawn.
+        <Image src={previewUrl} alt="" radius="sm" loading="eager" className={styles.thumbnail} />
       ) : (
         <Icon icon={isImage ? ImageIcon : FileIcon} size={entryIconSize[size]} tone="secondary" className={styles.entryIcon} />
       )}
@@ -398,7 +393,7 @@ export const FileUploadItem = forwardRef<HTMLLIElement, FileUploadItemProps>(({ 
           {status === "uploading"
             ? labels.uploadingStatus(percent)
             : status === "done"
-              ? `${labels.uploaded} · ${sizeText}`
+              ? labels.uploaded(sizeText)
               : status === "error"
                 ? (entry.error ?? labels.failed)
                 : sizeText}

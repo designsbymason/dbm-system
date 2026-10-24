@@ -8,7 +8,7 @@ import { Form } from "../Form";
 import { FileUpload } from "./FileUpload";
 import { fileUploadPlaygroundSnippet, fileUploadSnippets } from "./FileUpload.snippets";
 import type { FileUploadLayout, FileUploadSize, FileUploadVariant } from "./FileUpload.types";
-import { SimulatedFileUpload, demoEntries, demoFile, demoImage } from "./FileUploadStoryKit";
+import { SimulatedFileUpload, demoEntries, demoFile, demoImage, playgroundEntries } from "./FileUploadStoryKit";
 
 // `FileUpload`'s own root props get hand-written argTypes here (this meta has no `component`, so docgen doesn't supply
 // them); each part gets its own Properties table through a hidden docs-only stories file (ADR-0013).
@@ -259,7 +259,7 @@ const meta: Meta<PlaygroundArgs & DocumentedProps> = {
     },
     formatSize: {
       control: false,
-      description: "Writes a size in bytes as text. The default gives B, KB, MB or GB in steps of 1024, with at most one decimal.",
+      description: "Writes a size in bytes as text. The default gives B, KB, MB or GB in steps of 1024, with at most one decimal; pass your own to change the units or the base.",
     },
     labels: {
       control: false,
@@ -277,6 +277,8 @@ const meta: Meta<PlaygroundArgs & DocumentedProps> = {
       control: false,
       description: "The id of the helper or error text for the field.",
     },
+    // A Playground-only control (it writes maxSize in bytes); its number control and description are on the Playground story.
+    maxSizeMb: { control: false, table: { disable: true } },
     id: {
       control: false,
       description: "The id of the file input, so a FieldLabel's htmlFor reaches it (clicking the label opens the picker).",
@@ -310,6 +312,7 @@ const meta: Meta<PlaygroundArgs & DocumentedProps> = {
     <div style={frame}>
       <SimulatedFileUpload
         aria-label="Attachments"
+        initialEntries={playgroundEntries()}
         size={args.size}
         layout={args.layout}
         variant={args.variant}
@@ -335,7 +338,7 @@ export default meta;
 
 type Story = StoryObj<PlaygroundArgs & DocumentedProps>;
 
-/** Drive every prop live via the Controls panel below. Choose or drop files: a pretend uploader sends them (a name containing "fail" fails). */
+/** Drive every prop live via the Controls panel below. It starts with two finished files; choose or drop more and a pretend uploader sends them (a name containing "fail" fails). */
 export const Playground: Story = {
   argTypes: {
     maxSizeMb: {
@@ -599,6 +602,7 @@ export const DropInteraction: Story = {
     const remove = canvas.getByRole("button", { name: "Remove plan.pdf" });
     remove.click();
     await waitFor(() => expect(canvas.queryByText("plan.pdf")).toBeNull());
-    await expect(canvas.getByRole("button", { name: "Choose files" })).toHaveFocus();
+    // The Playground starts with two files, so focus moves to the last one left.
+    await expect(canvas.getByRole("button", { name: "Remove quarterly-report.pdf" })).toHaveFocus();
   },
 };

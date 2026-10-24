@@ -29,7 +29,17 @@ export function demoEntries(): FileUploadEntry[] {
   ];
 }
 
+/** Two finished files, one of them an image, so the Playground's preview and summary controls have something to act on. */
+export function playgroundEntries(): FileUploadEntry[] {
+  return [
+    { id: "sunset", file: demoImage("sunset.svg", "#f59e0b", "#db2777"), status: "done" },
+    { id: "report", file: demoFile("quarterly-report.pdf", 1_450_000, "application/pdf"), status: "done" },
+  ];
+}
+
 interface SimulatedFileUploadProps extends Omit<FileUploadProps, "value" | "defaultValue" | "onValueChange" | "onRetry"> {
+  /** The files the list starts with. */
+  initialEntries?: FileUploadEntry[];
   /** Files whose name contains this text fail, so the error state and retry can be tried. */
   failWhenNameIncludes?: string;
 }
@@ -39,8 +49,8 @@ interface SimulatedFileUploadProps extends Omit<FileUploadProps, "value" | "defa
  * along and ends it as done (or failed). It is what a real app writes around the field with a request in place of the
  * timer, and why the field itself needs none.
  */
-export function SimulatedFileUpload({ failWhenNameIncludes = "fail", ...props }: SimulatedFileUploadProps) {
-  const [entries, setEntries] = useState<FileUploadEntry[]>([]);
+export function SimulatedFileUpload({ failWhenNameIncludes = "fail", initialEntries, ...props }: SimulatedFileUploadProps) {
+  const [entries, setEntries] = useState<FileUploadEntry[]>(initialEntries ?? []);
 
   useEffect(() => {
     const timer = window.setInterval(() => {

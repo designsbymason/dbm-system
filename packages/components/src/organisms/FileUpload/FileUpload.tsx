@@ -121,8 +121,9 @@ const FileUploadRoot = forwardRef<HTMLDivElement, FileUploadProps>(
       retry: (fileName) => `Retry ${fileName}`,
       uploading: (fileName) => `Uploading ${fileName}`,
       uploadingStatus: (percent) => (percent === undefined ? "Uploading…" : `Uploading… ${formatNumber(percent)}%`),
-      uploaded: "Uploaded",
+      uploaded: (size) => `Uploaded · ${size}`,
       failed: "Upload failed",
+      joinHint: (parts) => parts.join(" · "),
       acceptedTypes: (types) => `Accepted: ${types}`,
       maxSizeHint: (limit) => `Up to ${limit} each`,
       maxFilesHint: (limit) => `Up to ${formatNumber(limit)} files`,
@@ -340,9 +341,9 @@ const FileUploadRoot = forwardRef<HTMLDivElement, FileUploadProps>(
         maxSize !== undefined ? labels.maxSizeHint(formatSize(maxSize)) : null,
         multiple && maxFiles !== undefined ? labels.maxFilesHint(maxFiles) : null,
       ].filter(Boolean);
-      return parts.length > 0 ? parts.join(" · ") : null;
+      return parts.length > 0 ? labels.joinHint(parts as string[]) : null;
       // eslint-disable-next-line react-hooks/exhaustive-deps -- the labels and formatter are rebuilt every render
-    }, [hintProp, accept, acceptLabels, maxSize, maxFiles, multiple, labels.acceptedTypes, labels.maxSizeHint, labels.maxFilesHint]);
+    }, [hintProp, accept, acceptLabels, maxSize, maxFiles, multiple, labels.joinHint, labels.acceptedTypes, labels.maxSizeHint, labels.maxFilesHint]);
 
     const describedBy =
       [hint !== null && hint !== false && hint !== undefined ? hintId : null, rejections.length > 0 ? rejectionsId : null]

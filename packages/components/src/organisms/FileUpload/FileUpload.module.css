@@ -126,11 +126,6 @@
   opacity: var(--dbm-opacity-40);
 }
 
-/* The hint is part of the drop area's column; its width is held to a comfortable line. */
-.dropzoneHint {
-  max-inline-size: 40ch;
-}
-
 .hint {
   margin: 0;
 }
@@ -184,16 +179,13 @@
   flex-shrink: 0;
 }
 
-/* A preview of an image, drawn at the size of the row's icon tile. */
+/* A preview of an image, drawn by `Image` at the size of the row's icon tile (its corners are `Image`'s `radius="sm"`). */
 .thumbnail {
-  background-color: var(--dbm-bg-neutral-subtle);
   block-size: var(--fu-thumb);
   border: var(--dbm-border-width-1) solid var(--dbm-border-default);
-  border-radius: var(--dbm-radius-sm);
   box-sizing: border-box;
   flex-shrink: 0;
   inline-size: var(--fu-thumb);
-  object-fit: cover;
 }
 
 .summary {
@@ -238,7 +230,8 @@
   gap: var(--dbm-space-1);
 }
 
-/* On a phone the rows give their padding back to the filename. */
+/* On a phone the rows give their padding back to the filename. 639px is the literal value of `breakpoint.sm` (640px) less one
+   pixel: custom properties can't be used in a media condition, so if that token changes this must be updated by hand. */
 @media (max-width: 639px) {
   .item {
     column-gap: var(--dbm-space-2);

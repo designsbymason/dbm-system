@@ -238,6 +238,19 @@ describe("FileUpload", () => {
       expect(screen.getByRole("button", { name: "Choose files" }).querySelector("svg")).toBeNull();
     });
 
+    it("takes the size of the field, and the size it is given itself over that", () => {
+      const { rerender } = render(<FileUpload aria-label="A" size="lg" />);
+      const classes = () => screen.getByRole("button", { name: "Choose files" }).className;
+      expect(classes()).toMatch(/sizeLg/);
+      rerender(
+        <FileUpload aria-label="A" size="lg">
+          <FileUpload.Trigger size="xs" />
+        </FileUpload>,
+      );
+      expect(classes()).toMatch(/sizeXs/);
+      expect(classes()).not.toMatch(/sizeLg/);
+    });
+
     it("lets a click handler on the trigger keep the picker closed", async () => {
       const user = userEvent.setup();
       const click = vi.spyOn(HTMLInputElement.prototype, "click").mockImplementation(() => undefined);
@@ -500,6 +513,63 @@ describe("FileUpload", () => {
       drop([twin()]);
       expect(onFilesAdded).toHaveBeenCalled();
       expect(screen.queryByRole("alert")).toBeNull();
+    });
+  });
+
+  describe("text written through the labels", () => {
+    it("writes the sent status and the way the hint is joined from the labels", () => {
+      render(
+        <FileUpload
+          aria-label="A"
+          accept=".pdf"
+          maxSize={2048}
+          defaultValue={[entryOf(makeFile("a.txt", 1536), { status: "done" })]}
+          labels={{ uploaded: (size) => `Sent (${size})`, joinHint: (parts) => parts.join(" / ") }}
+        />,
+      );
+      expect(screen.getByText("Sent (1.5 KB)")).toBeInTheDocument();
+      expect(screen.getByText("Accepted: PDF / Up to 2 KB each")).toBeInTheDocument();
+    });
+
+    it("keeps the default joiner and status when a label is undefined", () => {
+      render(
+        <FileUpload
+          aria-label="A"
+          accept=".pdf"
+          maxSize={2048}
+          defaultValue={[entryOf(makeFile("a.txt", 1536), { status: "done" })]}
+          labels={{ uploaded: undefined, joinHint: undefined }}
+        />,
+      );
+      expect(screen.getByText("Uploaded · 1.5 KB")).toBeInTheDocument();
+      expect(screen.getByText("Accepted: PDF · Up to 2 KB each")).toBeInTheDocument();
+    });
+  });
+
+  describe("nested inside itself", () => {
+    it("gives an inner field its own settings, whatever the outer one is set to", () => {
+      const inner = vi.fn();
+      render(
+        <FileUpload aria-label="Outer" disabled defaultValue={[entryOf(makeFile("outer.txt"))]}>
+          <FileUpload.Trigger />
+          <FileUpload.List>
+            {(entry) => (
+              <li key={entry.id}>
+                <FileUpload aria-label="Inner" onFilesAdded={inner} />
+              </li>
+            )}
+          </FileUpload.List>
+        </FileUpload>,
+      );
+      const buttons = screen.getAllByRole("button", { name: "Choose files" });
+      expect(buttons[0]).toBeDisabled();
+      expect(buttons[1]).toBeEnabled();
+      const innerArea = buttons[1]?.parentElement as HTMLElement;
+      fireEvent.drop(innerArea, filesDrag([makeFile("inner.txt")]));
+      expect(inner).toHaveBeenCalledTimes(1);
+      expect(screen.getByRole("group", { name: "Inner" })).toHaveTextContent("inner.txt");
+      expect(screen.getByRole("group", { name: "Outer" })).toHaveAttribute("aria-disabled", "true");
+      expect(screen.getByRole("group", { name: "Inner" })).not.toHaveAttribute("aria-disabled");
     });
   });
 

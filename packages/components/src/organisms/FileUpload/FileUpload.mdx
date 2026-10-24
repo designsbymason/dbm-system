@@ -112,8 +112,9 @@ import { FileUpload } from "@dbm-system/components";
 
 ## Playground
 
-Choose or drop some files: a pretend uploader sends them, moving each one's progress along (a file whose name
-contains "fail" fails, so the error state and retry can be tried).
+It starts with two finished files so the previews and the summary line have something to act on. Choose or drop some
+more: a pretend uploader sends them, moving each one's progress along (a file whose name contains "fail" fails, so the
+error state and retry can be tried).
 
 <div className="dbm-playground-canvas">
 
@@ -569,7 +570,6 @@ With the form:
 <TokenRow token="border-width.1" usage="the drop area's and the rows' borders" />
 <TokenRow token="border-width.2" usage="the double edge of an error in forced colours" />
 <TokenRow token="radius.lg" usage="the drop area's corners" />
-<TokenRow token="radius.sm" usage="an image preview's corners" />
 <TokenRow token="radius.md" usage="each file row's corners" />
 <TokenRow token="font-family.primary" usage="the field's typography" />
 <TokenRow token="motion.duration-fast" usage="the drop area's colour change" />

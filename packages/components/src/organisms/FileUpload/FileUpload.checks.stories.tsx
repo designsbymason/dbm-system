@@ -315,9 +315,53 @@ export const RealPreviews: Story = {
     await waitFor(() => expect(withPreviews.querySelector("img")).not.toBeNull());
     const picture = withPreviews.querySelector("img") as HTMLImageElement;
     await waitFor(() => expect(picture.complete && picture.naturalWidth > 0).toBe(true));
-    const box = picture.getBoundingClientRect();
+    // The tile `Image` draws is square, at the size of the icon tile, and the picture fills it.
+    const tile = picture.parentElement as HTMLElement;
+    const box = tile.getBoundingClientRect();
     await expect(box.width).toBe(box.height);
     await expect(box.width).toBeGreaterThanOrEqual(32);
+    await expect(picture.getBoundingClientRect().width).toBeGreaterThan(box.width - 4);
     await expect(canvas.getByRole("group", { name: "Without" }).querySelector("img")).toBeNull();
+  },
+};
+
+export const HoverFill: Story = {
+  name: "Hovering the drop area fills it with the brand tint (read from the stylesheet, since synthetic events never match :hover)",
+  render: () => frame(<FileUpload aria-label="Hover" />),
+  play: async () => {
+    // Pointer events dispatched by a script never match `:hover`, so the rule itself is read from the page's stylesheets.
+    const rules = [...document.styleSheets].flatMap((sheet) => {
+      try {
+        return [...sheet.cssRules];
+      } catch {
+        // A stylesheet from another origin can't be read; none of this component's are.
+        return [];
+      }
+    }) as CSSStyleRule[];
+    const hover = rules.find((rule) => /dropzone/.test(rule.selectorText ?? "") && /:hover/.test(rule.selectorText ?? "") && /not\(/.test(rule.selectorText ?? ""));
+    await expect(hover, "the :hover rule for the drop area").toBeDefined();
+    await expect(hover?.style.backgroundColor).toBe("var(--dbm-bg-brand-subtle)");
+    // A disabled area is left out of it.
+    await expect(hover?.selectorText).toMatch(/:not\(\.?_?disabled|:not\([^)]*disabled/);
+  },
+};
+
+export const RealPaste: Story = {
+  name: "A paste of real clipboard files, with the button focused, adds them",
+  render: () => frame(<FileUpload aria-label="Paste" />),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const button = canvas.getByRole("button", { name: "Choose files" });
+    button.focus();
+    const event = new ClipboardEvent("paste", { bubbles: true, cancelable: true, clipboardData: transferOf(real("pasted.png", "x", "image/png")) });
+    button.dispatchEvent(event);
+    await waitFor(() => expect(canvas.getByRole("list", { name: "Selected files" })).toHaveTextContent("pasted.png"));
+    await expect(event.defaultPrevented).toBe(true);
+    // A paste with only text is left to the browser.
+    const text = new DataTransfer();
+    text.setData("text/plain", "hello");
+    const plain = new ClipboardEvent("paste", { bubbles: true, cancelable: true, clipboardData: text });
+    button.dispatchEvent(plain);
+    await expect(plain.defaultPrevented).toBe(false);
   },
 };
