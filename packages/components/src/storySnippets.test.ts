@@ -68,6 +68,7 @@ import { dialogPlaygroundSnippet } from "./organisms/Dialog/Dialog.snippets";
 import { drawerPlaygroundSnippet } from "./organisms/Drawer/Drawer.snippets";
 import { navbarPlaygroundSnippet } from "./organisms/Navbar/Navbar.snippets";
 import { sidebarPlaygroundSnippet } from "./organisms/Sidebar/Sidebar.snippets";
+import { fileUploadPlaygroundSnippet } from "./organisms/FileUpload/FileUpload.snippets";
 import { formPlaygroundSnippet } from "./organisms/Form/Form.snippets";
 import { toastPlaygroundSnippet } from "./organisms/Toast/Toast.snippets";
 import { radioGroupPlaygroundSnippet } from "./molecules/RadioGroup/RadioGroup.snippets";
@@ -1933,5 +1934,59 @@ describe("Playground snippet for Form", () => {
     expect(formPlaygroundSnippet({ noValidate: false })).toContain("noValidate={false}");
     expect(formPlaygroundSnippet({ summary: true })).toContain("<Form.Summary />");
     expect(formPlaygroundSnippet({})).not.toContain("<Form.Summary />");
+  });
+});
+
+describe("Playground snippet for FileUpload", () => {
+  const everything = {
+    size: "lg",
+    layout: "button",
+    variant: "ghost",
+    multiple: true,
+    allowDuplicates: true,
+    allowFolders: true,
+    showPreviews: true,
+    showSummary: false,
+    accept: 'image/*,".pdf"',
+    maxSizeMb: 5,
+    maxFiles: 3,
+    required: true,
+    hasError: true,
+    disabled: true,
+    readOnly: true,
+    guardPage: true,
+  } as const;
+
+  it.each([{}, everything, { multiple: false, maxFiles: 4 }, { accept: "  " }, { maxSizeMb: 0, maxFiles: 0 }] as const)(
+    "FileUpload %j is a real snippet",
+    (args) => {
+      expect(problemsIn(fileUploadPlaygroundSnippet(args))).toEqual([]);
+    },
+  );
+
+  it("writes only what differs from the defaults", () => {
+    const code = fileUploadPlaygroundSnippet({
+      size: "md",
+      layout: "dropzone",
+      variant: "dashed",
+      multiple: true,
+      showSummary: true,
+      allowDuplicates: false,
+      accept: "",
+      maxSizeMb: 0,
+      maxFiles: 0,
+    });
+    expect(code).toContain('<FileUpload\n  aria-label="Attachments"\n  value={files}\n  onValueChange={setFiles}\n/>');
+  });
+
+  it("writes each setting that is changed, a size in bytes, and the limit on files only for several", () => {
+    const code = fileUploadPlaygroundSnippet(everything);
+    for (const part of ['size="lg"', 'layout="button"', 'variant="ghost"', "allowDuplicates", "allowFolders", "showPreviews", "showSummary={false}", "maxSize={5 * 1024 * 1024}", "maxFiles={3}", "required", "hasError", "disabled", "readOnly", "guardPage"]) {
+      expect(code).toContain(part);
+    }
+    expect(code).toContain('accept={"image/*,\\".pdf\\""}');
+    const single = fileUploadPlaygroundSnippet({ multiple: false, maxFiles: 4 });
+    expect(single).toContain("multiple={false}");
+    expect(single).not.toContain("maxFiles");
   });
 });

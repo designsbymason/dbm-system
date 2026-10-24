@@ -97,7 +97,7 @@ those parts in your own order.
 **It sends nothing.** Choosing a file adds it to a list; sending it is yours. You start the request, and write each
 entry's `status` and `progress` back into `value` as it goes, and the field shows them and asks for removal and
 retry through callbacks. That keeps the field free of any assumption about your backend, and makes the progress it
-shows always the truth you gave it.
+shows always the truth you gave it. Two ways to send are laid out under "Uploading the files" in Code examples.
 
 Files are checked against `accept`, `maxSize`, `minSize`, `maxFiles` and your own `validate` rule whether they were
 chosen, dropped or pasted. A refused file never enters the list; it is explained in words, beside the field, with its
@@ -334,8 +334,8 @@ It takes the `Button` atom's props and its own `leadingIcon`, which wins over th
 
 - Treat the list as yours. `value` is the single source of truth for what is shown, and the file input the form
   submits is rebuilt from it after every change, so what you see is what is sent.
-- Start sending when files are added (`onFilesAdded`) or when a form is submitted; both work. For a form that sends
-  files with the rest of its fields, leave status alone and let the form submit them.
+- Start sending files that arrive as `"idle"` (from an effect), or let a form submit them with its other fields: both
+  work, and "Uploading the files" under Code examples shows each. Don't mix them for the same field.
 - Keep `validate` quick and put the reason in words ("Remove the spaces from the name"): the message is shown with the
   file's name. A rule that returns a promise (reading the file's header, say) is waited for before anything is added.
 - Show progress as a number when you can measure it and leave `progress` out when you cannot: the bar is then
@@ -398,9 +398,36 @@ It takes the `Button` atom's props and its own `leadingIcon`, which wins over th
 
 ## Code examples
 
+### Uploading the files
+
+`FileUpload` never makes a request, so there are two ways to get the files where they are going. Pick by where they go.
+
+**With a form.** If the files go to the same place as the rest of a form, give the field a `name` and put it in a
+`<form>` (or a `Form`) with `encType="multipart/form-data"`. The files are submitted with the form, and there is
+nothing else to write: no `status`, no `progress`, and `required` is a real constraint. The files are the ones in the
+list, not the ones a person removed or the ones that were refused.
+
+**With your own requests.** If the files go straight to an endpoint or to storage as they are chosen, send them
+yourself and write what happens back into `value`, so the list shows it:
+
+- A new file arrives as `"idle"`. Start every entry whose `status` is `"idle"` from an effect: sending moves it on, so
+  each is started once. (`onFilesAdded` is called before the new entries are in the list, which is why the effect looks
+  at the list instead.)
+- While it is sending, set `status: "uploading"` and, if you can measure it, `progress` from 0 to 100. Leave `progress`
+  out for a bar that is indeterminate.
+- When it ends, set `"done"`, or `"error"` with an `error` message in words. Pass `onRetry` to give a failed file a retry
+  button, and `onCancel` to give an uploading file a cancel button; you decide what a cancelled entry becomes.
+- `fetch` cannot report how much of a request body has been sent, so use `XMLHttpRequest` when you want a measured
+  bar, and leave `progress` out with `fetch`.
+- The field's checks (`accept`, sizes, `validate`) are there to save a person a round trip. They are not a security
+  boundary: check again on the server.
+- Sending in pieces, resuming, and queueing are yours as well; the field has no opinion on them.
+
+With a request you can measure (a bar that fills):
+
 ```tsx
 import { useEffect, useRef, useState } from "react";
-import type { FileUploadEntry } from "@dbm-system/components";
+import { FileUpload, type FileUploadEntry } from "@dbm-system/components";
 
 function Attachments() {
   const [files, setFiles] = useState<FileUploadEntry[]>([]);
@@ -442,6 +469,66 @@ function Attachments() {
   );
 }
 ```
+
+Without a measured bar, using `fetch`, and a presigned URL for storage in place of your own endpoint:
+
+```tsx
+import { useEffect, useRef, useState } from "react";
+import { FileUpload, type FileUploadEntry } from "@dbm-system/components";
+
+function AttachmentsWithFetch() {
+  const [files, setFiles] = useState<FileUploadEntry[]>([]);
+  const controllers = useRef(new Map<string, AbortController>());
+  const update = (id: string, patch: Partial<FileUploadEntry>) =>
+    setFiles((current) => current.map((entry) => (entry.id === id ? { ...entry, ...patch } : entry)));
+
+  const send = async (entry: FileUploadEntry) => {
+    const controller = new AbortController();
+    controllers.current.set(entry.id, controller);
+    // No progress: the bar is indeterminate until the request ends.
+    update(entry.id, { status: "uploading", progress: undefined, error: undefined });
+    try {
+      // For storage that takes a signed address, ask your server for one and send the file to that instead:
+      // const { url } = await (await fetch("/api/sign", { method: "POST", body: entry.file.name })).json();
+      const response = await fetch("/api/attachments", { method: "POST", body: entry.file, signal: controller.signal });
+      update(entry.id, response.ok ? { status: "done" } : { status: "error", error: "The server refused it" });
+    } catch {
+      // A cancel aborts the request on purpose and has already taken the entry out of the list; anything else is a failure.
+      if (!controller.signal.aborted) update(entry.id, { status: "error", error: "The connection was lost" });
+    }
+  };
+
+  useEffect(() => {
+    files.filter((entry) => entry.status === "idle").forEach(send);
+  }, [files]);
+
+  return (
+    <FileUpload
+      aria-label="Attachments"
+      value={files}
+      onValueChange={setFiles}
+      onRetry={send}
+      onCancel={(entry) => {
+        controllers.current.get(entry.id)?.abort();
+        setFiles((current) => current.filter((item) => item.id !== entry.id));
+      }}
+    />
+  );
+}
+```
+
+With the form:
+
+```tsx
+<form action="/api/attachments" method="post" encType="multipart/form-data">
+  <FormField label="Supporting documents" name="documents" required>
+    {(fieldProps) => <FileUpload {...fieldProps} accept=".pdf" />}
+  </FormField>
+  <Button type="submit">Send</Button>
+</form>
+```
+
+### Other patterns
 
 ```tsx
 {/* In a form: the files are submitted under "documents", and a missing file is refused with a message */}
