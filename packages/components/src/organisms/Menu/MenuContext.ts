@@ -1,5 +1,31 @@
+import * as DropdownMenuPrimitive from "@radix-ui/react-dropdown-menu";
 import { createContext, useCallback, useState, type MutableRefObject } from "react";
 import type { MenuSize } from "./Menu.types";
+
+/**
+ * The Radix parts a menu's items, labels, groups and submenus are drawn with. `Menu` draws them with Radix
+ * DropdownMenu's and `ContextMenu` with Radix ContextMenu's, which are separate components over the same menu
+ * primitive and cannot stand in for one another (each reads the scope its own root provides: a dropdown item under a
+ * context menu's root throws "must be used within Menu"). The item parts read the kit from this context, so one
+ * implementation serves both. The default is the dropdown's, so `Menu` provides nothing.
+ */
+export type MenuPrimitiveKit = Pick<
+  typeof DropdownMenuPrimitive,
+  | "Item"
+  | "CheckboxItem"
+  | "ItemIndicator"
+  | "Group"
+  | "RadioGroup"
+  | "RadioItem"
+  | "Label"
+  | "Separator"
+  | "Sub"
+  | "SubTrigger"
+  | "SubContent"
+  | "Portal"
+>;
+
+export const MenuPrimitiveContext = createContext<MenuPrimitiveKit>(DropdownMenuPrimitive);
 
 /** What the root shares with its parts: whether it is open (for the trigger's own `aria-expanded`) and its direction. */
 export interface MenuRootContextValue {
@@ -11,7 +37,7 @@ export interface MenuRootContextValue {
   focusLastRef: MutableRefObject<boolean>;
   /** What the person last used on the trigger or the panel, so a close by pointer can return focus without a ring. */
   inputRef: MutableRefObject<"pointer" | "keyboard" | null>;
-  /** The trigger element, which the panel returns focus to on close. */
+  /** The trigger element, which the panel returns focus to on close (a context menu: the element that had focus as it opened). */
   triggerRef: MutableRefObject<HTMLElement | null>;
   /** Closes the menu. Does nothing if the menu is not open. */
   close: () => void;

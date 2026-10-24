@@ -1,0 +1,13 @@
+/* Trigger — the area a right-click opens the menu from. A block, so the area has a box to be pressed in; everything
+   else about it is the caller's. The panel, items, labels and separators are drawn by `Menu`'s stylesheet, which this
+   component imports: the two must look identical and change together. */
+.trigger {
+  display: block;
+}
+
+/* An area made focusable (`tabIndex`) can be opened with the context-menu key or Shift+F10, so it shows where focus is. */
+.trigger:focus-visible {
+  border-radius: var(--dbm-radius-sm);
+  outline: var(--dbm-border-width-2) solid var(--dbm-border-focus);
+  outline-offset: var(--dbm-space-1);
+}

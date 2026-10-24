@@ -1,0 +1,517 @@
+import { Canvas, Meta } from "@storybook/addon-docs/blocks";
+import { Callout, ComponentHeader, PlaygroundControls, PropertiesTable, RelatedCard, TokenRow } from "../../../.storybook/blocks";
+import { DotsThreeIcon } from "@dbm-system/icons";
+import { Button } from "../../atoms/Button";
+import { IconButton } from "../../atoms/IconButton";
+import { VisuallyHidden } from "../../atoms/VisuallyHidden";
+import * as ContextMenuStories from "./ContextMenu.stories";
+import * as ContextMenuRootStories from "./ContextMenuRoot.stories";
+import * as ContextMenuTriggerStories from "./ContextMenuTrigger.stories";
+import * as ContextMenuContentStories from "./ContextMenuContent.stories";
+import * as ContextMenuItemStories from "./ContextMenuItem.stories";
+import * as ContextMenuCheckboxItemStories from "./ContextMenuCheckboxItem.stories";
+import * as ContextMenuRadioGroupStories from "./ContextMenuRadioGroup.stories";
+import * as ContextMenuRadioItemStories from "./ContextMenuRadioItem.stories";
+import * as ContextMenuLabelStories from "./ContextMenuLabel.stories";
+import * as ContextMenuGroupStories from "./ContextMenuGroup.stories";
+import * as ContextMenuSeparatorStories from "./ContextMenuSeparator.stories";
+import * as ContextMenuSubStories from "./ContextMenuSub.stories";
+import * as ContextMenuSubTriggerStories from "./ContextMenuSubTrigger.stories";
+import * as ContextMenuSubContentStories from "./ContextMenuSubContent.stories";
+
+export const playgroundOrder = ["size", "alignOffset", "avoidCollisions", "collisionPadding", "loop", "modal", "dir"];
+export const propOrder = ["children", "open", "defaultOpen", "onOpenChange", "onOpenChangeComplete", "modal", "dir"];
+export const sharedTail = ["id", "className", "style", "data-testid"];
+export const triggerPropOrder = ["children", "disabled", "tabIndex", "aria-label", "aria-labelledby", "aria-describedby", "asChild", ...sharedTail];
+export const contentPropOrder = [
+  "children",
+  "size",
+  "alignOffset",
+  "avoidCollisions",
+  "collisionPadding",
+  "collisionBoundary",
+  "hideWhenDetached",
+  "sticky",
+  "loop",
+  "container",
+  "onCloseAutoFocus",
+  "onEscapeKeyDown",
+  "onPointerDownOutside",
+  "onFocusOutside",
+  "onInteractOutside",
+  "aria-label",
+  "aria-labelledby",
+  ...sharedTail,
+];
+export const itemPropOrder = [
+  "children",
+  "icon",
+  "description",
+  "trailing",
+  "shortcut",
+  "tone",
+  "disabled",
+  "disabledReason",
+  "closeOnSelect",
+  "onSelect",
+  "onSelectError",
+  "textValue",
+  "aria-keyshortcuts",
+  "aria-describedby",
+  "asChild",
+  ...sharedTail,
+];
+export const checkboxPropOrder = [
+  "children",
+  "icon",
+  "description",
+  "trailing",
+  "shortcut",
+  "checked",
+  "defaultChecked",
+  "onCheckedChange",
+  "disabled",
+  "disabledReason",
+  "closeOnSelect",
+  "onSelect",
+  "onSelectError",
+  "textValue",
+  "aria-keyshortcuts",
+  "aria-describedby",
+  ...sharedTail,
+];
+export const radioGroupPropOrder = ["children", "value", "defaultValue", "onValueChange", "aria-label", "aria-labelledby", ...sharedTail];
+export const radioItemPropOrder = [
+  "children",
+  "value",
+  "icon",
+  "description",
+  "trailing",
+  "shortcut",
+  "disabled",
+  "disabledReason",
+  "closeOnSelect",
+  "onSelect",
+  "onSelectError",
+  "textValue",
+  "aria-keyshortcuts",
+  "aria-describedby",
+  ...sharedTail,
+];
+export const labelPropOrder = ["children", ...sharedTail];
+export const groupPropOrder = ["children", "aria-label", "aria-labelledby", ...sharedTail];
+export const separatorPropOrder = sharedTail;
+export const subPropOrder = ["children", "open", "onOpenChange"];
+export const subTriggerPropOrder = ["children", "icon", "disabled", "textValue", ...sharedTail];
+export const subContentPropOrder = [
+  "children",
+  "size",
+  "sideOffset",
+  "alignOffset",
+  "avoidCollisions",
+  "collisionPadding",
+  "collisionBoundary",
+  "hideWhenDetached",
+  "sticky",
+  "loop",
+  "container",
+  "onEscapeKeyDown",
+  "onPointerDownOutside",
+  "onFocusOutside",
+  "onInteractOutside",
+  "aria-label",
+  ...sharedTail,
+];
+
+<Meta of={ContextMenuStories} />
+
+<VisuallyHidden asChild><h2>Intro</h2></VisuallyHidden>
+
+<ComponentHeader title="ContextMenu" tier="Organism" />
+
+A menu of actions that opens where the pointer is pressed: a right-click, a long press on a touch screen, or
+the context-menu key on a focused element. Built on Radix ContextMenu, so arrow keys, typeahead, Home/End,
+Escape and focus return come with it, as do checkbox and radio items, labelled groups and submenus. Its items
+are `Menu`'s, drawn the same. A compound component: put `ContextMenu.Trigger` (the area) and
+`ContextMenu.Content` inside `ContextMenu`, and the items, labels, groups and separators inside the content.
+
+A context menu is a shortcut, never the only way to an action. Nothing on the page says it is there, a touch
+screen needs a long press, and some people never right-click, so every action in it should also be reachable
+from a visible control (a button on the row, a toolbar).
+
+### Import
+
+```tsx
+import { ContextMenu } from "@dbm-system/components";
+```
+
+## Playground
+
+Right-click inside the box (or focus it and press Shift+F10, or the context-menu key). On a touch screen, press
+and hold.
+
+<div className="dbm-playground-canvas">
+
+<Canvas of={ContextMenuStories.Playground} />
+
+</div>
+<PlaygroundControls of={ContextMenuStories.Playground} order={playgroundOrder} />
+
+## Properties
+
+`ContextMenu` itself renders no DOM element of its own: it is a plain context provider around its sub-parts,
+so it has no `className`/`style`/`id`/`data-testid`/`ref` of its own to accept. The item, label, group and
+separator parts below are `Menu`'s own parts, so their properties are the same.
+
+<PropertiesTable of={ContextMenuRootStories} order={propOrder} />
+
+### ContextMenu.Trigger properties
+
+The area a right-click opens the menu from. Also accepts any other native `<span>` attribute beyond what's
+listed here (e.g. `onFocus`, `title`), passed straight through. While the menu is open it carries
+`data-state="open"`. A focusable area (`tabIndex`) is how a person without a mouse reaches the menu.
+
+<PropertiesTable of={ContextMenuTriggerStories} order={triggerPropOrder} />
+
+### ContextMenu.Content properties
+
+The floating panel, rendered in a portal on the page and placed at the point that was pressed. Also accepts any
+other native `<div>` attribute beyond what's listed here (e.g. `onFocus`, `title`), passed straight through to
+the panel. The reading direction is set on `ContextMenu`, not here. `role` and `aria-orientation` are set by
+the menu and can't be replaced.
+
+<PropertiesTable of={ContextMenuContentStories} order={contentPropOrder} />
+
+### ContextMenu.Item properties
+
+An action. Also accepts any other native `<div>` attribute beyond what's listed here (e.g. `onFocus`,
+`title`), passed straight through. `role` and `aria-disabled` are set by the menu and can't be replaced.
+
+<PropertiesTable of={ContextMenuItemStories} order={itemPropOrder} />
+
+### ContextMenu.CheckboxItem properties
+
+An item that toggles something and shows it with a check mark. Also accepts any other native `<div>`
+attribute beyond what's listed here. `role` and `aria-checked` are set by the menu and can't be replaced.
+
+<PropertiesTable of={ContextMenuCheckboxItemStories} order={checkboxPropOrder} />
+
+### ContextMenu.RadioGroup properties
+
+A set of `ContextMenu.RadioItem`s of which one is chosen. Also accepts any other native `<div>` attribute
+beyond what's listed here.
+
+<PropertiesTable of={ContextMenuRadioGroupStories} order={radioGroupPropOrder} />
+
+### ContextMenu.RadioItem properties
+
+One choice in a `ContextMenu.RadioGroup`. Also accepts any other native `<div>` attribute beyond what's listed
+here. `role` and `aria-checked` are set by the menu and can't be replaced.
+
+<PropertiesTable of={ContextMenuRadioItemStories} order={radioItemPropOrder} />
+
+### ContextMenu.Label properties
+
+A heading for a group of items. Not an item: it can't be focused. Also accepts any other native `<div>`
+attribute beyond what's listed here.
+
+<PropertiesTable of={ContextMenuLabelStories} order={labelPropOrder} />
+
+### ContextMenu.Group properties
+
+A set of items that go together. Also accepts any other native `<div>` attribute beyond what's listed here.
+
+<PropertiesTable of={ContextMenuGroupStories} order={groupPropOrder} />
+
+### ContextMenu.Separator properties
+
+A line between two sets of items. Also accepts any other native `<div>` attribute beyond what's listed here.
+
+<PropertiesTable of={ContextMenuSeparatorStories} order={separatorPropOrder} />
+
+### ContextMenu.Sub properties
+
+The root of a submenu. It renders no element of its own.
+
+<PropertiesTable of={ContextMenuSubStories} order={subPropOrder} />
+
+### ContextMenu.SubTrigger properties
+
+The item that opens a submenu, drawn with a caret that points the way it will open. Also accepts any other
+native `<div>` attribute beyond what's listed here.
+
+<PropertiesTable of={ContextMenuSubTriggerStories} order={subTriggerPropOrder} />
+
+### ContextMenu.SubContent properties
+
+The submenu's panel. Also accepts any other native `<div>` attribute beyond what's listed here.
+
+<PropertiesTable of={ContextMenuSubContentStories} order={subContentPropOrder} />
+
+## Variants
+
+Each demo has an area to press in. A story's menu is closed until you open it.
+
+### Icons, shortcut hints and a danger item
+
+<Canvas of={ContextMenuStories.IconsAndShortcuts} />
+
+### Sizes
+
+<Canvas of={ContextMenuStories.Sizes} />
+
+### Checkbox items
+
+<Canvas of={ContextMenuStories.CheckboxItems} />
+
+### Radio group
+
+<Canvas of={ContextMenuStories.RadioGroup} />
+
+### Groups and labels
+
+<Canvas of={ContextMenuStories.GroupsAndLabels} />
+
+### Submenus
+
+<Canvas of={ContextMenuStories.Submenu} />
+
+### Descriptions and trailing content
+
+<Canvas of={ContextMenuStories.DescriptionsAndTrailing} />
+
+### An action that takes time
+
+<Canvas of={ContextMenuStories.AsyncAction} />
+
+### A disabled item that says why
+
+<Canvas of={ContextMenuStories.DisabledReason} />
+
+### A long menu scrolls
+
+<Canvas of={ContextMenuStories.LongMenu} />
+
+### On a list of rows, with a button for the same actions
+
+<Canvas of={ContextMenuStories.OnRows} />
+
+### An item that opens a confirmation
+
+<Canvas of={ContextMenuStories.OpensADialog} />
+
+### Opened from inside a Dialog
+
+<Canvas of={ContextMenuStories.InsideDialog} />
+
+### Right to left
+
+<Canvas of={ContextMenuStories.RightToLeft} />
+
+## Usage guidelines
+
+<div className="dbm-do-dont-grid">
+<Callout tone="success" title="Do">
+
+- Use a `ContextMenu` for actions on the thing under the pointer (a file, a table row, a card, a point on a
+  canvas), as a shortcut beside the same actions in a visible control.
+- Make the area focusable (`tabIndex={0}` on the trigger, or `asChild` onto a link, a button or a row that already
+  is) so the context-menu key and Shift+F10 open it for someone using only a keyboard. If the area is just a box,
+  give it a role and a name that say what it is, since a focusable element with neither is announced as plain text.
+- Put the destructive action last, after a `ContextMenu.Separator`, with `tone="danger"`.
+- Keep the labels short and start them with the verb, so typeahead finds them from their first letters.
+- Style the area from `[data-state="open"]` so the thing the menu is about stays marked while it is open.
+- Keep a dialog an item opens beside the menu, opened from state; focus goes back to the row when it closes.
+
+</Callout>
+<Callout tone="danger" title="Don't">
+
+- Don't make a context menu the only way to do something. It is invisible until used, needs a long press on a
+  touch screen, and is unreachable from an area that can't take focus.
+- Don't use it for a menu opened from a button: that is a `Menu`, which is named after its trigger and opens on a
+  press or a key.
+- Don't put a form or arbitrary content in it. A context menu holds `menuitem`s only.
+- Don't rely on a `shortcut` hint to make a key work. It only displays the key; bind it yourself.
+- Don't set `open` to open it from code: a context menu can only be placed by a press, so it would be drawn at the
+  top-left corner of the page. `open` is for following and closing it.
+- Don't turn off the browser's menu on a whole page. Wrap only the thing that has actions.
+
+</Callout>
+</div>
+
+## Best practices
+
+- Order the items by how often they are used, and keep a menu to about seven items before grouping them with
+  `ContextMenu.Label` and `ContextMenu.Separator`.
+- A leading `icon` helps recognition when most items have one; give every item in a set one, or none.
+- For a row, put the trigger on the row with `asChild` and keep its "more" button (a `Menu`) beside the text: the
+  two hold the same actions, and the button is the discoverable one. They work together in one row.
+- Name the panel with `aria-label` when the area's own text would not say what the menu is for. A context menu has
+  no trigger button to be named after.
+- A menu taller than the room there is scrolls inside its panel, with a fade at each end that has more behind it.
+- The panel is placed at the pointer and flips to stay inside the viewport; give it `collisionPadding` where a
+  fixed header or footer covers the edge.
+
+## Accessibility
+
+<Callout tone="info" title="Keyboard and ARIA state come from Radix's menu primitive">
+
+- The panel is `role="menu"` and holds `menuitem`, `menuitemcheckbox` and `menuitemradio` elements. It has no
+  trigger button to be named after, so give it an `aria-label` when its purpose isn't clear.
+- A right-click, a long press of 700 milliseconds with a finger, and the context-menu key or Shift+F10 on a
+  focused area open the menu. An area that can't take focus can't be opened from the keyboard.
+- `ArrowDown` and `ArrowUp` move between items, skipping disabled ones; `Home` and `End` jump to the first and
+  last; typing letters moves to the item that starts with them. Arrow keys stop at the ends unless `loop` is set.
+- `ArrowRight` opens a submenu and `ArrowLeft` closes it, swapped in right-to-left text (`dir="rtl"`).
+- `Enter` and `Space` choose the focused item. `Escape` closes the menu (one level of submenu at a time) and
+  returns focus to the element that had it. `Tab` is not used inside an open menu.
+- A `description` is announced as the item's description, not as part of its name. A `disabledReason` keeps the
+  item focusable and `aria-disabled`, shows the reason in a tooltip and announces it as the description. An item
+  with a pending action is `aria-busy` and `aria-disabled`, and ignores presses until it settles.
+- A `ContextMenu.Label` inside a `ContextMenu.Group` or `ContextMenu.RadioGroup` names that group through
+  `aria-labelledby`, wired automatically.
+- The focused item is highlighted with a quiet fill and, for the keyboard, a ring in the focus colour drawn inside
+  it. In forced-colours mode the highlighted item is drawn with an outline in a system colour.
+- Every item is at least 24 × 24 CSS pixels at every size.
+- The menu is modal by default: the rest of the page is hidden from assistive technology and can't be pressed
+  while it is open, and a press outside only closes it. Set `modal={false}` for a menu that coexists with the page.
+- Focus goes back to the element that had it when the menu opened. When the menu was opened on an area that
+  can't take focus, there is nothing to return to.
+
+</Callout>
+
+## Code examples
+
+```tsx
+{/* A file list: each row is a focusable trigger with the same actions on its own button */}
+<ContextMenu>
+  <ContextMenu.Trigger asChild tabIndex={0}>
+    <li>quarterly-report.pdf</li>
+  </ContextMenu.Trigger>
+  <ContextMenu.Content aria-label="File actions">
+    <ContextMenu.Item icon={PencilSimpleIcon} shortcut="F2" onSelect={rename}>Rename</ContextMenu.Item>
+    <ContextMenu.Item icon={CopyIcon} onSelect={duplicate}>Duplicate</ContextMenu.Item>
+    <ContextMenu.Separator />
+    <ContextMenu.Item icon={TrashIcon} tone="danger" onSelect={remove}>Delete</ContextMenu.Item>
+  </ContextMenu.Content>
+</ContextMenu>
+
+{/* Mark the row while its menu is open */}
+{/* li[data-state="open"] { background: var(--dbm-bg-brand-subtle); } */}
+
+{/* Controlled open state, to follow or close the menu: a press on the trigger is what opens it */}
+function Example() {
+  const [open, setOpen] = useState(false);
+  return (
+    <ContextMenu open={open} onOpenChange={setOpen}>
+      <ContextMenu.Trigger tabIndex={0}>Right-click here</ContextMenu.Trigger>
+      <ContextMenu.Content>
+        <ContextMenu.Item>Rename</ContextMenu.Item>
+      </ContextMenu.Content>
+    </ContextMenu>
+  );
+}
+
+{/* A checkbox item leaves the menu open, and a radio group does too */}
+<ContextMenu.CheckboxItem checked={showGrid} onCheckedChange={setShowGrid}>
+  Show grid
+</ContextMenu.CheckboxItem>
+<ContextMenu.RadioGroup value={sort} onValueChange={setSort} aria-label="Sort by">
+  <ContextMenu.RadioItem value="name">Name</ContextMenu.RadioItem>
+  <ContextMenu.RadioItem value="date">Date</ContextMenu.RadioItem>
+</ContextMenu.RadioGroup>
+
+{/* An action that takes time: a spinner shows and the menu closes when the promise resolves */}
+<ContextMenu.Item onSelect={() => exportRows()} onSelectError={(error) => showError(error)}>
+  Export as CSV
+</ContextMenu.Item>
+
+{/* An item that opens a confirmation: the dialog sits beside the menu, opened from state */}
+function Row() {
+  const [confirming, setConfirming] = useState(false);
+  return (
+    <>
+      <ContextMenu>
+        <ContextMenu.Trigger asChild tabIndex={0}>
+          <li>quarterly-report.pdf</li>
+        </ContextMenu.Trigger>
+        <ContextMenu.Content>
+          <ContextMenu.Item tone="danger" onSelect={() => setConfirming(true)}>Delete</ContextMenu.Item>
+        </ContextMenu.Content>
+      </ContextMenu>
+      <ConfirmDialog open={confirming} onOpenChange={setConfirming} title="Delete this file?" onConfirm={deleteFile} />
+    </>
+  );
+}
+
+{/* A native <span> attribute on the area, passed straight through */}
+<ContextMenu.Trigger title="Right-click for actions">Project card</ContextMenu.Trigger>
+```
+
+## Design tokens used
+
+<TokenRow token="bg.surface" usage="panel background, and the colour the scroll fades run out into" />
+<TokenRow token="border.default" usage="panel border and the separator line" />
+<TokenRow token="border-width.1" usage="panel border and separator width" />
+<TokenRow token="border-width.2" usage="the keyboard focus ring, and the highlighted item's outline in forced-colours mode" />
+<TokenRow token="border.focus" usage="the keyboard focus ring drawn inside the focused item" />
+<TokenRow token="radius.md" usage="panel corner radius" />
+<TokenRow token="radius.sm" usage="item corner radius" />
+<TokenRow token="shadow.light.md / shadow.dark.md" usage="panel elevation" />
+<TokenRow token="font-family.primary" usage="panel typography — set explicitly since the panel renders in a portal outside the component's own tree" />
+<TokenRow token="font-size.xs" usage="extra-small item text; shortcut hint, item description and label heading text" />
+<TokenRow token="font-size.sm" usage="small item text" />
+<TokenRow token="font-size.base" usage="medium item text" />
+<TokenRow token="font-size.md" usage="large item text" />
+<TokenRow token="font-size.lg" usage="extra-large item text" />
+<TokenRow token="font-weight.semibold" usage="label heading weight" />
+<TokenRow token="line-height.snug" usage="item and panel line height" />
+<TokenRow token="icon-size.xs" usage="item icon size at extra small and small, and the indicator column at those sizes" />
+<TokenRow token="icon-size.sm" usage="item icon size at medium, and the indicator column" />
+<TokenRow token="icon-size.md" usage="item icon size at large, and the indicator column" />
+<TokenRow token="icon-size.lg" usage="item icon size at extra large, and the indicator column" />
+<TokenRow token="space.1" usage="panel padding, separator margin, label heading padding below it, extra-small item vertical padding" />
+<TokenRow token="space.2" usage="gap between an item's icon, label and hint; item padding at small sizes; label heading padding above it; space before trailing content and a spinner" />
+<TokenRow token="space.3" usage="item padding at medium and large sizes" />
+<TokenRow token="space.4" usage="item padding at extra large; gap before the shortcut hint" />
+<TokenRow token="space.6" usage="item minimum height (the 24px target floor); the height of a scroll fade" />
+<TokenRow token="menu.min-width" usage="panel minimum width" />
+<TokenRow token="menu.max-width" usage="panel maximum width before a long label wraps" />
+<TokenRow token="text.primary" usage="item and panel text" />
+<TokenRow token="text.secondary" usage="shortcut hint, item description and label heading text" />
+<TokenRow token="text.disabled" usage="disabled item text" />
+<TokenRow token="text.danger" usage="danger item text" />
+<TokenRow token="bg.brand-subtle" usage="highlighted item and open submenu trigger background" />
+<TokenRow token="bg.danger-subtle" usage="highlighted danger item background" />
+<TokenRow token="z-index.popover" usage="panel stacking order, above a dialog it is opened from" />
+<TokenRow token="motion.duration.fast" usage="open and close fade" />
+<TokenRow token="motion.easing.emphasized" usage="open fade-in" />
+<TokenRow token="motion.easing.standard" usage="close fade-out" />
+<TokenRow token="opacity.0 / opacity.100" usage="open and close fade endpoints; a scroll fade shown or hidden" />
+<TokenRow token="motion.scale.96" usage="the size the panel starts from as it enters" />
+
+## Related components
+
+<div className="dbm-card-grid">
+<RelatedCard
+  name="Menu"
+  description="The same list of actions opened from a button. Reach for it for the visible control that holds the actions a context menu repeats"
+  href="/?path=/docs/organisms-navigation-menu--docs"
+>
+  <Button variant="secondary">Actions</Button>
+</RelatedCard>
+<RelatedCard
+  name="IconButton"
+  description="The usual button for a row's actions, with an aria-label"
+  href="/?path=/docs/atoms-inputs-iconbutton--docs"
+>
+  <IconButton icon={DotsThreeIcon} aria-label="Row actions" variant="ghost" />
+</RelatedCard>
+<RelatedCard
+  name="Dialog"
+  description="A context menu opened from inside a dialog is drawn above it"
+  href="/?path=/docs/organisms-overlay-dialog--docs"
+>
+  <Button>Open settings</Button>
+</RelatedCard>
+</div>

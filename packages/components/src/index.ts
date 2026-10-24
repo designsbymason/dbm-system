@@ -101,6 +101,7 @@ export * from "./organisms/Dialog";
 export * from "./organisms/Drawer";
 export * from "./organisms/FileUpload";
 export * from "./organisms/Form";
+export * from "./organisms/ContextMenu";
 export * from "./organisms/Menu";
 export * from "./organisms/Navbar";
 export * from "./organisms/Sidebar";

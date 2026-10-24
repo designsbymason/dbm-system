@@ -153,7 +153,7 @@ Content that appears above, or reveals/hides other content.
 | Tour | organism | ⚪ | A guided product tour: a sequence of steps each anchoring a `Popover`-style card to an element on the page, with a dimmed spotlight, next/back/skip and keyboard control |
 | Accordion | molecule | 🟢 | Wraps Radix Accordion fully (`Root`/`Item`/`Header`/`Trigger`/`Content`) — does not literally reuse the `Collapse` atom's own component, see [ADR-0018](adr/0018-accordion-wraps-radix-accordion-content-directly-not-the-collapse-atom.md) |
 | Collapse | atom | 🟢 | Simple expand/collapse, building block for Accordion |
-| ContextMenu | organism | 🟡 | Right-click menu |
+| ContextMenu | organism | 🟡 | A menu of actions that opens where the pointer is pressed: a right-click, a long press on a touch screen, or the context-menu key on a focused element, compound (`ContextMenu.Trigger`/`Content`/`Item`/`CheckboxItem`/`RadioGroup`/`RadioItem`/`Label`/`Group`/`Separator`/`Sub`/`SubTrigger`/`SubContent`) over Radix ContextMenu, pinned on the Radix release train and modal by default ([ADR-0118](adr/0118-contextmenu-wraps-radix-contextmenu-pinned-at-2-3-7-on-the-menu-release-train-holds-its-own-open-state-and-is-modal-with-a-long-press-over-the-newest-release-or-a-hand-rolled-trigger.md)). Its items, labels, groups and submenus are `Menu`'s own parts, drawn with `Menu`'s stylesheet through a context that supplies the Radix parts ([ADR-0119](adr/0119-menus-item-parts-draw-with-the-radix-parts-a-context-supplies-so-contextmenu-shares-them-over-copying-them-or-extracting-them-early.md)). Placed at the pointer, so it takes no `side` or `align`. A shortcut and never the only way to an action. Review: [ContextMenu.md](component-reviews/ContextMenu.md) |
 | AlertDialog | organism | 🟢 | A modal that has to be answered: `role="alertdialog"`, no dismissal by a press outside and no corner close button, focus starting on the safe choice. Compound (`AlertDialog.Trigger`/`Content`/`Header`/`Title`/`Description`/`Body`/`Footer`/`Action`/`Cancel`) over Radix AlertDialog, with a tone icon, `busy` and a reason on close; drawn with `Dialog`'s sections and stylesheet ([ADR-0056](adr/0056-alertdialog-draws-with-dialogs-sections-and-stylesheet-and-defers-extracting-them-to-the-third-consumer.md)). [`ConfirmDialog`](component-reviews/ConfirmDialog.md) is the prop-driven pattern on top. Review: [AlertDialog.md](component-reviews/AlertDialog.md) |
 
 ## 8. Media
@@ -258,7 +258,7 @@ Dependency order, then priority (🟢 before 🟡 before ⚪). `Grid`, `List` an
 
 ### Organism-tier build order
 
-Dependency order, then priority (🟢 before 🟡 before ⚪). Build one at a time, each with the full `06-engineering-standards.md` §9 pass; note any deviation here. `Dialog`, `AlertDialog`, `ConfirmDialog`, `Drawer`, `Menu`, `Toast`, `Form`, `Combobox`, `DatePicker`, `DataTable`, `Navbar`, `Sidebar` and `FileUpload` are built and Finalized, and the rest are not started.
+Dependency order, then priority (🟢 before 🟡 before ⚪). Build one at a time, each with the full `06-engineering-standards.md` §9 pass; note any deviation here. `Dialog`, `AlertDialog`, `ConfirmDialog`, `Drawer`, `Menu`, `Toast`, `Form`, `Combobox`, `DatePicker`, `DataTable`, `Navbar`, `Sidebar` and `FileUpload` are built and Finalized, `ContextMenu` is built and has its review pass to finish, and the rest are not started.
 
 **🟢 core**
 1. Dialog — foundation for every modal (Radix Dialog, `Backdrop`, `CloseButton`, `ScrollArea`); built, review in [Dialog.md](component-reviews/Dialog.md)
@@ -274,7 +274,7 @@ Dependency order, then priority (🟢 before 🟡 before ⚪). Build one at a ti
 13. FileUpload — built and Finalized, review in [FileUpload.md](component-reviews/FileUpload.md)
 
 **🟡 v1.5**
-14. ContextMenu (on Menu), 15. MultiSelect (on Combobox), 16. DateRangePicker (on Calendar and DatePicker), 17. CommandPalette (Dialog plus Combobox-style search), 18. NavigationMenu (`Navbar` covers a bar of links; this is for mega-menu panels), 19. Stepper, 20. Timeline, 21. Tree / TreeView
+14. ContextMenu (on Menu; built, review in [ContextMenu.md](component-reviews/ContextMenu.md)), 15. MultiSelect (on Combobox), 16. DateRangePicker (on Calendar and DatePicker), 17. CommandPalette (Dialog plus Combobox-style search), 18. NavigationMenu (`Navbar` covers a bar of links; this is for mega-menu panels), 19. Stepper, 20. Timeline, 21. Tree / TreeView
 
 **⚪ deferred**
 22. Menubar (after Menu), 23. EditorTabs (wraps `Tabs`; reordering needs the drag-and-drop decision), 24. Carousel, 25. ImageViewer / Lightbox (Dialog, optionally Carousel), 26. ColorPicker (Popover plus Slider), 27. Tour (Popover-style cards and a spotlight)

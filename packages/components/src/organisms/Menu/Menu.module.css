@@ -71,12 +71,12 @@
      its longest label needs it, never wider than the room there is. */
   display: flex;
   flex-direction: column;
-  max-block-size: var(--radix-dropdown-menu-content-available-height);
-  max-inline-size: min(var(--dbm-menu-max-width), var(--radix-dropdown-menu-content-available-width));
-  min-inline-size: min(var(--dbm-menu-min-width), var(--radix-dropdown-menu-content-available-width));
+  max-block-size: var(--radix-popper-available-height);
+  max-inline-size: min(var(--dbm-menu-max-width), var(--radix-popper-available-width));
+  min-inline-size: min(var(--dbm-menu-min-width), var(--radix-popper-available-width));
   overflow: hidden;
   position: relative;
-  transform-origin: var(--radix-dropdown-menu-content-transform-origin);
+  transform-origin: var(--radix-popper-transform-origin);
   will-change: transform, opacity;
   z-index: var(--dbm-z-index-popover);
 }

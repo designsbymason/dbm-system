@@ -68,6 +68,7 @@ import { dialogPlaygroundSnippet } from "./organisms/Dialog/Dialog.snippets";
 import { drawerPlaygroundSnippet } from "./organisms/Drawer/Drawer.snippets";
 import { navbarPlaygroundSnippet } from "./organisms/Navbar/Navbar.snippets";
 import { sidebarPlaygroundSnippet } from "./organisms/Sidebar/Sidebar.snippets";
+import { contextMenuPlaygroundSnippet } from "./organisms/ContextMenu/ContextMenu.snippets";
 import { fileUploadPlaygroundSnippet } from "./organisms/FileUpload/FileUpload.snippets";
 import { formPlaygroundSnippet } from "./organisms/Form/Form.snippets";
 import { toastPlaygroundSnippet } from "./organisms/Toast/Toast.snippets";
@@ -1934,6 +1935,37 @@ describe("Playground snippet for Form", () => {
     expect(formPlaygroundSnippet({ noValidate: false })).toContain("noValidate={false}");
     expect(formPlaygroundSnippet({ summary: true })).toContain("<Form.Summary />");
     expect(formPlaygroundSnippet({})).not.toContain("<Form.Summary />");
+  });
+});
+
+describe("Playground snippet for ContextMenu", () => {
+  const everything = {
+    modal: false,
+    dir: "rtl",
+    size: "lg",
+    alignOffset: 6,
+    avoidCollisions: false,
+    collisionPadding: 20,
+    loop: true,
+  } as const;
+
+  it.each([{}, everything, { modal: true, dir: "ltr", size: "md", alignOffset: 0, avoidCollisions: true, collisionPadding: 8, loop: false }] as const)(
+    "ContextMenu %j is a real snippet",
+    (args) => {
+      expect(problemsIn(contextMenuPlaygroundSnippet(args))).toEqual([]);
+    },
+  );
+
+  it("writes only what differs from the defaults", () => {
+    const code = contextMenuPlaygroundSnippet({ modal: true, dir: "ltr", size: "md", alignOffset: 0, avoidCollisions: true, collisionPadding: 8, loop: false });
+    expect(code).toContain("<ContextMenu>");
+    expect(code).toContain("<ContextMenu.Content>");
+  });
+
+  it("writes each setting that is changed", () => {
+    const code = contextMenuPlaygroundSnippet(everything);
+    expect(code).toContain('<ContextMenu modal={false} dir="rtl">');
+    expect(code).toContain('<ContextMenu.Content size="lg" alignOffset={6} avoidCollisions={false} collisionPadding={20} loop>');
   });
 });
 

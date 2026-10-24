@@ -39,6 +39,7 @@ import type {
 } from "./Menu.types";
 import {
   MenuGroupContext,
+  MenuPrimitiveContext,
   MenuRadioValueContext,
   MenuRootContext,
   MenuSizeContext,
@@ -545,6 +546,7 @@ const MenuItem = forwardRef<HTMLDivElement, MenuItemProps>(
     },
     ref,
   ) => {
+    const Primitive = useContext(MenuPrimitiveContext);
     const size = useContext(MenuSizeContext);
     const ignoresContent = asChild && Boolean(icon || shortcut || description || trailing);
     useEffect(() => {
@@ -565,7 +567,7 @@ const MenuItem = forwardRef<HTMLDivElement, MenuItemProps>(
     });
     const iconTone: IconTone = disabled ? "disabled" : tone === "danger" ? "danger" : "default";
     return chrome.withReason(
-      <MenuPrimitive.Item
+      <Primitive.Item
         ref={ref}
         asChild={asChild}
         disabled={disabled && !chrome.hasReason}
@@ -598,7 +600,7 @@ const MenuItem = forwardRef<HTMLDivElement, MenuItemProps>(
             {chrome.reason}
           </>
         )}
-      </MenuPrimitive.Item>,
+      </Primitive.Item>,
     );
   },
 );
@@ -631,6 +633,7 @@ const MenuCheckboxItem = forwardRef<HTMLDivElement, MenuCheckboxItemProps>(
     },
     ref,
   ) => {
+    const Primitive = useContext(MenuPrimitiveContext);
     const size = useContext(MenuSizeContext);
     const [value, setValue] = useControllableState<boolean | "indeterminate">(checked, defaultChecked, (next) =>
       onCheckedChange?.(next === true),
@@ -646,7 +649,7 @@ const MenuCheckboxItem = forwardRef<HTMLDivElement, MenuCheckboxItemProps>(
       onSelectError,
     });
     return chrome.withReason(
-      <MenuPrimitive.CheckboxItem
+      <Primitive.CheckboxItem
         ref={ref}
         checked={value}
         // An item that can't be chosen (disabled with a reason, or busy) must not flip either.
@@ -665,9 +668,9 @@ const MenuCheckboxItem = forwardRef<HTMLDivElement, MenuCheckboxItemProps>(
         aria-busy={chrome.busy || undefined}
         aria-describedby={chrome.describedBy}
       >
-        <MenuPrimitive.ItemIndicator className={styles.indicator}>
+        <Primitive.ItemIndicator className={styles.indicator}>
           <Icon icon={value === "indeterminate" ? MinusIcon : CheckIcon} size={iconSizeFor[size]} tone="brand" />
-        </MenuPrimitive.ItemIndicator>
+        </Primitive.ItemIndicator>
         <ItemBody
           icon={icon}
           shortcut={shortcut}
@@ -681,7 +684,7 @@ const MenuCheckboxItem = forwardRef<HTMLDivElement, MenuCheckboxItemProps>(
           {children}
         </ItemBody>
         {chrome.reason}
-      </MenuPrimitive.CheckboxItem>,
+      </Primitive.CheckboxItem>,
     );
   },
 );
@@ -698,10 +701,11 @@ function useGroupLabelling(ariaLabelledBy: string | undefined) {
  */
 const MenuGroup = forwardRef<HTMLDivElement, MenuGroupProps>(
   ({ className, "aria-labelledby": ariaLabelledBy, ...props }, ref) => {
+    const Primitive = useContext(MenuPrimitiveContext);
     const { context, labelledBy } = useGroupLabelling(ariaLabelledBy);
     return (
       <MenuGroupContext.Provider value={context}>
-        <MenuPrimitive.Group
+        <Primitive.Group
           ref={ref}
           className={className}
           {...props}
@@ -720,12 +724,13 @@ MenuGroup.displayName = "Menu.Group";
  */
 const MenuRadioGroup = forwardRef<HTMLDivElement, MenuRadioGroupProps>(
   ({ value, defaultValue = "", onValueChange, className, "aria-labelledby": ariaLabelledBy, ...props }, ref) => {
+    const Primitive = useContext(MenuPrimitiveContext);
     const { context, labelledBy } = useGroupLabelling(ariaLabelledBy);
     const [current, setCurrent] = useControllableState<string>(value, defaultValue, onValueChange);
     return (
       <MenuGroupContext.Provider value={context}>
         <MenuRadioValueContext.Provider value={current}>
-          <MenuPrimitive.RadioGroup
+          <Primitive.RadioGroup
             ref={ref}
             value={current}
             onValueChange={setCurrent}
@@ -765,6 +770,7 @@ const MenuRadioItem = forwardRef<HTMLDivElement, MenuRadioItemProps>(
     },
     ref,
   ) => {
+    const Primitive = useContext(MenuPrimitiveContext);
     const size = useContext(MenuSizeContext);
     const chosen = useContext(MenuRadioValueContext);
     const chrome = useItemChrome({
@@ -778,7 +784,7 @@ const MenuRadioItem = forwardRef<HTMLDivElement, MenuRadioItemProps>(
       onSelectError,
     });
     return chrome.withReason(
-      <MenuPrimitive.RadioItem
+      <Primitive.RadioItem
         ref={ref}
         value={value}
         disabled={disabled && !chrome.hasReason}
@@ -793,9 +799,9 @@ const MenuRadioItem = forwardRef<HTMLDivElement, MenuRadioItemProps>(
         aria-busy={chrome.busy || undefined}
         aria-describedby={chrome.describedBy}
       >
-        <MenuPrimitive.ItemIndicator className={styles.indicator}>
+        <Primitive.ItemIndicator className={styles.indicator}>
           <Icon icon={CircleIcon} weight="fill" size={dotSizeFor[size]} tone="brand" />
-        </MenuPrimitive.ItemIndicator>
+        </Primitive.ItemIndicator>
         <ItemBody
           icon={icon}
           shortcut={shortcut}
@@ -809,7 +815,7 @@ const MenuRadioItem = forwardRef<HTMLDivElement, MenuRadioItemProps>(
           {children}
         </ItemBody>
         {chrome.reason}
-      </MenuPrimitive.RadioItem>,
+      </Primitive.RadioItem>,
     );
   },
 );
@@ -820,6 +826,7 @@ MenuRadioItem.displayName = "Menu.RadioItem";
  * technology; it is not itself an item and can't be focused.
  */
 const MenuLabel = forwardRef<HTMLDivElement, MenuLabelProps>(({ className, id, ...props }, ref) => {
+  const Primitive = useContext(MenuPrimitiveContext);
   const group = useContext(MenuGroupContext);
   const generatedId = useId();
   const labelId = id ?? generatedId;
@@ -827,22 +834,25 @@ const MenuLabel = forwardRef<HTMLDivElement, MenuLabelProps>(({ className, id, .
     group?.setLabelId(labelId);
     return () => group?.setLabelId(undefined);
   }, [group, labelId]);
-  return <MenuPrimitive.Label ref={ref} className={cx(styles.heading, className)} {...props} id={labelId} />;
+  return <Primitive.Label ref={ref} className={cx(styles.heading, className)} {...props} id={labelId} />;
 });
 MenuLabel.displayName = "Menu.Label";
 
 /** A line between two sets of items. */
-const MenuSeparator = forwardRef<HTMLDivElement, MenuSeparatorProps>(({ className, ...props }, ref) => (
+const MenuSeparator = forwardRef<HTMLDivElement, MenuSeparatorProps>(({ className, ...props }, ref) => {
+  const Primitive = useContext(MenuPrimitiveContext);
   // Radix sets the role and orientation first and spreads what it is given after, so a same-named consumer prop would
   // replace them: they are stated again here, after `{...props}` (05-component-api-conventions.md §3).
-  <MenuPrimitive.Separator
-    ref={ref}
-    className={cx(styles.separator, className)}
-    {...props}
-    role="separator"
-    aria-orientation="horizontal"
-  />
-));
+  return (
+    <Primitive.Separator
+      ref={ref}
+      className={cx(styles.separator, className)}
+      {...props}
+      role="separator"
+      aria-orientation="horizontal"
+    />
+  );
+});
 MenuSeparator.displayName = "Menu.Separator";
 
 /**
@@ -850,13 +860,14 @@ MenuSeparator.displayName = "Menu.Separator";
  * submenus of its own.
  */
 function MenuSub({ children, open, onOpenChange }: MenuSubProps) {
+  const Primitive = useContext(MenuPrimitiveContext);
   const [isOpen, setOpen] = useControllableState(open, false, onOpenChange);
   const value = useMemo(() => ({ open: isOpen }), [isOpen]);
   return (
     <MenuSubContext.Provider value={value}>
-      <MenuPrimitive.Sub open={isOpen} onOpenChange={setOpen}>
+      <Primitive.Sub open={isOpen} onOpenChange={setOpen}>
         {children}
-      </MenuPrimitive.Sub>
+      </Primitive.Sub>
     </MenuSubContext.Provider>
   );
 }
@@ -867,11 +878,12 @@ function MenuSub({ children, open, onOpenChange }: MenuSubProps) {
  */
 const MenuSubTrigger = forwardRef<HTMLDivElement, MenuSubTriggerProps>(
   ({ icon, disabled = false, className, children, ...props }, ref) => {
+    const Primitive = useContext(MenuPrimitiveContext);
     const size = useContext(MenuSizeContext);
     const { dir } = useContext(MenuRootContext);
     const sub = useContext(MenuSubContext);
     return (
-      <MenuPrimitive.SubTrigger
+      <Primitive.SubTrigger
         ref={ref}
         disabled={disabled}
         className={cx(styles.item, className)}
@@ -891,7 +903,7 @@ const MenuSubTrigger = forwardRef<HTMLDivElement, MenuSubTriggerProps>(
           mirrored={dir === "rtl"}
           className={styles.caret}
         />
-      </MenuPrimitive.SubTrigger>
+      </Primitive.SubTrigger>
     );
   },
 );
@@ -916,12 +928,13 @@ const MenuSubContent = forwardRef<HTMLDivElement, MenuSubContentProps>(
     },
     ref,
   ) => {
+    const Primitive = useContext(MenuPrimitiveContext);
     const parentSize = useContext(MenuSizeContext);
     const { inputRef } = useContext(MenuRootContext);
     const resolved = size ?? parentSize;
     return (
-      <MenuPrimitive.Portal container={container}>
-        <MenuPrimitive.SubContent
+      <Primitive.Portal container={container}>
+        <Primitive.SubContent
           ref={ref}
           alignOffset={alignOffset}
           collisionPadding={collisionPadding}
@@ -953,8 +966,8 @@ const MenuSubContent = forwardRef<HTMLDivElement, MenuSubContentProps>(
               <ButtonGroupReset>{children}</ButtonGroupReset>
             </MenuViewport>
           </MenuSizeContext.Provider>
-        </MenuPrimitive.SubContent>
-      </MenuPrimitive.Portal>
+        </Primitive.SubContent>
+      </Primitive.Portal>
     );
   },
 );
@@ -989,3 +1002,22 @@ export const Menu: MenuComponent = Object.assign(MenuRoot, {
   SubTrigger: MenuSubTrigger,
   SubContent: MenuSubContent,
 });
+
+/**
+ * The parts `ContextMenu` shares with `Menu`: the same items, labels, groups and submenu parts, drawn with the Radix
+ * parts the nearest `MenuPrimitiveContext` supplies (the dropdown's unless a `ContextMenu` provides its own).
+ */
+export const menuSharedParts = {
+  Item: MenuItem,
+  CheckboxItem: MenuCheckboxItem,
+  RadioGroup: MenuRadioGroup,
+  RadioItem: MenuRadioItem,
+  Label: MenuLabel,
+  Group: MenuGroup,
+  Separator: MenuSeparator,
+  Sub: MenuSub,
+  SubTrigger: MenuSubTrigger,
+  SubContent: MenuSubContent,
+};
+
+export { MenuViewport, sizeClass as menuSizeClass };
