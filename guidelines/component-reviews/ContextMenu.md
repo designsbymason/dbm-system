@@ -1,6 +1,6 @@
 # ContextMenu — review findings
 
-Fourteenth organism and the first 🟡 v1.5 one, built 2026-10-24 on `Menu`'s item parts with the `06-engineering-standards.md` §9 checklist applied as it was written. **Not Finalized:** the review pass below is the build's own; the maintainer's declaration and the items under "Open" are still to come.
+Fourteenth organism and the first 🟡 v1.5 one, built 2026-10-24 on `Menu`'s item parts with the `06-engineering-standards.md` §9 checklist applied as it was written. **Finalized 2026-10-24**, at the maintainer's declaration after a final review whose six findings were all fixed (below), with the items under "Open" accepted as open: none changes the component.
 
 ## Decisions
 - Wraps Radix ContextMenu pinned at `2.3.7` (the only release on `Menu`'s `react-menu@2.1.24`), holds its own open state, is modal by default and uses Radix's 700ms long press for touch; documented as a shortcut and never the only way to an action: [ADR-0118](../adr/0118-contextmenu-wraps-radix-contextmenu-pinned-at-2-3-7-on-the-menu-release-train-holds-its-own-open-state-and-is-modal-with-a-long-press-over-the-newest-release-or-a-hand-rolled-trigger.md).
