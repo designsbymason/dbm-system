@@ -1,5 +1,18 @@
 import { describe, expect, it, vi } from "vitest";
-import { checkFiles, describeAccept, dropDuplicates, formatFileSize, isSameFile, limitCount, matchesAccept, runValidate } from "./FileUpload.files";
+import {
+  MAX_FOLDER_FILES,
+  checkFiles,
+  describeAccept,
+  dropDuplicates,
+  formatFileSize,
+  isSameFile,
+  limitCount,
+  matchesAccept,
+  readDroppedItems,
+  readFolder,
+  runValidate,
+  summarize,
+} from "./FileUpload.files";
 
 const file = (name: string, size = 10, type = "") => {
   const made = new File(["x"], name, { type });
@@ -189,5 +202,80 @@ describe("runValidate", () => {
     const asynchronous = await runValidate([file("b")], () => Promise.reject(new Error("nope")), onFault);
     expect(asynchronous.rejected).toHaveLength(1);
     expect(onFault).toHaveBeenCalledTimes(2);
+  });
+});
+
+type Entry = Record<string, unknown>;
+const fileEntry = (name: string): Entry => ({ isFile: true, isDirectory: false, name, file: (ok: (f: File) => void) => ok(file(name)) });
+const folderOf = (name: string, children: Entry[], batch = 2): Entry => ({
+  isFile: false,
+  isDirectory: true,
+  name,
+  createReader: () => {
+    let at = 0;
+    return {
+      readEntries: (ok: (entries: Entry[]) => void) => {
+        ok(children.slice(at, at + batch));
+        at += batch;
+      },
+    };
+  },
+});
+
+describe("readFolder", () => {
+  it("reads every level and every batch, in order", async () => {
+    const tree = folderOf("root", [fileEntry("a"), folderOf("sub", [fileEntry("b"), fileEntry("c"), fileEntry("d")]), fileEntry("e")]);
+    expect((await readFolder(tree as never)).map((f) => f.name)).toEqual(["a", "b", "c", "d", "e"]);
+  });
+
+  it("reads an empty folder as no files", async () => {
+    expect(await readFolder(folderOf("empty", []) as never)).toEqual([]);
+  });
+
+  it("stops at the cap", async () => {
+    const many = Array.from({ length: MAX_FOLDER_FILES + 50 }, (_, index) => fileEntry(`f${index}`));
+    const read = await readFolder(folderOf("big", many, 1000) as never);
+    expect(read).toHaveLength(MAX_FOLDER_FILES);
+  });
+
+  it("rejects when the browser refuses to read", async () => {
+    const locked = { isDirectory: true, isFile: false, name: "x", createReader: () => ({ readEntries: (_ok: unknown, fail: (e: unknown) => void) => fail(new Error("denied")) }) };
+    await expect(readFolder(locked as never)).rejects.toThrow("denied");
+  });
+});
+
+describe("readDroppedItems", () => {
+  const transferOf = (items: unknown[], files: File[] = []) => ({ items, files }) as unknown as DataTransfer;
+  const item = (entry: Entry | null, got: File | null = null) => ({ kind: "file", webkitGetAsEntry: () => entry, getAsFile: () => got });
+
+  it("falls back to the drop's files when the browser gives no entries", () => {
+    const plain = file("a");
+    expect(readDroppedItems(transferOf([{ kind: "file", getAsFile: () => plain }], [plain]), false).files).toEqual([plain]);
+    expect(readDroppedItems(transferOf([], [plain]), false).files).toEqual([plain]);
+  });
+
+  it("sorts files from folders, and names a folder it will not read", () => {
+    const plain = file("a");
+    const dropped = readDroppedItems(transferOf([item(fileEntry("a"), plain), item(folderOf("Photos", []))]), false);
+    expect(dropped.files).toEqual([plain]);
+    expect(dropped.folders.map((f) => f.name)).toEqual(["Photos"]);
+    expect(dropped.reads).toEqual([]);
+  });
+
+  it("starts a read for each folder when folders are allowed, and skips what is not a file", () => {
+    const dropped = readDroppedItems(transferOf([item(folderOf("Photos", [])), { kind: "string", webkitGetAsEntry: () => null }]), true);
+    expect(dropped.folders).toEqual([]);
+    expect(dropped.reads).toHaveLength(1);
+  });
+});
+
+describe("summarize", () => {
+  it("says nothing until a file has started", () => {
+    expect(summarize([])).toBeNull();
+    expect(summarize([{}, { status: "idle" }])).toBeNull();
+  });
+
+  it("counts the files sent and the ones that failed", () => {
+    expect(summarize([{ status: "done" }, { status: "done" }, { status: "error" }, { status: "uploading" }, {}])).toEqual({ uploaded: 2, total: 5, failed: 1 });
   });
 });

@@ -31,39 +31,49 @@
   --fu-pad: var(--dbm-space-3);
   --fu-gap: var(--dbm-space-1);
   --fu-row-pad: var(--dbm-space-1);
+  --fu-thumb: var(--dbm-space-8);
 }
 
 .sizeSm {
   --fu-pad: var(--dbm-space-4);
   --fu-gap: var(--dbm-space-2);
   --fu-row-pad: var(--dbm-space-2);
+  --fu-thumb: var(--dbm-space-8);
 }
 
 .sizeMd {
   --fu-pad: var(--dbm-space-6);
   --fu-gap: var(--dbm-space-3);
   --fu-row-pad: var(--dbm-space-3);
+  --fu-thumb: var(--dbm-space-10);
 }
 
 .sizeLg {
   --fu-pad: var(--dbm-space-8);
   --fu-gap: var(--dbm-space-3);
   --fu-row-pad: var(--dbm-space-4);
+  --fu-thumb: var(--dbm-space-12);
 }
 
 .sizeXl {
   --fu-pad: var(--dbm-space-10);
   --fu-gap: var(--dbm-space-4);
   --fu-row-pad: var(--dbm-space-4);
+  --fu-thumb: var(--dbm-space-16);
 }
 
 /* --- The drop area. The edge is `border.neutral-strong` (4.70:1 / 6.08:1 against the surface), not `border.default`,
    because this edge is what tells a person where to drop and has to clear the 3:1 non-text floor. --- */
 
 .dropzone {
+  /* What a variant sets: the edge's style and colour and the fill. The drag, error and hover rules below override them. */
+  --fu-edge-style: dashed;
+  --fu-edge-color: var(--dbm-border-neutral-strong);
+  --fu-fill: var(--dbm-bg-surface);
+
   align-items: center;
-  background-color: var(--dbm-bg-surface);
-  border: var(--dbm-border-width-1) dashed var(--dbm-border-neutral-strong);
+  background-color: var(--fu-fill);
+  border: var(--dbm-border-width-1) var(--fu-edge-style) var(--fu-edge-color);
   border-radius: var(--dbm-radius-lg);
   box-sizing: border-box;
   cursor: pointer;
@@ -77,6 +87,24 @@
   transition:
     background-color var(--dbm-motion-duration-fast) var(--dbm-motion-easing-standard),
     border-color var(--dbm-motion-duration-fast) var(--dbm-motion-easing-standard);
+}
+
+/* Variants. `dashed` is the base above. `outlined` is the same edge, solid. `filled` swaps the strong edge for the light one and
+   adds a quiet fill. `ghost` has neither until files are dragged over it: the button and the prompt still name the area. */
+.outlined {
+  --fu-edge-style: solid;
+}
+
+.filled {
+  --fu-edge-style: solid;
+  --fu-edge-color: var(--dbm-border-default);
+  --fu-fill: var(--dbm-bg-neutral-subtle);
+}
+
+.ghost {
+  --fu-edge-style: solid;
+  --fu-edge-color: transparent;
+  --fu-fill: transparent;
 }
 
 .dropzone:hover:not(.disabled) {
@@ -156,6 +184,22 @@
   flex-shrink: 0;
 }
 
+/* A preview of an image, drawn at the size of the row's icon tile. */
+.thumbnail {
+  background-color: var(--dbm-bg-neutral-subtle);
+  block-size: var(--fu-thumb);
+  border: var(--dbm-border-width-1) solid var(--dbm-border-default);
+  border-radius: var(--dbm-radius-sm);
+  box-sizing: border-box;
+  flex-shrink: 0;
+  inline-size: var(--fu-thumb);
+  object-fit: cover;
+}
+
+.summary {
+  margin: 0;
+}
+
 .entryBody {
   display: flex;
   flex: 1 1 auto;
@@ -204,6 +248,11 @@
 
 /* Forced colours replaces every fill, so a drag is told apart by the edge alone: solid instead of dashed. */
 @media (forced-colors: active) {
+  /* A transparent edge is drawn as a solid line in forced colours, so the ghost's is the page's own colour. */
+  .ghost {
+    border-color: Canvas;
+  }
+
   .invalid,
   .itemError {
     border-style: double;

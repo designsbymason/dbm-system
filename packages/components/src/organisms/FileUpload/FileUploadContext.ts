@@ -7,6 +7,7 @@ import type {
   FileUploadRejection,
   FileUploadSize,
   FileUploadSource,
+  FileUploadVariant,
 } from "./FileUpload.types";
 
 /** What the root hands to its parts. */
@@ -14,6 +15,9 @@ export interface FileUploadContextValue {
   entries: FileUploadEntry[];
   rejections: FileUploadRejection[];
   size: FileUploadSize;
+  variant: FileUploadVariant;
+  allowFolders: boolean;
+  showPreviews: boolean;
   multiple: boolean;
   disabled: boolean;
   readOnly: boolean;
@@ -37,7 +41,8 @@ export interface FileUploadContextValue {
   canCancel: boolean;
   triggerRef: RefObject<HTMLButtonElement | null>;
   open: () => void;
-  addFiles: (files: File[], source: FileUploadSource) => void;
+  /** Adds files from a source; `refused` are files the caller already turned away (folders), shown with the rest. */
+  addFiles: (files: File[], source: FileUploadSource, refused?: FileUploadRejection[]) => void;
   remove: (entry: FileUploadEntry) => void;
   retry: (entry: FileUploadEntry) => void;
   cancel: (entry: FileUploadEntry) => void;

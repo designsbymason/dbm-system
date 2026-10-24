@@ -170,6 +170,7 @@ A superseded ADR's `Status` line becomes: `Status: Superseded by [NNNN](./NNNN-n
 | [0114](./0114-the-shared-helpers-package-is-utils-not-primitives.md) | The shared-helpers package is `utils`, over keeping the name `primitives` | Accepted |
 | [0115](./0115-fileupload-collects-files-and-shows-the-progress-it-is-given-and-never-uploads-them-over-owning-the-request.md) | `FileUpload` collects files and shows the progress it is given, and never uploads them, over owning the request | Accepted |
 | [0116](./0116-fileupload-submits-through-a-real-file-input-whose-files-are-set-from-the-list-over-hidden-inputs-or-a-value-the-form-cannot-see.md) | `FileUpload` submits through a real file input whose files are set from the list, over hidden inputs or a value the form cannot see | Accepted |
+| [0117](./0117-fileupload-reads-a-dropped-folder-only-when-asked-and-refuses-it-otherwise-over-reading-every-folder-or-adding-it-as-a-file.md) | `FileUpload` reads a dropped folder only when asked, and refuses it otherwise, over reading every folder or adding it as a file | Accepted |
 
 *(Extracted from `01-vision-and-goals.md`/`02-tech-stack-and-structure.md`/`03-token-system-spec.md`/`04-component-inventory.md`/`05-component-api-conventions.md`/`06-engineering-standards.md` during the guidelines retrofit pass, 2026-08-31 — more get added the same way, file by file, as the retrofit continues.)*
 

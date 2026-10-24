@@ -11,6 +11,14 @@ export function demoFile(name: string, size = 2048, type = "application/octet-st
   return file;
 }
 
+/** A real picture, a small gradient drawn as an SVG, so a preview has something to show. */
+export function demoImage(name: string, from: string, to: string, size = 240_000): File {
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="96" height="96"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="${from}"/><stop offset="1" stop-color="${to}"/></linearGradient></defs><rect width="96" height="96" fill="url(#g)"/><circle cx="68" cy="30" r="12" fill="white" fill-opacity="0.7"/></svg>`;
+  const file = new File([svg], name, { type: "image/svg+xml" });
+  Object.defineProperty(file, "size", { value: size });
+  return file;
+}
+
 /** One entry per state, for a list that shows every status at once. */
 export function demoEntries(): FileUploadEntry[] {
   return [

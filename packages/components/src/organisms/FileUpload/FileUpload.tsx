@@ -12,6 +12,7 @@ import {
   isThenable,
   limitCount,
   runValidate,
+  warnOnce,
 } from "./FileUpload.files";
 import type {
   FileUploadEntry,
@@ -29,15 +30,9 @@ import {
   FileUploadItem,
   FileUploadList,
   FileUploadRejections,
+  FileUploadSummary,
   FileUploadTrigger,
 } from "./FileUploadParts";
-
-const warned = new Set<string>();
-function warnOnce(message: string) {
-  if (process.env.NODE_ENV === "production" || warned.has(message)) return;
-  warned.add(message);
-  console.warn(message);
-}
 
 const canWriteFiles = () => typeof DataTransfer !== "undefined";
 
@@ -88,6 +83,10 @@ const FileUploadRoot = forwardRef<HTMLDivElement, FileUploadProps>(
       triggerIcon,
       hint: hintProp,
       guardPage = false,
+      variant = "dashed",
+      allowFolders = false,
+      showPreviews = false,
+      showSummary = true,
       layout = "dropzone",
       size = "md",
       required = false,
@@ -131,6 +130,9 @@ const FileUploadRoot = forwardRef<HTMLDivElement, FileUploadProps>(
       tooLarge: (fileName, limit) => `${fileName} is larger than ${limit}`,
       tooSmall: (fileName, limit) => `${fileName} is smaller than ${limit}`,
       tooMany: (fileName, limit) => `${fileName} was not added: no more than ${formatNumber(limit)} files`,
+      folder: (fileName) => `${fileName} is a folder; choose files instead`,
+      summary: (uploaded, total, failed) =>
+        `${formatNumber(uploaded)} of ${formatNumber(total)} uploaded${failed > 0 ? `, ${formatNumber(failed)} failed` : ""}`,
       duplicate: (fileName) => `${fileName} is already added`,
       invalid: (fileName, message) => `${fileName}: ${message}`,
       couldNotCheck: "it could not be checked",
@@ -243,8 +245,8 @@ const FileUploadRoot = forwardRef<HTMLDivElement, FileUploadProps>(
       writeInputFiles(next);
     };
 
-    const addFiles = (incoming: File[], source: FileUploadSource) => {
-      if (disabled || readOnly || incoming.length === 0) return;
+    const addFiles = (incoming: File[], source: FileUploadSource, refused: FileUploadRejection[] = []) => {
+      if (disabled || readOnly || (incoming.length === 0 && refused.length === 0)) return;
       const { passed, rejected } = checkFiles(incoming, { accept, maxSize, minSize });
       const onFault = (error: unknown) =>
         warnOnce(`FileUpload: \`validate\` threw or rejected (${String(error)}); the file was refused. Return a message instead of throwing.`);
@@ -253,7 +255,7 @@ const FileUploadRoot = forwardRef<HTMLDivElement, FileUploadProps>(
       const unique = dropDuplicates(passed, held, allowDuplicates);
       const checked = runValidate(unique.passed, validate, onFault);
       const complete = (result: { passed: File[]; rejected: FileUploadRejection[] }) =>
-        finishAdding(result.passed, [...rejected, ...unique.rejected, ...result.rejected], source);
+        finishAdding(result.passed, [...refused, ...rejected, ...unique.rejected, ...result.rejected], source);
       if (isThenable(checked)) void Promise.resolve(checked).then(complete);
       else complete(checked);
     };
@@ -351,6 +353,9 @@ const FileUploadRoot = forwardRef<HTMLDivElement, FileUploadProps>(
       entries,
       rejections,
       size,
+      variant,
+      allowFolders,
+      showPreviews,
       multiple,
       disabled,
       readOnly,
@@ -411,12 +416,14 @@ const FileUploadRoot = forwardRef<HTMLDivElement, FileUploadProps>(
             <FileUploadHint />
           </div>
           <FileUploadRejections />
+          {showSummary && <FileUploadSummary />}
           <FileUploadList />
         </>
       ) : (
         <>
           <FileUploadDropzone />
           <FileUploadRejections />
+          {showSummary && <FileUploadSummary />}
           <FileUploadList />
         </>
       );
@@ -467,6 +474,7 @@ export const FileUpload = Object.assign(FileUploadRoot, {
   Dropzone: FileUploadDropzone,
   Trigger: FileUploadTrigger,
   Rejections: FileUploadRejections,
+  Summary: FileUploadSummary,
   List: FileUploadList,
   Item: FileUploadItem,
 });

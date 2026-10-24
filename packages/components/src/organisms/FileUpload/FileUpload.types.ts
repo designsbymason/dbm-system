@@ -4,6 +4,9 @@ import type { ButtonProps } from "../../atoms/Button";
 /** The size of the field, on the shared scale. It sets the dropzone's padding and the size of the text, icons and buttons in it. */
 export type FileUploadSize = "xs" | "sm" | "md" | "lg" | "xl";
 
+/** The look of the drop area: a dashed edge, a solid one, a quiet fill, or nothing until files are dragged over it. */
+export type FileUploadVariant = "dashed" | "outlined" | "filled" | "ghost";
+
 /** How the field asks for files: a dashed drop area with a button in it, or only a button. */
 export type FileUploadLayout = "dropzone" | "button";
 
@@ -14,7 +17,7 @@ export type FileUploadStatus = "idle" | "uploading" | "done" | "error";
 export type FileUploadSource = "drop" | "picker" | "paste";
 
 /** Why a file was refused. */
-export type FileUploadRejectionReason = "file-type" | "too-large" | "too-small" | "too-many" | "duplicate" | "invalid";
+export type FileUploadRejectionReason = "file-type" | "too-large" | "too-small" | "too-many" | "duplicate" | "folder" | "invalid";
 
 /** One chosen file and, once the caller starts sending it, where that has got to. */
 export interface FileUploadEntry {
@@ -87,6 +90,14 @@ export interface FileUploadLabels {
   tooSmall: (name: string, min: string) => string;
   /** The refusal for a file past `maxFiles`, or past one in a single-file field. Receives the limit as a plain number. @default (name, max) => `${name} was not added: no more than ${max} files` */
   tooMany: (name: string, max: number) => string;
+  /** The refusal for a dropped folder, when folders are not allowed. @default (name) => `${name} is a folder; choose files instead` */
+  folder: (name: string) => string;
+  /**
+   * The summary line above the list once a file has started: how many are sent of how many, and how many failed. Plain
+   * numbers; write them with `formatNumber` if you pass your own.
+   * @default (uploaded, total, failed) => `${uploaded} of ${total} uploaded` + (failed ? `, ${failed} failed` : "")
+   */
+  summary: (uploaded: number, total: number, failed: number) => string;
   /** The refusal for a file that is already in the list, or twice in one batch. @default (name) => `${name} is already added` */
   duplicate: (name: string) => string;
   /** The refusal for a file `validate` turned down. Receives the message it gave. @default (name, message) => `${name}: ${message}` */
@@ -203,6 +214,31 @@ export interface FileUploadProps
    * @default false
    */
   guardPage?: boolean;
+  /**
+   * The look of the drop area: `dashed` (a dashed edge), `outlined` (a solid edge), `filled` (a quiet fill and a light
+   * edge) or `ghost` (no fill and no edge until files are dragged over it). The error and drag edges show in every one.
+   * @default "dashed"
+   */
+  variant?: FileUploadVariant;
+  /**
+   * Whether a dropped folder is read: the files under it join the others and go through the same rules. Folders are
+   * refused, with a message, unless this is set. Only a drop can bring in a folder (the picker chooses files or a folder,
+   * never both).
+   * @default false
+   */
+  allowFolders?: boolean;
+  /**
+   * Shows a small preview of each image in place of the file icon. The preview is read from the file in the browser and
+   * never sent anywhere.
+   * @default false
+   */
+  showPreviews?: boolean;
+  /**
+   * Shows a line above the list once a file has started, such as "2 of 4 uploaded, 1 failed". Left out of a field you
+   * compose yourself unless you draw `FileUpload.Summary`.
+   * @default true
+   */
+  showSummary?: boolean;
   /**
    * How the field asks for files.
    * @default "dropzone"
@@ -328,5 +364,14 @@ export interface FileUploadItemProps extends Omit<ComponentPropsWithoutRef<"li">
   /** Inline styles for the row. */
   style?: CSSProperties;
   /** A test id for the row. */
+  "data-testid"?: string;
+}
+
+export interface FileUploadSummaryProps extends ComponentPropsWithoutRef<"p"> {
+  /** Extra class names for the summary line. */
+  className?: string;
+  /** Inline styles for the summary line. */
+  style?: CSSProperties;
+  /** A test id for the summary line. */
   "data-testid"?: string;
 }

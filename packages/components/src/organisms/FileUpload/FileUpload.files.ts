@@ -1,5 +1,13 @@
 import type { FileUploadRejection, FileUploadRejectionReason, FileUploadValidateResult } from "./FileUpload.types";
 
+const warned = new Set<string>();
+/** A development warning, given once per message and never in production. */
+export function warnOnce(message: string) {
+  if (process.env.NODE_ENV === "production" || warned.has(message)) return;
+  warned.add(message);
+  console.warn(message);
+}
+
 const SIZE_UNITS = ["B", "KB", "MB", "GB"] as const;
 
 /**
@@ -191,4 +199,85 @@ export function runValidate(
   return answers.some(isThenable)
     ? Promise.all(answers).then(collect)
     : collect(answers as { message?: string }[]);
+}
+
+// The pieces of the File System Entries API a dropped folder is read with. Browsers expose them on a drop's items as
+// `webkitGetAsEntry`; the types below are the few members used, since TypeScript's DOM library has them under other names.
+interface DirectoryReaderLike {
+  readEntries: (success: (entries: EntryLike[]) => void, failure: (error: unknown) => void) => void;
+}
+interface EntryLike {
+  isFile: boolean;
+  isDirectory: boolean;
+  name: string;
+  file?: (success: (file: File) => void, failure: (error: unknown) => void) => void;
+  createReader?: () => DirectoryReaderLike;
+}
+type ItemWithEntry = DataTransferItem & { webkitGetAsEntry?: () => EntryLike | null };
+
+/** The most files read from one dropped folder, so a drop of a whole disk's worth of files can't hang the page. */
+export const MAX_FOLDER_FILES = 5000;
+
+/** Every file under a dropped folder, in order, read a batch at a time as the API gives them. */
+export async function readFolder(directory: EntryLike, found: File[] = []): Promise<File[]> {
+  const reader = directory.createReader?.();
+  if (!reader) return found;
+  for (;;) {
+    const batch = await new Promise<EntryLike[]>((resolve, reject) => reader.readEntries(resolve, reject));
+    if (batch.length === 0) return found;
+    for (const entry of batch) {
+      if (found.length >= MAX_FOLDER_FILES) return found;
+      if (entry.isDirectory) await readFolder(entry, found);
+      else if (entry.isFile && entry.file) {
+        const read = entry.file;
+        found.push(await new Promise<File>((resolve, reject) => read.call(entry, resolve, reject)));
+      }
+    }
+  }
+}
+
+export interface DroppedItems {
+  /** Files that can be used as they are. */
+  files: File[];
+  /** Folders that were dropped and will not be read, as empty files carrying their names. */
+  folders: File[];
+  /** One pending read per folder that will be read. Empty unless folders are allowed. */
+  reads: Promise<File[]>[];
+}
+
+/**
+ * What a drop holds, read synchronously (a drop's items are only valid during the event): plain files, folders to refuse,
+ * and, when `readFolders`, a read for each folder. A browser or test that gives no entries falls back to the drop's files.
+ */
+export function readDroppedItems(transfer: DataTransfer, readFolders: boolean): DroppedItems {
+  const dropped: DroppedItems = { files: [], folders: [], reads: [] };
+  const items = Array.from(transfer.items ?? []) as ItemWithEntry[];
+  if (items.length === 0 || !items.some((item) => typeof item.webkitGetAsEntry === "function")) {
+    dropped.files = Array.from(transfer.files ?? []);
+    return dropped;
+  }
+  for (const item of items) {
+    if (item.kind !== "file") continue;
+    const entry = item.webkitGetAsEntry?.() ?? null;
+    if (entry?.isDirectory) {
+      if (readFolders) dropped.reads.push(readFolder(entry));
+      else dropped.folders.push(new File([], entry.name));
+      continue;
+    }
+    const file = item.getAsFile();
+    if (file) dropped.files.push(file);
+  }
+  return dropped;
+}
+
+/** A summary of where the files are: how many are sent of how many, and how many failed. `null` until one has started. */
+export function summarize(
+  entries: ReadonlyArray<{ status?: string }>,
+): { uploaded: number; total: number; failed: number } | null {
+  if (!entries.some((entry) => (entry.status ?? "idle") !== "idle")) return null;
+  return {
+    uploaded: entries.filter((entry) => entry.status === "done").length,
+    total: entries.length,
+    failed: entries.filter((entry) => entry.status === "error").length,
+  };
 }

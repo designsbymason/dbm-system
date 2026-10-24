@@ -6,7 +6,7 @@
 // comment, since a snippet is JSX only. See `07-storybook-and-documentation-standards.md` §4.2.
 
 import { quote } from "../../snippetHelpers";
-import type { FileUploadLayout, FileUploadSize } from "./FileUpload.types";
+import type { FileUploadLayout, FileUploadSize, FileUploadVariant } from "./FileUpload.types";
 
 const stateNote = "{/* You own the files: const [files, setFiles] = useState<FileUploadEntry[]>([]); */}";
 
@@ -17,6 +17,17 @@ export const fileUploadSnippets = {
 
   layouts: `{/* layout: "dropzone" (default) draws a dashed drop area; "button" draws only a button. */}
 <FileUpload aria-label="Photos" layout="button" accept="image/*" value={files} onValueChange={setFiles} />`,
+
+  variants: `{/* variant: "dashed" (default) | "outlined" | "filled" | "ghost". A drag draws a brand edge in every one. */}
+<FileUpload aria-label="Documents" variant="filled" value={files} onValueChange={setFiles} />`,
+
+  previews: `{/* Shows a small picture of each image in place of the file icon. It is read from the file in the browser
+    and is never sent anywhere. */}
+<FileUpload aria-label="Photos" showPreviews accept="image/*" value={files} onValueChange={setFiles} />`,
+
+  folders: `{/* A dropped folder is refused with a message unless allowFolders is set; then the files under it are read and go
+    through the same rules (accept, sizes, maxFiles, duplicates, validate) as any file. Only a drop can bring in a folder. */}
+<FileUpload aria-label="Import" allowFolders accept=".csv,.json" value={files} onValueChange={setFiles} />`,
 
   states: `{/* Write each entry's status and progress yourself as the file is sent:
     status: "idle" | "uploading" | "done" | "error", progress: 0–100 (leave it out if you can't measure it).
@@ -96,8 +107,12 @@ export const fileUploadSnippets = {
 interface PlaygroundArgs {
   size?: FileUploadSize;
   layout?: FileUploadLayout;
+  variant?: FileUploadVariant;
   multiple?: boolean;
   allowDuplicates?: boolean;
+  allowFolders?: boolean;
+  showPreviews?: boolean;
+  showSummary?: boolean;
   accept?: string;
   maxSizeMb?: number;
   maxFiles?: number;
@@ -113,8 +128,12 @@ export function fileUploadPlaygroundSnippet(args: PlaygroundArgs): string {
   const attributes = ['aria-label="Attachments"'];
   if (args.size && args.size !== "md") attributes.push(`size="${args.size}"`);
   if (args.layout && args.layout !== "dropzone") attributes.push(`layout="${args.layout}"`);
+  if (args.variant && args.variant !== "dashed") attributes.push(`variant="${args.variant}"`);
   if (args.multiple === false) attributes.push("multiple={false}");
   if (args.allowDuplicates) attributes.push("allowDuplicates");
+  if (args.allowFolders) attributes.push("allowFolders");
+  if (args.showPreviews) attributes.push("showPreviews");
+  if (args.showSummary === false) attributes.push("showSummary={false}");
   if (args.accept?.trim()) attributes.push(`accept=${quote(args.accept.trim())}`);
   if (typeof args.maxSizeMb === "number" && args.maxSizeMb > 0) attributes.push(`maxSize={${args.maxSizeMb} * 1024 * 1024}`);
   if (args.multiple !== false && typeof args.maxFiles === "number" && args.maxFiles > 0) attributes.push(`maxFiles={${args.maxFiles}}`);

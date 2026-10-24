@@ -9,6 +9,7 @@ import * as FileUploadStories from "./FileUpload.stories";
 import * as FileUploadDropzoneStories from "./FileUploadDropzone.stories";
 import * as FileUploadTriggerStories from "./FileUploadTrigger.stories";
 import * as FileUploadRejectionsStories from "./FileUploadRejections.stories";
+import * as FileUploadSummaryStories from "./FileUploadSummary.stories";
 import * as FileUploadListStories from "./FileUploadList.stories";
 import * as FileUploadItemStories from "./FileUploadItem.stories";
 
@@ -21,6 +22,7 @@ export const rootPropOrder = [
   "acceptLabels",
   "multiple",
   "allowDuplicates",
+  "allowFolders",
   "maxFiles",
   "maxSize",
   "minSize",
@@ -33,7 +35,10 @@ export const rootPropOrder = [
   "hint",
   "triggerIcon",
   "layout",
+  "variant",
   "size",
+  "showPreviews",
+  "showSummary",
   "required",
   "hasError",
   "disabled",
@@ -59,8 +64,12 @@ export const playgroundPropOrder = [
   "maxFiles",
   "multiple",
   "allowDuplicates",
+  "allowFolders",
   "layout",
+  "variant",
   "size",
+  "showPreviews",
+  "showSummary",
   "required",
   "hasError",
   "disabled",
@@ -152,6 +161,14 @@ attribute beyond what's listed here (e.g. `title`, `lang`) — passed straight t
 
 <PropertiesTable of={FileUploadRejectionsStories} order={rejectionsPropOrder} />
 
+### FileUpload.Summary properties
+
+One line above the list once a file has started: how many are sent of how many, and how many failed. Plain text, not a
+live region (each file's own change is announced as it happens). Renders nothing while every file is still waiting.
+Also accepts any other native `<p>` attribute beyond what's listed here (e.g. `title`, `lang`) — passed straight through.
+
+<PropertiesTable of={FileUploadSummaryStories} order={rejectionsPropOrder} />
+
 ### FileUpload.List properties
 
 The list of chosen files, one `FileUpload.Item` each (or whatever your function draws). Renders nothing while it is
@@ -173,6 +190,30 @@ here (e.g. `title`, `lang`) — passed straight through.
 ### All sizes
 
 <Canvas of={FileUploadStories.Sizes} />
+
+### All looks
+
+The drop area is dashed, outlined, filled or ghost (no fill and no edge until files are dragged over it). Every look
+draws a brand edge during a drag and the error edge when `hasError` is set, so a state is never lost to the look. The
+dashed and outlined edges are the strong neutral one; the quieter looks lean on the prompt and the button to say where
+the area is.
+
+<Canvas of={FileUploadStories.Variants} />
+
+### Image previews
+
+With `showPreviews`, an image's row draws a small picture in place of the file icon. It is read from the file in the
+browser and never sent anywhere, and a file the browser can't draw keeps its icon.
+
+<Canvas of={FileUploadStories.Previews} />
+
+### Dropping folders
+
+A dropped folder is refused with a message ("Photos is a folder; choose files instead") unless `allowFolders` is set;
+then the files under it are read and go through the same rules as any file. Only a drop can bring in a folder, so
+the button still chooses files. Drag a folder onto this field from your computer to try it.
+
+<Canvas of={FileUploadStories.Folders} />
 
 ### Dropzone and button layouts
 
@@ -246,6 +287,12 @@ It takes the `Button` atom's props and its own `leadingIcon`, which wins over th
   after it.
 - Write each entry's `status` and `progress` as the file is sent, and its `error` when it fails, so the list tells the
   truth. Offer `onRetry` for failures a second try can fix.
+- Use `showSummary` (on by default) to keep a count in view once files are being sent; turn it off when the page shows
+  progress some other way, or draw `FileUpload.Summary` yourself where you want it.
+- Turn on `allowFolders` for a field that imports a whole tree (a set of documents, a project). Leave it off for a field
+  that wants named files, so a folder is turned away in words.
+- Use `showPreviews` for photos, avatars and screenshots, where seeing the picture is how a person checks they chose the
+  right file.
 - Pass `onCancel` when a request can be stopped: an uploading file's button becomes "cancel" and asks you to abort it.
   Decide what the entry becomes afterwards (remove it, or set it back to `"idle"` or to `"error"`).
 - Give the accepted types readable names with `acceptLabels` when the automatic ones don't say enough (a `.docx`
@@ -268,6 +315,10 @@ It takes the `Button` atom's props and its own `leadingIcon`, which wins over th
   list of links is often better.
 - Don't put the label's text only in the drop area's prompt. The field needs its own name (`aria-label` or a
   `FormField` label).
+- Don't turn on `allowFolders` and then expect a limit on how many folders were dropped: the files are counted, and one
+  drop reads at most 5,000 of them.
+- Don't use `showPreviews` for large lists of big images: each preview is decoded from the original file in the
+  browser. Keep it to the images a person is choosing between.
 - Don't set `allowDuplicates` just to silence the "already added" message: two copies of the same file are almost
   always a mistake, and the message says which one.
 - Don't draw the field with children and leave out `FileUpload.Trigger`: a keyboard or screen-reader user then has no
@@ -317,6 +368,8 @@ It takes the `Button` atom's props and its own `leadingIcon`, which wins over th
   name, which would hide "Choose files" from a speech-recognition user. A label that points at the file input opens the
   picker when it is clicked, and a form that focuses its first invalid control lands there and is handed on to the
   button.
+- **Delete removes a file.** With focus on one of a row's buttons, `Delete` or `Backspace` does what the row's main
+  button does: cancels an upload that can be cancelled, and otherwise removes the file. Nothing else on the page hears it.
 - **Cancel is its own button.** For an uploading file with `onCancel`, the button is named "Cancel uploading
   report.pdf", not "Remove". It is the same button in the same place, so focus stays on it when the upload ends and the
   name goes back to "Remove".
@@ -340,6 +393,7 @@ It takes the `Button` atom's props and its own `leadingIcon`, which wins over th
 |---|---|
 | `Tab` / `Shift+Tab` | Moves between the button and each file's remove (and retry) buttons |
 | `Enter` / `Space` | On the button, opens the file picker; on a file's button, removes or retries |
+| `Delete` / `Backspace` | On one of a file's buttons, removes the file (or cancels it, while it uploads and `onCancel` is set) |
 | `Ctrl/Cmd+V` | With the button focused, adds the files on the clipboard |
 
 ## Code examples
@@ -419,14 +473,16 @@ function Attachments() {
 ## Design tokens used
 
 <TokenRow token="bg.surface" usage="the drop area's and each file row's background" />
+<TokenRow token="bg.neutral-subtle" usage="the filled variant's fill, and the empty tile behind an image preview" />
 <TokenRow token="bg.brand-subtle" usage="the drop area's fill on hover and while files are dragged over it" />
 <TokenRow token="border.neutral-strong" usage="the drop area's dashed edge, which clears the 3:1 floor for a boundary" />
 <TokenRow token="border.brand" usage="the drop area's edge while files are dragged over it" />
 <TokenRow token="border.danger" usage="the drop area's edge when hasError is set, and a failed file's row" />
-<TokenRow token="border.default" usage="each file row's border" />
+<TokenRow token="border.default" usage="each file row's border, the filled variant's edge and an image preview's edge" />
 <TokenRow token="border-width.1" usage="the drop area's and the rows' borders" />
 <TokenRow token="border-width.2" usage="the double edge of an error in forced colours" />
 <TokenRow token="radius.lg" usage="the drop area's corners" />
+<TokenRow token="radius.sm" usage="an image preview's corners" />
 <TokenRow token="radius.md" usage="each file row's corners" />
 <TokenRow token="font-family.primary" usage="the field's typography" />
 <TokenRow token="motion.duration-fast" usage="the drop area's colour change" />
@@ -437,8 +493,10 @@ function Attachments() {
 <TokenRow token="space.3" usage="the gap between the parts of the field; the drop area's padding at xs; the row padding at md" />
 <TokenRow token="space.4" usage="the drop area's padding at sm; the row padding at lg and xl" />
 <TokenRow token="space.6" usage="the drop area's padding at md" />
-<TokenRow token="space.8" usage="the drop area's padding at lg" />
-<TokenRow token="space.10" usage="the drop area's padding at xl" />
+<TokenRow token="space.8" usage="the drop area's padding at lg, and the image preview's size at xs and sm" />
+<TokenRow token="space.10" usage="the drop area's padding at xl, and the image preview's size at md" />
+<TokenRow token="space.12" usage="the image preview's size at lg" />
+<TokenRow token="space.16" usage="the image preview's size at xl" />
 
 ## Related components
 

@@ -9,8 +9,8 @@ import {
   XIcon,
 } from "@dbm-system/icons";
 import { cx, mergeRefs } from "@dbm-system/utils";
-import { Fragment, forwardRef, useMemo, useRef, useState } from "react";
-import type { ClipboardEvent, DragEvent, MouseEvent } from "react";
+import { Fragment, forwardRef, useEffect, useMemo, useRef, useState } from "react";
+import type { ClipboardEvent, DragEvent, KeyboardEvent, MouseEvent } from "react";
 import { Button } from "../../atoms/Button";
 import { FieldError } from "../../atoms/FieldError";
 import { Icon } from "../../atoms/Icon";
@@ -20,7 +20,7 @@ import { ProgressBar } from "../../atoms/ProgressBar";
 import { Text } from "../../atoms/Text";
 import type { TextSize } from "../../atoms/Text/Text.types";
 import styles from "./FileUpload.module.css";
-import { describeAccept } from "./FileUpload.files";
+import { describeAccept, readDroppedItems, summarize, warnOnce } from "./FileUpload.files";
 import type {
   FileUploadDropzoneProps,
   FileUploadItemProps,
@@ -28,7 +28,9 @@ import type {
   FileUploadRejection,
   FileUploadRejectionsProps,
   FileUploadSize,
+  FileUploadSummaryProps,
   FileUploadTriggerProps,
+  FileUploadVariant,
 } from "./FileUpload.types";
 import { useFileUpload } from "./FileUploadContext";
 import type { FileUploadContextValue } from "./FileUploadContext";
@@ -50,6 +52,13 @@ const statusIconSize: Record<FileUploadSize, IconSize> = { xs: "xs", sm: "xs", m
 const barSize: Record<FileUploadSize, "xs" | "sm" | "md"> = { xs: "xs", sm: "xs", md: "sm", lg: "sm", xl: "md" };
 const actionSize: Record<FileUploadSize, "xs" | "sm" | "md"> = { xs: "xs", sm: "xs", md: "sm", lg: "sm", xl: "md" };
 
+const variantClass: Record<FileUploadVariant, string | undefined> = {
+  dashed: undefined,
+  outlined: styles.outlined,
+  filled: styles.filled,
+  ghost: styles.ghost,
+};
+
 const hasFiles = (event: DragEvent) => Array.from(event.dataTransfer?.types ?? []).includes("Files");
 
 /** The sentence for one refusal: each reason in words, with the file's name. */
@@ -68,6 +77,8 @@ function describeRejection(rejection: FileUploadRejection, context: FileUploadCo
         return labels.tooMany(name, context.multiple ? (context.limits.maxFiles ?? 1) : 1);
       case "duplicate":
         return labels.duplicate(name);
+      case "folder":
+        return labels.folder(name);
       default:
         return labels.invalid(name, rejection.message ?? labels.couldNotCheck);
     }
@@ -166,7 +177,22 @@ export const FileUploadDropzone = forwardRef<HTMLDivElement, FileUploadDropzoneP
       event.preventDefault();
       depth.current = 0;
       setDragging(false);
-      context.addFiles(Array.from(event.dataTransfer.files), "drop");
+      if (context.disabled) return;
+      // The drop's items are only valid while this event is handled, so they are read now; a folder's files are read
+      // afterwards, a batch at a time (ADR-0117).
+      const dropped = readDroppedItems(event.dataTransfer, context.allowFolders);
+      const folders = dropped.folders.map((file): FileUploadRejection => ({ file, reasons: ["folder"] }));
+      if (dropped.reads.length === 0) {
+        context.addFiles(dropped.files, "drop", folders);
+        return;
+      }
+      Promise.all(dropped.reads).then(
+        (lists) => context.addFiles([...dropped.files, ...lists.flat()], "drop", folders),
+        (error: unknown) => {
+          warnOnce(`FileUpload: a dropped folder could not be read (${String(error)}); its files were not added.`);
+          context.addFiles(dropped.files, "drop", folders);
+        },
+      );
     };
     const handlePaste = (event: ClipboardEvent<HTMLDivElement>) => {
       onPaste?.(event);
@@ -194,6 +220,7 @@ export const FileUploadDropzone = forwardRef<HTMLDivElement, FileUploadDropzoneP
         className={cx(
           styles.dropzone,
           sizeClass[context.size],
+          variantClass[context.variant],
           dragging && styles.dragging,
           context.hasError && styles.invalid,
           context.disabled && styles.disabled,
@@ -247,6 +274,29 @@ export const FileUploadRejections = forwardRef<HTMLUListElement, FileUploadRejec
 );
 FileUploadRejections.displayName = "FileUpload.Rejections";
 
+/**
+ * One line above the list once a file has started: how many are sent of how many, and how many failed ("2 of 4 uploaded,
+ * 1 failed"). Renders nothing while every file is still waiting. It is plain text, not a live region; each file's own
+ * change is announced as it happens.
+ */
+export const FileUploadSummary = forwardRef<HTMLParagraphElement, FileUploadSummaryProps>(({ className, ...props }, ref) => {
+  const context = useFileUpload("FileUpload.Summary");
+  const summary = summarize(context.entries);
+  if (!summary) return null;
+  return (
+    <Text
+      {...props}
+      ref={ref}
+      size={hintTextSize[context.size]}
+      color="secondary"
+      className={cx(styles.summary, className)}
+    >
+      {context.labels.summary(summary.uploaded, summary.total, summary.failed)}
+    </Text>
+  );
+});
+FileUploadSummary.displayName = "FileUpload.Summary";
+
 /** The list of chosen files, one `FileUpload.Item` each (or whatever you draw for an entry). Renders nothing while it is empty. */
 export const FileUploadList = forwardRef<HTMLUListElement, FileUploadListProps>(
   ({ children, className, ...props }, ref) => {
@@ -270,26 +320,74 @@ export const FileUploadList = forwardRef<HTMLUListElement, FileUploadListProps>(
 );
 FileUploadList.displayName = "FileUpload.List";
 
+/** A temporary address for a file the browser can draw, or `null` while there is none; revoked when the file changes or the row goes. */
+function useObjectUrl(file: File | null): string | null {
+  const [url, setUrl] = useState<string | null>(null);
+  useEffect(() => {
+    if (!file || typeof URL === "undefined" || typeof URL.createObjectURL !== "function") return undefined;
+    let made: string;
+    try {
+      made = URL.createObjectURL(file);
+    } catch {
+      // Some environments have the function and can't use it on a browser's `File` (a test DOM); no preview is the
+      // right answer there, and the icon already stands in.
+      return undefined;
+    }
+    // Held in state because it only exists after the first commit (nothing is made while rendering, on the server too).
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- the address is created by an effect and must be drawn
+    setUrl(made);
+    return () => {
+      URL.revokeObjectURL(made);
+      setUrl(null);
+    };
+  }, [file]);
+  return url;
+}
+
 /** One chosen file: an icon for its kind, its name and size, where it has got to, and its remove (and retry) button. */
-export const FileUploadItem = forwardRef<HTMLLIElement, FileUploadItemProps>(({ entry, className, ...props }, ref) => {
+export const FileUploadItem = forwardRef<HTMLLIElement, FileUploadItemProps>(({ entry, className, onKeyDown, ...props }, ref) => {
   const context = useFileUpload("FileUpload.Item");
   const { labels, size } = context;
   const status = entry.status ?? "idle";
   const name = entry.file.name;
   const isImage = entry.file.type.startsWith("image/");
   const sizeText = context.formatSize(entry.file.size);
+  const [previewFailed, setPreviewFailed] = useState(false);
+  const previewUrl = useObjectUrl(context.showPreviews && isImage && !previewFailed ? entry.file : null);
   const percent = entry.progress === undefined ? undefined : Math.round(Math.min(Math.max(entry.progress, 0), 100));
 
   return (
-    // eslint-disable-next-line jsx-a11y/no-redundant-roles -- Safari with VoiceOver drops list semantics otherwise
+    // The row takes no key of its own: it hears the Delete key from the buttons inside it, which are the focus.
+    // eslint-disable-next-line jsx-a11y/no-redundant-roles, jsx-a11y/no-noninteractive-element-interactions -- Safari with VoiceOver drops list semantics otherwise
     <li
       {...props}
       ref={ref}
       role="listitem"
       data-status={status}
+      onKeyDown={(event: KeyboardEvent<HTMLLIElement>) => {
+        onKeyDown?.(event);
+        // Delete (or Backspace, which is the delete key on many keyboards) on one of the row's buttons does what the
+        // row's own button does: cancels an upload that can be cancelled, and otherwise removes the file.
+        if (event.defaultPrevented || event.altKey || event.ctrlKey || event.metaKey || event.shiftKey) return;
+        if (event.key !== "Delete" && event.key !== "Backspace") return;
+        if (!(event.target instanceof Element) || event.target.tagName !== "BUTTON") return;
+        event.preventDefault();
+        if (status === "uploading" && context.canCancel) context.cancel(entry);
+        else context.remove(entry);
+      }}
       className={cx(styles.item, sizeClass[size], status === "error" && styles.itemError, context.disabled && styles.disabled, className)}
     >
-      <Icon icon={isImage ? ImageIcon : FileIcon} size={entryIconSize[size]} tone="secondary" className={styles.entryIcon} />
+      {previewUrl ? (
+        <img
+          src={previewUrl}
+          alt=""
+          decoding="async"
+          className={styles.thumbnail}
+          onError={() => setPreviewFailed(true)}
+        />
+      ) : (
+        <Icon icon={isImage ? ImageIcon : FileIcon} size={entryIconSize[size]} tone="secondary" className={styles.entryIcon} />
+      )}
       <div className={styles.entryBody}>
         <Text size={promptTextSize[size]} weight="medium" wrap="nowrap" dir="auto" className={styles.entryName}>
           {name}

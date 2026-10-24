@@ -39,6 +39,38 @@ afterEach(() => {
   vi.restoreAllMocks();
 });
 
+// Stand-ins for what a browser hands a drop: entries that are files or folders, read a batch at a time.
+type FakeEntry = Record<string, unknown>;
+const fileEntry = (file: File): FakeEntry => ({
+  isFile: true,
+  isDirectory: false,
+  name: file.name,
+  file: (success: (file: File) => void) => success(file),
+});
+const folderEntry = (name: string, children: FakeEntry[], batch = 2): FakeEntry => ({
+  isFile: false,
+  isDirectory: true,
+  name,
+  createReader: () => {
+    let read = 0;
+    return {
+      readEntries: (success: (entries: FakeEntry[]) => void) => {
+        const next = children.slice(read, read + batch);
+        read += batch;
+        success(next);
+      },
+    };
+  },
+});
+const dropOf = (...dropped: Array<{ entry: FakeEntry; file?: File }>) => ({
+  dataTransfer: {
+    types: ["Files"],
+    files: [],
+    dropEffect: "none",
+    items: dropped.map(({ entry, file }) => ({ kind: "file", webkitGetAsEntry: () => entry, getAsFile: () => file ?? null })),
+  },
+});
+
 describe("FileUpload", () => {
   describe("structure and naming", () => {
     it("is a named group holding a drop area, a button, a hint and nothing else", () => {
@@ -490,6 +522,62 @@ describe("FileUpload", () => {
     });
   });
 
+  describe("folders", () => {
+    it("refuses a dropped folder in words, and still adds the files dropped with it", () => {
+      const onFilesRejected = vi.fn();
+      const plain = makeFile("a.txt");
+      render(<FileUpload aria-label="A" onFilesRejected={onFilesRejected} />);
+      fireEvent.drop(dropzone(), dropOf({ entry: folderEntry("Photos", []) }, { entry: fileEntry(plain), file: plain }));
+      expect(screen.getByRole("alert")).toHaveTextContent("Photos is a folder; choose files instead");
+      expect(onFilesRejected).toHaveBeenCalledWith([expect.objectContaining({ reasons: ["folder"] })]);
+      expect(screen.getByRole("list", { name: "Selected files" })).toHaveTextContent("a.txt");
+    });
+
+    it("reads the files under a folder, through every level and every batch, when folders are allowed", async () => {
+      const onFilesAdded = vi.fn();
+      const tree = folderEntry("Photos", [
+        fileEntry(makeFile("one.png", 5, "image/png")),
+        fileEntry(makeFile("two.png", 5, "image/png")),
+        folderEntry("Trips", [fileEntry(makeFile("three.png", 5, "image/png")), fileEntry(makeFile("four.png", 5, "image/png")), fileEntry(makeFile("five.png", 5, "image/png"))]),
+      ]);
+      render(<FileUpload aria-label="A" allowFolders onFilesAdded={onFilesAdded} />);
+      fireEvent.drop(dropzone(), dropOf({ entry: tree }));
+      await waitFor(() => expect(onFilesAdded).toHaveBeenCalled());
+      const [added, source] = onFilesAdded.mock.calls[0] as [File[], string];
+      expect(added.map((file) => file.name)).toEqual(["one.png", "two.png", "three.png", "four.png", "five.png"]);
+      expect(source).toBe("drop");
+    });
+
+    it("applies the rules to a folder's files, one by one", async () => {
+      const tree = folderEntry("Docs", [fileEntry(makeFile("a.pdf", 5, "application/pdf")), fileEntry(makeFile("b.exe", 5, "application/x-msdownload"))]);
+      render(<FileUpload aria-label="A" allowFolders accept=".pdf" />);
+      fireEvent.drop(dropzone(), dropOf({ entry: tree }));
+      await waitFor(() => expect(screen.getByRole("list", { name: "Selected files" })).toHaveTextContent("a.pdf"));
+      expect(screen.getByRole("alert")).toHaveTextContent("b.exe is not an accepted file type");
+    });
+
+    it("warns and adds the other files when a folder can't be read", async () => {
+      const plain = makeFile("a.txt");
+      const broken = {
+        isFile: false,
+        isDirectory: true,
+        name: "Locked",
+        createReader: () => ({ readEntries: (_ok: unknown, fail: (error: unknown) => void) => fail(new Error("denied")) }),
+      };
+      render(<FileUpload aria-label="A" allowFolders />);
+      fireEvent.drop(dropzone(), dropOf({ entry: broken }, { entry: fileEntry(plain), file: plain }));
+      await waitFor(() => expect(screen.getByText("a.txt")).toBeInTheDocument());
+      expect(console.warn).toHaveBeenCalledWith(expect.stringContaining("a dropped folder could not be read"));
+    });
+
+    it("leaves a drop on a disabled field unread", () => {
+      const read = vi.fn(() => fileEntry(makeFile("a.txt")));
+      render(<FileUpload aria-label="A" disabled />);
+      fireEvent.drop(dropzone(), { dataTransfer: { types: ["Files"], files: [], items: [{ kind: "file", webkitGetAsEntry: read, getAsFile: () => null }] } });
+      expect(read).not.toHaveBeenCalled();
+    });
+  });
+
   describe("controlled and uncontrolled", () => {
     it("keeps what it was given until the value changes, and asks for the change", () => {
       const onValueChange = vi.fn();
@@ -623,6 +711,171 @@ describe("FileUpload", () => {
     it("writes its name from the labels", () => {
       render(<FileUpload aria-label="A" value={[uploading()]} onCancel={() => undefined} labels={{ cancel: (name) => `Stop ${name}` }} />);
       expect(screen.getByRole("button", { name: "Stop a.txt" })).toBeInTheDocument();
+    });
+  });
+
+  describe("the summary", () => {
+    const start = (...patches: Array<Partial<FileUploadEntry>>) => patches.map((patch, index) => entryOf(makeFile(`f${index}.txt`), patch));
+
+    it("says nothing while every file is waiting", () => {
+      render(<FileUpload aria-label="A" defaultValue={start({}, {})} />);
+      expect(screen.queryByText(/uploaded/)).toBeNull();
+    });
+
+    it("counts the files sent, and the ones that failed", () => {
+      const { rerender } = render(<FileUpload aria-label="A" value={start({ status: "done" }, { status: "uploading" }, {})} />);
+      expect(screen.getByText("1 of 3 uploaded")).toBeInTheDocument();
+      rerender(<FileUpload aria-label="A" value={start({ status: "done" }, { status: "error" }, { status: "error" })} />);
+      expect(screen.getByText("1 of 3 uploaded, 2 failed")).toBeInTheDocument();
+    });
+
+    it("can be turned off, written in your words, and drawn where you like", () => {
+      const entries = start({ status: "done" });
+      const { rerender } = render(<FileUpload aria-label="A" value={entries} showSummary={false} />);
+      expect(screen.queryByText(/uploaded/)).toBeNull();
+      rerender(<FileUpload aria-label="A" value={entries} labels={{ summary: (done, total) => `${done}/${total}` }} />);
+      expect(screen.getByText("1/1")).toBeInTheDocument();
+      rerender(
+        <FileUpload aria-label="A" value={entries}>
+          <FileUpload.Summary data-testid="mine" />
+        </FileUpload>,
+      );
+      expect(screen.getByTestId("mine")).toHaveTextContent("1 of 1 uploaded");
+    });
+
+    it("is plain text, not a live region", () => {
+      render(<FileUpload aria-label="A" value={start({ status: "done" })} />);
+      expect(screen.getByText("1 of 1 uploaded").closest("[aria-live], [role=status], [role=alert]")).toBeNull();
+    });
+  });
+
+  describe("previews", () => {
+    const image = () => entryOf(makeFile("photo.png", 100, "image/png"));
+
+    const original = { create: URL.createObjectURL, revoke: URL.revokeObjectURL };
+
+    function withObjectUrls() {
+      const create = vi.fn(() => "blob:preview");
+      const revoke = vi.fn();
+      Object.assign(URL, { createObjectURL: create, revokeObjectURL: revoke });
+      return { create, revoke };
+    }
+    afterEach(() => {
+      Object.assign(URL, { createObjectURL: original.create, revokeObjectURL: original.revoke });
+    });
+
+    it("draws an icon, and never reads the file, unless previews are asked for", () => {
+      const { create } = withObjectUrls();
+      render(<FileUpload aria-label="A" defaultValue={[image()]} />);
+      expect(document.querySelector("img")).toBeNull();
+      expect(create).not.toHaveBeenCalled();
+    });
+
+    it("draws a small picture in place of the icon for an image, and only for an image", async () => {
+      withObjectUrls();
+      render(<FileUpload aria-label="A" showPreviews defaultValue={[image(), entryOf(makeFile("notes.txt"))]} />);
+      await waitFor(() => expect(document.querySelectorAll("img")).toHaveLength(1));
+      expect(document.querySelector("img")).toHaveAttribute("src", "blob:preview");
+      expect(document.querySelector("img")).toHaveAttribute("alt", "");
+    });
+
+    it("lets go of the address when the row goes", async () => {
+      const { revoke } = withObjectUrls();
+      const { unmount } = render(<FileUpload aria-label="A" showPreviews defaultValue={[image()]} />);
+      await waitFor(() => expect(document.querySelector("img")).not.toBeNull());
+      unmount();
+      expect(revoke).toHaveBeenCalledWith("blob:preview");
+    });
+
+    it("falls back to the icon when the picture can't be drawn", async () => {
+      withObjectUrls();
+      render(<FileUpload aria-label="A" showPreviews defaultValue={[image()]} />);
+      await waitFor(() => expect(document.querySelector("img")).not.toBeNull());
+      fireEvent.error(document.querySelector("img") as HTMLImageElement);
+      await waitFor(() => expect(document.querySelector("img")).toBeNull());
+    });
+
+    it("works where the browser can't make an address, or can't make one for this file", () => {
+      Object.assign(URL, { createObjectURL: undefined });
+      const { unmount } = render(<FileUpload aria-label="A" showPreviews defaultValue={[image()]} />);
+      expect(document.querySelector("img")).toBeNull();
+      unmount();
+      Object.assign(URL, {
+        createObjectURL: () => {
+          throw new TypeError("not a blob");
+        },
+      });
+      render(<FileUpload aria-label="A" showPreviews defaultValue={[image()]} />);
+      expect(document.querySelector("img")).toBeNull();
+      expect(screen.getByText("photo.png")).toBeInTheDocument();
+    });
+  });
+
+  describe("the Delete key", () => {
+    const two = () => [entryOf(makeFile("a.txt")), entryOf(makeFile("b.txt"))];
+
+    it("removes a file from one of its row's buttons, and moves focus on", async () => {
+      const user = userEvent.setup();
+      render(<FileUpload aria-label="A" defaultValue={two()} />);
+      screen.getByRole("button", { name: "Remove a.txt" }).focus();
+      await user.keyboard("{Delete}");
+      expect(screen.queryByText("a.txt")).toBeNull();
+      expect(screen.getByRole("button", { name: "Remove b.txt" })).toHaveFocus();
+    });
+
+    it("does the same for Backspace, and nothing with a modifier", async () => {
+      const user = userEvent.setup();
+      render(<FileUpload aria-label="A" defaultValue={two()} />);
+      screen.getByRole("button", { name: "Remove a.txt" }).focus();
+      await user.keyboard("{Control>}{Delete}{/Control}");
+      expect(screen.getByText("a.txt")).toBeInTheDocument();
+      await user.keyboard("{Backspace}");
+      expect(screen.queryByText("a.txt")).toBeNull();
+    });
+
+    it("cancels an upload that can be cancelled instead of removing it", async () => {
+      const user = userEvent.setup();
+      const onCancel = vi.fn();
+      const onRemove = vi.fn();
+      const entry = entryOf(makeFile("a.txt"), { status: "uploading" });
+      render(<FileUpload aria-label="A" value={[entry]} onCancel={onCancel} onRemove={onRemove} onValueChange={() => undefined} />);
+      screen.getByRole("button", { name: "Cancel uploading a.txt" }).focus();
+      await user.keyboard("{Delete}");
+      expect(onCancel).toHaveBeenCalledWith(entry);
+      expect(onRemove).not.toHaveBeenCalled();
+    });
+
+    it("is not heard from the page around the row, and a handler of your own can keep it", async () => {
+      const user = userEvent.setup();
+      render(
+        <FileUpload aria-label="A">
+          <FileUpload.Dropzone>
+            <FileUpload.Trigger />
+          </FileUpload.Dropzone>
+          <FileUpload.List>{(entry) => <FileUpload.Item entry={entry} onKeyDown={(event) => event.preventDefault()} />}</FileUpload.List>
+        </FileUpload>,
+      );
+      drop([makeFile("a.txt")]);
+      screen.getByRole("button", { name: "Remove a.txt" }).focus();
+      await user.keyboard("{Delete}");
+      expect(screen.getByText("a.txt")).toBeInTheDocument();
+      screen.getByRole("button", { name: "Choose files" }).focus();
+      await user.keyboard("{Delete}");
+      expect(screen.getByText("a.txt")).toBeInTheDocument();
+    });
+  });
+
+  describe("variants", () => {
+    it("takes the dashed look unless it is given another, and the others each have their own", () => {
+      const { rerender } = render(<FileUpload aria-label="A" />);
+      const classes = () => dropzone().className;
+      const base = classes();
+      for (const [variant, pattern] of [["outlined", /outlined/], ["filled", /filled/], ["ghost", /ghost/]] as const) {
+        rerender(<FileUpload aria-label="A" variant={variant} />);
+        expect(classes()).toMatch(pattern);
+      }
+      rerender(<FileUpload aria-label="A" variant="dashed" />);
+      expect(classes()).toBe(base);
     });
   });
 

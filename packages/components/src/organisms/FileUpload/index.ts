@@ -13,6 +13,8 @@ export type {
   FileUploadSize,
   FileUploadSource,
   FileUploadStatus,
+  FileUploadSummaryProps,
   FileUploadTriggerProps,
   FileUploadValidateResult,
+  FileUploadVariant,
 } from "./FileUpload.types";

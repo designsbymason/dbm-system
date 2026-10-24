@@ -2,8 +2,8 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 import { expect, fireEvent, waitFor, within } from "storybook/test";
 import { send } from "../../molecules/CodeBlock/browserProtocol";
 import { FileUpload } from "./FileUpload";
-import type { FileUploadSize } from "./FileUpload.types";
-import { demoEntries, demoFile } from "./FileUploadStoryKit";
+import type { FileUploadSize, FileUploadVariant } from "./FileUpload.types";
+import { demoEntries, demoFile, demoImage } from "./FileUploadStoryKit";
 
 // Real-browser checks for what jsdom can't evaluate: a real `DataTransfer` and `FormData`, the constraint a form
 // enforces, the computed look of the drop area while dragging and in forced colours, target sizes, a phone's width and
@@ -244,5 +244,80 @@ export const PageGuard: Story = {
     const text = new DataTransfer();
     text.setData("text/plain", "hello");
     await expect(dispatchDrag(document.body, "drop", text).defaultPrevented).toBe(false);
+  },
+};
+
+const allVariants: FileUploadVariant[] = ["dashed", "outlined", "filled", "ghost"];
+
+export const VariantLooks: Story = {
+  name: "Each look draws its own edge and fill, and a drag draws over any of them",
+  render: () =>
+    frame(
+      <div style={{ display: "flex", flexDirection: "column", gap: "var(--dbm-space-4)" }}>
+        {allVariants.map((variant) => (
+          <FileUpload key={variant} aria-label={variant} variant={variant} size="xs" />
+        ))}
+      </div>,
+    ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const area = (variant: FileUploadVariant) => areaOf(canvas.getByRole("group", { name: variant }));
+    const look = (variant: FileUploadVariant) => getComputedStyle(area(variant));
+    const clear = "rgba(0, 0, 0, 0)";
+    await expect(look("dashed").borderTopStyle).toBe("dashed");
+    await expect(look("outlined").borderTopStyle).toBe("solid");
+    await expect(look("outlined").borderTopColor).toBe(look("dashed").borderTopColor);
+    await expect(look("filled").borderTopStyle).toBe("solid");
+    await expect(look("filled").borderTopColor).not.toBe(look("dashed").borderTopColor);
+    await expect(look("filled").backgroundColor).not.toBe(look("dashed").backgroundColor);
+    // The ghost has neither fill nor edge at rest.
+    await expect(look("ghost").borderTopColor).toBe(clear);
+    await expect(look("ghost").backgroundColor).toBe(clear);
+    // Every look keeps the same box, so a variant never moves what is around it.
+    const heights = allVariants.map((variant) => area(variant).getBoundingClientRect().height);
+    await expect(new Set(heights).size).toBe(1);
+    // A drag gives the ghost an edge.
+    dispatchDrag(area("ghost"), "dragenter", transferOf(real("a.txt")));
+    await waitFor(() => expect(area("ghost")).toHaveAttribute("data-drag-active", "true"));
+    await new Promise((resolve) => setTimeout(resolve, 300));
+    await expect(look("ghost").borderTopColor).not.toBe(clear);
+  },
+};
+
+export const GhostInForcedColours: Story = {
+  name: "Forced colours: the ghost's edge is the page's colour, not a drawn line",
+  render: () => frame(<FileUpload aria-label="Ghost" variant="ghost" size="xs" />),
+  play: async ({ canvasElement }) => {
+    const emulate = (value: "active" | "none") => send("Emulation.setEmulatedMedia", { features: [{ name: "forced-colors", value }] });
+    await emulate("active");
+    try {
+      await new Promise((resolve) => setTimeout(resolve, 300));
+      const area = areaOf(within(canvasElement).getByRole("group", { name: "Ghost" }));
+      await expect(getComputedStyle(area).borderTopColor).toBe(`rgb(${rgbOf("Canvas").join(", ")})`);
+    } finally {
+      await emulate("none");
+    }
+  },
+};
+
+export const RealPreviews: Story = {
+  name: "Previews draw the real picture at the size of the icon tile, only when asked for",
+  render: () =>
+    frame(
+      <div style={{ display: "flex", flexDirection: "column", gap: "var(--dbm-space-4)" }}>
+        <FileUpload aria-label="With" showPreviews layout="button" defaultValue={[{ id: "a", file: demoImage("sunset.svg", "#f59e0b", "#db2777"), status: "idle" }]} />
+        <FileUpload aria-label="Without" layout="button" defaultValue={[{ id: "b", file: demoImage("lagoon.svg", "#06b6d4", "#4f46e5"), status: "idle" }]} />
+      </div>,
+    ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const withPreviews = canvas.getByRole("group", { name: "With" });
+    await waitFor(() => expect(withPreviews.querySelector("img")).not.toBeNull());
+    const picture = withPreviews.querySelector("img") as HTMLImageElement;
+    await waitFor(() => expect(picture.complete && picture.naturalWidth > 0).toBe(true));
+    const box = picture.getBoundingClientRect();
+    await expect(box.width).toBe(box.height);
+    await expect(box.width).toBeGreaterThanOrEqual(32);
+    await expect(canvas.getByRole("group", { name: "Without" }).querySelector("img")).toBeNull();
   },
 };

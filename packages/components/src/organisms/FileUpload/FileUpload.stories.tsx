@@ -7,16 +7,20 @@ import { FormField } from "../../molecules/FormField";
 import { Form } from "../Form";
 import { FileUpload } from "./FileUpload";
 import { fileUploadPlaygroundSnippet, fileUploadSnippets } from "./FileUpload.snippets";
-import type { FileUploadLayout, FileUploadSize } from "./FileUpload.types";
-import { SimulatedFileUpload, demoEntries, demoFile } from "./FileUploadStoryKit";
+import type { FileUploadLayout, FileUploadSize, FileUploadVariant } from "./FileUpload.types";
+import { SimulatedFileUpload, demoEntries, demoFile, demoImage } from "./FileUploadStoryKit";
 
 // `FileUpload`'s own root props get hand-written argTypes here (this meta has no `component`, so docgen doesn't supply
 // them); each part gets its own Properties table through a hidden docs-only stories file (ADR-0013).
 interface PlaygroundArgs {
   size: FileUploadSize;
   layout: FileUploadLayout;
+  variant: FileUploadVariant;
   multiple: boolean;
   allowDuplicates: boolean;
+  allowFolders: boolean;
+  showPreviews: boolean;
+  showSummary: boolean;
   accept: string;
   maxSizeMb: number;
   maxFiles: number;
@@ -59,6 +63,7 @@ interface DocumentedProps {
 }
 
 const allSizes: FileUploadSize[] = ["xs", "sm", "md", "lg", "xl"];
+const allVariants: FileUploadVariant[] = ["dashed", "outlined", "filled", "ghost"];
 const frame: CSSProperties = { maxInlineSize: "36rem", marginInline: "auto" };
 const stack: CSSProperties = { display: "flex", flexDirection: "column", gap: "var(--dbm-space-6)" };
 const labelled: CSSProperties = { display: "flex", flexDirection: "column", gap: "var(--dbm-space-2)" };
@@ -68,8 +73,12 @@ const labelled: CSSProperties = { display: "flex", flexDirection: "column", gap:
 const noControls: Record<keyof PlaygroundArgs, { control: false }> = {
   size: { control: false },
   layout: { control: false },
+  variant: { control: false },
   multiple: { control: false },
   allowDuplicates: { control: false },
+  allowFolders: { control: false },
+  showPreviews: { control: false },
+  showSummary: { control: false },
   accept: { control: false },
   maxSizeMb: { control: false },
   maxFiles: { control: false },
@@ -179,6 +188,30 @@ const meta: Meta<PlaygroundArgs & DocumentedProps> = {
         "Stops the browser opening a file that is dropped anywhere on the page outside the drop area. Attaches a window listener while mounted, so it is off unless you want it.",
       table: { defaultValue: { summary: "false" } },
     },
+    variant: {
+      control: "select",
+      options: ["dashed", "outlined", "filled", "ghost"],
+      description:
+        "The look of the drop area: dashed (a dashed edge), outlined (a solid edge), filled (a quiet fill and a light edge) or ghost (no fill and no edge until files are dragged over it). The error and drag edges show in every one.",
+      table: { defaultValue: { summary: "dashed" } },
+    },
+    allowFolders: {
+      control: "boolean",
+      description:
+        "Whether a dropped folder is read: the files under it join the others and go through the same rules. Folders are refused, with a message, unless this is set. Only a drop can bring in a folder.",
+      table: { defaultValue: { summary: "false" } },
+    },
+    showPreviews: {
+      control: "boolean",
+      description:
+        "Shows a small preview of each image in place of the file icon. The preview is read from the file in the browser and never sent anywhere.",
+      table: { defaultValue: { summary: "false" } },
+    },
+    showSummary: {
+      control: "boolean",
+      description: "Shows a line above the list once a file has started, such as 2 of 4 uploaded, 1 failed.",
+      table: { defaultValue: { summary: "true" } },
+    },
     layout: {
       control: "select",
       options: ["dropzone", "button"],
@@ -258,8 +291,12 @@ const meta: Meta<PlaygroundArgs & DocumentedProps> = {
   args: {
     size: "md",
     layout: "dropzone",
+    variant: "dashed",
     multiple: true,
     allowDuplicates: false,
+    allowFolders: false,
+    showPreviews: false,
+    showSummary: true,
     accept: "",
     maxSizeMb: 0,
     maxFiles: 0,
@@ -275,8 +312,12 @@ const meta: Meta<PlaygroundArgs & DocumentedProps> = {
         aria-label="Attachments"
         size={args.size}
         layout={args.layout}
+        variant={args.variant}
         multiple={args.multiple}
         allowDuplicates={args.allowDuplicates}
+        allowFolders={args.allowFolders}
+        showPreviews={args.showPreviews}
+        showSummary={args.showSummary}
         accept={args.accept || undefined}
         maxSize={args.maxSizeMb > 0 ? args.maxSizeMb * 1024 * 1024 : undefined}
         maxFiles={args.maxFiles > 0 ? args.maxFiles : undefined}
@@ -331,6 +372,54 @@ export const Sizes: Story = {
           />
         </div>
       ))}
+    </div>
+  ),
+};
+
+export const Variants: Story = {
+  name: "All looks",
+  argTypes: noControls,
+  parameters: { docs: { source: { code: fileUploadSnippets.variants } } },
+  render: () => (
+    <div style={{ ...frame, ...stack }}>
+      {allVariants.map((variant) => (
+        <div key={variant} style={labelled}>
+          <Text size="sm" weight="semibold">
+            variant=&quot;{variant}&quot;
+          </Text>
+          <FileUpload aria-label={`Documents, ${variant}`} variant={variant} accept=".pdf" size="sm" />
+        </div>
+      ))}
+    </div>
+  ),
+};
+
+export const Previews: Story = {
+  name: "Image previews",
+  argTypes: noControls,
+  parameters: { docs: { source: { code: fileUploadSnippets.previews } } },
+  render: () => (
+    <div style={frame}>
+      <FileUpload
+        aria-label="Photos"
+        showPreviews
+        defaultValue={[
+          { id: "sunset", file: demoImage("sunset.svg", "#f59e0b", "#db2777"), status: "done" },
+          { id: "lagoon", file: demoImage("lagoon.svg", "#06b6d4", "#4f46e5", 1_800_000), status: "uploading", progress: 45 },
+          { id: "notes", file: demoFile("notes.txt", 820, "text/plain"), status: "idle" },
+        ]}
+      />
+    </div>
+  ),
+};
+
+export const Folders: Story = {
+  name: "Dropping folders",
+  argTypes: noControls,
+  parameters: { docs: { source: { code: fileUploadSnippets.folders } } },
+  render: () => (
+    <div style={frame}>
+      <SimulatedFileUpload aria-label="Import" allowFolders accept=".csv,.json" />
     </div>
   ),
 };
