@@ -242,6 +242,14 @@ ${menu(
   </Dialog.Content>
 </Dialog>`,
 
+  sheet: `{/* A sheet is the menu drawn across the bottom of the screen, with taller rows and the page dimmed behind it: the shape
+    a touch screen expects. It is the same menu, with the same keys and parts. A submenu covers it under a Back row. */}
+${menu('presentation="sheet"', "", basicBody)}`,
+
+  responsivePresentation: `{/* presentation takes a mobile-first map, like side: a sheet on a phone and the floating menu from md up. labels
+    sets the Back row's text in a submenu's sheet. */}
+${menu('presentation={{ base: "sheet", md: "menu" }}', "", basicBody)}`,
+
   rightToLeft: `{/* dir is passed to the menu and its submenus: they open on the start side and the keys swap. */}
 ${menu("dir=\"rtl\"", "", basicBody)}`,
 } as const;
@@ -251,6 +259,7 @@ export interface MenuPlaygroundSnippetArgs {
   defaultOpen?: boolean;
   modal?: boolean;
   dir?: "ltr" | "rtl";
+  presentation?: "menu" | "sheet";
   size?: MenuSize;
   side?: MenuSide;
   align?: MenuAlign;
@@ -271,6 +280,7 @@ export function menuPlaygroundSnippet(args: MenuPlaygroundSnippetArgs): string {
   // `modal` defaults to true, so it only needs writing when it's off.
   if (args.modal === false) rootAttributes.push("modal={false}");
   if (args.dir && args.dir !== "ltr") rootAttributes.push(`dir="${args.dir}"`);
+  if (args.presentation && args.presentation !== "menu") rootAttributes.push(`presentation="${args.presentation}"`);
 
   const contentAttributes: string[] = [];
   if (args.size && args.size !== "md") contentAttributes.push(`size="${args.size}"`);

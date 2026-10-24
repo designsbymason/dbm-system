@@ -30,9 +30,10 @@ import { DataTableContext, useControllableValue, type DataTableState } from "./D
 import styles from "./DataTable.module.css";
 import { clampPage, pageCountOf } from "./DataTable.page";
 import { DataTableColumnMenu, DataTablePagination, DataTableSelection, DataTableToolbar } from "./DataTable.parts";
+import { DataTableRowMenu } from "./DataTable.rowMenu";
 import { headerState, idsBetween, setChosen } from "./DataTable.selection";
 import { directionOf, nextDirection, sortRows } from "./DataTable.sort";
-import type { DataTableColumn, DataTableLabels, DataTableProps, DataTableSort } from "./DataTable.types";
+import type { DataTableColumn, DataTableLabels, DataTableProps, DataTableRowMenuContext, DataTableSort } from "./DataTable.types";
 
 /** Above this many rows an unpaged table with a `maxHeight` draws only the ones in view. */
 const WINDOW_THRESHOLD = 100;
@@ -67,6 +68,7 @@ const makeLabels = (formatNumber: (value: number) => string): DataTableLabels =>
   row: (position) => `Row ${formatNumber(position)}`,
   selectColumn: "Select",
   actionsColumn: "Actions",
+  rowMenu: (rowLabel) => `Actions for ${rowLabel}`,
   expandRow: (rowLabel) => `Expand ${rowLabel}`,
   collapseRow: (rowLabel) => `Collapse ${rowLabel}`,
   expandColumn: "Details",
@@ -166,6 +168,8 @@ function DataTableInner<TRow>(props: DataTableProps<TRow>, ref: ForwardedRef<HTM
     loadingRows = 5,
     emptyState,
     rowActions,
+    rowContextMenu,
+    rowContextMenuKeys,
     onRowClick,
     resizable = false,
     columnWidths: columnWidthsProp,
@@ -398,6 +402,28 @@ function DataTableInner<TRow>(props: DataTableProps<TRow>, ref: ForwardedRef<HTM
     lastToggled.current = entry.id;
   };
 
+  // A press on a row that isn't chosen chooses it alone first, so a row's menu is about what is marked; a press on a chosen
+  // row keeps the selection, and the menu is about all of it.
+  const chooseForMenu = (entry: Entry<TRow>) => {
+    if (!selecting || !selectable(entry.row) || allMatching || selectedSet.has(entry.id)) return;
+    setSelection([entry.id]);
+    lastToggled.current = entry.id;
+  };
+  const menuContext = (entry: Entry<TRow>): DataTableRowMenuContext<TRow> => {
+    const part = allMatching ? selectable(entry.row) : selectedSet.has(entry.id);
+    const rows = part
+      ? ordered.filter((candidate) => (allMatching ? selectable(candidate.row) : selectedSet.has(candidate.id))).map((candidate) => candidate.row)
+      : [entry.row];
+    return {
+      row: entry.row,
+      index: entry.index,
+      id: entry.id,
+      rows,
+      count: part && allMatching ? (selectableCount ?? rows.length) : rows.length,
+      allSelected: part && allMatching,
+    };
+  };
+
   const toggleExpanded = (id: string) => {
     if (expandedSet.has(id)) setExpanded(expanded.filter((candidate) => candidate !== id));
     else setExpanded(expandMode === "single" ? [id] : [...expanded, id]);
@@ -529,8 +555,7 @@ function DataTableInner<TRow>(props: DataTableProps<TRow>, ref: ForwardedRef<HTM
     const canExpand = expandable && (isRowExpandable ? isRowExpandable(entry.row) : true);
     const open = canExpand && expandedSet.has(entry.id);
     const detailId = `${detailsId}-${entry.id.replace(/\s/g, "_")}`;
-    return (
-      <>
+    const row = (
       <Table.Row
         selected={chosen}
         {...(open ? { "data-expanded": "" } : {})}
@@ -542,7 +567,7 @@ function DataTableInner<TRow>(props: DataTableProps<TRow>, ref: ForwardedRef<HTM
               onKeyDown: (event: KeyboardEvent<HTMLTableRowElement>) => rowKey(entry.row, event),
             }
           : {})}
-        className={cx(onRowClick && styles.rowClickable)}
+        className={cx(onRowClick && styles.rowClickable, rowContextMenu && styles.rowMenu)}
       >
         {selecting && (
           <Table.Cell className={styles.selectCell} style={fixedWidth(selectionColumnWidth)}>
@@ -599,6 +624,21 @@ function DataTableInner<TRow>(props: DataTableProps<TRow>, ref: ForwardedRef<HTM
         })}
         {hasActions && <Table.Cell className={styles.actionsCell} style={fixedWidth(actionsColumnWidth)}>{rowActions?.(entry.row, entry.index)}</Table.Cell>}
       </Table.Row>
+    );
+    return (
+      <>
+      {rowContextMenu ? (
+        <DataTableRowMenu
+          name={labels.rowMenu(rowLabel)}
+          keys={rowContextMenuKeys}
+          onOpen={() => chooseForMenu(entry)}
+          renderItems={() => rowContextMenu(menuContext(entry))}
+        >
+          {row}
+        </DataTableRowMenu>
+      ) : (
+        row
+      )}
       {open && (
         <>
           {/* A hidden row keeps the striping in step: the detail row and this one make two rows after the one it belongs to. */}

@@ -12,6 +12,18 @@ type MenuPrimitiveSubContentProps = ComponentPropsWithoutRef<typeof DropdownMenu
  */
 export type MenuSize = "xs" | "sm" | "md" | "lg" | "xl";
 
+/**
+ * How the menu is drawn: `"menu"` floats beside what opened it, `"sheet"` is a panel across the bottom of the screen
+ * with larger rows and a dimmed page behind it, the shape a touch screen expects.
+ */
+export type MenuPresentation = "menu" | "sheet";
+
+/** The text a menu supplies itself. */
+export interface MenuLabels {
+  /** The row at the top of a submenu in a sheet, which returns to the menu it came from. */
+  back: string;
+}
+
 /** The side of the trigger the panel opens on. */
 export type MenuSide = "top" | "right" | "bottom" | "left";
 
@@ -57,6 +69,20 @@ export interface MenuProps {
    * @default 'ltr'
    */
   dir?: "ltr" | "rtl";
+  /**
+   * How the menu is drawn, a single value or a mobile-first map keyed by breakpoint (`{ base: "sheet", md: "menu" }`
+   * for a sheet on a phone and a floating menu from `md` up). A sheet is anchored to the bottom edge across the full
+   * width with taller rows and a scrim behind it; `side`, `align` and `sideOffset` don't apply to it. A submenu
+   * covers the menu it opened from, under a "Back" row. It is the same menu either way: the same keys, the same
+   * parts, the same focus handling.
+   * @default 'menu'
+   */
+  presentation?: Responsive<MenuPresentation>;
+  /**
+   * The text the menu supplies itself, each with an English default: `back`, the row at the top of a submenu in a
+   * sheet. Pass any subset.
+   */
+  labels?: Partial<MenuLabels>;
 }
 
 export interface MenuTriggerProps extends Omit<ComponentPropsWithoutRef<"button">, "children"> {

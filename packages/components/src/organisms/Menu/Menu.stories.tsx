@@ -26,6 +26,7 @@ interface PlaygroundArgs {
   defaultOpen: boolean;
   modal: boolean;
   dir: "ltr" | "rtl";
+  presentation: "menu" | "sheet";
   onOpenChange: (open: boolean) => void;
   size: MenuSize;
   side: MenuSide;
@@ -98,6 +99,13 @@ const meta: Meta<PlaygroundArgs> = {
         "Makes the rest of the page inert and locks its scroll while the menu is open, and has a press outside only close it. Turn off for a menu that leaves the page usable behind it.",
       table: { defaultValue: { summary: "true" } },
     },
+    presentation: {
+      control: "inline-radio",
+      options: ["menu", "sheet"],
+      description:
+        "How the menu is drawn: floating, or a sheet across the bottom of the screen with taller rows and a scrim, the shape a touch screen expects. Also takes a mobile-first map keyed by breakpoint.",
+      table: { defaultValue: { summary: '"menu"' } },
+    },
     dir: {
       control: "inline-radio",
       options: ["ltr", "rtl"],
@@ -128,6 +136,7 @@ const meta: Meta<PlaygroundArgs> = {
     loop: false,
     modal: true,
     dir: "ltr",
+    presentation: "menu",
     defaultOpen: false,
     onOpenChange: fn(),
   },
@@ -487,5 +496,41 @@ export const RightToLeft: Story = {
         <Menu.Item>Archive</Menu.Item>
       </MenuStage>
     </div>
+  ),
+};
+
+export const Sheet: Story = {
+  name: "As a sheet",
+  parameters: { docs: { source: { code: menuSnippets.sheet } } },
+  // The story is the sheet, so the control that chooses between the two has nothing to do here.
+  argTypes: { presentation: { control: false } },
+  render: (args) => (
+    <MenuStage args={{ ...args, presentation: "sheet" }}>
+      <Menu.Item>Rename</Menu.Item>
+      <Menu.Item>Duplicate</Menu.Item>
+      <Menu.Sub>
+        <Menu.SubTrigger>Share</Menu.SubTrigger>
+        <Menu.SubContent>
+          <Menu.Item>Copy link</Menu.Item>
+          <Menu.Item>Email</Menu.Item>
+        </Menu.SubContent>
+      </Menu.Sub>
+      <Menu.Separator />
+      <Menu.Item tone="danger">Delete</Menu.Item>
+    </MenuStage>
+  ),
+};
+
+export const ResponsivePresentation: Story = {
+  name: "A sheet on a phone, a menu from md up",
+  parameters: { docs: { source: { code: menuSnippets.responsivePresentation } } },
+  // `presentation` is the responsive map below, which no single control can express.
+  argTypes: { presentation: { control: false } },
+  render: (args) => (
+    <MenuStage args={{ ...args, presentation: { base: "sheet", md: "menu" } }} label="Resize the viewport">
+      <Menu.Item>Rename</Menu.Item>
+      <Menu.Item>Duplicate</Menu.Item>
+      <Menu.Item>Archive</Menu.Item>
+    </MenuStage>
   ),
 };

@@ -2,6 +2,7 @@ import type { Meta, StoryContext, StoryObj } from "@storybook/react-vite";
 import type { ComponentType } from "react";
 import { Spacer } from "../../atoms/Spacer";
 import { EmptyState } from "../../molecules/EmptyState";
+import { ContextMenu } from "../ContextMenu";
 import { TableToolbar } from "../../molecules/TableToolbar";
 import { DataTable } from "./DataTable";
 import { dataTablePlaygroundSnippet, dataTableSnippets } from "./DataTable.snippets";
@@ -88,6 +89,8 @@ const meta: Meta<Args> = {
     loadingRows: { control: "number", if: { arg: "loading", truthy: true }, description: "How many placeholder rows a loading table draws.", table: { defaultValue: { summary: "5" } } },
     emptyState: { ...noControls, description: "What an empty table says: text, or an EmptyState." },
     rowActions: { ...noControls, description: "Draws a trailing column for each row's actions, usually an IconButton that opens a Menu." },
+    rowContextMenu: { ...noControls, description: "The items of the menu a right-click, a long press or the context-menu key opens on a row, as ContextMenu items. Told the row and the rows it acts on; a press on a row that isn't chosen chooses it alone first." },
+    rowContextMenuKeys: { ...noControls, description: "Extra keys that open a row's context menu from the element that has focus in it, for platforms with no context-menu key." },
     onRowClick: { ...noControls, description: "Called when a row is pressed or Enter is pressed on it. Makes each row a tab stop; offer the action another way as well." },
     resizable: {
       control: "boolean",
@@ -240,6 +243,34 @@ export const RowActions: Story = {
   render: ({ maxHeight, ...args }) => (
     <div style={{ minHeight: "22rem" }}>
       <DataTable<Employee> {...args} maxHeight={maxHeight || undefined} data={employees.slice(0, 6)} rowActions={(row) => <RowMenu row={row} size={args.size} />} />
+    </div>
+  ),
+};
+
+export const RowContextMenu: Story = {
+  name: "A row's context menu",
+  parameters: { docs: { source: { code: dataTableSnippets.rowContextMenu } } },
+  args: { selectionMode: "multiple" },
+  argTypes: { selectionMode: { control: "inline-radio", options: ["none", "single", "multiple"] } },
+  render: ({ maxHeight, ...args }) => (
+    <div style={{ minHeight: "22rem" }}>
+      <DataTable<Employee>
+        {...args}
+        maxHeight={maxHeight || undefined}
+        data={employees.slice(0, 6)}
+        aria-label="Team"
+        rowContextMenuKeys={["Alt+ArrowDown"]}
+        rowContextMenu={({ row, rows, count }) => (
+          <>
+            <ContextMenu.Item>{count > 1 ? `Edit ${count} people` : `Edit ${row.name}`}</ContextMenu.Item>
+            <ContextMenu.Item>Copy {count > 1 ? `${count} emails` : "email"}</ContextMenu.Item>
+            <ContextMenu.Separator />
+            <ContextMenu.Item tone="danger" disabled={rows.some((person) => person.status === "On leave")}>
+              {count > 1 ? `Remove ${count} people` : "Remove"}
+            </ContextMenu.Item>
+          </>
+        )}
+      />
     </div>
   ),
 };

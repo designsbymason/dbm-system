@@ -926,3 +926,103 @@ export const ADisabledReasonIsShownOnHoverAndFocus: Story = {
     await expect(getComputedStyle(item).cursor).toBe("not-allowed");
   },
 };
+
+const sheetTree = (presentation: "sheet" | { base: "sheet"; md: "menu" } = "sheet") => (
+  <Page>
+    <Menu presentation={presentation}>
+      <Menu.Trigger asChild>
+        <Button variant="secondary">Actions</Button>
+      </Menu.Trigger>
+      <Menu.Content>
+        <Menu.Item>Edit</Menu.Item>
+        <Menu.Item>Duplicate</Menu.Item>
+        <Menu.Sub>
+          <Menu.SubTrigger>Share</Menu.SubTrigger>
+          <Menu.SubContent>
+            <Menu.Item>Email</Menu.Item>
+          </Menu.SubContent>
+        </Menu.Sub>
+      </Menu.Content>
+    </Menu>
+  </Page>
+);
+
+export const SheetIsPinnedToTheBottomEdge: Story = {
+  name: "A sheet fills the width at the bottom edge, with 48px rows and a scrim a real press closes",
+  render: () => sheetTree(),
+  play: async () => {
+    await realClick(trigger("Actions"));
+    const menu = await openMenu();
+    const rect = menu.getBoundingClientRect();
+    await expect(Math.abs(rect.left)).toBeLessThan(1);
+    await expect(Math.abs(rect.right - window.innerWidth)).toBeLessThan(1);
+    await expect(Math.abs(rect.bottom - window.innerHeight)).toBeLessThan(1);
+    await expect(rect.top).toBeGreaterThanOrEqual(0);
+    for (const item of within(menu).getAllByRole("menuitem")) {
+      await expect(item.getBoundingClientRect().height).toBeGreaterThanOrEqual(48);
+    }
+    const scrim = document.querySelector("[data-menu-scrim]") as HTMLElement;
+    await expect(scrim).not.toBeNull();
+    const scrimRect = scrim.getBoundingClientRect();
+    await expect(scrimRect.width).toBeGreaterThanOrEqual(window.innerWidth);
+    // a real press on the scrim, above the sheet, closes the menu
+    await realClick(document.elementFromPoint(10, 10) ?? scrim);
+    await waitFor(() => expect(body.queryByRole("menu")).toBeNull());
+  },
+};
+
+export const SheetSubmenuCoversTheMenu: Story = {
+  name: "A sheet's submenu covers the menu under a Back row, and Back returns to it with focus on its trigger",
+  render: () => sheetTree(),
+  play: async () => {
+    await realClick(trigger("Actions"));
+    const menu = await openMenu();
+    const share = within(menu).getByRole("menuitem", { name: "Share" });
+    await realClick(share);
+    const sub = (await body.findAllByRole("menu"))[1] as HTMLElement;
+    await settled(sub);
+    const rect = sub.getBoundingClientRect();
+    await expect(Math.abs(rect.bottom - window.innerHeight)).toBeLessThan(1);
+    await expect(Math.abs(rect.right - window.innerWidth)).toBeLessThan(1);
+    // the menu it opened from is hidden, not removed, so focus isn't lost with it
+    await expect(getComputedStyle(menu).opacity).toBe("0");
+    const rows = within(sub).getAllByRole("menuitem");
+    await expect(rows.map((row) => row.textContent)).toEqual(["Back", "Email"]);
+    await realClick(rows[0] as HTMLElement);
+    await waitFor(() => expect(body.queryByRole("menuitem", { name: "Email" })).toBeNull());
+    await expect(getComputedStyle(menu).opacity).toBe("1");
+    await userEvent.keyboard("{Escape}");
+    await waitFor(() => expect(body.queryByRole("menu")).toBeNull());
+  },
+};
+
+export const SheetOnAPhoneAndMenuAbove: Story = {
+  name: "On a phone, a responsive presentation is a sheet",
+  // Opened on its own this story is shown at a phone's width (and it is in the test run).
+  globals: { viewport: { value: "mobile1", isRotated: false } },
+  render: () => sheetTree({ base: "sheet", md: "menu" }),
+  play: async () => {
+    await expect(window.innerWidth).toBeLessThan(768);
+    await realClick(trigger("Actions"));
+    const menu = await openMenu();
+    await expect(menu).toHaveAttribute("data-presentation", "sheet");
+    await expect(Math.abs(menu.getBoundingClientRect().right - window.innerWidth)).toBeLessThan(1);
+    await userEvent.keyboard("{Escape}");
+    await waitFor(() => expect(body.queryByRole("menu")).toBeNull());
+  },
+};
+
+export const FloatingMenuAtDesktopWidth: Story = {
+  name: "At a desktop width the same responsive presentation is the floating menu",
+  render: () => sheetTree({ base: "sheet", md: "menu" }),
+  play: async () => {
+    await expect(window.innerWidth).toBeGreaterThanOrEqual(768);
+    await realClick(trigger("Actions"));
+    const menu = await openMenu();
+    await expect(menu).not.toHaveAttribute("data-presentation");
+    await expect(menu.getBoundingClientRect().width).toBeLessThan(window.innerWidth / 2);
+    await expect(document.querySelector("[data-menu-scrim]")).toBeNull();
+    await userEvent.keyboard("{Escape}");
+    await waitFor(() => expect(body.queryByRole("menu")).toBeNull());
+  },
+};

@@ -130,6 +130,57 @@
   animation: fadeOut var(--dbm-motion-duration-fast) var(--dbm-motion-easing-standard);
 }
 
+/* The sheet presentation: the same panel drawn across the bottom of the screen, for a touch screen. Radix places a panel
+   from a wrapper element it writes inline styles on (a `translate` to the trigger, `left` and `top`, a minimum width), so
+   the wrapper is the one thing that has to be overridden to pin the panel to the bottom edge, and only an `!important`
+   outranks inline styles. The wrapper is found by Radix's own attribute and by holding a sheet. */
+:global([data-radix-popper-content-wrapper]):has(> .sheet) {
+  inset-block: auto 0 !important;
+  inset-inline: 0 !important;
+  min-inline-size: 0 !important;
+  transform: none !important;
+}
+
+.sheet {
+  border-block-end-width: 0;
+  border-end-end-radius: 0;
+  border-end-start-radius: 0;
+  border-start-end-radius: var(--dbm-radius-xl);
+  border-start-start-radius: var(--dbm-radius-xl);
+  box-shadow: var(--dbm-shadow-light-lg);
+  /* Under the top of the screen by a row's height, so the page behind still shows above it; the items scroll inside. */
+  max-block-size: calc(100dvh - var(--dbm-space-12));
+  max-inline-size: none;
+  min-inline-size: 0;
+  /* Clear of a device's home indicator. */
+  padding-block-end: env(safe-area-inset-bottom);
+  transform-origin: bottom center;
+}
+
+[data-theme$="-dark"] .sheet {
+  box-shadow: var(--dbm-shadow-dark-lg);
+}
+
+.sheet[data-state="open"] {
+  animation: sheetIn var(--dbm-motion-duration-moderate) var(--dbm-motion-easing-emphasized);
+}
+
+.sheet[data-state="closed"] {
+  animation: sheetOut var(--dbm-motion-duration-fast) var(--dbm-motion-easing-standard);
+}
+
+/* Rows are as tall as a finger needs: 48px, over the size's own height. */
+.sheet .item {
+  min-block-size: var(--dbm-space-12);
+}
+
+/* A submenu covers the menu it opened from: that menu, which holds the trigger that is open, is hidden but stays where
+   focus can still be, so opening a submenu doesn't move focus off its trigger. */
+.sheet:has([aria-haspopup="menu"][data-state="open"]) {
+  opacity: var(--dbm-opacity-0);
+  pointer-events: none;
+}
+
 /* Every kind of item: padding, hover and keyboard highlight, disabled colouring. `min-block-size` is the 24px
    floor for an interactive target (WCAG 2.5.8) at every size. `outline: none` removes the browser's default ring,
    which `:focus-visible` below replaces with the system's own, and Radix moves `data-highlighted` with focus, so a
@@ -314,6 +365,18 @@
   .item[data-state="open"] {
     outline: var(--dbm-border-width-2) solid Highlight;
     outline-offset: calc(-1 * var(--dbm-border-width-2));
+  }
+}
+
+@keyframes sheetIn {
+  from {
+    transform: translateY(100%);
+  }
+}
+
+@keyframes sheetOut {
+  to {
+    transform: translateY(100%);
   }
 }
 

@@ -149,6 +149,13 @@ tr[data-selected] > .selectCell {
   cursor: pointer;
 }
 
+/* The row a context menu is open on stays marked once the pointer has moved onto the panel, which ends its hover tint. An
+   outline rather than a fill: it reads the same on a striped, hovered or chosen row, and forced colours keeps outlines. */
+.rowMenu[data-state="open"] {
+  outline: var(--dbm-border-width-1) solid var(--dbm-border-neutral-strong);
+  outline-offset: calc(-1 * var(--dbm-border-width-1));
+}
+
 .rowClickable:focus-visible {
   border-radius: var(--dbm-radius-sm);
   outline: var(--dbm-border-width-2) solid var(--dbm-border-focus);

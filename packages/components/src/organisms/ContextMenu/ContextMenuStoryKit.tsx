@@ -10,6 +10,7 @@ import type { ContextMenuContentProps, ContextMenuProps } from "./ContextMenu.ty
 export interface ContextMenuStageArgs {
   modal?: boolean;
   dir?: ContextMenuProps["dir"];
+  presentation?: ContextMenuProps["presentation"];
   onOpenChange?: ContextMenuProps["onOpenChange"];
   size?: ContextMenuContentProps["size"];
   alignOffset?: number;
@@ -53,7 +54,7 @@ export function ContextMenuStage({
   children: ReactNode;
 }) {
   return (
-    <ContextMenu modal={args.modal} dir={args.dir} onOpenChange={args.onOpenChange}>
+    <ContextMenu modal={args.modal} dir={args.dir} presentation={args.presentation} onOpenChange={args.onOpenChange}>
       <Area label={label} />
       <ContextMenu.Content
         size={args.size}

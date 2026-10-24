@@ -12,6 +12,7 @@ export interface MenuStageArgs {
   defaultOpen?: boolean;
   modal?: boolean;
   dir?: MenuProps["dir"];
+  presentation?: MenuProps["presentation"];
   onOpenChange?: MenuProps["onOpenChange"];
   size?: MenuContentProps["size"];
   side?: MenuContentProps["side"];
@@ -38,7 +39,7 @@ export function MenuStage({
 }) {
   return (
     <div style={{ display: "flex", justifyContent: "center", paddingBlock: "var(--dbm-space-8)" }}>
-      <Menu defaultOpen={args.defaultOpen} modal={args.modal} dir={args.dir} onOpenChange={args.onOpenChange}>
+      <Menu defaultOpen={args.defaultOpen} modal={args.modal} dir={args.dir} presentation={args.presentation} onOpenChange={args.onOpenChange}>
         <Menu.Trigger asChild>{trigger ?? <Button variant="secondary">{label}</Button>}</Menu.Trigger>
         <Menu.Content
           size={args.size}

@@ -5,7 +5,9 @@ import { createRef, StrictMode, useState } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { Dialog } from "../Dialog";
 import { Menu } from "../Menu";
-import { ContextMenu } from "./ContextMenu";
+import { ContextMenu, useContextMenuController } from "./ContextMenu";
+import type { ContextMenuController } from "./ContextMenu.types";
+import { matchesKeyCombo } from "./ContextMenuContext";
 
 function Basic({
   root,
@@ -126,6 +128,197 @@ describe("ContextMenu", () => {
     it("prevents the browser's own menu when it opens", () => {
       render(<Basic />);
       expect(fireEvent.contextMenu(area())).toBe(false);
+    });
+  });
+
+  describe("the controller", () => {
+    it("opens at a point through controllerRef, as a right-click there would", async () => {
+      const controllerRef = createRef<ContextMenuController>();
+      const seen: Array<[number, number, boolean]> = [];
+      document.addEventListener("contextmenu", (event) => seen.push([event.clientX, event.clientY, event.defaultPrevented]), { once: true });
+      render(<Basic root={{ controllerRef }} />);
+      let opened = false;
+      act(() => {
+        opened = controllerRef.current?.openAt({ x: 120, y: 80 }) ?? false;
+      });
+      expect(opened).toBe(true);
+      expect(await screen.findByRole("menu")).toBeInTheDocument();
+      expect(controllerRef.current?.open).toBe(true);
+      // the event bubbles to the page like a real one, with the point it was given
+      expect(seen[0]?.slice(0, 2)).toEqual([120, 80]);
+    });
+
+    it("opens from an element at its bottom corner on the start side, the other side in right-to-left text", async () => {
+      const controllerRef = createRef<ContextMenuController>();
+      const points: Array<[number, number]> = [];
+      document.addEventListener("contextmenu", (event) => points.push([event.clientX, event.clientY]));
+      render(
+        <>
+          <button type="button" data-testid="anchor">
+            Anchor
+          </button>
+          <Basic root={{ controllerRef, dir: "rtl" }} />
+        </>,
+      );
+      const anchor = screen.getByTestId("anchor");
+      vi.spyOn(anchor, "getBoundingClientRect").mockReturnValue({ left: 10, right: 90, top: 20, bottom: 50, width: 80, height: 30, x: 10, y: 20, toJSON: () => ({}) });
+      act(() => {
+        controllerRef.current?.openFrom(anchor);
+      });
+      expect(await screen.findByRole("menu")).toBeInTheDocument();
+      expect(points.at(-1)).toEqual([90, 50]);
+    });
+
+    it("closes the menu", async () => {
+      const controllerRef = createRef<ContextMenuController>();
+      render(<Basic root={{ controllerRef }} />);
+      act(() => {
+        controllerRef.current?.openAt({ x: 1, y: 1 });
+      });
+      await screen.findByRole("menu");
+      act(() => controllerRef.current?.close());
+      await waitFor(() => expect(screen.queryByRole("menu")).not.toBeInTheDocument());
+      expect(controllerRef.current?.open).toBe(false);
+    });
+
+    it("does nothing, and says so, with a disabled area", () => {
+      const controllerRef = createRef<ContextMenuController>();
+      render(<Basic root={{ controllerRef }} trigger={{ disabled: true }} />);
+      expect(controllerRef.current?.openAt({ x: 1, y: 1 })).toBe(false);
+      expect(screen.queryByRole("menu")).not.toBeInTheDocument();
+    });
+
+    it("is the same object, kept for the life of the menu, inside it through useContextMenuController", () => {
+      const controllerRef = createRef<ContextMenuController>();
+      const inside: ContextMenuController[] = [];
+      function Probe() {
+        inside.push(useContextMenuController());
+        return null;
+      }
+      const { rerender } = render(
+        <ContextMenu controllerRef={controllerRef}>
+          <ContextMenu.Trigger>Area</ContextMenu.Trigger>
+          <Probe />
+        </ContextMenu>,
+      );
+      rerender(
+        <ContextMenu controllerRef={controllerRef} modal={false}>
+          <ContextMenu.Trigger>Area</ContextMenu.Trigger>
+          <Probe />
+        </ContextMenu>,
+      );
+      expect(new Set(inside).size).toBe(1);
+      expect(inside[0]).toBe(controllerRef.current);
+    });
+
+    it("controls nothing outside a ContextMenu, and warns in development", () => {
+      const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
+      const results: boolean[] = [];
+      function Lost() {
+        results.push(useContextMenuController().openAt({ x: 1, y: 1 }));
+        return null;
+      }
+      render(<Lost />);
+      expect(results).toEqual([false]);
+      expect(warn).toHaveBeenCalledWith(expect.stringContaining("useContextMenuController: called outside a <ContextMenu>"));
+    });
+
+    it("opens a menu from a button inside the menu's own tree", async () => {
+      const user = userEvent.setup();
+      function Actions() {
+        const menu = useContextMenuController();
+        return (
+          <button type="button" onClick={(event) => menu.openFrom(event.currentTarget)}>
+            Actions
+          </button>
+        );
+      }
+      render(
+        <ContextMenu>
+          <ContextMenu.Trigger>Area</ContextMenu.Trigger>
+          <Actions />
+          <ContextMenu.Content>
+            <ContextMenu.Item>Rename</ContextMenu.Item>
+          </ContextMenu.Content>
+        </ContextMenu>,
+      );
+      await user.click(screen.getByRole("button", { name: "Actions" }));
+      expect(await screen.findByRole("menuitem", { name: "Rename" })).toBeInTheDocument();
+    });
+  });
+
+  describe("opening from extra keys", () => {
+    it("opens under the focused element on a key it was given, and returns focus there on Escape", async () => {
+      const user = userEvent.setup();
+      render(
+        <ContextMenu>
+          <ContextMenu.Trigger asChild openOnKeys={["Alt+ArrowDown"]}>
+            <div data-testid="area">
+              <button type="button">Inside</button>
+            </div>
+          </ContextMenu.Trigger>
+          <ContextMenu.Content>
+            <ContextMenu.Item>Rename</ContextMenu.Item>
+          </ContextMenu.Content>
+        </ContextMenu>,
+      );
+      const inside = screen.getByRole("button", { name: "Inside" });
+      const rect = vi.spyOn(inside, "getBoundingClientRect").mockReturnValue({ left: 30, right: 70, top: 10, bottom: 40, width: 40, height: 30, x: 30, y: 10, toJSON: () => ({}) });
+      const points: Array<[number, number]> = [];
+      document.addEventListener("contextmenu", (event) => points.push([event.clientX, event.clientY]));
+      inside.focus();
+      await user.keyboard("{Alt>}{ArrowDown}{/Alt}");
+      expect(await screen.findByRole("menu")).toBeInTheDocument();
+      expect(rect).toHaveBeenCalled();
+      expect(points.at(-1)).toEqual([30, 40]);
+      await user.keyboard("{Escape}");
+      await waitFor(() => expect(screen.queryByRole("menu")).not.toBeInTheDocument());
+      await waitFor(() => expect(inside).toHaveFocus());
+    });
+
+    it("needs exactly the modifiers it names, and does nothing without openOnKeys", async () => {
+      const user = userEvent.setup();
+      const { rerender } = render(<Basic trigger={{ openOnKeys: ["Alt+ArrowDown"], tabIndex: 0 }} />);
+      area().focus();
+      await user.keyboard("{ArrowDown}");
+      await user.keyboard("{Shift>}{Alt>}{ArrowDown}{/Alt}{/Shift}");
+      expect(screen.queryByRole("menu")).not.toBeInTheDocument();
+      rerender(<Basic trigger={{ tabIndex: 0 }} />);
+      await user.keyboard("{Alt>}{ArrowDown}{/Alt}");
+      expect(screen.queryByRole("menu")).not.toBeInTheDocument();
+    });
+
+    it("leaves a key alone that another handler already took", async () => {
+      const user = userEvent.setup();
+      render(<Basic trigger={{ openOnKeys: ["Enter"], tabIndex: 0, onKeyDown: (event) => event.preventDefault() }} />);
+      area().focus();
+      await user.keyboard("{Enter}");
+      expect(screen.queryByRole("menu")).not.toBeInTheDocument();
+    });
+  });
+
+  describe("matchesKeyCombo", () => {
+    const press = (key: string, modifiers: Partial<Record<"ctrlKey" | "altKey" | "shiftKey" | "metaKey", boolean>> = {}) => ({
+      key,
+      ctrlKey: false,
+      altKey: false,
+      shiftKey: false,
+      metaKey: false,
+      ...modifiers,
+    });
+    it.each([
+      ["Enter", press("Enter"), true],
+      ["enter", press("Enter"), true],
+      ["Alt+ArrowDown", press("ArrowDown", { altKey: true }), true],
+      ["Option+ArrowDown", press("ArrowDown", { altKey: true }), true],
+      ["Control+Enter", press("Enter", { ctrlKey: true }), true],
+      ["Cmd+k", press("K", { metaKey: true }), true],
+      ["Enter", press("Enter", { shiftKey: true }), false],
+      ["Alt+ArrowDown", press("ArrowDown"), false],
+      ["Hyper+x", press("x"), false],
+      ["", press("x"), false],
+    ] as const)("%j against %j is %s", (combo, event, expected) => {
+      expect(matchesKeyCombo(event, combo)).toBe(expected);
     });
   });
 
@@ -617,6 +810,52 @@ describe("ContextMenu", () => {
       openByRightClick();
       await user.click(await screen.findByRole("button", { name: "Inner", hidden: true }));
       expect(await screen.findByRole("menuitem", { name: "Inside" })).toBeInTheDocument();
+    });
+  });
+
+  describe("as a sheet", () => {
+    it("is drawn as a sheet with a scrim, wherever the press was", async () => {
+      render(<Basic root={{ presentation: "sheet" }} />);
+      openByRightClick();
+      const menu = await screen.findByRole("menu");
+      expect(menu).toHaveAttribute("data-presentation", "sheet");
+      expect(document.querySelector("[data-menu-scrim]")).not.toBeNull();
+    });
+
+    it("is a floating menu by default, with no scrim", async () => {
+      render(<Basic />);
+      openByRightClick();
+      expect(await screen.findByRole("menu")).not.toHaveAttribute("data-presentation");
+      expect(document.querySelector("[data-menu-scrim]")).toBeNull();
+    });
+
+    it("opens a submenu over the menu with a Back row, which returns to it, in the label it is given", async () => {
+      const user = userEvent.setup();
+      render(
+        <Basic root={{ presentation: "sheet", labels: { back: "Zurück" } }}>
+          <ContextMenu.Sub>
+            <ContextMenu.SubTrigger>Share</ContextMenu.SubTrigger>
+            <ContextMenu.SubContent>
+              <ContextMenu.Item>Email</ContextMenu.Item>
+            </ContextMenu.SubContent>
+          </ContextMenu.Sub>
+        </Basic>,
+      );
+      openByRightClick();
+      await user.click(await screen.findByRole("menuitem", { name: "Share" }));
+      const sub = (await screen.findAllByRole("menu"))[1] as HTMLElement;
+      expect(within(sub).getAllByRole("menuitem").map((item) => item.textContent)).toEqual(["Zurück", "Email"]);
+      await user.click(within(sub).getByRole("menuitem", { name: "Zurück" }));
+      await waitFor(() => expect(screen.queryByRole("menuitem", { name: "Email" })).not.toBeInTheDocument());
+    });
+
+    it("opens from code as a sheet too", async () => {
+      const controllerRef = createRef<ContextMenuController>();
+      render(<Basic root={{ presentation: "sheet", controllerRef }} />);
+      act(() => {
+        controllerRef.current?.openAt({ x: 5, y: 5 });
+      });
+      expect(await screen.findByRole("menu")).toHaveAttribute("data-presentation", "sheet");
     });
   });
 

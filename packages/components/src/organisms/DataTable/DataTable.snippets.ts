@@ -84,6 +84,24 @@ export const dataTableSnippets = {
   )}
 />`,
 
+  rowContextMenu: `${columnsNote}
+{/* The menu opens on a right-click, a long press or the context-menu key. A press on a row that isn't chosen chooses it alone
+    first, so rows is everything marked. Offer the same actions in rowActions or the toolbar: a context menu is a shortcut. */}
+<DataTable
+  aria-label="Team"
+  columns={columns}
+  data={rows}
+  selectionMode="multiple"
+  rowContextMenuKeys={["Alt+ArrowDown"]}
+  rowContextMenu={({ count }) => (
+    <>
+      <ContextMenu.Item>{count > 1 ? \`Edit \${count} people\` : "Edit"}</ContextMenu.Item>
+      <ContextMenu.Separator />
+      <ContextMenu.Item tone="danger">{count > 1 ? "Remove all" : "Remove"}</ContextMenu.Item>
+    </>
+  )}
+/>`,
+
   longTable: `${columnsNote}
 {/* Above 100 rows, an unpaged table with a maxHeight draws only the rows in view; every row is one line of
     a fixed height. aria-rowcount and aria-rowindex tell a screen reader the real size. */}

@@ -1,11 +1,13 @@
-export { ContextMenu } from "./ContextMenu";
+export { ContextMenu, useContextMenuController } from "./ContextMenu";
 export type {
   ContextMenuCheckboxItemProps,
   ContextMenuContentProps,
+  ContextMenuController,
   ContextMenuGroupProps,
   ContextMenuItemProps,
   ContextMenuItemTone,
   ContextMenuLabelProps,
+  ContextMenuPoint,
   ContextMenuProps,
   ContextMenuRadioGroupProps,
   ContextMenuRadioItemProps,

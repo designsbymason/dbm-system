@@ -114,6 +114,8 @@ export interface DataTableLabels {
   selectColumn: string;
   /** The heading of the column of `rowActions`, read by a screen reader but not drawn. */
   actionsColumn: string;
+  /** The name of the menu a row's `rowContextMenu` opens: "Actions for Ada Lovelace". */
+  rowMenu: (rowLabel: string) => string;
   /** The name of a row's expand button when it is closed: "Expand Ada Lovelace". */
   expandRow: (rowLabel: string) => string;
   /** The name of a row's expand button when it is open: "Collapse Ada Lovelace". */
@@ -313,6 +315,20 @@ export interface DataTableProps<TRow>
    */
   rowActions?: (row: TRow, index: number) => ReactNode;
   /**
+   * The items of the menu a right-click, a long press or the context-menu key opens on a row: return
+   * `ContextMenu` items (`ContextMenu.Item`, `.Separator`, …) for the row, or for the whole selection when the row
+   * pressed is part of it. A press on a row that is not selected chooses it alone first (in a table with
+   * `selectionMode`), so the menu is always about what the person sees marked; a press on a selected row keeps
+   * the selection. The row carries `data-state="open"` while its menu is. A context menu is a shortcut: offer the
+   * same actions in `rowActions` or the toolbar.
+   */
+  rowContextMenu?: (context: DataTableRowMenuContext<TRow>) => ReactNode;
+  /**
+   * Extra keys that open a row's `rowContextMenu` from the element that has focus in it, such as a row's checkbox
+   * or button (`["Alt+ArrowDown"]`), for platforms with no context-menu key. See `ContextMenu.Trigger`'s `openOnKeys`.
+   */
+  rowContextMenuKeys?: string[];
+  /**
    * Called when a row is pressed or Enter is pressed on it. Makes each row a tab stop, so offer the same action
    * another way as well (a link in the row), and don't rely on this alone. A press on a control inside the row
    * (a checkbox, a link, a menu button) is that control's, and doesn't reach this.
@@ -393,6 +409,26 @@ export interface DataTableProps<TRow>
 
 /** The properties of `DataTable.Toolbar`: a `TableToolbar` drawn above the table. */
 export type DataTableToolbarProps = TableToolbarProps;
+
+/** What `rowContextMenu` is told about the row a menu was opened on and the selection it belongs to. */
+export interface DataTableRowMenuContext<TRow> {
+  /** The row the menu was opened on. */
+  row: TRow;
+  /** The row's position in `data`. */
+  index: number;
+  /** The row's id, as `getRowId` gives it. */
+  id: string;
+  /**
+   * The rows the menu acts on: the whole selection, in table order, when the row is part of it, and otherwise just
+   * `row`. With every row chosen across pages (`allSelected`), the rows the table has, which are not all of them
+   * when the caller holds one page.
+   */
+  rows: TRow[];
+  /** How many rows the menu acts on: `rows.length`, or the total chosen across pages when `allSelected`. */
+  count: number;
+  /** Whether every row is chosen across pages, so `rows` is only the ones this table holds. */
+  allSelected: boolean;
+}
 
 /** The properties of `DataTable.Selection`: `TableToolbar.Selection` read from the table's own selection. */
 export interface DataTableSelectionProps extends Omit<TableToolbarSelectionProps, "count" | "totalCount" | "onClear"> {

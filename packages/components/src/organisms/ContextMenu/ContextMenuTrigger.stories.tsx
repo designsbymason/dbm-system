@@ -23,6 +23,11 @@ const meta: Meta<typeof ContextMenu.Trigger> = {
       description: "A disabled trigger opens nothing, and the browser's own context menu shows instead.",
       table: { defaultValue: { summary: "false" } },
     },
+    openOnKeys: {
+      control: false,
+      description:
+        "Extra keys that open the menu from the element that has focus, written as modifiers and a key (\"Alt+ArrowDown\", \"Control+Enter\"). The context-menu key and Shift+F10 work without this on Windows and Linux; macOS has no such key, so an app that wants a keyboard path there names one. The menu opens under the focused element. Keep a visible control for the same actions.",
+    },
     tabIndex: {
       control: "number",
       description:

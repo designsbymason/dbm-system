@@ -31,9 +31,10 @@ export const playgroundOrder = [
   "loop",
   "modal",
   "dir",
+  "presentation",
   "defaultOpen",
 ];
-export const propOrder = ["children", "open", "defaultOpen", "onOpenChange", "onOpenChangeComplete", "modal", "dir"];
+export const propOrder = ["children", "open", "defaultOpen", "onOpenChange", "onOpenChangeComplete", "presentation", "labels", "modal", "dir"];
 export const sharedTail = ["id", "className", "style", "data-testid"];
 export const triggerPropOrder = ["children", "disabled", "aria-label", "aria-labelledby", "aria-haspopup", "aria-expanded", "asChild", ...sharedTail];
 export const contentPropOrder = [
@@ -328,6 +329,14 @@ The submenu's panel. Also accepts any other native `<div>` attribute beyond what
 
 <Canvas of={MenuStories.InsideDialog} />
 
+### As a sheet
+
+<Canvas of={MenuStories.Sheet} />
+
+### A sheet on a phone, a menu from md up
+
+<Canvas of={MenuStories.ResponsivePresentation} />
+
 ### Right to left
 
 <Canvas of={MenuStories.RightToLeft} />
@@ -372,6 +381,11 @@ The submenu's panel. Also accepts any other native `<div>` attribute beyond what
 
 ## Best practices
 
+- On a phone, draw it as a sheet: `presentation={{ base: "sheet", md: "menu" }}` is a panel across the bottom of the screen with
+  48px rows and the page dimmed behind it, and the floating menu from `md` up. It is the same menu, with the same keys and parts. A
+  submenu covers it under a "Back" row (set the text with `labels`), so keep a sheet's menus shallow. A sheet has no swipe to dismiss:
+  it closes on a press on the dimmed page, Escape, or choosing an item.
+
 - Order the items by how often they are used, and keep a menu to about seven items before grouping them
   with `Menu.Label` and `Menu.Separator`.
 - A leading `icon` helps recognition when most items have one; give every item in a set one, or none.
@@ -408,7 +422,9 @@ The submenu's panel. Also accepts any other native `<div>` attribute beyond what
 - The focused item is highlighted with a quiet fill and, for the keyboard, a ring in the focus colour
   drawn inside it. In forced-colours mode the highlighted item is drawn with an outline in a system
   colour, since backgrounds are not drawn.
-- Every item is at least 24 × 24 CSS pixels at every size.
+- Every item is at least 24 × 24 CSS pixels at every size, and 48px tall in a sheet.
+- A sheet is the same `role="menu"`: the keys, typeahead and focus handling are the floating menu's. A submenu in a sheet is drawn over
+  the menu it opened from and starts on its "Back" row; the menu under it stays in the page, hidden from view, so focus isn't lost.
 - The menu is modal by default: the rest of the page is hidden from assistive technology and can't be
   pressed while it is open. Set `modal={false}` for a menu that coexists with the page.
 
@@ -507,8 +523,10 @@ function Row() {
 <TokenRow token="border-width.2" usage="the keyboard focus ring, and the highlighted item's outline in forced-colours mode" />
 <TokenRow token="border.focus" usage="the keyboard focus ring drawn inside the focused item" />
 <TokenRow token="radius.md" usage="panel corner radius" />
+<TokenRow token="radius.xl" usage="the top corners of a sheet" />
 <TokenRow token="radius.sm" usage="item corner radius" />
 <TokenRow token="shadow.light.md / shadow.dark.md" usage="panel elevation" />
+<TokenRow token="shadow.light.lg / shadow.dark.lg" usage="a sheet's elevation" />
 <TokenRow token="font-family.primary" usage="panel typography — set explicitly since the panel renders in a portal outside this component's own tree" />
 <TokenRow token="font-size.xs" usage="extra-small item text; shortcut hint, item description and label heading text" />
 <TokenRow token="font-size.sm" usage="small item text" />
@@ -525,6 +543,7 @@ function Row() {
 <TokenRow token="space.2" usage="gap between an item's icon, label and hint; item padding at small sizes; label heading padding above it; space before trailing content and a spinner" />
 <TokenRow token="space.3" usage="item padding at medium and large sizes" />
 <TokenRow token="space.4" usage="item padding at extra large; gap before the shortcut hint" />
+<TokenRow token="space.12" usage="a row's height in a sheet, and the room left above a sheet so the page behind it shows" />
 <TokenRow token="space.6" usage="item minimum height (the 24px target floor); the height of a scroll fade" />
 <TokenRow token="menu.min-width" usage="panel minimum width" />
 <TokenRow token="menu.max-width" usage="panel maximum width before a long label wraps" />
@@ -535,7 +554,8 @@ function Row() {
 <TokenRow token="bg.brand-subtle" usage="highlighted item and open submenu trigger background" />
 <TokenRow token="bg.danger-subtle" usage="highlighted danger item background" />
 <TokenRow token="z-index.popover" usage="panel stacking order, above a dialog it is opened from" />
-<TokenRow token="motion.duration.fast" usage="open and close fade" />
+<TokenRow token="motion.duration.fast" usage="open and close fade, and a sheet's exit" />
+<TokenRow token="motion.duration.moderate" usage="a sheet's slide in from the bottom edge" />
 <TokenRow token="motion.easing.emphasized" usage="open fade-in" />
 <TokenRow token="motion.easing.standard" usage="close fade-out" />
 <TokenRow token="opacity.0 / opacity.100" usage="open and close fade endpoints; a scroll fade shown or hidden" />

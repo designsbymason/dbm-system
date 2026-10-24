@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { expect, userEvent, waitFor, within } from "storybook/test";
 import { send } from "../../molecules/CodeBlock/browserProtocol";
+import { ContextMenu } from "../ContextMenu";
 import { DataTable } from "./DataTable";
 import { DensityDemo, EmployeeDetail, SavedViewsDemo, employeeColumns, employees, makeEmployees, RowMenu, ServerDemo, TeamDemo, type Employee } from "./DataTableStoryKit";
 
@@ -797,5 +798,56 @@ export const SelectAllKeepsKeyboardFocus: Story = {
     await user.keyboard("{Enter}");
     await waitFor(() => expect(body.queryByRole("button", { name: "Select all 137" })).toBeNull());
     await expect(body.getByRole("button", { name: "Clear selection" })).toHaveFocus();
+  },
+};
+
+async function realRightClick(element: Element) {
+  const { x, y } = pointOf(element);
+  await send("Input.dispatchMouseEvent", { type: "mouseMoved", x, y });
+  await send("Input.dispatchMouseEvent", { type: "mousePressed", x, y, button: "right", clickCount: 1 });
+  await send("Input.dispatchMouseEvent", { type: "mouseReleased", x, y, button: "right", clickCount: 1 });
+}
+
+export const RowContextMenuWithARealPointer: Story = {
+  name: "A real right-click on a row chooses it, opens its menu above the table and outlines the row",
+  render: () => (
+    <div style={{ minHeight: "22rem" }}>
+      <DataTable<Employee>
+        columns={employeeColumns}
+        data={employees.slice(0, 6)}
+        aria-label="Team"
+        selectionMode="multiple"
+        defaultSelection={["e1"]}
+        stickyHeader
+        maxHeight="16rem"
+        rowContextMenu={({ row, count }) => (
+          <>
+            <ContextMenu.Item>{count > 1 ? `Edit ${count} people` : `Edit ${row.name}`}</ContextMenu.Item>
+            <ContextMenu.Item>Copy email</ContextMenu.Item>
+          </>
+        )}
+      />
+    </div>
+  ),
+  play: async () => {
+    const rows = await body.findAllByRole("row");
+    const target = rows[3] as HTMLElement;
+    await realRightClick(target);
+    const menu = await body.findByRole("menu");
+    await new Promise((resolve) => setTimeout(resolve, 300));
+    // chosen alone: the row that was chosen before is not, and this one is
+    const boxes = Array.from(document.querySelectorAll<HTMLElement>('tbody [role="checkbox"]'));
+    await expect(boxes.filter((box) => box.getAttribute("aria-checked") === "true")).toHaveLength(1);
+    await expect(target.querySelector('[role="checkbox"]')).toHaveAttribute("aria-checked", "true");
+    await expect(target).toHaveAttribute("data-state", "open");
+    // the outline is drawn from the stylesheet, and the panel is the top element at its own item's point
+    await expect(getComputedStyle(target).outlineStyle).toBe("solid");
+    const item = within(menu).getAllByRole("menuitem")[0] as HTMLElement;
+    const at = item.getBoundingClientRect();
+    const top = document.elementFromPoint(at.left + at.width / 2, at.top + at.height / 2);
+    await expect(item.contains(top)).toBe(true);
+    await realClick(item);
+    await waitFor(() => expect(body.queryByRole("menu")).toBeNull());
+    await expect(target).toHaveAttribute("data-state", "closed");
   },
 };

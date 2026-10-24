@@ -139,6 +139,20 @@ ${contextMenu(
   <ContextMenu.Content>{/* the same items */}</ContextMenu.Content>
 </ContextMenu>`,
 
+  fromCode: `{/* A button, a key you handle, or code of your own opens the menu where you say. openFrom(element) puts the
+    panel under an element; openAt({ x, y }) puts it at a point. The menu opens as a right-click would. */}
+{/* const menu = useRef<ContextMenuController>(null); */}
+<ContextMenu controllerRef={menu}>
+  <ContextMenu.Trigger tabIndex={0} aria-label="Project card" openOnKeys={["Alt+ArrowDown"]}>
+    Right-click, or press Alt+ArrowDown
+  </ContextMenu.Trigger>
+  <ContextMenu.Content>
+    <ContextMenu.Item>Rename</ContextMenu.Item>
+    <ContextMenu.Item>Duplicate</ContextMenu.Item>
+  </ContextMenu.Content>
+</ContextMenu>
+<Button onClick={(event) => menu.current?.openFrom(event.currentTarget)}>Actions</Button>`,
+
   openingStyle: `{/* While the menu is open the area carries data-state="open", so the thing it was opened on can show it. */}
 <ContextMenu.Trigger asChild tabIndex={0}>
   <li className="row">quarterly-report.pdf</li>
@@ -178,6 +192,14 @@ ${contextMenu(
   </Dialog.Content>
 </Dialog>`,
 
+  sheet: `{/* A sheet is the menu drawn across the bottom of the screen, wherever the press was, with taller rows and the page
+    dimmed behind it. It is the same menu, with the same keys and parts. A submenu covers it under a Back row. */}
+${contextMenu('presentation="sheet"', "", basicBody)}`,
+
+  responsivePresentation: `{/* presentation takes a mobile-first map, like side on Menu: a sheet on a phone and the menu at the pointer from md up.
+    labels sets the Back row's text in a submenu's sheet. */}
+${contextMenu('presentation={{ base: "sheet", md: "menu" }}', "", basicBody)}`,
+
   rightToLeft: `{/* dir is passed to the menu and its submenus: they open on the start side and the keys swap. */}
 ${contextMenu('dir="rtl"', "", basicBody)}`,
 } as const;
@@ -186,6 +208,7 @@ ${contextMenu('dir="rtl"', "", basicBody)}`,
 export interface ContextMenuPlaygroundSnippetArgs {
   modal?: boolean;
   dir?: "ltr" | "rtl";
+  presentation?: "menu" | "sheet";
   size?: ContextMenuSize;
   alignOffset?: number;
   avoidCollisions?: boolean;
@@ -202,6 +225,7 @@ export function contextMenuPlaygroundSnippet(args: ContextMenuPlaygroundSnippetA
   // `modal` defaults to true, so it only needs writing when it's off.
   if (args.modal === false) rootAttributes.push("modal={false}");
   if (args.dir && args.dir !== "ltr") rootAttributes.push(`dir="${args.dir}"`);
+  if (args.presentation && args.presentation !== "menu") rootAttributes.push(`presentation="${args.presentation}"`);
 
   const contentAttributes: string[] = [];
   if (args.size && args.size !== "md") contentAttributes.push(`size="${args.size}"`);

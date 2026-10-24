@@ -1,11 +1,14 @@
-import type { ComponentPropsWithoutRef, CSSProperties, ReactNode } from "react";
-import type { MenuContentProps, MenuProps } from "../Menu/Menu.types";
+import type { ComponentPropsWithoutRef, CSSProperties, ReactNode, Ref } from "react";
+import type { MenuContentProps, MenuLabels, MenuPresentation, MenuProps } from "../Menu/Menu.types";
+import type { Responsive } from "@dbm-system/utils";
 
 export type {
   MenuCheckboxItemProps as ContextMenuCheckboxItemProps,
   MenuGroupProps as ContextMenuGroupProps,
   MenuItemProps as ContextMenuItemProps,
   MenuItemTone as ContextMenuItemTone,
+  MenuLabels as ContextMenuLabels,
+  MenuPresentation as ContextMenuPresentation,
   MenuLabelProps as ContextMenuLabelProps,
   MenuRadioGroupProps as ContextMenuRadioGroupProps,
   MenuRadioItemProps as ContextMenuRadioItemProps,
@@ -15,6 +18,34 @@ export type {
   MenuSubProps as ContextMenuSubProps,
   MenuSubTriggerProps as ContextMenuSubTriggerProps,
 } from "../Menu/Menu.types";
+
+/** A point on the page, in CSS pixels from the top-left of the viewport (the coordinates of a pointer event). */
+export interface ContextMenuPoint {
+  x: number;
+  y: number;
+}
+
+/**
+ * What code outside the menu can do to it: open it where it wants and close it. `ContextMenu`'s `controllerRef`
+ * hands it out, and `useContextMenuController()` returns the same object inside the menu.
+ */
+export interface ContextMenuController {
+  /**
+   * Opens the menu at a point, as a right-click there would: the panel's start corner is at the point, flipped to
+   * stay inside the viewport. Sends the trigger a `contextmenu` event, which bubbles to the page like a real one.
+   * Returns `false` when there is nothing to open from: the trigger isn't mounted or is `disabled`.
+   */
+  openAt: (point: ContextMenuPoint) => boolean;
+  /**
+   * Opens the menu from an element: at the element's bottom corner on the reading-start side, so the panel hangs
+   * under it. What the element is for is up to the caller (the focused cell, a row, a button).
+   */
+  openFrom: (element: Element) => boolean;
+  /** Closes the menu. Does nothing if it is closed. */
+  close: () => void;
+  /** Whether the menu is open now. */
+  readonly open: boolean;
+}
 
 export interface ContextMenuProps {
   /** `ContextMenu.Trigger` and `ContextMenu.Content`. */
@@ -54,6 +85,25 @@ export interface ContextMenuProps {
    * @default 'ltr'
    */
   dir?: MenuProps["dir"];
+  /**
+   * How the menu is drawn, a single value or a mobile-first map keyed by breakpoint (`{ base: "sheet", md: "menu" }`
+   * for a sheet on a phone and a menu at the pointer from `md` up). A sheet is anchored to the bottom edge across the
+   * full width with taller rows and a scrim behind it, wherever the press was; `alignOffset` and the collision props
+   * don't apply to it. A submenu covers the menu it opened from, under a "Back" row. It is the same menu either way:
+   * the same keys, the same parts, the same focus handling.
+   * @default 'menu'
+   */
+  presentation?: Responsive<MenuPresentation>;
+  /**
+   * The text the menu supplies itself, each with an English default: `back`, the row at the top of a submenu in a
+   * sheet. Pass any subset.
+   */
+  labels?: Partial<MenuLabels>;
+  /**
+   * Hands the menu's controls (`openAt`, `openFrom`, `close`) to code outside it, such as a "Actions" button or a
+   * key you handle yourself. Inside the menu, `useContextMenuController()` returns the same object.
+   */
+  controllerRef?: Ref<ContextMenuController>;
 }
 
 export interface ContextMenuTriggerProps extends Omit<ComponentPropsWithoutRef<"span">, "children"> {
@@ -70,6 +120,14 @@ export interface ContextMenuTriggerProps extends Omit<ComponentPropsWithoutRef<"
    * @default false
    */
   disabled?: boolean;
+  /**
+   * Extra keys that open the menu from the element that has focus, written as modifiers and a key
+   * (`"Alt+ArrowDown"`, `"Control+Enter"`). The context-menu key and Shift+F10 work without this on Windows and
+   * Linux; macOS has no such key, so an app that wants a keyboard path there names one. The menu opens under the
+   * focused element (not under the area), so a focused cell or button in a row anchors it. Keep a visible control
+   * for the same actions: a key nobody knows is no better than a right-click.
+   */
+  openOnKeys?: string[];
   /**
    * Makes the area reachable by keyboard. The context-menu key and Shift+F10 open the menu on the element that has
    * focus, so an area that can't take focus can't be opened that way: set `0` here, or put the trigger on an

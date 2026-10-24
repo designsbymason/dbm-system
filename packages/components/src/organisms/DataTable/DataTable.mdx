@@ -57,6 +57,8 @@ export const propOrder = [
   "defaultExpanded",
   "onExpandedChange",
   "rowActions",
+  "rowContextMenu",
+  "rowContextMenuKeys",
   "onRowClick",
   "loading",
   "loadingRows",
@@ -200,6 +202,8 @@ reads and changes the table's state from your own parts inside it.
     "totalCount",
     "emptyState",
     "rowActions",
+    "rowContextMenu",
+    "rowContextMenuKeys",
     "onRowClick",
     "columnWidths",
     "defaultColumnWidths",
@@ -325,6 +329,16 @@ text and the filtered rows; the table holds the selection, the sort and the page
 drawn.
 
 <Canvas of={DataTableStories.RowActions} />
+
+### A row's context menu
+
+`rowContextMenu` opens a menu on a right-click, a long press or the context-menu key, and returns its `ContextMenu` items. It is told
+the row and the rows it acts on: a press on a row that isn't chosen chooses it alone first, and a press on a chosen row keeps the
+selection, so `rows` is everything marked. The row stays outlined while its menu is open. A context menu is a shortcut and is not the
+only way to an action, so offer the same items in `rowActions` or the toolbar; `rowContextMenuKeys` names keys for a platform with no
+context-menu key (macOS).
+
+<Canvas of={DataTableStories.RowContextMenu} />
 
 ### A long table, drawn a window at a time
 
@@ -470,6 +484,9 @@ doesn't read the page's direction, so give `DataTable.Pagination` `dir="rtl"` as
   real size and position. The page controls announce the page and the footer's size select announces the new count.
 - `onRowClick` makes each row a tab stop, activated by Enter or Space on the row itself; a press on a control inside the row is
   that control's.
+- `rowContextMenu` opens a menu named "Actions for" and the row's label on a right-click, a long press, and the context-menu key
+  (or the keys of `rowContextMenuKeys`) on the element that has focus in the row, which needs no extra tab stop: a row's checkbox
+  or button is enough. Focus goes back to it on Escape. It is a shortcut, so the same actions belong in `rowActions` or the toolbar.
 - Every interactive target is at least 24 × 24px at every size (the sort button, the checkbox, the row menu's button).
 - The sort button's focus ring is drawn inside it, since a header cell and the scroll frame clip what is outside. On a solid
   tone's header it takes the text's colour.
@@ -583,6 +600,8 @@ const columns: DataTableColumn<Employee>[] = [
 <TokenRow token="border-width.2" usage="the width of the focus rings" />
 <TokenRow token="border.focus" usage="the colour of the focus rings" />
 <TokenRow token="border.brand" usage="the marker on the start edge of a chosen row's checkbox cell" />
+<TokenRow token="border-width.1" usage="the outline of the row a context menu is open on" />
+<TokenRow token="border.neutral-strong" usage="the colour of that outline" />
 <TokenRow token="border-width.4" usage="the width of that marker, held (transparent) for every row so choosing one moves nothing" />
 <TokenRow token="text.secondary" usage="the footer's range" />
 <TokenRow token="font-family.primary" usage="the type of the toolbar, table and footer" />

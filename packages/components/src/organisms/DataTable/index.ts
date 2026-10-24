@@ -8,6 +8,7 @@ export type {
   DataTableLabels,
   DataTablePaginationLabels,
   DataTablePaginationProps,
+  DataTableRowMenuContext,
   DataTableProps,
   DataTableSelectionMode,
   DataTableSelectionProps,

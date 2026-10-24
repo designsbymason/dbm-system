@@ -1,12 +1,14 @@
-import { cx, mergeRefs } from "@dbm-system/utils";
+import { cx, mergeDefined, mergeRefs, useResolvedResponsiveValue } from "@dbm-system/utils";
 import * as ContextMenuPrimitive from "@radix-ui/react-context-menu";
-import { forwardRef, useCallback, useEffect, useMemo, useRef, useContext } from "react";
+import { forwardRef, useCallback, useContext, useEffect, useImperativeHandle, useMemo, useRef } from "react";
+import { Backdrop } from "../../atoms/Backdrop";
 import { ButtonGroupReset } from "../../atoms/Button/buttonGroupContext";
 import { registerMenuInvoker } from "../../internal/overlay/menuInvokers";
 import { OverlayLifecycle } from "../../internal/overlay/OverlayLifecycle";
 import menuStyles from "../Menu/Menu.module.css";
 import { menuSharedParts, menuSizeClass, MenuViewport } from "../Menu/Menu";
 import {
+  DEFAULT_MENU_LABELS,
   MenuPrimitiveContext,
   MenuRootContext,
   MenuSizeContext,
@@ -14,7 +16,18 @@ import {
   type MenuPrimitiveKit,
 } from "../Menu/MenuContext";
 import styles from "./ContextMenu.module.css";
-import type { ContextMenuContentProps, ContextMenuProps, ContextMenuTriggerProps } from "./ContextMenu.types";
+import {
+  ContextMenuControllerContext,
+  ContextMenuTriggerNodeContext,
+  INERT_CONTROLLER,
+  matchesKeyCombo,
+} from "./ContextMenuContext";
+import type {
+  ContextMenuContentProps,
+  ContextMenuController,
+  ContextMenuProps,
+  ContextMenuTriggerProps,
+} from "./ContextMenu.types";
 
 // Radix ContextMenu's item, group and submenu parts, which the shared parts draw with inside a `ContextMenu`'s panel.
 const primitiveKit: MenuPrimitiveKit = ContextMenuPrimitive;
@@ -39,6 +52,10 @@ const primitiveKit: MenuPrimitiveKit = ContextMenuPrimitive;
  * It is modal by default, as a native menu is: the page behind is inert while it is open and a press outside only
  * closes it. The panel is portaled to the page and sits above a `Dialog` it was opened from.
  *
+ * Code opens it too: `controllerRef` (or `useContextMenuController()` inside) gives `openAt({ x, y })`, `openFrom(element)`
+ * and `close()`, and the trigger's `openOnKeys` names keys that open it from the focused element (macOS has no
+ * context-menu key).
+ *
  * @example
  * ```tsx
  * <ContextMenu>
@@ -62,8 +79,13 @@ function ContextMenuRoot({
   onOpenChangeComplete,
   modal = true,
   dir = "ltr",
+  presentation = "menu",
+  labels: labelOverrides,
+  controllerRef,
 }: ContextMenuProps) {
   const [isOpen, setOpen] = useControllableState(open, defaultOpen, onOpenChange);
+  const sheet = useResolvedResponsiveValue(presentation, "menu") === "sheet";
+  const labels = useMemo(() => mergeDefined(DEFAULT_MENU_LABELS, labelOverrides), [labelOverrides]);
   const inputRef = useRef<"pointer" | "keyboard" | null>(null);
   const focusLastRef = useRef(false);
   const triggerRef = useRef<HTMLElement | null>(null);
@@ -80,14 +102,46 @@ function ContextMenuRoot({
   // A context menu has no trigger button to press ArrowUp on, so there is nothing to open it onto its last item.
   const openToLast = useCallback(() => undefined, []);
   const value = useMemo(
-    () => ({ open: isOpen, dir, openToLast, focusLastRef, inputRef, triggerRef, close, reportClosed, reportOpened }),
-    [isOpen, dir, openToLast, close, reportClosed, reportOpened],
+    () => ({ open: isOpen, dir, openToLast, focusLastRef, inputRef, triggerRef, close, reportClosed, reportOpened, sheet, labels }),
+    [isOpen, dir, openToLast, close, reportClosed, reportOpened, sheet, labels],
   );
+  // The controller's methods read the latest state, so its identity never changes and a caller can keep it.
+  const triggerNodeRef = useRef<HTMLElement | null>(null);
+  const latestDir = useRef(dir);
+  useEffect(() => {
+    latestDir.current = dir;
+  });
+  const controller = useMemo<ContextMenuController>(() => {
+    // Radix opens the menu from a `contextmenu` event on its trigger, at the event's own coordinates, so asking for
+    // a point is sending it that event. It bubbles, as a real one does, because React listens at the root.
+    const openAt: ContextMenuController["openAt"] = ({ x, y }) => {
+      const node = triggerNodeRef.current;
+      if (!node || node.hasAttribute("data-disabled")) return false;
+      node.dispatchEvent(new MouseEvent("contextmenu", { bubbles: true, cancelable: true, clientX: x, clientY: y }));
+      return true;
+    };
+    return {
+      openAt,
+      openFrom: (element) => {
+        const rect = element.getBoundingClientRect();
+        return openAt({ x: latestDir.current === "rtl" ? rect.right : rect.left, y: rect.bottom });
+      },
+      close,
+      get open() {
+        return latest.current.open;
+      },
+    };
+  }, [close]);
+  useImperativeHandle(controllerRef, () => controller, [controller]);
   return (
     <MenuRootContext.Provider value={value}>
-      <ContextMenuPrimitive.Root open={isOpen} onOpenChange={setOpen} modal={modal} dir={dir}>
-        {children}
-      </ContextMenuPrimitive.Root>
+      <ContextMenuControllerContext.Provider value={controller}>
+        <ContextMenuTriggerNodeContext.Provider value={triggerNodeRef}>
+          <ContextMenuPrimitive.Root open={isOpen} onOpenChange={setOpen} modal={modal} dir={dir}>
+            {children}
+          </ContextMenuPrimitive.Root>
+        </ContextMenuTriggerNodeContext.Provider>
+      </ContextMenuControllerContext.Provider>
     </MenuRootContext.Provider>
   );
 }
@@ -98,11 +152,14 @@ function ContextMenuRoot({
  * carries `data-state="open"`, so the thing it was opened on can show it.
  */
 const ContextMenuTrigger = forwardRef<HTMLSpanElement, ContextMenuTriggerProps>(
-  ({ asChild = false, className, onPointerDown, onKeyDown, onContextMenu, ...props }, ref) => {
+  ({ asChild = false, className, openOnKeys, onPointerDown, onKeyDown, onContextMenu, ...props }, ref) => {
     const { inputRef, triggerRef } = useContext(MenuRootContext);
+    const controller = useContext(ContextMenuControllerContext) ?? INERT_CONTROLLER;
+    const nodeRef = useContext(ContextMenuTriggerNodeContext);
+    const mergedRef = useMemo(() => mergeRefs(ref, nodeRef), [ref, nodeRef]);
     return (
       <ContextMenuPrimitive.Trigger
-        ref={ref}
+        ref={mergedRef}
         asChild={asChild}
         className={asChild ? className : cx(styles.trigger, className)}
         {...props}
@@ -113,6 +170,10 @@ const ContextMenuTrigger = forwardRef<HTMLSpanElement, ContextMenuTriggerProps>(
         onKeyDown={(event) => {
           onKeyDown?.(event);
           inputRef.current = "keyboard";
+          if (event.defaultPrevented || !openOnKeys?.some((combo) => matchesKeyCombo(event.nativeEvent, combo))) return;
+          // Under the element that has focus, which may be a cell or a button inside the area.
+          event.preventDefault();
+          controller.openFrom(event.target as Element);
         }}
         onContextMenu={(event) => {
           onContextMenu?.(event);
@@ -149,7 +210,7 @@ const ContextMenuContent = forwardRef<HTMLDivElement, ContextMenuContentProps>(
     },
     ref,
   ) => {
-    const { open, inputRef, triggerRef, reportClosed, reportOpened } = useContext(MenuRootContext);
+    const { open, inputRef, triggerRef, reportClosed, reportOpened, sheet } = useContext(MenuRootContext);
     const contentRef = useRef<HTMLDivElement | null>(null);
     // A dialog an item opens gives focus back to the element the menu was opened on, which it finds from the panel.
     // The panel mounts a render after the root opens (the portal waits for its first commit), so this is a ref callback.
@@ -167,8 +228,9 @@ const ContextMenuContent = forwardRef<HTMLDivElement, ContextMenuContentProps>(
           alignOffset={alignOffset}
           avoidCollisions={avoidCollisions}
           collisionPadding={collisionPadding}
-          className={cx(menuStyles.content, menuSizeClass[size], className)}
+          className={cx(menuStyles.content, sheet && menuStyles.sheet, menuSizeClass[size], className)}
           {...props}
+          data-presentation={sheet ? "sheet" : undefined}
           // Which kind of input was used last is recorded on the panel (`data-input`, read by Menu's stylesheet to hold
           // the focus ring back while it is `"pointer"`) and on the root (read as the panel closes, below).
           onPointerMove={(event) => {
@@ -217,6 +279,8 @@ const ContextMenuContent = forwardRef<HTMLDivElement, ContextMenuContentProps>(
               if (done) reportOpened();
             }}
           />
+          {/* The page behind a sheet is dimmed; a press on it is a press outside the panel, which closes the menu. */}
+          {sheet && <Backdrop open data-menu-scrim="" />}
           <MenuSizeContext.Provider value={size}>
             <MenuViewport>
               {/* The kit is provided here, not at the root: the items inside the panel draw with the context menu's
@@ -253,3 +317,27 @@ export const ContextMenu: ContextMenuComponent = Object.assign(ContextMenuRoot, 
   Content: ContextMenuContent,
   ...menuSharedParts,
 });
+
+/**
+ * The controls of the nearest `ContextMenu`, for a part rendered inside it (the same object `controllerRef` hands out):
+ * open it where you like, from an element, and close it. Outside a `ContextMenu` it controls nothing and warns in
+ * development.
+ *
+ * @example
+ * ```tsx
+ * function ActionsButton() {
+ *   const menu = useContextMenuController();
+ *   return <Button onClick={(event) => menu.openFrom(event.currentTarget)}>Actions</Button>;
+ * }
+ * ```
+ */
+export function useContextMenuController(): ContextMenuController {
+  const controller = useContext(ContextMenuControllerContext);
+  const outside = controller === null;
+  useEffect(() => {
+    if (process.env.NODE_ENV !== "production" && outside) {
+      console.warn("useContextMenuController: called outside a <ContextMenu>, so it controls nothing. Call it from a component rendered inside the menu.");
+    }
+  }, [outside]);
+  return controller ?? INERT_CONTROLLER;
+}

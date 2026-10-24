@@ -1,8 +1,9 @@
 import type { Meta, StoryContext, StoryObj } from "@storybook/react-vite";
 import { CopyIcon, DotsThreeIcon, PencilSimpleIcon, TrashIcon } from "@dbm-system/icons";
 import { fn } from "storybook/test";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { Badge } from "../../atoms/Badge";
+import { Button } from "../../atoms/Button";
 import { IconButton } from "../../atoms/IconButton";
 import { ConfirmDialog } from "../ConfirmDialog";
 import { Dialog } from "../Dialog";
@@ -10,7 +11,7 @@ import { Menu } from "../Menu";
 import { countries } from "../Menu/MenuStoryKit";
 import { ContextMenu } from "./ContextMenu";
 import { contextMenuPlaygroundSnippet, contextMenuSnippets } from "./ContextMenu.snippets";
-import type { ContextMenuSize } from "./ContextMenu.types";
+import type { ContextMenuController, ContextMenuSize } from "./ContextMenu.types";
 import { Area, ContextMenuStage, type ContextMenuStageArgs } from "./ContextMenuStoryKit";
 
 // Combines ContextMenu's own root-level args (modal/dir/onOpenChange) with ContextMenu.Content's (size/alignOffset/…)
@@ -21,6 +22,7 @@ import { Area, ContextMenuStage, type ContextMenuStageArgs } from "./ContextMenu
 interface PlaygroundArgs {
   modal: boolean;
   dir: "ltr" | "rtl";
+  presentation: "menu" | "sheet";
   onOpenChange: (open: boolean) => void;
   size: ContextMenuSize;
   alignOffset: number;
@@ -71,6 +73,13 @@ const meta: Meta<PlaygroundArgs> = {
         "Makes the rest of the page inert and locks its scroll while the menu is open, and has a press outside only close it. Turn off for a menu that leaves the page usable behind it.",
       table: { defaultValue: { summary: "true" } },
     },
+    presentation: {
+      control: "inline-radio",
+      options: ["menu", "sheet"],
+      description:
+        "How the menu is drawn: floating, or a sheet across the bottom of the screen with taller rows and a scrim, the shape a touch screen expects. Also takes a mobile-first map keyed by breakpoint.",
+      table: { defaultValue: { summary: '"menu"' } },
+    },
     dir: {
       control: "inline-radio",
       options: ["ltr", "rtl"],
@@ -93,6 +102,7 @@ const meta: Meta<PlaygroundArgs> = {
     loop: false,
     modal: true,
     dir: "ltr",
+    presentation: "menu",
     onOpenChange: fn(),
   },
   render: (args) => (
@@ -309,6 +319,42 @@ export const OnRows: Story = {
   render: (args) => <FileRows args={args} />,
 };
 
+export const FromAButtonAndAKey: Story = {
+  name: "Opened from a button, and from a key",
+  parameters: { docs: { source: { code: contextMenuSnippets.fromCode } } },
+  render: function Render(args) {
+    const menu = useRef<ContextMenuController>(null);
+    return (
+      <div style={{ display: "grid", gap: "var(--dbm-space-3)", justifyItems: "start" }}>
+        <ContextMenu controllerRef={menu} modal={args.modal} dir={args.dir} onOpenChange={args.onOpenChange}>
+          <ContextMenu.Trigger
+            tabIndex={0}
+            aria-label="Project card. Right-click, or press Alt+ArrowDown."
+            openOnKeys={["Alt+ArrowDown"]}
+            style={{
+              border: "var(--dbm-border-width-1) dashed var(--dbm-border-default)",
+              borderRadius: "var(--dbm-radius-md)",
+              color: "var(--dbm-text-secondary)",
+              display: "block",
+              fontFamily: "var(--dbm-font-family-primary)",
+              padding: "var(--dbm-space-6)",
+            }}
+          >
+            Right-click, or focus here and press Alt+ArrowDown
+          </ContextMenu.Trigger>
+          <ContextMenu.Content size={args.size}>
+            <ContextMenu.Item>Rename</ContextMenu.Item>
+            <ContextMenu.Item>Duplicate</ContextMenu.Item>
+          </ContextMenu.Content>
+        </ContextMenu>
+        <Button variant="secondary" onClick={(event) => menu.current?.openFrom(event.currentTarget)}>
+          Actions
+        </Button>
+      </div>
+    );
+  },
+};
+
 export const OpensADialog: Story = {
   name: "An item that opens a confirmation",
   parameters: { docs: { source: { code: contextMenuSnippets.opensADialog } } },
@@ -390,5 +436,41 @@ export const RightToLeft: Story = {
         </ContextMenu.Sub>
       </ContextMenuStage>
     </div>
+  ),
+};
+
+export const Sheet: Story = {
+  name: "As a sheet",
+  parameters: { docs: { source: { code: contextMenuSnippets.sheet } } },
+  // The story is the sheet, so the control that chooses between the two has nothing to do here.
+  argTypes: { presentation: { control: false } },
+  render: (args) => (
+    <ContextMenuStage args={{ ...args, presentation: "sheet" }} label="Press and hold, or right-click">
+      <ContextMenu.Item>Rename</ContextMenu.Item>
+      <ContextMenu.Item>Duplicate</ContextMenu.Item>
+      <ContextMenu.Sub>
+        <ContextMenu.SubTrigger>Share</ContextMenu.SubTrigger>
+        <ContextMenu.SubContent>
+          <ContextMenu.Item>Copy link</ContextMenu.Item>
+          <ContextMenu.Item>Email</ContextMenu.Item>
+        </ContextMenu.SubContent>
+      </ContextMenu.Sub>
+      <ContextMenu.Separator />
+      <ContextMenu.Item tone="danger">Delete</ContextMenu.Item>
+    </ContextMenuStage>
+  ),
+};
+
+export const ResponsivePresentation: Story = {
+  name: "A sheet on a phone, a menu from md up",
+  parameters: { docs: { source: { code: contextMenuSnippets.responsivePresentation } } },
+  // `presentation` is the responsive map below, which no single control can express.
+  argTypes: { presentation: { control: false } },
+  render: (args) => (
+    <ContextMenuStage args={{ ...args, presentation: { base: "sheet", md: "menu" } }} label="Resize the viewport, then right-click">
+      <ContextMenu.Item>Rename</ContextMenu.Item>
+      <ContextMenu.Item>Duplicate</ContextMenu.Item>
+      <ContextMenu.Item>Archive</ContextMenu.Item>
+    </ContextMenuStage>
   ),
 };

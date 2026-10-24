@@ -6,7 +6,9 @@ import { send } from "../../molecules/CodeBlock/browserProtocol";
 import { Dialog } from "../Dialog";
 import { Menu } from "../Menu";
 import { countries } from "../Menu/MenuStoryKit";
+import { useRef } from "react";
 import { ContextMenu } from "./ContextMenu";
+import type { ContextMenuController } from "./ContextMenu.types";
 import type { ContextMenuSize } from "./ContextMenu.types";
 
 // Real-browser checks for what jsdom can't evaluate: where the panel is placed, the stacking above a dialog, a real
@@ -400,6 +402,149 @@ export const RowWithBothMenus: Story = {
     await click(rect.left + 40, rect.top + rect.height / 2, "right");
     const second = await openMenu();
     await expect(within(second).getByRole("menuitem", { name: "From a right-click" })).toBeInTheDocument();
+    await userEvent.keyboard("{Escape}");
+    await waitClosed();
+  },
+};
+
+export const OpensAtAPointFromCode: Story = {
+  name: "openAt places the panel at the point it is given, flipped inside the viewport",
+  render: function Render() {
+    const controller = useRef<ContextMenuController>(null);
+    return (
+      <Page>
+        <ContextMenu controllerRef={controller}>
+          <Fill />
+          <ContextMenu.Content>{items}</ContextMenu.Content>
+        </ContextMenu>
+        <button type="button" data-testid="go" onClick={() => controller.current?.openAt({ x: 300, y: 200 })}>
+          Open at 300, 200
+        </button>
+        <button
+          type="button"
+          data-testid="corner"
+          onClick={() => controller.current?.openAt({ x: window.innerWidth - 4, y: window.innerHeight - 4 })}
+        >
+          Open in the corner
+        </button>
+      </Page>
+    );
+  },
+  play: async () => {
+    await body.findByTestId("go");
+    (document.querySelector('[data-testid="go"]') as HTMLElement).click();
+    const menu = await openMenu();
+    const rect = menu.getBoundingClientRect();
+    await expect(Math.abs(rect.left - 300)).toBeLessThan(4);
+    await expect(Math.abs(rect.top - 200)).toBeLessThan(4);
+    await userEvent.keyboard("{Escape}");
+    await waitClosed();
+    (document.querySelector('[data-testid="corner"]') as HTMLElement).click();
+    const flipped = await openMenu();
+    const box = flipped.getBoundingClientRect();
+    await expect(box.right).toBeLessThanOrEqual(window.innerWidth);
+    await expect(box.bottom).toBeLessThanOrEqual(window.innerHeight);
+    await userEvent.keyboard("{Escape}");
+    await waitClosed();
+  },
+};
+
+export const OpensUnderTheFocusedElementOnAKey: Story = {
+  name: "openOnKeys opens the panel under the focused element, and Escape puts focus back on it",
+  render: () => (
+    <div style={{ padding: "var(--dbm-space-8)" }}>
+      <ContextMenu>
+        <ContextMenu.Trigger asChild openOnKeys={["Alt+ArrowDown"]}>
+          <div data-testid="area" style={{ padding: "var(--dbm-space-4)" }}>
+            <button type="button" data-testid="cell">
+              Cell with actions
+            </button>
+          </div>
+        </ContextMenu.Trigger>
+        <ContextMenu.Content>{items}</ContextMenu.Content>
+      </ContextMenu>
+    </div>
+  ),
+  play: async () => {
+    const cell = (await body.findByTestId("cell")) as HTMLElement;
+    cell.focus();
+    await userEvent.keyboard("{Alt>}{ArrowDown}{/Alt}");
+    const menu = await openMenu();
+    const anchor = cell.getBoundingClientRect();
+    const rect = menu.getBoundingClientRect();
+    await expect(Math.abs(rect.left - anchor.left)).toBeLessThan(4);
+    await expect(Math.abs(rect.top - anchor.bottom)).toBeLessThan(4);
+    await userEvent.keyboard("{Escape}");
+    await waitClosed();
+    await waitFor(() => expect(cell).toHaveFocus());
+  },
+};
+
+export const SheetIsPinnedToTheBottomEdge: Story = {
+  name: "A sheet opened by a right-click fills the width at the bottom edge, whatever the pointer, and its scrim closes it",
+  render: () => (
+    <Page>
+      <ContextMenu presentation="sheet">
+        <Fill />
+        <ContextMenu.Content>
+          {items}
+          <ContextMenu.Sub>
+            <ContextMenu.SubTrigger>Share</ContextMenu.SubTrigger>
+            <ContextMenu.SubContent>
+              <ContextMenu.Item>Email</ContextMenu.Item>
+            </ContextMenu.SubContent>
+          </ContextMenu.Sub>
+        </ContextMenu.Content>
+      </ContextMenu>
+    </Page>
+  ),
+  play: async () => {
+    await click(220, 140, "right");
+    const menu = await openMenu();
+    const rect = menu.getBoundingClientRect();
+    await expect(Math.abs(rect.left)).toBeLessThan(1);
+    await expect(Math.abs(rect.right - window.innerWidth)).toBeLessThan(1);
+    await expect(Math.abs(rect.bottom - window.innerHeight)).toBeLessThan(1);
+    for (const item of menu.querySelectorAll<HTMLElement>('[role^="menuitem"]')) {
+      await expect(item.getBoundingClientRect().height).toBeGreaterThanOrEqual(48);
+    }
+    // the submenu covers it under a Back row, and Back returns
+    await leftClick(within(menu).getByRole("menuitem", { name: "Share" }));
+    const sub = (await body.findAllByRole("menu"))[1] as HTMLElement;
+    await settled(sub);
+    await expect(Math.abs(sub.getBoundingClientRect().bottom - window.innerHeight)).toBeLessThan(1);
+    await expect(getComputedStyle(menu).opacity).toBe("0");
+    await leftClick(within(sub).getByRole("menuitem", { name: "Back" }));
+    await waitFor(() => expect(body.queryByRole("menuitem", { name: "Email" })).toBeNull());
+    // Back stepped out of the submenu and left the menu open and showing
+    await expect(body.getByRole("menuitem", { name: "Share" })).toBeInTheDocument();
+    await expect(getComputedStyle(menu).opacity).toBe("1");
+    // a real press on the scrim closes the menu
+    await click(10, 10, "left");
+    await waitClosed();
+  },
+};
+
+export const SheetOnAPhoneFromALongPress: Story = {
+  name: "On a phone, a long press opens the sheet when the presentation is responsive",
+  globals: { viewport: { value: "mobile1", isRotated: false } },
+  render: () => (
+    <Page>
+      <ContextMenu presentation={{ base: "sheet", md: "menu" }}>
+        <Fill />
+        <ContextMenu.Content>{items}</ContextMenu.Content>
+      </ContextMenu>
+    </Page>
+  ),
+  play: async () => {
+    await expect(window.innerWidth).toBeLessThan(768);
+    const point = pagePoint(120, 200);
+    await send("Input.dispatchTouchEvent", { type: "touchStart", touchPoints: [{ x: point.x, y: point.y }] });
+    await new Promise((resolve) => setTimeout(resolve, 900));
+    await send("Input.dispatchTouchEvent", { type: "touchEnd", touchPoints: [] });
+    const menu = await openMenu();
+    await expect(menu).toHaveAttribute("data-presentation", "sheet");
+    await expect(Math.abs(menu.getBoundingClientRect().bottom - window.innerHeight)).toBeLessThan(1);
     await userEvent.keyboard("{Escape}");
     await waitClosed();
   },

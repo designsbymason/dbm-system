@@ -23,6 +23,7 @@ const variants: Array<[string, Partial<DataTableProps<Employee>>]> = [
   ["sorted", { defaultSort: [{ columnId: "salary", direction: "descending" }] }],
   ["selecting", { selectionMode: "multiple", defaultSelection: ["e2"] }],
   ["with row actions", { rowActions: () => <button type="button">More</button> }],
+  ["with a row context menu", { selectionMode: "multiple", rowContextMenu: () => null, rowContextMenuKeys: ["Alt+ArrowDown"] }],
   ["loading", { loading: true }],
   ["empty", { data: [] }],
   ["paged", { defaultPageSize: 5, defaultPage: 2 }],

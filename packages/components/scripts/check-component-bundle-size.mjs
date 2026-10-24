@@ -79,7 +79,9 @@ const PER_COMPONENT_CSS_BUDGET_KB = 5;
 //   rail flyout's measured offset, 20.70KB measured; the budget is 22KB, the same as `Navbar`'s.
 //   FileUpload (2026-10-24): draws with `Button`, `IconButton`, `FieldError`, `ProgressBar`, `Icon`, `Image` and `Text`, and holds the
 //   drop, paste, folder-reading, duplicate, cancel and preview code of its own, 10.24KB measured against the default 10KB. The budget is 14KB.
-const JS_BUDGET_OVERRIDES_KB = { Calendar: 12, DataTable: 26, DatePicker: 18, FileUpload: 14, Navbar: 22, Sidebar: 22, TimeRangePicker: 12, Toolbar: 12 };
+//   DataTable (2026-10-24): a row's context menu (`rowContextMenu`) brings `ContextMenu` with it, which draws `Menu`'s item parts that the column
+//   menu already carries: 26.42KB measured against the 26KB set before it. The budget is 32KB.
+const JS_BUDGET_OVERRIDES_KB = { Calendar: 12, DataTable: 32, DatePicker: 18, FileUpload: 14, Navbar: 22, Sidebar: 22, TimeRangePicker: 12, Toolbar: 13 };
 
 // The same for CSS. `DataTable`'s bundle holds the stylesheets of the `Table`, `TableToolbar`, `Pagination`, `Select`,
 // `Checkbox` and `Menu` parts it draws with (6.30KB measured against 3.45KB for `TableToolbar`, the largest of them), plus its own; 8.10KB
@@ -91,7 +93,11 @@ const JS_BUDGET_OVERRIDES_KB = { Calendar: 12, DataTable: 26, DatePicker: 18, Fi
 //
 // `Sidebar`'s bundle holds the `Drawer`'s seven-breakpoint side classes, as `Navbar`'s does, with the `Menu`, `Tooltip` and `Collapse` stylesheets
 // and its own: 8.52KB measured. CSS budget 10KB.
-const CSS_BUDGET_OVERRIDES_KB = { DataTable: 9, Navbar: 11, Sidebar: 10 };
+//
+// `Menu`'s stylesheet grew by about 0.4KB with the sheet presentation (2026-10-24), which every bundle that holds a `Menu` carries:
+// `Sidebar`'s CSS went from 9.75KB to 10.12KB against its 10KB, so its budget is 11KB, and `Toolbar`'s overflow menu took its JS to 11.98KB
+// against 12KB, so its budget is 13KB.
+const CSS_BUDGET_OVERRIDES_KB = { DataTable: 10, Navbar: 11, Sidebar: 11 };
 
 // Words only an opt-in extra's code contains, and the component whose bundle must not contain them: `CodeBlock`
 // ships Python, Go and Java as separate exports an app registers (ADR-0027). If a change makes the component

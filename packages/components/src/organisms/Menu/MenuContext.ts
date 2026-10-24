@@ -1,6 +1,8 @@
 import * as DropdownMenuPrimitive from "@radix-ui/react-dropdown-menu";
 import { createContext, useCallback, useState, type MutableRefObject } from "react";
-import type { MenuSize } from "./Menu.types";
+import type { MenuLabels, MenuSize } from "./Menu.types";
+
+export const DEFAULT_MENU_LABELS: MenuLabels = { back: "Back" };
 
 /**
  * The Radix parts a menu's items, labels, groups and submenus are drawn with. `Menu` draws them with Radix
@@ -45,6 +47,10 @@ export interface MenuRootContextValue {
   reportClosed: () => void;
   /** Called by the panel when its entrance has finished. */
   reportOpened: () => void;
+  /** Whether the menu is drawn as a sheet across the bottom of the screen (`presentation`, resolved for this width). */
+  sheet: boolean;
+  /** The text the menu supplies itself. */
+  labels: MenuLabels;
 }
 
 export const MenuRootContext = createContext<MenuRootContextValue>({
@@ -57,11 +63,15 @@ export const MenuRootContext = createContext<MenuRootContextValue>({
   close: () => undefined,
   reportClosed: () => undefined,
   reportOpened: () => undefined,
+  sheet: false,
+  labels: DEFAULT_MENU_LABELS,
 });
 
 /** What a submenu root shares with its trigger. `null` outside any `Menu.Sub`. */
 export interface MenuSubContextValue {
   open: boolean;
+  /** Closes the submenu: the "Back" row of a sheet. */
+  close: () => void;
 }
 
 export const MenuSubContext = createContext<MenuSubContextValue | null>(null);

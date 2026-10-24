@@ -1084,6 +1084,161 @@ describe("Menu", () => {
     });
   });
 
+  describe("as a sheet", () => {
+    const sheetTree = (root: Omit<React.ComponentProps<typeof Menu>, "children"> = {}) => (
+      <Menu presentation="sheet" {...root}>
+        <Menu.Trigger>Actions</Menu.Trigger>
+        <Menu.Content>
+          <Menu.Item>Edit</Menu.Item>
+          <Menu.Sub>
+            <Menu.SubTrigger>Share</Menu.SubTrigger>
+            <Menu.SubContent>
+              <Menu.Item>Email</Menu.Item>
+            </Menu.SubContent>
+          </Menu.Sub>
+        </Menu.Content>
+      </Menu>
+    );
+
+    it("marks the panel as a sheet and dims the page behind it", async () => {
+      const user = userEvent.setup();
+      render(sheetTree());
+      await user.click(trigger());
+      const menu = await screen.findByRole("menu");
+      expect(menu).toHaveAttribute("data-presentation", "sheet");
+      expect(menu.className).toMatch(/sheet/);
+      expect(document.querySelector("[data-menu-scrim]")).not.toBeNull();
+    });
+
+    it("draws the floating menu by default, with no scrim", async () => {
+      const user = userEvent.setup();
+      render(<Basic />);
+      await user.click(trigger());
+      const menu = await screen.findByRole("menu");
+      expect(menu).not.toHaveAttribute("data-presentation");
+      expect(document.querySelector("[data-menu-scrim]")).toBeNull();
+    });
+
+    it("keeps its keys: arrows move, Enter chooses, Escape closes", async () => {
+      const user = userEvent.setup();
+      const onSelect = vi.fn();
+      render(
+        <Menu presentation="sheet">
+          <Menu.Trigger>Actions</Menu.Trigger>
+          <Menu.Content>
+            <Menu.Item onSelect={onSelect}>Edit</Menu.Item>
+            <Menu.Item>Duplicate</Menu.Item>
+          </Menu.Content>
+        </Menu>,
+      );
+      trigger().focus();
+      await user.keyboard("{ArrowDown}");
+      await waitFor(() => expect(screen.getByRole("menuitem", { name: "Edit" })).toHaveFocus());
+      await user.keyboard("{ArrowDown}{ArrowUp}{Enter}");
+      expect(onSelect).toHaveBeenCalledTimes(1);
+      await waitFor(() => expect(screen.queryByRole("menu")).not.toBeInTheDocument());
+    });
+
+    it("opens a submenu over the menu with a Back row first, and Back returns to the menu", async () => {
+      const user = userEvent.setup();
+      render(sheetTree());
+      await user.click(trigger());
+      await user.click(await screen.findByRole("menuitem", { name: "Share" }));
+      const menus = await screen.findAllByRole("menu");
+      const sub = menus[1] as HTMLElement;
+      expect(sub).toHaveAttribute("data-presentation", "sheet");
+      const items = within(sub).getAllByRole("menuitem");
+      expect(items.map((item) => item.textContent)).toEqual(["Back", "Email"]);
+      await user.click(within(sub).getByRole("menuitem", { name: "Back" }));
+      await waitFor(() => expect(screen.queryByRole("menuitem", { name: "Email" })).not.toBeInTheDocument());
+      expect(screen.getByRole("menuitem", { name: "Share" })).toHaveAttribute("aria-expanded", "false");
+      // Back steps out of the submenu; it doesn't close the menu the way choosing an item does
+      await new Promise((resolve) => setTimeout(resolve, 400));
+      expect(screen.getByRole("menu")).toBeInTheDocument();
+    });
+
+    it("takes the Back row's text from labels", async () => {
+      const user = userEvent.setup();
+      render(sheetTree({ labels: { back: "Zurück" } }));
+      await user.click(trigger());
+      await user.click(await screen.findByRole("menuitem", { name: "Share" }));
+      expect(await screen.findByRole("menuitem", { name: "Zurück" })).toBeInTheDocument();
+    });
+
+    it("keeps its default Back text when a label is passed as undefined", async () => {
+      const user = userEvent.setup();
+      render(sheetTree({ labels: { back: undefined } }));
+      await user.click(trigger());
+      await user.click(await screen.findByRole("menuitem", { name: "Share" }));
+      expect(await screen.findByRole("menuitem", { name: "Back" })).toBeInTheDocument();
+    });
+
+    it("draws no Back row in a floating menu's submenu", async () => {
+      const user = userEvent.setup();
+      render(
+        <Menu>
+          <Menu.Trigger>Actions</Menu.Trigger>
+          <Menu.Content>
+            <Menu.Sub>
+              <Menu.SubTrigger>Share</Menu.SubTrigger>
+              <Menu.SubContent>
+                <Menu.Item>Email</Menu.Item>
+              </Menu.SubContent>
+            </Menu.Sub>
+          </Menu.Content>
+        </Menu>,
+      );
+      await user.click(trigger());
+      await user.click(await screen.findByRole("menuitem", { name: "Share" }));
+      await screen.findByRole("menuitem", { name: "Email" });
+      expect(screen.queryByRole("menuitem", { name: "Back" })).not.toBeInTheDocument();
+    });
+
+    it("is a sheet below the width a responsive map names and a menu from it up", async () => {
+      const user = userEvent.setup();
+      const matchMedia = vi.fn((query: string) => ({
+        matches: query === "(min-width: 768px)",
+        media: query,
+        addEventListener: () => undefined,
+        removeEventListener: () => undefined,
+        addListener: () => undefined,
+        removeListener: () => undefined,
+        onchange: null,
+        dispatchEvent: () => false,
+      }));
+      vi.stubGlobal("matchMedia", matchMedia);
+      try {
+        const { unmount } = render(sheetTree({ presentation: { base: "sheet", md: "menu" } }));
+        await user.click(trigger());
+        expect(await screen.findByRole("menu")).not.toHaveAttribute("data-presentation");
+        unmount();
+        matchMedia.mockImplementation((query: string) => ({
+          matches: false,
+          media: query,
+          addEventListener: () => undefined,
+          removeEventListener: () => undefined,
+          addListener: () => undefined,
+          removeListener: () => undefined,
+          onchange: null,
+          dispatchEvent: () => false,
+        }));
+        render(sheetTree({ presentation: { base: "sheet", md: "menu" } }));
+        await user.click(trigger());
+        expect(await screen.findByRole("menu")).toHaveAttribute("data-presentation", "sheet");
+      } finally {
+        vi.unstubAllGlobals();
+      }
+    });
+
+    it("has no axe violations open as a sheet", async () => {
+      const user = userEvent.setup();
+      render(sheetTree());
+      await user.click(trigger());
+      await screen.findByRole("menu");
+      expect((await axe(document.body, noRegion)).violations).toHaveLength(0);
+    });
+  });
+
   describe("StrictMode", () => {
     it("opens, moves and chooses under StrictMode", async () => {
       const user = userEvent.setup();

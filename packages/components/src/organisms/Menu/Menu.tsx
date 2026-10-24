@@ -1,5 +1,5 @@
-import { CaretRightIcon, CheckIcon, CircleIcon, MinusIcon } from "@dbm-system/icons";
-import { cx, mergeRefs, useResolvedResponsiveValue, useScrollEdges } from "@dbm-system/utils";
+import { CaretLeftIcon, CaretRightIcon, CheckIcon, CircleIcon, MinusIcon } from "@dbm-system/icons";
+import { cx, mergeDefined, mergeRefs, useResolvedResponsiveValue, useScrollEdges } from "@dbm-system/utils";
 import * as MenuPrimitive from "@radix-ui/react-dropdown-menu";
 import {
   forwardRef,
@@ -13,6 +13,7 @@ import {
   type ReactElement,
   type ReactNode,
 } from "react";
+import { Backdrop } from "../../atoms/Backdrop";
 import { Icon } from "../../atoms/Icon";
 import { Spinner } from "../../atoms/Spinner";
 import { Tooltip } from "../../atoms/Tooltip";
@@ -38,6 +39,7 @@ import type {
   MenuTriggerProps,
 } from "./Menu.types";
 import {
+  DEFAULT_MENU_LABELS,
   MenuGroupContext,
   MenuPrimitiveContext,
   MenuRadioValueContext,
@@ -100,8 +102,13 @@ function MenuRoot({
   onOpenChangeComplete,
   modal = true,
   dir = "ltr",
+  presentation = "menu",
+  labels: labelOverrides,
 }: MenuProps) {
   const [isOpen, setOpen] = useControllableState(open, defaultOpen, onOpenChange);
+  // Which presentation applies is a width question, answered in JS since it chooses what is drawn, not only how.
+  const sheet = useResolvedResponsiveValue(presentation, "menu") === "sheet";
+  const labels = useMemo(() => mergeDefined(DEFAULT_MENU_LABELS, labelOverrides), [labelOverrides]);
   const focusLastRef = useRef(false);
   const inputRef = useRef<"pointer" | "keyboard" | null>(null);
   const triggerRef = useRef<HTMLElement | null>(null);
@@ -130,8 +137,10 @@ function MenuRoot({
       close,
       reportClosed,
       reportOpened,
+      sheet,
+      labels,
     }),
-    [isOpen, dir, openToLast, close, reportClosed, reportOpened],
+    [isOpen, dir, openToLast, close, reportClosed, reportOpened, sheet, labels],
   );
   return (
     <MenuRootContext.Provider value={value}>
@@ -226,7 +235,7 @@ const MenuContent = forwardRef<HTMLDivElement, MenuContentProps>(
     },
     ref,
   ) => {
-    const { open, focusLastRef, inputRef, triggerRef, reportClosed, reportOpened } = useContext(MenuRootContext);
+    const { open, focusLastRef, inputRef, triggerRef, reportClosed, reportOpened, sheet } = useContext(MenuRootContext);
     const contentRef = useRef<HTMLDivElement | null>(null);
     const mergedRef = useMemo(() => mergeRefs(ref, contentRef), [ref]);
     // Opened with ArrowUp: once Radix has put focus on its first item, move it to the last one that can have it.
@@ -255,8 +264,9 @@ const MenuContent = forwardRef<HTMLDivElement, MenuContentProps>(
           alignOffset={alignOffset}
           avoidCollisions={avoidCollisions}
           collisionPadding={collisionPadding}
-          className={cx(styles.content, sizeClass[size], className)}
+          className={cx(styles.content, sheet && styles.sheet, sizeClass[size], className)}
           {...props}
+          data-presentation={sheet ? "sheet" : undefined}
           // Which kind of input was used last is recorded on the panel (`data-input`, read by the stylesheet to hold
           // the focus ring back while it is `"pointer"`) and on the root (read as the panel closes, below). Radix
           // focuses an item as the pointer passes over it, which a browser may count as keyboard-style focus.
@@ -305,6 +315,8 @@ const MenuContent = forwardRef<HTMLDivElement, MenuContentProps>(
               if (done) reportOpened();
             }}
           />
+          {/* The page behind a sheet is dimmed; a press on it is a press outside the panel, which closes the menu. */}
+          {sheet && <Backdrop open data-menu-scrim="" />}
           <MenuSizeContext.Provider value={size}>
             <MenuViewport>
               <ButtonGroupReset>{children}</ButtonGroupReset>
@@ -862,7 +874,7 @@ MenuSeparator.displayName = "Menu.Separator";
 function MenuSub({ children, open, onOpenChange }: MenuSubProps) {
   const Primitive = useContext(MenuPrimitiveContext);
   const [isOpen, setOpen] = useControllableState(open, false, onOpenChange);
-  const value = useMemo(() => ({ open: isOpen }), [isOpen]);
+  const value = useMemo(() => ({ open: isOpen, close: () => setOpen(false) }), [isOpen, setOpen]);
   return (
     <MenuSubContext.Provider value={value}>
       <Primitive.Sub open={isOpen} onOpenChange={setOpen}>
@@ -930,7 +942,8 @@ const MenuSubContent = forwardRef<HTMLDivElement, MenuSubContentProps>(
   ) => {
     const Primitive = useContext(MenuPrimitiveContext);
     const parentSize = useContext(MenuSizeContext);
-    const { inputRef } = useContext(MenuRootContext);
+    const { inputRef, sheet, labels, dir } = useContext(MenuRootContext);
+    const sub = useContext(MenuSubContext);
     const resolved = size ?? parentSize;
     return (
       <Primitive.Portal container={container}>
@@ -938,8 +951,9 @@ const MenuSubContent = forwardRef<HTMLDivElement, MenuSubContentProps>(
           ref={ref}
           alignOffset={alignOffset}
           collisionPadding={collisionPadding}
-          className={cx(styles.content, sizeClass[resolved], className)}
+          className={cx(styles.content, sheet && styles.sheet, sizeClass[resolved], className)}
           {...props}
+          data-presentation={sheet ? "sheet" : undefined}
           // Which kind of input was used last is recorded on the panel (`data-input`, read by the stylesheet to hold
           // the focus ring back while it is `"pointer"`) and on the root (read as the panel closes, below). Radix
           // focuses an item as the pointer passes over it, which a browser may count as keyboard-style focus.
@@ -963,6 +977,27 @@ const MenuSubContent = forwardRef<HTMLDivElement, MenuSubContentProps>(
         >
           <MenuSizeContext.Provider value={resolved}>
             <MenuViewport>
+              {/* A sheet's submenu covers the menu it came from, so the way back is a row of its own. */}
+              {sheet && (
+                <>
+                  <Primitive.Item
+                    className={styles.item}
+                    onSelect={(event) => {
+                      // Choosing an item closes the whole menu; this one only steps back out of the submenu.
+                      event.preventDefault();
+                      sub?.close();
+                    }}
+                  >
+                    <span className={styles.iconSlot}>
+                      <Icon icon={CaretLeftIcon} size={iconSizeFor[resolved]} mirrored={dir === "rtl"} />
+                    </span>
+                    <span className={styles.text}>
+                      <span className={styles.label}>{labels.back}</span>
+                    </span>
+                  </Primitive.Item>
+                  <Primitive.Separator className={styles.separator} />
+                </>
+              )}
               <ButtonGroupReset>{children}</ButtonGroupReset>
             </MenuViewport>
           </MenuSizeContext.Provider>

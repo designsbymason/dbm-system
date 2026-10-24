@@ -19,10 +19,10 @@ import * as ContextMenuSubStories from "./ContextMenuSub.stories";
 import * as ContextMenuSubTriggerStories from "./ContextMenuSubTrigger.stories";
 import * as ContextMenuSubContentStories from "./ContextMenuSubContent.stories";
 
-export const playgroundOrder = ["size", "alignOffset", "avoidCollisions", "collisionPadding", "loop", "modal", "dir"];
-export const propOrder = ["children", "open", "defaultOpen", "onOpenChange", "onOpenChangeComplete", "modal", "dir"];
+export const playgroundOrder = ["size", "alignOffset", "avoidCollisions", "collisionPadding", "loop", "modal", "dir", "presentation"];
+export const propOrder = ["children", "open", "defaultOpen", "onOpenChange", "onOpenChangeComplete", "controllerRef", "presentation", "labels", "modal", "dir"];
 export const sharedTail = ["id", "className", "style", "data-testid"];
-export const triggerPropOrder = ["children", "disabled", "tabIndex", "aria-label", "aria-labelledby", "aria-describedby", "asChild", ...sharedTail];
+export const triggerPropOrder = ["children", "disabled", "openOnKeys", "tabIndex", "aria-label", "aria-labelledby", "aria-describedby", "asChild", ...sharedTail];
 export const contentPropOrder = [
   "children",
   "size",
@@ -142,7 +142,7 @@ from a visible control (a button on the row, a toolbar).
 ### Import
 
 ```tsx
-import { ContextMenu } from "@dbm-system/components";
+import { ContextMenu, useContextMenuController } from "@dbm-system/components";
 ```
 
 ## Playground
@@ -296,6 +296,10 @@ Each demo has an area to press in. A story's menu is closed until you open it.
 
 <Canvas of={ContextMenuStories.OnRows} />
 
+### Opened from a button, and from a key
+
+<Canvas of={ContextMenuStories.FromAButtonAndAKey} />
+
 ### An item that opens a confirmation
 
 <Canvas of={ContextMenuStories.OpensADialog} />
@@ -303,6 +307,14 @@ Each demo has an area to press in. A story's menu is closed until you open it.
 ### Opened from inside a Dialog
 
 <Canvas of={ContextMenuStories.InsideDialog} />
+
+### As a sheet
+
+<Canvas of={ContextMenuStories.Sheet} />
+
+### A sheet on a phone, a menu from md up
+
+<Canvas of={ContextMenuStories.ResponsivePresentation} />
 
 ### Right to left
 
@@ -322,6 +334,8 @@ Each demo has an area to press in. A story's menu is closed until you open it.
 - Keep the labels short and start them with the verb, so typeahead finds them from their first letters.
 - Style the area from `[data-state="open"]` so the thing the menu is about stays marked while it is open.
 - Keep a dialog an item opens beside the menu, opened from state; focus goes back to the row when it closes.
+- Name a key with `openOnKeys` where the platform has none (macOS has no context-menu key), and keep a visible
+  button for the same actions: `controllerRef` or `useContextMenuController()` opens the menu from one.
 
 </Callout>
 <Callout tone="danger" title="Don't">
@@ -332,14 +346,19 @@ Each demo has an area to press in. A story's menu is closed until you open it.
   press or a key.
 - Don't put a form or arbitrary content in it. A context menu holds `menuitem`s only.
 - Don't rely on a `shortcut` hint to make a key work. It only displays the key; bind it yourself.
-- Don't set `open` to open it from code: a context menu can only be placed by a press, so it would be drawn at the
-  top-left corner of the page. `open` is for following and closing it.
+- Don't set `open` to open it from code: with no press to place it, it is drawn at the top-left corner of the page.
+  Use the controller's `openAt` or `openFrom`, which open it where you say. `open` is for following and closing it.
 - Don't turn off the browser's menu on a whole page. Wrap only the thing that has actions.
 
 </Callout>
 </div>
 
 ## Best practices
+
+- On a phone, draw it as a sheet: `presentation={{ base: "sheet", md: "menu" }}` is a panel across the bottom of the screen with
+  48px rows and the page dimmed behind it, and the floating menu from `md` up. It is the same menu, with the same keys and parts. A
+  submenu covers it under a "Back" row (set the text with `labels`), so keep a sheet's menus shallow. A sheet has no swipe to dismiss:
+  it closes on a press on the dimmed page, Escape, or choosing an item.
 
 - Order the items by how often they are used, and keep a menu to about seven items before grouping them with
   `ContextMenu.Label` and `ContextMenu.Separator`.
@@ -359,7 +378,8 @@ Each demo has an area to press in. A story's menu is closed until you open it.
 - The panel is `role="menu"` and holds `menuitem`, `menuitemcheckbox` and `menuitemradio` elements. It has no
   trigger button to be named after, so give it an `aria-label` when its purpose isn't clear.
 - A right-click, a long press of 700 milliseconds with a finger, and the context-menu key or Shift+F10 on a
-  focused area open the menu. An area that can't take focus can't be opened from the keyboard.
+  focused area open the menu. An area that can't take focus can't be opened from the keyboard. macOS has no
+  context-menu key, so `openOnKeys` names the keys an app wants there; the menu then opens under the focused element.
 - `ArrowDown` and `ArrowUp` move between items, skipping disabled ones; `Home` and `End` jump to the first and
   last; typing letters moves to the item that starts with them. Arrow keys stop at the ends unless `loop` is set.
 - `ArrowRight` opens a submenu and `ArrowLeft` closes it, swapped in right-to-left text (`dir="rtl"`).
@@ -372,7 +392,9 @@ Each demo has an area to press in. A story's menu is closed until you open it.
   `aria-labelledby`, wired automatically.
 - The focused item is highlighted with a quiet fill and, for the keyboard, a ring in the focus colour drawn inside
   it. In forced-colours mode the highlighted item is drawn with an outline in a system colour.
-- Every item is at least 24 × 24 CSS pixels at every size.
+- Every item is at least 24 × 24 CSS pixels at every size, and 48px tall in a sheet.
+- A sheet is the same `role="menu"`: the keys, typeahead and focus handling are the floating menu's. A submenu in a sheet is drawn over
+  the menu it opened from and starts on its "Back" row; the menu under it stays in the page, hidden from view, so focus isn't lost.
 - The menu is modal by default: the rest of the page is hidden from assistive technology and can't be pressed
   while it is open, and a press outside only closes it. Set `modal={false}` for a menu that coexists with the page.
 - Focus goes back to the element that had it when the menu opened. When the menu was opened on an area that
@@ -444,6 +466,23 @@ function Row() {
   );
 }
 
+{/* Opened from code: a button, or a key of your own. The controller opens it where you say, as a right-click would */}
+function Card() {
+  const menu = useRef<ContextMenuController>(null);
+  return (
+    <>
+      <ContextMenu controllerRef={menu}>
+        <ContextMenu.Trigger tabIndex={0} openOnKeys={["Alt+ArrowDown"]}>Project card</ContextMenu.Trigger>
+        <ContextMenu.Content>
+          <ContextMenu.Item>Rename</ContextMenu.Item>
+        </ContextMenu.Content>
+      </ContextMenu>
+      <Button onClick={(event) => menu.current?.openFrom(event.currentTarget)}>Actions</Button>
+    </>
+  );
+}
+{/* menu.current?.openAt({ x: 300, y: 200 }) opens it at a point; menu.current?.close() closes it */}
+
 {/* A native <span> attribute on the area, passed straight through */}
 <ContextMenu.Trigger title="Right-click for actions">Project card</ContextMenu.Trigger>
 ```
@@ -456,8 +495,10 @@ function Row() {
 <TokenRow token="border-width.2" usage="the keyboard focus ring, and the highlighted item's outline in forced-colours mode" />
 <TokenRow token="border.focus" usage="the keyboard focus ring drawn inside the focused item" />
 <TokenRow token="radius.md" usage="panel corner radius" />
+<TokenRow token="radius.xl" usage="the top corners of a sheet" />
 <TokenRow token="radius.sm" usage="item corner radius" />
 <TokenRow token="shadow.light.md / shadow.dark.md" usage="panel elevation" />
+<TokenRow token="shadow.light.lg / shadow.dark.lg" usage="a sheet's elevation" />
 <TokenRow token="font-family.primary" usage="panel typography — set explicitly since the panel renders in a portal outside the component's own tree" />
 <TokenRow token="font-size.xs" usage="extra-small item text; shortcut hint, item description and label heading text" />
 <TokenRow token="font-size.sm" usage="small item text" />
@@ -474,6 +515,7 @@ function Row() {
 <TokenRow token="space.2" usage="gap between an item's icon, label and hint; item padding at small sizes; label heading padding above it; space before trailing content and a spinner" />
 <TokenRow token="space.3" usage="item padding at medium and large sizes" />
 <TokenRow token="space.4" usage="item padding at extra large; gap before the shortcut hint" />
+<TokenRow token="space.12" usage="a row's height in a sheet, and the room left above a sheet so the page behind it shows" />
 <TokenRow token="space.6" usage="item minimum height (the 24px target floor); the height of a scroll fade" />
 <TokenRow token="menu.min-width" usage="panel minimum width" />
 <TokenRow token="menu.max-width" usage="panel maximum width before a long label wraps" />
@@ -484,7 +526,8 @@ function Row() {
 <TokenRow token="bg.brand-subtle" usage="highlighted item and open submenu trigger background" />
 <TokenRow token="bg.danger-subtle" usage="highlighted danger item background" />
 <TokenRow token="z-index.popover" usage="panel stacking order, above a dialog it is opened from" />
-<TokenRow token="motion.duration.fast" usage="open and close fade" />
+<TokenRow token="motion.duration.fast" usage="open and close fade, and a sheet's exit" />
+<TokenRow token="motion.duration.moderate" usage="a sheet's slide in from the bottom edge" />
 <TokenRow token="motion.easing.emphasized" usage="open fade-in" />
 <TokenRow token="motion.easing.standard" usage="close fade-out" />
 <TokenRow token="opacity.0 / opacity.100" usage="open and close fade endpoints; a scroll fade shown or hidden" />

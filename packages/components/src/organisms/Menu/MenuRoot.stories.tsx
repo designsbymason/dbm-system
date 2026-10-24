@@ -37,6 +37,18 @@ const meta: Meta<typeof Menu> = {
         "Makes the rest of the page inert and locks its scroll while the menu is open, and has a press outside only close it, as a native menu does. Set false for a menu that leaves the page usable behind it.",
       table: { defaultValue: { summary: "true" } },
     },
+    presentation: {
+      control: "inline-radio",
+      options: ["menu", "sheet"],
+      description:
+        "How the menu is drawn, a single value or a mobile-first map keyed by breakpoint ({ base: 'sheet', md: 'menu' } for a sheet on a phone and a floating menu from md up). A sheet is anchored to the bottom edge across the full width with taller rows and a scrim behind it; side, align and sideOffset don't apply to it. A submenu covers the menu it opened from, under a Back row.",
+      table: { defaultValue: { summary: '"menu"' } },
+    },
+    labels: {
+      control: false,
+      description:
+        "The text the menu supplies itself, each with an English default: back, the row at the top of a submenu in a sheet. Pass any subset.",
+    },
     dir: {
       control: "inline-radio",
       options: ["ltr", "rtl"],
