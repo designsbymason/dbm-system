@@ -849,6 +849,25 @@ describe("ContextMenu", () => {
       await waitFor(() => expect(screen.queryByRole("menuitem", { name: "Email" })).not.toBeInTheDocument());
     });
 
+    it("has no axe violations open as a sheet, with a submenu showing", async () => {
+      const user = userEvent.setup();
+      render(
+        <Basic root={{ presentation: "sheet" }} content={{ "aria-label": "File actions" }}>
+          <ContextMenu.Item>Rename</ContextMenu.Item>
+          <ContextMenu.Sub>
+            <ContextMenu.SubTrigger>Share</ContextMenu.SubTrigger>
+            <ContextMenu.SubContent>
+              <ContextMenu.Item>Email</ContextMenu.Item>
+            </ContextMenu.SubContent>
+          </ContextMenu.Sub>
+        </Basic>,
+      );
+      openByRightClick();
+      await user.click(await screen.findByRole("menuitem", { name: "Share" }));
+      await screen.findByRole("menuitem", { name: "Back" });
+      expect((await axe(document.body, noRegion)).violations).toHaveLength(0);
+    });
+
     it("opens from code as a sheet too", async () => {
       const controllerRef = createRef<ContextMenuController>();
       render(<Basic root={{ presentation: "sheet", controllerRef }} />);

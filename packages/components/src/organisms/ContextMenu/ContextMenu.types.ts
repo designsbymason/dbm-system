@@ -151,13 +151,23 @@ export interface ContextMenuTriggerProps extends Omit<ComponentPropsWithoutRef<"
 }
 
 export interface ContextMenuContentProps
-  extends Omit<MenuContentProps, "side" | "align" | "sideOffset" | "alignOffset" | "onCloseAutoFocus"> {
+  extends Omit<
+    MenuContentProps,
+    "side" | "align" | "sideOffset" | "alignOffset" | "onCloseAutoFocus" | "aria-label" | "aria-labelledby"
+  > {
   /**
    * Pixel offset of the panel from the point that was pressed, along the pointer's own line (a context menu is placed
    * at the pointer and takes no `side`, `align` or `sideOffset`).
    * @default 0
    */
   alignOffset?: number;
+  /**
+   * An accessible name for the panel. A context menu has no trigger button to be named after, so name it when the
+   * area's own text would not say what the menu is for ("File actions").
+   */
+  "aria-label"?: string;
+  /** The id of an element that names the panel. */
+  "aria-labelledby"?: string;
   /** Called when focus would return to where it was on close. Call `event.preventDefault()` to place it yourself. */
   onCloseAutoFocus?: (event: Event) => void;
 }

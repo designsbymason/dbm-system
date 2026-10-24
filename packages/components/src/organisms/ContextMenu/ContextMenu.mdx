@@ -165,6 +165,21 @@ separator parts below are `Menu`'s own parts, so their properties are the same.
 
 <PropertiesTable of={ContextMenuRootStories} order={propOrder} />
 
+### The controller
+
+`controllerRef` (or `useContextMenuController()` inside the menu) hands out an object that opens and closes the menu from code. Its
+methods do what a right-click there would, and say whether there was something to do:
+
+- `openAt({ x, y })` opens the menu at a point, in the same viewport coordinates a pointer event has. The panel's start corner is at the
+  point, flipped to stay inside the viewport. It works by sending the trigger a `contextmenu` event, which bubbles to the page like a real
+  one, so a page-level `contextmenu` listener sees it. It returns `false`, and does nothing, when the trigger isn't mounted or is `disabled`.
+- `openFrom(element)` opens the menu under an element, at its bottom corner on the reading-start side (the other side in right-to-left
+  text). Use it from a button or a key you handle. It returns `false` in the same cases.
+- `close()` closes the menu, and does nothing if it is closed.
+- `open` reads whether the menu is open now. It is a getter on a stable object: the object itself never changes, so keep it.
+
+Outside a `ContextMenu`, `useContextMenuController()` returns an object whose methods do nothing and warns in development.
+
 ### ContextMenu.Trigger properties
 
 The area a right-click opens the menu from. Also accepts any other native `<span>` attribute beyond what's
@@ -493,11 +508,11 @@ function Card() {
 <TokenRow token="bg.surface" usage="panel background, and the colour the scroll fades run out into" />
 <TokenRow token="border.default" usage="panel border and the separator line" />
 <TokenRow token="border-width.1" usage="panel border and separator width" />
-<TokenRow token="border-width.2" usage="the keyboard focus ring, and the highlighted item's outline in forced-colours mode" />
-<TokenRow token="border.focus" usage="the keyboard focus ring drawn inside the focused item" />
+<TokenRow token="border-width.2" usage="the keyboard focus ring, the highlighted item's outline in forced-colours mode, and the ring round a focusable area" />
+<TokenRow token="border.focus" usage="the keyboard focus ring drawn inside the focused item, and the ring round a focusable area" />
 <TokenRow token="radius.md" usage="panel corner radius" />
 <TokenRow token="radius.xl" usage="the top corners of a sheet" />
-<TokenRow token="radius.sm" usage="item corner radius" />
+<TokenRow token="radius.sm" usage="item corner radius, and the corners of a focusable area's ring" />
 <TokenRow token="shadow.light.md / shadow.dark.md" usage="panel elevation" />
 <TokenRow token="shadow.light.lg / shadow.dark.lg" usage="a sheet's elevation" />
 <TokenRow token="font-family.primary" usage="panel typography — set explicitly since the panel renders in a portal outside the component's own tree" />
@@ -512,7 +527,7 @@ function Card() {
 <TokenRow token="icon-size.sm" usage="item icon size at medium, and the indicator column" />
 <TokenRow token="icon-size.md" usage="item icon size at large, and the indicator column" />
 <TokenRow token="icon-size.lg" usage="item icon size at extra large, and the indicator column" />
-<TokenRow token="space.1" usage="panel padding, separator margin, label heading padding below it, extra-small item vertical padding" />
+<TokenRow token="space.1" usage="panel padding, separator margin, label heading padding below it, extra-small item vertical padding, and the gap between a focusable area and its ring" />
 <TokenRow token="space.2" usage="gap between an item's icon, label and hint; item padding at small sizes; label heading padding above it; space before trailing content and a spinner" />
 <TokenRow token="space.3" usage="item padding at medium and large sizes" />
 <TokenRow token="space.4" usage="item padding at extra large; gap before the shortcut hint" />

@@ -57,6 +57,19 @@ async function realClick(element: Element) {
   await send("Input.dispatchMouseEvent", { type: "mouseReleased", x, y, button: "left", clickCount: 1 });
 }
 
+
+// A sheet slides in from the bottom edge, and `getAnimations()` is empty until the browser has started the animation, so a
+// rectangle read right after `settled` can still be mid-slide on a busy machine. Wait until it has stopped moving.
+const stillRect = async (element: HTMLElement) => {
+  let last = element.getBoundingClientRect();
+  for (let stable = 0; stable < 5; ) {
+    await nextFrame();
+    const next = element.getBoundingClientRect();
+    stable = next.top === last.top && next.bottom === last.bottom ? stable + 1 : 0;
+    last = next;
+  }
+  return last;
+};
 const trigger = (name: string) => body.getByRole("button", { name, hidden: true });
 const textLeft = (element: Element) => {
   const range = document.createRange();
@@ -953,7 +966,7 @@ export const SheetIsPinnedToTheBottomEdge: Story = {
   play: async () => {
     await realClick(trigger("Actions"));
     const menu = await openMenu();
-    const rect = menu.getBoundingClientRect();
+    const rect = await stillRect(menu);
     await expect(Math.abs(rect.left)).toBeLessThan(1);
     await expect(Math.abs(rect.right - window.innerWidth)).toBeLessThan(1);
     await expect(Math.abs(rect.bottom - window.innerHeight)).toBeLessThan(1);
@@ -981,7 +994,7 @@ export const SheetSubmenuCoversTheMenu: Story = {
     await realClick(share);
     const sub = (await body.findAllByRole("menu"))[1] as HTMLElement;
     await settled(sub);
-    const rect = sub.getBoundingClientRect();
+    const rect = await stillRect(sub);
     await expect(Math.abs(rect.bottom - window.innerHeight)).toBeLessThan(1);
     await expect(Math.abs(rect.right - window.innerWidth)).toBeLessThan(1);
     // the menu it opened from is hidden and out of reach (inert), and focus was moved into the submenu first
@@ -1011,7 +1024,7 @@ export const SheetOnAPhoneAndMenuAbove: Story = {
     await realClick(trigger("Actions"));
     const menu = await openMenu();
     await expect(menu).toHaveAttribute("data-presentation", "sheet");
-    await expect(Math.abs(menu.getBoundingClientRect().right - window.innerWidth)).toBeLessThan(1);
+    await expect(Math.abs((await stillRect(menu)).right - window.innerWidth)).toBeLessThan(1);
     await userEvent.keyboard("{Escape}");
     await waitFor(() => expect(body.queryByRole("menu")).toBeNull());
   },

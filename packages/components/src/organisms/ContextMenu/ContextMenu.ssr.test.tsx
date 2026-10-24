@@ -2,8 +2,9 @@ import { act, screen } from "@testing-library/react";
 import { hydrateRoot } from "react-dom/client";
 import { renderToString } from "react-dom/server";
 import { afterEach, describe, expect, it, vi } from "vitest";
+import { createRef } from "react";
 import { ContextMenu } from "./ContextMenu";
-import type { ContextMenuContentProps, ContextMenuProps } from "./ContextMenu.types";
+import type { ContextMenuContentProps, ContextMenuController, ContextMenuProps, ContextMenuTriggerProps } from "./ContextMenu.types";
 
 // Server rendering and hydration. The unit project runs in jsdom, where `window` and `document` exist, so the
 // server render is done with both removed: what it proves is that nothing touches them while rendering.
@@ -17,10 +18,18 @@ function onTheServer<T>(render: () => T): T {
   }
 }
 
-function Tree({ root, content }: { root?: Omit<ContextMenuProps, "children">; content?: ContextMenuContentProps }) {
+function Tree({
+  root,
+  content,
+  trigger,
+}: {
+  root?: Omit<ContextMenuProps, "children">;
+  content?: ContextMenuContentProps;
+  trigger?: ContextMenuTriggerProps;
+}) {
   return (
     <ContextMenu {...root}>
-      <ContextMenu.Trigger>Right-click me</ContextMenu.Trigger>
+      <ContextMenu.Trigger {...trigger}>Right-click me</ContextMenu.Trigger>
       <ContextMenu.Content {...content}>
         <ContextMenu.Group>
           <ContextMenu.Label>Edit</ContextMenu.Label>
@@ -56,6 +65,12 @@ const variants: Array<[string, Parameters<typeof Tree>[0]]> = [
   ["extra small", { root: { defaultOpen: true }, content: { size: "xs" } }],
   ["right to left", { root: { defaultOpen: true, dir: "rtl" } }],
   ["non-modal", { root: { defaultOpen: true, modal: false } }],
+  ["a sheet", { root: { defaultOpen: true, presentation: "sheet" } }],
+  // resolved after hydration from the viewport, so the first render must be the same on the server and the client
+  ["a responsive presentation", { root: { defaultOpen: true, presentation: { base: "sheet", md: "menu" } } }],
+  ["a custom back label", { root: { defaultOpen: true, presentation: "sheet", labels: { back: "Zurück" } } }],
+  ["a controller", { root: { controllerRef: createRef<ContextMenuController>() } }],
+  ["keys that open it", { trigger: { openOnKeys: ["Alt+ArrowDown"], tabIndex: 0 } }],
 ];
 
 afterEach(() => {

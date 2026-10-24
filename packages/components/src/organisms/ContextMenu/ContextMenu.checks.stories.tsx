@@ -41,6 +41,19 @@ const openMenu = async () => {
   await settled(menu);
   return menu;
 };
+
+// A sheet slides in from the bottom edge, and `getAnimations()` is empty until the browser has started the animation, so a
+// rectangle read right after `settled` can still be mid-slide on a busy machine. Wait until it has stopped moving.
+const stillRect = async (element: HTMLElement) => {
+  let last = element.getBoundingClientRect();
+  for (let stable = 0; stable < 5; ) {
+    await nextFrame();
+    const next = element.getBoundingClientRect();
+    stable = next.top === last.top && next.bottom === last.bottom ? stable + 1 : 0;
+    last = next;
+  }
+  return last;
+};
 const waitClosed = () => waitFor(() => expect(body.queryByRole("menu")).toBeNull());
 
 // A real mouse, through the Chrome DevTools Protocol: Storybook's `userEvent` sends synthetic events. The test page
@@ -61,6 +74,7 @@ async function click(x: number, y: number, button: "left" | "right") {
   await send("Input.dispatchMouseEvent", { type: "mouseReleased", ...point, button, clickCount: 1 });
 }
 const leftClick = (element: Element) => click(centreOf(element).x, centreOf(element).y, "left");
+const realClick = leftClick;
 
 const Page = ({ children }: { children: React.ReactNode }) => (
   <div style={{ blockSize: "100vh", position: "relative" }}>{children}</div>
@@ -501,7 +515,7 @@ export const SheetIsPinnedToTheBottomEdge: Story = {
   play: async () => {
     await click(220, 140, "right");
     const menu = await openMenu();
-    const rect = menu.getBoundingClientRect();
+    const rect = await stillRect(menu);
     await expect(Math.abs(rect.left)).toBeLessThan(1);
     await expect(Math.abs(rect.right - window.innerWidth)).toBeLessThan(1);
     await expect(Math.abs(rect.bottom - window.innerHeight)).toBeLessThan(1);
@@ -512,7 +526,7 @@ export const SheetIsPinnedToTheBottomEdge: Story = {
     await leftClick(within(menu).getByRole("menuitem", { name: "Share" }));
     const sub = (await body.findAllByRole("menu"))[1] as HTMLElement;
     await settled(sub);
-    await expect(Math.abs(sub.getBoundingClientRect().bottom - window.innerHeight)).toBeLessThan(1);
+    await expect(Math.abs((await stillRect(sub)).bottom - window.innerHeight)).toBeLessThan(1);
     await expect(getComputedStyle(menu).opacity).toBe("0");
     await leftClick(within(sub).getByRole("menuitem", { name: "Back" }));
     await waitFor(() => expect(body.queryByRole("menuitem", { name: "Email" })).toBeNull());
@@ -544,8 +558,40 @@ export const SheetOnAPhoneFromALongPress: Story = {
     await send("Input.dispatchTouchEvent", { type: "touchEnd", touchPoints: [] });
     const menu = await openMenu();
     await expect(menu).toHaveAttribute("data-presentation", "sheet");
-    await expect(Math.abs(menu.getBoundingClientRect().bottom - window.innerHeight)).toBeLessThan(1);
+    await expect(Math.abs((await stillRect(menu)).bottom - window.innerHeight)).toBeLessThan(1);
     await userEvent.keyboard("{Escape}");
     await waitClosed();
+  },
+};
+
+export const AreaShowsAFocusRingOnlyForTheKeyboard: Story = {
+  name: "A focusable area is ringed when the keyboard reaches it, and not after a real press",
+  render: () => (
+    <div style={{ padding: "var(--dbm-space-8)" }}>
+      <ContextMenu>
+        <ContextMenu.Trigger tabIndex={0} aria-label="Project card" data-testid="area">
+          Project card
+        </ContextMenu.Trigger>
+        <ContextMenu.Content>{items}</ContextMenu.Content>
+      </ContextMenu>
+    </div>
+  ),
+  play: async () => {
+    const target = (await body.findByTestId("area")) as HTMLElement;
+    // A real key, through the protocol: a synthetic one doesn't change what the browser counts as keyboard use.
+    await send("Input.dispatchKeyEvent", { type: "rawKeyDown", key: "Tab", code: "Tab", windowsVirtualKeyCode: 9 });
+    await send("Input.dispatchKeyEvent", { type: "keyUp", key: "Tab", code: "Tab", windowsVirtualKeyCode: 9 });
+    await waitFor(() => expect(target).toHaveFocus());
+    await expect(target.matches(":focus-visible")).toBe(true);
+    const ring = getComputedStyle(target);
+    await expect(ring.outlineStyle).toBe("solid");
+    await expect(ring.outlineWidth).toBe("2px");
+    // a ring that follows the area's own corners: radius-sm, set explicitly
+    await expect(Number.parseFloat(ring.borderTopLeftRadius)).toBeGreaterThan(0);
+    target.blur();
+    await realClick(target);
+    await waitFor(() => expect(target).toHaveFocus());
+    await expect(target.matches(":focus-visible")).toBe(false);
+    await expect(getComputedStyle(target).outlineStyle).toBe("none");
   },
 };

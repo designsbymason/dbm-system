@@ -19,6 +19,23 @@ export interface ContextMenuStageArgs {
   loop?: boolean;
 }
 
+/** The root's props from a story's args, so a story that draws its own area and items still follows every control. */
+export const rootPropsOf = (args: ContextMenuStageArgs) => ({
+  modal: args.modal,
+  dir: args.dir,
+  presentation: args.presentation,
+  onOpenChange: args.onOpenChange,
+});
+
+/** The panel's props from a story's args. */
+export const contentPropsOf = (args: ContextMenuStageArgs) => ({
+  size: args.size,
+  alignOffset: args.alignOffset,
+  avoidCollisions: args.avoidCollisions,
+  collisionPadding: args.collisionPadding,
+  loop: args.loop,
+});
+
 /** The area a story's menu opens from: a labelled, focusable box, so the keyboard path can be tried too. */
 export function Area({ label = "Right-click here, or press Shift+F10 when focused" }: { label?: string }) {
   return (
@@ -54,17 +71,9 @@ export function ContextMenuStage({
   children: ReactNode;
 }) {
   return (
-    <ContextMenu modal={args.modal} dir={args.dir} presentation={args.presentation} onOpenChange={args.onOpenChange}>
+    <ContextMenu {...rootPropsOf(args)}>
       <Area label={label} />
-      <ContextMenu.Content
-        size={args.size}
-        alignOffset={args.alignOffset}
-        avoidCollisions={args.avoidCollisions}
-        collisionPadding={args.collisionPadding}
-        loop={args.loop}
-      >
-        {children}
-      </ContextMenu.Content>
+      <ContextMenu.Content {...contentPropsOf(args)}>{children}</ContextMenu.Content>
     </ContextMenu>
   );
 }

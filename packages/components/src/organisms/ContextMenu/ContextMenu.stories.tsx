@@ -12,7 +12,7 @@ import { countries } from "../Menu/MenuStoryKit";
 import { ContextMenu } from "./ContextMenu";
 import { contextMenuPlaygroundSnippet, contextMenuSnippets } from "./ContextMenu.snippets";
 import type { ContextMenuController, ContextMenuSize } from "./ContextMenu.types";
-import { Area, ContextMenuStage, type ContextMenuStageArgs } from "./ContextMenuStoryKit";
+import { Area, ContextMenuStage, contentPropsOf, rootPropsOf, type ContextMenuStageArgs } from "./ContextMenuStoryKit";
 
 // Combines ContextMenu's own root-level args (modal/dir/onOpenChange) with ContextMenu.Content's (size/alignOffset/…)
 // in one Playground: `meta.component` can only resolve docgen argTypes for one component, so Content's are declared by
@@ -272,7 +272,7 @@ function FileRows({ args }: { args: ContextMenuStageArgs }) {
   return (
     <div style={{ maxInlineSize: "28rem" }} role="list" aria-label="Files">
       {files.map((file) => (
-        <ContextMenu key={file} modal={args.modal} dir={args.dir} onOpenChange={args.onOpenChange}>
+        <ContextMenu key={file} {...rootPropsOf(args)}>
           <ContextMenu.Trigger asChild tabIndex={0}>
             <div
               role="listitem"
@@ -301,7 +301,7 @@ function FileRows({ args }: { args: ContextMenuStageArgs }) {
               </Menu>
             </div>
           </ContextMenu.Trigger>
-          <ContextMenu.Content size={args.size}>
+          <ContextMenu.Content {...contentPropsOf(args)}>
             <ContextMenu.Item icon={PencilSimpleIcon}>Rename</ContextMenu.Item>
             <ContextMenu.Item icon={TrashIcon} tone="danger">
               Delete
@@ -326,7 +326,7 @@ export const FromAButtonAndAKey: Story = {
     const menu = useRef<ContextMenuController>(null);
     return (
       <div style={{ display: "grid", gap: "var(--dbm-space-3)", justifyItems: "start" }}>
-        <ContextMenu controllerRef={menu} modal={args.modal} dir={args.dir} onOpenChange={args.onOpenChange}>
+        <ContextMenu controllerRef={menu} {...rootPropsOf(args)}>
           <ContextMenu.Trigger
             tabIndex={0}
             aria-label="Project card. Right-click, or press Alt+ArrowDown."
@@ -342,7 +342,7 @@ export const FromAButtonAndAKey: Story = {
           >
             Right-click, or focus here and press Alt+ArrowDown
           </ContextMenu.Trigger>
-          <ContextMenu.Content size={args.size}>
+          <ContextMenu.Content {...contentPropsOf(args)}>
             <ContextMenu.Item>Rename</ContextMenu.Item>
             <ContextMenu.Item>Duplicate</ContextMenu.Item>
           </ContextMenu.Content>
@@ -362,9 +362,9 @@ export const OpensADialog: Story = {
     const [confirming, setConfirming] = useState(false);
     return (
       <>
-        <ContextMenu modal={args.modal} dir={args.dir} onOpenChange={args.onOpenChange}>
+        <ContextMenu {...rootPropsOf(args)}>
           <Area label="quarterly-report.pdf — right-click, then Delete" />
-          <ContextMenu.Content size={args.size}>
+          <ContextMenu.Content {...contentPropsOf(args)}>
             <ContextMenu.Item>Rename</ContextMenu.Item>
             <ContextMenu.Item tone="danger" onSelect={() => setConfirming(true)}>
               Delete…
