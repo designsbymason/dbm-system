@@ -2038,6 +2038,7 @@ describe("Playground snippet for CommandPalette", () => {
     highlightTone: "highlight",
     defaultQuery: 'say "hi"',
     placeholder: "Aller à…",
+    searchNested: false,
   } as const;
 
   it.each([{}, everything, { hotkey: false, highlightTone: "none", dir: "ltr", size: "lg", placement: "top", showHints: true }] as const)(
@@ -2050,7 +2051,7 @@ describe("Playground snippet for CommandPalette", () => {
   it("writes only what differs from the defaults", () => {
     const code = commandPalettePlaygroundSnippet({ hotkey: "mod+k", size: "lg", placement: "top", showHints: true, showCloseButton: false, scrimBlur: false, loading: false, error: false, dir: "ltr", highlightTone: "none" });
     expect(code).toContain("<CommandPalette");
-    for (const word of ["hotkey", "size", "placement", "showHints", "showCloseButton", "scrimBlur", "loading", "error", "dir", "highlightTone"]) {
+    for (const word of ["hotkey", "size", "placement", "showHints", "showCloseButton", "scrimBlur", "loading", "error", "dir", "highlightTone", "searchNested"]) {
       expect(code).not.toContain(word);
     }
   });
@@ -2069,6 +2070,8 @@ describe("Playground snippet for CommandPalette", () => {
     expect(code).toContain('highlightTone="highlight"');
     expect(code).toContain('defaultQuery={"say \\"hi\\""}');
     expect(code).toContain('labels={{ placeholder: "Aller à…" }}');
+    expect(code).toContain("searchNested={false}");
     expect(commandPalettePlaygroundSnippet({ hotkey: false })).toContain("hotkey={false}");
+    expect(commandPalettePlaygroundSnippet({ searchNested: true })).not.toContain("searchNested");
   });
 });

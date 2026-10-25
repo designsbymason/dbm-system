@@ -39,7 +39,9 @@ export const commandPaletteSnippets = {
 />`,
 
   lists: `{/* items: choosing a command opens them as a list of its own, under a Back button. Backspace on an empty search
-    goes back, and Escape closes the palette from either level. One level is supported. */}
+    goes back, and Escape closes the palette from either level. One level is supported. The list can set its own
+    placeholder and empty note. A search at the top level also finds them, under the command's label
+    (searchNested={false} turns that off). */}
 <CommandPalette
   trigger={<Button variant="secondary">Search…</Button>}
   commands={[
@@ -47,6 +49,8 @@ export const commandPaletteSnippets = {
       value: "theme",
       label: "Change theme",
       icon: PaletteIcon,
+      placeholder: "Search themes…",
+      emptyContent: "No such theme",
       items: [
         { value: "light", label: "Light", onSelect: () => setTheme("light") },
         { value: "dark", label: "Dark", onSelect: () => setTheme("dark") },
@@ -160,6 +164,7 @@ export interface CommandPalettePlaygroundSnippetArgs {
   highlightTone?: "warning" | "highlight" | "success" | "info" | "danger" | "none";
   defaultQuery?: string;
   placeholder?: string;
+  searchNested?: boolean;
 }
 
 /** The Playground's snippet: only the props that differ from their defaults, around a small real palette. */
@@ -176,6 +181,7 @@ export function commandPalettePlaygroundSnippet(args: CommandPalettePlaygroundSn
   if (args.error) attributes.push("error");
   if (args.dir && args.dir !== "ltr") attributes.push(`dir="${args.dir}"`);
   if (args.highlightTone && args.highlightTone !== "none") attributes.push(`highlightTone="${args.highlightTone}"`);
+  if (args.searchNested === false) attributes.push("searchNested={false}");
   if (args.defaultQuery) attributes.push(`defaultQuery=${quote(args.defaultQuery)}`);
   if (args.placeholder) attributes.push(`labels={{ placeholder: ${JSON.stringify(args.placeholder)} }}`);
   attributes.push(`commands={[

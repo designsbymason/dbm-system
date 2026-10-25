@@ -45,7 +45,7 @@ const closeWithEscape = async () => {
   await userEvent.keyboard("{Escape}");
   await waitFor(() => expect(body().queryByRole("dialog")).toBeNull());
 };
-const search = () => body().getByRole("combobox", { name: "Search commands" }) as HTMLInputElement;
+const search = () => body().getByRole("combobox", { name: /^Search/ }) as HTMLInputElement;
 
 // A real key and a real mouse, through the Chrome DevTools Protocol: Storybook's `userEvent` sends synthetic events.
 // The test page scales its iframe, so a point inside the story is mapped to the page it is drawn on.
@@ -324,6 +324,55 @@ export const OnAPhone: Story = {
     await expect(Math.round(rect.height)).toBe(window.innerHeight);
     await expect(parseFloat(getComputedStyle(dialog).borderTopLeftRadius)).toBe(0);
     await userEvent.click(body().getByRole("button", { name: "Close" }));
+    await waitFor(() => expect(body().queryByRole("dialog")).toBeNull());
+  },
+};
+
+// A touch, dispatched from the page: Chrome's touch input through the DevTools Protocol is not reliable in the test
+// browser, and what matters here is that a tap (touch pointer events, then the compatibility mouse events and a click)
+// chooses a row without taking focus from the search field.
+const tap = (element: Element) => {
+  const rect = element.getBoundingClientRect();
+  const point = { bubbles: true, cancelable: true, clientX: rect.left + rect.width / 2, clientY: rect.top + rect.height / 2 };
+  element.dispatchEvent(new PointerEvent("pointerdown", { ...point, pointerType: "touch", isPrimary: true }));
+  const mouseDown = new MouseEvent("mousedown", point);
+  element.dispatchEvent(mouseDown);
+  element.dispatchEvent(new PointerEvent("pointerup", { ...point, pointerType: "touch", isPrimary: true }));
+  element.dispatchEvent(new MouseEvent("mouseup", point));
+  element.dispatchEvent(new MouseEvent("click", point));
+  return { focusKept: mouseDown.defaultPrevented };
+};
+
+export const TapsOnAPhone: Story = {
+  name: "On a phone a tap opens a list, goes back and runs a command, and keeps focus in the search field",
+  globals: { viewport: { value: "mobile1", isRotated: false } },
+  render: () => <Page fullScreen={{ base: true, sm: false }} showCloseButton />,
+  play: async () => {
+    await expect(window.innerWidth).toBeLessThan(640);
+    await openFrom("Open");
+    const first = tap(body().getByRole("option", { name: /Change theme/ }));
+    await expect(first.focusKept).toBe(true);
+    await body().findByRole("button", { name: "Back" });
+    await expect(search()).toHaveFocus();
+    tap(body().getByRole("button", { name: "Back" }));
+    await waitFor(() => expect(body().queryByRole("button", { name: "Back" })).toBeNull());
+    // A row that runs closes the palette, which gives the page back.
+    tap(body().getByRole("option", { name: /New file/ }));
+    await waitFor(() => expect(body().queryByRole("dialog")).toBeNull());
+  },
+};
+
+export const NestedSearchInTheBrowser: Story = {
+  name: "A search finds a command inside a list, under its parent's heading, and a key press runs it",
+  render: () => <Page />,
+  play: async () => {
+    await openFrom("Open");
+    await userEvent.type(search(), "dark");
+    const row = await body().findByRole("option", { name: /Dark/ });
+    const group = row.closest('[role="group"]') as HTMLElement;
+    await expect(group).toHaveAttribute("aria-labelledby");
+    await expect(document.getElementById(group.getAttribute("aria-labelledby") ?? "")).toHaveTextContent("Change theme");
+    await userEvent.keyboard("{Enter}");
     await waitFor(() => expect(body().queryByRole("dialog")).toBeNull());
   },
 };

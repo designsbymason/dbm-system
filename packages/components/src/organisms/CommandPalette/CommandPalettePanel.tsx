@@ -14,10 +14,14 @@ import { buildRows, firstEnabled, isDisabled, lastEnabled, stepEnabled } from ".
 import { optionDomId, useOptionListWindow } from "../../internal/optionList/useOptionListWindow";
 import styles from "./CommandPalette.module.css";
 import type { CommandItem, CommandPaletteLabels, CommandPaletteProps } from "./CommandPalette.types";
+import { keywordHints } from "./commandPalette.hints";
 import { rankCommands } from "./commandPalette.rank";
 
 // How far the Page Up and Page Down keys move the highlight.
 const PAGE_STEP = 10;
+
+// Joins a parent command's value and a child's into the key a nested search hit is listed under.
+const NESTED_SEPARATOR = "\u0001";
 
 const isThenable = (value: unknown): value is PromiseLike<unknown> =>
   typeof (value as { then?: unknown } | null | undefined)?.then === "function";
@@ -29,6 +33,7 @@ interface CommandPalettePanelProps
     | "defaultQuery"
     | "onQueryChange"
     | "filter"
+    | "searchNested"
     | "recent"
     | "loading"
     | "error"
@@ -59,6 +64,7 @@ export function CommandPalettePanel({
   defaultQuery = "",
   onQueryChange,
   filter,
+  searchNested = true,
   recent,
   loading = false,
   error = false,
@@ -95,7 +101,26 @@ export function CommandPalettePanel({
     [commands, pageValue],
   );
   const level = page?.items ?? commands;
-  const lookup = useMemo(() => new Map(level.map((item) => [item.value, item])), [level]);
+
+  // At the top level, a search also finds the commands inside the lists it could open. Each is listed under its
+  // parent's label with a key of its own (a child's value may repeat a top-level one), and run directly.
+  const hasQuery = query.trim() !== "";
+  const searchingNested = searchNested && !page && hasQuery && filter !== false;
+  const entries = useMemo(() => {
+    const map = new Map<string, { item: CommandItem; parent?: CommandItem; shown: CommandItem }>();
+    for (const item of level) map.set(item.value, { item, shown: item });
+    if (searchingNested) {
+      for (const parent of level) {
+        if (!parent.items || isDisabled(parent)) continue;
+        for (const child of parent.items) {
+          const value = `${parent.value}${NESTED_SEPARATOR}${child.value}`;
+          const shown: CommandItem = { ...child, value, group: parent.label, items: undefined, keywords: [...(child.keywords ?? []), parent.label] };
+          map.set(value, { item: child, parent, shown });
+        }
+      }
+    }
+    return map;
+  }, [level, searchingNested]);
 
   const warned = useRef(false);
   useEffect(() => {
@@ -106,12 +131,12 @@ export function CommandPalettePanel({
     }
   }, [page]);
 
-  const hasQuery = query.trim() !== "";
   const visible = useMemo(() => {
+    const all = [...entries.values()].map((entry) => entry.shown);
     let list: CommandItem[];
-    if (filter === false) list = level;
-    else if (typeof filter === "function") list = level.filter((item) => filter(item, query));
-    else list = rankCommands(level, query);
+    if (filter === false) list = all;
+    else if (typeof filter === "function") list = all.filter((shown) => filter((entries.get(shown.value) as { item: CommandItem }).item, query));
+    else list = rankCommands(all, query);
     if (!hasQuery && !page && recent && recent.length > 0) {
       const wanted = [...new Set(recent)];
       const present = wanted.map((value) => list.find((item) => item.value === value)).filter((item): item is CommandItem => item !== undefined);
@@ -121,7 +146,7 @@ export function CommandPalettePanel({
       }
     }
     return list;
-  }, [level, filter, query, hasQuery, page, recent, labels.recent]);
+  }, [entries, filter, query, hasQuery, page, recent, labels.recent]);
   const { rows, flat } = useMemo(() => buildRows(visible), [visible]);
   const hasIcons = useMemo(() => flat.some((item) => item.icon !== undefined), [flat]);
 
@@ -212,10 +237,10 @@ export function CommandPalettePanel({
     );
   };
   const choose = (option: { value: string }) => {
-    const item = lookup.get(option.value);
-    if (!item || isDisabled(item) || pendingRef.current) return;
-    if (item.items !== undefined && !page) openPage(item);
-    else run(item);
+    const entry = entries.get(option.value);
+    if (!entry || isDisabled(entry.item) || pendingRef.current) return;
+    if (entry.item.items !== undefined && !page && !entry.parent) openPage(entry.item);
+    else run(entry.item);
   };
 
   const handleKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
@@ -250,14 +275,17 @@ export function CommandPalettePanel({
   };
 
   const renderTrailing = (option: CommandItem) => {
-    const item = lookup.get(option.value);
-    if (!item) return null;
+    const entry = entries.get(option.value);
+    if (!entry) return null;
+    const { item, parent } = entry;
     if (pending === item.value) return <Spinner size="xs" tone="default" className={styles.trailing} />;
     const keys = item.shortcut === undefined ? [] : Array.isArray(item.shortcut) ? item.shortcut : [item.shortcut];
-    const opensList = item.items !== undefined && !page;
-    if (keys.length === 0 && !opensList) return null;
+    const opensList = item.items !== undefined && !page && !parent;
+    const hints = hasQuery ? keywordHints(item, query, parent?.label) : [];
+    if (keys.length === 0 && !opensList && hints.length === 0) return null;
     return (
       <span className={styles.trailing}>
+        {hints.length > 0 ? <span className={styles.matchHint}>{`“${hints.join(", ")}”`}</span> : null}
         {keys.map((key, index) => (
           <Kbd key={`${key}-${index}`}>{key}</Kbd>
         ))}
@@ -266,7 +294,7 @@ export function CommandPalettePanel({
     );
   };
 
-  const emptyMessage = loading ? labels.loading : (emptyContent ?? labels.noResults);
+  const emptyMessage = loading ? labels.loading : (page?.emptyContent ?? emptyContent ?? labels.noResults);
 
   return (
     <div className={styles.panel}>
@@ -286,14 +314,14 @@ export function CommandPalettePanel({
           type="text"
           className={styles.input}
           value={query}
-          placeholder={labels.placeholder}
+          placeholder={page?.placeholder ?? labels.placeholder}
           onChange={(event: ChangeEvent<HTMLInputElement>) => setQuery(event.target.value)}
           onKeyDown={handleKeyDown}
           autoComplete="off"
           autoCapitalize="none"
           spellCheck={false}
           role="combobox"
-          aria-label={labels.search}
+          aria-label={page ? labels.searchIn(page.label) : labels.search}
           aria-haspopup="listbox"
           aria-expanded="true"
           aria-controls={listId}
@@ -321,11 +349,11 @@ export function CommandPalettePanel({
           markText={query}
           highlightTone={highlightTone}
           hasIcons={hasIcons}
-          renderOption={renderItem ? (item, state) => renderItem(lookup.get(item.value) ?? item, { highlighted: state.highlighted }) : undefined}
+          renderOption={renderItem ? (item, state) => renderItem(entries.get(item.value)?.item ?? item, { highlighted: state.highlighted }) : undefined}
           renderTrailing={renderTrailing}
           emptyMessage={emptyMessage}
           loading={loading}
-          ariaLabel={labels.title}
+          ariaLabel={page ? page.label : labels.title}
           ariaLabelledBy={undefined}
           setListRef={listWindow.setListRef}
         />

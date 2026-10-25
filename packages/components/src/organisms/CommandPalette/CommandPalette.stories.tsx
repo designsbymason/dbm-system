@@ -36,6 +36,7 @@ const noControls = {
   dir: { control: false },
   highlightTone: { control: false },
   defaultQuery: { control: false },
+  searchNested: { control: false },
   placeholder: { control: false },
   onOpenChange: { control: false },
   onSelect: { control: false },
@@ -98,6 +99,12 @@ const meta: Meta<PlaygroundArgs> = {
       control: false,
       description:
         "How commands are matched to the search. By default every word must be found in a command's label or keywords and the best matches come first within each group. A function keeps or drops each command and leaves the order; false leaves the list as given, for a search the caller does itself.",
+    },
+    searchNested: {
+      control: "boolean",
+      description:
+        "Whether a search at the top level also finds the commands inside lists, listing each under its parent command's label. Try searching \"dark\". Has no effect inside a list or with filter={false}.",
+      table: { defaultValue: { summary: "true" } },
     },
     recent: {
       control: false,
@@ -186,7 +193,7 @@ const meta: Meta<PlaygroundArgs> = {
     labels: {
       control: false,
       description:
-        "The words the palette writes itself: title, search, placeholder, noResults, loading, error, failed, back, recent, results (a function of the count) and the three footer hints. Pass the ones to replace.",
+        "The words the palette writes itself: title, search, searchIn (a function of a list's label), placeholder, noResults, loading, error, failed, back, recent, results (a function of the count) and the three footer hints. Pass the ones to replace.",
       table: { defaultValue: { summary: "" } },
     },
     formatNumber: {
@@ -217,6 +224,7 @@ const meta: Meta<PlaygroundArgs> = {
   args: {
     hotkey: "mod+k",
     defaultQuery: "",
+    searchNested: true,
     loading: false,
     error: false,
     showHints: true,

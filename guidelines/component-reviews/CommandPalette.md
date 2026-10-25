@@ -11,7 +11,10 @@ A modal `Dialog` with a search field and an inline list of commands, opened by a
 - The split of `OptionListBody` out of `OptionListPanel` changed no output: `Combobox` and `MultiSelect`'s unit tests pass unchanged. Their real-browser checks are to be re-run as part of this component's review, as ADR-0133 says.
 - Looked at in Storybook in light purple and dark emerald.
 
+## Added after the first build
+Searching the commands inside lists from the top level, the keyword a row matched through, and a list's own placeholder and empty note ([ADR-0134](../adr/0134-commandpalette-ranks-by-word-start-keeps-group-order-drills-into-one-level-of-pages-and-runs-promise-commands-busy-over-fuzzy-matching-a-flat-list-or-closing-first.md)), each with unit tests and, for nested search and taps on a phone width, real-browser checks.
+
 ## Known gaps, for the review pass
-- A real touch (a page-dispatched tap) is not yet checked; `fullScreen` is off by default until it has been tried on a real device (ADR-0132).
+- A tap is checked with touch pointer events dispatched from the page (a real touch through the DevTools Protocol is unreliable in the test browser); a real device has not been tried, so `fullScreen` stays off by default and the on-screen keyboard's effect on the layout is unverified (ADR-0132).
 - Light/dark and both brands are looked at only in part; the full four-theme pass, contrast checks of the highlighted row against `bg.brand-subtle` (shared with `Combobox`) and the Docs page visual pass are part of the review.
 - The feature-completeness pass and the Properties-table checks of `06` §9 are still to do.

@@ -48,9 +48,17 @@ export interface CommandItem {
   /**
    * Commands this one opens as a list of their own. Choosing it clears the search and shows them under a Back button;
    * Backspace on an empty search goes back. One level is supported: the `items` of a command in a list opened this
-   * way are ignored (a development warning says so).
+   * way are ignored (a development warning says so). While something is typed at the top level, these commands are
+   * searched too and listed under this command's label (see `searchNested`).
    */
   items?: CommandItem[];
+  /**
+   * The search field's placeholder while this command's `items` are open, in place of `labels.placeholder`
+   * ("Search themes…").
+   */
+  placeholder?: string;
+  /** What the list says when nothing in this command's `items` matches, in place of the palette's `emptyContent`. */
+  emptyContent?: ReactNode;
 }
 
 /**
@@ -99,6 +107,8 @@ export interface CommandPaletteLabels {
   title: string;
   /** The search field's accessible name. @default 'Search commands' */
   search: string;
+  /** The search field's accessible name inside a list opened from a command, given the command's label. @default 'Search Change theme' */
+  searchIn: (label: string) => string;
   /** The search field's placeholder. @default 'Type a command or search…' */
   placeholder: string;
   /** The note when nothing matches. @default 'No results' */
@@ -171,6 +181,13 @@ export interface CommandPaletteProps
    * `onQueryChange` reports typing, and `loading` while they are on their way).
    */
   filter?: false | ((item: CommandItem, query: string) => boolean);
+  /**
+   * Whether a search at the top level also finds the `items` of commands that open a list, listing each under its
+   * parent command's label (a command whose parent is `disabled` is left out). Choosing one runs it at once. Has no
+   * effect inside a list, or with `filter={false}`.
+   * @default true
+   */
+  searchNested?: boolean;
   /**
    * The `value`s of commands to list first, under a heading of their own, while the search is empty. A command shows
    * once: in this group while the search is empty, and in its usual place otherwise. The palette remembers nothing,

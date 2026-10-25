@@ -89,7 +89,7 @@ const PER_COMPONENT_CSS_BUDGET_KB = 5;
 //   against the default 10KB (ADR-0129). The budget is 22KB.
 //   CommandPalette (2026-10-25): a `Dialog` (the panel, its scrim, the close button and the overlay sections) with the option list rows it shares
 //   with `Combobox`, the `IconButton`, `Tag`, `Kbd`, `Spinner` and `Highlight` it draws with, and its own ranking, hotkey, pages, recent and
-//   running-a-command code, 14.41KB of JS and 6.08KB of CSS measured against the defaults of 10KB and 5KB (ADR-0132, ADR-0133, ADR-0134).
+//   running-a-command code, 14.75KB of JS and 6.11KB of CSS measured (with searching inside lists, the keyword a row matched through and a list's own text) against the defaults of 10KB and 5KB (ADR-0132, ADR-0133, ADR-0134).
 //   The budgets are 16KB and 7KB.
 const JS_BUDGET_OVERRIDES_KB = { Calendar: 12, CommandPalette: 16, DataTable: 32, DatePicker: 18, DateRangePicker: 22, FileUpload: 14, MultiSelect: 18, Navbar: 22, Sidebar: 22, TimeRangePicker: 12, Toolbar: 13 };
 

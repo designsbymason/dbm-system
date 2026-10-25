@@ -312,7 +312,7 @@ describe("CommandPalette", () => {
     });
 
     it("starts from defaultQuery", async () => {
-      setup({ defaultQuery: "theme" });
+      setup({ defaultQuery: "theme", searchNested: false });
       await screen.findByRole("dialog");
       expect(labelsOf()).toEqual(["Change theme"]);
     });
@@ -725,6 +725,134 @@ describe("CommandPalette", () => {
       await waitFor(() => expect(dialog()).toBeNull());
       fireEvent.keyDown(document.body, { key: "k", code: "KeyK", ctrlKey: true });
       expect(await screen.findByRole("dialog")).toBeInTheDocument();
+    });
+  });
+
+  describe("searching the commands inside lists", () => {
+    it("finds a command inside a list from the top level, under its parent's label, and runs it", async () => {
+      const user = userEvent.setup();
+      const onSelect = vi.fn();
+      const nested = [
+        { value: "theme", label: "Change theme", group: "App", items: [{ value: "dark", label: "Dark mode", onSelect }, { value: "light", label: "Light mode" }] },
+        { value: "dark", label: "Dark corners", group: "App" },
+      ];
+      setup({ commands: nested });
+      await screen.findByRole("dialog");
+      await user.type(input(), "dark");
+      // A top-level command and a nested one can share a value.
+      expect(labelsOf()).toEqual(["Dark corners", "Dark mode"]);
+      expect(screen.getByText("Change theme", { selector: '[role="presentation"]' })).toBeInTheDocument();
+      expect(screen.getAllByRole("group")).toHaveLength(2);
+      await user.click(screen.getByRole("option", { name: /Dark mode/ }));
+      expect(onSelect).toHaveBeenCalledWith(expect.objectContaining({ value: "dark", label: "Dark mode" }));
+      await waitFor(() => expect(dialog()).toBeNull());
+    });
+
+    it("finds a nested command by its parent's name, and has no marker for opening a list on it", async () => {
+      const user = userEvent.setup();
+      setup();
+      await screen.findByRole("dialog");
+      await user.type(input(), "theme");
+      expect(labelsOf()).toEqual(["Change theme", "Light", "Dark"]);
+      const light = screen.getByRole("option", { name: /Light/ });
+      expect(light.querySelector('[class*="chevron"]')).toBeNull();
+      expect(light.querySelector('[class*="matchHint"]')).toBeNull();
+    });
+
+    it("does not look inside a list for a disabled parent, with searchNested off, inside a list, or with filter={false}", async () => {
+      const user = userEvent.setup();
+      const locked = [{ value: "a", label: "Locked", disabled: "No", items: [{ value: "b", label: "Hidden child" }] }];
+      const { unmount } = setup({ commands: locked });
+      await screen.findByRole("dialog");
+      await user.type(input(), "hidden");
+      expect(screen.getByRole("option")).toHaveTextContent("No results");
+      unmount();
+
+      const open = [{ value: "a", label: "Parent", items: [{ value: "b", label: "Child" }] }];
+      const off = setup({ commands: open, searchNested: false });
+      await screen.findByRole("dialog");
+      await user.type(input(), "child");
+      expect(screen.getByRole("option")).toHaveTextContent("No results");
+      off.unmount();
+
+      const byCaller = setup({ commands: open, filter: false });
+      await screen.findByRole("dialog");
+      await user.type(input(), "child");
+      expect(labelsOf()).toEqual(["Parent"]);
+      byCaller.unmount();
+
+      setup({ commands: open });
+      await screen.findByRole("dialog");
+      await user.click(screen.getByRole("option", { name: /Parent/ }));
+      await user.type(input(), "par");
+      expect(screen.getByRole("option")).toHaveTextContent("No results");
+    });
+
+    it("hands a filter function the original commands, and counts nested hits", async () => {
+      const user = userEvent.setup();
+      const filter = vi.fn((item: CommandItem, text: string) => item.label.toLowerCase().includes(text.toLowerCase()));
+      setup({ filter });
+      await screen.findByRole("dialog");
+      await user.type(input(), "light");
+      expect(labelsOf()).toEqual(["Light"]);
+      expect(filter.mock.calls.every(([item]) => !item.value.includes("\u0001"))).toBe(true);
+      await waitFor(() => expect(screen.getByRole("status")).toHaveTextContent("1 result available"), { timeout: 2000 });
+    });
+  });
+
+  describe("saying why a command matched", () => {
+    it("shows the keyword a row was found through when its label doesn't hold the word", async () => {
+      const user = userEvent.setup();
+      setup();
+      await screen.findByRole("dialog");
+      await user.type(input(), "prefer");
+      const row = screen.getByRole("option", { name: /Open settings/ });
+      expect(row.querySelector('[class*="matchHint"]')).toHaveTextContent("“preferences”");
+      expect(row).toHaveAccessibleName(/Open settings.*preferences/);
+    });
+
+    it("shows nothing when the label holds every word, and nothing without a search", async () => {
+      const user = userEvent.setup();
+      setup();
+      await screen.findByRole("dialog");
+      expect(document.querySelector('[class*="matchHint"]')).toBeNull();
+      await user.type(input(), "settings");
+      expect(document.querySelector('[class*="matchHint"]')).toBeNull();
+    });
+  });
+
+  describe("a list's own placeholder and empty note", () => {
+    const withPage: CommandItem[] = [
+      { value: "theme", label: "Change theme", placeholder: "Search themes…", emptyContent: "No such theme", items: [{ value: "dark", label: "Dark" }] },
+    ];
+
+    it("uses them inside the list, and the palette's own outside it", async () => {
+      const user = userEvent.setup();
+      setup({ commands: withPage });
+      await screen.findByRole("dialog");
+      expect(input()).toHaveAttribute("placeholder", "Type a command or search…");
+      expect(input()).toHaveAccessibleName("Search commands");
+      expect(screen.getByRole("listbox")).toHaveAccessibleName("Command palette");
+      await user.click(screen.getByRole("option", { name: /Change theme/ }));
+      expect(input()).toHaveAttribute("placeholder", "Search themes…");
+      expect(input()).toHaveAccessibleName("Search Change theme");
+      expect(screen.getByRole("listbox")).toHaveAccessibleName("Change theme");
+      await user.type(input(), "zzz");
+      expect(screen.getByRole("option")).toHaveTextContent("No such theme");
+      await user.clear(input());
+      await user.keyboard("{Backspace}");
+      expect(input()).toHaveAttribute("placeholder", "Type a command or search…");
+    });
+
+    it("falls back to the palette's words when the list sets none, and takes searchIn from labels", async () => {
+      const user = userEvent.setup();
+      setup({ commands: [{ value: "theme", label: "Theme", items: [{ value: "dark", label: "Dark" }] }], emptyContent: "Nothing", labels: { searchIn: (label) => `Cherche ${label}` } });
+      await screen.findByRole("dialog");
+      await user.click(screen.getByRole("option", { name: /Theme/ }));
+      expect(input()).toHaveAttribute("placeholder", "Type a command or search…");
+      expect(input()).toHaveAccessibleName("Cherche Theme");
+      await user.type(input(), "zzz");
+      expect(screen.getByRole("option")).toHaveTextContent("Nothing");
     });
   });
 });

@@ -17,6 +17,7 @@ const NO_COMMANDS: CommandItem[] = [];
 const buildDefaultLabels = (formatNumber: (value: number) => string): CommandPaletteLabels => ({
   title: "Command palette",
   search: "Search commands",
+  searchIn: (label) => `Search ${label}`,
   placeholder: "Type a command or search…",
   noResults: "No results",
   loading: "Loading…",
@@ -78,6 +79,7 @@ export const CommandPalette = forwardRef<HTMLDivElement, CommandPaletteProps>(
       defaultQuery,
       onQueryChange,
       filter,
+      searchNested,
       recent,
       loading,
       error,
@@ -205,6 +207,7 @@ export const CommandPalette = forwardRef<HTMLDivElement, CommandPaletteProps>(
               defaultQuery={defaultQuery}
               onQueryChange={onQueryChange}
               filter={filter}
+              searchNested={searchNested}
               recent={recent}
               loading={loading}
               error={error}

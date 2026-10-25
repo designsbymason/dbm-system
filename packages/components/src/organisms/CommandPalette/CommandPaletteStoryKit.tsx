@@ -29,6 +29,8 @@ export const sampleCommands: CommandItem[] = [
     label: "Change theme",
     group: "App",
     icon: PaletteIcon,
+    placeholder: "Search themes…",
+    emptyContent: "No such theme",
     items: [
       { value: "light", label: "Light", icon: SunIcon },
       { value: "dark", label: "Dark", icon: MoonIcon },

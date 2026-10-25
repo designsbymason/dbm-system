@@ -20,6 +20,7 @@ export const propOrder = [
   "query",
   "onQueryChange",
   "filter",
+  "searchNested",
   "recent",
   "loading",
   "error",
@@ -135,6 +136,7 @@ A command is an object in the `commands` array.
 | `onSelect` | Runs when it is chosen; may return a promise. |
 | `closeOnSelect` | `false` keeps the palette open after it runs. |
 | `items` | Commands it opens as a list of its own. |
+| `placeholder`, `emptyContent` | For a command with `items`: the search field's placeholder and the note for no results while its list is open. |
 
 ## Variants
 
@@ -214,7 +216,9 @@ A command is an object in the `commands` array.
 - **The hotkey is the palette's own.** `hotkey` defaults to `mod+k`, where `mod` is ⌘ on an Apple platform and Ctrl elsewhere. It works from anywhere, including from inside a text field, and the press is kept from the browser, which takes the combination from the few that reserve it (Ctrl+K focuses the address bar's search in some). Choose another combination with `hotkey="mod+shift+p"`, or turn it off with `hotkey={false}` and open the palette yourself.
 - **Write shortcut hints as words when a symbol is unclear.** `["Ctrl", "N"]` is read as two keys; a glyph like `⌘` may not be read at all. The hint is display only and binds nothing.
 - **Search matches every word, in any order,** in a command's label (or `textValue`) and its `keywords`, ignoring case and accents. A label that starts with a word ranks above one that has it inside, and a match in `keywords` ranks last. Commands keep their group's place, so a heading never jumps as someone types, and equal matches keep the order you gave.
-- **Only the current list is searched.** Inside a list opened from a command, the search covers that list alone. Put a command at the top level too if it should be found from the start.
+- **A search at the top level also finds the commands inside lists.** Typing "dark" lists "Dark" under the heading "Change theme", and choosing it runs it without opening the list. The parent's label is searched too, so "theme dark" finds it. A disabled parent's commands are left out, and `searchNested={false}` turns the behaviour off. Inside a list the search covers that list alone.
+- **A row says why it matched.** When a word is found only in a command's `keywords`, never in its label, the row ends with that keyword in quotes ("preferences" after typing "prefer"), so a match through a word the row never shows is not a mystery.
+- **A list can speak for itself.** A command with `items` can set a `placeholder` ("Search themes…") and an `emptyContent` for its own list; the search field is then named after the list (`labels.searchIn`) and so is the listbox.
 - **`recent` is a list of values you keep.** The palette remembers nothing between openings, because what counts as recent (per person, per workspace, after a round trip) is yours to say. A command shows once: under the Recent heading while the search is empty, and in its usual place once something is typed.
 - **A command that returns a promise is busy until it settles.** The row shows a spinner, the palette ignores Escape and a press on the scrim, no other command runs, and it closes when the promise resolves unless `closeOnSelect` is `false`. A rejection keeps it open, announces `labels.failed` and calls `onSelectError`; with no handler the rejection is left unhandled so it is not lost silently.
 - **A command that opens something else needs nothing special.** Open a `ConfirmDialog` or a `Dialog` from `onSelect` and focus goes to it, not back to where the palette was opened.
@@ -229,7 +233,7 @@ A command is an object in the `commands` array.
 
 - The panel is a `dialog` with `aria-modal`, named by `labels.title` ("Command palette"), `aria-label` or `aria-labelledby`. The page behind it is hidden from assistive technology and can't be scrolled or reached, and focus returns to what opened it when it closes.
 - The search field is a native text input with `role="combobox"`, `aria-expanded="true"`, `aria-controls`, `aria-autocomplete="list"` and `aria-haspopup="listbox"`. The highlighted command is named by `aria-activedescendant`, so a screen reader reads each one as the arrow keys reach it.
-- The list is a `listbox`; each command is an `option`. One that can't run has `aria-disabled`, and its reason is read after its name. Groups are named by their heading; in a list long enough to be windowed, each command is read with its group's name instead.
+- The list is a `listbox`; each command is an `option`. Inside a list opened from a command, the search field and the list are named after that command. A keyword shown on a row because it made the row match is part of the row's name. One that can't run has `aria-disabled`, and its reason is read after its name. Groups are named by their heading; in a list long enough to be windowed, each command is read with its group's name instead.
 - "No results" and "Loading…" are rows that can't be chosen, so the list is never empty to assistive technology. A loading list is `aria-busy`, and a palette waiting on a command is `aria-busy` too.
 - The number of results is announced in a status region that was already in the page, only when it changes as someone types or opens a list, never when the palette merely opens. A failed command and an error are announced when they appear.
 - The Back button has an accessible name (`labels.back`) and is at least 24 × 24 pixels, as is every row. Enter while an input method is composing a character does nothing.
@@ -276,6 +280,13 @@ A command is an object in the `commands` array.
       { value: "light", label: "Light", onSelect: () => setTheme("light") },
       { value: "dark", label: "Dark", onSelect: () => setTheme("dark") },
     ] },
+  ]}
+/>
+
+{/* A list that speaks for itself; a search at the top level finds its commands too, under "Change theme" */}
+<CommandPalette
+  commands={[
+    { value: "theme", label: "Change theme", placeholder: "Search themes…", emptyContent: "No such theme", items: themes },
   ]}
 />
 

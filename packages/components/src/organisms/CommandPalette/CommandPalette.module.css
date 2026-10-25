@@ -80,6 +80,16 @@
   gap: var(--dbm-space-1);
 }
 
+/* The word a row was found through when its label doesn't hold it: small and quiet, cut with an ellipsis. */
+.matchHint {
+  font-size: var(--dbm-font-size-xs);
+  font-style: italic;
+  max-inline-size: 10rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .chevron:dir(rtl) {
   transform: scaleX(-1);
 }
