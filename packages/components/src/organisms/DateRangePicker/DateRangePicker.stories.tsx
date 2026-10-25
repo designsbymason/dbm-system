@@ -1,5 +1,5 @@
 import type { Meta, StoryContext, StoryObj } from "@storybook/react-vite";
-import { useState } from "react";
+import { Fragment, useState } from "react";
 import { expect, fn, userEvent, waitFor, within } from "storybook/test";
 import { Button } from "../../atoms/Button";
 import { Text } from "../../atoms/Text";
@@ -360,6 +360,11 @@ const stay: DateRangeValue = ["2026-10-05", "2026-10-09"];
 
 // Stories that depend on the date work from the real one, so they stay true on any day. Plain "YYYY-MM-DD" arithmetic, as a
 // reader's own code would write it.
+// Today as the component reads it: the browser's own date, not UTC, so a demo built on it stays true on any day.
+const isoToday = () => {
+  const now = new Date();
+  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
+};
 const shiftDays = (date: string, days: number) => {
   const [year, month, day] = date.split("-").map(Number) as [number, number, number];
   const shifted = new Date(Date.UTC(year, month - 1, day + days));
@@ -368,6 +373,14 @@ const shiftDays = (date: string, days: number) => {
 
 /** Type each end, or open the calendar and choose the first and last date; drive every prop from the Controls panel. */
 export const Playground: Story = {
+  // An uncontrolled pair keeps the `defaultOpen` it first mounted with, so the control remounts it to be live.
+  decorators: [
+    (Story, context) => (
+      <Fragment key={String(context.args.defaultOpen)}>
+        <Story />
+      </Fragment>
+    ),
+  ],
   args: { maxRangeDays: 0 },
   argTypes: {
     maxRangeDays: {
@@ -447,7 +460,7 @@ export const UnavailableReasons: Story = {
   parameters: { docs: { source: { code: dateRangePickerSnippets.reasons } } },
   argTypes: { ...noControls },
   render: function UnavailableReasonsStory() {
-    const today = new Date().toISOString().slice(0, 10);
+    const today = isoToday();
     const booked = shiftDays(today, 3);
     return (
       <div style={stack}>
@@ -505,6 +518,13 @@ export const ByMonth: Story = {
       />
     </div>
   ),
+};
+
+export const Rounded: Story = {
+  name: "Round days and months",
+  parameters: { docs: { source: { code: dateRangePickerSnippets.rounded } } },
+  argTypes: { ...noControls },
+  render: () => <DateRangePicker rounded aria-label="Stay" defaultValue={stay} />,
 };
 
 export const Months: Story = {

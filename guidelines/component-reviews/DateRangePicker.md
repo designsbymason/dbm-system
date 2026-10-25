@@ -45,3 +45,16 @@ Added 15 unit tests and 3 real-browser checks (and the Months-only story); the t
 ## `rounded`, 2026-10-25
 
 `rounded` on the pair, as on [DatePicker](DatePicker.md): the calendar's days and month buttons, and by month the month cells, are circles; the strip behind a range keeps its straight edges and the fields keep their corners. Two unit tests and two real-browser checks.
+
+## Final review pass (2026-10-25) and its fixes
+The §9 pass (`/review-component DateRangePicker`) found five things, all documentation or coverage; no behaviour was wrong. All are fixed.
+- **The component JSDoc was stale:** it now covers months only, `rounded`, editing the start, requiring both ends, `commitOn` on the calendar's picks and the one clear button.
+- **Untested public surface:** tests for `container`, a consumer's `onKeyDown`, `onKeyUp` and `onInput` still running beside the pair's own, the `maxRangeDays` and `align` warnings and the by-month limits warning, and every exported type used through `index.ts`; four server-render and hydration variants (by month, by month open and rounded, rounded, by month right to left). Four of the new tests were broken on purpose (the container, both handlers' wrapping, the warning) and failed.
+- **The "Design tokens used" table listed tokens the pair never draws** (`icon-size.*`, `space.6`, `bg.neutral-subtle`, `radius.full`, `icon.default`: the rules of `DatePicker`'s in-field buttons, which the ends have off here). The docs guard now reads `DatePicker`'s stylesheet without those rules, and the rows are gone; the pair's own `IconButton`s keep their tokens on that atom's page.
+- **Two stories took today from UTC** while the component reads the local date; the one that built a "fully booked" day from it now uses the local date.
+- **`defaultOpen` was a dead Playground control** (an uncontrolled pair keeps what it mounted with); the Playground now remounts on it, driven live to confirm. `required` looks inert beside a whole demo range because a whole range already needs both ends; it is behaviour-only, covered by tests.
+- **Snippets:** all 20 typecheck as written and the Playground builder's output compiles for six spreads of controls; placeholders (`fullyBooked`, `addDays`, `save`, the range state) now say what they stand for, and a "Round days and months" story and snippet were added.
+
+Checks: `pnpm lint` clean; unit project 188 files, 10,345 tests; Chromium Storybook project 285 files, 2,208 tests; `check-guidelines` 0 warnings.
+
+**Not run at this pass:** a screen-reader pass, a real phone and finger, Windows high-contrast mode, Firefox and Safari, the live "Show code" read on the Docs page, purple dark and a tablet width by eye. Awaiting the maintainer's decision to Finalize.

@@ -3,10 +3,16 @@ import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 
 // The Docs page's "Design tokens used" table is written by hand, so it can drift from the stylesheets: tokens they used
-// were missing from it. This holds them together. The panel is drawn with DatePicker's stylesheet, so both are read.
+// were missing from it. This holds them together. The ends and the panel are drawn with DatePicker's stylesheet, so it is read
+// too, less the rules of the in-field clear and calendar buttons, which the ends never draw here (the pair's two buttons are
+// `IconButton`s, whose tokens belong to that atom's own page).
 // (The tests run from the package's own folder.)
 const folder = join(process.cwd(), "src/organisms");
-const css = readFileSync(join(folder, "DateRangePicker/DateRangePicker.module.css"), "utf8") + readFileSync(join(folder, "DatePicker/DatePicker.module.css"), "utf8");
+// A rule that mentions the button classes, up to its closing brace (none of those rules is nested).
+const unusedButtonRules = /[^{}]*\.(iconButton|button(Xs|Sm|Md|Lg|Xl))\b[^{}]*\{[^}]*\}/g;
+const css =
+  readFileSync(join(folder, "DateRangePicker/DateRangePicker.module.css"), "utf8") +
+  readFileSync(join(folder, "DatePicker/DatePicker.module.css"), "utf8").replace(unusedButtonRules, "");
 const mdx = readFileSync(join(folder, "DateRangePicker/DateRangePicker.mdx"), "utf8");
 
 /** `--dbm-icon-button-size-sm` -> `icon-button.size.sm`, the way a token row writes it (the category is a prefix). */

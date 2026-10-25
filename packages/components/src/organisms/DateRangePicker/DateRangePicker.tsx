@@ -62,12 +62,21 @@ const textOf = (value: unknown): string => (typeof value === "string" ? value : 
  *
  * `minRangeDays`, `maxRangeDays` and `rangeSpansUnavailable` limit the length of a range: the calendar disables the end
  * dates that would break them and a typed end that does is flagged with a message that says why. `presets` adds quick
- * choices ("Last 7 days"), `numberOfMonths` takes a breakpoint map (one month on a phone, two beyond), and `side`,
- * `align` and `presentation` place the panel against the pair. The panel opens from the button after the end or with
- * `Alt`+`ArrowDown` in a segment; opened from the end it chooses the end and leaves the start where it is.
+ * choices ("Last 7 days"), `numberOfMonths` takes a breakpoint map (one month on a phone, two beyond), `rounded` draws the
+ * calendar's days and month buttons as circles, and `side`, `align` and `presentation` place the panel against the pair.
+ * With `granularity="month"` each end is a month and a year, the panel is a grid of months, and the value is
+ * `["YYYY-MM", "YYYY-MM"]`.
  *
- * A form submits it as two values under `name[]`, and `required` stops a submit while either end is empty. `ref`
- * forwards to the group that holds the pair; `id` goes on the start's first segment.
+ * The panel opens from the button after the end or with `Alt`+`ArrowDown` in a segment. The first date chosen is the start
+ * (the calendar stays open for the end) and the second the end. Opened from the end it chooses the end and leaves the start
+ * where it is; opened from the start of a whole range it chooses the start and keeps the end, unless that date is after the
+ * end or would break a length limit, which starts a new range. `commitOn` holds what is chosen in the calendar until the
+ * range is whole or the calendar closes.
+ *
+ * A form submits it as two values under `name[]`. A range needs both ends: once one end has a date the other is required
+ * whether or not the pair is, so a half range is refused, and `required` also refuses an empty pair. One clear button
+ * (`clearable`) empties both ends, a half-typed segment included. `ref` forwards to the group that holds the pair; `id`
+ * goes on the start's first segment.
  *
  * @example
  * ```tsx

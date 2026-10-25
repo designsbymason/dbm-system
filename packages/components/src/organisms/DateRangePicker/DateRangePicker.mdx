@@ -124,6 +124,10 @@ import { DateRangePicker } from "@dbm-system/components";
 
 <Canvas of={DateRangePickerStories.Presets} />
 
+### Round days and months
+
+<Canvas of={DateRangePickerStories.Rounded} />
+
 ### Months on show
 
 <Canvas of={DateRangePickerStories.Months} />
@@ -304,7 +308,7 @@ function Example() {
   {(field) => <DateRangePicker {...field} />}
 </FormField>
 
-{/* Quick choices that are a function of today */}
+{/* Quick choices that are a function of today (daysAgo: your own date helper) */}
 <DateRangePicker
   aria-label="Report period"
   presets={[{ label: "Last 7 days", value: (today) => [daysAgo(today, 6), today] }]}
@@ -324,20 +328,17 @@ function Example() {
 <TokenRow token="bg.surface" usage="each end's background" />
 <TokenRow token="border.default" usage="each end's border" />
 <TokenRow token="border.neutral" usage="each end's border on hover" />
-<TokenRow token="border.focus" usage="each end's border and ring while a segment has focus; the focus ring of the buttons" />
+<TokenRow token="border.focus" usage="each end's border and ring while a segment has focus" />
 <TokenRow token="border.danger" usage="each end's border in the error state" />
 <TokenRow token="border-width.1" usage="each end's border width" />
 <TokenRow token="border-width.2" usage="focus ring width" />
 <TokenRow token="radius.md" usage="each end's corner radius" />
 <TokenRow token="radius.sm" usage="the segments' corners" />
-<TokenRow token="radius.full" usage="the clear and calendar buttons' corners" />
 <TokenRow token="text.primary" usage="segment text" />
 <TokenRow token="text.tertiary" usage="an empty segment's placeholder, and the separators between segments" />
 <TokenRow token="text.secondary" usage="the reason a day is unavailable, shown under the calendar" />
 <TokenRow token="text.on-brand" usage="the focused segment's text" />
 <TokenRow token="bg.brand" usage="the focused segment's fill" />
-<TokenRow token="bg.neutral-subtle" usage="hover fill of the buttons" />
-<TokenRow token="icon.default" usage="the clear and calendar buttons' icons" />
 <TokenRow token="font-family.primary" usage="the ends' typography" />
 <TokenRow token="font-size.xs" usage="text size at size xs" />
 <TokenRow token="font-size.sm" usage="text size at size sm" />
@@ -345,15 +346,10 @@ function Example() {
 <TokenRow token="font-size.md" usage="text size at size lg" />
 <TokenRow token="font-size.lg" usage="text size at size xl" />
 <TokenRow token="line-height.tight" usage="line height, so each size is as tall as an Input" />
-<TokenRow token="icon-size.sm" usage="the button's compensating margin at size sm (its icon is this size)" />
-<TokenRow token="icon-size.md" usage="the button's compensating margin at size md (its icon is this size)" />
-<TokenRow token="icon-size.lg" usage="the button's compensating margin at size lg (its icon is this size)" />
-<TokenRow token="icon-size.xl" usage="the button's compensating margin at size xl (its icon is this size)" />
-<TokenRow token="space.1" usage="gap between segments; the focus-ring offset; padding of the buttons at xs; the gap between preset buttons" />
-<TokenRow token="space.2" usage="gap between the segments and the buttons; padding at xs; the panel's padding and the gap inside it" />
+<TokenRow token="space.1" usage="the gap between segments; the gap between preset buttons" />
+<TokenRow token="space.2" usage="the gap between the two ends and the dash, and between them and the buttons; padding of an end at xs; the panel's padding and the gap inside it" />
 <TokenRow token="space.3" usage="padding at sizes sm and md" />
 <TokenRow token="space.4" usage="padding at sizes lg and xl" />
-<TokenRow token="space.6" usage="the smallest a button gets (24px), so it stays a large enough target at size xs" />
 <TokenRow token="date-picker.segment-width" usage="the width of a two-digit (day or month) segment" />
 <TokenRow token="date-picker.year-width" usage="the width of the four-digit year segment" />
 <TokenRow token="shadow.light-md" usage="the panel's elevation in a light theme" />

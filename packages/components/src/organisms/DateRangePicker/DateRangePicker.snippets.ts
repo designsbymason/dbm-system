@@ -46,14 +46,15 @@ export const dateRangePickerSnippets = {
 />`,
 
   reasons: `{/* unavailableReason: return why a date can't be chosen, or nothing. The day is disabled, the reason is part of its name,
-    shown under the calendar and the form's message for a typed date. */}
+    shown under the calendar and the form's message for a typed date.
+    fullyBooked: your own Set of "YYYY-MM-DD" strings. */}
 <DateRangePicker
   aria-label="Booking"
   unavailableReason={(date) => (fullyBooked.has(date) ? "Fully booked" : undefined)}
 />`,
 
   presets: `{/* presets: buttons under the calendar. A value is a [start, end] pair, or a function of today's date. One outside min and max,
-    unavailable or breaking a limit is disabled. */}
+    unavailable or breaking a limit is disabled. addDays: your own helper that adds days to a "YYYY-MM-DD" string. */}
 <DateRangePicker
   aria-label="Report period"
   presets={[
@@ -61,6 +62,10 @@ export const dateRangePickerSnippets = {
     { label: "This year", value: ["2026-01-01", "2026-12-31"] },
   ]}
 />`,
+
+  rounded: `{/* rounded draws the calendar's days (the chosen ones, today's ring and the focus ring) and its month buttons as circles,
+    and by month the cells of the grid of months. The strip behind a range keeps its straight edges, and the fields keep their corners. */}
+<DateRangePicker aria-label="Stay" rounded defaultValue={["2026-10-05", "2026-10-09"]} />`,
 
   months: `{/* numberOfMonths: 1 to 4 months side by side, or a breakpoint map. The default is one month on a phone and two from sm up. */}
 <DateRangePicker aria-label="Stay" numberOfMonths={{ base: 1, md: 3 }} />`,
@@ -80,11 +85,12 @@ export const dateRangePickerSnippets = {
 
   commitOn: `{/* commitOn: when onValueChange is called.
     "change" (default): every change, the first date chosen in the calendar included ([start, ""]).
-    "complete" and "blur": what is chosen in the calendar is held until the range is whole or the calendar closes. */}
+    "complete" and "blur": what is chosen in the calendar is held until the range is whole or the calendar closes.
+    const [range, setRange] = useState(["", ""]); */}
 <DateRangePicker aria-label="Stay" commitOn="complete" onValueChange={setRange} />`,
 
   form: `{/* required, min, max and the range limits are real form constraints: the browser won't submit and says why.
-    The two ends are submitted as stay[], start then end. */}
+    The two ends are submitted as stay[], start then end. save: your own submit handler. */}
 <form onSubmit={save}>
   <DateRangePicker aria-label="Stay" name="stay" required min="2026-10-01" />
   <Button type="submit">Save</Button>

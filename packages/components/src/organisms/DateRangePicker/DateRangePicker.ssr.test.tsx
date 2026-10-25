@@ -82,6 +82,10 @@ const variants: Array<[string, Partial<DateRangePickerProps>]> = [
       numberOfMonths: { base: 1, md: 3 },
     },
   ],
+  ["by month", { granularity: "month", defaultValue: ["2026-03", "2026-06"], min: "today" }],
+  ["by month, open", { granularity: "month", defaultOpen: true, rounded: true, presets: [{ label: "Year", value: ["2026-01", "2026-12"] }] }],
+  ["rounded, open", { defaultOpen: true, rounded: true, defaultValue: stay }],
+  ["by month, right to left", { granularity: "month", dir: "rtl", defaultOpen: true, format: "ymd" }],
   [
     "a today and a calendar option",
     {

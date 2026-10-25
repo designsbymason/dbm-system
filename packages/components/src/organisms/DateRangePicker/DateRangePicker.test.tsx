@@ -1,4 +1,4 @@
-import { render, screen, waitFor, within } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { axe } from "jest-axe";
 import { createRef, StrictMode, useState } from "react";
@@ -6,7 +6,20 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import calendarStyles from "../../molecules/Calendar/Calendar.module.css";
 import { FormField } from "../../molecules/FormField";
 import { DateRangePicker } from "./DateRangePicker";
-import type { DateRangePickerProps, DateRangeValue } from "./index";
+import type {
+  DateRangePickerAlign,
+  DateRangePickerCalendarProps,
+  DateRangePickerCommitOn,
+  DateRangePickerFormat,
+  DateRangePickerGranularity,
+  DateRangePickerLabels,
+  DateRangePickerPresentation,
+  DateRangePickerProps,
+  DateRangePickerSide,
+  DateRangePickerSize,
+  DateRangePreset,
+  DateRangeValue,
+} from "./index";
 import { laterOf, rangeProblem } from "./dateRangeValue";
 
 const startGroup = () => screen.getByRole("group", { name: "Start date" });
@@ -917,6 +930,84 @@ describe("DateRangePicker rounded", () => {
     render(<DateRangePicker aria-label="Period" granularity="month" defaultValue={["2026-03", "2026-05"]} defaultOpen rounded />);
     await screen.findByRole("dialog");
     expect(wrapper()).toHaveClass(calendarStyles.rounded ?? "");
+  });
+});
+
+describe("DateRangePicker container, handlers and warnings", () => {
+  it("draws the panel into the container it is given", async () => {
+    const box = document.createElement("div");
+    document.body.append(box);
+    render(<DateRangePicker aria-label="Stay" container={box} defaultValue={["2026-10-05", "2026-10-09"]} defaultOpen />);
+    const dialog = await screen.findByRole("dialog");
+    expect(box.contains(dialog)).toBe(true);
+    box.remove();
+  });
+
+  it("calls a consumer's onKeyDown, onKeyUp and onInput as well as its own", async () => {
+    const onKeyDown = vi.fn();
+    const onKeyUp = vi.fn();
+    const onInput = vi.fn();
+    render(<DateRangePicker aria-label="Stay" onKeyDown={onKeyDown} onKeyUp={onKeyUp} onInput={onInput} />);
+    await userEvent.click(segment(startGroup(), "Month"));
+    await userEvent.keyboard("1");
+    expect(onKeyDown).toHaveBeenCalled();
+    expect(onKeyUp).toHaveBeenCalled();
+    // its own handler still ran: the half-typed segment makes the clear button appear
+    fireEvent.input(segment(startGroup(), "Month"), { data: "1" });
+    expect(onInput).toHaveBeenCalled();
+  });
+
+  it("still opens the calendar with Alt+ArrowDown when the consumer has an onKeyDown", async () => {
+    const onKeyDown = vi.fn();
+    render(<DateRangePicker aria-label="Stay" onKeyDown={onKeyDown} />);
+    await userEvent.click(segment(startGroup(), "Day"));
+    await userEvent.keyboard("{Alt>}{ArrowDown}{/Alt}");
+    expect(await screen.findByRole("dialog")).toBeInTheDocument();
+    expect(onKeyDown).toHaveBeenCalled();
+  });
+
+  it("warns about a maxRangeDays that is not a whole number, and ignores it", () => {
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+    render(<DateRangePicker aria-label="Stay" maxRangeDays={0} defaultValue={["2026-10-05", "2026-10-30"]} />);
+    expect(warn.mock.calls.some(([message]) => String(message).includes("`maxRangeDays` must be a whole number"))).toBe(true);
+    expect(segment(endGroup(), "Month")).not.toHaveAttribute("aria-invalid");
+  });
+
+  it("warns that align has no effect on a full-width panel, and that the day limits have no effect by month", () => {
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+    render(<DateRangePicker aria-label="Stay" presentation="full-width" align="end" />);
+    expect(warn.mock.calls.some(([message]) => String(message).includes("`align` has no effect"))).toBe(true);
+    render(<DateRangePicker aria-label="Period" granularity="month" minRangeDays={2} />);
+    expect(warn.mock.calls.some(([message]) => String(message).includes("`minRangeDays`, `maxRangeDays` and `rangeSpansUnavailable` have no effect"))).toBe(true);
+  });
+
+  it("exports the types its props use", () => {
+    const align: DateRangePickerAlign = "end";
+    const format: DateRangePickerFormat = "dmy";
+    const granularity: DateRangePickerGranularity = "month";
+    const commitOn: DateRangePickerCommitOn = "blur";
+    const presentation: DateRangePickerPresentation = "full-width";
+    const side: DateRangePickerSide = "top";
+    const size: DateRangePickerSize = "sm";
+    const labels: Partial<DateRangePickerLabels> = { start: "From" };
+    const calendarProps: DateRangePickerCalendarProps = { showWeekNumbers: true };
+    const presets: DateRangePreset[] = [{ label: "Year", value: ["2026-01", "2026-12"] }];
+    render(
+      <DateRangePicker
+        aria-label="Period"
+        align={align}
+        format={format}
+        granularity={granularity}
+        commitOn={commitOn}
+        presentation={presentation}
+        side={side}
+        size={size}
+        labels={labels}
+        calendarProps={calendarProps}
+        presets={presets}
+      />,
+    );
+    expect(screen.getByRole("group", { name: "From" })).toBeInTheDocument();
   });
 });
 
