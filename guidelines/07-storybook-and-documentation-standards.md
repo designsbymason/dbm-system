@@ -273,13 +273,14 @@ Foundational components first (prove the template before mass-applying it), then
 | Menu | Organism | Navigation | ✅ | ✅ 2026-10-12 | [Menu.md](component-reviews/Menu.md) |
 | Toast | Organism | Feedback | ✅ | ✅ 2026-10-13 | [Toast.md](component-reviews/Toast.md) |
 | Form | Organism | Inputs & Forms | ✅ | ✅ 2026-10-14 | [Form.md](component-reviews/Form.md) |
-| Combobox | Organism | Inputs & Forms | ✅ | ✅ 2026-10-16 | [Combobox.md](component-reviews/Combobox.md) |
+| Combobox | Organism | Inputs & Forms | ✅ | ✅ 2026-10-16 (list, helpers and buttons moved to `internal/optionList` 2026-10-25; nothing changed; re-verified: functional verification, Docs) | [Combobox.md](component-reviews/Combobox.md) |
 | DatePicker | Organism | Inputs & Forms | ✅ | ✅ 2026-10-17 | [DatePicker.md](component-reviews/DatePicker.md) |
 | DataTable | Organism | Data Display | ✅ | ✅ 2026-10-17 | [DataTable.md](component-reviews/DataTable.md) |
 | Navbar | Organism | Navigation | ✅ | ✅ 2026-10-19 (built-in link badge made solid brand 2026-10-19; re-verified: design quality, theming, Docs, tests) | [Navbar.md](component-reviews/Navbar.md) |
 | Sidebar | Organism | Navigation | ✅ | ✅ 2026-10-21 (final review: section-heading padding, focus kept on a resize, account scaling, section `value`) | [Sidebar.md](component-reviews/Sidebar.md) |
 | FileUpload | Organism | Inputs & Forms | ✅ | ✅ 2026-10-24 | [FileUpload.md](component-reviews/FileUpload.md) |
 | ContextMenu | Organism | Overlay | ✅ | ✅ 2026-10-24 | [ContextMenu.md](component-reviews/ContextMenu.md) |
+| MultiSelect | Organism | Inputs & Forms | ✅ | Not yet declared | [MultiSelect.md](component-reviews/MultiSelect.md) |
 
 Components not yet built are listed in `04-component-inventory.md`'s build orders, and a row is added here once a component is built, and its Finalized cell is filled when its review pass is declared done. A Docs page is one deliverable inside each component's full `06-engineering-standards.md` §9 review pass, not a separate sweep; components are reviewed one at a time. Tier membership follows [ADR-0012](adr/0012-item-components-are-atom-tier-even-when-their-container-is-a-molecule.md) (`GridItem` and `ListItem` are atoms, `Grid` and `List` are molecules).
 

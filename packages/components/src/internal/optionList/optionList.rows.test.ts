@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest";
-import { buildRows, CREATE_VALUE, firstEnabled, isDisabled, lastEnabled, stepEnabled } from "./Combobox.rows";
-import type { ComboboxOption } from "./Combobox.types";
+import { buildRows, CREATE_VALUE, firstEnabled, isDisabled, lastEnabled, stepEnabled } from "./optionList.rows";
+import type { ListOption } from "./optionList.types";
 
-const option = (value: string, extra: Partial<ComboboxOption> = {}): ComboboxOption => ({ value, label: value.toUpperCase(), ...extra });
+const option = (value: string, extra: Partial<ListOption> = {}): ListOption => ({ value, label: value.toUpperCase(), ...extra });
 
 describe("isDisabled", () => {
   it("is true for true and for a reason, false otherwise", () => {

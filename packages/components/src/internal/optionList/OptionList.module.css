@@ -1,0 +1,232 @@
+/* The floating list that `Combobox` and `MultiSelect` share: the panel, its rows and its notes. */
+/* The floating list. The same elevated surface as `Select`'s and `Popover`'s panels. Portaled outside this
+   component's tree, so it sets its own font-family; shadows are a fixed light/dark primitive pair. On the `popover`
+   step so it sits above a `Dialog`'s scrim and panel when opened inside one. */
+.content {
+  background-color: var(--dbm-bg-surface);
+  border: var(--dbm-border-width-1) solid var(--dbm-border-default);
+  border-radius: var(--dbm-radius-md);
+  box-shadow: var(--dbm-shadow-light-md);
+  color: var(--dbm-text-primary);
+  display: flex;
+  flex-direction: column;
+  font-family: var(--dbm-font-family-primary);
+  /* The field's width, up to the room there is; the list scrolls inside the room that is left on the screen. */
+  /* The field's width, measured in useOptionListLayout.ts; Radix's own trigger-width variable is the fallback before then. */
+  inline-size: var(--combobox-width, var(--radix-popover-trigger-width));
+  max-block-size: min(var(--dbm-combobox-list-max-height), var(--radix-popper-available-height));
+  max-inline-size: var(--radix-popper-available-width);
+  overflow: hidden;
+  padding: var(--dbm-space-1);
+  z-index: var(--dbm-z-index-popover);
+}
+
+/* Across the visible screen: the width is set from the visual viewport in useOptionListLayout.ts, the layer's collision shift
+   puts its edge a gap in from the screen's, and the height is what is left above or below the field once an
+   on-screen keyboard is counted. */
+.fullWidth {
+  max-block-size: min(var(--dbm-combobox-list-max-height), var(--combobox-room, var(--radix-popper-available-height)));
+  max-inline-size: none;
+}
+
+[data-theme$="-dark"] .content {
+  box-shadow: var(--dbm-shadow-dark-md);
+}
+
+.content[data-state="open"] {
+  animation: contentIn var(--dbm-motion-duration-fast) var(--dbm-motion-easing-emphasized);
+}
+
+.content[data-state="closed"] {
+  animation: contentOut var(--dbm-motion-duration-fast) var(--dbm-motion-easing-standard);
+}
+
+@keyframes contentIn {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes contentOut {
+  to {
+    opacity: 0;
+  }
+}
+
+/* The row height and text size follow the field's size. */
+.sizeXs {
+  --combobox-icon: var(--dbm-icon-size-xs);
+  --combobox-row: var(--dbm-combobox-option-height-xs);
+  --combobox-row-described: var(--dbm-combobox-option-height-described-xs);
+  font-size: var(--dbm-font-size-xs);
+}
+
+.sizeSm {
+  --combobox-icon: var(--dbm-icon-size-sm);
+  --combobox-row: var(--dbm-combobox-option-height-sm);
+  --combobox-row-described: var(--dbm-combobox-option-height-described-sm);
+  font-size: var(--dbm-font-size-sm);
+}
+
+.sizeMd {
+  --combobox-icon: var(--dbm-icon-size-sm);
+  --combobox-row: var(--dbm-combobox-option-height-md);
+  --combobox-row-described: var(--dbm-combobox-option-height-described-md);
+  font-size: var(--dbm-font-size-base);
+}
+
+.sizeLg {
+  --combobox-icon: var(--dbm-icon-size-md);
+  --combobox-row: var(--dbm-combobox-option-height-lg);
+  --combobox-row-described: var(--dbm-combobox-option-height-described-lg);
+  font-size: var(--dbm-font-size-md);
+}
+
+.sizeXl {
+  --combobox-icon: var(--dbm-icon-size-md);
+  --combobox-row: var(--dbm-combobox-option-height-xl);
+  --combobox-row-described: var(--dbm-combobox-option-height-described-xl);
+  font-size: var(--dbm-font-size-lg);
+}
+
+/* The scrolling box. Rows have a fixed height, so a long list can draw a window of them between two blocks of
+   padding (set inline) and keep the scrollbar true. */
+.list {
+  flex: 1 1 auto;
+  /* Capped here as well as by the panel, which only learns the room on the screen after it has been measured. */
+  max-block-size: var(--dbm-combobox-list-max-height);
+  min-block-size: 0;
+  overflow-y: auto;
+}
+
+.option {
+  align-items: center;
+  border-radius: var(--dbm-radius-sm);
+  box-sizing: border-box;
+  block-size: var(--combobox-row);
+  color: var(--dbm-text-primary);
+  cursor: pointer;
+  display: flex;
+  gap: var(--dbm-space-2);
+  line-height: var(--dbm-line-height-tight);
+  outline: none;
+  padding-inline: var(--dbm-space-3);
+  user-select: none;
+}
+
+.optionDescribed {
+  block-size: var(--combobox-row-described);
+}
+
+.option[data-highlighted] {
+  background-color: var(--dbm-bg-brand-subtle);
+}
+
+.option[data-selected] {
+  color: var(--dbm-text-brand);
+  font-weight: var(--dbm-font-weight-semibold);
+}
+
+.option[data-disabled] {
+  color: var(--dbm-text-disabled);
+  cursor: not-allowed;
+}
+
+.optionIcon {
+  flex-shrink: 0;
+}
+
+/* Stands where an icon would, in a row that has none, when other options in the list have one. */
+.optionIconSpace {
+  flex-shrink: 0;
+  inline-size: var(--combobox-icon);
+}
+
+.optionText {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  min-inline-size: 0;
+}
+
+.optionLabel,
+.optionDescription {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* The matched stretch of a label: bold, which is what makes it stand out in a row at regular weight. It sits inside
+   a word, so `Highlight`'s own side padding (used when `highlightTone` is set) would read as a gap in it. */
+.optionLabel .match {
+  font-weight: var(--dbm-font-weight-bold);
+  padding-inline: 0;
+}
+
+.option[data-disabled] .optionDescription {
+  color: var(--dbm-text-disabled);
+}
+
+/* `text.secondary`, not `tertiary`: a described row can be the highlighted one, and `text.tertiary` on the
+   highlighted row's `bg.brand-subtle` is 4.48:1 in Purple light, under the 4.5:1 text floor. */
+.optionDescription {
+  color: var(--dbm-text-secondary);
+  font-size: var(--dbm-font-size-xs);
+  font-weight: var(--dbm-font-weight-regular);
+}
+
+.optionCheck {
+  flex-shrink: 0;
+}
+
+/* "No results" and "Loading…": a disabled row inside the list, so the list always holds an option. */
+.status {
+  color: var(--dbm-text-tertiary);
+  cursor: default;
+}
+
+.groupLabel {
+  box-sizing: border-box;
+  block-size: var(--combobox-row);
+  align-items: center;
+  color: var(--dbm-text-tertiary);
+  display: flex;
+  font-size: var(--dbm-font-size-xs);
+  font-weight: var(--dbm-font-weight-semibold);
+  /* Drawn in capitals only: the text in the page, and so the group's accessible name, is as written. */
+  letter-spacing: var(--dbm-letter-spacing-wide);
+  padding-inline: var(--dbm-space-3);
+  text-transform: uppercase;
+}
+
+/* The loading and error notes under the options. */
+.footer {
+  align-items: center;
+  border-block-start: var(--dbm-border-width-1) solid var(--dbm-border-default);
+  color: var(--dbm-text-tertiary);
+  display: flex;
+  flex-shrink: 0;
+  font-size: var(--dbm-font-size-xs);
+  gap: var(--dbm-space-2);
+  padding: var(--dbm-space-2) var(--dbm-space-3);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .content[data-state="open"],
+  .content[data-state="closed"] {
+    animation: none;
+  }
+}
+
+/* Forced colours replaces backgrounds, so the highlighted and chosen rows are told apart by an outline and the
+   list keeps a border. */
+@media (forced-colors: active) {
+  .option[data-highlighted] {
+    outline: var(--dbm-border-width-2) solid Highlight;
+    outline-offset: calc(-1 * var(--dbm-border-width-2));
+  }
+
+  .footer {
+    border-block-start-color: CanvasText;
+  }
+}

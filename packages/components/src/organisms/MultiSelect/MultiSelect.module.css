@@ -1,0 +1,30 @@
+/* The box, its chips and its entry are drawn with `TagsInput`'s stylesheet, which this component imports because the
+   two fields must look identical. Here the chips and the entry sit in a row of their own beside the buttons, so the
+   caret and the clear button stay at the end of the box, centred on it, however many lines the chips take. */
+.root {
+  min-inline-size: 0;
+}
+
+/* `.root .box` out-ranks `TagsInput`'s `.box` whichever stylesheet is read last. The box no longer wraps: its row
+   does. */
+.root .box {
+  align-items: center;
+  flex-wrap: nowrap;
+}
+
+/* The chips and the entry, wrapping as they do in `TagsInput`'s own box. */
+.row {
+  align-items: center;
+  display: flex;
+  flex: 1 1 auto;
+  flex-wrap: wrap;
+  gap: var(--dbm-space-2);
+  min-inline-size: 0;
+}
+
+.trailing {
+  align-items: center;
+  align-self: center;
+  display: flex;
+  flex-shrink: 0;
+}

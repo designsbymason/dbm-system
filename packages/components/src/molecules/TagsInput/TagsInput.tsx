@@ -6,10 +6,11 @@ import { FieldError } from "../../atoms/FieldError";
 import { Icon } from "../../atoms/Icon";
 import type { InputSize } from "../../atoms/Input";
 import { Tag } from "../../atoms/Tag";
-import type { TagSize, TagTone, TagVariant } from "../../atoms/Tag";
-import { Tooltip, TooltipProvider } from "../../atoms/Tooltip";
+import type { TagSize } from "../../atoms/Tag";
+import { TooltipProvider } from "../../atoms/Tooltip";
 import { VisuallyHidden } from "../../atoms/VisuallyHidden";
 import styles from "./TagsInput.module.css";
+import { TagsInputChip } from "./TagsInputChip";
 import { fitCount } from "./fitCount";
 import type { TagsInputAddSource, TagsInputLabels, TagsInputProps } from "./TagsInput.types";
 
@@ -44,55 +45,6 @@ function runValidate(validate: TagsInputProps["validate"], tag: string): string 
     warnOnce(`TagsInput: \`validate\` threw (${String(thrown)}); the tag was accepted. Return a message instead of throwing.`);
     return undefined;
   }
-}
-
-interface ChipProps {
-  tag: string;
-  reason: string | undefined;
-  tone: TagTone;
-  variant: TagVariant;
-  size: TagSize;
-  removable: boolean;
-  removeLabel: string;
-  onRemove: () => void;
-}
-
-/**
- * One chip. Its text ends in an ellipsis when the box is narrower than it, and then, and only then, a tooltip
- * shows the whole tag on hover or when the chip (its remove button) has focus; a chip that fits has none.
- */
-function Chip({ tag, reason, tone, variant, size, removable, removeLabel, onRemove }: ChipProps) {
-  const labelRef = useRef<HTMLSpanElement>(null);
-  const [open, setOpen] = useState(false);
-  const isCut = () => {
-    const label = labelRef.current;
-    return Boolean(label && label.scrollWidth > label.clientWidth);
-  };
-  return (
-    <Tooltip content={tag} open={open} onOpenChange={(next) => setOpen(next && isCut())}>
-      {/* The list item is the trigger, not the `Tag`: a trigger passes its own click handler to what it wraps,
-          and a `Tag` with one is a clickable tag, whose remove control is then only a decorative glyph. Focus
-          on the remove button bubbles to the item, so the tooltip opens for the keyboard as well. */}
-      {/* eslint-disable-next-line jsx-a11y/no-redundant-roles -- Safari with VoiceOver drops list semantics otherwise */}
-      <li role="listitem" className={styles.chip}>
-        <Tag
-          className={styles.chipTag}
-          tone={reason ? "danger" : tone}
-          variant={variant}
-          size={size}
-          removable={removable}
-          removeTabStop={false}
-          removeLabel={removeLabel}
-          onRemove={onRemove}
-        >
-          <span ref={labelRef} className={styles.chipLabel}>
-            {tag}
-          </span>
-          {reason ? <VisuallyHidden>{`, ${reason}`}</VisuallyHidden> : null}
-        </Tag>
-      </li>
-    </Tooltip>
-  );
 }
 
 type PendingFocus = { kind: "entry" } | { kind: "chip"; index: number } | null;
@@ -604,7 +556,7 @@ export const TagsInput = forwardRef<HTMLInputElement, TagsInputProps>(
             {tags.slice(0, visibleCount).map((tag, index) => {
               const reason = reasons[index];
               return (
-                <Chip
+                <TagsInputChip
                   key={`${index}-${tag}`}
                   tag={tag}
                   reason={reason}

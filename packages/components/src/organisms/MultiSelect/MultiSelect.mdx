@@ -1,0 +1,496 @@
+import { Canvas, Meta } from "@storybook/addon-docs/blocks";
+import { Callout, ComponentHeader, PlaygroundControls, PropertiesTable, RelatedCard, TokenRow } from "../../../.storybook/blocks";
+import { Tag } from "../../atoms/Tag";
+import { VisuallyHidden } from "../../atoms/VisuallyHidden";
+import { FormField } from "../../molecules/FormField";
+import { Select } from "../../molecules/Select";
+import { TagsInput } from "../../molecules/TagsInput";
+import { Combobox } from "../Combobox";
+import { MultiSelect } from "./MultiSelect";
+import * as MultiSelectStories from "./MultiSelect.stories";
+import { countries } from "./MultiSelectStoryKit";
+
+export const propOrder = [
+  "options",
+  "value",
+  "defaultValue",
+  "onValueChange",
+  "inputValue",
+  "defaultInputValue",
+  "onInputValueChange",
+  "placeholder",
+  "size",
+  "tone",
+  "variant",
+  "overflow",
+  "maxVisible",
+  "filter",
+  "autoHighlight",
+  "closeOnSelect",
+  "maxSelected",
+  "minSelected",
+  "selectAll",
+  "clearable",
+  "onClear",
+  "loading",
+  "error",
+  "emptyContent",
+  "highlightTone",
+  "onCreate",
+  "renderOption",
+  "open",
+  "defaultOpen",
+  "onOpenChange",
+  "openOnFocus",
+  "hasError",
+  "disabled",
+  "readOnly",
+  "required",
+  "name",
+  "form",
+  "autoFocus",
+  "inputMode",
+  "enterKeyHint",
+  "spellCheck",
+  "autoComplete",
+  "container",
+  "presentation",
+  "side",
+  "align",
+  "dir",
+  "formatNumber",
+  "labels",
+  "controllerRef",
+  "aria-label",
+  "aria-labelledby",
+  "aria-describedby",
+  "aria-invalid",
+  "id",
+  "className",
+  "style",
+  "data-testid",
+];
+
+<Meta of={MultiSelectStories} />
+
+<VisuallyHidden asChild><h2>Intro</h2></VisuallyHidden>
+
+<ComponentHeader title="MultiSelect" tier="Organism" />
+
+A text field for choosing several options from a list. The chosen options are removable chips inside the field, and the
+list floats beneath it: type to narrow it, then choose with the arrow keys and Enter, a mouse or a finger. The list stays
+open after a choice, so several can be chosen in a row, and choosing a chosen option takes it out again. The value is an
+array of the chosen options' `value`s. Use it where a person picks any number of items from a list too long to scan: a
+set of countries, the people on a task, the labels on a record. "Multi-select" and "tag select" are the same control. It
+differs from `Combobox`, which chooses one; from `TagsInput`, which makes chips out of whatever is typed and has no list;
+and from `CheckboxGroup`, which shows a short list in full. Focus stays in the field the whole time; the highlighted
+option is pointed at rather than focused (a *combobox* in the WAI-ARIA sense, whose list allows several choices).
+
+### Import
+
+```tsx
+import { MultiSelect } from "@dbm-system/components";
+```
+
+## Playground
+
+<div className="dbm-playground-canvas">
+
+<Canvas of={MultiSelectStories.Playground} />
+
+</div>
+<PlaygroundControls
+  of={MultiSelectStories.Playground}
+  exclude={[
+  "options",
+  "value",
+  "defaultValue",
+  "onValueChange",
+  "inputValue",
+  "defaultInputValue",
+  "onInputValueChange",
+  "maxVisible",
+  "filter",
+  "minSelected",
+  "onClear",
+  "emptyContent",
+  "onCreate",
+  "renderOption",
+  "open",
+  "defaultOpen",
+  "onOpenChange",
+  "form",
+  "autoFocus",
+  "inputMode",
+  "enterKeyHint",
+  "spellCheck",
+  "autoComplete",
+  "container",
+  "formatNumber",
+  "labels",
+  "controllerRef",
+  "aria-labelledby",
+  "aria-describedby",
+  "aria-invalid",
+  "id",
+  "className",
+  "style",
+  "data-testid",
+  ]}
+  order={propOrder}
+/>
+
+## Properties
+
+`MultiSelect` also accepts any other native `<div>` attribute beyond what is listed here (e.g. `title`, `lang`,
+`onKeyDown`) — passed straight through to the outer box. `className` and `style` go on the outer box too; `ref`, `id`,
+`data-testid` and the `aria-*` props go on the typing field, the `<input>` inside it.
+
+<PropertiesTable of={MultiSelectStories} order={propOrder} />
+
+## Variants
+
+### All sizes
+
+<Canvas of={MultiSelectStories.AllSizes} />
+
+### Controlled
+
+<Canvas of={MultiSelectStories.Controlled} />
+
+### Closing the list after each choice
+
+<Canvas of={MultiSelectStories.CloseOnSelect} />
+
+### Groups
+
+<Canvas of={MultiSelectStories.Groups} />
+
+### Descriptions, icons and unavailable options
+
+<Canvas of={MultiSelectStories.Rich} />
+
+### A limit
+
+<Canvas of={MultiSelectStories.MaxSelected} />
+
+### A Select all row
+
+<Canvas of={MultiSelectStories.SelectAll} />
+
+### Many chips
+
+<Canvas of={MultiSelectStories.Overflow} />
+
+### The look of the chips
+
+<Canvas of={MultiSelectStories.ChipLook} />
+
+### Options fetched as you type
+
+<Canvas of={MultiSelectStories.Async} />
+
+### Creating new options
+
+<Canvas of={MultiSelectStories.Create} />
+
+### Full width on a phone
+
+<Canvas of={MultiSelectStories.FullWidth} />
+
+### Loading, error and empty
+
+<Canvas of={MultiSelectStories.States} />
+
+### A long list
+
+<Canvas of={MultiSelectStories.LongList} />
+
+### Error state
+
+<Canvas of={MultiSelectStories.ErrorState} />
+
+### Disabled
+
+<Canvas of={MultiSelectStories.Disabled} />
+
+### Driven from code
+
+<Canvas of={MultiSelectStories.FromCode} />
+
+### In a FormField
+
+<Canvas of={MultiSelectStories.InFormField} />
+
+## Usage guidelines
+
+<div className="dbm-do-dont-grid">
+<Callout tone="success" title="Do">
+
+- Use it to choose any number of items from a list long enough that scanning it is slow: countries, people, labels.
+- Give it a name with `aria-label` or a `FormField`, so the field and its list both say what is being chosen.
+- Pass `filter={false}` and fetch the options yourself when the list lives on a server, and show `loading` while you wait.
+- Give each option a short, distinct `label`, since it is also the chip's text; put the detail in `description`, and the words people also search by in `keywords`.
+- Say why an option can't be chosen with `disabled="reason"`, rather than leaving it dimmed and unexplained.
+- Set `maxSelected` when the number is limited: the options left over say why they can't be chosen.
+- Add `selectAll` when a person often wants most of the list, or all of what a search found.
+- Use `overflow="collapse"` where the field sits in a toolbar or a table row and must stay one line.
+- Use `presentation={{ base: "full-width", sm: "anchored" }}` in a form people fill in on a phone.
+- Use `onCreate` when a person may add an item the list doesn't hold yet (a label, a person); return the new option so it is chosen.
+
+</Callout>
+<Callout tone="danger" title="Don't">
+
+- Don't use it for a handful of options: a `CheckboxGroup` shows them all at once, with no list to open.
+- Don't use it to choose one item: that is `Combobox`, or `Select` for a short list. Don't use it to collect free text: that is `TagsInput`.
+- Don't fetch on every change of text: search only on `reason === "input"`, since a choice, a clear and a reset write text that isn't a query.
+- Don't put interactive controls inside a row: a row is chosen as a whole, and focus never enters it.
+- Don't rely on a placeholder as the name; it goes as soon as there is a chip.
+
+</Callout>
+</div>
+
+## Best practices
+
+- The value is an array of option values, a new array on every change. Keep just `value` in your state in the usual
+  case. A value with no matching option (a saved id whose option has not loaded) shows the value as its chip, and the
+  chip keeps an option's label once it has seen it, so a list fetched for new text doesn't rename what is chosen.
+- A choice clears the text that narrowed the list, and leaves the highlight where it was, so the next option can be
+  chosen without the list jumping. `closeOnSelect` closes the list on each choice instead.
+- Chosen options stay in the list, marked with a check, so the same row that adds an option also takes it away. They are
+  not hidden, because hiding them moves the rows under the pointer.
+- `maxSelected` disables the options not chosen once it is reached; chosen ones stay available to remove. `minSelected`
+  only affects a form: a person can still remove chips below it, and the form says how many it needs.
+- "Select all" covers the options that match what is typed (every enabled option when nothing is), and stops at
+  `maxSelected`. With every one of them chosen, the row reads "Deselect all" and removes just those.
+- Rows have a fixed height, set by `size` (and taller for an option with a `description`), so a list of thousands draws
+  only the rows in view. A custom `renderOption` must fit its row; long text is cut with an ellipsis.
+- The chips share `TagsInput`'s box, sizes, tones and variants, so the two fields look the same side by side. A chip's
+  text is cut with an ellipsis when it is wider than the box, and the whole label shows in a tooltip while it is cut.
+- `overflow="collapse"` keeps an idle field to one line: as many chips as fit, then a "+N more" button whose count
+  follows the width. While the field is in use (the typing area or a chip has focus) every chip is shown, so a chip you
+  are on never disappears. `maxVisible` caps the number shown while idle; the hidden ones are still submitted.
+- Inside a `Form`, each chosen value is submitted as its own entry under `name`, and `required` and `minSelected` are
+  rules on the typing field itself, so the form shows its message in the field's own slot and focuses it. With nothing
+  chosen, a disabled hidden input keeps the name in the form's controls without submitting anything.
+- Once a list holds more than a hundred rows, group headings are drawn as plain rows rather than as grouped regions, and
+  each option is read with its group's name after its own.
+- `presentation="full-width"` measures the part of the page the person can see (the visual viewport), so an on-screen
+  keyboard that covers the bottom of the screen is counted: the list goes above the field when there is little room
+  below, and its height is what is left. `align` has no effect there, and `side` is only its first choice.
+- Typed text matches an option when its label and `keywords` together hold every word of it, in any order. Only the
+  label is marked (in bold, and in colour with `highlightTone`), and every matching stretch of it.
+- `onCreate` adds a last row, "Create …", while the typed text names no option. It is highlighted only when nothing
+  else matches, so Enter still chooses a real match first. Add the new option to `options` yourself: until you do, its
+  chip still shows its label, and the value is kept.
+- `controllerRef` hands your code an object with `open`, `close`, `clear` and `focus`, each returning whether it had
+  anything to do. Use it for a "Clear filters" button that lives elsewhere on the page.
+
+## Accessibility
+
+<Callout tone="info" title="A combobox whose list allows several choices, and whose focus never leaves the text field">
+
+- The typing field is a native text input with `role="combobox"`, `aria-expanded`, `aria-controls` (while open),
+  `aria-autocomplete="list"` and `aria-haspopup="listbox"`. Focus stays in it while the list is open; the highlighted
+  option is named by `aria-activedescendant`, so a screen reader reads each option as the arrow keys reach it.
+- The list is a `listbox` with `aria-multiselectable`, named like the field (from `aria-label`, `aria-labelledby` or the
+  field's visible label). Each row is an `option` with `aria-selected`; one that can't be chosen has `aria-disabled`,
+  and its reason is read after its name. Groups are `group`s named by their heading; in a list long enough to be
+  windowed, each option is read with its group's name instead.
+- The chosen options are a list named "Selected options" (`labels.selected`), each chip with a remove button named
+  "Remove" and the option's label. Once something is chosen, the typing field is described by a hint on how to reach the
+  chips. The chips are not tab stops: the field is one stop, and the arrow keys move among the chips.
+- A choice, a removal and a clear are announced with how many are now chosen, in a status region that was already in
+  the page. The number of matches is announced only as the person types and the count changes, never when the list
+  merely opens. A refused choice at the limit, and an error, are announced.
+- "No results", "Type to search" and "Loading…" are rows in the list that can't be chosen, so a list is never empty to
+  assistive technology. A loading list is `aria-busy`.
+- The caret and clear buttons are for the pointer and are not tab stops; the keyboard has the arrow keys, Escape and
+  Alt+Down. Each is at least 24 × 24 pixels at every size, and so is a chip's remove button's hit area.
+- Enter while an input method is composing a character does nothing. Pressing a row never moves focus, so a touch
+  keyboard stays up.
+- In a form, `required` and `minSelected` are a custom validity on the typing field, so the browser and `Form` focus the
+  field you can see and read its message.
+- The matched text in a label is drawn bold, and with `highlightTone` also in `Highlight`'s colours (a `<mark>`). Neither
+  is the only cue to what matched: the list is already narrowed to the options that do.
+- In Windows high contrast, the highlighted row is outlined and the list and the box keep their borders.
+
+</Callout>
+
+| Key | Behaviour |
+|---|---|
+| Down arrow | Opens the list and highlights the first option; when open, highlights the next option and wraps. |
+| Up arrow | Opens the list and highlights the last option; when open, the previous one, wrapping. |
+| Alt + Down, Alt + Up | Opens or closes the list without moving the highlight. |
+| Page Down, Page Up | Move the highlight ten options (while open). |
+| Enter | Chooses the highlighted option, or removes it if it is already chosen, and keeps the list open (`closeOnSelect` closes it). With nothing highlighted it closes the list. With the list closed it does what Enter does in any field. |
+| Escape | Closes the list. With the list closed, clears the typed text. |
+| Left arrow (right, in a right-to-left page) | At the start of the typing field, moves to the last chip. Between chips it moves to the previous one; Right goes the other way, and from the last chip back to the typing field. |
+| Home, End | On a chip, move to the first or last chip. In the typing field they move the caret. |
+| Backspace | In an empty typing field, moves to the last chip; a second press there removes it and keeps your place along the row. With text, deletes a character. |
+| Delete | On a chip, removes it. |
+| Tab | Leaves the field. The typed text is dropped. |
+| Typing | Opens the list and narrows it; the first match is highlighted. With `onCreate`, a "Create …" row comes last. |
+
+## Code examples
+
+```tsx
+{/* countries: [{ value: "ca", label: "Canada" }, { value: "mx", label: "Mexico" }, …] */}
+<MultiSelect aria-label="Countries" options={countries} onValueChange={(values) => setCountries(values)} />
+
+{/* Native props pass through to the outer box: a title, a lang, a handler */}
+<MultiSelect aria-label="Countries" options={countries} title="Where the order ships" lang="fr" />
+
+{/* At most three, with a row that chooses every match */}
+<MultiSelect aria-label="Labels" options={labels} maxSelected={3} selectAll />
+
+{/* One line while idle, the rest behind "+N more" */}
+<MultiSelect aria-label="Assignees" options={people} overflow="collapse" />
+
+{/* Options fetched as the person types: search only for typing, and drop stale replies */}
+<MultiSelect
+  aria-label="Search countries"
+  options={results}
+  filter={false}
+  loading={isFetching}
+  onInputValueChange={(text, reason) => reason === "input" && search(text)}
+/>
+
+{/* Let a person add an item the list doesn't hold; return it so it is chosen */}
+<MultiSelect aria-label="Labels" options={labels} onCreate={(text) => addLabel(text)} />
+
+{/* Clear a filter field from a button elsewhere on the page */}
+{/* const controllerRef = useRef<MultiSelectController>(null); */}
+<MultiSelect aria-label="Countries" options={countries} controllerRef={controllerRef} />
+<Button onClick={() => controllerRef.current?.clear()}>Clear filters</Button>
+
+{/* Choosing in a Dialog: the list sits above the dialog, takes the mouse, and leaves the dialog open */}
+<Dialog>
+  <Dialog.Trigger asChild>
+    <Button>Ship to…</Button>
+  </Dialog.Trigger>
+  <Dialog.Content aria-label="Ship to">
+    <Dialog.Body>
+      <MultiSelect aria-label="Countries" options={countries} />
+    </Dialog.Body>
+  </Dialog.Content>
+</Dialog>
+
+{/* Words in another language, and numerals that differ */}
+<MultiSelect
+  aria-label="Países"
+  options={paises}
+  formatNumber={new Intl.NumberFormat("ar-EG").format}
+  labels={{ noResults: "Sin resultados", clear: "Borrar todo", remove: (label) => `Quitar ${label}` }}
+/>
+
+{/* With a label, helper text and a minimum; the wiring is done for you */}
+<FormField label="Countries" helperText="Where the order ships" required>
+  {(fieldProps) => <MultiSelect {...fieldProps} name="countries" options={countries} minSelected={2} />}
+</FormField>
+```
+
+## Design tokens used
+
+The chips are `Tag`s, which list their own tokens; the list below is what the box, the floating list and its rows draw.
+The box is `TagsInput`'s, and the list is `Combobox`'s.
+
+<TokenRow token="bg.surface" usage="the box's fill, and the list's fill" />
+<TokenRow token="bg.brand-subtle" usage="the highlighted row" />
+<TokenRow token="bg.neutral-subtle" usage="the fill behind the caret or clear button while the pointer is over it" />
+<TokenRow token="border.default" usage="the box's border at rest, the list's border, and the line above the loading and error notes" />
+<TokenRow token="border.neutral" usage="the box's border while the pointer is over it" />
+<TokenRow token="border.focus" usage="the box's border and focus ring while the entry has focus" />
+<TokenRow token="border.danger" usage="the box's border and ring when `hasError` is set" />
+<TokenRow token="text.primary" usage="the typed text and the option text" />
+<TokenRow token="text.secondary" usage="the description under an option, which stays readable on the highlighted row" />
+<TokenRow token="text.tertiary" usage="the placeholder, group headings, the No results row and the loading and error notes" />
+<TokenRow token="text.brand" usage="a chosen option" />
+<TokenRow token="text.disabled" usage="an option that can't be chosen" />
+<TokenRow token="border-width.1" usage="the box's border and the list's border" />
+<TokenRow token="border-width.2" usage="the focus ring's width, drawn on the box's own edge, and the highlighted row's outline in Windows high contrast" />
+<TokenRow token="tags-input.entry-min-width" usage="the narrowest the typing area gets before it drops beneath the chips" />
+<TokenRow token="combobox.list-max-height" usage="the most height the list takes before it scrolls" />
+<TokenRow token="combobox.option-height.xs" usage="the height of a one-line row at `xs`, shared by group headings" />
+<TokenRow token="combobox.option-height.sm" usage="the height of a one-line row at `sm`" />
+<TokenRow token="combobox.option-height.md" usage="the height of a one-line row at `md`" />
+<TokenRow token="combobox.option-height.lg" usage="the height of a one-line row at `lg`" />
+<TokenRow token="combobox.option-height.xl" usage="the height of a one-line row at `xl`" />
+<TokenRow token="combobox.option-height-described.xs" usage="the height of a row with a description at `xs`" />
+<TokenRow token="combobox.option-height-described.sm" usage="the height of a row with a description at `sm`" />
+<TokenRow token="combobox.option-height-described.md" usage="the height of a row with a description at `md`" />
+<TokenRow token="combobox.option-height-described.lg" usage="the height of a row with a description at `lg`" />
+<TokenRow token="combobox.option-height-described.xl" usage="the height of a row with a description at `xl`" />
+<TokenRow token="radius.md" usage="the box's and the list's corners" />
+<TokenRow token="radius.sm" usage="a row's corners" />
+<TokenRow token="radius.full" usage="the round hover fill of the caret and clear buttons" />
+<TokenRow token="shadow.light-md" usage="the list's elevation in a light theme" />
+<TokenRow token="shadow.dark-md" usage="the list's elevation in a dark theme" />
+<TokenRow token="z-index.popover" usage="the list's layer, above a Dialog's scrim and panel so it works inside one" />
+<TokenRow token="opacity.40" usage="the whole field while disabled" />
+<TokenRow token="space.1" usage="the box's padding at `xs` and `md`, the list's padding, and the gap between the caret and clear buttons" />
+<TokenRow token="space.2" usage="the gap between the chips, the typing area and the buttons, the box's padding at `sm`, `lg` and `xl`, and the gap inside a row" />
+<TokenRow token="space.3" usage="the inset of a row's content, and of the typing text at `sm` and `md`" />
+<TokenRow token="space.4" usage="the inset of the typing text at `lg` and `xl`" />
+<TokenRow token="space.6" usage="the least size of the caret and clear buttons, a 24px target" />
+<TokenRow token="icon-size.xs" usage="the caret, clear and loading icons at `xs`, and an option's icon at `xs`" />
+<TokenRow token="icon-size.sm" usage="the caret, clear and loading icons at `sm`, and an option's icon at `sm` and `md`" />
+<TokenRow token="icon-size.md" usage="the caret, clear and loading icons at `md`, and an option's icon at `lg` and `xl`" />
+<TokenRow token="icon-size.lg" usage="the caret, clear and loading icons at `lg`" />
+<TokenRow token="icon-size.xl" usage="the caret, clear and loading icons at `xl`" />
+<TokenRow token="font-family.primary" usage="the typed text, and the list's text, which is drawn outside the field and sets its own" />
+<TokenRow token="font-size.xs" usage="the text at `xs`, and descriptions and headings" />
+<TokenRow token="font-size.sm" usage="the text at `sm`" />
+<TokenRow token="font-size.base" usage="the text at `md`" />
+<TokenRow token="font-size.md" usage="the text at `lg`" />
+<TokenRow token="font-size.lg" usage="the text at `xl`" />
+<TokenRow token="font-weight.bold" usage="the matched text in a label" />
+<TokenRow token="font-weight.regular" usage="a description" />
+<TokenRow token="font-weight.semibold" usage="a chosen option and group headings" />
+<TokenRow token="letter-spacing.wide" usage="the group headings, which are drawn in capitals" />
+<TokenRow token="line-height.tight" usage="the text and the buttons' height arithmetic, matching `Input`" />
+<TokenRow token="motion-duration.fast" usage="the list's fade, the border-colour change and the buttons' hover fill" />
+<TokenRow token="motion-easing.emphasized" usage="the list fading in" />
+<TokenRow token="motion-easing.standard" usage="the list fading out, the border-colour change and the buttons' hover fill" />
+
+## Related components
+
+<div className="dbm-card-grid">
+<RelatedCard
+  name="Combobox"
+  description="Choose one item from a list with typing, over the same list and options"
+  href="/?path=/docs/organisms-inputs-combobox--docs"
+>
+  <Combobox aria-label="Country" options={countries} size="sm" />
+</RelatedCard>
+<RelatedCard
+  name="TagsInput"
+  description="Free text made into removable chips, with no list, in the same box"
+  href="/?path=/docs/molecules-inputs-tagsinput--docs"
+>
+  <TagsInput aria-label="Labels" defaultValue={["a", "b"]} size="sm" />
+</RelatedCard>
+<RelatedCard
+  name="Select"
+  description="Choose one item from a short list with no typing"
+  href="/?path=/docs/molecules-inputs-select--docs"
+>
+  <Select aria-label="Size" defaultValue="a" size="sm">
+    <Select.Option value="a">Small</Select.Option>
+  </Select>
+</RelatedCard>
+<RelatedCard
+  name="Tag"
+  description="The chip each chosen option is drawn as"
+  href="/?path=/docs/atoms-data-display-tag--docs"
+>
+  <Tag removable onRemove={() => undefined}>Canada</Tag>
+</RelatedCard>
+<RelatedCard
+  name="FormField"
+  description="Composes this with a label and helper or error text, with the id and aria wiring done for you"
+  href="/?path=/docs/molecules-inputs-formfield--docs"
+>
+  <MultiSelect aria-label="Countries" options={countries} size="sm" />
+</RelatedCard>
+</div>

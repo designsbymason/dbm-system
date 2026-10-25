@@ -81,7 +81,10 @@ const PER_COMPONENT_CSS_BUDGET_KB = 5;
 //   drop, paste, folder-reading, duplicate, cancel and preview code of its own, 10.24KB measured against the default 10KB. The budget is 14KB.
 //   DataTable (2026-10-24): a row's context menu (`rowContextMenu`) brings `ContextMenu` with it, which draws `Menu`'s item parts that the column
 //   menu already carries: 26.42KB measured against the 26KB set before it. The budget is 32KB.
-const JS_BUDGET_OVERRIDES_KB = { Calendar: 12, DataTable: 32, DatePicker: 18, FileUpload: 14, Navbar: 22, Sidebar: 22, TimeRangePicker: 12, Toolbar: 13 };
+//   MultiSelect (2026-10-25): the option list it shares with `Combobox` (the panel, the rows, the matching and the windowing, about 6KB), the
+//   chip row and chip keys of `TagsInput` (the `Tag`, its tooltip and the width measuring), the select-all, limit, create and controller code
+//   of its own and the Popover layer, 12.45KB measured against the default 10KB. The budget is 14KB, the same as `FileUpload`'s.
+const JS_BUDGET_OVERRIDES_KB = { Calendar: 12, DataTable: 32, DatePicker: 18, FileUpload: 14, MultiSelect: 14, Navbar: 22, Sidebar: 22, TimeRangePicker: 12, Toolbar: 13 };
 
 // The same for CSS. `DataTable`'s bundle holds the stylesheets of the `Table`, `TableToolbar`, `Pagination`, `Select`,
 // `Checkbox` and `Menu` parts it draws with (6.30KB measured against 3.45KB for `TableToolbar`, the largest of them), plus its own; 8.10KB

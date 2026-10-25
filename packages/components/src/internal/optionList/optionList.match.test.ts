@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { defaultFilter, findMatches, fold, foldCharacters, queryWords } from "./Combobox.match";
+import { defaultFilter, findMatches, fold, foldCharacters, queryWords } from "./optionList.match";
 
 describe("fold", () => {
   it("lower-cases and drops accents", () => {

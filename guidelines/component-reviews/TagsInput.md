@@ -66,3 +66,7 @@ The same field-family rule as `Input`'s (see [Input.md](Input.md) and `05-compon
 ## Icons at the input's own step, 2026-10-19 (visual change; stays Finalized)
 
 At explicit direction, following `Input`'s own change (see [Input](Input.md)): the icons this component draws in the field are the same step as its `size` (`xs` 12px … `xl` 32px) instead of one step below it. This is the clear-all icon; the chips and their remove icons keep their own sizes. A real-browser check in `Input.checks.stories.tsx` measures the icons at every size.
+
+## Chip in its own file, 2026-10-25 (code move, no change; stays Finalized)
+
+The chip (a `Tag` in a list item with the cut-text tooltip) moved unchanged into `TagsInputChip.tsx`, so `MultiSelect` draws the same chip ([ADR-0123](../adr/0123-the-floating-option-list-is-shared-by-combobox-and-multiselect-through-internal-and-multiselect-draws-tagsinputs-box-and-chip-over-copying-them-or-adding-a-multiple-prop-to-combobox.md)). It is not exported from the package. Nothing `TagsInput` renders or does changed, and its tests pass as written.

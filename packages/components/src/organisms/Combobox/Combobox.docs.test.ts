@@ -5,7 +5,10 @@ import { describe, expect, it } from "vitest";
 // The Docs page's "Design tokens used" table is written by hand, so it can drift from the stylesheet. This holds
 // the two together for every token the stylesheet reads, and the other way round. (The tests run from the package's own folder.)
 const folder = join(process.cwd(), "src/organisms/Combobox");
-const css = readFileSync(join(folder, "Combobox.module.css"), "utf8");
+// The list and the field's buttons are drawn by the stylesheets `Combobox` shares with `MultiSelect`.
+const css = ["Combobox.module.css", "../../internal/optionList/OptionList.module.css", "../../internal/optionList/AdornmentButton.module.css"]
+  .map((file) => readFileSync(join(folder, file), "utf8"))
+  .join("\n");
 const mdx = readFileSync(join(folder, "Combobox.mdx"), "utf8");
 
 const usedTokens = [...new Set([...css.matchAll(/var\(--dbm-([a-z0-9-]+)/g)].map((match) => match[1] as string))];

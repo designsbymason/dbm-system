@@ -1,4 +1,4 @@
-import type { ComboboxOption } from "./Combobox.types";
+import type { ListOption } from "./optionList.types";
 
 /** Lower-cases and drops accents, writing each character on its own so positions map back to the original text. */
 export function foldCharacters(text: string): { folded: string; origin: number[] } {
@@ -20,7 +20,7 @@ export const fold = (text: string): string => foldCharacters(text).folded;
 /** The words of the typed text, folded: a label matches when it holds every one of them, in any order. */
 export const queryWords = (text: string): string[] => fold(text.trim()).split(/\s+/).filter(Boolean);
 
-export function defaultFilter(option: ComboboxOption, text: string): boolean {
+export function defaultFilter(option: ListOption, text: string): boolean {
   const words = queryWords(text);
   if (words.length === 0) return true;
   const haystack = fold([option.textValue ?? option.label, ...(option.keywords ?? [])].join(" "));

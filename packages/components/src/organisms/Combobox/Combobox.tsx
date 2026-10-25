@@ -1,22 +1,13 @@
-import { CaretDownIcon, CheckIcon, PlusIcon, XIcon } from "@dbm-system/icons";
-import {
-  cx,
-  mergeDefined,
-  mergeRefs,
-  useAnnouncement,
-  useResolvedResponsiveValue,
-  useWindowedList,
-} from "@dbm-system/utils";
+import { CaretDownIcon, XIcon } from "@dbm-system/icons";
+import { cx, mergeDefined, mergeRefs, useAnnouncement } from "@dbm-system/utils";
 import * as PopoverPrimitive from "@radix-ui/react-popover";
 import { forwardRef, useCallback, useEffect, useId, useMemo, useRef, useState } from "react";
-import type { ChangeEvent, CSSProperties, FocusEvent, KeyboardEvent, MouseEvent, ReactNode } from "react";
-import { Highlight } from "../../atoms/Highlight";
-import { Icon } from "../../atoms/Icon";
+import type { ChangeEvent, FocusEvent, KeyboardEvent, MouseEvent } from "react";
 import { Input } from "../../atoms/Input";
 import { Spinner } from "../../atoms/Spinner";
 import { VisuallyHidden } from "../../atoms/VisuallyHidden";
-import styles from "./Combobox.module.css";
-import { defaultFilter, findMatches, fold } from "./Combobox.match";
+import { AdornmentButton, Adornments } from "../../internal/optionList/AdornmentButton";
+import { defaultFilter, fold } from "../../internal/optionList/optionList.match";
 import {
   buildRows,
   CREATE_VALUE,
@@ -24,62 +15,20 @@ import {
   isDisabled,
   lastEnabled,
   stepEnabled,
-} from "./Combobox.rows";
-import type { Row } from "./Combobox.rows";
-import { useViewportRoom } from "../../internal/useViewportRoom";
+} from "../../internal/optionList/optionList.rows";
+import { OptionListPanel } from "../../internal/optionList/OptionListPanel";
+import { useOptionListLayout } from "../../internal/optionList/useOptionListLayout";
+import { optionDomId, useOptionListWindow } from "../../internal/optionList/useOptionListWindow";
+import styles from "./Combobox.module.css";
 import type {
   ComboboxInputChangeReason,
   ComboboxLabels,
   ComboboxOption,
   ComboboxProps,
-  ComboboxSize,
 } from "./Combobox.types";
 
-// Past this many rows only the ones in view are drawn (06 §4). Below it, drawing them all is cheaper than the
-// bookkeeping, and keeps real group elements in the list.
-const WINDOW_THRESHOLD = 100;
 // How far the Page Up and Page Down keys move the highlight.
 const PAGE_STEP = 10;
-// The gap between the field and its list, in pixels (Radix takes a number, as `Popover`'s `sideOffset` does).
-const SIDE_OFFSET = 4;
-// The gap kept between a full-width list and the edges of the screen, in pixels (also the layer's collision padding).
-const EDGE_GAP = SIDE_OFFSET * 2;
-// A full-width list opens on the side that has at least this much room (pixels) before the other side is tried: about
-// five rows. A behaviour threshold, not a design value.
-const MIN_ROOM = 160;
-
-const sizeClass: Record<ComboboxSize, string | undefined> = {
-  xs: styles.sizeXs,
-  sm: styles.sizeSm,
-  md: styles.sizeMd,
-  lg: styles.sizeLg,
-  xl: styles.sizeXl,
-};
-
-const adornmentClass: Record<ComboboxSize, string | undefined> = {
-  xs: styles.adornmentXs,
-  sm: styles.adornmentSm,
-  md: styles.adornmentMd,
-  lg: styles.adornmentLg,
-  xl: styles.adornmentXl,
-};
-
-// The same step as the field's own size, the way `Input` sizes its clear icon.
-const adornmentIconSize: Record<ComboboxSize, "xs" | "sm" | "md" | "lg" | "xl"> = {
-  xs: "xs",
-  sm: "sm",
-  md: "md",
-  lg: "lg",
-  xl: "xl",
-};
-
-const optionIconSize: Record<ComboboxSize, "xs" | "sm" | "md" | "lg"> = {
-  xs: "xs",
-  sm: "sm",
-  md: "sm",
-  lg: "md",
-  xl: "md",
-};
 
 const buildDefaultLabels = (formatNumber: (value: number) => string): ComboboxLabels => ({
   clear: "Clear",
@@ -97,17 +46,6 @@ const ignoreChange = () => undefined;
 
 // The default for `options`: one array, so an omitted prop doesn't make the memos below recompute on every render.
 const NO_OPTIONS: ComboboxOption[] = [];
-
-/** A length token such as `2.25rem` in pixels, or `undefined` when it can't be read (a server render). */
-function readLengthToken(name: string): number | undefined {
-  if (typeof document === "undefined") return undefined;
-  const root = getComputedStyle(document.documentElement);
-  const raw = root.getPropertyValue(name).trim();
-  const value = Number.parseFloat(raw);
-  if (Number.isNaN(value)) return undefined;
-  if (raw.endsWith("rem")) return value * Number.parseFloat(root.fontSize);
-  return raw.endsWith("px") ? value : undefined;
-}
 
 /**
  * A text field with a list of options under it: type to narrow the list, then choose one with the keyboard, a
@@ -214,8 +152,7 @@ export const Combobox = forwardRef<HTMLInputElement, ComboboxProps>(
     const reactId = useId();
     const inputId = id ?? `${reactId}-input`;
     const listId = `${reactId}-list`;
-    const optionDomId = (index: number) => `${listId}-option-${index}`;
-    const labels = useMemo(
+        const labels = useMemo(
       () => mergeDefined(buildDefaultLabels(formatNumber), labelOverrides),
       [formatNumber, labelOverrides],
     );
@@ -249,21 +186,6 @@ export const Combobox = forwardRef<HTMLInputElement, ComboboxProps>(
         seen.add(option.value);
       }
     }, [options, warnOnce]);
-
-    // The list is as wide as the field. Radix's own `--radix-popover-trigger-width` is rewritten while the page is
-    // being laid out, and a width that follows it feeds back into the layer's size observer (a "ResizeObserver
-    // loop" warning inside a `Dialog`, whose entrance scales the field), so the field's layout width is read here.
-    const [anchorWidth, setAnchorWidth] = useState<number | undefined>();
-    useEffect(() => {
-      const element = rootRef.current;
-      if (!element || typeof ResizeObserver === "undefined") return undefined;
-      const observer = new ResizeObserver((entries) => {
-        const entry = entries[entries.length - 1];
-        setAnchorWidth(entry?.borderBoxSize?.[0]?.inlineSize ?? element.offsetWidth);
-      });
-      observer.observe(element);
-      return () => observer.disconnect();
-    }, []);
 
     // The chosen value.
     const isValueControlled = valueProp !== undefined;
@@ -299,21 +221,15 @@ export const Combobox = forwardRef<HTMLInputElement, ComboboxProps>(
       [interactive, isOpenControlled, open, onOpenChange],
     );
 
-    // A full-width list (a phone, usually) spans the visible screen, and goes on whichever side has room above or
-    // below the field once an on-screen keyboard is counted, which the layer doesn't know about.
-    const fullWidth = useResolvedResponsiveValue(presentation, "anchored") === "full-width";
-    const room = useViewportRoom(rootRef, fullWidth && open);
-    useEffect(() => {
-      if (fullWidth && align !== "start") {
-        warnOnce("Combobox: `align` has no effect while `presentation` is \"full-width\"; the list spans the screen.");
-      }
-    }, [fullWidth, align, warnOnce]);
-    const preferredTop = side === "top";
-    const roomOnPreferred = room ? (preferredTop ? room.above : room.below) : 0;
-    const roomOnOther = room ? (preferredTop ? room.below : room.above) : 0;
-    const wideSide: "top" | "bottom" =
-      room && roomOnPreferred < MIN_ROOM && roomOnOther > roomOnPreferred ? (preferredTop ? "bottom" : "top") : preferredTop ? "top" : "bottom";
-    const wideRoom = room ? (wideSide === "top" ? room.above : room.below) - SIDE_OFFSET - EDGE_GAP : undefined;
+    const { fullWidth, panelSide, contentStyle } = useOptionListLayout({
+      rootRef,
+      presentation,
+      open,
+      side,
+      align,
+      warn: warnOnce,
+      name: "Combobox",
+    });
 
     // The options on show and the rows that draw them.
     const filterText = dirty ? inputValue : "";
@@ -342,14 +258,6 @@ export const Combobox = forwardRef<HTMLInputElement, ComboboxProps>(
     }, [visible, createLabel, creating]);
     const resultCount = flat.length - (createLabel === undefined ? 0 : 1);
     const hasIcons = useMemo(() => options.some((option) => option.icon !== undefined), [options]);
-    const rowIndexOfOption = useMemo(() => {
-      const map: number[] = [];
-      rows.forEach((row, rowIndex) => {
-        if (row.kind === "option") map[row.index] = rowIndex;
-      });
-      return map;
-    }, [rows]);
-
     // The highlight. `navigated` is the option the person moved to with a key or the pointer; until they do, the
     // highlight is the first match while typing (`autoHighlight`) and the chosen option otherwise.
     const [navigated, setNavigated] = useState<string | null>(null);
@@ -365,70 +273,12 @@ export const Combobox = forwardRef<HTMLInputElement, ComboboxProps>(
       return chosen !== -1 && !isDisabled(flat[chosen] as ComboboxOption) ? chosen : -1;
     }, [open, navigated, flat, dirty, autoHighlightOn, value]);
 
-    // Windowing: rows are a fixed height, so a long list draws only the ones in view.
-    const windowed = open && rows.length > WINDOW_THRESHOLD;
-    const rowSizes = useMemo(() => {
-      if (!windowed) return undefined;
-      const plain = readLengthToken(`--dbm-combobox-option-height-${size}`);
-      const described = readLengthToken(`--dbm-combobox-option-height-described-${size}`);
-      return plain !== undefined && described !== undefined ? { plain, described } : undefined;
-    }, [windowed, size]);
-    const getItemSize = useCallback(
-      (rowIndex: number) => {
-        const row = rows[rowIndex];
-        const described = row?.kind === "option" && Boolean(row.option.description);
-        return (described ? rowSizes?.described : rowSizes?.plain) ?? 0;
-      },
-      [rows, rowSizes],
-    );
-    const windowedList = useWindowedList({
-      count: rows.length,
-      getItemSize,
-      enabled: windowed && rowSizes !== undefined,
-    });
-    const { containerRef: windowRef, scrollToIndex, viewportSize } = windowedList;
-    const [listElement, setListElement] = useState<HTMLDivElement | null>(null);
-    const setListRef = useCallback(
-      (element: HTMLDivElement | null) => {
-        setListElement(element);
-        windowRef(element);
-      },
-      [windowRef],
-    );
-
-    // Keeps the highlighted option in view after a key moved it. A pointer hover doesn't scroll, so the list
-    // doesn't jump under the pointer.
-    const scrollOnHighlight = useRef(false);
-    useEffect(() => {
-      if (!scrollOnHighlight.current || highlighted === -1 || !listElement) return;
-      scrollOnHighlight.current = false;
-      if (!windowed) {
-        listElement
-          .querySelector<HTMLElement>(`[id="${optionDomId(highlighted)}"]`)
-          ?.scrollIntoView({ block: "nearest" });
-      }
-      // eslint-disable-next-line react-hooks/exhaustive-deps -- `optionDomId` only reads `listId`, which is stable
-    }, [highlighted, listElement, windowed]);
-
-    // When the list opens on a chosen option far down a long list, bring it into view. The box is only as tall as it
-    // will be once the floating layer has measured the room there is, so this runs again when its height settles.
-    useEffect(() => {
-      if (!open || !windowed || !listElement) return;
-      const target = highlighted === -1 ? undefined : rowIndexOfOption[highlighted];
-      if (target !== undefined) scrollToIndex(target);
-      // Not on every highlight: moving it with a key scrolls from the key handler.
-      // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [open, windowed, listElement, viewportSize]);
-
+    const listWindow = useOptionListWindow({ open, rows, size, highlighted, listId });
     const moveHighlight = (index: number) => {
       const option = flat[index];
       if (!option) return;
-      scrollOnHighlight.current = true;
+      listWindow.reveal(index);
       setNavigated(option.value);
-      if (windowed) {
-        const target = rowIndexOfOption[index];
-        if (target !== undefined) scrollToIndex(target);
-      }
     };
 
     // Announcements: the number of matches changing while the person types. A list that merely opens, or whose
@@ -625,160 +475,7 @@ export const Combobox = forwardRef<HTMLInputElement, ComboboxProps>(
       hiddenRef.current?.setCustomValidity(unchosenText ? labels.pickAnOption : "");
     }, [unchosenText, labels.pickAnOption]);
 
-    const activeRendered =
-      highlighted !== -1 &&
-      (!windowed ||
-        (() => {
-          const rowIndex = rowIndexOfOption[highlighted];
-          return rowIndex !== undefined && rowIndex >= windowedList.start && rowIndex < windowedList.end;
-        })());
-
     const showClear = clearable && interactive && (value !== "" || inputValue !== "");
-    const markText = dirty ? inputValue : "";
-
-    const renderRowContent = (option: ComboboxOption, isHighlighted: boolean, isSelected: boolean): ReactNode => {
-      if (renderOption) return renderOption(option, { highlighted: isHighlighted, selected: isSelected });
-      if (option.value === CREATE_VALUE) {
-        return (
-          <>
-            <Icon icon={PlusIcon} size={optionIconSize[size]} tone="default" className={styles.optionIcon} />
-            <span className={styles.optionText}>
-              <span className={styles.optionLabel}>{option.label}</span>
-            </span>
-          </>
-        );
-      }
-      const matches = findMatches(option.label, markText);
-      const parts: ReactNode[] = [];
-      let at = 0;
-      matches.forEach(([from, to], position) => {
-        if (from > at) parts.push(option.label.slice(at, from));
-        const text = option.label.slice(from, to);
-        // Bold by default; a tone adds `Highlight`'s colours as well.
-        parts.push(
-          highlightTone ? (
-            <Highlight key={position} tone={highlightTone} className={styles.match}>
-              {text}
-            </Highlight>
-          ) : (
-            <b key={position} className={styles.match}>
-              {text}
-            </b>
-          ),
-        );
-        at = to;
-      });
-      if (at < option.label.length) parts.push(option.label.slice(at));
-      const label = matches.length > 0 ? <>{parts}</> : option.label;
-      return (
-        <>
-          {option.icon ? (
-            <Icon icon={option.icon} size={optionIconSize[size]} tone="default" className={styles.optionIcon} />
-          ) : hasIcons ? (
-            // Keeps the labels of options without an icon in line with those that have one.
-            <span aria-hidden="true" className={styles.optionIconSpace} />
-          ) : null}
-          <span className={styles.optionText}>
-            <span className={styles.optionLabel}>{label}</span>
-            {option.description ? <span className={styles.optionDescription}>{option.description}</span> : null}
-          </span>
-        </>
-      );
-    };
-
-    const renderOptionRow = (row: Extract<Row, { kind: "option" }>) => {
-      const { option, index } = row;
-      const isSelected = option.value === value;
-      const isHighlighted = index === highlighted;
-      const reason = typeof option.disabled === "string" ? option.disabled : undefined;
-      // In a windowed list the group's own element isn't drawn, so each option carries the group's name to be read.
-      const groupName = windowed && rowSizes ? option.group : undefined;
-      return (
-        // eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/interactive-supports-focus -- an option of a combobox is never focused: focus stays in the field, which points at the highlighted option with aria-activedescendant and answers the keys itself (the ARIA combobox pattern).
-        <div
-          key={row.key}
-          id={optionDomId(index)}
-          role="option"
-          aria-selected={isSelected}
-          aria-disabled={isDisabled(option) || undefined}
-          data-highlighted={isHighlighted || undefined}
-          data-selected={isSelected || undefined}
-          data-disabled={isDisabled(option) || undefined}
-          title={reason}
-          className={cx(styles.option, Boolean(option.description) && styles.optionDescribed)}
-          onClick={() => choose(option)}
-          onMouseMove={() => {
-            if (!isDisabled(option) && navigated !== option.value) setNavigated(option.value);
-          }}
-        >
-          {renderRowContent(option, isHighlighted, isSelected)}
-          {groupName ? <VisuallyHidden>{`, ${groupName}`}</VisuallyHidden> : null}
-          {reason ? <VisuallyHidden>{`, ${reason}`}</VisuallyHidden> : null}
-          {isSelected && option.value !== CREATE_VALUE ? (
-            <Icon icon={CheckIcon} size={optionIconSize[size]} tone="brand" className={styles.optionCheck} />
-          ) : null}
-        </div>
-      );
-    };
-
-    const renderHeading = (row: Extract<Row, { kind: "group" }>) => (
-      <div key={row.key} id={`${listId}-${row.key}`} role="presentation" className={styles.groupLabel}>
-        {row.label}
-      </div>
-    );
-
-    const drawn = windowed && rowSizes ? rows.slice(windowedList.start, windowedList.end) : rows;
-
-    const renderRows = (): ReactNode => {
-      if (flat.length === 0) {
-        // Nothing to choose from and nothing typed is an invitation; text that matches nothing is "no results".
-        const invitation = filterText.trim() === "" && options.length === 0;
-        const message = loading ? labels.loading : invitation ? labels.typeToSearch : (emptyContent ?? labels.noResults);
-        return (
-          <div role="option" aria-selected="false" aria-disabled="true" className={cx(styles.option, styles.status)}>
-            {message}
-          </div>
-        );
-      }
-      if (windowed && rowSizes) {
-        return drawn.map((row) => (row.kind === "group" ? renderHeading(row) : renderOptionRow(row)));
-      }
-      const sections: ReactNode[] = [];
-      let group: { heading: Extract<Row, { kind: "group" }>; items: ReactNode[] } | undefined;
-      const flush = () => {
-        if (!group) return;
-        sections.push(
-          <div key={group.heading.key} role="group" aria-labelledby={`${listId}-${group.heading.key}`}>
-            {renderHeading(group.heading)}
-            {group.items}
-          </div>,
-        );
-        group = undefined;
-      };
-      for (const row of rows) {
-        if (row.kind === "group") {
-          flush();
-          group = { heading: row, items: [] };
-        } else if (group) group.items.push(renderOptionRow(row));
-        else sections.push(renderOptionRow(row));
-      }
-      flush();
-      return sections;
-    };
-
-    const listWidth = fullWidth && room ? room.width - 2 * EDGE_GAP : anchorWidth;
-    const contentStyle: CSSProperties | undefined =
-      listWidth === undefined
-        ? undefined
-        : ({
-            "--combobox-width": `${listWidth}px`,
-            ...(fullWidth && wideRoom !== undefined ? { "--combobox-room": `${Math.max(wideRoom, 0)}px` } : {}),
-          } as CSSProperties);
-
-    const windowStyle =
-      windowed && rowSizes
-        ? { paddingBlockStart: windowedList.before, paddingBlockEnd: windowedList.after }
-        : undefined;
 
     const hiddenControl = !allowCustomValue ? (
       <VisuallyHidden asChild>
@@ -825,36 +522,21 @@ export const Combobox = forwardRef<HTMLInputElement, ComboboxProps>(
               onClick={handleClick}
               onKeyDown={handleKeyDown}
               suffix={
-                <span className={styles.adornments}>
-                  {loading ? <Spinner size={adornmentIconSize[size]} tone="default" /> : null}
-                  {showClear ? (
-                    <button
-                      type="button"
-                      tabIndex={-1}
-                      aria-label={labels.clear}
-                      className={cx(styles.adornment, adornmentClass[size])}
-                      onMouseDown={(event) => event.preventDefault()}
-                      onClick={clear}
-                    >
-                      <Icon icon={XIcon} size={adornmentIconSize[size]} tone="default" />
-                    </button>
-                  ) : null}
+                <Adornments>
+                  {loading ? <Spinner size={size} tone="default" /> : null}
+                  {showClear ? <AdornmentButton icon={XIcon} size={size} label={labels.clear} onClick={clear} /> : null}
                   {interactive ? (
-                    <button
-                      type="button"
-                      tabIndex={-1}
-                      aria-label={labels.toggle}
-                      className={cx(styles.adornment, adornmentClass[size])}
-                      onMouseDown={(event) => event.preventDefault()}
+                    <AdornmentButton
+                      icon={CaretDownIcon}
+                      size={size}
+                      label={labels.toggle}
                       onClick={() => {
                         inputRef.current?.focus();
                         setOpen(!open);
                       }}
-                    >
-                      <Icon icon={CaretDownIcon} size={adornmentIconSize[size]} tone="default" />
-                    </button>
+                    />
                   ) : null}
-                </span>
+                </Adornments>
               }
               role="combobox"
               aria-label={ariaLabel}
@@ -862,9 +544,9 @@ export const Combobox = forwardRef<HTMLInputElement, ComboboxProps>(
               aria-haspopup="listbox"
               aria-expanded={open}
               // Points at the list for as long as it is in the page, which includes the moment it fades out after closing.
-              aria-controls={listElement ? listId : undefined}
+              aria-controls={listWindow.listElement ? listId : undefined}
               aria-autocomplete="list"
-              aria-activedescendant={open && activeRendered ? optionDomId(highlighted) : undefined}
+              aria-activedescendant={open && listWindow.activeRendered ? optionDomId(listId, highlighted) : undefined}
               required={allowCustomValue ? required : undefined}
               aria-required={required && !allowCustomValue ? true : undefined}
             />
@@ -872,52 +554,46 @@ export const Combobox = forwardRef<HTMLInputElement, ComboboxProps>(
             <VisuallyHidden role="status">{announcement}</VisuallyHidden>
           </div>
         </PopoverPrimitive.Anchor>
-        <PopoverPrimitive.Portal container={container}>
-          <PopoverPrimitive.Content
-            role="presentation"
-            dir={dir}
-            side={fullWidth ? wideSide : side}
-            align={align}
-            sideOffset={SIDE_OFFSET}
-            collisionPadding={EDGE_GAP}
-            className={cx(styles.content, sizeClass[size], fullWidth && styles.fullWidth)}
-            // Focus stays in the field: nothing here takes it, and a press on the list isn't the field losing it.
-            onOpenAutoFocus={(event) => event.preventDefault()}
-            onCloseAutoFocus={(event) => event.preventDefault()}
-            onEscapeKeyDown={handleEscape}
-            onFocusOutside={(event) => event.preventDefault()}
-            // A press in the field or its buttons is not "outside"; one anywhere else closes the list.
-            onInteractOutside={(event) => {
-              const target = event.target;
-              if (target instanceof Node && rootRef.current?.contains(target)) event.preventDefault();
-            }}
-            style={contentStyle}
-            onMouseDown={(event) => event.preventDefault()}
-          >
-            <div
-              ref={setListRef}
-              id={listId}
-              role="listbox"
-              aria-label={ariaLabelledBy ? undefined : (ariaLabel ?? fieldLabel)}
-              aria-labelledby={ariaLabelledBy}
-              aria-busy={loading || undefined}
-              className={styles.list}
-            >
-              {/* The spacers of a windowed list are this box's padding, not the scrolling box's own: a box can't
-                  shrink below its padding, so padding on it would stop it being capped. */}
-              <div role="presentation" style={windowStyle}>
-                {renderRows()}
-              </div>
-            </div>
-            {error ? <div className={styles.footer}>{labels.error}</div> : null}
-            {loading && flat.length > 0 ? (
-              <div className={styles.footer}>
-                <Spinner size="xs" tone="default" />
-                {labels.loading}
-              </div>
-            ) : null}
-          </PopoverPrimitive.Content>
-        </PopoverPrimitive.Portal>
+        <OptionListPanel
+          listId={listId}
+          size={size}
+          rows={listWindow.drawn}
+          windowed={listWindow.drawing}
+          windowStyle={listWindow.windowStyle}
+          optionCount={flat.length}
+          highlighted={highlighted}
+          isSelected={(option) => option.value === value}
+          onChoose={choose}
+          onHover={(option) => {
+            if (navigated !== option.value) setNavigated(option.value);
+          }}
+          markText={dirty ? inputValue : ""}
+          highlightTone={highlightTone}
+          hasIcons={hasIcons}
+          renderOption={renderOption}
+          // Nothing to choose from and nothing typed is an invitation; text that matches nothing is "no results".
+          emptyMessage={
+            loading
+              ? labels.loading
+              : filterText.trim() === "" && options.length === 0
+                ? labels.typeToSearch
+                : (emptyContent ?? labels.noResults)
+          }
+          loading={loading}
+          loadingMessage={labels.loading}
+          errorMessage={error ? labels.error : undefined}
+          ariaLabel={ariaLabel ?? fieldLabel}
+          ariaLabelledBy={ariaLabelledBy}
+          setListRef={listWindow.setListRef}
+          fieldRef={rootRef}
+          container={container}
+          dir={dir}
+          side={panelSide}
+          align={align}
+          fullWidth={fullWidth}
+          contentStyle={contentStyle}
+          onEscapeKeyDown={handleEscape}
+        />
       </PopoverPrimitive.Root>
     );
   },

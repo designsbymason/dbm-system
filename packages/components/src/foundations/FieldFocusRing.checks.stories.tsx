@@ -11,6 +11,7 @@ import { Select } from "../molecules/Select";
 import { TagsInput } from "../molecules/TagsInput";
 import { TimePicker } from "../molecules/TimePicker";
 import { DatePicker } from "../organisms/DatePicker";
+import { MultiSelect } from "../organisms/MultiSelect";
 
 // One rule for every field that draws its own box (`05-component-api-conventions.md` §6): the focus ring is on the
 // box's own edge, with no gap, and the box does not change shape or size when it is focused; an invalid field keeps
@@ -90,6 +91,20 @@ const cases: Case[] = [
     ring: '[data-active="true"]',
   },
   { name: "DatePicker", field: (invalid) => <DatePicker aria-label="Start" hasError={invalid} defaultValue="2026-10-03" /> },
+  {
+    name: "MultiSelect",
+    field: (invalid) => (
+      <MultiSelect
+        aria-label="Countries"
+        hasError={invalid}
+        defaultValue={["ca"]}
+        options={[
+          { value: "ca", label: "Canada" },
+          { value: "mx", label: "Mexico" },
+        ]}
+      />
+    ),
+  },
 ];
 
 function Harness({ children }: { children: ReactNode }) {
@@ -174,3 +189,5 @@ export const PinInput_: Story = story(cases[8] as Case, false);
 export const PinInputInvalid: Story = story(cases[8] as Case, true);
 export const DatePicker_: Story = story(cases[9] as Case, false);
 export const DatePickerInvalid: Story = story(cases[9] as Case, true);
+export const MultiSelect_: Story = story(cases[10] as Case, false);
+export const MultiSelectInvalid: Story = story(cases[10] as Case, true);

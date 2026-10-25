@@ -1,0 +1,60 @@
+/* The caret and clear buttons share the field's trailing edge. */
+.adornments {
+  align-items: center;
+  display: inline-flex;
+  gap: var(--dbm-space-1);
+}
+
+/* Neutral in-field icon buttons, as `Input`'s clear button is: `icon.default` with a `bg.neutral-subtle` hover
+   only. Out of the tab order (the arrow keys and Escape do what they do), but a real hit area: padding around the
+   icon, with a negative block margin that gives the extra height back so they don't make the field taller. */
+.adornment {
+  align-items: center;
+  background-color: transparent;
+  border: none;
+  border-radius: var(--dbm-radius-full);
+  cursor: pointer;
+  display: inline-flex;
+  flex-shrink: 0;
+  justify-content: center;
+  min-block-size: var(--adornment-box);
+  min-inline-size: var(--adornment-box);
+  transition: background-color var(--dbm-motion-duration-fast) var(--dbm-motion-easing-standard);
+}
+
+.adornment:hover {
+  background-color: var(--dbm-bg-neutral-subtle);
+}
+
+/* Each size pads the icon and gives the box at least `space.6` (a 24px target) in both directions. The negative
+   block margin gives back whatever height the box has beyond the field's text line, so the buttons never make the
+   field taller than an `Input`. */
+.adornmentXs {
+  --adornment-box: max(var(--dbm-space-6), calc(var(--dbm-icon-size-xs) + 2 * var(--dbm-space-1)));
+  padding: var(--dbm-space-1);
+  margin-block: calc((var(--dbm-font-size-xs) * var(--dbm-line-height-tight) - var(--adornment-box)) / 2);
+}
+
+.adornmentSm {
+  --adornment-box: max(var(--dbm-space-6), calc(var(--dbm-icon-size-sm) + 2 * var(--dbm-space-2)));
+  padding: var(--dbm-space-2);
+  margin-block: calc((var(--dbm-font-size-sm) * var(--dbm-line-height-tight) - var(--adornment-box)) / 2);
+}
+
+.adornmentMd {
+  --adornment-box: max(var(--dbm-space-6), calc(var(--dbm-icon-size-md) + 2 * var(--dbm-space-2)));
+  padding: var(--dbm-space-2);
+  margin-block: calc((var(--dbm-font-size-base) * var(--dbm-line-height-tight) - var(--adornment-box)) / 2);
+}
+
+.adornmentLg {
+  --adornment-box: max(var(--dbm-space-6), calc(var(--dbm-icon-size-lg) + 2 * var(--dbm-space-2)));
+  padding: var(--dbm-space-2);
+  margin-block: calc((var(--dbm-font-size-md) * var(--dbm-line-height-tight) - var(--adornment-box)) / 2);
+}
+
+.adornmentXl {
+  --adornment-box: max(var(--dbm-space-6), calc(var(--dbm-icon-size-xl) + 2 * var(--dbm-space-2)));
+  padding: var(--dbm-space-2);
+  margin-block: calc((var(--dbm-font-size-lg) * var(--dbm-line-height-tight) - var(--adornment-box)) / 2);
+}
