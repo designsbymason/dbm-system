@@ -1,6 +1,7 @@
 import type { Meta, StoryContext, StoryObj } from "@storybook/react-vite";
 import { expect, fn, userEvent, waitFor, within } from "storybook/test";
 import { MagnifyingGlassIcon } from "@dbm-system/icons";
+import { useRecentCommands } from "@dbm-system/utils";
 import { useRef, useState } from "react";
 import { Button } from "../../atoms/Button";
 import { Kbd } from "../../atoms/Kbd";
@@ -351,6 +352,36 @@ export const Recent: Story = {
       )}
     </PaletteStage>
   ),
+};
+
+function RememberedExample({ container }: { container: HTMLElement | null }) {
+  const { recent, add, clear } = useRecentCommands("story-palette", { storage: "session", max: 3 });
+  return (
+    <Stack gap={3} align="center">
+      <CommandPalette
+        container={container}
+        hotkey={false}
+        trigger={searchTrigger}
+        commands={sampleCommands.filter((command) => command.items === undefined)}
+        recent={recent}
+        onSelect={(item) => add(item.value)}
+      />
+      <Button variant="tertiary" size="sm" onClick={clear}>
+        Forget recent commands
+      </Button>
+      <Text size="sm" color="secondary">
+        Run a command, then open the palette again: the last three come first.
+      </Text>
+    </Stack>
+  );
+}
+
+/** `useRecentCommands` remembers what was run (here for this tab only) and hands it back as `recent`. */
+export const Remembered: Story = {
+  name: "Remembering recent commands",
+  parameters: { docs: { source: { code: commandPaletteSnippets.remembered } } },
+  argTypes: { ...noControls },
+  render: () => <PaletteStage>{(container) => <RememberedExample container={container} />}</PaletteStage>,
 };
 
 function WaitingExample({ container }: { container: HTMLElement | null }) {

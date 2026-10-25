@@ -471,3 +471,34 @@ export const ModifierKeysForThePlatform: Story = {
     await closeWithEscape();
   },
 };
+
+async function realMove(element: Element) {
+  const rect = element.getBoundingClientRect();
+  const frame = window.frameElement?.getBoundingClientRect();
+  const scale = frame ? frame.width / window.innerWidth : 1;
+  const x = (frame?.left ?? 0) + (rect.left + rect.width / 2) * scale;
+  const y = (frame?.top ?? 0) + (rect.top + rect.height / 2) * scale;
+  await send("Input.dispatchMouseEvent", { type: "mouseMoved", x, y });
+}
+
+export const KeysWinOverAPointerAtRest: Story = {
+  name: "A pointer resting on the list does not take the highlight back from the arrow keys",
+  render: () => <Page commands={manyCommands(1000)} />,
+  play: async () => {
+    await openFrom("Open");
+    const rows = body().getAllByRole("option");
+    // The pointer comes to rest on the seventh row, which it highlights; the keys then carry the highlight twenty rows
+    // further, scrolling the list so other rows arrive under the resting pointer.
+    await realMove(rows[6] as Element);
+    const active = () => document.getElementById(search().getAttribute("aria-activedescendant") ?? "");
+    await waitFor(() => expect(active()).toHaveTextContent("Command 7"));
+    await userEvent.keyboard("{ArrowDown}".repeat(20));
+    await new Promise((resolve) => setTimeout(resolve, 400));
+    await expect(active()).toHaveTextContent("Command 27");
+    // And it stays there while the pointer stays still.
+    await userEvent.keyboard("{ArrowDown}");
+    await new Promise((resolve) => setTimeout(resolve, 400));
+    await expect(active()).toHaveTextContent("Command 28");
+    await closeWithEscape();
+  },
+};

@@ -160,6 +160,10 @@ A command is an object in the `commands` array.
 
 <Canvas of={CommandPaletteStories.Recent} />
 
+### Remembering recent commands
+
+<Canvas of={CommandPaletteStories.Remembered} />
+
 ### Commands that take time
 
 <Canvas of={CommandPaletteStories.Waiting} />
@@ -252,7 +256,7 @@ A command is an object in the `commands` array.
 - **Cut a long empty list with `maxPerGroup`.** Each group shows its first few while the search is empty, followed by a row ("Show 3 more") that shows the rest of that group; the row is reached with the arrow keys like any other. Searching lists every match, and the recent and suggested groups are never cut. `suggested` lists commands after `recent` under their own heading, and a command shows once, in the first group that names it.
 - **The forward arrow opens a list.** With the caret at the end of the text, Right (Left in right-to-left) opens the highlighted command's list or asks for its value; Tab is not used for this, so it keeps moving focus as it does everywhere in the dialog. The highlighted row ends with an Enter key to say what runs it.
 - **A list can speak for itself.** A command with `items` can set a `placeholder` ("Search themes…") and an `emptyContent` for its own list; the search field is then named after the list (`labels.searchIn`) and so is the listbox.
-- **`recent` is a list of values you keep.** The palette remembers nothing between openings, because what counts as recent (per person, per workspace, after a round trip) is yours to say. A command shows once: under the Recent heading while the search is empty, and in its usual place once something is typed.
+- **`recent` is a list of values you keep.** The palette remembers nothing between openings, because what counts as recent (per person, per workspace, after a round trip) is yours to say. `useRecentCommands(key, { storage, max })` is the usual way to keep it: it returns `recent` and an `add`, remembers the list in the browser (this tab only with `storage: "session"`), keeps it newest first and capped, keeps other tabs in step, falls back to memory when storage is blocked, and renders empty on the server. Call `add(item.value)` from `onSelect`, and store ids, never text a person typed. A command shows once: under the Recent heading while the search is empty, and in its usual place once something is typed.
 - **A command that returns a promise is busy until it settles.** The row shows a spinner, the palette ignores Escape and a press on the scrim, no other command runs, and it closes when the promise resolves unless `closeOnSelect` is `false`. A rejection keeps it open, announces `labels.failed` and calls `onSelectError`; with no handler the rejection is left unhandled so it is not lost silently.
 - **A command that opens something else needs nothing special.** Open a `ConfirmDialog` or a `Dialog` from `onSelect` and focus goes to it, not back to where the palette was opened.
 - **Search on a server with `filter={false}`.** Pass new `commands` as `onQueryChange` reports typing, and `loading` while they are on their way. The palette then lists exactly what you give it.
@@ -324,6 +328,9 @@ A command is an object in the `commands` array.
     { value: "theme", label: "Change theme", placeholder: "Search themes…", emptyContent: "No such theme", items: themes },
   ]}
 />
+
+{/* Remember what was run, and list it first next time */}
+<CommandPalette commands={commands} recent={recent} onSelect={(item) => add(item.value)} />
 
 {/* Ask for a value before running, and try a choice as it is highlighted */}
 <CommandPalette

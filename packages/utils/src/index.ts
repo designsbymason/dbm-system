@@ -1,6 +1,7 @@
 export * from "./hooks/useAnnouncement";
 export * from "./hooks/useIsScrollable";
 export * from "./hooks/usePersistentDismiss";
+export * from "./hooks/useRecentCommands";
 export * from "./hooks/useScrollEdges";
 export * from "./hooks/useSortable";
 export * from "./hooks/useResolvedResponsiveValue";

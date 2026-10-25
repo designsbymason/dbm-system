@@ -68,6 +68,15 @@ export const commandPaletteSnippets = {
   commands={commands}
 />`,
 
+  remembered: `{/* useRecentCommands keeps the values of the commands that were run (most recent first, at most max) in the
+    browser's storage, and returns them for recent. const { recent, add } = useRecentCommands("app-commands", { max: 5 }); */}
+<CommandPalette
+  trigger={<Button variant="secondary">Search…</Button>}
+  commands={commands}
+  recent={recent}
+  onSelect={(item) => add(item.value)}
+/>`,
+
   waiting: `{/* onSelect returns a promise: the row shows a spinner, the palette can't be dismissed, and it closes when the
     promise resolves. A rejection keeps it open and goes to onSelectError. */}
 <CommandPalette

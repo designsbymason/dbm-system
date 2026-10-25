@@ -6,6 +6,10 @@ import type { Breakpoint, CodeBlockSize, Responsive, SpaceValue } from "../index
 
 // What a consumer who installs only `@dbm-system/components` can import from it.
 describe("the components package's entry", () => {
+  it("re-exports useRecentCommands, the same function the utils package defines", () => {
+    expect(library.useRecentCommands).toBe(utils.useRecentCommands);
+  });
+
   it("re-exports usePersistentDismiss, the same function the utils package defines", () => {
     expect(library.usePersistentDismiss).toBe(utils.usePersistentDismiss);
   });

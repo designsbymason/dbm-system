@@ -113,9 +113,10 @@ export * from "./organisms/Toast";
 // What a consumer is meant to use from `@dbm-system/utils`, re-exported so that installing only this package
 // is enough (ADR-0023, `02-tech-stack-and-structure.md` §2) — never the helpers only components use.
 //
-// A hook: pair it with `Alert`'s controlled `open` to remember a dismissal across visits.
-export { usePersistentDismiss } from "@dbm-system/utils";
-export type { PersistentDismiss, PersistentDismissStorage, UsePersistentDismissOptions } from "@dbm-system/utils";
+// Hooks: pair `usePersistentDismiss` with `Alert`'s controlled `open` to remember a dismissal across visits, and
+// `useRecentCommands` with `CommandPalette`'s `recent` to remember the commands a person ran.
+export { usePersistentDismiss, useRecentCommands } from "@dbm-system/utils";
+export type { PersistentDismiss, PersistentDismissStorage, RecentCommands, UsePersistentDismissOptions, UseRecentCommandsOptions } from "@dbm-system/utils";
 // The types in thirteen components' public props (`Stack`'s `gap`, `Tabs`' `orientation`, `Grid`'s `columns`…), for a
 // consumer writing a typed wrapper around one.
 export type { Breakpoint, Responsive, SpaceValue } from "@dbm-system/utils";

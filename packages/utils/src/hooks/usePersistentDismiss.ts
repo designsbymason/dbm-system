@@ -1,7 +1,9 @@
 import { useCallback, useSyncExternalStore } from "react";
+import { readStored, removeStored, subscribeToStorage, writeStored } from "./persistentStorage";
+import type { PersistentStorage } from "./persistentStorage";
 
 /** Where the dismissal is remembered. */
-export type PersistentDismissStorage = "local" | "session";
+export type PersistentDismissStorage = PersistentStorage;
 
 export interface UsePersistentDismissOptions {
   /**
@@ -33,47 +35,9 @@ export interface PersistentDismiss {
 
 const PREFIX = "dbm-dismissed:";
 
-// What can't be written to (private browsing in some browsers, storage disabled or full) still has to work for the
-// page's own lifetime, so a dismissal falls back to this map: it lasts until the page is reloaded, and no longer.
-const memory = new Map<string, string>();
-
-// Same-tab listeners. The browser's `storage` event only reaches *other* tabs, so `dismiss`/`reset` tell this tab's own
-// subscribers themselves.
-const listeners = new Set<() => void>();
-const notify = () => listeners.forEach((listener) => listener());
-
-const subscribe = (listener: () => void) => {
-  listeners.add(listener);
-  // Another tab (or window) changing the same key.
-  window.addEventListener("storage", listener);
-  return () => {
-    listeners.delete(listener);
-    window.removeEventListener("storage", listener);
-  };
-};
-
-const areaFor = (storage: PersistentDismissStorage): Storage | undefined => {
-  try {
-    return storage === "session" ? window.sessionStorage : window.localStorage;
-  } catch {
-    // Reading the property itself can throw when storage is blocked: use the in-memory fallback instead.
-    return undefined;
-  }
-};
-
-const read = (key: string, storage: PersistentDismissStorage): string | null => {
-  try {
-    const stored = areaFor(storage)?.getItem(key);
-    if (stored !== null && stored !== undefined) return stored;
-  } catch {
-    // Reading refused: fall through to the in-memory copy, if there is one.
-  }
-  return memory.get(key) ?? null;
-};
-
 /** `"dismissed"` or `"visible"` — a primitive, so `useSyncExternalStore` can tell whether it changed. */
 const readState = (key: string, storage: PersistentDismissStorage): "dismissed" | "visible" => {
-  const raw = read(key, storage);
+  const raw = readStored(key, storage);
   if (raw === null) return "visible";
   const expiresAt = Number(raw);
   // The stored value is the moment the dismissal ends (0 for one that never does).
@@ -108,35 +72,18 @@ export function usePersistentDismiss(key: string, options: UsePersistentDismissO
   const storageKey = PREFIX + key;
 
   const state = useSyncExternalStore(
-    subscribe,
+    subscribeToStorage,
     () => readState(storageKey, storage),
     // The server, and the first render while hydrating, have nothing to read.
     () => "unknown" as const,
   );
 
   const dismiss = useCallback(() => {
-    const value = String(expiresAfter !== undefined && expiresAfter > 0 ? Date.now() + expiresAfter : 0);
-    const area = areaFor(storage);
-    try {
-      if (!area) throw new Error("storage unavailable");
-      area.setItem(storageKey, value);
-      memory.delete(storageKey);
-    } catch {
-      // Storage is blocked, or refused the write (full): keep it in memory, which lasts for this page's lifetime. Only
-      // then — a copy kept alongside a working storage would outlive another tab's `reset`.
-      memory.set(storageKey, value);
-    }
-    notify();
+    writeStored(storageKey, String(expiresAfter !== undefined && expiresAfter > 0 ? Date.now() + expiresAfter : 0), storage);
   }, [storage, storageKey, expiresAfter]);
 
   const reset = useCallback(() => {
-    try {
-      areaFor(storage)?.removeItem(storageKey);
-    } catch {
-      // Nothing to remove from a storage that refused the write in the first place; the memory copy is cleared below.
-    }
-    memory.delete(storageKey);
-    notify();
+    removeStored(storageKey, storage);
   }, [storage, storageKey]);
 
   return { ready: state !== "unknown", dismissed: state === "dismissed", dismiss, reset };
