@@ -13,26 +13,21 @@ import listStyles from "../../internal/optionList/OptionList.module.css";
 import { buildRows, firstEnabled, isActionValue, isDisabled, lastEnabled, stepEnabled } from "../../internal/optionList/optionList.rows";
 import { optionDomId, useOptionListWindow } from "../../internal/optionList/useOptionListWindow";
 import styles from "./CommandPalette.module.css";
-import type { CommandItem, CommandPaletteLabels, CommandPaletteMode, CommandPaletteProps, CommandPaletteSelectDetails } from "./CommandPalette.types";
-import { capGroups } from "./commandPalette.groups";
+import type { CommandItem, CommandPaletteLabels, CommandPaletteProps } from "./CommandPalette.types";
+import { ARGUMENT_VALUE, buildEntries, buildVisible, modeFor, problemWith } from "./commandPalette.entries";
 import { keywordHints } from "./commandPalette.hints";
 import { isApplePlatform } from "./commandPalette.hotkey";
-import { rankCommands } from "./commandPalette.rank";
 import { shortcutKeys } from "./commandPalette.shortcut";
+import { modeWarnings, valueWarnings } from "./commandPalette.warnings";
+import { useCommandRunner } from "./useCommandRunner";
+import { useHighlightReport } from "./useHighlightReport";
+import { useResultAnnouncements } from "./useResultAnnouncements";
+import { useWarnOnce } from "./useWarnOnce";
 
 // How far the Page Up and Page Down keys move the highlight.
 const PAGE_STEP = 10;
 
-// Joins a parent command's value and a child's into the key a nested search hit is listed under.
-const NESTED_SEPARATOR = "\u0001";
-
 const NO_COMMANDS: CommandItem[] = [];
-
-// The value of the one row that runs a command with an `argument`.
-const ARGUMENT_VALUE = "\u0000run";
-
-const isThenable = (value: unknown): value is PromiseLike<unknown> =>
-  typeof (value as { then?: unknown } | null | undefined)?.then === "function";
 
 interface CommandPalettePanelProps
   extends Pick<
@@ -124,10 +119,7 @@ export function CommandPalettePanel({
     [commands, pageValue],
   );
   const [argItem, setArgItem] = useState<CommandItem | null>(null);
-  const mode: CommandPaletteMode | undefined = useMemo(
-    () => (page || argItem ? undefined : modes?.find((candidate) => candidate.prefix !== "" && query.startsWith(candidate.prefix))),
-    [modes, query, page, argItem],
-  );
+  const mode = useMemo(() => modeFor(modes, query, page !== undefined || argItem !== null), [modes, query, page, argItem]);
   // The words searched for: the text, less a mode's prefix.
   const searchText = mode ? query.slice(mode.prefix.length) : query;
   const hasQuery = searchText.trim() !== "";
@@ -137,82 +129,44 @@ export function CommandPalettePanel({
   );
   const context = argItem ?? page ?? mode;
 
-  // At the top level, a search also finds the commands inside the lists it could open. Each is listed under its
-  // parent's label with a key of its own (a child's value may repeat a top-level one), and run directly.
+  // At the top level, a search also finds the commands inside the lists it could open.
   const searchingNested = searchNested && !page && !argItem && hasQuery && filter !== false;
-  const entries = useMemo(() => {
-    const map = new Map<string, { item: CommandItem; parent?: CommandItem; shown: CommandItem }>();
-    for (const item of level) map.set(item.value, { item, shown: item });
-    if (searchingNested) {
-      for (const parent of level) {
-        if (!parent.items || isDisabled(parent)) continue;
-        for (const child of parent.items) {
-          const value = `${parent.value}${NESTED_SEPARATOR}${child.value}`;
-          const shown: CommandItem = { ...child, value, group: parent.label, items: undefined, keywords: [...(child.keywords ?? []), parent.label] };
-          map.set(value, { item: child, parent, shown });
-        }
-      }
-    }
-    return map;
-  }, [level, searchingNested]);
+  const entries = useMemo(() => buildEntries(level, searchingNested), [level, searchingNested]);
 
-  const warned = useRef(false);
+  // What is wrong with what was passed, said once in development.
+  const warnOnce = useWarnOnce();
   useEffect(() => {
-    if (process.env.NODE_ENV === "production" || warned.current || !page) return;
-    if (page.items?.some((item) => item.items !== undefined)) {
-      warned.current = true;
-      console.warn("CommandPalette: a command inside a list that was opened has its own `items`, which are ignored. One level of lists is supported.");
+    for (const message of [...valueWarnings(commands, modes), ...modeWarnings(modes)]) warnOnce(message);
+  }, [commands, modes, warnOnce]);
+  useEffect(() => {
+    if (page?.items?.some((item) => item.items !== undefined)) {
+      warnOnce("CommandPalette: a command inside a list that was opened has its own `items`, which are ignored. One level of lists is supported.");
     }
-  }, [page]);
+  }, [page, warnOnce]);
 
   // The command asked a question: the one row says what Enter will do, or why it will not.
   const argumentText = argItem ? query.trim() : "";
-  const argumentProblem = argItem ? (argumentText === "" ? labels.argumentEmpty : argItem.argument?.validate?.(argumentText)) : undefined;
+  const argumentProblem = argItem ? problemWith(argItem, argumentText, labels, warnOnce) : undefined;
 
   const [expanded, setExpanded] = useState<ReadonlySet<string>>(() => new Set());
-  const { visible, moreRows } = useMemo(() => {
-    if (argItem) {
-      const row: CommandItem = {
-        value: ARGUMENT_VALUE,
-        label: argumentProblem ?? labels.runWith(argumentText),
-        icon: argItem.icon,
-        disabled: argumentProblem !== undefined,
-      };
-      return { visible: [row], moreRows: new Map<string, { group: string; first: string }>() };
-    }
-    const all = [...entries.values()].map((entry) => entry.shown);
-    let list: CommandItem[];
-    if (filter === false) list = all;
-    else if (typeof filter === "function") list = all.filter((shown) => filter((entries.get(shown.value) as { item: CommandItem }).item, searchText));
-    else list = rankCommands(all, searchText);
-    const exempt = new Set<string>();
-    if (!hasQuery && !page && !mode) {
-      // The groups of commands put first: recent ones, then suggested ones. A command shows once, in the first that names it.
-      const taken = new Set<string>();
-      const promote = (values: string[] | undefined, heading: string) => {
-        const present = [...new Set(values ?? [])]
-          .filter((value) => !taken.has(value))
-          .map((value) => list.find((item) => item.value === value))
-          .filter((item): item is CommandItem => item !== undefined);
-        if (present.length === 0) return [];
-        for (const item of present) taken.add(item.value);
-        exempt.add(heading);
-        return present.map((item) => ({ ...item, group: heading }));
-      };
-      const first = promote(recent, labels.recent);
-      const second = promote(suggested, labels.suggested);
-      if (taken.size > 0) list = [...first, ...second, ...list.filter((item) => !taken.has(item.value))];
-    }
-    if (!hasQuery && maxPerGroup > 0) {
-      const capped = capGroups(list, maxPerGroup, expanded, exempt, (group, hidden) => ({
-        value: "",
-        label: labels.showMore(hidden),
-        group,
-      }));
-      return { visible: capped.list, moreRows: capped.more };
-    }
-    return { visible: list, moreRows: new Map<string, { group: string; first: string }>() };
-  }, [argItem, argumentProblem, argumentText, entries, filter, searchText, hasQuery, page, mode, recent, suggested, maxPerGroup, expanded, labels]);
+  const { visible, moreRows } = useMemo(
+    () =>
+      buildVisible({
+        argument: argItem ? { item: argItem, text: argumentText, problem: argumentProblem } : undefined,
+        entries,
+        filter,
+        searchText,
+        hasQuery,
+        topLevel: !page && !mode,
+        recent,
+        suggested,
+        maxPerGroup,
+        expanded,
+        labels,
+        warn: warnOnce,
+      }),
+    [argItem, argumentText, argumentProblem, entries, filter, searchText, hasQuery, page, mode, recent, suggested, maxPerGroup, expanded, labels, warnOnce],
+  );
   const { rows, flat } = useMemo(() => buildRows(visible), [visible]);
   const hasIcons = useMemo(() => flat.some((item) => !isActionValue(item.value) && item.icon !== undefined), [flat]);
   const resultCount = useMemo(() => flat.filter((item) => !isActionValue(item.value)).length, [flat]);
@@ -232,40 +186,8 @@ export function CommandPalettePanel({
     listWindow.reveal(index);
     setNavigated(item.value);
   };
-
-  // Tells the app which command is highlighted, and that nothing is once the palette closes.
-  const highlightedItem = highlighted === -1 ? null : (entries.get((flat[highlighted] as CommandItem).value)?.item ?? null);
-  const latestHighlightReport = useRef(onHighlightChange);
-  useEffect(() => {
-    latestHighlightReport.current = onHighlightChange;
-  });
-  useEffect(() => {
-    latestHighlightReport.current?.(highlightedItem);
-  }, [highlightedItem]);
-  useEffect(
-    () => () => {
-      latestHighlightReport.current?.(null);
-    },
-    [],
-  );
-
-  // Announcements: the number of matches changing. A list that merely opens is a first appearance and isn't read.
-  const lastAnnounced = useRef("");
-  useEffect(() => {
-    if (argItem || (!hasQuery && pageValue === null && !mode)) {
-      lastAnnounced.current = "";
-      return;
-    }
-    const key = `${searchText}|${pageValue}|${mode?.prefix}|${resultCount}|${loading}`;
-    if (key === lastAnnounced.current) return;
-    lastAnnounced.current = key;
-    if (!loading) announce(resultCount === 0 ? labels.noResults : labels.results(resultCount));
-  }, [argItem, hasQuery, searchText, pageValue, mode, resultCount, loading, labels, announce]);
-  const lastError = useRef(false);
-  useEffect(() => {
-    if (error && !lastError.current) announce(labels.error);
-    lastError.current = error;
-  }, [error, labels.error, announce]);
+  useHighlightReport(highlighted === -1 ? null : (entries.get((flat[highlighted] as CommandItem).value)?.item ?? null), onHighlightChange);
+  useResultAnnouncements({ asking: argItem !== null, hasQuery, searchText, pageValue, mode, resultCount, loading, error, labels, announce });
 
   const focusInput = useCallback(() => inputRef.current?.focus(), []);
   const openPage = (item: CommandItem) => {
@@ -285,47 +207,7 @@ export function CommandPalettePanel({
     focusInput();
   };
 
-  // Running a command. One that returns a promise keeps the palette open and busy until it settles.
-  const [pending, setPending] = useState<string | null>(null);
-  const pendingRef = useRef(false);
-  const alive = useRef(true);
-  useEffect(() => {
-    alive.current = true;
-    return () => {
-      alive.current = false;
-    };
-  }, []);
-  const run = (item: CommandItem, argument?: string) => {
-    const closes = item.closeOnSelect !== false;
-    const details: CommandPaletteSelectDetails = argument === undefined ? { query } : { query, argument };
-    const result = item.onSelect?.(item, details);
-    onSelect?.(item, details);
-    if (!isThenable(result)) {
-      if (closes) onFinish();
-      return;
-    }
-    pendingRef.current = true;
-    setPending(argument === undefined ? item.value : ARGUMENT_VALUE);
-    onBusyChange(true);
-    void result.then(
-      () => {
-        pendingRef.current = false;
-        onBusyChange(false);
-        if (alive.current) setPending(null);
-        if (closes) onFinish();
-      },
-      (failure: unknown) => {
-        pendingRef.current = false;
-        onBusyChange(false);
-        if (alive.current) setPending(null);
-        announce(labels.failed);
-        // The palette stays open. With a handler the caller has the error; without one the rejection is left
-        // unhandled, so it surfaces where the caller can see it instead of being lost.
-        if (onSelectError) onSelectError(failure, item);
-        else throw failure;
-      },
-    );
-  };
+  const { pending, pendingRef, run } = useCommandRunner({ labels, query, announce, onSelect, onSelectError, onFinish, onBusyChange });
   const choose = (option: { value: string }) => {
     if (pendingRef.current) return;
     const more = moreRows.get(option.value);
@@ -395,10 +277,11 @@ export function CommandPalettePanel({
   };
 
   const renderTrailing = (option: CommandItem, state: { highlighted: boolean }) => {
-    // What a row ends with is only a hint at pressing Enter on the highlighted one.
+    // Every row that can run holds room for the Enter key, drawn only on the highlighted one, so the labels don't
+    // change width as the highlight moves.
     const enterHint =
-      state.highlighted && showHints && !isDisabled(option) ? (
-        <Kbd aria-hidden="true" className={styles.enterHint}>
+      showHints && !isDisabled(option) ? (
+        <Kbd aria-hidden="true" className={cx(styles.enterHint, !state.highlighted && styles.enterHintIdle)}>
           ↵
         </Kbd>
       ) : null;

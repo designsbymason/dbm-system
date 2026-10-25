@@ -4,6 +4,16 @@
       "$type": "dimension",
       "$value": "24rem",
       "$description": "New token (2026-10-25), added for CommandPalette's own result list — the most height it takes before it scrolls. A palette's list is the content of its window, so it is taller than Combobox's dropdown cap (18rem), and the window is also limited to the room left on the screen. No home on any existing primitive scale (the spacing scale tops out at 8rem)."
+    },
+    "match-hint-max-width": {
+      "$type": "dimension",
+      "$value": "10rem",
+      "$description": "New token (2026-10-25), added for CommandPalette's own rows: the widest the quoted keyword a row was found through may grow before it is cut with an ellipsis, so it never pushes the label out. No home on any existing primitive scale (the spacing scale tops out at 8rem)."
+    },
+    "page-tag-max-width": {
+      "$type": "dimension",
+      "$value": "40%",
+      "$description": "New token (2026-10-25), added for CommandPalette's own search row: the share of the row the tag naming an open list may take before its text is cut, leaving the rest to the search field. A share of the row, not a length, so it holds at every panel width."
     }
   }
 }

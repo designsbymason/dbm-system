@@ -220,7 +220,7 @@ const meta: Meta<PlaygroundArgs> = {
     labels: {
       control: false,
       description:
-        "The words the palette writes itself: title, search, searchIn (a function of a list's label), placeholder, runWith, argumentEmpty, suggested, showMore, noResults, loading, error, failed, back, recent, results (a function of the count) and the three footer hints. Pass the ones to replace.",
+        "The words the palette writes itself: title, search, searchIn (a function of a list's label), placeholder, runWith, argumentEmpty, argumentInvalid, suggested, showMore, noResults, loading, error, failed, back, recent, results (a function of the count) and the three footer hints. Pass the ones to replace.",
       table: { defaultValue: { summary: "" } },
     },
     formatNumber: {

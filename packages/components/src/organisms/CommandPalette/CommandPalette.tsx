@@ -21,6 +21,7 @@ const buildDefaultLabels = (formatNumber: (value: number) => string): CommandPal
   placeholder: "Type a command or search…",
   runWith: (text) => `Run with “${text}”`,
   argumentEmpty: "Type a value, then press Enter",
+  argumentInvalid: "That value can’t be used",
   suggested: "Suggested",
   showMore: (count) => `Show ${formatNumber(count)} more`,
   noResults: "No results",

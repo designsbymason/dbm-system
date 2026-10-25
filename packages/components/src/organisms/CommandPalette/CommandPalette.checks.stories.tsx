@@ -447,8 +447,8 @@ export const CappedGroupsAndTheEnterKey: Story = {
     const more = body().getAllByRole("option", { name: /Show 4 more/ });
     await expect(more).toHaveLength(3);
     await expect(Math.round(more[0]!.getBoundingClientRect().height)).toBe(Math.round(rows[0]!.getBoundingClientRect().height));
-    // Enter is drawn on the highlighted row, and nowhere else.
-    const hints = document.querySelectorAll('[class*="enterHint"]');
+    // Enter is drawn on the highlighted row, and nowhere else (every other row only keeps its room).
+    const hints = [...document.querySelectorAll('[class*="enterHint"]')].filter((hint) => getComputedStyle(hint).visibility !== "hidden");
     await expect(hints).toHaveLength(1);
     await expect(hints[0]!.getBoundingClientRect().width).toBeGreaterThan(0);
     await expect(rows[0]!.contains(hints[0] as Element)).toBe(true);
@@ -500,5 +500,62 @@ export const KeysWinOverAPointerAtRest: Story = {
     await new Promise((resolve) => setTimeout(resolve, 400));
     await expect(active()).toHaveTextContent("Command 28");
     await closeWithEscape();
+  },
+};
+
+export const LabelsKeepTheirWidth: Story = {
+  name: "A row's label is the same width whether or not the highlight is on it",
+  render: () => <Page />,
+  play: async () => {
+    await openFrom("Open");
+    const labelWidth = (row: HTMLElement) => (row.querySelector('[class*="optionText"]') as HTMLElement).getBoundingClientRect().width;
+    const rows = () => body().getAllByRole("option").filter((row) => !row.hasAttribute("aria-disabled"));
+    const before = rows().map(labelWidth);
+    await userEvent.keyboard("{ArrowDown}{ArrowDown}");
+    const after = rows().map(labelWidth);
+    await expect(after).toHaveLength(before.length);
+    after.forEach((width, index) => expect(Math.abs(width - (before[index] as number))).toBeLessThan(0.5));
+    await closeWithEscape();
+  },
+};
+
+export const KeywordHintContrast: Story = {
+  name: "The keyword a row was found through is readable on the highlighted row",
+  render: () => <Page />,
+  play: async () => {
+    await openFrom("Open");
+    await userEvent.type(search(), "prefer");
+    const row = (await body().findByRole("option", { name: /Open settings/ })) as HTMLElement;
+    const hint = row.querySelector('[class*="matchHint"]') as HTMLElement;
+    await expect(row).toHaveAttribute("data-highlighted");
+    const channels = (color: string) => (color.match(/[\d.]+/g) ?? []).slice(0, 3).map(Number);
+    const luminance = (color: string) => {
+      const [r, g, b] = channels(color).map((value) => {
+        const unit = value / 255;
+        return unit <= 0.03928 ? unit / 12.92 : ((unit + 0.055) / 1.055) ** 2.4;
+      }) as [number, number, number];
+      return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+    };
+    const [lighter, darker] = [luminance(getComputedStyle(hint).color), luminance(getComputedStyle(row).backgroundColor)].sort((a, b) => b - a) as [number, number];
+    await expect((lighter + 0.05) / (darker + 0.05)).toBeGreaterThanOrEqual(4.5);
+    await closeWithEscape();
+  },
+};
+
+export const TabOrderInTheBrowser: Story = {
+  name: "Tab goes from the search field to the close button and back, and never into a row",
+  render: () => <Page showCloseButton />,
+  play: async () => {
+    await openFrom("Open");
+    await waitFor(() => expect(search()).toHaveFocus());
+    await userEvent.tab();
+    await expect(body().getByRole("button", { name: "Close" })).toHaveFocus();
+    await userEvent.tab();
+    await expect(search()).toHaveFocus();
+    await userEvent.tab({ shift: true });
+    await expect(body().getByRole("button", { name: "Close" })).toHaveFocus();
+    await expect(body().getAllByRole("option").includes(document.activeElement as HTMLElement)).toBe(false);
+    await userEvent.keyboard("{Escape}");
+    await waitFor(() => expect(body().queryByRole("dialog")).toBeNull());
   },
 };

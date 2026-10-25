@@ -155,6 +155,8 @@ export interface CommandPaletteLabels {
   placeholder: string;
   /** The row that says what Enter will do for a command with an `argument`, given the text. @default 'Run with “text”' */
   runWith: (text: string) => string;
+  /** The row for a command with an `argument` when its `validate` threw, so the text was refused. @default 'That value can’t be used' */
+  argumentInvalid: string;
   /** The row for a command with an `argument` while nothing is typed. @default 'Type a value, then press Enter' */
   argumentEmpty: string;
   /** The heading of the `suggested` group. @default 'Suggested' */

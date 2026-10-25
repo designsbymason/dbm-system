@@ -23,6 +23,19 @@ The highlight report (`onHighlightChange`), values asked for in the search field
 ## Recent commands
 `useRecentCommands` (in `utils`, re-exported from the package) keeps the list `recent` takes, newest first and capped, with the storage plumbing it shares with `usePersistentDismiss` (that hook was moved onto the shared helpers with no change in behaviour; its tests pass unchanged).
 
+## Final review pass
+Found and fixed:
+- `onHighlightChange` is reported by the command's `value`, not by object identity (commands built on every render called it each render, and a callback that set state to an object looped); remembered across React's `StrictMode` remount.
+- The keyword a row was found through is `text.secondary`, not `text.tertiary`: 4.48:1 on the highlighted row in Purple light, now 6.56:1 or more in all four themes (measured; a real-browser check guards it).
+- A `filter` or an `argument.validate` that throws is treated as "no match" or a refusal (`labels.argumentInvalid`), with one development warning, instead of taking the page down.
+- The Enter key's room is kept on every row that can run (drawn only on the highlighted one), so a label's width no longer changes by about 33px as the highlight moves (a real-browser check measures it).
+- Development warnings for a value used twice in one list and for modes that can never be reached (an empty or spaced prefix, a repeat, or one an earlier prefix shadows).
+- The two lengths in the stylesheet are tokens (`command-palette.match-hint-max-width`, `command-palette.page-tag-max-width`).
+- The composed tab order (search field, close button, never a row; Back button first inside a list) has unit and real-browser tests.
+- `CommandPalettePanel.tsx` is split: pure functions for entries, ranking-and-grouping and warnings (`commandPalette.entries.ts`, `.warnings.ts`) and hooks for running a command, reporting the highlight, announcing results and warning once. The panel went from 532 to about 415 lines, each part with tests.
+
+Left for a decision: whether a row's own shortcut keys should hide on a touch screen (the footer hints and the Enter key already do).
+
 ## Known gaps, for the review pass
 - A tap is checked with touch pointer events dispatched from the page (a real touch through the DevTools Protocol is unreliable in the test browser); a real device has not been tried, so `fullScreen` stays off by default and the on-screen keyboard's effect on the layout is unverified (ADR-0132).
 - Light/dark and both brands are looked at only in part; the full four-theme pass, contrast checks of the highlighted row against `bg.brand-subtle` (shared with `Combobox`) and the Docs page visual pass are part of the review.

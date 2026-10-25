@@ -35,7 +35,7 @@
 }
 
 .pageTag {
-  max-inline-size: 40%;
+  max-inline-size: var(--dbm-command-palette-page-tag-max-width);
 }
 
 .input {
@@ -82,9 +82,11 @@
 
 /* The word a row was found through when its label doesn't hold it: small and quiet, cut with an ellipsis. */
 .matchHint {
+  /* Not the row's quieter text.tertiary: the row it sits on can be the highlighted one, where that is 4.48:1 in Purple light. */
+  color: var(--dbm-text-secondary);
   font-size: var(--dbm-font-size-xs);
   font-style: italic;
-  max-inline-size: 10rem;
+  max-inline-size: var(--dbm-command-palette-match-hint-max-width);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -93,6 +95,11 @@
 /* The key that runs the highlighted row; a touch screen has no key to press. */
 .enterHint {
   margin-inline-start: var(--dbm-space-1);
+}
+
+/* Not on the highlighted row: the key's room is kept so a label's width doesn't change as the highlight moves. */
+.enterHintIdle {
+  visibility: hidden;
 }
 
 @media (pointer: coarse) {

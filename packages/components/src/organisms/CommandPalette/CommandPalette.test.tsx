@@ -895,17 +895,27 @@ describe("CommandPalette", () => {
   describe("the key that runs the highlighted row", () => {
     const hintOn = (row: HTMLElement) => row.querySelector('[class*="enterHint"]');
 
-    it("shows Enter at the end of the highlighted row only, hidden from assistive technology", async () => {
+    const shown = (row: HTMLElement) => {
+      const hint = hintOn(row);
+      return hint !== null && !hint.className.includes("enterHintIdle");
+    };
+
+    it("draws Enter at the end of the highlighted row only, hidden from assistive technology, with room kept on every row that can run", async () => {
       const user = userEvent.setup();
       setup();
       await screen.findByRole("dialog");
-      expect(document.querySelectorAll('[class*="enterHint"]')).toHaveLength(1);
       const first = screen.getByRole("option", { name: /New file/ });
+      const second = screen.getByRole("option", { name: /Open file/ });
+      expect(shown(first)).toBe(true);
+      expect(shown(second)).toBe(false);
+      // The second row keeps the key's room, so its label doesn't change width when the highlight arrives.
+      expect(hintOn(second)).not.toBeNull();
       expect(hintOn(first)).toHaveAttribute("aria-hidden", "true");
       expect(first).toHaveAccessibleName("New file Ctrl N");
       await user.keyboard("{ArrowDown}");
-      expect(hintOn(first)).toBeNull();
-      expect(hintOn(screen.getByRole("option", { name: /Open file/ }))).not.toBeNull();
+      expect(shown(first)).toBe(false);
+      expect(shown(second)).toBe(true);
+      expect(hintOn(first)).not.toBeNull();
     });
 
     it("is left off by showHints={false}, and never on a row that can't run", async () => {
@@ -1228,6 +1238,144 @@ describe("CommandPalette", () => {
       await screen.findByRole("dialog");
       await user.click(screen.getByRole("option", { name: /Publish/ }));
       expect(dialog()).toBeInTheDocument();
+    });
+  });
+
+  describe("a callback that only needs the highlighted command's value", () => {
+    it("reports a change of command, not a new object for the same command", async () => {
+      const onHighlightChange = vi.fn();
+      // Commands built on every render, as an inline array is: new objects each time.
+      function Inline({ tick }: { tick: number }) {
+        return <CommandPalette defaultOpen onHighlightChange={onHighlightChange} commands={[{ value: "a", label: `Alpha ${tick}` }, { value: "b", label: "Beta" }]} />;
+      }
+      const { rerender } = render(<Inline tick={0} />);
+      await screen.findByRole("dialog");
+      await waitFor(() => expect(onHighlightChange).toHaveBeenCalledTimes(1));
+      rerender(<Inline tick={1} />);
+      rerender(<Inline tick={2} />);
+      await new Promise((resolve) => setTimeout(resolve, 50));
+      expect(onHighlightChange).toHaveBeenCalledTimes(1);
+      expect(onHighlightChange).toHaveBeenLastCalledWith(expect.objectContaining({ value: "a" }));
+    });
+
+    it("does not loop when the callback sets state to an object built from the command", async () => {
+      let calls = 0;
+      function Loop() {
+        const [, setSeen] = useState<unknown>(null);
+        return (
+          <CommandPalette
+            defaultOpen
+            onHighlightChange={(item) => {
+              calls += 1;
+              // Stops feeding a loop that has gone wrong, so a regression fails instead of hanging the run.
+              if (calls < 50) setSeen(item ? { value: item.value } : null);
+            }}
+            commands={[{ value: "a", label: "Alpha" }]}
+          />
+        );
+      }
+      render(<Loop />);
+      await screen.findByRole("dialog");
+      await new Promise((resolve) => setTimeout(resolve, 100));
+      expect(calls).toBeLessThan(5);
+    });
+
+    it("reports again after React StrictMode's simulated remount", async () => {
+      const onHighlightChange = vi.fn();
+      render(
+        <StrictMode>
+          <CommandPalette defaultOpen commands={commands} onHighlightChange={onHighlightChange} />
+        </StrictMode>,
+      );
+      await screen.findByRole("dialog");
+      await waitFor(() => expect(onHighlightChange).toHaveBeenLastCalledWith(expect.objectContaining({ value: "new-file" })));
+    });
+  });
+
+  describe("functions of the caller's that read the typed text", () => {
+    it("treats a filter that throws as no match, warning once", async () => {
+      const user = userEvent.setup();
+      const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
+      setup({ filter: () => { throw new Error("boom"); } });
+      await screen.findByRole("dialog");
+      await user.type(input(), "ab");
+      expect(screen.getByRole("option")).toHaveTextContent("No results");
+      const messages = warn.mock.calls.map((call) => String(call[0])).filter((message) => message.includes("`filter` threw"));
+      expect(new Set(messages).size).toBe(messages.length);
+      expect(messages.length).toBeGreaterThan(0);
+    });
+
+    it("refuses text when a validate throws, saying so and warning", async () => {
+      const user = userEvent.setup();
+      const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
+      const asking: CommandItem[] = [{ value: "r", label: "Rename", argument: { validate: () => { throw new Error("boom"); } } }];
+      setup({ commands: asking });
+      await screen.findByRole("dialog");
+      await user.click(screen.getByRole("option", { name: /Rename/ }));
+      await user.type(input(), "x");
+      expect(screen.getByRole("option")).toHaveTextContent("That value can’t be used");
+      expect(screen.getByRole("option")).toHaveAttribute("aria-disabled", "true");
+      await user.keyboard("{Enter}");
+      expect(dialog()).toBeInTheDocument();
+      expect(warn.mock.calls.some((call) => String(call[0]).includes("`argument.validate`"))).toBe(true);
+    });
+  });
+
+  describe("development warnings for what was passed", () => {
+    it("warns once about a value used twice in one list, but not for the same value in different lists", async () => {
+      const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
+      setup({ commands: [{ value: "a", label: "One" }, { value: "a", label: "Two" }, { value: "p", label: "P", items: [{ value: "a", label: "Nested" }] }] });
+      await screen.findByRole("dialog");
+      const messages = warn.mock.calls.map((call) => String(call[0])).filter((message) => message.includes("more than one command"));
+      expect(messages).toHaveLength(1);
+      expect(messages[0]).toContain('"a"');
+    });
+
+    it("warns about modes that can never be reached", async () => {
+      const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
+      setup({
+        modes: [
+          { prefix: ">", label: "Actions", commands: [] },
+          { prefix: ">>", label: "More actions", commands: [] },
+          { prefix: "", label: "Nothing", commands: [] },
+        ],
+      });
+      await screen.findByRole("dialog");
+      const text = warn.mock.calls.map((call) => String(call[0])).join("\n");
+      expect(text).toContain('starts with the earlier prefix ">"');
+      expect(text).toContain("empty or holds a space");
+    });
+  });
+
+  describe("the composed tab order", () => {
+    it("goes from the search field to the close button and back, never into a row", async () => {
+      const user = userEvent.setup();
+      setup({ showCloseButton: true });
+      await screen.findByRole("dialog");
+      await waitFor(() => expect(input()).toHaveFocus());
+      await user.tab();
+      expect(screen.getByRole("button", { name: "Close" })).toHaveFocus();
+      await user.tab();
+      expect(input()).toHaveFocus();
+      await user.tab({ shift: true });
+      expect(screen.getByRole("button", { name: "Close" })).toHaveFocus();
+      expect(screen.getAllByRole("option").some((row) => row === document.activeElement)).toBe(false);
+    });
+
+    it("puts the Back button first inside a list, and a press of it returns focus to the search field", async () => {
+      const user = userEvent.setup();
+      setup({ showCloseButton: true });
+      await screen.findByRole("dialog");
+      await user.click(screen.getByRole("option", { name: /Change theme/ }));
+      expect(input()).toHaveFocus();
+      await user.tab({ shift: true });
+      expect(screen.getByRole("button", { name: "Back" })).toHaveFocus();
+      await user.tab();
+      expect(input()).toHaveFocus();
+      await user.tab({ shift: true });
+      await user.keyboard("{Enter}");
+      expect(screen.queryByRole("button", { name: "Back" })).toBeNull();
+      expect(input()).toHaveFocus();
     });
   });
 });
