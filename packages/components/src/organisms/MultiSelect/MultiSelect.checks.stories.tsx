@@ -948,15 +948,14 @@ export const MoreButtonsAreBigEnough: Story = {
   },
 };
 
-// A real finger, through the Chrome DevTools Protocol: a touch that goes down and up in one place is a tap.
-async function realTap(element: Element) {
+// A touch tap, as the browser reports one: a primary pointer of type touch that goes down and up in one place. It is dispatched
+// from the page (the DevTools Protocol's touch input behaves differently on the CI machine, where it left the story unusable),
+// so it covers the touch branch of the code and the stylesheet, and not a real finger on a real screen.
+function touchTap(element: Element) {
   const rect = element.getBoundingClientRect();
-  const frame = window.frameElement?.getBoundingClientRect();
-  const scale = frame ? frame.width / window.innerWidth : 1;
-  const x = (frame?.left ?? 0) + (rect.left + rect.width / 2) * scale;
-  const y = (frame?.top ?? 0) + (rect.top + rect.height / 2) * scale;
-  await send("Input.dispatchTouchEvent", { type: "touchStart", touchPoints: [{ x, y }] });
-  await send("Input.dispatchTouchEvent", { type: "touchEnd", touchPoints: [] });
+  const init = { bubbles: true, cancelable: true, composed: true, pointerId: 7, pointerType: "touch", isPrimary: true, button: 0, clientX: rect.left + rect.width / 2, clientY: rect.top + rect.height / 2 };
+  element.dispatchEvent(new PointerEvent("pointerdown", { ...init, buttons: 1 }));
+  element.dispatchEvent(new PointerEvent("pointerup", { ...init, buttons: 0 }));
 }
 
 export const ChipsMoveWithTaps: Story = {
@@ -989,8 +988,8 @@ export const ChipsMoveWithTaps: Story = {
   },
 };
 
-export const ChipsMoveWithAFingerTap: Story = {
-  name: "With a real finger, a tap picks a chip up and a tap on another chip moves it there, and the page does not scroll",
+export const ChipsMoveWithATouchTap: Story = {
+  name: "With a touch tap a chip is picked up, a tap on another chip moves it there, and the chips take no touch gestures of their own",
   render: () => (
     <div style={{ minHeight: "80rem" }}>
       <Page>
@@ -1001,9 +1000,9 @@ export const ChipsMoveWithAFingerTap: Story = {
   play: async () => {
     await ready();
     const before = window.scrollY;
-    await realTap(itemOf("Canada"));
+    touchTap(itemOf("Canada"));
     await waitFor(() => expect(itemOf("Canada")).toHaveAttribute("data-lifted", "true"));
-    await realTap(itemOf("Uruguay"));
+    touchTap(itemOf("Uruguay"));
     await waitFor(() => expect(chips()).toEqual(["United States", "Uruguay", "Canada"]));
     await expect(window.scrollY).toBe(before);
     await expect(getComputedStyle(itemOf("Canada")).touchAction).toBe("none");
