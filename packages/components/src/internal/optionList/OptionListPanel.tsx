@@ -64,6 +64,8 @@ export interface OptionListPanelProps<O extends ListOption> {
   loadingMessage: string;
   /** The note under the options when the owner reports an error. */
   errorMessage: string | undefined;
+  /** A row of actions under the list (a count and its buttons), outside the listbox. */
+  footer?: ReactNode;
 
   /** The listbox's accessible name. */
   ariaLabel: string | undefined;
@@ -108,6 +110,7 @@ export function OptionListPanel<O extends ListOption>({
   loading,
   loadingMessage,
   errorMessage,
+  footer,
   ariaLabel,
   ariaLabelledBy,
   multiselectable,
@@ -288,6 +291,7 @@ export function OptionListPanel<O extends ListOption>({
           </div>
         </div>
         {errorMessage ? <div className={styles.footer}>{errorMessage}</div> : null}
+        {footer ? <div className={styles.actions}>{footer}</div> : null}
         {loading && optionCount > 0 ? (
           <div className={styles.footer}>
             <Spinner size="xs" tone="default" />

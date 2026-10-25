@@ -78,9 +78,9 @@ const meta: Meta<typeof MultiSelect> = {
     },
     overflow: {
       control: "radio",
-      options: ["wrap", "collapse"],
+      options: ["wrap", "collapse", "summary"],
       description:
-        "What a closed field does with chips that do not fit: wrap onto more lines, or collapse to one line with as many chips as fit and a +N more button. It always shows every chip while it is in use.",
+        "What a closed field does with chips that do not fit: wrap onto more lines, collapse to one line with as many chips as fit and a +N more button, or show a count (3 selected) in place of the chips. Wrap and collapse show every chip while the field is in use; summary never does.",
       table: { defaultValue: { summary: "wrap" } },
     },
     renderValue: {
@@ -145,6 +145,18 @@ const meta: Meta<typeof MultiSelect> = {
       control: "boolean",
       description:
         "Lets typed text be a chip of its own when it names no option: Enter with no option highlighted, a separator, a paste of several or leaving the field makes it a value. Text that is exactly an option's label chooses that option. A repeat, a refused value and one past maxSelected are refused with a message.",
+      table: { defaultValue: { summary: "false" } },
+    },
+    pasteList: {
+      control: "boolean",
+      description:
+        "Lets a list be pasted: the text is split at the separators, line breaks and tabs, each piece that is exactly an option's label is chosen, and the rest are counted as not added (or become chips with allowCustomValue).",
+      table: { defaultValue: { summary: "false" } },
+    },
+    footer: {
+      control: "boolean",
+      description:
+        "Adds a footer under the list with the count chosen, a Clear button and a Done button that closes it: a way to finish on a phone. Takes a map to change with the screen, such as { base: true, sm: false }.",
       table: { defaultValue: { summary: "false" } },
     },
     separators: {
@@ -358,6 +370,8 @@ const meta: Meta<typeof MultiSelect> = {
     selectAll: false,
     selectGroups: false,
     allowCustomValue: false,
+    pasteList: false,
+    footer: false,
     clearable: true,
     loading: false,
     error: false,
@@ -647,6 +661,43 @@ export const CustomValues: Story = {
   },
   render: (args) =>
     inStage(<MultiSelect {...args} validate={(text) => (/^\S+@\S+\.\S+$/.test(text) ? undefined : "Not an email address")} />),
+};
+
+export const PasteList: Story = {
+  name: "Pasting a list",
+  parameters: { docs: { source: { code: multiSelectSnippets.pasteList } } },
+  args: { pasteList: true, "aria-label": "Countries", placeholder: "Paste Canada, Mexico, Uruguay" },
+};
+
+export const Summary: Story = {
+  name: "A count in place of the chips",
+  parameters: { docs: { source: { code: multiSelectSnippets.summary } } },
+  // The story sets the overflow, and the default value is the starting choice.
+  argTypes: { overflow: { control: false } },
+  args: { overflow: "summary", defaultValue: ["ca", "us", "uy"], "aria-label": "Countries" },
+};
+
+export const Footer: Story = {
+  name: "A footer under the list",
+  parameters: { docs: { source: { code: multiSelectSnippets.footer } } },
+  args: { footer: true, defaultValue: ["ca", "us"], "aria-label": "Countries" },
+};
+
+export const Locked: Story = {
+  name: "Chips that can't be removed",
+  parameters: { docs: { source: { code: multiSelectSnippets.locked } } },
+  // The story owns the options, and the two chosen values are its point.
+  argTypes: { options: { control: false } },
+  args: {
+    "aria-label": "Members",
+    options: [
+      { value: "owner", label: "Owner", disabled: "Every project has one" },
+      { value: "ada", label: "Ada Lovelace" },
+      { value: "grace", label: "Grace Hopper" },
+      { value: "alan", label: "Alan Turing" },
+    ],
+    defaultValue: ["owner", "ada"],
+  },
 };
 
 export const Overflow: Story = {

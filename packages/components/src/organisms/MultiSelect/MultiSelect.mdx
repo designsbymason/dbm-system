@@ -35,8 +35,10 @@ export const propOrder = [
   "onSelectAll",
   "selectGroups",
   "allowCustomValue",
+  "pasteList",
   "separators",
   "validate",
+  "footer",
   "clearable",
   "onClear",
   "loading",
@@ -201,6 +203,22 @@ import { MultiSelect } from "@dbm-system/components";
 
 <Canvas of={MultiSelectStories.CustomValues} />
 
+### Pasting a list
+
+<Canvas of={MultiSelectStories.PasteList} />
+
+### A count in place of the chips
+
+<Canvas of={MultiSelectStories.Summary} />
+
+### A footer under the list
+
+<Canvas of={MultiSelectStories.Footer} />
+
+### Chips that can't be removed
+
+<Canvas of={MultiSelectStories.Locked} />
+
 ### Many chips
 
 <Canvas of={MultiSelectStories.Overflow} />
@@ -269,6 +287,9 @@ import { MultiSelect } from "@dbm-system/components";
 - Use `presentation={{ base: "full-width", sm: "anchored" }}` in a form people fill in on a phone.
 - Use `onCreate` when a person may add an item the list doesn't hold yet (a label, a person); return the new option so it is chosen.
 - Use `allowCustomValue` when the list is only suggestions and a person may type any value (an email address, a tag), and `validate` to refuse the ones that aren't.
+- Use `overflow="summary"` in a toolbar or a narrow filter bar where chips would crowd the row, and `footer` where the list spans the screen (a phone), so there is a button to finish with.
+- Use `pasteList` where people have a list in a document or a spreadsheet to bring in.
+- Disable an option to lock it once chosen (an owner, a required member): its chip loses its remove button.
 - Use `reorderable` when the order is part of the value: columns to show, steps, an assignee priority.
 - Use `selectGroups` for a long grouped list where a person often wants a whole group, and `onSelectAll` when "all" is more than the page has loaded.
 - Give an option a `tone` and a `chipIcon` when the chip should say what kind of thing it is (a status, a category), and `renderValue` when a name needs an avatar beside it.
@@ -334,6 +355,23 @@ import { MultiSelect } from "@dbm-system/components";
   options loaded now, and returns options or just their values (or a promise of them); the row waits meanwhile, the result is
   added up to `maxSelected`, and the chips keep the labels of the options it returned. The row only adds: remove with the clear
   button or the chips. It is offered once there is something to search or load.
+- `pasteList` splits pasted text at the separators, line breaks and tabs, and chooses each piece that is exactly an option's
+  label (ignoring case and accents). The pieces that name no option are counted, "3 added, 2 not added", and a single refused
+  piece says what it was. With `allowCustomValue` the same split makes chips of the rest, and `pasteList` is not needed. Text with
+  none of those characters is pasted as ordinary text.
+- `overflow="summary"` draws one count ("3 selected", `labels.summary`) in place of every chip, one line tall at every size,
+  and never shows the chips, even while the field is in use. A press on it opens the list. With no chips there is nothing to reach
+  with the left arrow or Backspace: options come out from the list, where each chosen one is checked, or with the clear button.
+- `footer` adds a row under the list with the count, a "Clear" button and a "Done" button that closes it. Its buttons are for the
+  pointer and a finger and are not tab stops, as the caret's are; the keyboard closes with Escape and clears with the chips.
+  It takes a map, `{ base: true, sm: false }`, to show only where the list spans the screen.
+- A chosen option that is disabled is locked: its chip has no remove button, the reason (`disabled="reason"`, else
+  `labels.locked`) is read after it, and neither the clear button nor "Select all" nor choosing it again in the list removes it.
+  The clear button is hidden while everything chosen is locked. A locked chip is not a stop in the chip keys, so Backspace
+  and the arrows skip it, and it can still be dragged with `reorderable`.
+- `onValueChange` also reports `selected`, the option behind each of the new values in order, including the ones that have
+  since left `options` (a list fetched for other text) and `undefined` for a typed value or an id the field has never seen. Keep
+  the chosen options from it and you can show them elsewhere without fetching again.
 - With `allowCustomValue` typed text is a value of its own when it names no option. Enter with no option highlighted, a
   separator (a comma by default; `separators` changes them), a paste of several (split at separators and line breaks) or leaving
   the field makes chips; the first match is not highlighted while typing, so Enter commits what was typed, and an arrow key
@@ -372,6 +410,12 @@ import { MultiSelect } from "@dbm-system/components";
   position 2 of 3"), and the pick-up says which keys to use. A chip keeps its element when it moves, so keyboard focus stays on
   it. Space picks up rather than removes while it is on; Enter and Delete still remove. A chip that is picked up has a ring in the
   focus colour, and a drop marker is a bar in the same colour (a system colour in Windows high contrast).
+- With `overflow="summary"` the count is a plain piece of text that describes the typing field, so a screen reader reads "3
+  selected" with the field's name, and the change is announced as each option is chosen or removed. A locked chip is
+  announced with its reason after its text.
+- The footer's buttons are real buttons with names ("Clear", "Done") that take no focus: they are for a pointer and a finger, as
+  the caret and clear buttons are, and every one of their jobs has a key (Escape closes the list, Backspace and Delete take chips
+  out). Each is at least 24 × 24 pixels.
 - With `allowCustomValue` a refused value is shown under the field, announced, and named in the field's description, and the
   field is marked invalid until the next keystroke.
 - The matched text in a label is drawn bold, and with `highlightTone` also in `Highlight`'s colours (a `<mark>`). Neither
@@ -391,7 +435,7 @@ import { MultiSelect } from "@dbm-system/components";
 | Left arrow (right, in a right-to-left page) | At the start of the typing field, moves to the last chip. Between chips it moves to the previous one; Right goes the other way, and from the last chip back to the typing field. |
 | Home, End | On a chip, move to the first or last chip. In the typing field they move the caret. |
 | Backspace | In an empty typing field, moves to the last chip; a second press there removes it and keeps your place along the row. With text, deletes a character. |
-| Delete | On a chip, removes it. |
+| Delete | On a chip, removes it. A locked chip has none to reach. |
 | Space (`reorderable`) | On a chip, picks it up. Arrow keys (flipped in a right-to-left page), Home and End then move it, Space or Enter drops it, Escape puts it back. Leaving the chip drops it where it is. |
 | Alt + arrow (`reorderable`) | On a chip, moves it one place without picking it up. |
 | Tab | Leaves the field. The typed text is dropped. |
@@ -428,6 +472,20 @@ import { MultiSelect } from "@dbm-system/components";
 {/* const controllerRef = useRef<MultiSelectController>(null); */}
 <MultiSelect aria-label="Countries" options={countries} controllerRef={controllerRef} />
 <Button onClick={() => controllerRef.current?.clear()}>Clear filters</Button>
+
+{/* Keep the chosen options as they are chosen, even when the next search replaces the list */}
+<MultiSelect
+  aria-label="Search countries"
+  options={results}
+  filter={false}
+  onValueChange={(values, { selected }) => saveChosen(values, selected)}
+/>
+
+{/* A list pasted from a spreadsheet; the pieces that are not options are counted */}
+<MultiSelect aria-label="Countries" options={countries} pasteList />
+
+{/* A count in a toolbar, and a footer to finish with on a phone */}
+<MultiSelect aria-label="Countries" options={countries} overflow="summary" footer={{ base: true, sm: false }} />
 
 {/* Typed values as chips: an email field with suggestions */}
 <MultiSelect
@@ -491,13 +549,13 @@ The box is `TagsInput`'s, and the list is `Combobox`'s.
 <TokenRow token="bg.surface" usage="the box's fill, and the list's fill" />
 <TokenRow token="bg.brand-subtle" usage="the highlighted row" />
 <TokenRow token="bg.neutral-subtle" usage="the fill behind the caret or clear button while the pointer is over it" />
-<TokenRow token="border.default" usage="the box's border at rest, the list's border, and the line above the loading and error notes" />
+<TokenRow token="border.default" usage="the box's border at rest, the list's border, and the line above the footer and the loading and error notes" />
 <TokenRow token="border.neutral" usage="the box's border while the pointer is over it" />
 <TokenRow token="border.focus" usage="the box's border and focus ring while the entry has focus, the ring on a chip picked up with the keyboard and the bar that shows where a dragged chip will land" />
 <TokenRow token="border.danger" usage="the box's border and ring when `hasError` is set" />
 <TokenRow token="text.primary" usage="the typed text and the option text" />
 <TokenRow token="text.secondary" usage="the description under an option, which stays readable on the highlighted row" />
-<TokenRow token="text.tertiary" usage="the placeholder, group headings, the No results row and the loading and error notes" />
+<TokenRow token="text.tertiary" usage="the placeholder, group headings, the No results row, the footer's count and the loading and error notes" />
 <TokenRow token="text.brand" usage="a chosen option" />
 <TokenRow token="text.disabled" usage="an option that can't be chosen" />
 <TokenRow token="border-width.1" usage="the box's border and the list's border" />
@@ -523,7 +581,7 @@ The box is `TagsInput`'s, and the list is `Combobox`'s.
 <TokenRow token="opacity.40" usage="the whole field while disabled, and a chip while it is dragged" />
 <TokenRow token="space.1" usage="the box's padding at `xs` and `md`, the list's padding, the gap between the caret and clear buttons, and how far a picked-up chip's ring and a drop marker stand off the chip" />
 <TokenRow token="space.2" usage="the gap between the chips, the typing area and the buttons (which a drop marker is centred in), the box's padding at `sm`, `lg` and `xl`, and the gap inside a row" />
-<TokenRow token="space.3" usage="the inset of a row's content, and of the typing text at `sm` and `md`" />
+<TokenRow token="space.3" usage="the inset of a row's content and of the footer, and of the typing text at `sm` and `md`" />
 <TokenRow token="space.4" usage="the inset of the typing text at `lg` and `xl`" />
 <TokenRow token="space.6" usage="the least size of the caret and clear buttons, a 24px target" />
 <TokenRow token="icon-size.xs" usage="the caret, clear and loading icons at `xs`, and an option's icon at `xs`" />

@@ -802,3 +802,95 @@ export const GroupRowsLineUp: Story = {
     await expect(Math.abs(left(group) - left(apple))).toBeLessThan(1);
   },
 };
+
+export const FooterSitsUnderTheListOnAPhone: Story = {
+  name: "On a phone the footer sits under a list that still scrolls, its buttons are 24px or more, and Done closes the list",
+  globals: { viewport: { value: "mobile1", isRotated: false } },
+  render: () => (
+    <div style={{ padding: "var(--dbm-space-4)", minHeight: "40rem" }}>
+      <MultiSelect aria-label="Items" options={manyOptions} footer presentation={{ base: "full-width", sm: "anchored" }} defaultValue={["item-1"]} />
+    </div>
+  ),
+  play: async () => {
+    await expect(window.innerWidth).toBeLessThan(500);
+    await userEvent.click(field());
+    const list = (await body().findByRole("listbox")) as HTMLElement;
+    await settled(list);
+    const done = body().getByRole("button", { name: "Done" });
+    const clear = body().getByRole("button", { name: "Clear" });
+    for (const button of [done, clear]) {
+      const r = button.getBoundingClientRect();
+      await expect(r.width).toBeGreaterThanOrEqual(23.5);
+      await expect(r.height).toBeGreaterThanOrEqual(23.5);
+    }
+    // under the list, inside the panel, and the whole panel is on the screen
+    const panel = (list.parentElement as HTMLElement).getBoundingClientRect();
+    await expect(done.getBoundingClientRect().top).toBeGreaterThanOrEqual(list.getBoundingClientRect().bottom - 0.5);
+    await expect(done.getBoundingClientRect().bottom).toBeLessThanOrEqual(panel.bottom + 0.5);
+    await expect(panel.bottom).toBeLessThanOrEqual(window.innerHeight + 0.5);
+    await expect(list.scrollHeight).toBeGreaterThan(list.clientHeight);
+    // a real press on Clear empties the field and keeps the list; on Done closes it
+    await realClick(clear);
+    await waitFor(() => expect(chips()).toEqual([]));
+    await expect(body().getByRole("listbox")).toBeInTheDocument();
+    await realClick(done);
+    await waitFor(() => expect(body().queryByRole("listbox")).toBeNull());
+    await expect(field()).toHaveFocus();
+  },
+};
+
+export const SummaryIsOneLine: Story = {
+  name: "A count in place of the chips is one line, as tall as a field holding one chip, at every size",
+  render: () => (
+    <Page width="36rem">
+      {(["xs", "sm", "md", "lg", "xl"] as MultiSelectSize[]).map((size) => (
+        <div key={size} style={{ display: "flex", flexDirection: "column", gap: "var(--dbm-space-2)" }}>
+          <MultiSelect aria-label={`Summary ${size}`} size={size} options={people} overflow="summary" defaultValue={["ada", "grace", "alan", "katherine", "margaret"]} />
+          <MultiSelect aria-label={`One chip ${size}`} size={size} options={people} defaultValue={["ada"]} />
+        </div>
+      ))}
+    </Page>
+  ),
+  play: async () => {
+    for (const size of ["xs", "sm", "md", "lg", "xl"]) {
+      const summary = boxOf(body().getByRole("combobox", { name: `Summary ${size}` }));
+      const one = boxOf(body().getByRole("combobox", { name: `One chip ${size}` }));
+      await expect(Math.abs(summary.getBoundingClientRect().height - one.getBoundingClientRect().height)).toBeLessThan(1.5);
+      await expect(within(summary).getByText("5 selected")).toBeInTheDocument();
+      await expect(within(summary).queryAllByRole("button", { name: /^Remove / })).toHaveLength(0);
+    }
+  },
+};
+
+export const LockedChipIsTheSameHeight: Story = {
+  name: "A chip with no remove button is as tall as one with, and the field is as tall as with all chips removable",
+  render: () => (
+    <Page>
+      <MultiSelect
+        aria-label="Locked"
+        options={[
+          { value: "a", label: "Alpha", disabled: "Fixed" },
+          { value: "b", label: "Beta", disabled: "Fixed" },
+        ]}
+        defaultValue={["a", "b"]}
+      />
+      <MultiSelect
+        aria-label="Free"
+        options={[
+          { value: "a", label: "Alpha" },
+          { value: "b", label: "Beta" },
+        ]}
+        defaultValue={["a", "b"]}
+      />
+    </Page>
+  ),
+  play: async () => {
+    const locked = boxOf(body().getByRole("combobox", { name: "Locked" }));
+    const free = boxOf(body().getByRole("combobox", { name: "Free" }));
+    await expect(Math.abs(locked.getBoundingClientRect().height - free.getBoundingClientRect().height)).toBeLessThan(1.5);
+    await expect(within(locked).queryAllByRole("button", { name: /^Remove / })).toHaveLength(0);
+    await expect(within(free).getAllByRole("button", { name: /^Remove / })).toHaveLength(2);
+    // the reason is read after the chip, and is not drawn
+    await expect(within(locked).getByText("Alpha").closest("li")).toHaveTextContent("Alpha, Fixed");
+  },
+};

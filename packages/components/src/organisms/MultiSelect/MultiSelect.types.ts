@@ -9,8 +9,8 @@ export type MultiSelectSide = "top" | "right" | "bottom" | "left";
 export type MultiSelectAlign = "start" | "center" | "end";
 /** How the list is drawn: under the field and as wide as it, or across the whole visible screen. */
 export type MultiSelectPresentation = "anchored" | "full-width";
-/** What a closed field does with chips that don't fit: wrap onto more lines, or stay on one line with a "+N more" button. */
-export type MultiSelectOverflow = "wrap" | "collapse";
+/** What a closed field does with chips that don't fit: wrap onto more lines, stay on one line with a "+N more" button, or show a count instead of chips. */
+export type MultiSelectOverflow = "wrap" | "collapse" | "summary";
 
 /** Why the text typed into a `MultiSelect` changed, as `onInputValueChange` reports it. */
 export type MultiSelectInputChangeReason =
@@ -59,8 +59,8 @@ export interface MultiSelectOption {
   icon?: PhosphorIcon;
   /**
    * Makes the option unavailable. `true` dims it; a string does the same and gives the reason, shown as the row's
-   * tooltip and read after its name. A disabled option that is already chosen stays chosen and can still be
-   * removed with its chip.
+   * tooltip and read after its name. A disabled option that is already chosen stays chosen, and its chip has no
+   * remove button: it is locked, and the clear button leaves it too. The reason is read after the chip.
    */
   disabled?: boolean | string;
   /** Extra words the default filter matches, never shown ("UK" for "United Kingdom"). */
@@ -135,6 +135,20 @@ export interface MultiSelectLabels {
   less: string;
   /** Describes the field once something is chosen: how to reach the chips with the keyboard. @default "Use the left arrow key to move to the chosen options" */
   chipsHint: string;
+  /** Said under the field when typed or pasted text names no option and `allowCustomValue` is off. Receives the text. @default (text) => `${text} isn't in the list` */
+  notFound: (text: string) => string;
+  /** Shown, and announced, after a pasted list had pieces that were not added. Plain numbers. @default (added, refused) => `${added} added, ${refused} not added` */
+  pasted: (added: number, refused: number) => string;
+  /** The text of the count that stands for the chips with `overflow="summary"`. Plain number. @default (count) => `${count} selected` */
+  summary: (count: number) => string;
+  /** Read after a chip that can't be removed because its option is disabled, when the option gives no reason of its own. @default "Can't be removed" */
+  locked: string;
+  /** The count in the list's footer (`footer`). Plain number. @default (count) => `${count} selected` */
+  footerCount: (count: number) => string;
+  /** The footer's button that removes every chip that can be removed. @default "Clear" */
+  footerClear: string;
+  /** The footer's button that closes the list. @default "Done" */
+  footerDone: string;
   /** The text of a group's "select all" row (`selectGroups`). Receives the group's name. @default (group) => `Select all in ${group}` */
   selectGroup: (group: string) => string;
   /** The text of a group's row while everything it covers is chosen. Receives the group's name. @default (group) => `Deselect all in ${group}` */
@@ -175,8 +189,14 @@ export interface MultiSelectController {
 export interface MultiSelectChangeDetails {
   /** What changed them. */
   source: MultiSelectChangeSource;
-  /** The option that was added or removed, when one was (not for `clear` or `selectAll`); `undefined` for a value with no option in `options`. */
+  /** The option that was added or removed, when one was (not for `clear` or `selectAll`); `undefined` for a value with no option, as one typed with `allowCustomValue`. */
   option?: MultiSelectOption;
+  /**
+   * The option behind each of the new values, in the same order, or `undefined` for a value with none (a typed one, or an
+   * id the field has never seen). It includes options that have left `options` since they were chosen, which a field of
+   * fetched options can't otherwise recover.
+   */
+  selected: Array<MultiSelectOption | undefined>;
 }
 
 export interface MultiSelectProps
@@ -276,6 +296,21 @@ export interface MultiSelectProps
    */
   allowCustomValue?: boolean;
   /**
+   * Lets a list be pasted into the typing field: the text is split at the separators, line breaks and tabs, and each
+   * piece that is exactly an option's label (ignoring case and accents) is chosen. Pieces that name no option are
+   * refused and counted ("3 added, 2 not added"), or become chips of their own with `allowCustomValue`, which turns this
+   * on. Without it a paste is ordinary text.
+   * @default false
+   */
+  pasteList?: boolean;
+  /**
+   * Adds a footer under the list with the count chosen, a "Clear" button and a "Done" button that closes the list: a way
+   * to finish on a phone, where the list spans the screen and there is no key to press. Takes a map to change with the
+   * screen, such as `{ base: true, sm: false }`. The buttons are for the pointer and touch and are not tab stops.
+   * @default false
+   */
+  footer?: Responsive<boolean>;
+  /**
    * The characters that end a typed value, when `allowCustomValue` is set: typing one, or pasting text with one (or a
    * line break), makes a chip of what came before it.
    * @default [","]
@@ -356,7 +391,9 @@ export interface MultiSelectProps
   reorderable?: boolean;
   /**
    * What a closed field does with chips that don't fit: `wrap` lets them take more lines, `collapse` keeps one line
-   * with as many chips as fit and a "+N more" button. The field always shows every chip while it is in use.
+   * with as many chips as fit and a "+N more" button, and `summary` shows a count ("3 selected") instead of any chips,
+   * for a field in a toolbar or a narrow filter bar. `wrap` and `collapse` show every chip while the field is in use;
+   * `summary` never does, so options are removed from the list (the check marks) or with the clear button.
    * @default "wrap"
    */
   overflow?: MultiSelectOverflow;

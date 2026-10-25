@@ -16,6 +16,8 @@ interface TagsInputChipProps {
   removable: boolean;
   removeLabel: string;
   onRemove: () => void;
+  /** Text read after the chip, without changing how it looks (why it can't be removed). */
+  note?: string;
   /** An icon before the text. */
   icon?: PhosphorIcon;
   /** Drawn instead of `tag` as the chip's content (an avatar and a name); `tag` is still the tooltip and the text that is cut. */
@@ -37,6 +39,7 @@ export function TagsInputChip({
   removable,
   removeLabel,
   onRemove,
+  note,
   icon,
   content,
   itemProps,
@@ -69,6 +72,7 @@ export function TagsInputChip({
             {content ?? tag}
           </span>
           {reason ? <VisuallyHidden>{`, ${reason}`}</VisuallyHidden> : null}
+          {note ? <VisuallyHidden>{`, ${note}`}</VisuallyHidden> : null}
         </Tag>
       </li>
     </Tooltip>

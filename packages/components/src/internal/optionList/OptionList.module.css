@@ -211,6 +211,19 @@
   padding: var(--dbm-space-2) var(--dbm-space-3);
 }
 
+/* A row of actions under the list: a count at the start, buttons at the end. Pointer and touch only, as the caret is. */
+.actions {
+  align-items: center;
+  border-block-start: var(--dbm-border-width-1) solid var(--dbm-border-default);
+  color: var(--dbm-text-tertiary);
+  display: flex;
+  flex-shrink: 0;
+  font-size: var(--dbm-font-size-xs);
+  gap: var(--dbm-space-2);
+  justify-content: flex-end;
+  padding: var(--dbm-space-2) var(--dbm-space-3);
+}
+
 @media (prefers-reduced-motion: reduce) {
   .content[data-state="open"],
   .content[data-state="closed"] {
@@ -226,7 +239,8 @@
     outline-offset: calc(-1 * var(--dbm-border-width-2));
   }
 
-  .footer {
+  .footer,
+  .actions {
     border-block-start-color: CanvasText;
   }
 }

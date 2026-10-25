@@ -108,6 +108,34 @@ export const multiSelectSnippets = {
   validate={(text) => (text.includes("@") ? undefined : "Not an email address")}
 />`,
 
+  pasteList: `{/* Paste "Canada, Uruguay" (or one per line): each piece that is exactly an option's label is chosen,
+    and the ones that are not are counted ("2 added, 1 not added"). */}
+<MultiSelect aria-label="Countries" options={countries} pasteList />`,
+
+  summary: `{/* A count in place of the chips, for a toolbar or a narrow filter bar. Options are removed in the list. */}
+<MultiSelect aria-label="Countries" options={countries} overflow="summary" defaultValue={["ca", "us", "uy"]} />`,
+
+  footer: `{/* A count, Clear and Done under the list. Takes a map, so it can be on for a phone only. */}
+<MultiSelect aria-label="Countries" options={countries} footer={{ base: true, sm: false }} />`,
+
+  locked: `{/* A chosen option that is disabled can't be removed: its chip has no remove button, and the clear button leaves it. */}
+<MultiSelect
+  aria-label="Members"
+  options={[
+    { value: "owner", label: "Owner", disabled: "Every project has one" },
+    { value: "ada", label: "Ada Lovelace" },
+  ]}
+  defaultValue={["owner", "ada"]}
+/>`,
+
+  selected: `{/* selected: the option behind each value, in order, including ones the list no longer holds. */}
+<MultiSelect
+  aria-label="Search countries"
+  options={results}
+  filter={false}
+  onValueChange={(values, { selected }) => saveChosen(values, selected)}
+/>`,
+
   async: `{/* You fetch: filter={false} shows options as given. Search on "input"; a choice clears the text, it isn't a query. */}
 {/* const [results, setResults] = useState([]); const [loading, setLoading] = useState(false); */}
 <MultiSelect
@@ -175,7 +203,9 @@ export interface MultiSelectPlaygroundSnippetArgs {
   selectAll?: boolean;
   selectGroups?: boolean;
   allowCustomValue?: boolean;
+  pasteList?: boolean;
   reorderable?: boolean;
+  footer?: boolean | Record<string, boolean>;
   clearable?: boolean;
   openOnFocus?: boolean;
   loading?: boolean;
@@ -213,6 +243,8 @@ export function multiSelectPlaygroundSnippet(args: MultiSelectPlaygroundSnippetA
   if (args.selectAll) attributes.push("selectAll");
   if (args.selectGroups) attributes.push("selectGroups");
   if (args.allowCustomValue) attributes.push("allowCustomValue");
+  if (args.pasteList) attributes.push("pasteList");
+  if (args.footer === true) attributes.push("footer");
   if (args.reorderable) attributes.push("reorderable");
   if (args.autoHighlight === false && !args.allowCustomValue) attributes.push("autoHighlight={false}");
   if (args.autoHighlight === true && args.allowCustomValue) attributes.push("autoHighlight");
