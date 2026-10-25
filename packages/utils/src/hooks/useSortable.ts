@@ -5,9 +5,12 @@ import type { KeyboardEvent as ReactKeyboardEvent, PointerEvent as ReactPointerE
 const DRAG_THRESHOLD = 4;
 
 export interface SortableMove {
-  /** What asked for the move: a key press or a drag. */
+  /** What asked for the move: a key press, or a drag or a tap. */
   via: "keyboard" | "pointer";
 }
+
+/** What picked an item up: a key press, or a tap (`tapToMove`). */
+export type SortableLift = "keyboard" | "pointer";
 
 export interface UseSortableOptions {
   /** Whether items can be moved. When `false` the hook does nothing and every handler reports "not handled". @default true */
@@ -19,12 +22,19 @@ export interface UseSortableOptions {
    * never reorders anything itself: a gesture asks, and the owner applies it by changing what it passes next.
    */
   onMove: (from: number, to: number, move: SortableMove) => void;
-  /** A key press picked up the item at `index`. */
-  onLift?: (index: number) => void;
+  /** The item at `index` was picked up, by a key press or a tap. */
+  onLift?: (index: number, via: SortableLift) => void;
   /** The picked-up item was dropped where it is, at `index`. */
   onDrop?: (index: number) => void;
   /** The pick-up was cancelled and the item put back at `origin`. */
   onCancel?: (origin: number) => void;
+  /**
+   * Lets a tap or click that does not move pick an item up, and a tap on another item put it in that item's place (a tap
+   * on the picked-up item drops it where it is). It is the way to move an item without dragging, for a person who can't
+   * drag (WCAG 2.5.7). A press on a button, a link or a field inside an item is not a tap on the item.
+   * @default false
+   */
+  tapToMove?: boolean;
   /** Whether the items read right to left, which flips the horizontal arrow keys and the side a drop lands on. @default false */
   rtl?: boolean | (() => boolean);
 }
@@ -60,6 +70,8 @@ export interface SortableItemProps {
  * - **Pointer and touch:** press an item and move past a few pixels to drag it; the item nearest the pointer gets a
  *   `data-drop` marker, and the move is asked for on release. The press that ends a drag does not also click. A touch
  *   press drags at once, so a component that is scrolled by touch gives the items `touch-action: none`.
+ * - **Tap:** with `tapToMove`, a tap that does not move picks an item up, and a tap on another item puts the picked-up one
+ *   in its place, for a person who can't drag.
  * - **Keyboard:** Space picks the focused item up, the arrow keys (flipped in a right-to-left list), Home and End move
  *   it, Space or Enter drops it and Escape puts it back where it started. Alt with an arrow key moves an item one place
  *   without picking it up.
@@ -90,6 +102,7 @@ export function useSortable<Container extends HTMLElement = HTMLElement>({
   onDrop,
   onCancel,
   rtl = false,
+  tapToMove = false,
 }: UseSortableOptions) {
   const container = useRef<Container | null>(null);
   // A callback ref, so the element is set without anything reading a ref while rendering.
@@ -97,14 +110,19 @@ export function useSortable<Container extends HTMLElement = HTMLElement>({
     container.current = element;
   }, []);
   const [lifted, setLifted] = useState<number | null>(null);
+  const [liftedVia, setLiftedVia] = useState<SortableLift | null>(null);
   const [drag, setDrag] = useState<SortableDrag | null>(null);
 
   // The latest options, read by the listeners below, which are added once per press.
-  const latest = useRef({ enabled, count, onMove, onLift, onDrop, onCancel, rtl, lifted });
+  const latest = useRef({ enabled, count, onMove, onLift, onDrop, onCancel, rtl, lifted, tapToMove });
   useLayoutEffect(() => {
-    latest.current = { enabled, count, onMove, onLift, onDrop, onCancel, rtl, lifted };
+    latest.current = { enabled, count, onMove, onLift, onDrop, onCancel, rtl, lifted, tapToMove };
   });
   const origin = useRef(0);
+  const liftedViaRef = useRef<SortableLift | null>(null);
+  useLayoutEffect(() => {
+    liftedViaRef.current = liftedVia;
+  });
   const cleanup = useRef<(() => void) | null>(null);
 
   const isRtl = () => {
@@ -154,9 +172,37 @@ export function useSortable<Container extends HTMLElement = HTMLElement>({
   }, []);
   useEffect(() => stopTracking, [stopTracking]);
 
+  const lift = (index: number, via: SortableLift) => {
+    origin.current = index;
+    setLifted(index);
+    setLiftedVia(via);
+    latest.current.onLift?.(index, via);
+  };
+  const clearLift = () => {
+    setLifted(null);
+    setLiftedVia(null);
+  };
+
+  // A tap that did not move: pick the item up, or put the picked-up item in this item's place, or drop it where it is.
+  const tap = (index: number) => {
+    const { enabled: on, tapToMove: allowed, lifted: current } = latest.current;
+    if (!on || !allowed) return;
+    if (current === null) {
+      lift(index, "pointer");
+      return;
+    }
+    clearLift();
+    // A move says where the item ended up; a drop is only for an item put down where it was.
+    if (current !== index) latest.current.onMove(current, index, { via: "pointer" });
+    else latest.current.onDrop?.(index);
+  };
+
   const onPointerDown = (index: number) => (event: ReactPointerEvent<HTMLElement>) => {
     if (!latest.current.enabled || (event.pointerType === "mouse" && event.button !== 0) || !event.isPrimary) return;
     stopTracking();
+    // A press on a button, a link or a field inside the item (a remove button) is that control's, not a tap on the item.
+    const control = event.target instanceof Element ? event.target.closest("button, a, input, select, textarea") : null;
+    const pressedOnControl = control !== null && control !== event.currentTarget && event.currentTarget.contains(control);
     const startX = event.clientX;
     const startY = event.clientY;
     let dragging = false;
@@ -171,7 +217,10 @@ export function useSortable<Container extends HTMLElement = HTMLElement>({
       const final = dragging ? target(ended.clientX, ended.clientY, index) : null;
       stopTracking();
       setDrag(null);
-      if (!dragging) return;
+      if (!dragging) {
+        if (ended.type === "pointerup" && !pressedOnControl) tap(index);
+        return;
+      }
       swallowNextClick();
       if (ended.type === "pointerup" && final && final.to !== index) latest.current.onMove(index, final.to, { via: "pointer" });
     };
@@ -213,9 +262,7 @@ export function useSortable<Container extends HTMLElement = HTMLElement>({
     if (latest.current.lifted === null) {
       if (key === " " && !event.altKey && !event.ctrlKey && !event.metaKey && !event.shiftKey) {
         event.preventDefault();
-        origin.current = index;
-        setLifted(index);
-        latest.current.onLift?.(index);
+        lift(index, "keyboard");
         return true;
       }
       if (event.altKey && !event.ctrlKey && !event.metaKey && direction !== 0) {
@@ -226,6 +273,8 @@ export function useSortable<Container extends HTMLElement = HTMLElement>({
       return false;
     }
 
+    // A key pressed on another item than the picked-up one (it was picked up with a tap) only cancels.
+    if (index !== latest.current.lifted && key !== "Escape") return false;
     if (direction !== 0) {
       event.preventDefault();
       setLifted(step(index, index + direction, "keyboard"));
@@ -238,19 +287,26 @@ export function useSortable<Container extends HTMLElement = HTMLElement>({
     }
     if (key === " " || key === "Enter") {
       event.preventDefault();
-      setLifted(null);
+      clearLift();
       latest.current.onDrop?.(index);
       return true;
     }
     if (key === "Escape") {
       event.preventDefault();
       event.stopPropagation();
-      if (index !== origin.current) latest.current.onMove(index, origin.current, { via: "keyboard" });
-      setLifted(null);
-      latest.current.onCancel?.(origin.current);
+      cancel();
       return true;
     }
     return false;
+  };
+
+  /** Puts a picked-up item back where it started, and drops it there. Does nothing when nothing is picked up. */
+  const cancel = () => {
+    const current = latest.current.lifted;
+    if (current === null) return;
+    if (current !== origin.current) latest.current.onMove(current, origin.current, { via: "keyboard" });
+    clearLift();
+    latest.current.onCancel?.(origin.current);
   };
 
   /**
@@ -263,13 +319,16 @@ export function useSortable<Container extends HTMLElement = HTMLElement>({
     return true;
   };
 
-  /** Drops a picked-up item where it is, as when focus leaves the list. */
-  const release = () => {
-    if (latest.current.lifted === null) return;
-    const index = latest.current.lifted;
-    setLifted(null);
-    latest.current.onDrop?.(index);
+  /**
+   * Drops a picked-up item where it is, as when focus leaves the list. With `via` it only drops an item picked up that
+   * way: moving focus drops one picked up with the keyboard, but not one picked up with a tap.
+   */
+  const release = (via?: SortableLift) => {
+    const current = latest.current.lifted;
+    if (current === null || (via !== undefined && liftedViaRef.current !== via)) return;
+    clearLift();
+    latest.current.onDrop?.(current);
   };
 
-  return { containerRef, lifted, drag, itemProps, handleKeyDown, handleKeyUp, release };
+  return { containerRef, lifted, liftedVia, drag, itemProps, handleKeyDown, handleKeyUp, release, cancel };
 }

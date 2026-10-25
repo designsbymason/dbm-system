@@ -69,8 +69,9 @@ export const multiSelectSnippets = {
   renderValue={(option) => <span>{option?.label}</span>}
 />`,
 
-  reorderable: `{/* Drag a chip, or focus its remove button and press Space, move it with the arrow keys, and press Space to drop it.
-    Alt with an arrow key moves a chip one place. The values (and what a form submits) follow the new order. */}
+  reorderable: `{/* Drag a chip; or tap one and then tap the chip whose place it should take; or focus its remove button, press Space,
+    move it with the arrow keys and press Space to drop it. Alt with an arrow key moves a chip one place.
+    The values (and what a form submits) follow the new order. */}
 <MultiSelect
   aria-label="Columns"
   options={columns}
@@ -105,6 +106,7 @@ export const multiSelectSnippets = {
   aria-label="Recipients"
   options={contacts}
   allowCustomValue
+  maxTagLength={64}
   validate={(text) => (text.includes("@") ? undefined : "Not an email address")}
 />`,
 

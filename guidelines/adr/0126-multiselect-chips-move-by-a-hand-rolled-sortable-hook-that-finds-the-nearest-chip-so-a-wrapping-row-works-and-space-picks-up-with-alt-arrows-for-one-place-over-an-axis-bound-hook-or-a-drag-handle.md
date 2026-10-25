@@ -1,6 +1,6 @@
 # 0126 — `MultiSelect` chips move by a hand-rolled sortable hook that finds the nearest chip, so a wrapping row works, and Space picks up with Alt and the arrows for one place, over an axis-bound hook or a drag handle
 
-**Status:** Accepted · **Date:** 2026-10-25
+**Status:** Accepted · **Date:** 2026-10-25 · **Amended 2026-10-25** — a tap picks a chip up and a second tap places it, so nothing has to be dragged; the decision itself is unchanged
 
 ## Context
 [ADR-0043](./0043-reordering-is-a-hand-rolled-sortable-hook-in-primitives-for-a-single-list-over-a-drag-and-drop-dependency.md) decided that reordering is built once, by hand, with no dependency, as an internal hook, "with the component that first needs it". `MultiSelect`'s `reorderable` is that component. Two things in that record did not fit a field of chips: its first version was for one list "one axis at a time", with wrapping layouts out of scope, and a chip's only focusable part is its remove button, which Enter and Space already activate.
@@ -8,6 +8,7 @@
 ## Decision
 - **The hook is `useSortable` in `utils`,** internal (not re-exported from `@dbm-system/components`), with the scope ADR-0043 set: a controlled order (a gesture asks with `onMove(from, to)` and the owner applies it), pointer, touch and keyboard, announcements through callbacks, `rtl`, and nothing drawn by the hook.
 - **The drop target is the item nearest the pointer, not a position along an axis,** and the marker goes before or after it by which half of it the pointer is in, in reading order (flipped in a right-to-left list). That is what lets a row that wraps onto several lines work with no extra code, which widens ADR-0043's first version without closing any door it kept open (moving between lists is still out).
+- **A tap picks an item up, and a tap on another item puts it in that item's place** (`tapToMove`, off by default in the hook, on in `MultiSelect`). It is the way to move a chip without dragging, which WCAG 2.5.7 (Dragging Movements, AA) asks for beside any drag: the keyboard path is not a single-pointer alternative. A second tap on the picked-up item, or Escape from anywhere in the field, puts it down. A press on a button, link or field inside an item (a remove button) is that control's own, never a tap on the item, and a tap-picked-up item is not dropped when focus moves (a keyboard one is). *(Amended 2026-10-25: this decision originally had the keyboard path as the only alternative to dragging, because a tap was taken for a click on a chip's remove button; the remove button is a control inside the chip, so a tap on the chip's body is free to mean "pick up".)*
 - **A drag starts after a few pixels of movement,** so a press that doesn't move is still a click (the chip's remove button), and the click that ends a drag is swallowed. Move and up listeners are on `window`, cleaned up on unmount, and a cancelled pointer drops nothing. A touch drags at once, so a component that moves items by touch gives them `touch-action: none`; `MultiSelect` does that for its chips only while `reorderable`.
 - **The keyboard path is ADR-0043's:** Space picks up, the arrow keys (flipped in a right-to-left list), Home and End move, Space or Enter drops, Escape puts it back, and leaving the chip drops it where it is. **Alt with an arrow key moves an item one place without picking it up,** as a shortcut for the common one-step move.
 - **On a chip Space is taken for picking up, and Enter and Delete still remove.** A browser clicks a button when Space is released, so the hook also keeps the key's release from activating it.
@@ -17,6 +18,7 @@
 ## Alternatives considered
 - **A hook bound to one axis, with wrapping out.** Rejected: a field of chips wraps by default, and the nearest-item test costs nothing more.
 - **A drag handle on each chip.** Rejected: a chip is small, a handle would double its width, and the chip has no other drag-conflicting gesture (its remove button is a click).
+- **Move buttons on each chip, or a menu of "move earlier / later".** Rejected: they would add controls to a chip that is small and already carries a remove button; the tap pair reuses the chips themselves.
 - **Enter to pick up.** Rejected: Enter removes a chip, which people expect.
 - **Moving chips live while dragging (the others slide aside).** Rejected for now: a marker is enough to know where it will land, and animating a wrapping row is a larger piece of motion than the first version needs.
 

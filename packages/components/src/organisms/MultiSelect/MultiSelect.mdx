@@ -36,6 +36,7 @@ export const propOrder = [
   "selectGroups",
   "allowCustomValue",
   "pasteList",
+  "maxTagLength",
   "separators",
   "validate",
   "footer",
@@ -123,6 +124,7 @@ import { MultiSelect } from "@dbm-system/components";
   "filter",
   "minSelected",
   "onSelectAll",
+  "maxTagLength",
   "separators",
   "validate",
   "onClear",
@@ -343,7 +345,9 @@ import { MultiSelect } from "@dbm-system/components";
   list doesn't show (the option's own `icon` is for the list). `renderValue` replaces a chip's text with your own content: it
   receives the option (or `undefined` for a value with no option), the chip's tooltip, remove button and announcements keep the
   `label`, and the chip must stay one line tall.
-- `reorderable` lets chips be moved by dragging with a pointer or a finger, or with the keyboard (see the table). The value
+- `reorderable` lets chips be moved by dragging with a pointer or a finger, by tapping a chip and then the chip whose place it
+  should take (for a person who can't drag), or with the keyboard (see the table). A tap on the picked-up chip again, or Escape,
+  puts it down. A press on a chip's remove button is a removal, never a pick-up. The value
   changes order and `onValueChange` reports `source: "reorder"`; the order is also what a form submits. Chips take no touch
   gestures of their own while it is on, so a finger drags them instead of scrolling the page, and a press on a chip never opens
   the list. A chip being dragged is dimmed and a bar shows where it will land, beside the nearest chip, so a row that wraps onto
@@ -376,7 +380,7 @@ import { MultiSelect } from "@dbm-system/components";
   separator (a comma by default; `separators` changes them), a paste of several (split at separators and line breaks) or leaving
   the field makes chips; the first match is not highlighted while typing, so Enter commits what was typed, and an arrow key
   moves to an option when that is what is meant. Text that is exactly an option's label (ignoring case and accents) chooses that
-  option instead. A value already chosen, one `validate` refuses, the text of a disabled option and one past `maxSelected` are
+  option instead. A value longer than `maxTagLength` (typed values only: an option's own label is never limited), a value already chosen, one `validate` refuses, the text of a disabled option and one past `maxSelected` are
   refused with a message under the field, which is announced and cleared by the next keystroke.
 - `controllerRef` hands your code an object with `open`, `close`, `clear` and `focus`, each returning whether it had
   anything to do. Use it for a "Clear filters" button that lives elsewhere on the page.
@@ -416,6 +420,10 @@ import { MultiSelect } from "@dbm-system/components";
 - The footer's buttons are real buttons with names ("Clear", "Done") that take no focus: they are for a pointer and a finger, as
   the caret and clear buttons are, and every one of their jobs has a key (Escape closes the list, Backspace and Delete take chips
   out). Each is at least 24 × 24 pixels.
+- The list of chosen options is named only while chips are drawn, and the hint about reaching them given only while one has a
+  remove button (a locked chip has none), so a screen reader is not told about an empty list or a key that has nothing to reach.
+- With `reorderable` a chip can be picked up and placed with taps, so nothing needs dragging. A screen reader's touch gestures
+  reach a chip's remove button and not the chip, so its way to reorder is the keyboard path.
 - With `allowCustomValue` a refused value is shown under the field, announced, and named in the field's description, and the
   field is marked invalid until the next keystroke.
 - The matched text in a label is drawn bold, and with `highlightTone` also in `Highlight`'s colours (a `<mark>`). Neither
@@ -436,6 +444,7 @@ import { MultiSelect } from "@dbm-system/components";
 | Home, End | On a chip, move to the first or last chip. In the typing field they move the caret. |
 | Backspace | In an empty typing field, moves to the last chip; a second press there removes it and keeps your place along the row. With text, deletes a character. |
 | Delete | On a chip, removes it. A locked chip has none to reach. |
+| Escape (`reorderable`) | From the typing field, puts down a chip that was picked up with a tap. |
 | Space (`reorderable`) | On a chip, picks it up. Arrow keys (flipped in a right-to-left page), Home and End then move it, Space or Enter drops it, Escape puts it back. Leaving the chip drops it where it is. |
 | Alt + arrow (`reorderable`) | On a chip, moves it one place without picking it up. |
 | Tab | Leaves the field. The typed text is dropped. |

@@ -83,7 +83,7 @@ const PER_COMPONENT_CSS_BUDGET_KB = 5;
 //   menu already carries: 26.42KB measured against the 26KB set before it. The budget is 32KB.
 //   MultiSelect (2026-10-25): the option list it shares with `Combobox` (the panel, the rows, the matching and the windowing, about 6KB), the
 //   chip row and chip keys of `TagsInput` (the `Tag`, its tooltip and the width measuring), the select-all, limit, create and controller code
-//   of its own and the Popover layer, 12.45KB measured against the default 10KB. With reordering (the `useSortable` hook, drag and keys, and the chip's moving styles), the group and remote Select all rows and typed values (separators, paste, validation): 14.58KB. With the footer (the `Button` atom), pasting a list, the summary and locked chips: 15.63KB. The budget is 18KB, the same as `DatePicker`'s.
+//   of its own and the Popover layer, 12.45KB measured against the default 10KB. With reordering (the `useSortable` hook, drag and keys, and the chip's moving styles), the group and remote Select all rows and typed values (separators, paste, validation): 14.58KB. With the footer (the `Button` atom), pasting a list, the summary and locked chips: 15.63KB; with tap-to-move, the length limit and the development warnings: 16.69KB. The budget is 18KB, the same as `DatePicker`'s.
 const JS_BUDGET_OVERRIDES_KB = { Calendar: 12, DataTable: 32, DatePicker: 18, FileUpload: 14, MultiSelect: 18, Navbar: 22, Sidebar: 22, TimeRangePicker: 12, Toolbar: 13 };
 
 // The same for CSS. `DataTable`'s bundle holds the stylesheets of the `Table`, `TableToolbar`, `Pagination`, `Select`,

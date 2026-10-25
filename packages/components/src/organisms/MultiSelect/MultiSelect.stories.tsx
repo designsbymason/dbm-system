@@ -91,7 +91,7 @@ const meta: Meta<typeof MultiSelect> = {
     reorderable: {
       control: "boolean",
       description:
-        "Lets chips be moved: drag one with a pointer or a finger, or press Space on its remove button, move it with the arrow keys and press Space to drop it (Escape cancels). Alt with an arrow key moves a chip one place. The order is what is submitted.",
+        "Lets chips be moved: drag one with a pointer or a finger, or tap one and then tap the chip whose place it should take (no dragging needed), or press Space on its remove button, move it with the arrow keys and press Space to drop it (Escape cancels). Alt with an arrow key moves a chip one place. The order is what is submitted.",
       table: { defaultValue: { summary: "false" } },
     },
     maxVisible: {
@@ -158,6 +158,10 @@ const meta: Meta<typeof MultiSelect> = {
       description:
         "Adds a footer under the list with the count chosen, a Clear button and a Done button that closes it: a way to finish on a phone. Takes a map to change with the screen, such as { base: true, sm: false }.",
       table: { defaultValue: { summary: "false" } },
+    },
+    maxTagLength: {
+      control: false,
+      description: "The most characters a typed value may have with allowCustomValue. Typing, a separator, a paste and leaving the field all go through the same check, and a longer value is refused with labels.tooLong. An option's own label is never limited.",
     },
     separators: {
       control: false,
@@ -660,7 +664,7 @@ export const CustomValues: Story = {
     ],
   },
   render: (args) =>
-    inStage(<MultiSelect {...args} validate={(text) => (/^\S+@\S+\.\S+$/.test(text) ? undefined : "Not an email address")} />),
+    inStage(<MultiSelect {...args} maxTagLength={40} validate={(text) => (/^\S+@\S+\.\S+$/.test(text) ? undefined : "Not an email address")} />),
 };
 
 export const PasteList: Story = {

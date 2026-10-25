@@ -149,6 +149,8 @@ export interface MultiSelectLabels {
   footerClear: string;
   /** The footer's button that closes the list. @default "Done" */
   footerDone: string;
+  /** The message shown, and announced, when a typed value is longer than `maxTagLength`. Receives the text and the limit, a plain number. @default (text, max) => `${text} is longer than ${max} characters` */
+  tooLong: (text: string, max: number) => string;
   /** The text of a group's "select all" row (`selectGroups`). Receives the group's name. @default (group) => `Select all in ${group}` */
   selectGroup: (group: string) => string;
   /** The text of a group's row while everything it covers is chosen. Receives the group's name. @default (group) => `Deselect all in ${group}` */
@@ -161,6 +163,11 @@ export interface MultiSelectLabels {
    * @default (label, position, total) => `${label}, position ${position} of ${total}. Use the arrow keys to move it, Space to drop it, Escape to cancel`
    */
   liftedChip: (label: string, position: number, total: number) => string;
+  /**
+   * Announced when a chip is picked up with a tap (`reorderable`), with its place, and what a second tap does. Plain numbers.
+   * @default (label, position, total) => `${label}, position ${position} of ${total}. Tap another chip to move it there, or tap it again to drop it`
+   */
+  liftedChipTap: (label: string, position: number, total: number) => string;
   /** Announced as a picked-up chip moves, or is moved with Alt and an arrow key, with its new place. @default (label, position, total) => `${label} moved to position ${position} of ${total}` */
   movedChip: (label: string, position: number, total: number) => string;
   /** Announced when a chip is dropped, by key or by the pointer, with its place. @default (label, position, total) => `${label} dropped at position ${position} of ${total}` */
@@ -316,6 +323,11 @@ export interface MultiSelectProps
    * @default [","]
    */
   separators?: string[];
+  /**
+   * The most characters a typed value may have (`allowCustomValue`). Typing, a separator, a paste and leaving the field all
+   * go through the same check, and a longer value is refused with `labels.tooLong`. An option's own label is never limited.
+   */
+  maxTagLength?: number;
   /** Checks a typed value before it becomes a chip (`allowCustomValue`): return a message to refuse it, or nothing to accept it. */
   validate?: (text: string) => string | void | undefined;
   /**
@@ -382,10 +394,12 @@ export interface MultiSelectProps
    */
   renderValue?: (option: MultiSelectOption | undefined, value: string) => ReactNode;
   /**
-   * Lets chips be moved to change the order of the values: drag one with a pointer or a finger, or focus its remove
-   * button, press Space, move it with the arrow keys and press Space or Enter to drop it (Escape cancels). Alt with an
-   * arrow key moves a chip one place at once. The order is submitted. Chips are `touch-action: none` so a finger drags
-   * instead of scrolling the page; on a chip, Space picks up rather than removing, and Enter and Delete still remove.
+   * Lets chips be moved to change the order of the values. Drag one with a pointer or a finger; or tap one and then tap the
+   * chip whose place it should take (tapping it again, or pressing Escape, puts it down), which needs no dragging; or
+   * focus its remove button, press Space, move it with the arrow keys and press Space or Enter to drop it (Escape
+   * cancels). Alt with an arrow key moves a chip one place at once. The order is submitted. Chips are `touch-action: none`
+   * so a finger drags instead of scrolling the page; on a chip, Space picks up rather than removing, and Enter and Delete
+   * still remove.
    * @default false
    */
   reorderable?: boolean;

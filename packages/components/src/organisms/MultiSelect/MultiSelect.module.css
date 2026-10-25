@@ -85,3 +85,8 @@
 .footerCount {
   margin-inline-end: auto;
 }
+
+/* The "+N more" and "Show less" buttons are at least 24px tall at every size, the smallest a target may be. */
+.more {
+  min-block-size: var(--dbm-space-6);
+}

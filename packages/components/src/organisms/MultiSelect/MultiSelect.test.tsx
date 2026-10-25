@@ -1080,6 +1080,57 @@ describe("MultiSelect", () => {
       expect(chips()).toEqual(["Canada", "United States", "Uruguay"]);
     });
 
+    it("moves a chip without dragging: tap one, then tap the chip whose place it should take", async () => {
+      const user = userEvent.setup();
+      const onValueChange = vi.fn();
+      reorderable({ onValueChange });
+      const status = () => screen.getAllByRole("status").map((node) => node.textContent).join(" ");
+      await user.click(screen.getByText("Canada"));
+      expect(screen.getByText("Canada").closest("li")).toHaveAttribute("data-lifted", "true");
+      await waitFor(() => expect(status()).toContain("Canada, position 1 of 3. Tap another chip to move it there, or tap it again to drop it"));
+      await user.click(screen.getByText("Uruguay"));
+      expect(chips()).toEqual(["United States", "Uruguay", "Canada"]);
+      expect(onValueChange).toHaveBeenLastCalledWith(["us", "uy", "ca"], expect.objectContaining({ source: "reorder" }));
+      expect(document.querySelector("[data-lifted]")).toBeNull();
+      await waitFor(() => expect(status()).toContain("Canada dropped at position 3 of 3"));
+    });
+
+    it("drops a tapped chip where it is when it is tapped again, and puts it down with Escape", async () => {
+      const user = userEvent.setup();
+      const onValueChange = vi.fn();
+      reorderable({ onValueChange });
+      await user.click(screen.getByText("Canada"));
+      await user.click(screen.getByText("Canada"));
+      expect(document.querySelector("[data-lifted]")).toBeNull();
+      expect(onValueChange).not.toHaveBeenCalled();
+      await user.click(screen.getByText("United States"));
+      expect(field()).toHaveFocus();
+      await user.keyboard("{Escape}");
+      expect(document.querySelector("[data-lifted]")).toBeNull();
+      expect(chips()).toEqual(["Canada", "United States", "Uruguay"]);
+    });
+
+    it("keeps a tapped chip picked up while the person types, and still removes with its own button", async () => {
+      const user = userEvent.setup();
+      reorderable();
+      await user.click(screen.getByText("Canada"));
+      await user.type(field(), "ur");
+      expect(screen.getByText("Canada").closest("li")).toHaveAttribute("data-lifted", "true");
+      await user.click(screen.getByRole("button", { name: "Remove Uruguay" }));
+      expect(document.querySelector("[data-lifted]")).not.toBeNull();
+      expect(chips()).toEqual(["Canada", "United States"]);
+    });
+
+    it("does not pick a chip up with a tap unless it is reorderable, and never while read-only", async () => {
+      const user = userEvent.setup();
+      const { rerender } = setup({ defaultValue: three });
+      await user.click(screen.getByText("Canada"));
+      expect(document.querySelector("[data-lifted]")).toBeNull();
+      rerender(<MultiSelect aria-label="Countries" options={countries} reorderable readOnly defaultValue={three} />);
+      await user.click(screen.getByText("Canada"));
+      expect(document.querySelector("[data-lifted]")).toBeNull();
+    });
+
     it("keeps a chip's element when its place changes, and copes with the same value twice", () => {
       const { rerender } = render(<MultiSelect aria-label="Countries" options={countries} value={["ca", "us"]} />);
       const before = screen.getByRole("button", { name: "Remove Canada" });
@@ -1449,6 +1500,48 @@ describe("MultiSelect", () => {
     });
   });
 
+  describe("a length limit on typed values", () => {
+    it("refuses a typed value that is too long by Enter, separator, paste and leaving the field, and says so", async () => {
+      const user = userEvent.setup();
+      render(
+        <>
+          <MultiSelect aria-label="Tags" options={countries} allowCustomValue maxTagLength={5} />
+          <button type="button">Elsewhere</button>
+        </>,
+      );
+      await user.type(field(), "toolong{Enter}");
+      expect(chips()).toEqual([]);
+      expect(await screen.findByText("toolong is longer than 5 characters")).toBeInTheDocument();
+      expect(field()).toHaveAttribute("aria-invalid", "true");
+      await user.clear(field());
+      await user.type(field(), "ok1,longer,fine");
+      expect(chips()).toEqual(["ok1"]);
+      await user.clear(field());
+      await user.paste("one, waytoolong, two");
+      expect(chips()).toEqual(["ok1", "one", "two"]);
+      expect(await screen.findByText("2 added, 1 not added")).toBeInTheDocument();
+      await user.type(field(), "overlong");
+      await user.click(screen.getByRole("button", { name: "Elsewhere" }));
+      expect(chips()).toEqual(["ok1", "one", "two"]);
+    });
+
+    it("does not limit an option's own label, a chosen option or the text used to search", async () => {
+      const user = userEvent.setup();
+      setup({ allowCustomValue: true, maxTagLength: 3 });
+      await user.type(field(), "united states{Enter}");
+      expect(chips()).toEqual(["United States"]);
+      await user.type(field(), "a search longer than three");
+      expect(field()).toHaveValue("a search longer than three");
+    });
+
+    it("writes the message with labels and formatNumber", async () => {
+      const user = userEvent.setup();
+      setup({ allowCustomValue: true, maxTagLength: 2, formatNumber: (n) => `#${n}`, labels: { tooLong: (text, max) => `${text} > ${max}` } });
+      await user.type(field(), "abc{Enter}");
+      expect(await screen.findByText("abc > 2")).toBeInTheDocument();
+    });
+  });
+
   describe("a count in place of the chips", () => {
     it("shows how many are chosen instead of the chips, and the entry beside it", () => {
       setup({ overflow: "summary", defaultValue: ["ca", "us", "uy"] });
@@ -1665,6 +1758,54 @@ describe("MultiSelect", () => {
     });
   });
 
+  describe("the controller and locked chips", () => {
+    it("says clear() had nothing to do when everything chosen is locked, and does not call onClear", () => {
+      const controllerRef = createRef<MultiSelectController>();
+      const onClear = vi.fn();
+      setup({ controllerRef, onClear, options: [{ value: "k", label: "Fixed", disabled: true }], defaultValue: ["k"] });
+      act(() => {
+        expect(controllerRef.current?.clear()).toBe(false);
+      });
+      expect(onClear).not.toHaveBeenCalled();
+      expect(chips()[0]).toContain("Fixed");
+    });
+
+    it("still clears typed text when everything chosen is locked", async () => {
+      const user = userEvent.setup();
+      const controllerRef = createRef<MultiSelectController>();
+      setup({ controllerRef, options: [{ value: "k", label: "Fixed", disabled: true }], defaultValue: ["k"] });
+      await user.type(field(), "abc");
+      act(() => {
+        expect(controllerRef.current?.clear()).toBe(true);
+      });
+      expect(field()).toHaveValue("");
+    });
+  });
+
+  describe("what a screen reader is told about the chips", () => {
+    it("names the list of chosen options only when chips are drawn", () => {
+      const { rerender } = setup({ value: [] });
+      expect(screen.queryByRole("list", { name: "Selected options" })).toBeNull();
+      rerender(<MultiSelect aria-label="Countries" options={countries} value={["ca"]} />);
+      expect(screen.getByRole("list", { name: "Selected options" })).toBeInTheDocument();
+      rerender(<MultiSelect aria-label="Countries" options={countries} value={["ca"]} overflow="summary" />);
+      expect(screen.queryByRole("list", { name: "Selected options" })).toBeNull();
+    });
+
+    it("gives the hint about reaching the chips only when one can be reached", () => {
+      const locked: MultiSelectOption[] = [{ value: "k", label: "Fixed", disabled: true }, { value: "f", label: "Free" }];
+      const hint = () => (field().getAttribute("aria-describedby") ?? "").length > 0;
+      const { rerender } = setup({ options: locked, value: ["k"] });
+      expect(hint()).toBe(false);
+      rerender(<MultiSelect aria-label="Countries" options={locked} value={["k", "f"]} />);
+      expect(hint()).toBe(true);
+      rerender(<MultiSelect aria-label="Countries" options={locked} value={["k", "f"]} overflow="summary" />);
+      expect(field().getAttribute("aria-describedby")).not.toMatch(/-hint/);
+      rerender(<MultiSelect aria-label="Countries" options={locked} value={["k", "f"]} readOnly />);
+      expect(hint()).toBe(false);
+    });
+  });
+
   describe("accessibility", () => {
     it("has no axe violations closed, open, with chips, groups and in each state", async () => {
       const user = userEvent.setup();
@@ -1760,6 +1901,50 @@ describe("MultiSelect", () => {
       expect(warn).toHaveBeenCalledWith(expect.stringContaining('more than one option has the value "ca"'));
       expect(warn).toHaveBeenCalledWith(expect.stringContaining("both `value` and `defaultValue`"));
       warn.mockRestore();
+    });
+  });
+
+  describe("props that do nothing together", () => {
+    const warns = (props: Partial<MultiSelectProps>) => {
+      const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
+      const { unmount } = setup(props);
+      const messages = warn.mock.calls.map((call) => String(call[0]));
+      warn.mockRestore();
+      unmount();
+      return messages;
+    };
+
+    it("says onSelectAll needs selectAll", () => {
+      expect(warns({ onSelectAll: () => [] }).join("\n")).toContain("`onSelectAll` has no effect without `selectAll`");
+      expect(warns({ onSelectAll: () => [], selectAll: true }).join("\n")).not.toContain("`onSelectAll` has no effect");
+    });
+
+    it("says validate and maxTagLength need allowCustomValue", () => {
+      const messages = warns({ validate: () => undefined, maxTagLength: 4 }).join("\n");
+      expect(messages).toContain("`validate` checks typed values");
+      expect(messages).toContain("`maxTagLength` limits typed values");
+      expect(warns({ validate: () => undefined, maxTagLength: 4, allowCustomValue: true }).join("\n")).not.toContain("typed values, which only");
+    });
+
+    it("says separators need allowCustomValue or pasteList", () => {
+      expect(warns({ separators: [";"] }).join("\n")).toContain("`separators` split typed and pasted text");
+      expect(warns({ separators: [";"], pasteList: true }).join("\n")).not.toContain("`separators` split");
+    });
+
+    it("says reorderable does nothing with a summary, read-only or disabled", () => {
+      expect(warns({ reorderable: true, overflow: "summary" }).join("\n")).toContain("with `overflow=\"summary\"`, which draws no chips to move");
+      expect(warns({ reorderable: true, readOnly: true }).join("\n")).toContain("while the field is read-only or disabled");
+      expect(warns({ reorderable: true }).join("\n")).not.toContain("`reorderable` has no effect");
+    });
+
+    it("says maxVisible does nothing with a summary", () => {
+      expect(warns({ maxVisible: 2, overflow: "summary" }).join("\n")).toContain("`maxVisible` has no effect");
+    });
+
+    it("says selectGroups needs grouped options, but not for a list with no options yet", () => {
+      expect(warns({ selectGroups: true }).join("\n")).toContain("no option has a `group`");
+      expect(warns({ selectGroups: true, options: [] }).join("\n")).not.toContain("no option has a `group`");
+      expect(warns({ selectGroups: true, options: [{ value: "a", label: "A", group: "G" }] }).join("\n")).not.toContain("no option has a `group`");
     });
   });
 

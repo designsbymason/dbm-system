@@ -15,18 +15,21 @@ function List({
   initial = ["a", "b", "c", "d"],
   enabled = true,
   rtl = false,
+  tapToMove = false,
   events,
 }: {
   initial?: string[];
   enabled?: boolean;
   rtl?: boolean;
-  events?: { onLift?: (i: number) => void; onDrop?: (i: number) => void; onCancel?: (i: number) => void; onMove?: (from: number, to: number, via: string) => void };
+  tapToMove?: boolean;
+  events?: { onLift?: (i: number, via: string) => void; onDrop?: (i: number) => void; onCancel?: (i: number) => void; onMove?: (from: number, to: number, via: string) => void };
 }) {
   const [items, setItems] = useState(initial);
   const sortable = useSortable<HTMLDivElement>({
     enabled,
     count: items.length,
     rtl,
+    tapToMove,
     onMove: (from, to, details) => {
       events?.onMove?.(from, to, details.via);
       setItems((current) => move(current, from, to));
@@ -35,7 +38,7 @@ function List({
     onDrop: events?.onDrop,
     onCancel: events?.onCancel,
   });
-  const { containerRef, drag, itemProps, handleKeyDown, handleKeyUp } = sortable;
+  const { containerRef, drag, itemProps, handleKeyDown, handleKeyUp, release, cancel } = sortable;
   return (
     <div role="group" ref={containerRef} aria-label="items" data-drag={drag ? "yes" : undefined}>
       {items.map((item, index) => (
@@ -51,6 +54,8 @@ function List({
         </button>
       ))}
       <output data-testid="order">{items.join("")}</output>
+      <button type="button" data-testid="release" onClick={() => release("keyboard")}>release keyboard</button>
+      <button type="button" data-testid="cancel" onClick={() => cancel()}>cancel</button>
     </div>
   );
 }
@@ -66,7 +71,7 @@ describe("useSortable", () => {
       render(<List events={{ onLift, onDrop }} />);
       screen.getByTestId("b").focus();
       await user.keyboard(" ");
-      expect(onLift).toHaveBeenCalledWith(1);
+      expect(onLift).toHaveBeenCalledWith(1, "keyboard");
       expect(screen.getByTestId("b")).toHaveAttribute("data-lifted", "true");
       await user.keyboard("{ArrowRight}{ArrowRight}");
       expect(order()).toBe("acdb");
@@ -158,6 +163,106 @@ describe("useSortable", () => {
       screen.getByTestId("a").focus();
       await user.keyboard("{Alt>}{ArrowRight}{/Alt}");
       expect(onMove).toHaveBeenCalledWith(0, 1, "keyboard");
+    });
+  });
+
+  describe("tapping", () => {
+    const lay = () => {
+      for (const [index, id] of ["a", "b", "c", "d"].entries()) {
+        screen.getByTestId(id).getBoundingClientRect = () => ({ left: index * 100, right: index * 100 + 100, top: 0, bottom: 40, width: 100, height: 40, x: index * 100, y: 0, toJSON: () => ({}) }) as DOMRect;
+      }
+    };
+    const pointer = (type: string, x: number) =>
+      act(() => {
+        fireEvent(window, new MouseEvent(type, { clientX: x, clientY: 20, bubbles: true }));
+      });
+    const tap = (id: string, x: number) => {
+      fireEvent.pointerDown(screen.getByTestId(id), { clientX: x, clientY: 20, pointerId: 1, isPrimary: true, pointerType: "touch", button: 0 });
+      pointer("pointerup", x);
+    };
+
+    it("picks an item up with a tap and puts it in the place of the next item tapped", () => {
+      const onLift = vi.fn();
+      const onMove = vi.fn();
+      const onDrop = vi.fn();
+      render(<List tapToMove events={{ onLift, onMove, onDrop }} />);
+      lay();
+      tap("b", 150);
+      expect(onLift).toHaveBeenCalledWith(1, "pointer");
+      expect(screen.getByTestId("b")).toHaveAttribute("data-lifted", "true");
+      tap("d", 350);
+      expect(onMove).toHaveBeenCalledWith(1, 3, "pointer");
+      expect(order()).toBe("acdb");
+      // the move says where it ended up, so there is no drop to report as well
+      expect(onDrop).not.toHaveBeenCalled();
+      expect(document.querySelector("[data-lifted]")).toBeNull();
+    });
+
+    it("drops the item where it is when it is tapped again", () => {
+      const onMove = vi.fn();
+      const onDrop = vi.fn();
+      render(<List tapToMove events={{ onMove, onDrop }} />);
+      lay();
+      tap("c", 250);
+      tap("c", 250);
+      expect(onMove).not.toHaveBeenCalled();
+      expect(onDrop).toHaveBeenCalledWith(2);
+      expect(document.querySelector("[data-lifted]")).toBeNull();
+    });
+
+    it("does nothing for a tap unless asked, and not for a press on a control inside an item", () => {
+      const onLift = vi.fn();
+      const { rerender } = render(<List events={{ onLift }} />);
+      lay();
+      tap("a", 50);
+      expect(onLift).not.toHaveBeenCalled();
+      rerender(<List tapToMove events={{ onLift }} />);
+      lay();
+      const inner = document.createElement("button");
+      screen.getByTestId("a").appendChild(inner);
+      fireEvent.pointerDown(inner, { clientX: 50, clientY: 20, pointerId: 1, isPrimary: true, pointerType: "mouse", button: 0 });
+      pointer("pointerup", 50);
+      expect(onLift).not.toHaveBeenCalled();
+    });
+
+    it("is not a tap when the press moved, which is a drag", () => {
+      const onLift = vi.fn();
+      render(<List tapToMove events={{ onLift }} />);
+      lay();
+      fireEvent.pointerDown(screen.getByTestId("a"), { clientX: 50, clientY: 20, pointerId: 1, isPrimary: true, pointerType: "touch", button: 0 });
+      pointer("pointermove", 260);
+      pointer("pointerup", 260);
+      expect(onLift).not.toHaveBeenCalled();
+      expect(order()).toBe("bcad");
+    });
+
+    it("keeps a tapped item picked up when focus moves, but drops a keyboard one", async () => {
+      const user = userEvent.setup();
+      render(<List tapToMove />);
+      lay();
+      tap("b", 150);
+      await user.click(screen.getByTestId("release"));
+      expect(screen.getByTestId("b")).toHaveAttribute("data-lifted", "true");
+      await user.click(screen.getByTestId("cancel"));
+      expect(document.querySelector("[data-lifted]")).toBeNull();
+      screen.getByTestId("c").focus();
+      await user.keyboard(" ");
+      await user.click(screen.getByTestId("release"));
+      expect(document.querySelector("[data-lifted]")).toBeNull();
+    });
+
+    it("cancels a tap pick-up with Escape from any item, and ignores other keys on another item", async () => {
+      const user = userEvent.setup();
+      const onCancel = vi.fn();
+      render(<List tapToMove events={{ onCancel }} />);
+      lay();
+      tap("b", 150);
+      screen.getByTestId("d").focus();
+      await user.keyboard("{ArrowRight}");
+      expect(order()).toBe("abcd");
+      await user.keyboard("{Escape}");
+      expect(onCancel).toHaveBeenCalledWith(1);
+      expect(document.querySelector("[data-lifted]")).toBeNull();
     });
   });
 

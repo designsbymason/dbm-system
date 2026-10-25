@@ -894,3 +894,85 @@ export const LockedChipIsTheSameHeight: Story = {
     await expect(within(locked).getByText("Alpha").closest("li")).toHaveTextContent("Alpha, Fixed");
   },
 };
+
+export const MoreButtonsAreBigEnough: Story = {
+  name: "The +N more and Show less buttons are at least 24 pixels tall at every size",
+  render: () => (
+    <Page width="36rem">
+      {(["xs", "sm", "md", "lg", "xl"] as MultiSelectSize[]).map((size) => (
+        <MultiSelect key={size} aria-label={`More ${size}`} size={size} options={people} maxVisible={1} defaultValue={["ada", "grace", "alan"]} />
+      ))}
+    </Page>
+  ),
+  play: async () => {
+    for (const entry of body().getAllByRole("combobox")) {
+      const root = entry.closest("[dir]") as HTMLElement;
+      const more = within(root).getByRole("button", { name: /^\+\d+ more$/ });
+      await expect(more.getBoundingClientRect().height).toBeGreaterThanOrEqual(24);
+      await expect(more.getBoundingClientRect().width).toBeGreaterThanOrEqual(24);
+    }
+    await userEvent.click(within((body().getAllByRole("combobox")[0] as HTMLElement).closest("[dir]") as HTMLElement).getByRole("button", { name: /^\+\d+ more$/ }));
+    const less = await body().findByRole("button", { name: "Show less" });
+    await expect(less.getBoundingClientRect().height).toBeGreaterThanOrEqual(24);
+  },
+};
+
+// A real finger, through the Chrome DevTools Protocol: a touch that goes down and up in one place is a tap.
+async function realTap(element: Element) {
+  const rect = element.getBoundingClientRect();
+  const frame = window.frameElement?.getBoundingClientRect();
+  const scale = frame ? frame.width / window.innerWidth : 1;
+  const x = (frame?.left ?? 0) + (rect.left + rect.width / 2) * scale;
+  const y = (frame?.top ?? 0) + (rect.top + rect.height / 2) * scale;
+  await send("Input.dispatchTouchEvent", { type: "touchStart", touchPoints: [{ x, y }] });
+  await send("Input.dispatchTouchEvent", { type: "touchEnd", touchPoints: [] });
+}
+
+export const ChipsMoveWithTaps: Story = {
+  name: "A chip is moved without dragging: a real click picks it up, a second on another chip puts it there, and a remove button still removes",
+  render: () => (
+    <Page>
+      <MultiSelect aria-label="Columns" options={countries} reorderable defaultValue={["ca", "us", "uy", "jp"]} />
+    </Page>
+  ),
+  play: async () => {
+    await realClick(itemOf("Canada"));
+    await waitFor(() => expect(itemOf("Canada")).toHaveAttribute("data-lifted", "true"));
+    // the ring is drawn, and the list is not opened by it
+    await expect(getComputedStyle(itemOf("Canada")).outlineStyle).toBe("solid");
+    await expect(body().queryByRole("listbox")).toBeNull();
+    await realClick(itemOf("Uruguay"));
+    await waitFor(() => expect(chips()).toEqual(["United States", "Uruguay", "Canada", "Japan"]));
+    await expect(document.querySelector("[data-lifted]")).toBeNull();
+    // picked up again and put down with Escape, from the typing field
+    await realClick(itemOf("Japan"));
+    await waitFor(() => expect(itemOf("Japan")).toHaveAttribute("data-lifted", "true"));
+    await userEvent.keyboard("{Escape}");
+    await waitFor(() => expect(document.querySelector("[data-lifted]")).toBeNull());
+    await expect(chips()).toEqual(["United States", "Uruguay", "Canada", "Japan"]);
+    // a press on a remove button is a removal, not a pick-up
+    await realClick(body().getByRole("button", { name: "Remove Uruguay" }));
+    await waitFor(() => expect(chips()).toEqual(["United States", "Canada", "Japan"]));
+    await expect(document.querySelector("[data-lifted]")).toBeNull();
+  },
+};
+
+export const ChipsMoveWithAFingerTap: Story = {
+  name: "With a real finger, a tap picks a chip up and a tap on another chip moves it there, and the page does not scroll",
+  render: () => (
+    <div style={{ minHeight: "80rem" }}>
+      <Page>
+        <MultiSelect aria-label="Columns" options={countries} reorderable defaultValue={["ca", "us", "uy"]} />
+      </Page>
+    </div>
+  ),
+  play: async () => {
+    const before = window.scrollY;
+    await realTap(itemOf("Canada"));
+    await waitFor(() => expect(itemOf("Canada")).toHaveAttribute("data-lifted", "true"));
+    await realTap(itemOf("Uruguay"));
+    await waitFor(() => expect(chips()).toEqual(["United States", "Uruguay", "Canada"]));
+    await expect(window.scrollY).toBe(before);
+    await expect(getComputedStyle(itemOf("Canada")).touchAction).toBe("none");
+  },
+};
