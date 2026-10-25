@@ -10,6 +10,7 @@ import type {
   DateRangePickerAlign,
   DateRangePickerCommitOn,
   DateRangePickerFormat,
+  DateRangePickerGranularity,
   DateRangePickerPresentation,
   DateRangePickerSide,
   DateRangePickerSize,
@@ -23,6 +24,15 @@ export const dateRangePickerSnippets = {
 
   formats: `{/* format: "mdy" (default) | "dmy" | "ymd" — the order each end's segments are written in. The value is "YYYY-MM-DD" either way. */}
 <DateRangePicker aria-label="Stay" format="dmy" separator="." defaultValue={["2026-10-05", "2026-10-09"]} />`,
+
+  byMonth: `{/* granularity="month": no day segments, a grid of months in the panel (the first month chosen is the start, the second the end),
+    and the value is ["YYYY-MM", "YYYY-MM"]. The length limits and numberOfMonths have no effect by month. */}
+<DateRangePicker
+  aria-label="Billing period"
+  granularity="month"
+  min="today"
+  presets={[{ label: "This year", value: (today) => [today.slice(0, 4) + "-01", today.slice(0, 4) + "-12"] }]}
+/>`,
 
   limits: `{/* minRangeDays and maxRangeDays count both ends. The calendar disables the end dates that would break them, and a typed end
     that does is flagged with a message that says why. rangeSpansUnavailable={false} stops a range at the first unavailable date. */}
@@ -113,6 +123,7 @@ export const dateRangePickerSnippets = {
 
 /** The Playground's live controls, as far as the snippet cares. */
 export interface DateRangePickerPlaygroundSnippetArgs {
+  granularity?: DateRangePickerGranularity;
   side?: DateRangePickerSide;
   align?: DateRangePickerAlign;
   presentation?: DateRangePickerPresentation;
@@ -139,7 +150,9 @@ export interface DateRangePickerPlaygroundSnippetArgs {
  * a small real pair. A pair needs an accessible name, so the `aria-label` is always written.
  */
 export function dateRangePickerPlaygroundSnippet(args: DateRangePickerPlaygroundSnippetArgs): string {
-  const attributes: string[] = ['aria-label="Stay"', 'defaultValue={["2026-10-05", "2026-10-09"]}'];
+  const byMonth = args.granularity === "month";
+  const attributes: string[] = ['aria-label="Stay"', byMonth ? 'defaultValue={["2026-10", "2026-10"]}' : 'defaultValue={["2026-10-05", "2026-10-09"]}'];
+  if (byMonth) attributes.push('granularity="month"');
   if (args.commitOn && args.commitOn !== "change") attributes.push(`commitOn="${args.commitOn}"`);
   if (args.format && args.format !== "mdy") attributes.push(`format="${args.format}"`);
   if (args.separator && args.separator !== "/") attributes.push(`separator="${args.separator}"`);

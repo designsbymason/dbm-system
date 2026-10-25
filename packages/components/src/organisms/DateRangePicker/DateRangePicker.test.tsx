@@ -11,7 +11,10 @@ import { laterOf, rangeProblem } from "./dateRangeValue";
 const startGroup = () => screen.getByRole("group", { name: "Start date" });
 const endGroup = () => screen.getByRole("group", { name: "End date" });
 const segment = (group: HTMLElement, name: string) => within(group).getByRole("spinbutton", { name }) as HTMLInputElement;
-const texts = (group: HTMLElement) => within(group).getAllByRole("spinbutton").map((input) => (input as HTMLInputElement).value);
+const texts = (group: HTMLElement) =>
+  within(group)
+    .getAllByRole("spinbutton")
+    .map((input) => (input as HTMLInputElement).value);
 const day = (date: string) => document.querySelector<HTMLButtonElement>(`button[data-date="${date}"]`) as HTMLButtonElement;
 const open = () => userEvent.click(screen.getByRole("button", { name: "Choose dates" }));
 const hiddenInputs = (container: HTMLElement) => [...container.querySelectorAll<HTMLInputElement>('input[type="date"]')];
@@ -53,7 +56,19 @@ describe("DateRangePicker structure", () => {
   });
 
   it("translates every word, and keeps the default for a label left undefined", () => {
-    render(<DateRangePicker aria-label="Stay" labels={{ start: "Arrive", end: "Leave", openPicker: undefined, clear: "Reset" }} clearable defaultValue={["2026-10-05", ""]} />);
+    render(
+      <DateRangePicker
+        aria-label="Stay"
+        labels={{
+          start: "Arrive",
+          end: "Leave",
+          openPicker: undefined,
+          clear: "Reset",
+        }}
+        clearable
+        defaultValue={["2026-10-05", ""]}
+      />,
+    );
     expect(screen.getByRole("group", { name: "Arrive" })).toBeInTheDocument();
     expect(screen.getByRole("group", { name: "Leave" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Choose dates" })).toBeInTheDocument();
@@ -173,7 +188,15 @@ describe("DateRangePicker validity", () => {
     ["long enough", { minRangeDays: 3 }, ["2026-10-05", "2026-10-08"], false],
     ["too long", { maxRangeDays: 3 }, ["2026-10-05", "2026-10-08"], true],
     ["short enough", { maxRangeDays: 3 }, ["2026-10-05", "2026-10-07"], false],
-    ["over an unavailable day", { rangeSpansUnavailable: false, isDateDisabled: (date: string) => date === "2026-10-07" }, ["2026-10-05", "2026-10-09"], true],
+    [
+      "over an unavailable day",
+      {
+        rangeSpansUnavailable: false,
+        isDateDisabled: (date: string) => date === "2026-10-07",
+      },
+      ["2026-10-05", "2026-10-09"],
+      true,
+    ],
     ["over one that is allowed", { isDateDisabled: (date: string) => date === "2026-10-07" }, ["2026-10-05", "2026-10-09"], false],
   ] as const)("flags an end that makes the range %s only when it does", (_name, props, value, flagged) => {
     render(<DateRangePicker aria-label="Stay" {...props} defaultValue={value} />);
@@ -184,13 +207,7 @@ describe("DateRangePicker validity", () => {
   it("says why in the end's form message, in the labels given", () => {
     const { container } = render(
       <form>
-        <DateRangePicker
-          aria-label="Stay"
-          name="stay"
-          maxRangeDays={2}
-          labels={{ tooLong: (days) => `Max ${days}` }}
-          defaultValue={["2026-10-05", "2026-10-09"]}
-        />
+        <DateRangePicker aria-label="Stay" name="stay" maxRangeDays={2} labels={{ tooLong: (days) => `Max ${days}` }} defaultValue={["2026-10-05", "2026-10-09"]} />
       </form>,
     );
     expect(hiddenInputs(container)[1]!.validationMessage).toBe("Max 2");
@@ -321,7 +338,9 @@ describe("DateRangePicker calendar", () => {
   it("opens a dialog with a range calendar, and focuses the chosen start", async () => {
     render(<DateRangePicker aria-label="Stay" defaultValue={["2026-10-05", "2026-10-09"]} />);
     await open();
-    const dialog = await screen.findByRole("dialog", { name: "Choose a date range" });
+    const dialog = await screen.findByRole("dialog", {
+      name: "Choose a date range",
+    });
     expect(within(dialog).getAllByRole("grid").length).toBeGreaterThan(0);
     await waitFor(() => expect(day("2026-10-05")).toHaveFocus());
     expect(screen.getByRole("button", { name: "Choose dates" })).toHaveAttribute("aria-expanded", "true");
@@ -440,7 +459,18 @@ describe("DateRangePicker calendar", () => {
   });
 
   it("passes calendarProps to the calendar", async () => {
-    render(<DateRangePicker aria-label="Stay" calendarProps={{ labels: { months: ["j", "f", "m", "a", "m", "j", "j", "a", "s", "o", "n", "d"] } }} defaultValue={["2026-10-05", ""]} defaultOpen />);
+    render(
+      <DateRangePicker
+        aria-label="Stay"
+        calendarProps={{
+          labels: {
+            months: ["j", "f", "m", "a", "m", "j", "j", "a", "s", "o", "n", "d"],
+          },
+        }}
+        defaultValue={["2026-10-05", ""]}
+        defaultOpen
+      />,
+    );
     const dialog = await screen.findByRole("dialog");
     expect(within(dialog).getByRole("grid").getAttribute("aria-label") ?? dialog.textContent).toMatch(/o/);
     expect(segment(startGroup(), "Month")).toHaveAttribute("aria-valuetext", "o");
@@ -465,7 +495,9 @@ describe("DateRangePicker calendar", () => {
   });
 
   it("shows why a day is unavailable in its name", async () => {
-    render(<DateRangePicker aria-label="Stay" unavailableReason={(date) => (date === "2026-10-11" ? "Fully booked" : null)} defaultValue={["2026-10-05", ""]} defaultOpen />);
+    render(
+      <DateRangePicker aria-label="Stay" unavailableReason={(date) => (date === "2026-10-11" ? "Fully booked" : null)} defaultValue={["2026-10-05", ""]} defaultOpen />,
+    );
     await screen.findByRole("dialog");
     expect(day("2026-10-11").getAttribute("aria-label") ?? day("2026-10-11").textContent).toContain("Fully booked");
   });
@@ -481,7 +513,10 @@ describe("DateRangePicker calendar", () => {
 describe("DateRangePicker presets", () => {
   const presets: NonNullable<DateRangePickerProps["presets"]> = [
     { label: "This week", value: ["2026-10-05", "2026-10-11"] },
-    { label: "Last 3 days", value: (today) => [today.replace(/\d\d$/, "08"), today] },
+    {
+      label: "Last 3 days",
+      value: (today) => [today.replace(/\d\d$/, "08"), today],
+    },
     { label: "Backwards", value: ["2026-10-11", "2026-10-05"] },
   ];
 
@@ -627,8 +662,201 @@ describe("DateRangePicker controlled by state", () => {
   });
 });
 
+describe("DateRangePicker by month", () => {
+  const monthButton = (name: RegExp) => within(screen.getByRole("dialog")).getByRole("button", { name });
+
+  it("has a month and a year segment on each end, and no day", () => {
+    render(<DateRangePicker aria-label="Period" granularity="month" defaultValue={["2026-03", "2026-05"]} />);
+    expect(
+      within(startGroup())
+        .getAllByRole("spinbutton")
+        .map((input) => input.getAttribute("aria-label")),
+    ).toEqual(["Month", "Year"]);
+    expect(texts(startGroup())).toEqual(["03", "2026"]);
+    expect(texts(endGroup())).toEqual(["05", "2026"]);
+  });
+
+  it("types a month and a year into each end, and reports YYYY-MM", async () => {
+    const onValueChange = vi.fn();
+    render(<DateRangePicker aria-label="Period" granularity="month" onValueChange={onValueChange} />);
+    await userEvent.click(segment(startGroup(), "Month"));
+    await userEvent.keyboard("032026");
+    await userEvent.click(segment(endGroup(), "Month"));
+    await userEvent.keyboard("052026");
+    expect(onValueChange).toHaveBeenLastCalledWith(["2026-03", "2026-05"]);
+  });
+
+  it("opens a grid of months, and chooses a start and then an end from it", async () => {
+    const onValueChange = vi.fn();
+    render(<DateRangePicker aria-label="Period" granularity="month" today="2026-10-01" onValueChange={onValueChange} />);
+    await open();
+    await screen.findByRole("dialog");
+    expect(document.querySelector("button[data-date]")).toBeNull();
+    await userEvent.click(monthButton(/^Mar/));
+    expect(onValueChange).toHaveBeenLastCalledWith(["2026-03", ""]);
+    expect(screen.getByRole("dialog")).toBeInTheDocument();
+    await userEvent.click(monthButton(/^Jun/));
+    expect(onValueChange).toHaveBeenLastCalledWith(["2026-03", "2026-06"]);
+    expect(texts(endGroup())).toEqual(["06", "2026"]);
+    await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
+  });
+
+  it("starts again when the second month is before the first", async () => {
+    const onValueChange = vi.fn();
+    render(<DateRangePicker aria-label="Period" granularity="month" today="2026-10-01" onValueChange={onValueChange} />);
+    await open();
+    await screen.findByRole("dialog");
+    await userEvent.click(monthButton(/^Jun/));
+    await userEvent.click(monthButton(/^Mar/));
+    expect(onValueChange).toHaveBeenLastCalledWith(["2026-03", ""]);
+    expect(screen.getByRole("dialog")).toBeInTheDocument();
+  });
+
+  it("flags an end before the start, and takes min and max as months", () => {
+    render(<DateRangePicker aria-label="Period" granularity="month" min="2026-04" defaultValue={["2026-06", "2026-05"]} />);
+    expect(segment(startGroup(), "Month")).not.toHaveAttribute("aria-invalid");
+    expect(segment(endGroup(), "Month")).toHaveAttribute("aria-invalid", "true");
+  });
+
+  it("takes presets as month pairs, and disables one that is not", async () => {
+    const onValueChange = vi.fn();
+    render(
+      <DateRangePicker
+        aria-label="Period"
+        granularity="month"
+        today="2026-10-01"
+        onValueChange={onValueChange}
+        presets={[
+          { label: "First quarter", value: ["2026-01", "2026-03"] },
+          {
+            label: "This year so far",
+            value: (today) => [`${today.slice(0, 4)}-01`, today.slice(0, 7)],
+          },
+          { label: "Backwards", value: ["2026-06", "2026-01"] },
+          { label: "A day", value: ["2026-01-01", "2026-03-01"] },
+        ]}
+        defaultOpen
+      />,
+    );
+    await screen.findByRole("dialog");
+    expect(screen.getByRole("button", { name: "Backwards" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "A day" })).toBeDisabled();
+    await userEvent.click(screen.getByRole("button", { name: "This year so far" }));
+    expect(onValueChange).toHaveBeenCalledWith(["2026-01", "2026-10"]);
+  });
+
+  it("says the months aloud when chosen, and warns that the day limits have no effect", async () => {
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+    render(<DateRangePicker aria-label="Period" granularity="month" maxRangeDays={5} defaultValue={["2026-03", ""]} defaultOpen today="2026-10-01" />);
+    await screen.findByRole("dialog");
+    expect(warn.mock.calls.some(([message]) => String(message).includes('granularity="month"'))).toBe(true);
+    await userEvent.click(monthButton(/^Jun/));
+    expect(await screen.findByText("Dates chosen: 03/2026 to 06/2026")).toBeInTheDocument();
+  });
+
+  it("submits two YYYY-MM values under name[]", () => {
+    const { container } = render(
+      <form>
+        <DateRangePicker aria-label="Period" granularity="month" name="period" defaultValue={["2026-03", "2026-05"]} />
+      </form>,
+    );
+    expect(new FormData(container.querySelector("form") as HTMLFormElement).getAll("period[]")).toEqual(["2026-03", "2026-05"]);
+  });
+});
+
+describe("DateRangePicker editing one end from the calendar", () => {
+  it("opened from the start of a whole range, a date chosen replaces the start and keeps the end", async () => {
+    const onValueChange = vi.fn();
+    render(<DateRangePicker aria-label="Stay" defaultValue={["2026-10-05", "2026-10-09"]} onValueChange={onValueChange} />);
+    await userEvent.click(segment(startGroup(), "Day"));
+    await userEvent.keyboard("{Alt>}{ArrowDown}{/Alt}");
+    await screen.findByRole("dialog");
+    await userEvent.click(day("2026-10-07"));
+    expect(onValueChange).toHaveBeenCalledTimes(1);
+    expect(onValueChange).toHaveBeenLastCalledWith(["2026-10-07", "2026-10-09"]);
+    await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
+    expect(segment(startGroup(), "Day")).toHaveFocus();
+  });
+
+  it("starts a new range when the date is after the end, or breaks a limit", async () => {
+    const onValueChange = vi.fn();
+    render(<DateRangePicker aria-label="Stay" maxRangeDays={4} defaultValue={["2026-10-05", "2026-10-09"]} onValueChange={onValueChange} />);
+    await userEvent.click(segment(startGroup(), "Day"));
+    await userEvent.keyboard("{Alt>}{ArrowDown}{/Alt}");
+    await screen.findByRole("dialog");
+    await userEvent.click(day("2026-10-12"));
+    expect(onValueChange).toHaveBeenLastCalledWith(["2026-10-12", ""]);
+    expect(screen.getByRole("dialog")).toBeInTheDocument();
+  });
+
+  it("opened from the button, a date chosen still starts a new range", async () => {
+    const onValueChange = vi.fn();
+    render(<DateRangePicker aria-label="Stay" defaultValue={["2026-10-05", "2026-10-09"]} onValueChange={onValueChange} />);
+    await open();
+    await screen.findByRole("dialog");
+    await userEvent.click(day("2026-10-07"));
+    expect(onValueChange).toHaveBeenLastCalledWith(["2026-10-07", ""]);
+  });
+});
+
+describe("DateRangePicker with only one end", () => {
+  it("refuses a submit with a start and no end, and with an end and no start, even when not required", () => {
+    const { container, rerender } = render(
+      <form>
+        <DateRangePicker aria-label="Stay" name="stay" defaultValue={["2026-10-05", ""]} />
+      </form>,
+    );
+    const [first, second] = hiddenInputs(container);
+    expect(first!.validity.valueMissing).toBe(false);
+    expect(second!.validity.valueMissing).toBe(true);
+    expect((container.querySelector("form") as HTMLFormElement).checkValidity()).toBe(false);
+    rerender(
+      <form>
+        <DateRangePicker aria-label="Stay" name="stay" value={["", "2026-10-09"]} />
+      </form>,
+    );
+    expect(hiddenInputs(container)[0]!.validity.valueMissing).toBe(true);
+  });
+
+  it("lets a completely empty range through when it is not required", () => {
+    const { container } = render(
+      <form>
+        <DateRangePicker aria-label="Stay" name="stay" />
+      </form>,
+    );
+    expect((container.querySelector("form") as HTMLFormElement).checkValidity()).toBe(true);
+  });
+
+  it("marks the end that is wanted as required to assistive technology", () => {
+    render(<DateRangePicker aria-label="Stay" defaultValue={["2026-10-05", ""]} />);
+    expect(segment(endGroup(), "Month")).toHaveAttribute("aria-required", "true");
+    expect(segment(startGroup(), "Month")).not.toHaveAttribute("aria-required");
+  });
+});
+
+describe("DateRangePicker clear with half-typed ends", () => {
+  it("shows the clear button for a half-typed end, and clears everything typed", async () => {
+    const onClear = vi.fn();
+    render(<DateRangePicker aria-label="Stay" onClear={onClear} />);
+    expect(screen.queryByRole("button", { name: "Clear dates" })).toBeNull();
+    await userEvent.click(segment(endGroup(), "Month"));
+    await userEvent.keyboard("1");
+    expect(await screen.findByRole("button", { name: "Clear dates" })).toBeInTheDocument();
+    await userEvent.click(screen.getByRole("button", { name: "Clear dates" }));
+    expect(texts(endGroup())).toEqual(["", "", ""]);
+    expect(onClear).toHaveBeenCalledTimes(1);
+    expect(segment(startGroup(), "Month")).toHaveFocus();
+    expect(screen.queryByRole("button", { name: "Clear dates" })).toBeNull();
+  });
+});
+
 describe("dateRangeValue", () => {
-  const rules = { minRangeDays: 1, maxRangeDays: 0, rangeSpansUnavailable: true, isBlocked: () => false };
+  const rules = {
+    minRangeDays: 1,
+    maxRangeDays: 0,
+    rangeSpansUnavailable: true,
+    isBlocked: () => false,
+  };
 
   it("judges length inclusive of both ends, and ignores an end before the start", () => {
     expect(rangeProblem("2026-10-05", "2026-10-05", rules)).toBeNull();
@@ -640,10 +868,23 @@ describe("dateRangeValue", () => {
   });
 
   it("finds an unavailable date between the ends only when the range may not run over one", () => {
-    const blocked = { ...rules, isBlocked: (date: string) => date === "2026-10-07" };
+    const blocked = {
+      ...rules,
+      isBlocked: (date: string) => date === "2026-10-07",
+    };
     expect(rangeProblem("2026-10-05", "2026-10-09", blocked)).toBeNull();
-    expect(rangeProblem("2026-10-05", "2026-10-09", { ...blocked, rangeSpansUnavailable: false })).toBe("spansUnavailable");
-    expect(rangeProblem("2026-10-05", "2026-10-06", { ...blocked, rangeSpansUnavailable: false })).toBeNull();
+    expect(
+      rangeProblem("2026-10-05", "2026-10-09", {
+        ...blocked,
+        rangeSpansUnavailable: false,
+      }),
+    ).toBe("spansUnavailable");
+    expect(
+      rangeProblem("2026-10-05", "2026-10-06", {
+        ...blocked,
+        rangeSpansUnavailable: false,
+      }),
+    ).toBeNull();
   });
 
   it("returns nothing for text that is not dates", () => {
@@ -657,6 +898,13 @@ describe("dateRangeValue", () => {
     expect(laterOf(undefined, "2026-10-09")).toBe("2026-10-09");
     expect(laterOf("2026-10-09", undefined)).toBe("2026-10-09");
     expect(laterOf(undefined, undefined)).toBeUndefined();
+  });
+});
+
+describe("DateRangePicker status region", () => {
+  it("has one region, its own, for the range chosen", () => {
+    render(<DateRangePicker aria-label="Stay" />);
+    expect(screen.getAllByRole("status")).toHaveLength(1);
   });
 });
 

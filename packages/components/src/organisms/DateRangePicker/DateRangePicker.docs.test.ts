@@ -6,9 +6,7 @@ import { describe, expect, it } from "vitest";
 // were missing from it. This holds them together. The panel is drawn with DatePicker's stylesheet, so both are read.
 // (The tests run from the package's own folder.)
 const folder = join(process.cwd(), "src/organisms");
-const css =
-  readFileSync(join(folder, "DateRangePicker/DateRangePicker.module.css"), "utf8") +
-  readFileSync(join(folder, "DatePicker/DatePicker.module.css"), "utf8");
+const css = readFileSync(join(folder, "DateRangePicker/DateRangePicker.module.css"), "utf8") + readFileSync(join(folder, "DatePicker/DatePicker.module.css"), "utf8");
 const mdx = readFileSync(join(folder, "DateRangePicker/DateRangePicker.mdx"), "utf8");
 
 /** `--dbm-icon-button-size-sm` -> `icon-button.size.sm`, the way a token row writes it (the category is a prefix). */

@@ -64,3 +64,7 @@ The §9 review (`/review-component DatePicker`) found twelve things; all are fix
 ## Icons at the input's own step, 2026-10-19 (visual change; stays Finalized)
 
 At explicit direction, following `Input`'s own change (see [Input](Input.md)): the icons this component draws in the field are the same step as its `size` (`xs` 12px … `xl` 32px) instead of one step below it. The calendar and clear buttons' compensating margins are recomputed, with `space.2` of padding at `lg` and `xl` (was `space.3`) so the larger button stays inside the field's padding; the field is no taller than a plain `Input` (measured). A real-browser check in `Input.checks.stories.tsx` measures the icons at every size.
+
+## Status region only with a calendar (2026-10-25, authorized fix; stays Finalized)
+
+At explicit direction, while building [DateRangePicker](DateRangePicker.md): the empty `role="status"` region the field announces a chosen date in is drawn only when `showPicker` is on. With the calendar off nothing can be announced there, and two of them were an empty region apiece inside every `DateRangePicker`. Additive to what anyone hears or sees (the only change is a DOM node that never had text, gone when `showPicker={false}`), so it stays Finalized under the three-question test; one unit test checks it.

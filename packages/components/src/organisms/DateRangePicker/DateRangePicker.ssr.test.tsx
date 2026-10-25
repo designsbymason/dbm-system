@@ -30,15 +30,66 @@ const variants: Array<[string, Partial<DateRangePickerProps>]> = [
   ["named and required", { name: "stay", required: true }],
   ["day first", { format: "dmy", separator: ".", defaultValue: stay }],
   ["right to left", { dir: "rtl", defaultOpen: true, format: "ymd" }],
-  ["with bounds and an unavailable rule", { min: "2026-10-01", max: "2026-10-31", isDateDisabled: (date) => date.endsWith("-10"), defaultValue: stay }],
-  ["with length limits", { minRangeDays: 2, maxRangeDays: 7, rangeSpansUnavailable: false, defaultValue: stay, defaultOpen: true }],
-  ["translated digits", { formatNumber: (n) => String.fromCodePoint(0x660 + n), defaultValue: stay }],
+  [
+    "with bounds and an unavailable rule",
+    {
+      min: "2026-10-01",
+      max: "2026-10-31",
+      isDateDisabled: (date) => date.endsWith("-10"),
+      defaultValue: stay,
+    },
+  ],
+  [
+    "with length limits",
+    {
+      minRangeDays: 2,
+      maxRangeDays: 7,
+      rangeSpansUnavailable: false,
+      defaultValue: stay,
+      defaultOpen: true,
+    },
+  ],
+  [
+    "translated digits",
+    {
+      formatNumber: (n) => String.fromCodePoint(0x660 + n),
+      defaultValue: stay,
+    },
+  ],
   ["today as a bound", { min: "today", max: "2030-01-01", defaultValue: stay }],
-  ["presets that ask for today", { defaultOpen: true, presets: [{ label: "Soon", value: (today: string) => [today, today] }] }],
-  ["a reason and a side", { defaultOpen: true, side: "top", align: "center", unavailableReason: (date: string) => (date.endsWith("-10") ? "Booked" : undefined) }],
+  [
+    "presets that ask for today",
+    {
+      defaultOpen: true,
+      presets: [{ label: "Soon", value: (today: string) => [today, today] }],
+    },
+  ],
+  [
+    "a reason and a side",
+    {
+      defaultOpen: true,
+      side: "top",
+      align: "center",
+      unavailableReason: (date: string) => (date.endsWith("-10") ? "Booked" : undefined),
+    },
+  ],
   ["full width", { defaultOpen: true, presentation: "full-width" }],
-  ["a responsive presentation and months", { defaultOpen: true, presentation: { base: "full-width", sm: "anchored" }, numberOfMonths: { base: 1, md: 3 } }],
-  ["a today and a calendar option", { today: "2026-10-16", defaultOpen: true, calendarProps: { showWeekNumbers: true } }],
+  [
+    "a responsive presentation and months",
+    {
+      defaultOpen: true,
+      presentation: { base: "full-width", sm: "anchored" },
+      numberOfMonths: { base: 1, md: 3 },
+    },
+  ],
+  [
+    "a today and a calendar option",
+    {
+      today: "2026-10-16",
+      defaultOpen: true,
+      calendarProps: { showWeekNumbers: true },
+    },
+  ],
 ];
 
 describe("DateRangePicker on the server and in hydration", () => {
@@ -60,7 +111,9 @@ describe("DateRangePicker on the server and in hydration", () => {
     const recoverable: unknown[] = [];
     const errors = vi.spyOn(console, "error").mockImplementation(() => undefined);
     await act(async () => {
-      hydrateRoot(container, markup, { onRecoverableError: (error) => recoverable.push(error) });
+      hydrateRoot(container, markup, {
+        onRecoverableError: (error) => recoverable.push(error),
+      });
     });
     expect(recoverable).toEqual([]);
     expect(errors).not.toHaveBeenCalled();

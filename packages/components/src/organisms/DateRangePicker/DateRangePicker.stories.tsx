@@ -27,10 +27,16 @@ const meta: Meta<typeof DateRangePicker> = {
         "Shows the error state on both ends: a danger-coloured border and aria-invalid. A date outside min/max, one ruled out by isDateDisabled, an end that breaks the range's limits and three numbers that are not a real date show it on their own end without this.",
       table: { defaultValue: { summary: "false" } },
     },
+    granularity: {
+      control: "select",
+      options: ["day", "month"],
+      description:
+        'What the pair chooses: "day", whole dates as "YYYY-MM-DD", or "month", only months of a year as "YYYY-MM", with no day segments and a grid of months in the panel (the first month chosen is the start, the second the end). Every date prop is then written as "YYYY-MM". The range limits, numberOfMonths and calendarProps have no effect by month, and isDateDisabled and unavailableReason only flag a month in the field.',
+      table: { defaultValue: { summary: '"day"' } },
+    },
     value: {
       control: false,
-      description:
-        'The range, as ["YYYY-MM-DD", "YYYY-MM-DD"]. "" stands for an end that is not chosen, so ["2026-10-05", ""] is a range in progress.',
+      description: 'The range, as ["YYYY-MM-DD", "YYYY-MM-DD"]. "" stands for an end that is not chosen, so ["2026-10-05", ""] is a range in progress.',
     },
     defaultValue: {
       control: false,
@@ -63,8 +69,7 @@ const meta: Meta<typeof DateRangePicker> = {
     },
     min: {
       control: "text",
-      description:
-        'The earliest allowed date for either end, as "YYYY-MM-DD" or the word "today". The end can never be before the start, whatever this says.',
+      description: 'The earliest allowed date for either end, as "YYYY-MM-DD" or the word "today". The end can never be before the start, whatever this says.',
     },
     max: {
       control: "text",
@@ -93,19 +98,17 @@ const meta: Meta<typeof DateRangePicker> = {
     },
     rangeSpansUnavailable: {
       control: "boolean",
-      description:
-        "Whether a range may run over an unavailable date. With false, the calendar stops the end at the first one and a typed end past one is flagged.",
+      description: "Whether a range may run over an unavailable date. With false, the calendar stops the end at the first one and a typed end past one is flagged.",
       table: { defaultValue: { summary: "true" } },
     },
     presets: {
       control: false,
       description:
-        "Quick choices shown as buttons under the calendar (\"Last 7 days\"): each is { label, value }, where value is a [start, end] pair or a function of today's date, and picks a whole range and closes the calendar. A preset outside min/max, unavailable or breaking a limit is disabled.",
+        'Quick choices shown as buttons under the calendar ("Last 7 days"): each is { label, value }, where value is a [start, end] pair or a function of today\'s date, and picks a whole range and closes the calendar. A preset outside min/max, unavailable or breaking a limit is disabled.',
     },
     numberOfMonths: {
       control: false,
-      description:
-        "How many months are on show side by side in the calendar, 1 to 4. Takes a breakpoint map. The default is one month on a phone and two from sm up.",
+      description: "How many months are on show side by side in the calendar, 1 to 4. Takes a breakpoint map. The default is one month on a phone and two from sm up.",
       table: { defaultValue: { summary: "{ base: 1, sm: 2 }" } },
     },
     weekStartsOn: {
@@ -151,8 +154,7 @@ const meta: Meta<typeof DateRangePicker> = {
     },
     showPicker: {
       control: "boolean",
-      description:
-        "Shows the button that opens the calendar. Turn it off for a pair that is only ever typed into. Alt+ArrowDown in a segment opens it too.",
+      description: "Shows the button that opens the calendar. Turn it off for a pair that is only ever typed into. Alt+ArrowDown in a segment opens it too.",
       table: { defaultValue: { summary: "true" } },
     },
     open: {
@@ -200,8 +202,7 @@ const meta: Meta<typeof DateRangePicker> = {
     },
     readOnly: {
       control: "boolean",
-      description:
-        "Makes the pair read-only: the segments can be focused and read but not changed, and the calendar and the clear button are hidden.",
+      description: "Makes the pair read-only: the segments can be focused and read but not changed, and the calendar and the clear button are hidden.",
       table: { defaultValue: { summary: "false" } },
     },
     autoFocus: {
@@ -213,7 +214,7 @@ const meta: Meta<typeof DateRangePicker> = {
     name: {
       control: "text",
       description:
-        'The name a surrounding <form> submits the range under: two values under name[], start then end, through hidden date inputs that also hold the form validation.',
+        "The name a surrounding <form> submits the range under: two values under name[], start then end, through hidden date inputs that also hold the form validation.",
     },
     form: {
       control: false,
@@ -252,8 +253,14 @@ const meta: Meta<typeof DateRangePicker> = {
       description:
         "Standard DOM id, applied to the start's first segment — which is what a FieldLabel's htmlFor should point at, so clicking the label focuses the field. A FormField already does this.",
     },
-    className: { control: false, description: "Additional CSS classes for customization." },
-    style: { control: false, description: "Inline styles, merged onto the component's own internal styles." },
+    className: {
+      control: false,
+      description: "Additional CSS classes for customization.",
+    },
+    style: {
+      control: false,
+      description: "Inline styles, merged onto the component's own internal styles.",
+    },
     "data-testid": {
       control: false,
       description:
@@ -265,6 +272,7 @@ const meta: Meta<typeof DateRangePicker> = {
   args: {
     size: "md",
     hasError: false,
+    granularity: "day",
     commitOn: "change",
     format: "mdy",
     separator: "/",
@@ -295,6 +303,7 @@ type Story = StoryObj<typeof DateRangePicker>;
 
 // The fixed-render stories below show one thing each; every control that render ignores is switched off.
 const noControls = {
+  granularity: { control: false },
   value: { control: false },
   defaultValue: { control: false },
   onValueChange: { control: false },
@@ -332,7 +341,12 @@ const noControls = {
   "aria-label": { control: false },
 } as const;
 
-const stack = { display: "flex", flexDirection: "column", gap: "var(--dbm-space-4)", alignItems: "flex-start" } as const;
+const stack = {
+  display: "flex",
+  flexDirection: "column",
+  gap: "var(--dbm-space-4)",
+  alignItems: "flex-start",
+} as const;
 
 const stay: DateRangeValue = ["2026-10-05", "2026-10-09"];
 
@@ -354,7 +368,14 @@ export const Playground: Story = {
         "The most days a range may span, counting both ends. 0 here means no limit (the prop is left out). In the calendar the dates that would make the range longer are unavailable once the start is chosen.",
     },
   },
-  render: (args) => <DateRangePicker {...args} maxRangeDays={args.maxRangeDays || undefined} defaultValue={stay} />,
+  // By month the pair takes "YYYY-MM": the demo range is cut to its months when the control is switched over.
+  render: (args) => (
+    <DateRangePicker
+      {...args}
+      maxRangeDays={args.maxRangeDays || undefined}
+      defaultValue={args.granularity === "month" ? [stay[0].slice(0, 7), stay[1].slice(0, 7)] : stay}
+    />
+  ),
   parameters: {
     docs: {
       source: {
@@ -406,8 +427,8 @@ export const Limits: Story = {
         isDateDisabled={(date) => new Date(date + "T00:00:00Z").getUTCDay() % 6 === 0}
       />
       <Text size="sm" color="secondary">
-        A booking of two to fourteen days that cannot run over a weekend: choose a start in the calendar and the dates that would break a
-        limit are disabled; type an end that does and the field says why.
+        A booking of two to fourteen days that cannot run over a weekend: choose a start in the calendar and the dates that would break a limit are disabled; type an end
+        that does and the field says why.
       </Text>
     </div>
   ),
@@ -424,8 +445,7 @@ export const UnavailableReasons: Story = {
       <div style={stack}>
         <DateRangePicker aria-label="Booking" unavailableReason={(date) => (date === booked ? "Fully booked" : undefined)} />
         <Text size="sm" color="secondary">
-          Open the calendar and move to three days from today: the reason is read as part of the day&apos;s name and shown under the
-          calendar.
+          Open the calendar and move to three days from today: the reason is read as part of the day&apos;s name and shown under the calendar.
         </Text>
       </div>
     );
@@ -440,11 +460,42 @@ export const Presets: Story = {
     <DateRangePicker
       aria-label="Report period"
       presets={[
-        { label: "Last 7 days", value: (today) => [shiftDays(today, -6), today] },
-        { label: "Last 30 days", value: (today) => [shiftDays(today, -29), today] },
-        { label: "This year", value: (today) => [`${today.slice(0, 4)}-01-01`, `${today.slice(0, 4)}-12-31`] },
+        {
+          label: "Last 7 days",
+          value: (today) => [shiftDays(today, -6), today],
+        },
+        {
+          label: "Last 30 days",
+          value: (today) => [shiftDays(today, -29), today],
+        },
+        {
+          label: "This year",
+          value: (today) => [`${today.slice(0, 4)}-01-01`, `${today.slice(0, 4)}-12-31`],
+        },
       ]}
     />
+  ),
+};
+
+export const ByMonth: Story = {
+  name: "Months only",
+  parameters: { docs: { source: { code: dateRangePickerSnippets.byMonth } } },
+  argTypes: { ...noControls },
+  render: () => (
+    <div style={stack}>
+      <DateRangePicker granularity="month" aria-label="Report period" defaultValue={["2026-03", "2026-06"]} />
+      <DateRangePicker
+        granularity="month"
+        format="ymd"
+        separator="-"
+        aria-label="Billing period"
+        min="today"
+        presets={[
+          { label: "This quarter", value: (today) => [today.slice(0, 7), today.slice(0, 7)] },
+          { label: "This year", value: (today) => [`${today.slice(0, 4)}-01`, `${today.slice(0, 4)}-12`] },
+        ]}
+      />
+    </div>
   ),
 };
 
@@ -561,14 +612,18 @@ export const Clearable: Story = {
 
 export const WithoutPicker: Story = {
   name: "Without the calendar",
-  parameters: { docs: { source: { code: dateRangePickerSnippets.withoutPicker } } },
+  parameters: {
+    docs: { source: { code: dateRangePickerSnippets.withoutPicker } },
+  },
   argTypes: { ...noControls },
   render: () => <DateRangePicker showPicker={false} aria-label="Stay" defaultValue={stay} />,
 };
 
 export const Controlled: Story = {
   name: "Controlled value",
-  parameters: { docs: { source: { code: dateRangePickerSnippets.controlled } } },
+  parameters: {
+    docs: { source: { code: dateRangePickerSnippets.controlled } },
+  },
   argTypes: { ...noControls },
   render: function ControlledStory() {
     const [range, setRange] = useState<DateRangeValue>(stay);
@@ -596,7 +651,9 @@ export const InFormField: Story = {
 
 export const Translated: Story = {
   name: "Translated, with its own digits",
-  parameters: { docs: { source: { code: dateRangePickerSnippets.translated } } },
+  parameters: {
+    docs: { source: { code: dateRangePickerSnippets.translated } },
+  },
   argTypes: { ...noControls },
   render: () => (
     <div dir="rtl">

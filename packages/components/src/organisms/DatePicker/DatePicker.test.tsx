@@ -788,6 +788,15 @@ describe("DatePicker form validation", () => {
   });
 });
 
+describe("DatePicker status region", () => {
+  it("draws the region a chosen date is announced in only when it has a calendar", () => {
+    const { rerender } = render(<DatePicker aria-label="d" />);
+    expect(screen.getAllByRole("status")).toHaveLength(1);
+    rerender(<DatePicker aria-label="d" showPicker={false} />);
+    expect(screen.queryByRole("status")).toBeNull();
+  });
+});
+
 describe("DatePicker accessibility", () => {
   it("has no violations closed or open", async () => {
     const { container } = render(<DatePicker aria-label="d" defaultValue="2026-10-03" clearable />);

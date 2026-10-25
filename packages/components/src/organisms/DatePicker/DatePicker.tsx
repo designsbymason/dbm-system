@@ -558,8 +558,8 @@ export const DatePicker = forwardRef<HTMLDivElement, DatePickerProps>(
           </button>
         )}
         {/* A date chosen in the calendar is said here: focus goes back to a button whose name doesn't change. The region is in
-            the page before its text does, so it is announced as a change. */}
-        <VisuallyHidden role="status">{announcement}</VisuallyHidden>
+            the page before its text does, so it is announced as a change. Without a calendar there is nothing to say, so no region. */}
+        {showPicker && <VisuallyHidden role="status">{announcement}</VisuallyHidden>}
         {/* The value a form submits and validates. A hidden input is never validated, so this is a date input that is only
             hidden from sight (and from assistive tech, which has the segments): `required` and the custom message above
             give a surrounding form its native checks. Arriving on it, which a browser does to show its message, sends

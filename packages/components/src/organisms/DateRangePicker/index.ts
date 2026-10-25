@@ -4,6 +4,7 @@ export type {
   DateRangePickerCalendarProps,
   DateRangePickerCommitOn,
   DateRangePickerFormat,
+  DateRangePickerGranularity,
   DateRangePickerLabels,
   DateRangePickerPresentation,
   DateRangePickerProps,

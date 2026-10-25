@@ -1,14 +1,7 @@
 import type { Responsive } from "@dbm-system/utils";
 import type { ComponentPropsWithoutRef, CSSProperties, FocusEventHandler } from "react";
 import type { CalendarRangeProps, CalendarWeekStart } from "../../molecules/Calendar";
-import type {
-  DatePickerAlign,
-  DatePickerCommitOn,
-  DatePickerFormat,
-  DatePickerPresentation,
-  DatePickerSide,
-  DatePickerSize,
-} from "../DatePicker";
+import type { DatePickerAlign, DatePickerCommitOn, DatePickerFormat, DatePickerGranularity, DatePickerPresentation, DatePickerSide, DatePickerSize } from "../DatePicker";
 
 export type DateRangePickerSize = DatePickerSize;
 /** The order the day, month and year segments of each end are written in. */
@@ -21,6 +14,9 @@ export type DateRangePickerPresentation = DatePickerPresentation;
 export type DateRangePickerSide = DatePickerSide;
 /** How the calendar lines up with the field along the side it opens on. */
 export type DateRangePickerAlign = DatePickerAlign;
+
+/** What the pair chooses: whole dates (`"YYYY-MM-DD"`), or only months of a year (`"YYYY-MM"`). */
+export type DateRangePickerGranularity = DatePickerGranularity;
 
 /** A range as `[start, end]`, each a `"YYYY-MM-DD"` string, `""` for an end that is not chosen. */
 export type DateRangeValue = readonly [start: string, end: string];
@@ -109,8 +105,7 @@ export type DateRangePickerCalendarProps = Omit<
   | "id"
 >;
 
-export interface DateRangePickerProps
-  extends Omit<ComponentPropsWithoutRef<"div">, "defaultValue" | "onChange" | "children" | "role" | "onFocus" | "onBlur" | "dir"> {
+export interface DateRangePickerProps extends Omit<ComponentPropsWithoutRef<"div">, "defaultValue" | "onChange" | "children" | "role" | "onFocus" | "onBlur" | "dir"> {
   /**
    * Overall size, on the shared scale; both ends match `Input`'s height at the same step.
    * @default 'md'
@@ -124,12 +119,22 @@ export interface DateRangePickerProps
    */
   hasError?: boolean;
   /**
-   * The range, as `["YYYY-MM-DD", "YYYY-MM-DD"]`. `""` stands for an end that is not chosen, so `["2026-10-05", ""]`
+   * What the pair chooses: `"day"`, whole dates as `"YYYY-MM-DD"`, or `"month"`, only months of a year as `"YYYY-MM"`,
+   * with no day segments and a grid of months in the panel in place of the calendar (the first month chosen is the start,
+   * the second the end). Every date prop (`value`, `min`, `max`, `presets`, `isDateDisabled`) is then written, or given, as
+   * `"YYYY-MM"`. The range limits (`minRangeDays`, `maxRangeDays`, `rangeSpansUnavailable`), `numberOfMonths` and
+   * `calendarProps` have no effect by month, and `isDateDisabled` and `unavailableReason` only flag a month in the field,
+   * since the grid can only disable what `min` and `max` rule out.
+   * @default 'day'
+   */
+  granularity?: DateRangePickerGranularity;
+  /**
+   * The range, as `["YYYY-MM-DD", "YYYY-MM-DD"]` (`["YYYY-MM", "YYYY-MM"]` by month). `""` stands for an end that is not chosen, so `["2026-10-05", ""]`
    * is a range in progress. While an end is only partly filled, or holds numbers that are not a real date, it is `""`.
    */
   value?: DateRangeValue;
   /**
-   * The initial range for uncontrolled usage. Ignored once `value` is provided.
+   * The initial range for uncontrolled usage, written as `value` is. Ignored once `value` is provided.
    * @default ["", ""]
    */
   defaultValue?: DateRangeValue;

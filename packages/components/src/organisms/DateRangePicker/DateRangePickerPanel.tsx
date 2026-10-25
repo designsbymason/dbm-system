@@ -1,9 +1,13 @@
+import { cx } from "@dbm-system/utils";
 import { useState } from "react";
 import { Button } from "../../atoms/Button";
-import { formatDate } from "../../internal/date/dateValue";
+import { formatDate, parseMonth } from "../../internal/date/dateValue";
 import { Calendar } from "../../molecules/Calendar";
 import type { CalendarDayInfo, CalendarLabels, CalendarSize } from "../../molecules/Calendar";
 import datePickerStyles from "../DatePicker/DatePicker.module.css";
+import { CalendarPicker } from "../../molecules/Calendar/CalendarPicker";
+import { utcMonth } from "../../molecules/Calendar/calendarHelpers";
+import calendarStyles from "../../molecules/Calendar/Calendar.module.css";
 import { reasonOf } from "../DatePicker/datePickerReason";
 import type { DateRangePickerCalendarProps, DateRangeValue } from "./DateRangePicker.types";
 
@@ -14,7 +18,22 @@ export interface RangePresetChoice {
   allowed: boolean;
 }
 
+// The calendar's own size classes, for the grid of months drawn in the calendar's place when only months are chosen.
+const calendarSizeClass: Record<CalendarSize, string | undefined> = {
+  xs: calendarStyles.sizeXs,
+  sm: calendarStyles.sizeSm,
+  md: calendarStyles.sizeMd,
+  lg: calendarStyles.sizeLg,
+  xl: calendarStyles.sizeXl,
+};
+
 export interface DateRangePickerPanelProps {
+  /** Choosing months, not days: the calendar's grid of months is drawn instead of its days. */
+  byMonth: boolean;
+  /** A month has been chosen in the grid of months. */
+  onChooseMonth: (year: number, month: number) => void;
+  /** Today as `"YYYY-MM-DD"`, once it is known. */
+  today: string | undefined;
   /** The range the calendar shows: `[start, ""]` while the end is the next choice. */
   value: DateRangeValue;
   minDate: string | undefined;
@@ -47,6 +66,9 @@ export interface DateRangePickerPanelProps {
  * time the panel opens.
  */
 export function DateRangePickerPanel({
+  byMonth,
+  onChooseMonth,
+  today,
   value,
   minDate,
   maxDate,
@@ -85,28 +107,51 @@ export function DateRangePickerPanel({
     return reason ? `${base}, ${reason}` : base;
   };
 
+  // The month the grid opens on: the end if there is one, else the start, else this month.
+  const shown = parseMonth(value[1].slice(0, 7)) ?? parseMonth(value[0].slice(0, 7)) ?? parseMonth((today ?? "").slice(0, 7)) ?? parseMonth(utcMonth());
+
   return (
     <div className={datePickerStyles.panelBody} onFocusCapture={(event) => hintFrom(event.target)} onMouseOverCapture={(event) => hintFrom(event.target)}>
-      <Calendar
-        {...calendarProps}
-        mode="range"
-        size={calendarSize}
-        value={value}
-        onValueChange={onChoose}
-        min={minDate}
-        max={maxDate}
-        isDateDisabled={isBlocked}
-        weekStartsOn={weekStartsOn}
-        today={todayProp}
-        dir={dir}
-        formatNumber={formatNumber}
-        numberOfMonths={numberOfMonths}
-        minRangeDays={minRangeDays}
-        maxRangeDays={maxRangeDays}
-        rangeSpansUnavailable={rangeSpansUnavailable}
-        labels={{ ...calendarProps?.labels, day: dayName }}
-      />
-      {unavailableReason && (
+      {byMonth ? (
+        <div className={cx(calendarStyles.root, calendarSizeClass[calendarSize])}>
+          <CalendarPicker
+            shown={shown ?? { year: 1, month: 1 }}
+            today={today}
+            min={minDate ? `${minDate}-01` : ""}
+            max={maxDate ? `${maxDate}-01` : ""}
+            size={calendarSize}
+            rounded={false}
+            disabled={false}
+            dir={dir ?? "ltr"}
+            labels={calendarLabels}
+            formatNumber={formatNumber}
+            say={() => undefined}
+            onChoose={onChooseMonth}
+            onClose={() => undefined}
+          />
+        </div>
+      ) : (
+        <Calendar
+          {...calendarProps}
+          mode="range"
+          size={calendarSize}
+          value={value}
+          onValueChange={onChoose}
+          min={minDate}
+          max={maxDate}
+          isDateDisabled={isBlocked}
+          weekStartsOn={weekStartsOn}
+          today={todayProp}
+          dir={dir}
+          formatNumber={formatNumber}
+          numberOfMonths={numberOfMonths}
+          minRangeDays={minRangeDays}
+          maxRangeDays={maxRangeDays}
+          rangeSpansUnavailable={rangeSpansUnavailable}
+          labels={{ ...calendarProps?.labels, day: dayName }}
+        />
+      )}
+      {unavailableReason && !byMonth && (
         <div aria-hidden="true" className={datePickerStyles.hint}>
           {hint}
         </div>

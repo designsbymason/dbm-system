@@ -11,6 +11,7 @@ import * as DateRangePickerStories from "./DateRangePicker.stories";
 export const propOrder = [
   "size",
   "hasError",
+  "granularity",
   "value",
   "defaultValue",
   "onValueChange",
@@ -106,6 +107,10 @@ import { DateRangePicker } from "@dbm-system/components";
 
 <Canvas of={DateRangePickerStories.Formats} />
 
+### Months only
+
+<Canvas of={DateRangePickerStories.ByMonth} />
+
 ### Length limits and unavailable days
 
 <Canvas of={DateRangePickerStories.Limits} />
@@ -199,6 +204,8 @@ import { DateRangePicker } from "@dbm-system/components";
   date the pair flags are real form constraints, so the browser blocks the submit.
 - Don't convert a value through `new Date("2026-10-03")` and then read it in local time: that string is read as UTC
   midnight and can show the day before. Split the string, or use a UTC formatter.
+- Don't mix the two kinds of value: `granularity` decides whether the pair takes whole dates or months, and a value of the
+  other kind reads as empty.
 - Don't use it for a date and a time; put a `DatePicker` and a `TimePicker` side by side.
 
 </Callout>
@@ -214,16 +221,23 @@ import { DateRangePicker } from "@dbm-system/components";
   number and moves on, one that can waits for a second, and the year takes four. A separator key finishes the segment.
 - The end can never be before the start: an end that is is reported as typed and flagged on that end. The start is not
   flagged for being after the end, since it would flag whenever the end is half typed.
-- The calendar opened from the button, or from a segment of the start with `Alt`+`ArrowDown`, starts a new range with the
-  first date you choose. Opened from a segment of the end, it chooses the end and leaves the start where it is; closing it
+- The calendar opened from the button, or from a start that has no end yet, starts a new range with the first date you
+  choose (or ends the one in progress). Opened with `Alt`+`ArrowDown` from a segment of the end, it chooses the end and
+  leaves the start where it is; opened the same way from the start of a whole range, it chooses the start and keeps the
+  end, unless the date is after the end or would break a length limit, in which case it starts a new range. Closing it
   without a choice changes nothing.
+- A range needs both ends: once one end holds a date, the other is required in a form whether or not the pair is, so a
+  half range cannot be submitted. An empty pair can be, unless `required`.
+- Use `granularity="month"` for a period of whole months (a billing period, a report from March to June): each end is a
+  month and a year, the panel is a grid of months, and the value is `["YYYY-MM", "YYYY-MM"]`. The length limits,
+  `numberOfMonths` and `calendarProps` have no effect by month, and the grid does not show the months between the ends.
 - A range chosen is said aloud ("Dates chosen: 10/05/2026 to 10/09/2026") through a status region that is in the page from
   the start.
 - `onFocus` and `onBlur` are for the pair as a whole: they fire once on arriving and once on leaving, not as focus moves
   between the ends, the buttons and the calendar.
 - Use `container` when the panel would be clipped or must live somewhere else (an element inside a dialog or a shadow
   root, or a box that scopes a demo).
-- The clear button shows while either end holds a complete date; a half-typed end is cleared with `Backspace`.
+- The clear button shows while either end shows anything, a half-typed segment included, and empties both ends.
 - A preset's function is asked for its range only once today is known, so a server-rendered preset button starts disabled
   and is enabled after the first render in the browser.
 - In a table row or a toolbar, drop to `size="sm"` or `"xs"`; each end is as tall as an `Input` at the same step. The pair

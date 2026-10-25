@@ -1,6 +1,6 @@
 # 0130 — `DateRangePicker`'s calendar chooses the end when it is opened from the end, shows the start alone while the end is next, and holds calendar picks by `commitOn`, over restarting the range on every opening or holding nothing
 
-**Status:** Accepted · **Date:** 2026-10-25
+**Status:** Accepted · **Date:** 2026-10-25 · "opened from the start, the first date chosen starts a new range" is superseded by [ADR-0131](./0131-daterangepicker-chooses-months-edits-the-start-from-the-start-requires-both-ends-and-clears-by-remounting-over-a-separate-month-picker-or-restarting.md); the rest stands
 
 ## Context
 `Calendar`'s range model has no notion of an end to edit: the first choice is the start, the second the end, a third starts again, and an earlier choice replaces the start. Opened over a whole range, a press on a date would always restart it, so correcting only the end meant retyping it. And each choice in the calendar is a change of value that `commitOn` is meant to be able to hold ([ADR-0031](./0031-timerangepicker-keeps-a-pair-of-times-of-day-and-judges-length-through-the-ends-own-rules.md): picks follow `commitOn`).

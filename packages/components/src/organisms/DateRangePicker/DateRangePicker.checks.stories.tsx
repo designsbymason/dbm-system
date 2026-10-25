@@ -48,8 +48,20 @@ async function realClick(element: Element) {
   const x = (frame?.left ?? 0) + (rect.left + rect.width / 2) * scale;
   const y = (frame?.top ?? 0) + (rect.top + rect.height / 2) * scale;
   await send("Input.dispatchMouseEvent", { type: "mouseMoved", x, y });
-  await send("Input.dispatchMouseEvent", { type: "mousePressed", x, y, button: "left", clickCount: 1 });
-  await send("Input.dispatchMouseEvent", { type: "mouseReleased", x, y, button: "left", clickCount: 1 });
+  await send("Input.dispatchMouseEvent", {
+    type: "mousePressed",
+    x,
+    y,
+    button: "left",
+    clickCount: 1,
+  });
+  await send("Input.dispatchMouseEvent", {
+    type: "mouseReleased",
+    x,
+    y,
+    button: "left",
+    clickCount: 1,
+  });
 }
 
 const waitForDay = (date: string) =>
@@ -61,7 +73,16 @@ const waitForDay = (date: string) =>
 
 function Page({ children }: { children: React.ReactNode }) {
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: "var(--dbm-space-4)", padding: "var(--dbm-space-6)", maxWidth: "60rem", minHeight: "34rem" }}>
+    <div
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        gap: "var(--dbm-space-4)",
+        padding: "var(--dbm-space-6)",
+        maxWidth: "60rem",
+        minHeight: "34rem",
+      }}
+    >
       <Button variant="secondary" data-testid="aside">
         Elsewhere
       </Button>
@@ -79,7 +100,9 @@ export const CalendarSitsByThePair: Story = {
   ),
   play: async () => {
     await userEvent.click(openButton());
-    const dialog = await body().findByRole("dialog", { name: "Choose a date range" });
+    const dialog = await body().findByRole("dialog", {
+      name: "Choose a date range",
+    });
     await settled(dialog);
     const f = pair().getBoundingClientRect();
     const p = dialog.getBoundingClientRect();
@@ -200,7 +223,15 @@ export const SameHeightAsInputAtEverySize: Story = {
   render: () => (
     <Page>
       {(["xs", "sm", "md", "lg", "xl"] as const).map((size) => (
-        <div key={size} data-size={size} style={{ display: "flex", gap: "var(--dbm-space-2)", alignItems: "flex-start" }}>
+        <div
+          key={size}
+          data-size={size}
+          style={{
+            display: "flex",
+            gap: "var(--dbm-space-2)",
+            alignItems: "flex-start",
+          }}
+        >
           <DateRangePicker size={size} aria-label="Stay" defaultValue={["2026-10-05", "2026-10-09"]} today={TODAY} />
           <Input size={size} aria-label={`Name, ${size}`} defaultValue="Jane" />
         </div>
@@ -214,7 +245,9 @@ export const SameHeightAsInputAtEverySize: Story = {
       const input = row.querySelector("input[aria-label^='Name']") as HTMLElement;
       // the Input's box is its wrapper; the bare input inside it has no border
       const box = (input.closest("[class*='root'], [class*='wrapper']") ?? input.parentElement) as HTMLElement;
-      for (const end of within(row).getAllByRole("group", { name: /^(Start|End) date$/ })) {
+      for (const end of within(row).getAllByRole("group", {
+        name: /^(Start|End) date$/,
+      })) {
         await expect(Math.abs(end.getBoundingClientRect().height - box.getBoundingClientRect().height)).toBeLessThanOrEqual(1);
       }
     }
@@ -230,7 +263,9 @@ export const MonthsFollowTheWidth: Story = {
   ),
   play: async () => {
     await userEvent.click(openButton());
-    const dialog = await body().findByRole("dialog", { name: "Choose a date range" });
+    const dialog = await body().findByRole("dialog", {
+      name: "Choose a date range",
+    });
     await settled(dialog);
     const wide = window.matchMedia("(min-width: 640px)").matches;
     await expect(within(dialog).getAllByRole("grid")).toHaveLength(wide ? 2 : 1);
@@ -252,7 +287,9 @@ export const OnAPhone: Story = {
   play: async () => {
     await expect(window.innerWidth).toBeLessThan(640);
     await userEvent.click(openButton());
-    const dialog = await body().findByRole("dialog", { name: "Choose a date range" });
+    const dialog = await body().findByRole("dialog", {
+      name: "Choose a date range",
+    });
     await settled(dialog);
     await expect(within(dialog).getAllByRole("grid")).toHaveLength(1);
     const p = dialog.getBoundingClientRect();
@@ -282,7 +319,9 @@ export const ReasonLineDoesNotResizeThePanel: Story = {
   ),
   play: async () => {
     await userEvent.click(openButton());
-    const dialog = await body().findByRole("dialog", { name: "Choose a date range" });
+    const dialog = await body().findByRole("dialog", {
+      name: "Choose a date range",
+    });
     await settled(dialog);
     const before = dialog.getBoundingClientRect().height;
     (await waitForDay("2026-10-20")).focus();
@@ -386,7 +425,9 @@ export const PresetsAreBigEnough: Story = {
   ),
   play: async () => {
     await realClick(openButton());
-    const dialog = await body().findByRole("dialog", { name: "Choose a date range" });
+    const dialog = await body().findByRole("dialog", {
+      name: "Choose a date range",
+    });
     await settled(dialog);
     const group = within(dialog).getByRole("group", { name: "Quick choices" });
     for (const button of within(group).getAllByRole("button")) {
@@ -398,5 +439,110 @@ export const PresetsAreBigEnough: Story = {
     await waitFor(() => expect(segment(endGroup(), "Day")).toHaveValue("14"));
     await expect(segment(startGroup(), "Day")).toHaveValue("08");
     await waitFor(() => expect(body().queryByRole("dialog", { name: "Choose a date range" })).toBeNull());
+  },
+};
+
+// A touch tap, as the browser reports one: a primary pointer of type touch that goes down and up in one place, and then the click
+// it makes. It is dispatched from the page (the DevTools Protocol's touch input behaves differently on the CI machine, where it
+// left a story unusable), so it covers the touch branches of the code and the stylesheet, and not a real finger on a real screen.
+function touchPoint(element: Element, type: "pointerdown" | "pointerup", offset = 0) {
+  const rect = element.getBoundingClientRect();
+  const init = {
+    bubbles: true,
+    cancelable: true,
+    composed: true,
+    pointerId: 7,
+    pointerType: "touch",
+    isPrimary: true,
+    button: 0,
+    buttons: type === "pointerdown" ? 1 : 0,
+    clientX: rect.left + rect.width / 2 + offset,
+    clientY: rect.top + rect.height / 2,
+  };
+  element.dispatchEvent(new PointerEvent(type, init));
+}
+function touchTap(element: HTMLElement) {
+  touchPoint(element, "pointerdown");
+  touchPoint(element, "pointerup");
+  element.click();
+}
+
+export const RangeChosenWithTouchTaps: Story = {
+  name: "With touch taps: the button opens the calendar, a tap on a start and one on an end choose the range, and a sideways swipe turns the month without choosing",
+  render: () => (
+    <Page>
+      <DateRangePicker aria-label="Stay" today={TODAY} />
+    </Page>
+  ),
+  play: async () => {
+    touchTap(openButton());
+    const first = await waitForDay("2026-10-12");
+    await settled(body().getByRole("dialog", { name: "Choose a date range" }));
+    // a swipe across a day turns the month and is not a choice
+    const shownDays = () => [...document.querySelectorAll<HTMLElement>("button[data-date]")].map((button) => button.dataset.date);
+    const before = shownDays()[0];
+    touchPoint(first, "pointerdown");
+    touchPoint(first, "pointerup", -120);
+    await waitFor(() => expect(shownDays()[0]).not.toBe(before));
+    await expect(segment(startGroup(), "Day")).toHaveValue("");
+    // and the other way brings the month back, then two taps choose the range
+    const another = document.querySelector<HTMLElement>("button[data-date]") as HTMLElement;
+    touchPoint(another, "pointerdown");
+    touchPoint(another, "pointerup", 120);
+    await waitFor(() => expect(shownDays()[0]).toBe(before));
+    touchTap(await waitForDay("2026-10-12"));
+    await waitFor(() => expect(segment(startGroup(), "Day")).toHaveValue("12"));
+    touchTap(await waitForDay("2026-10-16"));
+    await waitFor(() => expect(segment(endGroup(), "Day")).toHaveValue("16"));
+    await waitFor(() => expect(body().queryByRole("dialog", { name: "Choose a date range" })).toBeNull());
+  },
+};
+
+export const MonthsChosenWithARealMouse: Story = {
+  name: "By month: a real mouse chooses the first and the last month from a grid of months, and a touch tap does too",
+  render: () => (
+    <Page>
+      <DateRangePicker aria-label="Stay" granularity="month" today={TODAY} />
+    </Page>
+  ),
+  play: async () => {
+    const month = (name: RegExp) => within(body().getByRole("dialog", { name: "Choose a date range" })).getByRole("button", { name });
+    await realClick(openButton());
+    await body().findByRole("dialog", { name: "Choose a date range" });
+    await settled(body().getByRole("dialog", { name: "Choose a date range" }));
+    // the grid is a grid of months, drawn without days
+    await expect(document.querySelector("button[data-date]")).toBeNull();
+    await realClick(month(/^Mar/));
+    await waitFor(() => expect(segment(startGroup(), "Month")).toHaveValue("03"));
+    await realClick(month(/^Jun/));
+    await waitFor(() => expect(segment(endGroup(), "Month")).toHaveValue("06"));
+    await waitFor(() => expect(body().queryByRole("dialog", { name: "Choose a date range" })).toBeNull());
+    await waitFor(() => expect(openButton()).toHaveFocus());
+    // again, with taps
+    touchTap(openButton());
+    await body().findByRole("dialog", { name: "Choose a date range" });
+    touchTap(month(/^Aug/));
+    await waitFor(() => expect(segment(startGroup(), "Month")).toHaveValue("08"));
+    touchTap(month(/^Nov/));
+    await waitFor(() => expect(segment(endGroup(), "Month")).toHaveValue("11"));
+  },
+};
+
+export const StartChangedFromTheStart: Story = {
+  name: "Alt+ArrowDown on the start of a whole range chooses the start and keeps the end, and focus is back on the segment",
+  render: () => (
+    <Page>
+      <DateRangePicker aria-label="Stay" defaultValue={["2026-10-05", "2026-10-09"]} today={TODAY} />
+    </Page>
+  ),
+  play: async () => {
+    segment(startGroup(), "Day").focus();
+    await userEvent.keyboard("{Alt>}{ArrowDown}{/Alt}");
+    await body().findByRole("dialog");
+    await waitFor(() => expect(dayButton("2026-10-05")).toHaveFocus());
+    await userEvent.keyboard("{ArrowRight}{ArrowRight}{Enter}");
+    await waitFor(() => expect(segment(startGroup(), "Day")).toHaveValue("07"));
+    await expect(segment(endGroup(), "Day")).toHaveValue("09");
+    await waitFor(() => expect(segment(startGroup(), "Day")).toHaveFocus());
   },
 };

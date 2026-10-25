@@ -24,7 +24,7 @@
 - **A value that is a single string** (`"2026-10-05/2026-10-09"`). Needs parsing and breaks `name[]` submission as plain dates.
 
 ## Consequences
-- The bundle holds `DatePicker` and so `Calendar`: 19.31KB of JS, a 22KB override in `check-component-bundle-size.mjs`.
+- The bundle holds `DatePicker` and so `Calendar`: 19.74KB of JS, a 22KB override in `check-component-bundle-size.mjs`.
 - No new token and no new dependency.
 - The clear button shows while either end holds a complete date; an end that is only half typed is cleared with `Backspace`.
 - A change to `DatePicker`'s props or its panel's classes needs a look here too.
