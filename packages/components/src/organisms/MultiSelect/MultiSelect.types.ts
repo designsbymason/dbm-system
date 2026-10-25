@@ -36,7 +36,11 @@ export type MultiSelectChangeSource =
   /** The "Select all" row chose, or removed, every option it covers. */
   | "selectAll"
   /** The "Create …" row made a new option and chose it. */
-  | "create";
+  | "create"
+  /** Typed text was made into a chip of its own (`allowCustomValue`), with no option behind it. */
+  | "custom"
+  /** A chip was moved to another place (`reorderable`). */
+  | "reorder";
 
 /** One choice in a `MultiSelect`. */
 export interface MultiSelectOption {
@@ -63,6 +67,10 @@ export interface MultiSelectOption {
   keywords?: string[];
   /** Puts the option under a heading of this name. Options are listed by group, groups in the order they first appear. */
   group?: string;
+  /** The colour of this option's chip, replacing the field's `tone`: a status, a category, a priority. */
+  tone?: TagTone;
+  /** An icon (a component reference) drawn before the text in this option's chip. It is separate from `icon`, which is for the list. */
+  chipIcon?: PhosphorIcon;
 }
 
 /** The text a `MultiSelect` writes itself: names, announcements and messages. */
@@ -127,6 +135,24 @@ export interface MultiSelectLabels {
   less: string;
   /** Describes the field once something is chosen: how to reach the chips with the keyboard. @default "Use the left arrow key to move to the chosen options" */
   chipsHint: string;
+  /** The text of a group's "select all" row (`selectGroups`). Receives the group's name. @default (group) => `Select all in ${group}` */
+  selectGroup: (group: string) => string;
+  /** The text of a group's row while everything it covers is chosen. Receives the group's name. @default (group) => `Deselect all in ${group}` */
+  deselectGroup: (group: string) => string;
+  /** The message shown, and announced, when typed text names a value that is already chosen (`allowCustomValue`). Receives the text. @default (text) => `${text} is already chosen` */
+  duplicate: (text: string) => string;
+  /**
+   * Announced when a chip is picked up with the keyboard (`reorderable`), with its place. Plain numbers; write them
+   * with `formatNumber` if you pass your own.
+   * @default (label, position, total) => `${label}, position ${position} of ${total}. Use the arrow keys to move it, Space to drop it, Escape to cancel`
+   */
+  liftedChip: (label: string, position: number, total: number) => string;
+  /** Announced as a picked-up chip moves, or is moved with Alt and an arrow key, with its new place. @default (label, position, total) => `${label} moved to position ${position} of ${total}` */
+  movedChip: (label: string, position: number, total: number) => string;
+  /** Announced when a chip is dropped, by key or by the pointer, with its place. @default (label, position, total) => `${label} dropped at position ${position} of ${total}` */
+  droppedChip: (label: string, position: number, total: number) => string;
+  /** Announced when a pick-up is cancelled and the chip is back where it was. @default (label, position, total) => `${label} moved back to position ${position} of ${total}` */
+  cancelledChip: (label: string, position: number, total: number) => string;
   /** The text of the "Create …" row for typed text that names no option. Receives the text. @default (text) => `Create “${text}”` */
   create: (text: string) => string;
   /** Shown in an empty list with nothing typed. @default "Type to search" */
@@ -200,7 +226,8 @@ export interface MultiSelectProps
    */
   filter?: ((option: MultiSelectOption, text: string) => boolean) | false;
   /**
-   * Highlights the first match while the person types, so Enter chooses it.
+   * Highlights the first match while the person types, so Enter chooses it. Off by default with `allowCustomValue`,
+   * where Enter commits what was typed.
    * @default true
    */
   autoHighlight?: boolean;
@@ -221,10 +248,41 @@ export interface MultiSelectProps
   minSelected?: number;
   /**
    * Adds a first row to the list that chooses every enabled option the list shows, or removes them again when all
-   * are chosen. With text typed it covers the matches only. Stops at `maxSelected`.
+   * are chosen. With text typed it covers the matches only. Stops at `maxSelected`. With `onSelectAll` the row asks
+   * you for the options instead, and only ever adds.
    * @default false
    */
   selectAll?: boolean;
+  /**
+   * Gives the "Select all" row the answer, for a list the page doesn't hold all of (options fetched as the person
+   * types, or a count in the thousands). Called with the typed text and the enabled options loaded now; return the
+   * options to choose (or their values), or a promise of them. The row waits while the promise is out, and the result
+   * is added to what is chosen, up to `maxSelected`. Needs `selectAll`.
+   */
+  onSelectAll?: (details: { text: string; options: MultiSelectOption[] }) => Array<MultiSelectOption | string> | void | Promise<Array<MultiSelectOption | string> | void>;
+  /**
+   * Adds a row under each group's heading that chooses every enabled option of that group the list shows, or removes
+   * them again when all are chosen. Only options with a `group` have one. Stops at `maxSelected`.
+   * @default false
+   */
+  selectGroups?: boolean;
+  /**
+   * Lets typed text be a chip of its own when it names no option: Enter (with no option highlighted), a separator, a
+   * paste of several, or leaving the field makes the text a value, as `TagsInput` does. Text that is exactly an
+   * option's label chooses that option instead. A value already chosen, one that `validate` refuses and one past
+   * `maxSelected` are refused with a message. The first match is not highlighted while typing, so Enter commits what
+   * was typed.
+   * @default false
+   */
+  allowCustomValue?: boolean;
+  /**
+   * The characters that end a typed value, when `allowCustomValue` is set: typing one, or pasting text with one (or a
+   * line break), makes a chip of what came before it.
+   * @default [","]
+   */
+  separators?: string[];
+  /** Checks a typed value before it becomes a chip (`allowCustomValue`): return a message to refuse it, or nothing to accept it. */
+  validate?: (text: string) => string | void | undefined;
   /**
    * Shows the clear button once something is chosen or typed.
    * @default true
@@ -282,6 +340,20 @@ export interface MultiSelectProps
    * @default "subtle"
    */
   variant?: TagVariant;
+  /**
+   * Replaces the text of each chip with content of your own (an avatar and a name). Receives the option, or
+   * `undefined` for a value with no option, and the value. The chip's tooltip, remove button name and announcements
+   * still use the option's `label`.
+   */
+  renderValue?: (option: MultiSelectOption | undefined, value: string) => ReactNode;
+  /**
+   * Lets chips be moved to change the order of the values: drag one with a pointer or a finger, or focus its remove
+   * button, press Space, move it with the arrow keys and press Space or Enter to drop it (Escape cancels). Alt with an
+   * arrow key moves a chip one place at once. The order is submitted. Chips are `touch-action: none` so a finger drags
+   * instead of scrolling the page; on a chip, Space picks up rather than removing, and Enter and Delete still remove.
+   * @default false
+   */
+  reorderable?: boolean;
   /**
    * What a closed field does with chips that don't fit: `wrap` lets them take more lines, `collapse` keeps one line
    * with as many chips as fit and a "+N more" button. The field always shows every chip while it is in use.

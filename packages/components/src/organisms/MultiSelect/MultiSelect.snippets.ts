@@ -58,6 +58,56 @@ export const multiSelectSnippets = {
 {/* variant: "subtle" (default) | "solid" | "outlined" */}
 <MultiSelect aria-label="Labels" options={labels} tone="success" variant="outlined" defaultValue={["bug"]} />`,
 
+  perOption: `{/* An option can carry its chip's tone and icon; renderValue draws the chip's content yourself (an avatar and a name). */}
+{/* CheckCircleIcon comes from @dbm-system/icons */}
+<MultiSelect
+  aria-label="Status"
+  options={[
+    { value: "done", label: "Done", tone: "success", chipIcon: CheckCircleIcon },
+    { value: "blocked", label: "Blocked", tone: "danger" },
+  ]}
+  renderValue={(option) => <span>{option?.label}</span>}
+/>`,
+
+  reorderable: `{/* Drag a chip, or focus its remove button and press Space, move it with the arrow keys, and press Space to drop it.
+    Alt with an arrow key moves a chip one place. The values (and what a form submits) follow the new order. */}
+<MultiSelect
+  aria-label="Columns"
+  options={columns}
+  reorderable
+  defaultValue={["name", "email", "role"]}
+  onValueChange={(values, { source }) => source === "reorder" && saveOrder(values)}
+/>`,
+
+  selectAllRemote: `{/* The page answers: fetch every id that matches the search, and return options (or just their values). */}
+<MultiSelect
+  aria-label="Search countries"
+  options={results}
+  filter={false}
+  selectAll
+  onSelectAll={async ({ text }) => (await fetchEveryMatch(text)).map((country) => country.id)}
+/>`,
+
+  groupSelectAll: `{/* A row under each group's heading chooses (and removes) the enabled options of that group. */}
+<MultiSelect
+  aria-label="Ingredients"
+  options={[
+    { value: "apple", label: "Apple", group: "Fruit" },
+    { value: "apricot", label: "Apricot", group: "Fruit" },
+    { value: "carrot", label: "Carrot", group: "Vegetables" },
+  ]}
+  selectGroups
+/>`,
+
+  customValues: `{/* Enter (with no option highlighted), a comma, a paste or leaving the field makes a chip of what was typed.
+    Text that is exactly an option's label chooses that option; a value validate refuses is shown with its message. */}
+<MultiSelect
+  aria-label="Recipients"
+  options={contacts}
+  allowCustomValue
+  validate={(text) => (text.includes("@") ? undefined : "Not an email address")}
+/>`,
+
   async: `{/* You fetch: filter={false} shows options as given. Search on "input"; a choice clears the text, it isn't a query. */}
 {/* const [results, setResults] = useState([]); const [loading, setLoading] = useState(false); */}
 <MultiSelect
@@ -123,6 +173,9 @@ export interface MultiSelectPlaygroundSnippetArgs {
   closeOnSelect?: boolean;
   autoHighlight?: boolean;
   selectAll?: boolean;
+  selectGroups?: boolean;
+  allowCustomValue?: boolean;
+  reorderable?: boolean;
   clearable?: boolean;
   openOnFocus?: boolean;
   loading?: boolean;
@@ -158,7 +211,11 @@ export function multiSelectPlaygroundSnippet(args: MultiSelectPlaygroundSnippetA
   if (typeof args.minSelected === "number") attributes.push(`minSelected={${args.minSelected}}`);
   if (args.closeOnSelect) attributes.push("closeOnSelect");
   if (args.selectAll) attributes.push("selectAll");
-  if (args.autoHighlight === false) attributes.push("autoHighlight={false}");
+  if (args.selectGroups) attributes.push("selectGroups");
+  if (args.allowCustomValue) attributes.push("allowCustomValue");
+  if (args.reorderable) attributes.push("reorderable");
+  if (args.autoHighlight === false && !args.allowCustomValue) attributes.push("autoHighlight={false}");
+  if (args.autoHighlight === true && args.allowCustomValue) attributes.push("autoHighlight");
   if (args.clearable === false) attributes.push("clearable={false}");
   if (args.openOnFocus) attributes.push("openOnFocus");
   if (args.loading) attributes.push("loading");

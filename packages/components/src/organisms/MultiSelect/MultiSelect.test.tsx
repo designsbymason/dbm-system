@@ -1,6 +1,7 @@
 import { act, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { axe } from "jest-axe";
+import { GlobeIcon } from "@dbm-system/icons";
 import { StrictMode, createRef, useState } from "react";
 import { describe, expect, it, vi } from "vitest";
 import { FormField } from "../../molecules/FormField";
@@ -178,6 +179,14 @@ describe("MultiSelect", () => {
       expect(field()).toHaveFocus();
       await user.click(screen.getByRole("button", { name: "Toggle options" }));
       expect(list()).toBeNull();
+    });
+
+    it("does not open the list for a press on a chip, which may be the start of a drag, but hands the typing back to the entry", async () => {
+      const user = userEvent.setup();
+      setup({ defaultValue: ["ca"] });
+      await user.click(screen.getByText("Canada"));
+      expect(list()).toBeNull();
+      expect(field()).toHaveFocus();
     });
 
     it("keeps the two adornment buttons out of the tab order", () => {
@@ -889,6 +898,467 @@ describe("MultiSelect", () => {
       await user.click(screen.getByRole("button", { name: "Send" }));
       await waitFor(() => expect(onSubmit).toHaveBeenCalled());
       expect(JSON.stringify(onSubmit.mock.calls[0]?.[0])).toContain("uy");
+    });
+  });
+
+  describe("the look of a chip", () => {
+    const toned: MultiSelectOption[] = [
+      { value: "ok", label: "Done", tone: "success", chipIcon: GlobeIcon },
+      { value: "bad", label: "Blocked", tone: "danger" },
+      { value: "plain", label: "Open" },
+    ];
+
+    it("draws a chip in its option's own tone and icon, and the field's tone for the rest", () => {
+      setup({ options: toned, defaultValue: ["ok", "bad", "plain"], tone: "info" });
+      const chip = (label: string) => screen.getByText(label).closest("span[class*=root]") as HTMLElement;
+      expect(chip("Done").className).toMatch(/Success/);
+      expect(chip("Blocked").className).toMatch(/Danger/);
+      expect(chip("Open").className).toMatch(/Info/);
+      expect(chip("Done").querySelector("svg")).not.toBeNull();
+      expect(chip("Open").querySelectorAll("svg")).toHaveLength(1);
+    });
+
+    it("keeps the list's own icon out of the chip", async () => {
+      const user = userEvent.setup();
+      setup({ options: [{ value: "a", label: "Alpha", icon: GlobeIcon }], defaultValue: ["a"] });
+      expect(screen.getByText("Alpha").closest("span[class*=root]")?.querySelectorAll("svg")).toHaveLength(1);
+      await user.click(field());
+      expect(screen.getByRole("option", { name: "Alpha" }).querySelectorAll("svg").length).toBeGreaterThan(0);
+    });
+
+    it("draws what renderValue returns in place of the text, with the label still naming the chip", () => {
+      setup({
+        options: toned,
+        defaultValue: ["ok", "zz"],
+        renderValue: (option, chosen) => <b data-testid={`value-${chosen}`}>{option ? `${option.label}!` : `?${chosen}`}</b>,
+      });
+      expect(screen.getByTestId("value-ok")).toHaveTextContent("Done!");
+      expect(screen.getByTestId("value-zz")).toHaveTextContent("?zz");
+      expect(screen.getByRole("button", { name: "Remove Done" })).toBeInTheDocument();
+      expect(screen.getByRole("button", { name: "Remove zz" })).toBeInTheDocument();
+    });
+
+    it("keeps the tone and icon of a chosen value whose option has left the list", () => {
+      const { rerender } = setup({ options: toned, value: ["ok"] });
+      rerender(<MultiSelect aria-label="Countries" options={[]} value={["ok"]} />);
+      expect(screen.getByText("Done").closest("span[class*=root]")?.className).toMatch(/Success/);
+    });
+  });
+
+  describe("reordering the chips", () => {
+    const three = ["ca", "us", "uy"];
+    const reorderable = (props: Partial<MultiSelectProps> = {}) => setup({ reorderable: true, defaultValue: three, ...props });
+
+    it("picks a chip up with Space, moves it with the arrow keys and drops it with Space", async () => {
+      const user = userEvent.setup();
+      const onValueChange = vi.fn();
+      reorderable({ onValueChange });
+      field().focus();
+      await user.keyboard("{ArrowLeft}{ArrowLeft}");
+      expect(screen.getByRole("button", { name: "Remove United States" })).toHaveFocus();
+      await user.keyboard(" ");
+      expect(screen.getByText("United States").closest("li")).toHaveAttribute("data-lifted", "true");
+      await user.keyboard("{ArrowRight}");
+      expect(chips()).toEqual(["Canada", "Uruguay", "United States"]);
+      expect(onValueChange).toHaveBeenLastCalledWith(["ca", "uy", "us"], expect.objectContaining({ source: "reorder" }));
+      // the chip kept its element, so focus stayed with it
+      expect(screen.getByRole("button", { name: "Remove United States" })).toHaveFocus();
+      await user.keyboard("{Home}");
+      expect(chips()).toEqual(["United States", "Canada", "Uruguay"]);
+      await user.keyboard(" ");
+      expect(screen.getByText("United States").closest("li")).not.toHaveAttribute("data-lifted");
+      expect(chips()).toEqual(["United States", "Canada", "Uruguay"]);
+    });
+
+    it("puts the chip back with Escape, and leaves the field's own Escape alone", async () => {
+      const user = userEvent.setup();
+      reorderable();
+      field().focus();
+      await user.keyboard("{ArrowLeft} {ArrowLeft}{ArrowLeft}");
+      expect(chips()).toEqual(["Uruguay", "Canada", "United States"]);
+      await user.keyboard("{Escape}");
+      expect(chips()).toEqual(["Canada", "United States", "Uruguay"]);
+      expect(screen.getByRole("button", { name: "Remove Uruguay" })).toHaveFocus();
+    });
+
+    it("moves a chip one place with Alt and an arrow key, without picking it up", async () => {
+      const user = userEvent.setup();
+      reorderable();
+      field().focus();
+      await user.keyboard("{ArrowLeft}{ArrowLeft}{Alt>}{ArrowLeft}{/Alt}");
+      expect(chips()).toEqual(["United States", "Canada", "Uruguay"]);
+      expect(screen.getByText("United States").closest("li")).not.toHaveAttribute("data-lifted");
+    });
+
+    it("does not remove the chip when Space picks it up, and Enter drops it rather than removing it", async () => {
+      const user = userEvent.setup();
+      reorderable();
+      field().focus();
+      await user.keyboard("{ArrowLeft} ");
+      expect(chips()).toEqual(["Canada", "United States", "Uruguay"]);
+      await user.keyboard("{Enter}");
+      expect(chips()).toEqual(["Canada", "United States", "Uruguay"]);
+      // with nothing picked up, Enter still removes
+      await user.keyboard("{Enter}");
+      expect(chips()).toEqual(["Canada", "United States"]);
+    });
+
+    it("removes a picked-up chip with Delete, and drops it first", async () => {
+      const user = userEvent.setup();
+      reorderable();
+      field().focus();
+      await user.keyboard("{ArrowLeft} {Delete}");
+      expect(chips()).toEqual(["Canada", "United States"]);
+      expect(document.querySelector("[data-lifted]")).toBeNull();
+    });
+
+    it("announces the pick-up, each move, the drop and a cancel with the place", async () => {
+      const user = userEvent.setup();
+      reorderable();
+      const status = () => screen.getAllByRole("status").map((node) => node.textContent).join(" ");
+      field().focus();
+      await user.keyboard("{ArrowLeft} ");
+      await waitFor(() => expect(status()).toContain("Uruguay, position 3 of 3. Use the arrow keys to move it, Space to drop it, Escape to cancel"));
+      await user.keyboard("{ArrowLeft}");
+      await waitFor(() => expect(status()).toContain("Uruguay moved to position 2 of 3"));
+      await user.keyboard(" ");
+      await waitFor(() => expect(status()).toContain("Uruguay dropped at position 2 of 3"));
+      await user.keyboard(" {ArrowLeft}{Escape}");
+      await waitFor(() => expect(status()).toContain("Uruguay moved back to position 2 of 3"));
+    });
+
+    it("drops a picked-up chip where it is when focus leaves", async () => {
+      const user = userEvent.setup();
+      reorderable();
+      field().focus();
+      await user.keyboard("{ArrowLeft} ");
+      expect(document.querySelector("[data-lifted]")).not.toBeNull();
+      act(() => field().focus());
+      expect(document.querySelector("[data-lifted]")).toBeNull();
+      expect(chips()).toEqual(["Canada", "United States", "Uruguay"]);
+    });
+
+    it("moves nothing when it is not reorderable, disabled or read-only", async () => {
+      const user = userEvent.setup();
+      const { rerender } = setup({ defaultValue: three });
+      field().focus();
+      await user.keyboard("{ArrowLeft}{Alt>}{ArrowLeft}{/Alt}");
+      expect(chips()).toEqual(["Canada", "United States", "Uruguay"]);
+      expect(document.querySelector("[data-sortable-index]")).toBeNull();
+      rerender(<MultiSelect aria-label="Countries" options={countries} reorderable readOnly defaultValue={three} />);
+      expect(document.querySelector("[data-sortable-index]")).toBeNull();
+    });
+
+    it("submits the values in the new order", async () => {
+      const user = userEvent.setup();
+      render(
+        <form data-testid="form">
+          <MultiSelect aria-label="Countries" options={countries} name="country" reorderable defaultValue={three} />
+        </form>,
+      );
+      field().focus();
+      await user.keyboard("{ArrowLeft}{Alt>}{ArrowLeft}{ArrowLeft}{/Alt}");
+      expect(hiddenValues(screen.getByTestId("form"))).toEqual(["uy", "ca", "us"]);
+    });
+
+    it("asks for a move on a drop with the pointer, and keeps the controlled order until the value changes", () => {
+      const onValueChange = vi.fn();
+      render(<MultiSelect aria-label="Countries" options={countries} reorderable value={three} onValueChange={onValueChange} />);
+      const items = [...document.querySelectorAll<HTMLElement>("[data-sortable-index]")];
+      items.forEach((item, index) => {
+        item.getBoundingClientRect = () => ({ left: index * 100, right: index * 100 + 100, top: 0, bottom: 30, width: 100, height: 30, x: index * 100, y: 0, toJSON: () => ({}) }) as DOMRect;
+      });
+      fireEvent.pointerDown(items[0] as HTMLElement, { clientX: 50, clientY: 10, pointerId: 1, isPrimary: true, pointerType: "mouse", button: 0 });
+      act(() => {
+        fireEvent(window, new MouseEvent("pointermove", { clientX: 270, clientY: 10 }));
+      });
+      expect(items[0]).toHaveAttribute("data-dragging", "true");
+      act(() => {
+        fireEvent(window, new MouseEvent("pointerup", { clientX: 270, clientY: 10 }));
+      });
+      expect(onValueChange).toHaveBeenCalledWith(["us", "uy", "ca"], expect.objectContaining({ source: "reorder" }));
+      expect(chips()).toEqual(["Canada", "United States", "Uruguay"]);
+    });
+
+    it("keeps a chip's element when its place changes, and copes with the same value twice", () => {
+      const { rerender } = render(<MultiSelect aria-label="Countries" options={countries} value={["ca", "us"]} />);
+      const before = screen.getByRole("button", { name: "Remove Canada" });
+      rerender(<MultiSelect aria-label="Countries" options={countries} value={["us", "ca"]} />);
+      expect(screen.getByRole("button", { name: "Remove Canada" })).toBe(before);
+      rerender(<MultiSelect aria-label="Countries" options={countries} value={["ca", "ca"]} />);
+      expect(chips()).toEqual(["Canada", "Canada"]);
+    });
+  });
+
+  describe("select all from the page", () => {
+    it("asks onSelectAll for the options, waits for a promise, and adds what it returns", async () => {
+      const user = userEvent.setup();
+      let resolve: (options: MultiSelectOption[]) => void = () => undefined;
+      const onSelectAll = vi.fn(() => new Promise<MultiSelectOption[]>((done) => (resolve = done)));
+      const onValueChange = vi.fn();
+      setup({ selectAll: true, onSelectAll, onValueChange });
+      await user.click(field());
+      await user.click(screen.getByRole("option", { name: "Select all" }));
+      expect(onSelectAll).toHaveBeenCalledWith({ text: "", options: countries.filter((country) => !country.disabled) });
+      expect(screen.getByRole("option", { name: "Select all" })).toHaveAttribute("aria-disabled", "true");
+      await act(async () => resolve([{ value: "zz", label: "Zedland", tone: "success" }, { value: "yy", label: "Yland" }]));
+      expect(chips()).toEqual(["Zedland", "Yland"]);
+      expect(onValueChange).toHaveBeenCalledWith(["zz", "yy"], { source: "selectAll", option: undefined });
+      // the row still says Select all: it only ever adds
+      expect(screen.getByRole("option", { name: "Select all" })).toHaveAttribute("aria-selected", "false");
+    });
+
+    it("takes values as strings too, skips what is chosen, and stops at the limit", async () => {
+      const user = userEvent.setup();
+      setup({ selectAll: true, onSelectAll: () => ["ca", "x1", "x2", "x3"], maxSelected: 3, defaultValue: ["ca"] });
+      await user.click(field());
+      await user.click(screen.getByRole("option", { name: /Select all/ }));
+      expect(chips()).toEqual(["Canada", "x1", "x2"]);
+    });
+
+    it("covers the typed text, and says so to onSelectAll", async () => {
+      const user = userEvent.setup();
+      const onSelectAll = vi.fn(() => []);
+      setup({ selectAll: true, onSelectAll });
+      await user.type(field(), "uru");
+      await user.click(screen.getByRole("option", { name: "Select all" }));
+      expect(onSelectAll).toHaveBeenCalledWith({ text: "uru", options: [countries[4]] });
+    });
+
+    it("announces an error and re-enables the row when the promise rejects or the callback throws", async () => {
+      const user = userEvent.setup();
+      const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
+      const { rerender } = setup({ selectAll: true, onSelectAll: () => Promise.reject(new Error("no")) });
+      await user.click(field());
+      await user.click(screen.getByRole("option", { name: "Select all" }));
+      await waitFor(() => expect(screen.getByRole("option", { name: "Select all" })).not.toHaveAttribute("aria-disabled"));
+      rerender(<MultiSelect aria-label="Countries" options={countries} selectAll onSelectAll={() => { throw new Error("boom"); }} />);
+      await user.click(screen.getByRole("option", { name: "Select all" }));
+      expect(warn).toHaveBeenCalledWith(expect.stringContaining("`onSelectAll` threw"));
+      expect(chips()).toEqual([]);
+      warn.mockRestore();
+    });
+
+    it("is not offered before there is anything to search or load", async () => {
+      const user = userEvent.setup();
+      setup({ selectAll: true, onSelectAll: () => [], options: [] });
+      await user.click(field());
+      expect(screen.queryByRole("option", { name: "Select all" })).toBeNull();
+      await user.type(field(), "x");
+      expect(screen.getByRole("option", { name: "Select all" })).toBeInTheDocument();
+    });
+  });
+
+  describe("select all in a group", () => {
+    const grouped: MultiSelectOption[] = [
+      { value: "a1", label: "Apple", group: "Fruit" },
+      { value: "a2", label: "Apricot", group: "Fruit" },
+      { value: "a3", label: "Avocado", group: "Fruit", disabled: true },
+      { value: "c1", label: "Carrot", group: "Veg" },
+      { value: "loose", label: "Salt" },
+    ];
+
+    it("puts a row under each group's heading that chooses its enabled options, and removes them again", async () => {
+      const user = userEvent.setup();
+      const onValueChange = vi.fn();
+      setup({ options: grouped, selectGroups: true, onValueChange });
+      await user.click(field());
+      expect(labelsOf()).toEqual(["Select all in Fruit", "Apple", "Apricot", "Avocado", "Select all in Veg", "Carrot", "Salt"]);
+      await user.click(screen.getByRole("option", { name: "Select all in Fruit" }));
+      expect(chips()).toEqual(["Apple", "Apricot"]);
+      expect(onValueChange).toHaveBeenLastCalledWith(["a1", "a2"], { source: "selectAll", option: undefined });
+      expect(screen.getByRole("option", { name: "Deselect all in Fruit" })).toHaveAttribute("aria-selected", "true");
+      expect(screen.getByRole("option", { name: "Select all in Veg" })).toHaveAttribute("aria-selected", "false");
+      await user.click(screen.getByRole("option", { name: "Deselect all in Fruit" }));
+      expect(chips()).toEqual([]);
+    });
+
+    it("covers only the matches while text is typed, and Enter still chooses the first option", async () => {
+      const user = userEvent.setup();
+      setup({ options: grouped, selectGroups: true });
+      await user.type(field(), "ap");
+      expect(labelsOf()).toEqual(["Select all in Fruit", "Apple", "Apricot"]);
+      await user.keyboard("{Enter}");
+      expect(chips()).toEqual(["Apple"]);
+    });
+
+    it("stops at the limit, and can be used from the keyboard", async () => {
+      const user = userEvent.setup();
+      setup({ options: grouped, selectGroups: true, maxSelected: 1 });
+      field().focus();
+      await user.keyboard("{ArrowDown}{Enter}");
+      expect(chips()).toEqual(["Apple"]);
+    });
+
+    it("leaves ungrouped options and a group with nothing to choose without a row", async () => {
+      const user = userEvent.setup();
+      setup({ options: [{ value: "x", label: "X", group: "Off", disabled: true }, { value: "y", label: "Y" }], selectGroups: true });
+      await user.click(field());
+      expect(labelsOf()).toEqual(["X", "Y"]);
+    });
+
+    it("writes the group's name in its own words with labels", async () => {
+      const user = userEvent.setup();
+      setup({ options: grouped, selectGroups: true, labels: { selectGroup: (group) => `Todo ${group}` } });
+      await user.click(field());
+      expect(screen.getByRole("option", { name: "Todo Fruit" })).toBeInTheDocument();
+    });
+  });
+
+  describe("typed values as chips", () => {
+    const custom = (props: Partial<MultiSelectProps> = {}) => setup({ allowCustomValue: true, ...props });
+
+    it("makes a chip of what was typed on Enter, and does not highlight the first match while typing", async () => {
+      const user = userEvent.setup();
+      const onValueChange = vi.fn();
+      custom({ onValueChange });
+      await user.type(field(), "Atlantis");
+      expect(field()).not.toHaveAttribute("aria-activedescendant");
+      await user.keyboard("{Enter}");
+      expect(chips()).toEqual(["Atlantis"]);
+      expect(field()).toHaveValue("");
+      expect(onValueChange).toHaveBeenCalledWith(["Atlantis"], { source: "custom", option: undefined });
+    });
+
+    it("chooses an option when the text is exactly its label, whatever the case", async () => {
+      const user = userEvent.setup();
+      const onValueChange = vi.fn();
+      custom({ onValueChange });
+      await user.type(field(), "canada{Enter}");
+      expect(chips()).toEqual(["Canada"]);
+      expect(onValueChange).toHaveBeenCalledWith(["ca"], expect.objectContaining({ source: "select", option: expect.objectContaining({ value: "ca" }) }));
+    });
+
+    it("chooses the highlighted option instead when one was moved to", async () => {
+      const user = userEvent.setup();
+      custom();
+      await user.type(field(), "uni");
+      await user.keyboard("{ArrowDown}{Enter}");
+      expect(chips()).toEqual(["United States"]);
+    });
+
+    it("makes chips at a separator, keeping what follows it in the entry", async () => {
+      const user = userEvent.setup();
+      custom();
+      await user.type(field(), "red,green,bl");
+      expect(chips()).toEqual(["red", "green"]);
+      expect(field()).toHaveValue("bl");
+    });
+
+    it("splits a paste at the separators and line breaks", async () => {
+      const user = userEvent.setup();
+      custom({ separators: [",", ";"] });
+      field().focus();
+      await user.paste("a, b;c\nd");
+      expect(chips()).toEqual(["a", "b", "c", "d"]);
+      expect(field()).toHaveValue("");
+    });
+
+    it("makes a chip of the text when the field is left, but not for an empty entry", async () => {
+      const user = userEvent.setup();
+      render(
+        <>
+          <MultiSelect aria-label="Countries" options={countries} allowCustomValue />
+          <button type="button">Elsewhere</button>
+        </>,
+      );
+      await user.type(field(), "later");
+      await user.click(screen.getByRole("button", { name: "Elsewhere" }));
+      expect(chips()).toEqual(["later"]);
+      await user.click(field());
+      await user.click(screen.getByRole("button", { name: "Elsewhere" }));
+      expect(chips()).toEqual(["later"]);
+    });
+
+    it("refuses a value that is already chosen, with a message that is shown and announced", async () => {
+      const user = userEvent.setup();
+      custom({ defaultValue: ["red"] });
+      await user.type(field(), "red{Enter}");
+      expect(chips()).toEqual(["red"]);
+      expect(await screen.findByText("red is already chosen")).toBeInTheDocument();
+      expect(field()).toHaveAttribute("aria-invalid", "true");
+      expect(field().getAttribute("aria-describedby")).toContain(screen.getByText("red is already chosen").id);
+      expect(field()).toHaveValue("red");
+      await user.type(field(), "x");
+      expect(screen.queryByText("red is already chosen")).toBeNull();
+    });
+
+    it("refuses a value validate rejects, and one that throws is accepted with a warning", async () => {
+      const user = userEvent.setup();
+      const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
+      const { rerender } = custom({ validate: (text) => (text.includes("@") ? undefined : "Not an email address") });
+      await user.type(field(), "nope{Enter}");
+      expect(chips()).toEqual([]);
+      expect(screen.getByText("Not an email address")).toBeInTheDocument();
+      await user.clear(field());
+      await user.type(field(), "me@example.com{Enter}");
+      expect(chips()).toEqual(["me@example.com"]);
+      rerender(<MultiSelect aria-label="Countries" options={countries} allowCustomValue validate={() => { throw new Error("x"); }} />);
+      await user.type(field(), "fine{Enter}");
+      expect(chips()).toEqual(["me@example.com", "fine"]);
+      expect(warn).toHaveBeenCalledWith(expect.stringContaining("`validate` threw"));
+      warn.mockRestore();
+    });
+
+    it("refuses a value past the limit, and the text of a disabled option", async () => {
+      const user = userEvent.setup();
+      custom({ maxSelected: 1, defaultValue: ["a"] });
+      await user.type(field(), "b{Enter}");
+      expect(chips()).toEqual(["a"]);
+      expect(screen.getByText("No more than 1 can be selected")).toBeInTheDocument();
+      await user.clear(field());
+      await user.type(field(), "mexico{Enter}");
+      expect(chips()).toEqual(["a"]);
+    });
+
+    it("gives the disabled option's own reason", async () => {
+      const user = userEvent.setup();
+      custom();
+      await user.type(field(), "Mexico{Enter}");
+      expect(chips()).toEqual([]);
+      expect(screen.getByText("Not shipping there yet")).toBeInTheDocument();
+    });
+
+    it("submits a typed value as it was typed, and clears the message with Escape", async () => {
+      const user = userEvent.setup();
+      render(
+        <form data-testid="form">
+          <MultiSelect aria-label="Countries" options={countries} name="country" allowCustomValue defaultValue={["x"]} />
+        </form>,
+      );
+      await user.type(field(), "free text{Enter}");
+      expect(hiddenValues(screen.getByTestId("form"))).toEqual(["x", "free text"]);
+      await user.type(field(), "x{Enter}");
+      expect(screen.getByText("x is already chosen")).toBeInTheDocument();
+      await user.keyboard("{Escape}{Escape}");
+      expect(screen.queryByText("x is already chosen")).toBeNull();
+    });
+
+    it("does nothing with Enter on empty text, and leaves the field alone without allowCustomValue", async () => {
+      const user = userEvent.setup();
+      const { rerender } = custom();
+      await user.type(field(), "{Enter}");
+      expect(chips()).toEqual([]);
+      rerender(<MultiSelect aria-label="Countries" options={countries} />);
+      await user.type(field(), "zzz,{Enter}");
+      expect(chips()).toEqual([]);
+    });
+
+    it("works with the Create row too: Enter commits the text, and the row is still there to choose", async () => {
+      const user = userEvent.setup();
+      custom({ onCreate: (text) => ({ value: `made-${text}`, label: `Made ${text}` }) });
+      await user.type(field(), "foo");
+      await user.click(screen.getByRole("option", { name: "Create “foo”" }));
+      expect(chips()).toEqual(["Made foo"]);
+      await user.type(field(), "bar{Enter}");
+      expect(chips()).toEqual(["Made foo", "bar"]);
+    });
+
+    it("leaves the first match highlighted while typing when autoHighlight is asked for", async () => {
+      const user = userEvent.setup();
+      custom({ autoHighlight: true });
+      await user.type(field(), "uru{Enter}");
+      expect(chips()).toEqual(["Uruguay"]);
     });
   });
 

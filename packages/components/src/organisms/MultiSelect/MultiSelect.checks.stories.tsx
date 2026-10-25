@@ -57,6 +57,28 @@ async function realClick(element: Element) {
   await send("Input.dispatchMouseEvent", { type: "mouseReleased", x, y, button: "left", clickCount: 1 });
 }
 
+// The same, as a press that moves: down on `from`, a few steps, up at `to`, with a pause between so a layout that
+// follows the pointer has settled. `during` runs while the button is still down.
+async function realDrag(from: Element, to: { x: number; y: number }, during?: () => Promise<void> | void) {
+  const rect = from.getBoundingClientRect();
+  const frame = window.frameElement?.getBoundingClientRect();
+  const scale = frame ? frame.width / window.innerWidth : 1;
+  const at = (x: number, y: number) => ({ x: (frame?.left ?? 0) + x * scale, y: (frame?.top ?? 0) + y * scale });
+  const start = at(rect.left + rect.width / 2, rect.top + rect.height / 2);
+  const end = at(to.x, to.y);
+  await send("Input.dispatchMouseEvent", { type: "mouseMoved", ...start });
+  await send("Input.dispatchMouseEvent", { type: "mousePressed", ...start, button: "left", clickCount: 1 });
+  for (let step = 1; step <= 6; step += 1) {
+    const x = start.x + ((end.x - start.x) * step) / 6;
+    const y = start.y + ((end.y - start.y) * step) / 6;
+    await send("Input.dispatchMouseEvent", { type: "mouseMoved", x, y, button: "left", buttons: 1 });
+    await nextFrame();
+  }
+  await during?.();
+  await send("Input.dispatchMouseEvent", { type: "mouseReleased", ...end, button: "left", clickCount: 1 });
+  await nextFrame();
+}
+
 // The page's own button: somewhere neutral for the pointer to rest between checks.
 const aside = (
   <Button variant="secondary" data-testid="aside">
@@ -619,5 +641,164 @@ export const ControlledOpenStaysPut: Story = {
     await userEvent.keyboard("{Alt>}{ArrowUp}{/Alt}");
     await waitFor(() => expect(body().getByTestId("open")).toHaveTextContent("false"));
     await waitFor(() => expect(body().queryByRole("listbox")).toBeNull());
+  },
+};
+
+const itemOf = (label: string) => body().getByText(label).closest("li") as HTMLElement;
+const centreOf = (element: Element) => {
+  const r = element.getBoundingClientRect();
+  return { x: r.left + r.width / 2, y: r.top + r.height / 2, r };
+};
+
+export const ChipsAreDraggedAcrossLines: Story = {
+  name: "A chip is dragged with a real mouse across the lines of a wrapped row, with a marker where it will land",
+  render: () => (
+    <Page width="18rem">
+      <MultiSelect
+        aria-label="Columns"
+        options={[
+          { value: "a", label: "Alpha chip" },
+          { value: "b", label: "Beta chip" },
+          { value: "c", label: "Gamma chip" },
+          { value: "d", label: "Delta chip" },
+          { value: "e", label: "Epsilon chip" },
+        ]}
+        reorderable
+        defaultValue={["a", "b", "c", "d", "e"]}
+      />
+    </Page>
+  ),
+  play: async () => {
+    const order = () => chips().join("|");
+    await expect(order()).toBe("Alpha chip|Beta chip|Gamma chip|Delta chip|Epsilon chip");
+    // the chips are drawn on more than one line, and take no touch gestures of their own
+    await expect(itemOf("Epsilon chip").getBoundingClientRect().top).toBeGreaterThan(itemOf("Alpha chip").getBoundingClientRect().bottom - 1);
+    await expect(getComputedStyle(itemOf("Alpha chip")).touchAction).toBe("none");
+    // drag the first chip to just after the last, which is on the second line
+    const last = centreOf(itemOf("Epsilon chip"));
+    await realDrag(itemOf("Alpha chip"), { x: last.r.right - 4, y: last.y }, () => {
+      const marked = document.querySelector<HTMLElement>("[data-drop]") as HTMLElement;
+      expect(marked).toBe(itemOf("Epsilon chip"));
+      expect(marked).toHaveAttribute("data-drop", "after");
+      expect(itemOf("Alpha chip")).toHaveAttribute("data-dragging", "true");
+      // the marker is drawn: a bar two pixels wide, beside the chip
+      const bar = getComputedStyle(marked, "::before");
+      expect(parseFloat(bar.width)).toBeGreaterThanOrEqual(2);
+      expect(bar.position).toBe("absolute");
+      // the dragged chip is dimmed, and the pointer is a grabbing hand
+      expect(parseFloat(getComputedStyle(itemOf("Alpha chip")).opacity)).toBeLessThan(1);
+      expect(getComputedStyle(itemOf("Alpha chip")).cursor).toBe("grabbing");
+    });
+    await waitFor(() => expect(order()).toBe("Beta chip|Gamma chip|Delta chip|Epsilon chip|Alpha chip"));
+    // the press that ended the drag was not a click on a remove button
+    await expect(chips()).toHaveLength(5);
+    await expect(document.querySelector("[data-drop], [data-dragging]")).toBeNull();
+    // and back: the last chip to the very start
+    const first = centreOf(itemOf("Beta chip"));
+    await realDrag(itemOf("Alpha chip"), { x: first.r.left + 2, y: first.y });
+    await waitFor(() => expect(order()).toBe("Alpha chip|Beta chip|Gamma chip|Delta chip|Epsilon chip"));
+  },
+};
+
+export const DroppingWhereItStartedChangesNothing: Story = {
+  name: "A press on a chip's remove button still removes it, and a drag that ends where it started changes nothing",
+  render: () => (
+    <Page>
+      <MultiSelect aria-label="Columns" options={countries} reorderable defaultValue={["ca", "us", "uy"]} />
+    </Page>
+  ),
+  play: async () => {
+    const mid = centreOf(itemOf("United States"));
+    await realDrag(itemOf("United States"), { x: mid.x + 3, y: mid.y });
+    await expect(chips()).toEqual(["Canada", "United States", "Uruguay"]);
+    await realClick(body().getByRole("button", { name: "Remove United States" }));
+    await waitFor(() => expect(chips()).toEqual(["Canada", "Uruguay"]));
+  },
+};
+
+export const ChipsAreDraggedInRightToLeft: Story = {
+  name: "In a right-to-left page a chip dropped on the left half of its neighbour lands after it",
+  render: () => (
+    <div dir="rtl" style={{ padding: "var(--dbm-space-6)", maxWidth: "26rem", minHeight: "20rem" }}>
+      <MultiSelect aria-label="Columns" options={countries} dir="rtl" reorderable defaultValue={["ca", "us", "uy"]} />
+    </div>
+  ),
+  play: async () => {
+    // reading order runs right to left: Canada is rightmost. Dropping it on the left half of the next chip puts it after.
+    const next = centreOf(itemOf("United States"));
+    await realDrag(itemOf("Canada"), { x: next.r.left + 3, y: next.y }, () => {
+      expect(itemOf("United States")).toHaveAttribute("data-drop", "after");
+    });
+    await waitFor(() => expect(chips()).toEqual(["United States", "Canada", "Uruguay"]));
+  },
+};
+
+export const KeyboardLiftShowsARing: Story = {
+  name: "A chip picked up with the keyboard has a 2px ring in the focus colour, and moves with the arrow keys",
+  render: () => (
+    <Page>
+      <MultiSelect aria-label="Columns" options={countries} reorderable defaultValue={["ca", "us", "uy"]} />
+    </Page>
+  ),
+  play: async () => {
+    field().focus();
+    await userEvent.keyboard("{ArrowLeft} ");
+    const lifted = itemOf("Uruguay");
+    await waitFor(() => expect(lifted).toHaveAttribute("data-lifted", "true"));
+    const ring = getComputedStyle(lifted);
+    await expect(ring.outlineStyle).toBe("solid");
+    await expect(parseFloat(ring.outlineWidth)).toBe(2);
+    const probe = document.createElement("span");
+    probe.style.outlineColor = "var(--dbm-border-focus)";
+    probe.style.outlineStyle = "solid";
+    document.body.appendChild(probe);
+    await expect(ring.outlineColor).toBe(getComputedStyle(probe).outlineColor);
+    probe.remove();
+    await userEvent.keyboard("{ArrowLeft}{ArrowLeft}");
+    await expect(chips()).toEqual(["Uruguay", "Canada", "United States"]);
+    // the chip kept its element, so the keyboard is still on it
+    await expect(body().getByRole("button", { name: "Remove Uruguay" })).toHaveFocus();
+    await userEvent.keyboard(" ");
+    await waitFor(() => expect(lifted).not.toHaveAttribute("data-lifted"));
+  },
+};
+
+export const CustomValuesTypedAtOnce: Story = {
+  name: "Values inserted all at once with separators in them become chips, and the rest stays in the entry",
+  render: () => (
+    <Page>
+      <MultiSelect aria-label="Recipients" options={countries} allowCustomValue />
+    </Page>
+  ),
+  play: async () => {
+    field().focus();
+    await send("Input.insertText", { text: "one,two,thr" });
+    await waitFor(() => expect(chips()).toEqual(["one", "two"]));
+    await expect(field()).toHaveValue("thr");
+    await userEvent.keyboard("ee{Enter}");
+    await waitFor(() => expect(chips()).toEqual(["one", "two", "three"]));
+  },
+};
+
+export const GroupRowsLineUp: Story = {
+  name: "A group's Select all row lines its text up with the options under it",
+  render: () => (
+    <Page>
+      <MultiSelect
+        aria-label="Ingredients"
+        selectGroups
+        defaultOpen
+        options={[
+          { value: "a", label: "Apple", group: "Fruit" },
+          { value: "b", label: "Carrot", group: "Veg" },
+        ]}
+      />
+    </Page>
+  ),
+  play: async () => {
+    const left = (row: HTMLElement) => (row.querySelector("[class*=optionLabel]") as HTMLElement).getBoundingClientRect().left;
+    const group = await option("Select all in Fruit");
+    const apple = await option("Apple");
+    await expect(Math.abs(left(group) - left(apple))).toBeLessThan(1);
   },
 };

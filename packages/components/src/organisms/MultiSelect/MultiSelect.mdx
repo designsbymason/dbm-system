@@ -22,6 +22,8 @@ export const propOrder = [
   "size",
   "tone",
   "variant",
+  "renderValue",
+  "reorderable",
   "overflow",
   "maxVisible",
   "filter",
@@ -30,6 +32,11 @@ export const propOrder = [
   "maxSelected",
   "minSelected",
   "selectAll",
+  "onSelectAll",
+  "selectGroups",
+  "allowCustomValue",
+  "separators",
+  "validate",
   "clearable",
   "onClear",
   "loading",
@@ -109,9 +116,13 @@ import { MultiSelect } from "@dbm-system/components";
   "inputValue",
   "defaultInputValue",
   "onInputValueChange",
+  "renderValue",
   "maxVisible",
   "filter",
   "minSelected",
+  "onSelectAll",
+  "separators",
+  "validate",
   "onClear",
   "emptyContent",
   "onCreate",
@@ -178,9 +189,29 @@ import { MultiSelect } from "@dbm-system/components";
 
 <Canvas of={MultiSelectStories.SelectAll} />
 
+### A Select all row in each group
+
+<Canvas of={MultiSelectStories.GroupSelectAll} />
+
+### Select all, answered by the page
+
+<Canvas of={MultiSelectStories.SelectAllFromThePage} />
+
+### Typed values as chips
+
+<Canvas of={MultiSelectStories.CustomValues} />
+
 ### Many chips
 
 <Canvas of={MultiSelectStories.Overflow} />
+
+### A tone, an icon or content for each chip
+
+<Canvas of={MultiSelectStories.PerOption} />
+
+### Moving chips
+
+<Canvas of={MultiSelectStories.Reorderable} />
 
 ### The look of the chips
 
@@ -237,6 +268,10 @@ import { MultiSelect } from "@dbm-system/components";
 - Use `overflow="collapse"` where the field sits in a toolbar or a table row and must stay one line.
 - Use `presentation={{ base: "full-width", sm: "anchored" }}` in a form people fill in on a phone.
 - Use `onCreate` when a person may add an item the list doesn't hold yet (a label, a person); return the new option so it is chosen.
+- Use `allowCustomValue` when the list is only suggestions and a person may type any value (an email address, a tag), and `validate` to refuse the ones that aren't.
+- Use `reorderable` when the order is part of the value: columns to show, steps, an assignee priority.
+- Use `selectGroups` for a long grouped list where a person often wants a whole group, and `onSelectAll` when "all" is more than the page has loaded.
+- Give an option a `tone` and a `chipIcon` when the chip should say what kind of thing it is (a status, a category), and `renderValue` when a name needs an avatar beside it.
 
 </Callout>
 <Callout tone="danger" title="Don't">
@@ -283,6 +318,28 @@ import { MultiSelect } from "@dbm-system/components";
 - `onCreate` adds a last row, "Create …", while the typed text names no option. It is highlighted only when nothing
   else matches, so Enter still chooses a real match first. Add the new option to `options` yourself: until you do, its
   chip still shows its label, and the value is kept.
+- An option can carry its chip's `tone` and `chipIcon`, which replace the field's `tone` for that chip and add an icon the
+  list doesn't show (the option's own `icon` is for the list). `renderValue` replaces a chip's text with your own content: it
+  receives the option (or `undefined` for a value with no option), the chip's tooltip, remove button and announcements keep the
+  `label`, and the chip must stay one line tall.
+- `reorderable` lets chips be moved by dragging with a pointer or a finger, or with the keyboard (see the table). The value
+  changes order and `onValueChange` reports `source: "reorder"`; the order is also what a form submits. Chips take no touch
+  gestures of their own while it is on, so a finger drags them instead of scrolling the page, and a press on a chip never opens
+  the list. A chip being dragged is dimmed and a bar shows where it will land, beside the nearest chip, so a row that wraps onto
+  several lines works the same.
+- `selectGroups` adds a row under each group's heading that chooses every enabled option of that group the list shows (the
+  matches, while text is typed), and removes them again once all are chosen. It stops at `maxSelected`. A group with nothing
+  that can be chosen has none.
+- `onSelectAll` answers the "Select all" row for a list the page doesn't hold all of. It receives the typed text and the
+  options loaded now, and returns options or just their values (or a promise of them); the row waits meanwhile, the result is
+  added up to `maxSelected`, and the chips keep the labels of the options it returned. The row only adds: remove with the clear
+  button or the chips. It is offered once there is something to search or load.
+- With `allowCustomValue` typed text is a value of its own when it names no option. Enter with no option highlighted, a
+  separator (a comma by default; `separators` changes them), a paste of several (split at separators and line breaks) or leaving
+  the field makes chips; the first match is not highlighted while typing, so Enter commits what was typed, and an arrow key
+  moves to an option when that is what is meant. Text that is exactly an option's label (ignoring case and accents) chooses that
+  option instead. A value already chosen, one `validate` refuses, the text of a disabled option and one past `maxSelected` are
+  refused with a message under the field, which is announced and cleared by the next keystroke.
 - `controllerRef` hands your code an object with `open`, `close`, `clear` and `focus`, each returning whether it had
   anything to do. Use it for a "Clear filters" button that lives elsewhere on the page.
 
@@ -311,6 +368,12 @@ import { MultiSelect } from "@dbm-system/components";
   keyboard stays up.
 - In a form, `required` and `minSelected` are a custom validity on the typing field, so the browser and `Form` focus the
   field you can see and read its message.
+- With `reorderable` a chip that is picked up, moved, dropped or put back is announced with its place ("Uruguay moved to
+  position 2 of 3"), and the pick-up says which keys to use. A chip keeps its element when it moves, so keyboard focus stays on
+  it. Space picks up rather than removes while it is on; Enter and Delete still remove. A chip that is picked up has a ring in the
+  focus colour, and a drop marker is a bar in the same colour (a system colour in Windows high contrast).
+- With `allowCustomValue` a refused value is shown under the field, announced, and named in the field's description, and the
+  field is marked invalid until the next keystroke.
 - The matched text in a label is drawn bold, and with `highlightTone` also in `Highlight`'s colours (a `<mark>`). Neither
   is the only cue to what matched: the list is already narrowed to the options that do.
 - In Windows high contrast, the highlighted row is outlined and the list and the box keep their borders.
@@ -329,6 +392,8 @@ import { MultiSelect } from "@dbm-system/components";
 | Home, End | On a chip, move to the first or last chip. In the typing field they move the caret. |
 | Backspace | In an empty typing field, moves to the last chip; a second press there removes it and keeps your place along the row. With text, deletes a character. |
 | Delete | On a chip, removes it. |
+| Space (`reorderable`) | On a chip, picks it up. Arrow keys (flipped in a right-to-left page), Home and End then move it, Space or Enter drops it, Escape puts it back. Leaving the chip drops it where it is. |
+| Alt + arrow (`reorderable`) | On a chip, moves it one place without picking it up. |
 | Tab | Leaves the field. The typed text is dropped. |
 | Typing | Opens the list and narrows it; the first match is highlighted. With `onCreate`, a "Create …" row comes last. |
 
@@ -363,6 +428,34 @@ import { MultiSelect } from "@dbm-system/components";
 {/* const controllerRef = useRef<MultiSelectController>(null); */}
 <MultiSelect aria-label="Countries" options={countries} controllerRef={controllerRef} />
 <Button onClick={() => controllerRef.current?.clear()}>Clear filters</Button>
+
+{/* Typed values as chips: an email field with suggestions */}
+<MultiSelect
+  aria-label="Recipients"
+  options={contacts}
+  allowCustomValue
+  validate={(text) => (text.includes("@") ? undefined : "Not an email address")}
+/>
+
+{/* Chips that move, with the new order reported and submitted */}
+<MultiSelect aria-label="Columns" options={columns} reorderable onValueChange={(values) => saveOrder(values)} />
+
+{/* A row for each group, and a Select all the page answers */}
+<MultiSelect aria-label="Ingredients" options={ingredients} selectGroups />
+<MultiSelect
+  aria-label="Search countries"
+  options={results}
+  filter={false}
+  selectAll
+  onSelectAll={async ({ text }) => (await fetchEveryMatch(text)).map((country) => country.id)}
+/>
+
+{/* A chip's colour and icon from its option, and its content drawn yourself */}
+<MultiSelect
+  aria-label="Status"
+  options={[{ value: "done", label: "Done", tone: "success", chipIcon: CheckCircleIcon }]}
+  renderValue={(option) => <span>{option?.label}</span>}
+/>
 
 {/* Choosing in a Dialog: the list sits above the dialog, takes the mouse, and leaves the dialog open */}
 <Dialog>
@@ -400,7 +493,7 @@ The box is `TagsInput`'s, and the list is `Combobox`'s.
 <TokenRow token="bg.neutral-subtle" usage="the fill behind the caret or clear button while the pointer is over it" />
 <TokenRow token="border.default" usage="the box's border at rest, the list's border, and the line above the loading and error notes" />
 <TokenRow token="border.neutral" usage="the box's border while the pointer is over it" />
-<TokenRow token="border.focus" usage="the box's border and focus ring while the entry has focus" />
+<TokenRow token="border.focus" usage="the box's border and focus ring while the entry has focus, the ring on a chip picked up with the keyboard and the bar that shows where a dragged chip will land" />
 <TokenRow token="border.danger" usage="the box's border and ring when `hasError` is set" />
 <TokenRow token="text.primary" usage="the typed text and the option text" />
 <TokenRow token="text.secondary" usage="the description under an option, which stays readable on the highlighted row" />
@@ -408,7 +501,7 @@ The box is `TagsInput`'s, and the list is `Combobox`'s.
 <TokenRow token="text.brand" usage="a chosen option" />
 <TokenRow token="text.disabled" usage="an option that can't be chosen" />
 <TokenRow token="border-width.1" usage="the box's border and the list's border" />
-<TokenRow token="border-width.2" usage="the focus ring's width, drawn on the box's own edge, and the highlighted row's outline in Windows high contrast" />
+<TokenRow token="border-width.2" usage="the focus ring's width, drawn on the box's own edge, the ring on a picked-up chip, the drop marker's width and the highlighted row's outline in Windows high contrast" />
 <TokenRow token="tags-input.entry-min-width" usage="the narrowest the typing area gets before it drops beneath the chips" />
 <TokenRow token="combobox.list-max-height" usage="the most height the list takes before it scrolls" />
 <TokenRow token="combobox.option-height.xs" usage="the height of a one-line row at `xs`, shared by group headings" />
@@ -423,13 +516,13 @@ The box is `TagsInput`'s, and the list is `Combobox`'s.
 <TokenRow token="combobox.option-height-described.xl" usage="the height of a row with a description at `xl`" />
 <TokenRow token="radius.md" usage="the box's and the list's corners" />
 <TokenRow token="radius.sm" usage="a row's corners" />
-<TokenRow token="radius.full" usage="the round hover fill of the caret and clear buttons" />
+<TokenRow token="radius.full" usage="the round hover fill of the caret and clear buttons, and the round ring and drop marker of a moved chip" />
 <TokenRow token="shadow.light-md" usage="the list's elevation in a light theme" />
 <TokenRow token="shadow.dark-md" usage="the list's elevation in a dark theme" />
 <TokenRow token="z-index.popover" usage="the list's layer, above a Dialog's scrim and panel so it works inside one" />
-<TokenRow token="opacity.40" usage="the whole field while disabled" />
-<TokenRow token="space.1" usage="the box's padding at `xs` and `md`, the list's padding, and the gap between the caret and clear buttons" />
-<TokenRow token="space.2" usage="the gap between the chips, the typing area and the buttons, the box's padding at `sm`, `lg` and `xl`, and the gap inside a row" />
+<TokenRow token="opacity.40" usage="the whole field while disabled, and a chip while it is dragged" />
+<TokenRow token="space.1" usage="the box's padding at `xs` and `md`, the list's padding, the gap between the caret and clear buttons, and how far a picked-up chip's ring and a drop marker stand off the chip" />
+<TokenRow token="space.2" usage="the gap between the chips, the typing area and the buttons (which a drop marker is centred in), the box's padding at `sm`, `lg` and `xl`, and the gap inside a row" />
 <TokenRow token="space.3" usage="the inset of a row's content, and of the typing text at `sm` and `md`" />
 <TokenRow token="space.4" usage="the inset of the typing text at `lg` and `xl`" />
 <TokenRow token="space.6" usage="the least size of the caret and clear buttons, a 24px target" />

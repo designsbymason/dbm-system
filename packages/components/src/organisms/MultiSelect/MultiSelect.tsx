@@ -1,5 +1,5 @@
 import { CaretDownIcon, ListChecksIcon, XIcon } from "@dbm-system/icons";
-import { cx, mergeDefined, mergeRefs, useAnnouncement } from "@dbm-system/utils";
+import { cx, mergeDefined, mergeRefs, useAnnouncement, useSortable } from "@dbm-system/utils";
 import * as PopoverPrimitive from "@radix-ui/react-popover";
 import {
   forwardRef,
@@ -12,7 +12,8 @@ import {
   useRef,
   useState,
 } from "react";
-import type { ChangeEvent, FocusEvent, KeyboardEvent, MouseEvent } from "react";
+import type { ChangeEvent, ClipboardEvent, FocusEvent, KeyboardEvent, MouseEvent } from "react";
+import { FieldError } from "../../atoms/FieldError";
 import { Spinner } from "../../atoms/Spinner";
 import { Tag } from "../../atoms/Tag";
 import type { TagSize } from "../../atoms/Tag";
@@ -30,7 +31,6 @@ import {
   SELECT_ALL_VALUE,
   stepEnabled,
 } from "../../internal/optionList/optionList.rows";
-import type { Row } from "../../internal/optionList/optionList.rows";
 import { OptionListPanel } from "../../internal/optionList/OptionListPanel";
 import { useOptionListLayout } from "../../internal/optionList/useOptionListLayout";
 import { optionDomId, useOptionListWindow } from "../../internal/optionList/useOptionListWindow";
@@ -38,6 +38,7 @@ import { TagsInputChip } from "../../molecules/TagsInput/TagsInputChip";
 // The chips and their box must look exactly as `TagsInput`'s do, so the two share its stylesheet.
 import chipStyles from "../../molecules/TagsInput/TagsInput.module.css";
 import styles from "./MultiSelect.module.css";
+import { composeRows, groupOfRowValue, groupRowValue } from "./MultiSelect.rows";
 import type {
   MultiSelectChangeSource,
   MultiSelectController,
@@ -84,6 +85,14 @@ const buildDefaultLabels = (formatNumber: (value: number) => string): MultiSelec
   more: (hidden) => `+${formatNumber(hidden)} more`,
   less: "Show less",
   chipsHint: "Use the left arrow key to move to the chosen options",
+  selectGroup: (group) => `Select all in ${group}`,
+  deselectGroup: (group) => `Deselect all in ${group}`,
+  duplicate: (text) => `${text} is already chosen`,
+  liftedChip: (label, position, total) =>
+    `${label}, position ${formatNumber(position)} of ${formatNumber(total)}. Use the arrow keys to move it, Space to drop it, Escape to cancel`,
+  movedChip: (label, position, total) => `${label} moved to position ${formatNumber(position)} of ${formatNumber(total)}`,
+  droppedChip: (label, position, total) => `${label} dropped at position ${formatNumber(position)} of ${formatNumber(total)}`,
+  cancelledChip: (label, position, total) => `${label} moved back to position ${formatNumber(position)} of ${formatNumber(total)}`,
   create: (text) => `Create “${text}”`,
   typeToSearch: "Type to search",
 });
@@ -92,6 +101,17 @@ const buildDefaultLabels = (formatNumber: (value: number) => string): MultiSelec
 // on every render.
 const NO_OPTIONS: MultiSelectOption[] = [];
 const NO_VALUES: string[] = [];
+const DEFAULT_SEPARATORS = [","];
+
+const escapeForPattern = (text: string) => text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
+/** Moves the item at `from` so that it ends up at `to`. */
+const moved = <T,>(list: T[], from: number, to: number): T[] => {
+  const next = [...list];
+  const [item] = next.splice(from, 1);
+  next.splice(to, 0, item as T);
+  return next;
+};
 
 const ignoreRemove = () => undefined;
 // A space that is not collapsed, so the unseen chip has a line of text and is as tall as a real one.
@@ -150,11 +170,16 @@ export const MultiSelect = forwardRef<HTMLInputElement, MultiSelectProps>(
       defaultInputValue,
       onInputValueChange,
       filter,
-      autoHighlight = true,
+      autoHighlight,
       closeOnSelect = false,
       maxSelected,
       minSelected,
       selectAll = false,
+      onSelectAll,
+      selectGroups = false,
+      allowCustomValue = false,
+      separators = DEFAULT_SEPARATORS,
+      validate,
       clearable = true,
       onClear,
       loading = false,
@@ -171,6 +196,8 @@ export const MultiSelect = forwardRef<HTMLInputElement, MultiSelectProps>(
       size = "md",
       tone = "brand",
       variant = "subtle",
+      renderValue,
+      reorderable = false,
       overflow = "wrap",
       maxVisible,
       hasError = false,
@@ -262,16 +289,20 @@ export const MultiSelect = forwardRef<HTMLInputElement, MultiSelectProps>(
     const selectedSet = useMemo(() => new Set(values), [values]);
     const optionByValue = useMemo(() => new Map(options.map((option) => [option.value, option])), [options]);
 
-    // A chip shows its option's label. The label is remembered, so a chosen value whose option has left `options`
-    // (a list fetched for other text, an option made by `onCreate` that the owner hasn't added) keeps its name.
-    const [labelMemory, setLabelMemory] = useState<Record<string, string>>({});
-    let staleLabels: Record<string, string> | undefined;
+    // A chip shows its option's label, colour and icon. The option is remembered, so a chosen value whose option has left
+    // `options` (a list fetched for other text, an option made by `onCreate` or `onSelectAll` that the owner hasn't
+    // added) keeps its name.
+    const [optionMemory, setOptionMemory] = useState<Record<string, MultiSelectOption>>({});
+    let staleOptions: Record<string, MultiSelectOption> | undefined;
     for (const chosen of values) {
       const known = optionByValue.get(chosen);
-      if (known && labelMemory[chosen] !== known.label) (staleLabels ??= {})[chosen] = known.label;
+      if (known && optionMemory[chosen] !== known) (staleOptions ??= {})[chosen] = known;
     }
-    if (staleLabels) setLabelMemory({ ...labelMemory, ...staleLabels });
-    const labelOf = (chosen: string) => optionByValue.get(chosen)?.label ?? labelMemory[chosen] ?? chosen;
+    if (staleOptions) setOptionMemory({ ...optionMemory, ...staleOptions });
+    const optionFor = (chosen: string): MultiSelectOption | undefined => optionByValue.get(chosen) ?? optionMemory[chosen];
+    const labelOf = (chosen: string) => optionFor(chosen)?.label ?? chosen;
+    const remember = (made: MultiSelectOption[]) =>
+      setOptionMemory((memory) => ({ ...memory, ...Object.fromEntries(made.map((entry) => [entry.value, entry])) }));
 
     // The text typed to narrow the list.
     const isInputControlled = inputValueProp !== undefined;
@@ -331,50 +362,87 @@ export const MultiSelect = forwardRef<HTMLInputElement, MultiSelectProps>(
       [selectAll, matching],
     );
     const allChosen = coverage.length > 0 && coverage.every((option) => selectedSet.has(option.value));
+    const [selecting, setSelecting] = useState(false);
+    // With `onSelectAll` the page answers, so the row is there whenever there is something to search or load.
+    const offersSelectAll = selectAll && (onSelectAll ? options.length > 0 || typedText !== "" : coverage.length > 0);
+
+    // A group's "select all" row covers that group's matching options that can be chosen.
+    const groupCoverage = useMemo(() => {
+      const byGroup = new Map<string, MultiSelectOption[]>();
+      if (!selectGroups) return byGroup;
+      for (const option of matching) {
+        if (option.group === undefined || isDisabled(option)) continue;
+        const members = byGroup.get(option.group);
+        if (members) members.push(option);
+        else byGroup.set(option.group, [option]);
+      }
+      return byGroup;
+    }, [selectGroups, matching]);
+    const groupAllChosen = (group: string) => {
+      const members = groupCoverage.get(group);
+      return Boolean(members && members.length > 0 && members.every((option) => selectedSet.has(option.value)));
+    };
 
     // The "Create …" row: offered for text that names no option, once the person has typed something.
     const canCreate = onCreate !== undefined;
     const [creating, setCreating] = useState(false);
     const foldedLabels = useMemo(
-      () => (canCreate ? new Set(options.map((option) => fold(option.label))) : undefined),
-      [options, canCreate],
+      () => (canCreate || allowCustomValue ? new Set(options.map((option) => fold(option.label))) : undefined),
+      [options, canCreate, allowCustomValue],
     );
-    const offersCreate = foldedLabels !== undefined && typedText !== "" && !foldedLabels.has(fold(typedText));
+    const offersCreate = canCreate && foldedLabels !== undefined && typedText !== "" && !foldedLabels.has(fold(typedText));
     const createLabel = offersCreate ? labels.create(typedText) : undefined;
 
     const { rows, flat } = useMemo(() => {
       const built = buildRows(visible);
-      let builtRows: Row<MultiSelectOption>[] = built.rows;
-      let builtFlat: MultiSelectOption[] = built.flat;
-      if (coverage.length > 0) {
-        const all: MultiSelectOption = {
-          value: SELECT_ALL_VALUE,
-          label: allChosen ? labels.deselectAll : labels.selectAll,
-          icon: ListChecksIcon,
-          disabled: !allChosen && atLimit ? limitReason : false,
-        };
-        // The row comes first, so every option's index moves down by one.
-        builtRows = [
-          { kind: "option", key: "select-all", option: all, index: 0 },
-          ...builtRows.map((row) => (row.kind === "option" ? { ...row, index: row.index + 1 } : row)),
-        ];
-        builtFlat = [all, ...builtFlat];
-      }
-      if (createLabel !== undefined) {
-        const option: MultiSelectOption = {
-          value: CREATE_VALUE,
-          label: createLabel,
-          disabled: creating || (atLimit ? limitReason : false),
-        };
-        builtRows = [...builtRows, { kind: "option", key: "create", option, index: builtFlat.length }];
-        builtFlat = [...builtFlat, option];
-      }
-      return { rows: builtRows, flat: builtFlat };
-    }, [visible, coverage.length, allChosen, atLimit, limitReason, labels.selectAll, labels.deselectAll, createLabel, creating]);
+      const top: MultiSelectOption | undefined = offersSelectAll
+        ? {
+            value: SELECT_ALL_VALUE,
+            label: !onSelectAll && allChosen ? labels.deselectAll : labels.selectAll,
+            icon: ListChecksIcon,
+            disabled: selecting || (!allChosen && atLimit ? limitReason : false),
+          }
+        : undefined;
+      const bottom: MultiSelectOption | undefined =
+        createLabel !== undefined
+          ? { value: CREATE_VALUE, label: createLabel, disabled: creating || (atLimit ? limitReason : false) }
+          : undefined;
+      return composeRows(built, {
+        top,
+        group: selectGroups
+          ? (group) => {
+              const members = groupCoverage.get(group);
+              if (!members || members.length === 0) return undefined;
+              const everyChosen = members.every((option) => selectedSet.has(option.value));
+              return {
+                value: groupRowValue(group),
+                label: everyChosen ? labels.deselectGroup(group) : labels.selectGroup(group),
+                icon: ListChecksIcon,
+                disabled: !everyChosen && atLimit ? limitReason : false,
+              };
+            }
+          : undefined,
+        bottom,
+      });
+    }, [
+      visible,
+      offersSelectAll,
+      onSelectAll,
+      allChosen,
+      selecting,
+      atLimit,
+      limitReason,
+      labels,
+      createLabel,
+      creating,
+      selectGroups,
+      groupCoverage,
+      selectedSet,
+    ]);
     const resultCount = visible.length;
     const hasIcons = useMemo(
-      () => coverage.length > 0 || options.some((option) => option.icon !== undefined),
-      [coverage.length, options],
+      () => offersSelectAll || groupCoverage.size > 0 || options.some((option) => option.icon !== undefined),
+      [offersSelectAll, groupCoverage, options],
     );
 
     // The highlight. `navigated` is the option the person moved to with a key or the pointer; until they do, the
@@ -386,12 +454,12 @@ export const MultiSelect = forwardRef<HTMLInputElement, MultiSelectProps>(
         const index = flat.findIndex((option) => option.value === navigated);
         if (index !== -1) return index;
       }
-      if (typedText !== "" && autoHighlight) {
+      if (typedText !== "" && (autoHighlight ?? !allowCustomValue)) {
         const first = flat.findIndex((option) => !isDisabled(option) && !isActionValue(option.value));
         return first !== -1 ? first : firstEnabled(flat);
       }
       return -1;
-    }, [open, navigated, flat, typedText, autoHighlight]);
+    }, [open, navigated, flat, typedText, autoHighlight, allowCustomValue]);
 
     const listWindow = useOptionListWindow({ open, rows, size, highlighted, listId });
     const moveHighlight = (index: number) => {
@@ -420,6 +488,8 @@ export const MultiSelect = forwardRef<HTMLInputElement, MultiSelectProps>(
       lastError.current = error;
     }, [error, labels.error, announce]);
 
+    const isRtl = () => (boxRef.current ? getComputedStyle(boxRef.current).direction === "rtl" : false);
+
     // Changing the values.
     const commit = (next: string[], source: MultiSelectChangeSource, option?: MultiSelectOption) => {
       if (!isValueControlled) setInnerValue(next);
@@ -432,9 +502,40 @@ export const MultiSelect = forwardRef<HTMLInputElement, MultiSelectProps>(
       commit(
         values.filter((_, position) => position !== index),
         "remove",
-        optionByValue.get(removed),
+        optionFor(removed),
       );
       announce(labels.removed(labelOf(removed), values.length - 1));
+    };
+
+    // Moving chips (`reorderable`): a gesture asks, and the order changes only when the value does.
+    const liftedValue = useRef<string | undefined>(undefined);
+    const sortable = useSortable<HTMLUListElement>({
+      enabled: reorderable && canEdit,
+      count: values.length,
+      rtl: isRtl,
+      onMove: (from, to, details) => {
+        const item = values[from];
+        if (item === undefined) return;
+        commit(moved(values, from, to), "reorder", optionFor(item));
+        announce(
+          (details.via === "keyboard" ? labels.movedChip : labels.droppedChip)(labelOf(item), to + 1, values.length),
+        );
+      },
+      onLift: (index) => {
+        liftedValue.current = values[index];
+        announce(labels.liftedChip(labelOf(values[index] ?? ""), index + 1, values.length));
+      },
+      onDrop: (index) => announce(labels.droppedChip(labelOf(values[index] ?? ""), index + 1, values.length)),
+      onCancel: (origin) => announce(labels.cancelledChip(labelOf(liftedValue.current ?? ""), origin + 1, values.length)),
+    });
+    const { containerRef: sortableRef, itemProps: sortableItemProps, handleKeyUp: sortableKeyUp, release: releaseChip } = sortable;
+    const liftedChip = sortable.lifted;
+    const dragged = sortable.drag;
+    const chipKeyDown = (event: KeyboardEvent<HTMLUListElement>, index: number) => {
+      if (!reorderable) return false;
+      // A chip being moved is dropped where it is before it is removed.
+      if (liftedChip !== null && (event.key === "Delete" || event.key === "Backspace")) releaseChip();
+      return sortable.handleKeyDown(event, index);
     };
 
     const chips = useSelectedChips({
@@ -445,6 +546,7 @@ export const MultiSelect = forwardRef<HTMLInputElement, MultiSelectProps>(
       boxRef,
       collapseMode: overflow === "collapse",
       maxVisible,
+      onItemKeyDown: chipKeyDown,
     });
 
     // What every choice from the list leaves behind: the text that narrowed it is cleared, the highlight stays on
@@ -474,22 +576,68 @@ export const MultiSelect = forwardRef<HTMLInputElement, MultiSelectProps>(
       afterChoice(option.value);
     };
 
-    const runSelectAll = () => {
-      if (allChosen) {
-        const covered = new Set(coverage.map((option) => option.value));
-        const next = values.filter((chosen) => !covered.has(chosen));
+    // Chooses what `covered` holds that isn't chosen yet, up to the limit, or (when all of it is chosen) removes it.
+    const toggleCovered = (covered: MultiSelectOption[], everyChosen: boolean, chosenValue: string) => {
+      if (everyChosen) {
+        const coveredValues = new Set(covered.map((option) => option.value));
+        const next = values.filter((chosen) => !coveredValues.has(chosen));
         commit(next, "selectAll");
         announce(labels.selectedCount(next.length));
       } else {
         const room = maxSelected === undefined ? Infinity : Math.max(0, maxSelected - values.length);
-        const unchosen = coverage.filter((option) => !selectedSet.has(option.value));
+        const unchosen = covered.filter((option) => !selectedSet.has(option.value));
         const added = unchosen.slice(0, room);
         const next = [...values, ...added.map((option) => option.value)];
         commit(next, "selectAll");
         announce(labels.selectedCount(next.length));
         if (maxSelected !== undefined && added.length < unchosen.length) announce(labels.limitReached(maxSelected));
       }
-      afterChoice(SELECT_ALL_VALUE);
+      afterChoice(chosenValue);
+    };
+
+    // The page answers "Select all" (a list it holds more of than is loaded): the result is added, up to the limit.
+    const runRemoteSelectAll = () => {
+      if (!onSelectAll || selecting) return;
+      const finish = (answer: Array<MultiSelectOption | string> | void) => {
+        if (!answer) return;
+        const made = answer.filter((entry): entry is MultiSelectOption => typeof entry !== "string");
+        remember(made);
+        const answered = answer.map((entry) => (typeof entry === "string" ? entry : entry.value));
+        const room = maxSelected === undefined ? Infinity : Math.max(0, maxSelected - values.length);
+        const fresh = [...new Set(answered)].filter((answeredValue) => !selectedSet.has(answeredValue));
+        const added = fresh.slice(0, room);
+        const next = [...values, ...added];
+        commit(next, "selectAll");
+        announce(labels.selectedCount(next.length));
+        if (maxSelected !== undefined && added.length < fresh.length) announce(labels.limitReached(maxSelected));
+        afterChoice(SELECT_ALL_VALUE);
+      };
+      let result: ReturnType<NonNullable<typeof onSelectAll>>;
+      try {
+        result = onSelectAll({ text: typedText, options: coverage });
+      } catch (thrown) {
+        warnOnce(`MultiSelect: \`onSelectAll\` threw (${String(thrown)}); nothing was chosen. Return the options instead of throwing.`);
+        announce(labels.error);
+        return;
+      }
+      if (result && typeof (result as Promise<unknown>).then === "function") {
+        setSelecting(true);
+        (result as Promise<Array<MultiSelectOption | string> | void>).then(
+          (answer) => {
+            setSelecting(false);
+            finish(answer);
+          },
+          () => {
+            setSelecting(false);
+            announce(labels.error);
+          },
+        );
+      } else finish(result as Array<MultiSelectOption | string> | void);
+    };
+
+    const runSelectAll = () => {
+      if (onSelectAll) runRemoteSelectAll();
+      else toggleCovered(coverage, allChosen, SELECT_ALL_VALUE);
     };
 
     // Asks the owner to make an option for the typed text. It may answer with the new option (chosen at once, even
@@ -499,7 +647,7 @@ export const MultiSelect = forwardRef<HTMLInputElement, MultiSelectProps>(
         setOpen(false);
         return;
       }
-      setLabelMemory((memory) => ({ ...memory, [created.value]: created.label }));
+      remember([created]);
       if (!selectedSet.has(created.value)) {
         commit([...values, created.value], "create", created);
         announce(labels.added(created.label, values.length + 1));
@@ -528,10 +676,76 @@ export const MultiSelect = forwardRef<HTMLInputElement, MultiSelectProps>(
       } else finishCreate(result as MultiSelectOption | void);
     };
 
+    // Typed text made into chips (`allowCustomValue`). Text that is exactly an option's label chooses that option;
+    // other text is a value of its own, unless it is already chosen, refused by `validate` or past the limit.
+    const [message, setMessage] = useState<string | undefined>(undefined);
+    const usableSeparators = useMemo(
+      () => (Array.isArray(separators) ? separators : []).filter((separator): separator is string => typeof separator === "string" && separator !== ""),
+      [separators],
+    );
+    const separatorSource = usableSeparators.map(escapeForPattern).join("|");
+    const pastePattern = new RegExp([...usableSeparators.map(escapeForPattern), "\\r?\\n", "\\t"].join("|"));
+    const runValidate = (word: string): string | undefined => {
+      if (!validate) return undefined;
+      try {
+        const reason = validate(word);
+        return typeof reason === "string" && reason !== "" ? reason : undefined;
+      } catch (thrown) {
+        warnOnce(`MultiSelect: \`validate\` threw (${String(thrown)}); the text was accepted. Return a message instead of throwing.`);
+        return undefined;
+      }
+    };
+    const addTyped = (pieces: string[]): string[] => {
+      const next = [...values];
+      const refused: string[] = [];
+      const addedLabels: string[] = [];
+      let custom = false;
+      let only: MultiSelectOption | undefined;
+      for (const piece of pieces) {
+        const word = piece.trim();
+        if (word === "") continue;
+        const named = options.find((option) => fold(option.label) === fold(word));
+        if (named && isDisabled(named)) {
+          refused.push(typeof named.disabled === "string" ? named.disabled : labels.noResults);
+          continue;
+        }
+        const chosenValue = named ? named.value : word;
+        if (next.includes(chosenValue)) {
+          refused.push(labels.duplicate(named ? named.label : word));
+          continue;
+        }
+        if (maxSelected !== undefined && next.length >= maxSelected) {
+          refused.push(labels.limitReached(maxSelected));
+          break;
+        }
+        if (!named) {
+          const reason = runValidate(word);
+          if (reason) {
+            refused.push(reason);
+            continue;
+          }
+          custom = true;
+        }
+        next.push(chosenValue);
+        addedLabels.push(named ? named.label : word);
+        only = named;
+      }
+      if (addedLabels.length > 0) {
+        commit(next, custom ? "custom" : "select", addedLabels.length === 1 ? only : undefined);
+        announce(
+          addedLabels.length === 1 ? labels.added(addedLabels[0] as string, next.length) : labels.selectedCount(next.length),
+        );
+      } else if (refused[0]) announce(refused[0]);
+      setMessage(refused[0]);
+      return refused;
+    };
+
     const choose = (option: MultiSelectOption) => {
       if (isDisabled(option)) return;
+      const group = groupOfRowValue(option.value);
       if (option.value === CREATE_VALUE) runCreate();
       else if (option.value === SELECT_ALL_VALUE) runSelectAll();
+      else if (group !== undefined) toggleCovered(groupCoverage.get(group) ?? NO_OPTIONS, groupAllChosen(group), option.value);
       else toggle(option);
     };
 
@@ -539,6 +753,7 @@ export const MultiSelect = forwardRef<HTMLInputElement, MultiSelectProps>(
       if (!canEdit) return;
       if (values.length > 0) commit([], "clear");
       if (text !== "") setText("", "clear");
+      setMessage(undefined);
       setNavigated(null);
       announce(labels.cleared);
       onClear?.();
@@ -552,17 +767,44 @@ export const MultiSelect = forwardRef<HTMLInputElement, MultiSelectProps>(
       setFieldLabel(labelText || undefined);
     };
 
+    const composing = useRef(false);
     const handleChange = (event: ChangeEvent<HTMLInputElement>) => {
       if (!canEdit) return;
-      setText(event.target.value, "input");
+      if (message) setMessage(undefined);
+      const next = event.target.value;
       setNavigated(null);
       setOpen(true);
+      if (!allowCustomValue || composing.current || separatorSource === "" || !new RegExp(separatorSource).test(next)) {
+        setText(next, "input");
+        return;
+      }
+      // A separator was typed: everything before the last one is complete, whatever follows it is still being typed.
+      const pieces = next.split(new RegExp(separatorSource, "g"));
+      const rest = pieces.pop() ?? "";
+      const refused = addTyped(pieces);
+      // A single typed piece that was refused stays in the entry, so it can be fixed.
+      setText(pieces.length === 1 && refused.length > 0 ? (pieces[0] as string) : rest, "input");
+    };
+
+    const handlePaste = (event: ClipboardEvent<HTMLInputElement>) => {
+      if (!allowCustomValue || !canEdit) return;
+      const pasted = event.clipboardData.getData("text");
+      if (!pastePattern.test(pasted)) return;
+      event.preventDefault();
+      // The pasted text goes in where the caret (or the selection) is, then everything is split.
+      const field = event.currentTarget;
+      const start = Math.min(field.selectionStart ?? text.length, text.length);
+      const end = Math.min(field.selectionEnd ?? start, text.length);
+      addTyped((text.slice(0, start) + pasted + text.slice(end)).split(new RegExp(pastePattern.source, "g")));
+      setText("", "input");
     };
 
     const handleFocus = (event: FocusEvent<HTMLDivElement>) => {
       const target = event.target as HTMLElement;
       const onEntry = target === entryRef.current;
-      chips.setEngaged(onEntry || Boolean(target.closest("li[role=listitem]")));
+      const onChip = Boolean(target.closest("li[role=listitem]"));
+      chips.setEngaged(onEntry || onChip);
+      if (!onChip) releaseChip();
       if (onEntry) {
         readFieldLabel();
         if (openOnFocus) setOpen(true);
@@ -578,7 +820,13 @@ export const MultiSelect = forwardRef<HTMLInputElement, MultiSelectProps>(
       const leave = () => {
         if (box.contains(document.activeElement)) return;
         chips.setEngaged(false);
-        if (entryRef.current && entryRef.current.value !== "") setText("", "reset");
+        releaseChip();
+        const left = entryRef.current?.value ?? "";
+        if (allowCustomValue && canEdit && left.trim() !== "") {
+          addTyped([left]);
+          setText("", "select");
+        } else if (left !== "") setText("", "reset");
+        setMessage(undefined);
         setNavigated(null);
         setOpen(false);
       };
@@ -593,14 +841,13 @@ export const MultiSelect = forwardRef<HTMLInputElement, MultiSelectProps>(
       if (target === entryRef.current || target.closest("button, a, input, [role=button]")) return;
       event.preventDefault();
       entryRef.current?.focus();
-      setOpen(true);
+      // A press on a chip hands the typing back to the entry, but is not a request for the list (it may be the start of a drag).
+      if (!target.closest("li[role=listitem]")) setOpen(true);
     };
 
     const handleEntryClick = () => {
       if (canEdit && !open) setOpen(true);
     };
-
-    const isRtl = () => (boxRef.current ? getComputedStyle(boxRef.current).direction === "rtl" : false);
 
     const handleKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
       if (event.defaultPrevented || event.nativeEvent.isComposing || event.keyCode === 229) return;
@@ -648,6 +895,13 @@ export const MultiSelect = forwardRef<HTMLInputElement, MultiSelectProps>(
         if (next >= 0 && next < flat.length) moveHighlight(next);
         return;
       }
+      if (key === "Enter" && allowCustomValue && typedText !== "" && !(open && highlighted !== -1)) {
+        // Nothing is highlighted, so Enter makes a chip of what was typed.
+        event.preventDefault();
+        const refused = addTyped([text]);
+        if (refused.length === 0) setText("", "select");
+        return;
+      }
       if (key === "Enter" && open) {
         event.preventDefault();
         const option = highlighted === -1 ? undefined : flat[highlighted];
@@ -666,6 +920,7 @@ export const MultiSelect = forwardRef<HTMLInputElement, MultiSelectProps>(
         event.preventDefault();
         event.stopPropagation();
         setText("", "reset");
+        setMessage(undefined);
       }
     };
 
@@ -720,8 +975,24 @@ export const MultiSelect = forwardRef<HTMLInputElement, MultiSelectProps>(
 
     const showClear = clearable && canEdit && (values.length > 0 || text !== "");
     const tagSize = tagSizeFor[size];
+    const errorId = `${reactId}-error`;
+    const invalid = hasError || Boolean(message);
     const describedBy =
-      [ariaDescribedBy, values.length > 0 && canEdit ? hintId : undefined].filter(Boolean).join(" ") || undefined;
+      [ariaDescribedBy, message ? errorId : undefined, values.length > 0 && canEdit ? hintId : undefined]
+        .filter(Boolean)
+        .join(" ") || undefined;
+    // Each chip is keyed by its value (and how many of the same value came before it), so moving one keeps its element,
+    // and the focus on its button, rather than making a new one.
+    const chipKeys = (() => {
+      const seen = new Map<string, number>();
+      return values.map((chosen) => {
+        const times = seen.get(chosen) ?? 0;
+        seen.set(chosen, times + 1);
+        return times === 0 ? chosen : `${chosen}\u0000${times}`;
+      });
+    })();
+    const chipContent = (chosen: string) => (renderValue ? renderValue(optionFor(chosen), chosen) : undefined);
+    const chipTone = (chosen: string) => optionFor(chosen)?.tone ?? tone;
 
     return (
       <PopoverPrimitive.Root open={open} onOpenChange={setOpen} modal={false}>
@@ -735,7 +1006,7 @@ export const MultiSelect = forwardRef<HTMLInputElement, MultiSelectProps>(
               className={cx(
                 chipStyles.box,
                 styles.box,
-                hasError && chipStyles.invalid,
+                invalid && chipStyles.invalid,
                 disabled && chipStyles.disabled,
                 (chips.collapsed || chips.idleLine) && chipStyles.collapsed,
                 values.length === 0 && chipStyles.noTags,
@@ -744,18 +1015,28 @@ export const MultiSelect = forwardRef<HTMLInputElement, MultiSelectProps>(
               onFocus={handleFocus}
               onBlur={handleBlur}
             >
-              <div className={cx(styles.row, chips.idleLine && chipStyles.oneLine)}>
+              <div
+                className={cx(
+                  styles.row,
+                  chips.idleLine && chipStyles.oneLine,
+                  reorderable && canEdit && styles.reorderable,
+                  dragged && styles.sorting,
+                )}
+              >
                 {/* The explicit roles are deliberate: Safari with VoiceOver stops treating a list as one under
                     `list-style: none` (05-component-api-conventions.md §6), which the lint rule calls redundant.
                     The key handler only moves focus among the chips' own buttons, which are real controls. */}
                 <TooltipProvider>
                   {/* eslint-disable-next-line jsx-a11y/no-redundant-roles, jsx-a11y/no-noninteractive-element-interactions */}
                   <ul
-                    ref={chips.listRef}
+                    ref={mergeRefs(chips.listRef, sortableRef)}
                     role="list"
                     aria-label={labels.selected}
                     className={chipStyles.list}
                     onKeyDown={chips.handleChipKeyDown}
+                    onKeyUp={(event) => {
+                      if (reorderable) sortableKeyUp(event);
+                    }}
                   >
                     {/* A chip drawn but never seen, so the row is as tall as a chip with none in it and choosing the
                         first does not move what is below. Hidden from everything: no tab stop, no name, no width. */}
@@ -766,15 +1047,18 @@ export const MultiSelect = forwardRef<HTMLInputElement, MultiSelectProps>(
                     </li>
                     {values.slice(0, chips.visibleCount).map((chosen, index) => (
                       <TagsInputChip
-                        key={`${index}-${chosen}`}
+                        key={chipKeys[index]}
                         tag={labelOf(chosen)}
                         reason={undefined}
-                        tone={tone}
+                        tone={chipTone(chosen)}
                         variant={variant}
                         size={tagSize}
+                        icon={optionFor(chosen)?.chipIcon}
+                        content={chipContent(chosen)}
                         removable={canEdit}
                         removeLabel={labels.remove(labelOf(chosen))}
                         onRemove={() => chips.removeFromChip(index)}
+                        itemProps={reorderable && canEdit ? sortableItemProps(index) : undefined}
                       />
                     ))}
                   </ul>
@@ -822,6 +1106,13 @@ export const MultiSelect = forwardRef<HTMLInputElement, MultiSelectProps>(
                     enterKeyHint={enterKeyHint}
                     spellCheck={spellCheck}
                     onChange={handleChange}
+                    onPaste={handlePaste}
+                    onCompositionStart={() => {
+                      composing.current = true;
+                    }}
+                    onCompositionEnd={() => {
+                      composing.current = false;
+                    }}
                     onClick={handleEntryClick}
                     onKeyDown={handleKeyDown}
                     role="combobox"
@@ -834,7 +1125,7 @@ export const MultiSelect = forwardRef<HTMLInputElement, MultiSelectProps>(
                     aria-controls={listWindow.listElement ? listId : undefined}
                     aria-autocomplete="list"
                     aria-activedescendant={open && listWindow.activeRendered ? optionDomId(listId, highlighted) : undefined}
-                    aria-invalid={hasError || ariaInvalid || undefined}
+                    aria-invalid={invalid || ariaInvalid || undefined}
                     aria-required={required || undefined}
                   />
                 </div>
@@ -864,8 +1155,16 @@ export const MultiSelect = forwardRef<HTMLInputElement, MultiSelectProps>(
                 <div aria-hidden="true" className={chipStyles.measurerFrame}>
                   <div ref={chips.measurerRef} className={chipStyles.measurer}>
                     {values.map((chosen, index) => (
-                      <Tag key={`${index}-${chosen}`} tone={tone} variant={variant} size={tagSize} removable={canEdit} onRemove={ignoreRemove}>
-                        {labelOf(chosen)}
+                      <Tag
+                        key={chipKeys[index]}
+                        tone={chipTone(chosen)}
+                        variant={variant}
+                        size={tagSize}
+                        leadingIcon={optionFor(chosen)?.chipIcon}
+                        removable={canEdit}
+                        onRemove={ignoreRemove}
+                      >
+                        {chipContent(chosen) ?? labelOf(chosen)}
                       </Tag>
                     ))}
                     <Tag tone={tone} variant={variant} size={tagSize}>
@@ -875,6 +1174,11 @@ export const MultiSelect = forwardRef<HTMLInputElement, MultiSelectProps>(
                 </div>
               )}
             </div>
+            {message && (
+              <FieldError id={errorId} className={chipStyles.message}>
+                {message}
+              </FieldError>
+            )}
             {values.length > 0 && canEdit && <VisuallyHidden id={hintId}>{labels.chipsHint}</VisuallyHidden>}
             {/* One hidden input per value. With none chosen a disabled one keeps the name in the form's list of
                 controls (it is never submitted), so a `Form` can find the field. */}
@@ -898,9 +1202,12 @@ export const MultiSelect = forwardRef<HTMLInputElement, MultiSelectProps>(
           windowStyle={listWindow.windowStyle}
           optionCount={flat.length}
           highlighted={highlighted}
-          isSelected={(option) =>
-            option.value === SELECT_ALL_VALUE ? allChosen : option.value !== CREATE_VALUE && selectedSet.has(option.value)
-          }
+          isSelected={(option) => {
+            if (option.value === SELECT_ALL_VALUE) return !onSelectAll && allChosen;
+            const group = groupOfRowValue(option.value);
+            if (group !== undefined) return groupAllChosen(group);
+            return option.value !== CREATE_VALUE && selectedSet.has(option.value);
+          }}
           onChoose={choose}
           onHover={(option) => {
             if (navigated !== option.value) setNavigated(option.value);

@@ -16,6 +16,8 @@ interface Options {
   /** `overflow="collapse"`: the idle row is one line, with as many chips as fit. */
   collapseMode: boolean;
   maxVisible: number | undefined;
+  /** Called first with a key pressed on the chip at `index`; return `true` to say the key was handled and the arrow-key model should not see it. */
+  onItemKeyDown?: (event: KeyboardEvent<HTMLUListElement>, index: number) => boolean;
 }
 
 /**
@@ -24,7 +26,16 @@ interface Options {
  * stops: the arrow key toward them from the start of the entry reaches them, and past the last one the entry takes
  * focus again. The model is `TagsInput`'s ([ADR-0050]).
  */
-export function useSelectedChips({ count, canEdit, onRemoveAt, entryRef, boxRef, collapseMode, maxVisible }: Options) {
+export function useSelectedChips({
+  count,
+  canEdit,
+  onRemoveAt,
+  entryRef,
+  boxRef,
+  collapseMode,
+  maxVisible,
+  onItemKeyDown,
+}: Options) {
   const listRef = useRef<HTMLUListElement>(null);
   const measurerRef = useRef<HTMLDivElement>(null);
   const measureRef = useRef<() => void>(() => undefined);
@@ -89,6 +100,7 @@ export function useSelectedChips({ count, canEdit, onRemoveAt, entryRef, boxRef,
     const buttons = chipButtons();
     const index = buttons.indexOf(target as HTMLButtonElement);
     if (index === -1) return;
+    if (onItemKeyDown?.(event, index)) return;
     const rtl = isRtl();
     const previousKey = rtl ? "ArrowRight" : "ArrowLeft";
     const nextKey = rtl ? "ArrowLeft" : "ArrowRight";

@@ -28,3 +28,55 @@
   display: flex;
   flex-shrink: 0;
 }
+
+/* Chips that can be moved (`reorderable`). A touch drags instead of scrolling the page, so the chips take no touch
+   gestures of their own, and a press-and-move is a drag, so the text of a chip is not selected by it. */
+.reorderable [data-sortable-index] {
+  cursor: grab;
+  position: relative;
+  touch-action: none;
+  user-select: none;
+}
+
+/* While one is being dragged the pointer is a grabbing hand everywhere over the row. */
+.sorting,
+.sorting [data-sortable-index] {
+  cursor: grabbing;
+}
+
+.reorderable [data-dragging] {
+  opacity: var(--dbm-opacity-40);
+}
+
+/* The chip picked up with the keyboard: a ring round it, in the colour of the field's own focus ring. */
+.reorderable [data-lifted] {
+  border-radius: var(--dbm-radius-full);
+  outline: var(--dbm-border-width-2) solid var(--dbm-border-focus);
+  outline-offset: var(--dbm-space-1);
+}
+
+/* Where a dragged chip will land: a bar in the gap before or after the chip the pointer is nearest, centred in it. */
+.reorderable [data-drop]::before {
+  background-color: var(--dbm-border-focus);
+  border-radius: var(--dbm-radius-full);
+  content: "";
+  inline-size: var(--dbm-border-width-2);
+  inset-block: calc(-1 * var(--dbm-space-1));
+  pointer-events: none;
+  position: absolute;
+}
+
+.reorderable [data-drop="before"]::before {
+  inset-inline-start: calc(-0.5 * (var(--dbm-space-2) + var(--dbm-border-width-2)));
+}
+
+.reorderable [data-drop="after"]::before {
+  inset-inline-end: calc(-0.5 * (var(--dbm-space-2) + var(--dbm-border-width-2)));
+}
+
+/* Forced colours draws a background in the page's colour, so the bar takes a system colour. */
+@media (forced-colors: active) {
+  .reorderable [data-drop]::before {
+    background-color: Highlight;
+  }
+}

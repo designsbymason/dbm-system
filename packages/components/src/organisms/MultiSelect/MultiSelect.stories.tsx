@@ -1,4 +1,4 @@
-import { GlobeIcon } from "@dbm-system/icons";
+import { CheckCircleIcon, GlobeIcon, WarningIcon } from "@dbm-system/icons";
 import type { Meta, StoryContext, StoryObj } from "@storybook/react-vite";
 import { useRef, useState } from "react";
 import { expect, userEvent, waitFor, within } from "storybook/test";
@@ -83,6 +83,17 @@ const meta: Meta<typeof MultiSelect> = {
         "What a closed field does with chips that do not fit: wrap onto more lines, or collapse to one line with as many chips as fit and a +N more button. It always shows every chip while it is in use.",
       table: { defaultValue: { summary: "wrap" } },
     },
+    renderValue: {
+      control: false,
+      description:
+        "Draws each chip's content yourself (an avatar and a name). Receives the option, or undefined for a value with no option, and the value. The tooltip, the remove button's name and the announcements still use the option's label.",
+    },
+    reorderable: {
+      control: "boolean",
+      description:
+        "Lets chips be moved: drag one with a pointer or a finger, or press Space on its remove button, move it with the arrow keys and press Space to drop it (Escape cancels). Alt with an arrow key moves a chip one place. The order is what is submitted.",
+      table: { defaultValue: { summary: "false" } },
+    },
     maxVisible: {
       control: false,
       description: "The most chips shown while the field is idle; the rest are behind a +N more button. With overflow=collapse it is an upper limit on the number that fit.",
@@ -95,8 +106,9 @@ const meta: Meta<typeof MultiSelect> = {
     },
     autoHighlight: {
       control: "boolean",
-      description: "Highlights the first match as the person types, so Enter chooses it.",
-      table: { defaultValue: { summary: "true" } },
+      description: "Highlights the first match as the person types, so Enter chooses it. Off by default with allowCustomValue, where Enter commits what was typed.",
+      // Two values (one with allowCustomValue), so the cell shows "—" and the description says which.
+      table: { defaultValue: { summary: "—" } },
     },
     closeOnSelect: {
       control: "boolean",
@@ -117,6 +129,32 @@ const meta: Meta<typeof MultiSelect> = {
       description:
         "Adds a first row that chooses every enabled option the list shows (the matches, while text is typed), and removes them again. It stops at maxSelected.",
       table: { defaultValue: { summary: "false" } },
+    },
+    onSelectAll: {
+      control: false,
+      description:
+        "Answers the Select all row for a list the page holds more of than is loaded: called with the typed text and the enabled options loaded now, it returns the options (or values) to choose, or a promise of them. The row waits meanwhile and only ever adds. Needs selectAll.",
+    },
+    selectGroups: {
+      control: "boolean",
+      description:
+        "Adds a row under each group's heading that chooses every enabled option of that group the list shows, or removes them again when all are chosen. Stops at maxSelected.",
+      table: { defaultValue: { summary: "false" } },
+    },
+    allowCustomValue: {
+      control: "boolean",
+      description:
+        "Lets typed text be a chip of its own when it names no option: Enter with no option highlighted, a separator, a paste of several or leaving the field makes it a value. Text that is exactly an option's label chooses that option. A repeat, a refused value and one past maxSelected are refused with a message.",
+      table: { defaultValue: { summary: "false" } },
+    },
+    separators: {
+      control: false,
+      description: "The characters that end a typed value with allowCustomValue: typing one, or pasting text with one (or a line break), makes a chip of what came before it.",
+      table: { defaultValue: { summary: '[","]' } },
+    },
+    validate: {
+      control: false,
+      description: "Checks a typed value before it becomes a chip (allowCustomValue): return a message to refuse it, or nothing to accept it.",
     },
     clearable: {
       control: "boolean",
@@ -316,7 +354,10 @@ const meta: Meta<typeof MultiSelect> = {
     overflow: "wrap",
     autoHighlight: true,
     closeOnSelect: false,
+    reorderable: false,
     selectAll: false,
+    selectGroups: false,
+    allowCustomValue: false,
     clearable: true,
     loading: false,
     error: false,
@@ -482,6 +523,132 @@ export const SelectAllInteraction: Story = {
   },
 };
 
+export const PerOption: Story = {
+  name: "A tone, an icon or content for each chip",
+  parameters: { docs: { source: { code: multiSelectSnippets.perOption } } },
+  // The story owns the options and how each chip is drawn.
+  argTypes: { options: { control: false }, tone: { control: false } },
+  args: { "aria-label": "Assignees", placeholder: "Assign people" },
+  render: (args) =>
+    inStage(
+      <div style={{ display: "flex", flexDirection: "column", gap: "var(--dbm-space-3)" }}>
+        <MultiSelect
+          {...args}
+          aria-label="Status"
+          placeholder="Choose statuses"
+          options={[
+            { value: "done", label: "Done", tone: "success", chipIcon: CheckCircleIcon },
+            { value: "blocked", label: "Blocked", tone: "danger", chipIcon: WarningIcon },
+            { value: "open", label: "Open", tone: "info" },
+            { value: "later", label: "Later", tone: "neutral" },
+          ]}
+          defaultValue={["done", "blocked"]}
+        />
+        <MultiSelect
+          {...args}
+          options={people.map((person) => ({ ...person, description: undefined }))}
+          defaultValue={["ada", "grace"]}
+          renderValue={(option) => (
+            <span style={{ alignItems: "center", display: "inline-flex", gap: "var(--dbm-space-1)" }}>
+              <span
+                aria-hidden="true"
+                style={{
+                  alignItems: "center",
+                  backgroundColor: "var(--dbm-bg-brand)",
+                  borderRadius: "var(--dbm-radius-full)",
+                  color: "var(--dbm-text-on-brand)",
+                  display: "inline-flex",
+                  fontSize: "var(--dbm-font-size-xs)",
+                  fontWeight: "var(--dbm-font-weight-semibold)",
+                  justifyContent: "center",
+                  minBlockSize: "var(--dbm-space-4)",
+                  minInlineSize: "var(--dbm-space-4)",
+                }}
+              >
+                {option?.label.charAt(0)}
+              </span>
+              {option?.label}
+            </span>
+          )}
+        />
+      </div>,
+    ),
+};
+
+export const Reorderable: Story = {
+  name: "Moving chips",
+  parameters: { docs: { source: { code: multiSelectSnippets.reorderable } } },
+  args: { reorderable: true, "aria-label": "Columns", placeholder: "Choose columns", options: [
+    { value: "name", label: "Name" },
+    { value: "email", label: "Email" },
+    { value: "role", label: "Role" },
+    { value: "team", label: "Team" },
+    { value: "joined", label: "Joined" },
+  ] },
+  render: function ReorderableStory(args) {
+    const [columns, setColumns] = useState<string[]>(["name", "email", "role", "team"]);
+    return (
+      <div style={{ display: "flex", flexDirection: "column", gap: "var(--dbm-space-2)", maxWidth: "26rem", minHeight: "20rem" }}>
+        <MultiSelect {...args} value={columns} onValueChange={setColumns} />
+        <span style={{ fontSize: "var(--dbm-font-size-sm)" }}>Order: {columns.join(" → ") || "—"}</span>
+      </div>
+    );
+  },
+};
+
+export const SelectAllFromThePage: Story = {
+  name: "Select all, answered by the page",
+  parameters: { docs: { source: { code: multiSelectSnippets.selectAllRemote } } },
+  // The story owns the options, the loading flag and the fetching.
+  argTypes: { loading: { control: false }, options: { control: false }, selectAll: { control: false } },
+  render: (args) =>
+    inStage(
+      <SearchingMultiSelect
+        {...args}
+        selectAll
+        onSelectAll={async ({ text }) => {
+          await new Promise((done) => window.setTimeout(done, 500));
+          return countries.filter((country) => country.label.toLowerCase().includes(text.trim().toLowerCase())).map((country) => country.value);
+        }}
+      />,
+    ),
+};
+
+export const GroupSelectAll: Story = {
+  name: "A Select all row in each group",
+  parameters: { docs: { source: { code: multiSelectSnippets.groupSelectAll } } },
+  args: {
+    selectGroups: true,
+    options: [
+      { value: "apple", label: "Apple", group: "Fruit" },
+      { value: "apricot", label: "Apricot", group: "Fruit" },
+      { value: "cherry", label: "Cherry", group: "Fruit" },
+      { value: "carrot", label: "Carrot", group: "Vegetables" },
+      { value: "kale", label: "Kale", group: "Vegetables" },
+      { value: "salt", label: "Salt" },
+    ],
+    "aria-label": "Ingredients",
+    placeholder: "Choose ingredients",
+  },
+};
+
+export const CustomValues: Story = {
+  name: "Typed values as chips",
+  parameters: { docs: { source: { code: multiSelectSnippets.customValues } } },
+  args: {
+    allowCustomValue: true,
+    "aria-label": "Recipients",
+    placeholder: "Choose, or type an email address",
+    options: [
+      { value: "ada@example.com", label: "Ada Lovelace" },
+      { value: "grace@example.com", label: "Grace Hopper" },
+      { value: "alan@example.com", label: "Alan Turing" },
+    ],
+  },
+  render: (args) =>
+    inStage(<MultiSelect {...args} validate={(text) => (/^\S+@\S+\.\S+$/.test(text) ? undefined : "Not an email address")} />),
+};
+
 export const Overflow: Story = {
   name: "Many chips",
   parameters: { docs: { source: { code: multiSelectSnippets.overflow } } },
@@ -630,4 +797,37 @@ export const InFormField: Story = {
         {(fieldProps) => <MultiSelect {...args} {...fieldProps} name="countries" minSelected={2} />}
       </FormField>,
     ),
+};
+
+/** Move a chip with the keyboard, and take it back. */
+export const ReorderInteraction: Story = {
+  ...Reorderable,
+  name: "Moving chips — interaction test",
+  tags: ["!dev"],
+  play: async ({ canvasElement }) => {
+    const body = within(document.body);
+    const canvas = within(canvasElement);
+    const chipsText = () => within(canvas.getByRole("list", { name: "Selected options" })).getAllByRole("listitem").map((item) => item.textContent).filter(Boolean);
+    canvas.getByRole("combobox").focus();
+    await userEvent.keyboard("{ArrowLeft}{ArrowLeft} {ArrowLeft}");
+    await expect(chipsText()).toEqual(["Name", "Role", "Email", "Team"]);
+    await userEvent.keyboard("{Escape}");
+    await expect(chipsText()).toEqual(["Name", "Email", "Role", "Team"]);
+    await userEvent.keyboard("{Alt>}{ArrowRight}{/Alt}");
+    await expect(chipsText()).toEqual(["Name", "Email", "Team", "Role"]);
+    await expect(body.getByRole("button", { name: "Remove Role" })).toHaveFocus();
+  },
+};
+
+/** Type values, and have one refused. */
+export const CustomValuesInteraction: Story = {
+  ...CustomValues,
+  name: "Typed values as chips — interaction test",
+  tags: ["!dev"],
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await userEvent.type(canvas.getByRole("combobox"), "new@example.com,nobody{Enter}");
+    await expect(await canvas.findByText("Not an email address")).toBeInTheDocument();
+    await expect(canvas.getByRole("list", { name: "Selected options" })).toHaveTextContent("new@example.com");
+  },
 };
