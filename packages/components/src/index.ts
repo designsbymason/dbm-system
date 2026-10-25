@@ -97,6 +97,7 @@ export * from "./organisms/Combobox";
 export * from "./organisms/ConfirmDialog";
 export * from "./organisms/DataTable";
 export * from "./organisms/DatePicker";
+export * from "./organisms/DateRangePicker";
 export * from "./organisms/Dialog";
 export * from "./organisms/Drawer";
 export * from "./organisms/FileUpload";

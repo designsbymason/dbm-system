@@ -1,0 +1,382 @@
+import { Canvas, Meta } from "@storybook/addon-docs/blocks";
+import { Callout, ComponentHeader, PlaygroundControls, PropertiesTable, RelatedCard, TokenRow } from "../../../.storybook/blocks";
+import { FieldLabel } from "../../atoms/FieldLabel";
+import { VisuallyHidden } from "../../atoms/VisuallyHidden";
+import { Calendar } from "../../molecules/Calendar";
+import { TimeRangePicker } from "../../molecules/TimeRangePicker";
+import { DatePicker } from "../DatePicker";
+import { DateRangePicker } from "./DateRangePicker";
+import * as DateRangePickerStories from "./DateRangePicker.stories";
+
+export const propOrder = [
+  "size",
+  "hasError",
+  "value",
+  "defaultValue",
+  "onValueChange",
+  "commitOn",
+  "format",
+  "separator",
+  "min",
+  "max",
+  "isDateDisabled",
+  "unavailableReason",
+  "minRangeDays",
+  "maxRangeDays",
+  "rangeSpansUnavailable",
+  "presets",
+  "numberOfMonths",
+  "weekStartsOn",
+  "today",
+  "calendarProps",
+  "side",
+  "align",
+  "presentation",
+  "container",
+  "showPicker",
+  "open",
+  "defaultOpen",
+  "onOpenChange",
+  "clearable",
+  "onClear",
+  "onFocus",
+  "onBlur",
+  "disabled",
+  "required",
+  "readOnly",
+  "autoFocus",
+  "name",
+  "form",
+  "dir",
+  "labels",
+  "formatNumber",
+  "aria-label",
+  "aria-labelledby",
+  "aria-describedby",
+  "id",
+  "className",
+  "style",
+  "data-testid",
+];
+export const playgroundExclude = ["onValueChange", "onClear", "onOpenChange", "onFocus", "onBlur", "isDateDisabled", "unavailableReason", "presets", "name"];
+
+<Meta of={DateRangePickerStories} />
+
+<VisuallyHidden asChild><h2>Intro</h2></VisuallyHidden>
+
+<ComponentHeader title="DateRangePicker" tier="Organism" />
+
+A start date and an end date: two date fields side by side, each with separate day, month and year segments you type into
+or step with the arrow keys, and one button that opens a calendar to choose the whole range from with a pointer or a
+finger. The first date you choose is the start and the second the end. The value is one `["YYYY-MM-DD", "YYYY-MM-DD"]`
+pair, with `""` for an end that is not chosen yet, whichever order the segments are written in. The order is chosen with
+`format`, never read from the browser's locale, so a server-rendered page and the client agree. For a single date, use
+`DatePicker`; for a time of day, `TimeRangePicker`.
+
+### Import
+
+```tsx
+import { DateRangePicker } from "@dbm-system/components";
+```
+
+## Playground
+
+<div className="dbm-playground-canvas">
+
+<Canvas of={DateRangePickerStories.Playground} />
+
+</div>
+<PlaygroundControls of={DateRangePickerStories.Playground} order={propOrder} exclude={playgroundExclude} />
+
+## Properties
+
+`DateRangePicker` also accepts any other native `<div>` attribute beyond what's listed here (e.g. `title`,
+`onKeyDown`) — passed straight through to the group element that holds the two ends. `ref` forwards to that group, and the
+`id` goes on the start's first segment, which is what a `FieldLabel`'s `htmlFor` should point at.
+
+<PropertiesTable of={DateRangePickerStories} order={propOrder} />
+
+## Variants
+
+### Sizes
+
+<Canvas of={DateRangePickerStories.Sizes} />
+
+### Day, month and year orders
+
+<Canvas of={DateRangePickerStories.Formats} />
+
+### Length limits and unavailable days
+
+<Canvas of={DateRangePickerStories.Limits} />
+
+### Why a date is unavailable
+
+<Canvas of={DateRangePickerStories.UnavailableReasons} />
+
+### Quick choices
+
+<Canvas of={DateRangePickerStories.Presets} />
+
+### Months on show
+
+<Canvas of={DateRangePickerStories.Months} />
+
+### Calendar options
+
+<Canvas of={DateRangePickerStories.CalendarOptions} />
+
+### Side and alignment
+
+<Canvas of={DateRangePickerStories.Placement} />
+
+### Full width, for a phone
+
+<Canvas of={DateRangePickerStories.FullWidth} />
+
+### When it reports
+
+<Canvas of={DateRangePickerStories.CommitTiming} />
+
+### Required, in a form
+
+<Canvas of={DateRangePickerStories.InAForm} />
+
+### Error, disabled and read-only
+
+<Canvas of={DateRangePickerStories.States} />
+
+### With a clear button
+
+<Canvas of={DateRangePickerStories.Clearable} />
+
+### Without the calendar
+
+<Canvas of={DateRangePickerStories.WithoutPicker} />
+
+### Controlled value
+
+<Canvas of={DateRangePickerStories.Controlled} />
+
+### In a FormField
+
+<Canvas of={DateRangePickerStories.InFormField} />
+
+### Translated, with its own digits
+
+<Canvas of={DateRangePickerStories.Translated} />
+
+## Usage guidelines
+
+<div className="dbm-do-dont-grid">
+<Callout tone="success" title="Do">
+
+- Use `DateRangePicker` for a stay, a booking window, a report period: a start and an end that belong together. For one
+  day use `DatePicker`; for several separate days, a `Calendar` in `multiple` mode.
+- Choose `format` for your users and say so explicitly; the pair never guesses it from the locale. The same goes for
+  `weekStartsOn`.
+- Use `min` and `max` for a window and `isDateDisabled` for gaps in it; the calendar disables what cannot be reached.
+- Use `minRangeDays` and `maxRangeDays` for a shortest and longest stay, and `rangeSpansUnavailable={false}` when a
+  range cannot run over a closed day: the calendar disables the end dates that would break them and a typed end that does
+  is flagged with a message that says why.
+- Use `unavailableReason` when people will wonder why a day is greyed out ("Fully booked"): it is read out, shown under
+  the calendar and used as the form's message.
+- Use `presets` for the periods people pick most ("Last 7 days", "This year").
+- Use `presentation={{ base: "full-width", sm: "anchored" }}` where the pair is used on a phone: the panel spans the
+  screen instead of floating beside a narrow field. One month is shown on a phone and two beyond it by default.
+- Put it in a `FormField` for a visible label, helper text and error text wired together.
+- Pass `labels` and `formatNumber` for a language that isn't English or digits that aren't 0–9, and the calendar's own
+  `labels` through `calendarProps` for its month and weekday names.
+
+</Callout>
+<Callout tone="danger" title="Don't">
+
+- Don't store or compare the displayed text. The value is a `"YYYY-MM-DD"` pair, and an end is `""` while it is only
+  partly filled or holds numbers that are not a real date (the 31st of February).
+- Don't treat a `min`/`max` or length violation as refused input: the pair flags it and still reports it, so your own
+  validation decides what to do.
+- Don't build your own "is it filled in?" check for a plain form: `required`, a half-filled end, an impossible date and a
+  date the pair flags are real form constraints, so the browser blocks the submit.
+- Don't convert a value through `new Date("2026-10-03")` and then read it in local time: that string is read as UTC
+  midnight and can show the day before. Split the string, or use a UTC formatter.
+- Don't use it for a date and a time; put a `DatePicker` and a `TimePicker` side by side.
+
+</Callout>
+</div>
+
+## Best practices
+
+- The first date chosen in the calendar is the start and the calendar stays open for the end, so by default
+  `onValueChange` is called with `[start, ""]` and then with the whole range. Set `commitOn="complete"` or `"blur"` to
+  hear only about a finished range (or what was chosen when the calendar closes); a preset and the clear button are
+  always reported at once.
+- Typing works the way a native date field does, for each end: a digit that can't start a two-digit number is the whole
+  number and moves on, one that can waits for a second, and the year takes four. A separator key finishes the segment.
+- The end can never be before the start: an end that is is reported as typed and flagged on that end. The start is not
+  flagged for being after the end, since it would flag whenever the end is half typed.
+- The calendar opened from the button, or from a segment of the start with `Alt`+`ArrowDown`, starts a new range with the
+  first date you choose. Opened from a segment of the end, it chooses the end and leaves the start where it is; closing it
+  without a choice changes nothing.
+- A range chosen is said aloud ("Dates chosen: 10/05/2026 to 10/09/2026") through a status region that is in the page from
+  the start.
+- `onFocus` and `onBlur` are for the pair as a whole: they fire once on arriving and once on leaving, not as focus moves
+  between the ends, the buttons and the calendar.
+- Use `container` when the panel would be clipped or must live somewhere else (an element inside a dialog or a shadow
+  root, or a box that scopes a demo).
+- The clear button shows while either end holds a complete date; a half-typed end is cleared with `Backspace`.
+- A preset's function is asked for its range only once today is known, so a server-rendered preset button starts disabled
+  and is enabled after the first render in the browser.
+- In a table row or a toolbar, drop to `size="sm"` or `"xs"`; each end is as tall as an `Input` at the same step. The pair
+  wraps, so on a narrow screen the end drops under the start.
+
+## Accessibility
+
+<Callout tone="info" title="A group of two groups of spinbuttons, with a dialog holding a range grid">
+
+- The pair is a `role="group"` named by `aria-label` or `aria-labelledby` (a `FormField` supplies the label). Inside it are
+  two groups, "Start date" and "End date", and each segment is an `<input role="spinbutton">` named for what it is (Day,
+  Month, Year), with its range, current value and a text value announced.
+- Each segment is its own tab stop, as in a native date field, then the clear button and the calendar button.
+  `ArrowLeft`/`ArrowRight` move between segments of an end, `ArrowUp`/`ArrowDown` step the segment, `Home`/`End` go to its
+  least and greatest, and `Backspace` clears it. `Alt`+`ArrowDown` in any segment opens the calendar.
+- The calendar button is `aria-haspopup="dialog"` with `aria-expanded`, and `aria-controls` while the panel is open. It
+  opens a `role="dialog"` holding a `Calendar` in range mode, which is a WAI-ARIA date grid: one tab stop, arrow keys by day
+  and week, `Page Up`/`Page Down` by month. Focus goes to the chosen start (or today); choosing the end closes the panel,
+  and `Escape` closes it, in both cases returning focus to where it was opened from (the segment, for `Alt`+`ArrowDown`;
+  otherwise the button), except after a press elsewhere, which leaves focus wherever the person put it.
+- A range's first and last days are named as such ("range start", "range end"), the days between them are marked, and an
+  unavailable day keeps its place in the arrow-key order, is `aria-disabled`, and has its reason as part of its name.
+- `hasError`, an out-of-range, unavailable or too-short or too-long end and an impossible date set `aria-invalid` on the
+  segments of the end concerned (a group can't carry it); `required` sets `aria-required` on every segment.
+- For a form, each end's value lives on a hidden `<input type="date">` that carries `required` and the validation messages,
+  submitted as `name[]`; the browser's message points at the end, and focus goes to its first empty segment.
+- Everything the pair says (end and segment names, "Empty", button names, form messages, the announcement) is in `labels`,
+  and the digits it shows and announces go through `formatNumber`.
+- The segments always read left to right, in a right-to-left page too, and the buttons and the calendar follow `dir`. In
+  Windows high-contrast mode the focused segment is drawn in the system highlight colours.
+- Every button is at least 24 × 24 pixels. A dev-mode console warning fires once per pair if it has no accessible name.
+
+</Callout>
+
+## Code examples
+
+```tsx
+<DateRangePicker aria-label="Stay" defaultValue={["2026-10-05", "2026-10-09"]} />
+
+{/* Controlled, day first, a window, a length limit and no weekends */}
+function Example() {
+  const [range, setRange] = useState(["", ""]);
+  return (
+    <DateRangePicker
+      aria-label="Booking"
+      value={range}
+      onValueChange={setRange}
+      format="dmy"
+      separator="."
+      min="today"
+      minRangeDays={2}
+      maxRangeDays={14}
+      isDateDisabled={(day) => new Date(day + "T00:00:00Z").getUTCDay() % 6 === 0}
+    />
+  );
+}
+
+{/* A form field with a visible label, helper text and an error */}
+<FormField label="Stay" helperText="Check-in and check-out" error={error}>
+  {(field) => <DateRangePicker {...field} />}
+</FormField>
+
+{/* Quick choices that are a function of today */}
+<DateRangePicker
+  aria-label="Report period"
+  presets={[{ label: "Last 7 days", value: (today) => [daysAgo(today, 6), today] }]}
+/>
+
+{/* A native <div> attribute, passed straight through to the group */}
+<DateRangePicker aria-label="Stay" title="Pick the dates of the stay" />
+
+{/* Submitted with a form, as stay[]: start, then end */}
+<form>
+  <DateRangePicker aria-label="Stay" name="stay" required />
+</form>
+```
+
+## Design tokens used
+
+<TokenRow token="bg.surface" usage="each end's background" />
+<TokenRow token="border.default" usage="each end's border" />
+<TokenRow token="border.neutral" usage="each end's border on hover" />
+<TokenRow token="border.focus" usage="each end's border and ring while a segment has focus; the focus ring of the buttons" />
+<TokenRow token="border.danger" usage="each end's border in the error state" />
+<TokenRow token="border-width.1" usage="each end's border width" />
+<TokenRow token="border-width.2" usage="focus ring width" />
+<TokenRow token="radius.md" usage="each end's corner radius" />
+<TokenRow token="radius.sm" usage="the segments' corners" />
+<TokenRow token="radius.full" usage="the clear and calendar buttons' corners" />
+<TokenRow token="text.primary" usage="segment text" />
+<TokenRow token="text.tertiary" usage="an empty segment's placeholder, and the separators between segments" />
+<TokenRow token="text.secondary" usage="the reason a day is unavailable, shown under the calendar" />
+<TokenRow token="text.on-brand" usage="the focused segment's text" />
+<TokenRow token="bg.brand" usage="the focused segment's fill" />
+<TokenRow token="bg.neutral-subtle" usage="hover fill of the buttons" />
+<TokenRow token="icon.default" usage="the clear and calendar buttons' icons" />
+<TokenRow token="font-family.primary" usage="the ends' typography" />
+<TokenRow token="font-size.xs" usage="text size at size xs" />
+<TokenRow token="font-size.sm" usage="text size at size sm" />
+<TokenRow token="font-size.base" usage="text size at size md" />
+<TokenRow token="font-size.md" usage="text size at size lg" />
+<TokenRow token="font-size.lg" usage="text size at size xl" />
+<TokenRow token="line-height.tight" usage="line height, so each size is as tall as an Input" />
+<TokenRow token="icon-size.sm" usage="the button's compensating margin at size sm (its icon is this size)" />
+<TokenRow token="icon-size.md" usage="the button's compensating margin at size md (its icon is this size)" />
+<TokenRow token="icon-size.lg" usage="the button's compensating margin at size lg (its icon is this size)" />
+<TokenRow token="icon-size.xl" usage="the button's compensating margin at size xl (its icon is this size)" />
+<TokenRow token="space.1" usage="gap between segments; the focus-ring offset; padding of the buttons at xs; the gap between preset buttons" />
+<TokenRow token="space.2" usage="gap between the segments and the buttons; padding at xs; the panel's padding and the gap inside it" />
+<TokenRow token="space.3" usage="padding at sizes sm and md" />
+<TokenRow token="space.4" usage="padding at sizes lg and xl" />
+<TokenRow token="space.6" usage="the smallest a button gets (24px), so it stays a large enough target at size xs" />
+<TokenRow token="date-picker.segment-width" usage="the width of a two-digit (day or month) segment" />
+<TokenRow token="date-picker.year-width" usage="the width of the four-digit year segment" />
+<TokenRow token="shadow.light-md" usage="the panel's elevation in a light theme" />
+<TokenRow token="shadow.dark-md" usage="the panel's elevation in a dark theme" />
+<TokenRow token="z-index.popover" usage="the panel's layer, above a Dialog's scrim and panel so it works inside one" />
+<TokenRow token="opacity.40" usage="the disabled field" />
+<TokenRow token="motion.duration.fast" usage="border and fill transitions" />
+<TokenRow token="motion.easing.standard" usage="border and fill transitions; the panel fading out" />
+<TokenRow token="motion-easing.emphasized" usage="the panel fading in" />
+
+## Related components
+
+<div className="dbm-card-grid">
+<RelatedCard
+  name="DatePicker"
+  description="One date: the same segmented field, and the field each end of the range is"
+  href="/?path=/docs/organisms-inputs-datepicker--docs"
+>
+  <DatePicker aria-label="Date" size="xs" defaultValue="2026-10-15" showPicker={false} />
+</RelatedCard>
+<RelatedCard
+  name="Calendar"
+  description="The month grid inside the panel, also useful on its own, with range, several-date and week selection"
+  href="/?path=/docs/molecules-inputs-calendar--docs"
+>
+  <div style={{ alignSelf: "flex-start", transform: "scale(0.5)", transformOrigin: "top center" }}>
+    <Calendar size="xs" mode="range" defaultValue={["2026-10-12", "2026-10-16"]} />
+  </div>
+</RelatedCard>
+<RelatedCard
+  name="TimeRangePicker"
+  description="A start and an end time of day, composed the same way"
+  href="/?path=/docs/molecules-inputs-timerangepicker--docs"
+>
+  <TimeRangePicker aria-label="Hours" size="xs" defaultValue={["09:00", "17:30"]} showPicker={false} />
+</RelatedCard>
+<RelatedCard
+  name="FormField"
+  description="Wraps a DateRangePicker with a visible label, helper text and error text, all wired together"
+  href="/?path=/docs/molecules-inputs-formfield--docs"
+>
+  <FieldLabel htmlFor="example">Stay</FieldLabel>
+</RelatedCard>
+</div>

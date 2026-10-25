@@ -1,0 +1,15 @@
+/* Two `DatePicker` fields and what joins them, then the buttons. The row wraps, so on a narrow screen the end drops under
+   the start rather than squeezing either. The panel and its parts are `DatePicker`'s own classes, so the two look alike. */
+.root {
+  align-items: center;
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: var(--dbm-space-2);
+}
+
+.separator {
+  color: var(--dbm-text-tertiary);
+  flex-shrink: 0;
+  font-family: var(--dbm-font-family-primary);
+  user-select: none;
+}
