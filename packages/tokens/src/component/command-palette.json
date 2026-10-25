@@ -1,0 +1,9 @@
+{
+  "command-palette": {
+    "list-max-height": {
+      "$type": "dimension",
+      "$value": "24rem",
+      "$description": "New token (2026-10-25), added for CommandPalette's own result list — the most height it takes before it scrolls. A palette's list is the content of its window, so it is taller than Combobox's dropdown cap (18rem), and the window is also limited to the room left on the screen. No home on any existing primitive scale (the spacing scale tops out at 8rem)."
+    }
+  }
+}

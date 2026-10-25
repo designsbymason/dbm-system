@@ -1,0 +1,395 @@
+import { Canvas, Meta } from "@storybook/addon-docs/blocks";
+import { Callout, ComponentHeader, PlaygroundControls, PropertiesTable, RelatedCard, TokenRow } from "../../../.storybook/blocks";
+import { Button } from "../../atoms/Button";
+import { Kbd } from "../../atoms/Kbd";
+import { VisuallyHidden } from "../../atoms/VisuallyHidden";
+import { Combobox } from "../Combobox";
+import { Menu } from "../Menu";
+import * as CommandPaletteStories from "./CommandPalette.stories";
+
+export const propOrder = [
+  "commands",
+  "trigger",
+  "hotkey",
+  "open",
+  "defaultOpen",
+  "onOpenChange",
+  "onOpenChangeComplete",
+  "controllerRef",
+  "defaultQuery",
+  "query",
+  "onQueryChange",
+  "filter",
+  "recent",
+  "loading",
+  "error",
+  "emptyContent",
+  "onSelect",
+  "onSelectError",
+  "renderItem",
+  "highlightTone",
+  "showHints",
+  "footer",
+  "size",
+  "placement",
+  "fullScreen",
+  "showCloseButton",
+  "scrimBlur",
+  "dir",
+  "labels",
+  "formatNumber",
+  "container",
+  "aria-label",
+  "aria-labelledby",
+  "id",
+  "className",
+  "style",
+  "data-testid",
+];
+
+<Meta of={CommandPaletteStories} />
+
+<VisuallyHidden asChild><h2>Intro</h2></VisuallyHidden>
+
+<ComponentHeader title="CommandPalette" tier="Organism" />
+
+A window for finding and running things by typing. Press <Kbd>Ctrl</Kbd> + <Kbd>K</Kbd> (<Kbd aria-label="Command">⌘</Kbd> + <Kbd>K</Kbd> on a Mac)
+from anywhere on the page, type a few letters, and choose a command with the arrow keys and Enter, a mouse or a finger.
+It suits an application with more places and actions than a menu can hold: go to a page, switch a setting, run a report.
+It is a *modal* `Dialog` (the page behind is dimmed and can't be reached while it is open) with a search field and a
+list inline in it. Focus never leaves the search field; the highlighted command is *pointed at* rather than focused,
+which is how a *combobox* (a text field that controls a list) works in assistive technology.
+
+It is not a `Menu`, which is a short list of actions beside the thing that opened it, and not a `Combobox`, which
+chooses a value for a form field. Nothing is chosen here: a command runs.
+
+### Import
+
+```tsx
+import { CommandPalette } from "@dbm-system/components";
+```
+
+## Playground
+
+<div className="dbm-playground-canvas">
+
+<Canvas of={CommandPaletteStories.Playground} />
+
+</div>
+<PlaygroundControls
+  of={CommandPaletteStories.Playground}
+  exclude={[
+    "commands",
+    "open",
+    "defaultOpen",
+    "onOpenChange",
+    "onOpenChangeComplete",
+    "trigger",
+    "query",
+    "onQueryChange",
+    "filter",
+    "recent",
+    "emptyContent",
+    "onSelect",
+    "onSelectError",
+    "renderItem",
+    "footer",
+    "fullScreen",
+    "container",
+    "labels",
+    "formatNumber",
+    "controllerRef",
+    "aria-label",
+    "aria-labelledby",
+    "id",
+    "className",
+    "style",
+    "data-testid",
+  ]}
+  order={propOrder}
+/>
+
+## Properties
+
+`CommandPalette` also accepts any other native `<div>` attribute beyond what is listed here (e.g. `title`, `lang`,
+`onKeyDown`) — passed straight through to the dialog panel, as are `ref`, `className`, `style`, `id` and `data-testid`.
+It is drawn with `Dialog`, so what `Dialog.Content` does with a prop it does here.
+
+<PropertiesTable of={CommandPaletteStories} order={propOrder} />
+
+### The shape of a command
+
+A command is an object in the `commands` array.
+
+| Field | What it does |
+|---|---|
+| `value` | A unique id within its list. It is how `recent` names a command and how rows are keyed. |
+| `label` | The text shown and searched. |
+| `textValue` | The text to search instead of `label`, when the label is not what someone would type. |
+| `description` | A second, smaller line under the label. |
+| `icon` | An icon before the label, a component from `@dbm-system/icons`. |
+| `group` | The heading to list it under. Commands with the same group are listed together. |
+| `keywords` | Words the search matches but the row never shows ("preferences" for "Settings"). |
+| `shortcut` | The keys to show at the row's end, as one string (`"⌘N"`) or one string per key (`["Ctrl", "N"]`). It displays a hint and binds nothing. |
+| `disabled` | `true`, or a string giving the reason, shown as the row's tooltip and read out after its name. |
+| `onSelect` | Runs when it is chosen; may return a promise. |
+| `closeOnSelect` | `false` keeps the palette open after it runs. |
+| `items` | Commands it opens as a list of its own. |
+
+## Variants
+
+### Groups and details
+
+<Canvas of={CommandPaletteStories.Groups} />
+
+### Lists of commands
+
+<Canvas of={CommandPaletteStories.Lists} />
+
+### Recent commands
+
+<Canvas of={CommandPaletteStories.Recent} />
+
+### Commands that take time
+
+<Canvas of={CommandPaletteStories.Waiting} />
+
+### Search done by the caller
+
+<Canvas of={CommandPaletteStories.SearchByTheCaller} />
+
+### Loading and error
+
+<Canvas of={CommandPaletteStories.LoadingAndError} />
+
+### A long list
+
+<Canvas of={CommandPaletteStories.LongList} />
+
+### Opened from code
+
+<Canvas of={CommandPaletteStories.FromCode} />
+
+### Footer
+
+<Canvas of={CommandPaletteStories.Footer} />
+
+### Right to left
+
+<Canvas of={CommandPaletteStories.RightToLeft} />
+
+### Full screen
+
+<Canvas of={CommandPaletteStories.FullScreen} />
+
+## Usage guidelines
+
+<div className="dbm-do-dont-grid">
+<Callout tone="success" title="Do">
+
+- Use it as the quick way to anything: a page, a record, an action. Keep the commands people reach for most near the top, and put the rest behind `keywords`.
+- Give every command a short, distinct `label` and put detail in `description`, so the row reads at a glance.
+- Group commands (`group`) when there are more than about eight, so the empty search is a map and not a wall.
+- Show a `shortcut` for a command that has a key, and bind that key yourself: the hint is only a label.
+- Say why a command can't run with `disabled="reason"`, rather than leaving it dimmed and unexplained.
+- Return a promise from `onSelect` for work that takes a moment, so the palette waits and shows progress instead of closing on something that then fails.
+- List recently used commands first with `recent` once someone has a history to show.
+- Offer a visible way in (`trigger`) beside the hotkey: not everyone knows the key, and a touch screen has none.
+
+</Callout>
+<Callout tone="danger" title="Don't">
+
+- Don't use it as the only way to reach a function: it is a shortcut, and every command should exist somewhere on the page too.
+- Don't use it to choose a value for a form field: that is `Combobox` or `Select`.
+- Don't put controls inside a row: a row is chosen as a whole, and focus never enters it.
+- Don't nest lists more than one level: `items` of a command inside a list are ignored. Flatten, or use `group`.
+- Don't fetch on every key without `filter={false}` and `loading`: the built-in search only narrows the commands you have given it.
+- Don't rely on the placeholder alone to say what the palette does; give it a `labels.title` that names it in your words.
+
+</Callout>
+</div>
+
+## Best practices
+
+- **The hotkey is the palette's own.** `hotkey` defaults to `mod+k`, where `mod` is ⌘ on an Apple platform and Ctrl elsewhere. It works from anywhere, including from inside a text field, and the press is kept from the browser, which takes the combination from the few that reserve it (Ctrl+K focuses the address bar's search in some). Choose another combination with `hotkey="mod+shift+p"`, or turn it off with `hotkey={false}` and open the palette yourself.
+- **Write shortcut hints as words when a symbol is unclear.** `["Ctrl", "N"]` is read as two keys; a glyph like `⌘` may not be read at all. The hint is display only and binds nothing.
+- **Search matches every word, in any order,** in a command's label (or `textValue`) and its `keywords`, ignoring case and accents. A label that starts with a word ranks above one that has it inside, and a match in `keywords` ranks last. Commands keep their group's place, so a heading never jumps as someone types, and equal matches keep the order you gave.
+- **Only the current list is searched.** Inside a list opened from a command, the search covers that list alone. Put a command at the top level too if it should be found from the start.
+- **`recent` is a list of values you keep.** The palette remembers nothing between openings, because what counts as recent (per person, per workspace, after a round trip) is yours to say. A command shows once: under the Recent heading while the search is empty, and in its usual place once something is typed.
+- **A command that returns a promise is busy until it settles.** The row shows a spinner, the palette ignores Escape and a press on the scrim, no other command runs, and it closes when the promise resolves unless `closeOnSelect` is `false`. A rejection keeps it open, announces `labels.failed` and calls `onSelectError`; with no handler the rejection is left unhandled so it is not lost silently.
+- **A command that opens something else needs nothing special.** Open a `ConfirmDialog` or a `Dialog` from `onSelect` and focus goes to it, not back to where the palette was opened.
+- **Search on a server with `filter={false}`.** Pass new `commands` as `onQueryChange` reports typing, and `loading` while they are on their way. The palette then lists exactly what you give it.
+- **The palette starts afresh each time it opens:** the search, the open list and the highlight reset. Control `query` to keep what was typed.
+- **A long list is drawn a window at a time.** Rows have a fixed height, so a thousand commands cost no more than twenty.
+- **Phone-sized presentation is opt-in.** `fullScreen={{ base: true, sm: false }}` with `showCloseButton` fills the screen on a phone. It is off by default.
+
+## Accessibility
+
+<Callout tone="info" title="A modal dialog holding a combobox whose focus never leaves the search field">
+
+- The panel is a `dialog` with `aria-modal`, named by `labels.title` ("Command palette"), `aria-label` or `aria-labelledby`. The page behind it is hidden from assistive technology and can't be scrolled or reached, and focus returns to what opened it when it closes.
+- The search field is a native text input with `role="combobox"`, `aria-expanded="true"`, `aria-controls`, `aria-autocomplete="list"` and `aria-haspopup="listbox"`. The highlighted command is named by `aria-activedescendant`, so a screen reader reads each one as the arrow keys reach it.
+- The list is a `listbox`; each command is an `option`. One that can't run has `aria-disabled`, and its reason is read after its name. Groups are named by their heading; in a list long enough to be windowed, each command is read with its group's name instead.
+- "No results" and "Loading…" are rows that can't be chosen, so the list is never empty to assistive technology. A loading list is `aria-busy`, and a palette waiting on a command is `aria-busy` too.
+- The number of results is announced in a status region that was already in the page, only when it changes as someone types or opens a list, never when the palette merely opens. A failed command and an error are announced when they appear.
+- The Back button has an accessible name (`labels.back`) and is at least 24 × 24 pixels, as is every row. Enter while an input method is composing a character does nothing.
+- The footer's key hints are decoration and are hidden from assistive technology; they are also not drawn on a touch screen. A shortcut on a row is part of the row's name.
+- The search row's focus ring is drawn inside its own edge. In Windows high contrast the highlighted row is outlined and the lines between the sections are kept.
+
+</Callout>
+
+| Key | Behaviour |
+|---|---|
+| Ctrl + K (⌘K), or `hotkey` | Opens the palette; pressed again, closes it. Works from inside a text field. |
+| Down arrow, Up arrow | Highlights the next or previous command that can run, wrapping at the ends. |
+| Page Down, Page Up | Move the highlight ten commands. |
+| Enter | Runs the highlighted command, or opens its list. |
+| Backspace | In a list opened from a command, with an empty search, goes back one level. |
+| Escape | Closes the palette, from any level. Does nothing while a command is running. |
+| Tab | Moves to the Back button when there is one; otherwise it stays in the dialog. |
+| Home, End, Left, Right | Move the caret in the search text, as in any field. |
+
+## Code examples
+
+```tsx
+{/* The smallest palette: Ctrl+K (⌘K) opens it, a trigger is optional */}
+<CommandPalette
+  commands={[
+    { value: "new-file", label: "New file", group: "File", shortcut: ["Ctrl", "N"], onSelect: newFile },
+    { value: "settings", label: "Open settings", group: "App", keywords: ["preferences"], onSelect: openSettings },
+  ]}
+/>
+
+{/* A visible way in beside the hotkey, and a different key */}
+<CommandPalette hotkey="mod+shift+p" trigger={<Button variant="secondary">Search…</Button>} commands={commands} />
+
+{/* Work that takes a moment: the palette waits, and a failure keeps it open */}
+<CommandPalette
+  commands={[{ value: "sync", label: "Sync now", onSelect: () => api.sync() }]}
+  onSelectError={(error, item) => toast.error(`${item.label} failed`)}
+/>
+
+{/* A command that opens a list of its own */}
+<CommandPalette
+  commands={[
+    { value: "theme", label: "Change theme", items: [
+      { value: "light", label: "Light", onSelect: () => setTheme("light") },
+      { value: "dark", label: "Dark", onSelect: () => setTheme("dark") },
+    ] },
+  ]}
+/>
+
+{/* A search done on a server: pass the commands as they arrive, and the search text back */}
+<CommandPalette filter={false} query={query} onQueryChange={setQuery} loading={isFetching} commands={results} />
+
+{/* Opened from your own code, and told why it opened or closed */}
+<CommandPalette
+  controllerRef={palette}
+  hotkey={false}
+  commands={commands}
+  onOpenChange={(open, { reason }) => track(open, reason)}
+/>
+<Button onClick={() => palette.current?.toggle()}>Commands</Button>
+
+{/* Native props pass through to the dialog panel: a language for assistive technology, a test id */}
+<CommandPalette lang="fr" data-testid="palette" labels={{ title: "Palette de commandes", placeholder: "Tapez une commande…" }} commands={commands} />
+
+{/* Words in another language, and numerals that differ */}
+<CommandPalette
+  dir="rtl"
+  formatNumber={new Intl.NumberFormat("ar-EG").format}
+  labels={{ noResults: "لا توجد نتائج", results: (count) => `${count} نتيجة` }}
+  commands={commands}
+/>
+```
+
+## Design tokens used
+
+The panel, its scrim and its entrance are `Dialog`'s, which lists its own tokens. The rows are the option list that `Combobox` and `MultiSelect` also draw, so its stylesheet is shared with them; the entries marked as belonging to the floating list are in that stylesheet and are not used by the palette.
+
+<TokenRow token="bg.brand-subtle" usage="the highlighted row" />
+<TokenRow token="bg.surface" usage="the fill of the floating list in the shared list stylesheet; the panel's own comes from `Dialog`" />
+<TokenRow token="border.default" usage="the lines under the search row and above the footer and the notes" />
+<TokenRow token="border.focus" usage="the search row's focus ring, drawn inside its own edge" />
+<TokenRow token="border-width.1" usage="the lines between the sections" />
+<TokenRow token="border-width.2" usage="the search row's focus ring, and the highlighted row's outline in Windows high contrast" />
+<TokenRow token="combobox.list-max-height" usage="the most height the floating list that `Combobox` and `MultiSelect` draw takes; the palette's own cap is `command-palette.list-max-height`" />
+<TokenRow token="combobox.option-height-described.lg" usage="the height of a row with a description at `lg`" />
+<TokenRow token="combobox.option-height-described.md" usage="the height of a row with a description at `md`" />
+<TokenRow token="combobox.option-height-described.sm" usage="the height of a row with a description at `sm`" />
+<TokenRow token="combobox.option-height-described.xl" usage="the height of a row with a description at `xl`" />
+<TokenRow token="combobox.option-height-described.xs" usage="the height of a row with a description at `xs`" />
+<TokenRow token="combobox.option-height.lg" usage="the height of a one-line row at `lg`" />
+<TokenRow token="combobox.option-height.md" usage="the height of a one-line row at `md`" />
+<TokenRow token="combobox.option-height.sm" usage="the height of a one-line row at `sm`" />
+<TokenRow token="combobox.option-height.xl" usage="the height of a one-line row at `xl`" />
+<TokenRow token="combobox.option-height.xs" usage="the height of a one-line row at `xs`, shared by group headings" />
+<TokenRow token="command-palette.list-max-height" usage="the most height the list takes before it scrolls; the window is also limited to the room left on the screen" />
+<TokenRow token="font-family.primary" usage="the palette's text" />
+<TokenRow token="font-size.base" usage="the row text at `md`" />
+<TokenRow token="font-size.lg" usage="the search field's text" />
+<TokenRow token="font-size.md" usage="the row text at `lg`" />
+<TokenRow token="font-size.sm" usage="the row text at `sm`" />
+<TokenRow token="font-size.xs" usage="the key hints, descriptions and group headings" />
+<TokenRow token="font-weight.bold" usage="the matched text in a label" />
+<TokenRow token="font-weight.regular" usage="a description" />
+<TokenRow token="font-weight.semibold" usage="group headings, and a chosen option in the shared list stylesheet" />
+<TokenRow token="icon-size.md" usage="an option's icon, which the rows share with the floating list, at the largest sizes" />
+<TokenRow token="icon-size.sm" usage="an option's icon in the palette's rows" />
+<TokenRow token="icon-size.xs" usage="an option's icon at the smallest row size" />
+<TokenRow token="letter-spacing.wide" usage="the group headings, which are drawn in capitals" />
+<TokenRow token="line-height.tight" usage="the search field's and the rows' text" />
+<TokenRow token="motion-duration.fast" usage="the fade of the floating list that `Combobox` and `MultiSelect` draw; the palette's entrance is `Dialog`'s" />
+<TokenRow token="motion-easing.emphasized" usage="the floating list fading in, in the shared list stylesheet" />
+<TokenRow token="motion-easing.standard" usage="the floating list fading out, in the shared list stylesheet" />
+<TokenRow token="radius.md" usage="the corners of the floating list in the shared list stylesheet" />
+<TokenRow token="radius.sm" usage="a row's corners" />
+<TokenRow token="shadow.dark-md" usage="the floating list's elevation in a dark theme (the palette takes `Dialog`'s)" />
+<TokenRow token="shadow.light-md" usage="the floating list's elevation in a light theme (the palette takes `Dialog`'s)" />
+<TokenRow token="space.1" usage="the gap between a row's shortcut keys, and between a hint and its key" />
+<TokenRow token="space.2" usage="the list's padding, the gaps in the search row, and the footer's block padding" />
+<TokenRow token="space.3" usage="the inset of a row's content" />
+<TokenRow token="space.4" usage="the search row's and the footer's inline padding, and the search field's block padding, and the gap between key hints" />
+<TokenRow token="text.brand" usage="a chosen option in the shared list stylesheet; the palette marks none" />
+<TokenRow token="text.disabled" usage="an option that can't be chosen" />
+<TokenRow token="text.primary" usage="the search text and the row text" />
+<TokenRow token="text.secondary" usage="the description under an option, which stays readable on the highlighted row" />
+<TokenRow token="text.tertiary" usage="the placeholder, a row's shortcut keys, the footer, group headings and the No results row" />
+<TokenRow token="z-index.popover" usage="the floating list's step in the shared list stylesheet; the palette is on `Dialog`'s modal step" />
+
+## Related components
+
+<div className="dbm-card-grid">
+<RelatedCard
+  name="Dialog"
+  description="The modal window the palette is drawn in, for anything that is not a list of commands"
+  href="/?path=/docs/organisms-overlay-dialog--docs"
+>
+  <Button variant="secondary" size="sm">Open dialog</Button>
+</RelatedCard>
+<RelatedCard
+  name="Combobox"
+  description="Type to narrow a list and choose a value for a form field"
+  href="/?path=/docs/organisms-inputs-combobox--docs"
+>
+  <Combobox aria-label="Country" options={[{ value: "ca", label: "Canada" }]} size="sm" />
+</RelatedCard>
+<RelatedCard
+  name="Menu"
+  description="A short list of actions beside the thing that opened it"
+  href="/?path=/docs/organisms-navigation-menu--docs"
+>
+  <Menu>
+    <Menu.Trigger asChild>
+      <Button variant="secondary" size="sm">Actions</Button>
+    </Menu.Trigger>
+  </Menu>
+</RelatedCard>
+<RelatedCard
+  name="Kbd"
+  description="The keycap the palette draws shortcuts and key hints with"
+  href="/?path=/docs/atoms-typography-kbd--docs"
+>
+  <Kbd>Ctrl</Kbd>
+</RelatedCard>
+</div>

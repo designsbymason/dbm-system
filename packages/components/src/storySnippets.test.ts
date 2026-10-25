@@ -68,6 +68,7 @@ import { dialogPlaygroundSnippet } from "./organisms/Dialog/Dialog.snippets";
 import { drawerPlaygroundSnippet } from "./organisms/Drawer/Drawer.snippets";
 import { navbarPlaygroundSnippet } from "./organisms/Navbar/Navbar.snippets";
 import { sidebarPlaygroundSnippet } from "./organisms/Sidebar/Sidebar.snippets";
+import { commandPalettePlaygroundSnippet } from "./organisms/CommandPalette/CommandPalette.snippets";
 import { contextMenuPlaygroundSnippet } from "./organisms/ContextMenu/ContextMenu.snippets";
 import { fileUploadPlaygroundSnippet } from "./organisms/FileUpload/FileUpload.snippets";
 import { formPlaygroundSnippet } from "./organisms/Form/Form.snippets";
@@ -2020,5 +2021,54 @@ describe("Playground snippet for FileUpload", () => {
     const single = fileUploadPlaygroundSnippet({ multiple: false, maxFiles: 4 });
     expect(single).toContain("multiple={false}");
     expect(single).not.toContain("maxFiles");
+  });
+});
+
+describe("Playground snippet for CommandPalette", () => {
+  const everything = {
+    hotkey: "mod+shift+p",
+    size: "xl",
+    placement: "center",
+    showHints: false,
+    showCloseButton: true,
+    scrimBlur: true,
+    loading: true,
+    error: true,
+    dir: "rtl",
+    highlightTone: "highlight",
+    defaultQuery: 'say "hi"',
+    placeholder: "Aller à…",
+  } as const;
+
+  it.each([{}, everything, { hotkey: false, highlightTone: "none", dir: "ltr", size: "lg", placement: "top", showHints: true }] as const)(
+    "CommandPalette %j is a real snippet",
+    (args) => {
+      expect(problemsIn(commandPalettePlaygroundSnippet(args))).toEqual([]);
+    },
+  );
+
+  it("writes only what differs from the defaults", () => {
+    const code = commandPalettePlaygroundSnippet({ hotkey: "mod+k", size: "lg", placement: "top", showHints: true, showCloseButton: false, scrimBlur: false, loading: false, error: false, dir: "ltr", highlightTone: "none" });
+    expect(code).toContain("<CommandPalette");
+    for (const word of ["hotkey", "size", "placement", "showHints", "showCloseButton", "scrimBlur", "loading", "error", "dir", "highlightTone"]) {
+      expect(code).not.toContain(word);
+    }
+  });
+
+  it("writes each setting that is changed, quoting the reader's text safely", () => {
+    const code = commandPalettePlaygroundSnippet(everything);
+    expect(code).toContain('hotkey="mod+shift+p"');
+    expect(code).toContain('size="xl"');
+    expect(code).toContain('placement="center"');
+    expect(code).toContain("showHints={false}");
+    expect(code).toContain("showCloseButton");
+    expect(code).toContain("scrimBlur");
+    expect(code).toContain("loading");
+    expect(code).toContain("error");
+    expect(code).toContain('dir="rtl"');
+    expect(code).toContain('highlightTone="highlight"');
+    expect(code).toContain('defaultQuery={"say \\"hi\\""}');
+    expect(code).toContain('labels={{ placeholder: "Aller à…" }}');
+    expect(commandPalettePlaygroundSnippet({ hotkey: false })).toContain("hotkey={false}");
   });
 });

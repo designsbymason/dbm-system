@@ -87,7 +87,11 @@ const PER_COMPONENT_CSS_BUDGET_KB = 5;
 //   DateRangePicker (2026-10-25): two `DatePicker`s (16.01KB on their own, the whole `Calendar` included) and a range panel of its own: the
 //   `Popover` layer, the range calendar's presets, limits and reasons, two `IconButton`s and the held-pick and focus code, 19.74KB measured
 //   against the default 10KB (ADR-0129). The budget is 22KB.
-const JS_BUDGET_OVERRIDES_KB = { Calendar: 12, DataTable: 32, DatePicker: 18, DateRangePicker: 22, FileUpload: 14, MultiSelect: 18, Navbar: 22, Sidebar: 22, TimeRangePicker: 12, Toolbar: 13 };
+//   CommandPalette (2026-10-25): a `Dialog` (the panel, its scrim, the close button and the overlay sections) with the option list rows it shares
+//   with `Combobox`, the `IconButton`, `Tag`, `Kbd`, `Spinner` and `Highlight` it draws with, and its own ranking, hotkey, pages, recent and
+//   running-a-command code, 14.41KB of JS and 6.08KB of CSS measured against the defaults of 10KB and 5KB (ADR-0132, ADR-0133, ADR-0134).
+//   The budgets are 16KB and 7KB.
+const JS_BUDGET_OVERRIDES_KB = { Calendar: 12, CommandPalette: 16, DataTable: 32, DatePicker: 18, DateRangePicker: 22, FileUpload: 14, MultiSelect: 18, Navbar: 22, Sidebar: 22, TimeRangePicker: 12, Toolbar: 13 };
 
 // The same for CSS. `DataTable`'s bundle holds the stylesheets of the `Table`, `TableToolbar`, `Pagination`, `Select`,
 // `Checkbox` and `Menu` parts it draws with (6.30KB measured against 3.45KB for `TableToolbar`, the largest of them), plus its own; 8.10KB
@@ -103,7 +107,7 @@ const JS_BUDGET_OVERRIDES_KB = { Calendar: 12, DataTable: 32, DatePicker: 18, Da
 // `Menu`'s stylesheet grew by about 0.4KB with the sheet presentation (2026-10-24), which every bundle that holds a `Menu` carries:
 // `Sidebar`'s CSS went from 9.75KB to 10.12KB against its 10KB, so its budget is 11KB, and `Toolbar`'s overflow menu took its JS to 11.98KB
 // against 12KB, so its budget is 13KB.
-const CSS_BUDGET_OVERRIDES_KB = { DataTable: 10, Navbar: 11, Sidebar: 11 };
+const CSS_BUDGET_OVERRIDES_KB = { CommandPalette: 7, DataTable: 10, Navbar: 11, Sidebar: 11 };
 
 // Words only an opt-in extra's code contains, and the component whose bundle must not contain them: `CodeBlock`
 // ships Python, Go and Java as separate exports an app registers (ADR-0027). If a change makes the component

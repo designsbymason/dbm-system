@@ -1,6 +1,6 @@
 # 0123 — The floating option list is shared by `Combobox` and `MultiSelect` through `internal/optionList`, and `MultiSelect` draws `TagsInput`'s box and chip, over copying them or adding a `multiple` prop to `Combobox`
 
-**Status:** Accepted · **Date:** 2026-10-25
+**Status:** Accepted · **Date:** 2026-10-25 · **Amended 2026-10-25** — what `CommandPalette` can reuse without moving anything; the decision itself is unchanged
 
 ## Context
 `MultiSelect` chooses several options from a long list and shows them as removable chips. Two Finalized components already hold what it needs: `Combobox` has the list (options as data, grouping, matching, marking, windowing, the floating layer, a full-width presentation, announcements), and `TagsInput` has the chips (a wrapping box, the roving chip keys, the width-driven collapse). Neither could be used as it stood: `Combobox`'s list was 350 lines of rendering and four hooks' worth of state inside a 926-line component, with its stylesheet and helpers in the component's own folder, and `TagsInput`'s chip and box were private to it.
@@ -24,7 +24,7 @@
 - `Combobox` is Finalized and was changed, so the three-question test of `06` §9 applies: its rendered and behavioural output is unchanged (every unit and real-browser check passes, the moved helper tests and the docs-token test aside), so it stays Finalized. The shared stylesheet's class names and the two CSS custom properties the list reads (`--combobox-width`, `--combobox-room`) are now a contract between the components.
 - A change to the list (a row, a key, the windowing) reaches both fields, and `Combobox`'s and `MultiSelect`'s real-browser checks must both be re-run.
 - `MultiSelect`'s bundle holds the list, the chip and the popover layer (12.45KB of JS, with a 14KB budget). `TagsInput` is unchanged in what it renders.
-- `CommandPalette`, when built, uses `internal/optionList` without moving anything.
+- `CommandPalette`, when built, uses `internal/optionList`. *(Amended 2026-10-25: this originally said it would use it "without moving anything", because the panel was assumed to be only the rows. It is also the floating layer, so the listbox body was split out of it first: [ADR-0133](./0133-the-listbox-body-is-split-from-the-option-list-panel-so-commandpalette-draws-it-inline-over-copying-the-rows-or-anchoring-a-popover-in-a-dialog.md).)*
 
 ## Related
 `05-component-api-conventions.md` §1; [ADR-0077](./0077-combobox-floats-its-list-with-a-radix-popover-anchor-and-no-trigger-over-popover-popper-and-a-dismissable-layer-or-a-bare-portal.md), [ADR-0078](./0078-combobox-takes-its-options-as-data-over-option-parts-mounted-as-children.md), [ADR-0080](./0080-long-option-lists-are-drawn-a-window-at-a-time-by-a-hand-rolled-hook-with-fixed-row-heights-from-tokens-over-a-virtualization-dependency-or-measured-rows.md), [ADR-0081](./0081-combobox-offers-a-full-width-presentation-measured-against-the-visual-viewport-over-a-docked-bottom-sheet.md), [ADR-0049](./0049-tagsinput-draws-chips-and-its-own-entry-in-one-wrapping-box-and-adds-on-enter-separator-blur-or-paste-over-the-input-atom-or-a-combobox.md), [ADR-0050](./0050-tagsinput-chips-are-one-tab-stop-with-arrow-key-movement-and-tag-lets-its-remove-button-leave-the-tab-order.md); `component-reviews/MultiSelect.md`, `component-reviews/Combobox.md`.

@@ -1,0 +1,130 @@
+/*
+ * CommandPalette: the inside of a `Dialog` panel (the panel, its scrim, its size and its entrance are `Dialog`'s own).
+ * A search row, the option list the way `Combobox` draws it (its rows come from the shared option-list stylesheet),
+ * and a footer of key hints. The panel's block size is the dialog's, so a long list scrolls inside the room left.
+ */
+.panel {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  font-family: var(--dbm-font-family-primary);
+  min-block-size: 0;
+}
+
+/* --- The search row. It is a field, so its focus ring is drawn on its own edge, inside it. --- */
+.header {
+  align-items: center;
+  border-block-end: var(--dbm-border-width-1) solid var(--dbm-border-default);
+  border-start-end-radius: var(--dialog-radius);
+  border-start-start-radius: var(--dialog-radius);
+  display: flex;
+  flex: 0 0 auto;
+  gap: var(--dbm-space-2);
+  padding-inline: var(--dbm-space-4);
+}
+
+.header:has(.input:focus-visible) {
+  outline: var(--dbm-border-width-2) solid var(--dbm-border-focus);
+  outline-offset: calc(-1 * var(--dbm-border-width-2));
+}
+
+.searchIcon,
+.back,
+.pageTag {
+  flex-shrink: 0;
+}
+
+.pageTag {
+  max-inline-size: 40%;
+}
+
+.input {
+  appearance: none;
+  background: transparent;
+  border: 0;
+  color: var(--dbm-text-primary);
+  flex: 1 1 auto;
+  font-family: inherit;
+  font-size: var(--dbm-font-size-lg);
+  line-height: var(--dbm-line-height-tight);
+  margin: 0;
+  min-inline-size: 0;
+  outline: none;
+  padding-block: var(--dbm-space-4);
+  padding-inline: 0;
+}
+
+.input::placeholder {
+  color: var(--dbm-text-tertiary);
+}
+
+/* --- The list. The rows and their heights are the shared option list's; the cap on the box is this palette's own. --- */
+.results {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  min-block-size: 0;
+  padding: var(--dbm-space-2);
+}
+
+.results > [role="listbox"] {
+  max-block-size: var(--dbm-command-palette-list-max-height);
+}
+
+/* What a row ends with: its shortcut, or a mark that it opens a list. */
+.trailing {
+  align-items: center;
+  color: var(--dbm-text-tertiary);
+  display: inline-flex;
+  flex-shrink: 0;
+  gap: var(--dbm-space-1);
+}
+
+.chevron:dir(rtl) {
+  transform: scaleX(-1);
+}
+
+/* --- The footer: key hints at the start, anything the app adds at the end. --- */
+.footer {
+  align-items: center;
+  border-block-start: var(--dbm-border-width-1) solid var(--dbm-border-default);
+  color: var(--dbm-text-tertiary);
+  display: flex;
+  flex: 0 0 auto;
+  font-size: var(--dbm-font-size-xs);
+  gap: var(--dbm-space-4);
+  justify-content: space-between;
+  padding: var(--dbm-space-2) var(--dbm-space-4);
+}
+
+.hints {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--dbm-space-4);
+}
+
+.hint {
+  align-items: center;
+  display: inline-flex;
+  gap: var(--dbm-space-1);
+}
+
+.footerExtra {
+  margin-inline-start: auto;
+}
+
+/* A touch screen has no keys to hint at. */
+@media (pointer: coarse) {
+  .hints {
+    display: none;
+  }
+}
+
+/* Forced colours replaces backgrounds, so the lines that tell the sections apart are drawn in a system colour. */
+@media (forced-colors: active) {
+  .header,
+  .footer {
+    border-color: CanvasText;
+  }
+}
