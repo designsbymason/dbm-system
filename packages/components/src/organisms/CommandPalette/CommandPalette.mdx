@@ -21,7 +21,11 @@ export const propOrder = [
   "onQueryChange",
   "filter",
   "searchNested",
+  "modes",
+  "maxPerGroup",
+  "suggested",
   "recent",
+  "onHighlightChange",
   "loading",
   "error",
   "emptyContent",
@@ -89,7 +93,10 @@ import { CommandPalette } from "@dbm-system/components";
     "query",
     "onQueryChange",
     "filter",
+    "modes",
+    "suggested",
     "recent",
+    "onHighlightChange",
     "emptyContent",
     "onSelect",
     "onSelectError",
@@ -131,11 +138,12 @@ A command is an object in the `commands` array.
 | `icon` | An icon before the label, a component from `@dbm-system/icons`. |
 | `group` | The heading to list it under. Commands with the same group are listed together. |
 | `keywords` | Words the search matches but the row never shows ("preferences" for "Settings"). |
-| `shortcut` | The keys to show at the row's end, as one string (`"⌘N"`) or one string per key (`["Ctrl", "N"]`). It displays a hint and binds nothing. |
+| `shortcut` | The keys to show at the row's end, as one string (`"⌘N"`) or one string per key (`["Ctrl", "N"]`). The names `mod`, `cmd`, `ctrl`, `alt` and `shift` are drawn for the platform: `["mod", "N"]` is ⌘N on a Mac and Ctrl N elsewhere. It displays a hint and binds nothing. |
 | `disabled` | `true`, or a string giving the reason, shown as the row's tooltip and read out after its name. |
 | `onSelect` | Runs when it is chosen; may return a promise. |
 | `closeOnSelect` | `false` keeps the palette open after it runs. |
 | `items` | Commands it opens as a list of its own. |
+| `argument` | Asks for a value before it runs: `{ placeholder, initialValue, validate }`. |
 | `placeholder`, `emptyContent` | For a command with `items`: the search field's placeholder and the note for no results while its list is open. |
 
 ## Variants
@@ -171,6 +179,26 @@ A command is an object in the `commands` array.
 ### Opened from code
 
 <Canvas of={CommandPaletteStories.FromCode} />
+
+### Preview as you move
+
+<Canvas of={CommandPaletteStories.Preview} />
+
+### Commands that ask for a value
+
+<Canvas of={CommandPaletteStories.Asking} />
+
+### Modes reached by a prefix
+
+<Canvas of={CommandPaletteStories.Modes} />
+
+### Capped and suggested groups
+
+<Canvas of={CommandPaletteStories.CappedGroups} />
+
+### Shortcuts written for the platform
+
+<Canvas of={CommandPaletteStories.PlatformShortcuts} />
 
 ### Footer
 
@@ -218,6 +246,11 @@ A command is an object in the `commands` array.
 - **Search matches every word, in any order,** in a command's label (or `textValue`) and its `keywords`, ignoring case and accents. A label that starts with a word ranks above one that has it inside, and a match in `keywords` ranks last. Commands keep their group's place, so a heading never jumps as someone types, and equal matches keep the order you gave.
 - **A search at the top level also finds the commands inside lists.** Typing "dark" lists "Dark" under the heading "Change theme", and choosing it runs it without opening the list. The parent's label is searched too, so "theme dark" finds it. A disabled parent's commands are left out, and `searchNested={false}` turns the behaviour off. Inside a list the search covers that list alone.
 - **A row says why it matched.** When a word is found only in a command's `keywords`, never in its label, the row ends with that keyword in quotes ("preferences" after typing "prefer"), so a match through a word the row never shows is not a mystery.
+- **Try a choice before it is made.** `onHighlightChange` is called with the highlighted command as the keys or the pointer move it, and with `null` when none is highlighted or the palette closes. Use it to preview (a theme, a page) and put things back on `null`. The palette draws no preview of its own.
+- **A command can ask for a value.** With an `argument`, choosing it turns the search field into the entry for it, under a Back button, and one row says what Enter will do: "Run with “name”". `validate` returns a message to refuse the text, which replaces that row's words and makes Enter do nothing; empty text is refused without asking. `onSelect` receives the text as `details.argument`. A command with both `items` and an `argument` opens its `items`.
+- **Modes are reached by a prefix.** With `modes`, typing `>` at the start of the search lists that mode's commands and searches what follows; the prefix stays in the text, so deleting it leaves the mode, and the footer hints each one. Modes apply at the top level only, and `recent` and `suggested` name top-level commands. They are props: the palette keeps no store of commands.
+- **Cut a long empty list with `maxPerGroup`.** Each group shows its first few while the search is empty, followed by a row ("Show 3 more") that shows the rest of that group; the row is reached with the arrow keys like any other. Searching lists every match, and the recent and suggested groups are never cut. `suggested` lists commands after `recent` under their own heading, and a command shows once, in the first group that names it.
+- **The forward arrow opens a list.** With the caret at the end of the text, Right (Left in right-to-left) opens the highlighted command's list or asks for its value; Tab is not used for this, so it keeps moving focus as it does everywhere in the dialog. The highlighted row ends with an Enter key to say what runs it.
 - **A list can speak for itself.** A command with `items` can set a `placeholder` ("Search themes…") and an `emptyContent` for its own list; the search field is then named after the list (`labels.searchIn`) and so is the listbox.
 - **`recent` is a list of values you keep.** The palette remembers nothing between openings, because what counts as recent (per person, per workspace, after a round trip) is yours to say. A command shows once: under the Recent heading while the search is empty, and in its usual place once something is typed.
 - **A command that returns a promise is busy until it settles.** The row shows a spinner, the palette ignores Escape and a press on the scrim, no other command runs, and it closes when the promise resolves unless `closeOnSelect` is `false`. A rejection keeps it open, announces `labels.failed` and calls `onSelectError`; with no handler the rejection is left unhandled so it is not lost silently.
@@ -237,6 +270,7 @@ A command is an object in the `commands` array.
 - "No results" and "Loading…" are rows that can't be chosen, so the list is never empty to assistive technology. A loading list is `aria-busy`, and a palette waiting on a command is `aria-busy` too.
 - The number of results is announced in a status region that was already in the page, only when it changes as someone types or opens a list, never when the palette merely opens. A failed command and an error are announced when they appear.
 - The Back button has an accessible name (`labels.back`) and is at least 24 × 24 pixels, as is every row. Enter while an input method is composing a character does nothing.
+- The Enter key drawn at the end of the highlighted row is hidden from assistive technology, so a row's name does not change as the highlight moves. A shortcut's modifier symbols (⌘ ⌃ ⌥ ⇧) have plain-language names.
 - The footer's key hints are decoration and are hidden from assistive technology; they are also not drawn on a touch screen. A shortcut on a row is part of the row's name.
 - The search row's focus ring is drawn inside its own edge. In Windows high contrast the highlighted row is outlined and the lines between the sections are kept.
 
@@ -245,9 +279,10 @@ A command is an object in the `commands` array.
 | Key | Behaviour |
 |---|---|
 | Ctrl + K (⌘K), or `hotkey` | Opens the palette; pressed again, closes it. Works from inside a text field. |
+| Right arrow (Left in right-to-left) | With the caret at the end of the text, opens the highlighted command's list, or asks for its value. |
 | Down arrow, Up arrow | Highlights the next or previous command that can run, wrapping at the ends. |
 | Page Down, Page Up | Move the highlight ten commands. |
-| Enter | Runs the highlighted command, or opens its list. |
+| Enter | Runs the highlighted command, opens its list, asks for its value, or shows the rest of a capped group. |
 | Backspace | In a list opened from a command, with an empty search, goes back one level. |
 | Escape | Closes the palette, from any level. Does nothing while a command is running. |
 | Tab | Moves to the Back button when there is one; otherwise it stays in the dialog. |
@@ -289,6 +324,15 @@ A command is an object in the `commands` array.
     { value: "theme", label: "Change theme", placeholder: "Search themes…", emptyContent: "No such theme", items: themes },
   ]}
 />
+
+{/* Ask for a value before running, and try a choice as it is highlighted */}
+<CommandPalette
+  commands={[{ value: "rename", label: "Rename file", argument: { placeholder: "New name…" }, onSelect: (item, { argument }) => rename(argument) }]}
+  onHighlightChange={(item) => preview(item?.value ?? null)}
+/>
+
+{/* Several sets of commands by prefix, and a long empty list cut to a few per group */}
+<CommandPalette commands={commands} modes={[{ prefix: ">", label: "Actions", commands: actions }]} maxPerGroup={3} suggested={["new-file"]} />
 
 {/* A search done on a server: pass the commands as they arrive, and the search text back */}
 <CommandPalette filter={false} query={query} onQueryChange={setQuery} loading={isFetching} commands={results} />

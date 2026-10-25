@@ -14,6 +14,9 @@ A modal `Dialog` with a search field and an inline list of commands, opened by a
 ## Added after the first build
 Searching the commands inside lists from the top level, the keyword a row matched through, and a list's own placeholder and empty note ([ADR-0134](../adr/0134-commandpalette-ranks-by-word-start-keeps-group-order-drills-into-one-level-of-pages-and-runs-promise-commands-busy-over-fuzzy-matching-a-flat-list-or-closing-first.md)), each with unit tests and, for nested search and taps on a phone width, real-browser checks.
 
+## Added in the second round
+The highlight report (`onHighlightChange`), values asked for in the search field (`argument`), modes reached by a prefix, capped and suggested groups, the Enter hint on the highlighted row with the forward arrow opening a list, and modifier keys drawn for the platform ([ADR-0135](../adr/0135-commandpalette-reports-the-highlight-asks-for-a-value-in-the-search-field-switches-lists-by-a-typed-prefix-caps-groups-and-draws-modifier-keys-for-the-platform-over-a-preview-pane-a-second-dialog-or-a-tab-key-that-completes.md)). Each has unit tests and, for arguments, modes, capped groups and platform keys, real-browser checks.
+
 ## Known gaps, for the review pass
 - A tap is checked with touch pointer events dispatched from the page (a real touch through the DevTools Protocol is unreliable in the test browser); a real device has not been tried, so `fullScreen` stays off by default and the on-screen keyboard's effect on the layout is unverified (ADR-0132).
 - Light/dark and both brands are looked at only in part; the full four-theme pass, contrast checks of the highlighted row against `bg.brand-subtle` (shared with `Combobox`) and the Docs page visual pass are part of the review.

@@ -30,15 +30,18 @@ export interface CommandItem {
   group?: string;
   /**
    * The key combination to show at the row's end: one string (`"⌘N"`) or one string per key (`["Ctrl", "N"]`). It only
-   * displays a hint and binds nothing: wire the key yourself, as for `Menu`'s `shortcut`.
+   * displays a hint and binds nothing: wire the key yourself, as for `Menu`'s `shortcut`. The names `mod`, `cmd`, `ctrl`,
+   * `alt` and `shift` are drawn for the person's platform (`["mod", "N"]` and `"mod+N"` are ⌘N on a Mac and Ctrl N
+   * elsewhere); any other text is drawn as written.
    */
   shortcut?: string | string[];
   /**
-   * Runs the command when it is chosen. It may return a promise: the row then shows a spinner, the palette waits (it
+   * Runs the command when it is chosen, with the command and what was typed (`details.argument` is the text entered
+   * for a command with an `argument`). It may return a promise: the row then shows a spinner, the palette waits (it
    * can't be dismissed), and it closes when the promise resolves. A rejection keeps it open and goes to
    * `onSelectError`. Not called for a command with `items`, which opens them.
    */
-  onSelect?: (item: CommandItem) => void | Promise<unknown>;
+  onSelect?: (item: CommandItem, details: CommandPaletteSelectDetails) => void | Promise<unknown>;
   /**
    * Whether choosing the command closes the palette. `false` keeps it open (a toggle, a command that changes the
    * list), and a command that returns a promise stays open until it settles either way.
@@ -58,6 +61,43 @@ export interface CommandItem {
    */
   placeholder?: string;
   /** What the list says when nothing in this command's `items` matches, in place of the palette's `emptyContent`. */
+  emptyContent?: ReactNode;
+  /**
+   * Asks for a value before the command runs ("Rename file…"). Choosing the command turns the search field into the
+   * entry for it, under a Back button, with one row that says what Enter will do; Enter runs `onSelect` with the text
+   * in `details.argument`. A command with both `items` and an `argument` opens its `items`.
+   */
+  argument?: CommandArgument;
+}
+
+/** What a command that asks for a value (its `argument`) needs to ask. */
+export interface CommandArgument {
+  /** The placeholder of the entry while it is asked for ("New file name…"), in place of `labels.placeholder`. */
+  placeholder?: string;
+  /** The text the entry starts with. */
+  initialValue?: string;
+  /**
+   * Judges the text as it is typed (spaces at either end already removed): return a message to refuse it, which the
+   * row shows in place of the "Run" line while Enter does nothing, or nothing to accept it. Empty text is refused
+   * without asking.
+   */
+  validate?: (text: string) => string | undefined;
+}
+
+/**
+ * A set of commands reached by typing a prefix at the start of the search (`>` for actions, `@` for people). The
+ * list switches to them while the text starts with the prefix; the search is what follows it.
+ */
+export interface CommandPaletteMode {
+  /** The text that switches to this mode when it starts the search: one or more characters, with no spaces. */
+  prefix: string;
+  /** The mode's name, shown in the footer's hint for its prefix and naming the search and the list while it is on. */
+  label: string;
+  /** The commands of this mode, searched like the top level (including the commands inside its lists). */
+  commands: CommandItem[];
+  /** The search field's placeholder while this mode is on, in place of `labels.placeholder`. */
+  placeholder?: string;
+  /** What the list says when nothing in this mode matches, in place of the palette's `emptyContent`. */
   emptyContent?: ReactNode;
 }
 
@@ -80,6 +120,8 @@ export interface CommandPaletteOpenChangeDetails {
 export interface CommandPaletteSelectDetails {
   /** The text in the search when the command was chosen. */
   query: string;
+  /** The text entered for a command with an `argument`; absent for any other command. */
+  argument?: string;
 }
 
 /**
@@ -111,6 +153,14 @@ export interface CommandPaletteLabels {
   searchIn: (label: string) => string;
   /** The search field's placeholder. @default 'Type a command or search…' */
   placeholder: string;
+  /** The row that says what Enter will do for a command with an `argument`, given the text. @default 'Run with “text”' */
+  runWith: (text: string) => string;
+  /** The row for a command with an `argument` while nothing is typed. @default 'Type a value, then press Enter' */
+  argumentEmpty: string;
+  /** The heading of the `suggested` group. @default 'Suggested' */
+  suggested: string;
+  /** The row that shows the rest of a capped group (`maxPerGroup`), given how many. @default 'Show 3 more' */
+  showMore: (count: number) => string;
   /** The note when nothing matches. @default 'No results' */
   noResults: string;
   /** The note while `loading`. @default 'Loading…' */
@@ -188,6 +238,30 @@ export interface CommandPaletteProps
    * @default true
    */
   searchNested?: boolean;
+  /**
+   * Sets of commands reached by typing a prefix at the start of the search, such as `>` for actions or `@` for people.
+   * Only at the top level, and not while a list or an argument is open. Without a matching prefix the palette lists
+   * `commands`. The footer hints each prefix.
+   */
+  modes?: CommandPaletteMode[];
+  /**
+   * The most commands of each group to list while the search is empty, with a row after them that shows the rest.
+   * Searching lists every match, and the `recent` and `suggested` groups are never cut. 0 or omitted caps nothing.
+   * @default 0
+   */
+  maxPerGroup?: number;
+  /**
+   * The `value`s of commands to list after `recent`, under a heading of their own (`labels.suggested`), while the
+   * search is empty. A command shows once, in the first group that names it.
+   */
+  suggested?: string[];
+  /**
+   * Called with the highlighted command whenever it changes (as the arrow keys or the pointer move it), and with `null`
+   * when none is highlighted or the palette closes. For a preview that follows the highlight, such as trying a theme
+   * as it is passed over: put things back when it reports `null`. A command found through a nested search is reported
+   * as itself.
+   */
+  onHighlightChange?: (item: CommandItem | null) => void;
   /**
    * The `value`s of commands to list first, under a heading of their own, while the search is empty. A command shows
    * once: in this group while the search is empty, and in its usual place otherwise. The palette remembers nothing,

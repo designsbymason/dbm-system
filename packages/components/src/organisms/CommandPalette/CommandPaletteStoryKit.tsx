@@ -12,7 +12,7 @@ import {
   SunIcon,
   UserIcon,
 } from "@dbm-system/icons";
-import type { CommandItem } from "./CommandPalette.types";
+import type { CommandItem, CommandPaletteMode } from "./CommandPalette.types";
 
 // The stage the stories draw an open palette inside: the same box `Dialog`'s stories use (every `<Canvas>` on a Docs
 // page shares one document, so a modal's fixed scrim would otherwise cover the whole page).
@@ -66,3 +66,49 @@ export const manyCommands = (count: number): CommandItem[] =>
     group: `Section ${Math.floor(index / 50) + 1}`,
     description: index % 7 === 0 ? "With a description" : undefined,
   }));
+
+/** Commands that ask for a value before they run. */
+export const askingCommands: CommandItem[] = [
+  {
+    value: "rename",
+    label: "Rename file",
+    icon: FolderOpenIcon,
+    description: "Asks for a new name",
+    argument: {
+      placeholder: "New file name…",
+      initialValue: "untitled",
+      validate: (text) => (text.includes("/") ? "A name can't hold a slash" : undefined),
+    },
+  },
+  { value: "folder", label: "Create folder", icon: FilePlusIcon, argument: { placeholder: "Folder name…" } },
+  { value: "settings", label: "Open settings", icon: GearIcon },
+];
+
+/** Two sets of commands reached by a prefix. */
+export const sampleModes: CommandPaletteMode[] = [
+  {
+    prefix: ">",
+    label: "Actions",
+    placeholder: "Run an action…",
+    commands: [
+      { value: "reload", label: "Reload window", keywords: ["restart"] },
+      { value: "format", label: "Format document" },
+      { value: "toggle-sidebar", label: "Toggle sidebar", shortcut: ["mod", "B"] },
+    ],
+  },
+  {
+    prefix: "@",
+    label: "People",
+    placeholder: "Find a person…",
+    commands: [
+      { value: "ada", label: "Ada Lovelace", description: "Engineering" },
+      { value: "grace", label: "Grace Hopper", description: "Compilers" },
+      { value: "alan", label: "Alan Turing", description: "Research" },
+    ],
+  },
+];
+
+/** A few commands in each of three groups, for a story about capping what is listed. */
+export const groupedCommands: CommandItem[] = ["Files", "Views", "Tools"].flatMap((group) =>
+  Array.from({ length: 6 }, (_, index) => ({ value: `${group}-${index}`, label: `${group.slice(0, -1)} command ${index + 1}`, group })),
+);

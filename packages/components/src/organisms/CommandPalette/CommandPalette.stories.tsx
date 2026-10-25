@@ -9,7 +9,7 @@ import { Text } from "../../atoms/Text";
 import { CommandPalette } from "./CommandPalette";
 import { commandPalettePlaygroundSnippet, commandPaletteSnippets } from "./CommandPalette.snippets";
 import type { CommandItem, CommandPaletteController, CommandPaletteProps } from "./CommandPalette.types";
-import { PaletteStage, manyCommands, sampleCommands, slowCommands } from "./CommandPaletteStoryKit";
+import { PaletteStage, askingCommands, groupedCommands, manyCommands, sampleCommands, sampleModes, slowCommands } from "./CommandPaletteStoryKit";
 
 // The Playground adds a Playground-only control (the placeholder), which is a field of the real `labels` prop and so
 // not a prop itself.
@@ -37,6 +37,7 @@ const noControls = {
   highlightTone: { control: false },
   defaultQuery: { control: false },
   searchNested: { control: false },
+  maxPerGroup: { control: false },
   placeholder: { control: false },
   onOpenChange: { control: false },
   onSelect: { control: false },
@@ -105,6 +106,26 @@ const meta: Meta<PlaygroundArgs> = {
       description:
         "Whether a search at the top level also finds the commands inside lists, listing each under its parent command's label. Try searching \"dark\". Has no effect inside a list or with filter={false}.",
       table: { defaultValue: { summary: "true" } },
+    },
+    modes: {
+      control: false,
+      description:
+        "Sets of commands reached by typing a prefix at the start of the search, such as > for actions or @ for people. Each is { prefix, label, commands, placeholder, emptyContent }. Only at the top level. The footer hints each prefix.",
+    },
+    maxPerGroup: {
+      control: "number",
+      description:
+        "The most commands of each group to list while the search is empty, with a row after them that shows the rest. Searching lists every match; the recent and suggested groups are never cut. 0 caps nothing.",
+      table: { defaultValue: { summary: "0" } },
+    },
+    suggested: {
+      control: false,
+      description: "The values of commands to list after recent, under a heading of their own, while the search is empty. A command shows once, in the first group that names it.",
+    },
+    onHighlightChange: {
+      control: false,
+      description:
+        "Called with the highlighted command whenever it changes, and with null when none is highlighted or the palette closes. For a preview that follows the highlight: put things back when it reports null.",
     },
     recent: {
       control: false,
@@ -193,7 +214,7 @@ const meta: Meta<PlaygroundArgs> = {
     labels: {
       control: false,
       description:
-        "The words the palette writes itself: title, search, searchIn (a function of a list's label), placeholder, noResults, loading, error, failed, back, recent, results (a function of the count) and the three footer hints. Pass the ones to replace.",
+        "The words the palette writes itself: title, search, searchIn (a function of a list's label), placeholder, runWith, argumentEmpty, suggested, showMore, noResults, loading, error, failed, back, recent, results (a function of the count) and the three footer hints. Pass the ones to replace.",
       table: { defaultValue: { summary: "" } },
     },
     formatNumber: {
@@ -225,6 +246,7 @@ const meta: Meta<PlaygroundArgs> = {
     hotkey: "mod+k",
     defaultQuery: "",
     searchNested: true,
+    maxPerGroup: 0,
     loading: false,
     error: false,
     showHints: true,
@@ -543,6 +565,135 @@ export const FullScreen: Story = {
           showCloseButton
           trigger={searchTrigger}
           commands={sampleCommands}
+        />
+      )}
+    </PaletteStage>
+  ),
+};
+
+function PreviewExample({ container }: { container: HTMLElement | null }) {
+  const [theme, setTheme] = useState("light");
+  const [previewing, setPreviewing] = useState<string | null>(null);
+  const shown = previewing ?? theme;
+  const commands: CommandItem[] = [
+    { value: "light", label: "Light", onSelect: () => setTheme("light") },
+    { value: "dark", label: "Dark", onSelect: () => setTheme("dark") },
+    { value: "sepia", label: "Sepia", onSelect: () => setTheme("sepia") },
+  ];
+  const fill = { light: "var(--dbm-bg-surface)", dark: "var(--dbm-gray-900)", sepia: "var(--dbm-yellow-100)" } as const;
+  return (
+    <Stack gap={3} align="center">
+      <CommandPalette
+        container={container}
+        hotkey={false}
+        trigger={searchTrigger}
+        commands={commands}
+        onHighlightChange={(item) => setPreviewing(item?.value ?? null)}
+      />
+      <div
+        style={{
+          background: fill[shown as keyof typeof fill],
+          border: "var(--dbm-border-width-1) solid var(--dbm-border-default)",
+          borderRadius: "var(--dbm-radius-md)",
+          padding: "var(--dbm-space-3) var(--dbm-space-6)",
+        }}
+      >
+        <Text size="sm" color="secondary">
+          {previewing && previewing !== theme ? `Previewing ${previewing}` : `Theme: ${theme}`}
+        </Text>
+      </div>
+    </Stack>
+  );
+}
+
+/** `onHighlightChange` follows the highlight, so a choice can be tried before it is made. */
+export const Preview: Story = {
+  name: "Preview as you move",
+  parameters: { docs: { source: { code: commandPaletteSnippets.preview } } },
+  argTypes: { ...noControls },
+  render: () => <PaletteStage>{(container) => <PreviewExample container={container} />}</PaletteStage>,
+};
+
+function AskingExample({ container }: { container: HTMLElement | null }) {
+  const [message, setMessage] = useState("Choose “Rename file” and give it a name.");
+  return (
+    <Stack gap={3} align="center">
+      <CommandPalette
+        container={container}
+        hotkey={false}
+        trigger={searchTrigger}
+        commands={askingCommands}
+        onSelect={(item, details) => setMessage(details.argument === undefined ? `Ran “${item.label}”.` : `Ran “${item.label}” with “${details.argument}”.`)}
+      />
+      <Text size="sm" color="secondary">
+        {message}
+      </Text>
+    </Stack>
+  );
+}
+
+/** A command with an `argument` asks for a value in the search field before it runs. */
+export const Asking: Story = {
+  name: "Commands that ask for a value",
+  parameters: { docs: { source: { code: commandPaletteSnippets.asking } } },
+  argTypes: { ...noControls },
+  render: () => <PaletteStage>{(container) => <AskingExample container={container} />}</PaletteStage>,
+};
+
+/** `modes` are sets of commands reached by a prefix: try `>` and `@`. */
+export const Modes: Story = {
+  name: "Modes reached by a prefix",
+  parameters: { docs: { source: { code: commandPaletteSnippets.modes } } },
+  argTypes: { ...noControls },
+  render: () => (
+    <PaletteStage>
+      {(container) => (
+        <CommandPalette container={container} hotkey={false} trigger={searchTrigger} commands={sampleCommands} modes={sampleModes} />
+      )}
+    </PaletteStage>
+  ),
+};
+
+/** `maxPerGroup` cuts each group while the search is empty, and `suggested` lists a few first. */
+export const CappedGroups: Story = {
+  name: "Capped and suggested groups",
+  parameters: { docs: { source: { code: commandPaletteSnippets.capped } } },
+  argTypes: { ...noControls },
+  render: () => (
+    <PaletteStage minBlockSize="40rem">
+      {(container) => (
+        <CommandPalette
+          container={container}
+          hotkey={false}
+          trigger={searchTrigger}
+          commands={groupedCommands}
+          maxPerGroup={2}
+          recent={["Views-3"]}
+          suggested={["Tools-1", "Files-4"]}
+        />
+      )}
+    </PaletteStage>
+  ),
+};
+
+/** Shortcuts written with `mod` are drawn for the platform: ⌘ on a Mac, Ctrl elsewhere. */
+export const PlatformShortcuts: Story = {
+  name: "Shortcuts written for the platform",
+  parameters: { docs: { source: { code: commandPaletteSnippets.platformShortcuts } } },
+  argTypes: { ...noControls },
+  render: () => (
+    <PaletteStage>
+      {(container) => (
+        <CommandPalette
+          container={container}
+          hotkey={false}
+          trigger={searchTrigger}
+          commands={[
+            { value: "new", label: "New file", shortcut: ["mod", "N"] },
+            { value: "palette", label: "Show all commands", shortcut: "mod+shift+P" },
+            { value: "next", label: "Next tab", shortcut: ["ctrl", "Tab"] },
+            { value: "find", label: "Find in file", shortcut: "mod+F" },
+          ]}
         />
       )}
     </PaletteStage>

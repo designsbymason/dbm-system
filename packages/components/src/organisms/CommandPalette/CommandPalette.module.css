@@ -90,6 +90,17 @@
   white-space: nowrap;
 }
 
+/* The key that runs the highlighted row; a touch screen has no key to press. */
+.enterHint {
+  margin-inline-start: var(--dbm-space-1);
+}
+
+@media (pointer: coarse) {
+  .enterHint {
+    display: none;
+  }
+}
+
 .chevron:dir(rtl) {
   transform: scaleX(-1);
 }

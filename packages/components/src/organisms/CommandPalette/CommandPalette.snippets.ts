@@ -113,6 +113,65 @@ export const commandPaletteSnippets = {
 />
 <Button onClick={() => palette.current?.toggle()}>Commands</Button>`,
 
+  preview: `{/* onHighlightChange: told which command is highlighted as the keys or the pointer move it, and null when none
+    is or the palette closes. Try a choice, and put things back on null. */}
+<CommandPalette
+  trigger={<Button variant="secondary">Search…</Button>}
+  onHighlightChange={(item) => setPreviewTheme(item ? item.value : null)}
+  commands={[
+    { value: "light", label: "Light", onSelect: () => setTheme("light") },
+    { value: "dark", label: "Dark", onSelect: () => setTheme("dark") },
+  ]}
+/>`,
+
+  asking: `{/* argument: choosing the command turns the search field into its entry, with one row that says what Enter will do.
+    validate returns a message to refuse the text. onSelect gets the text in details.argument. */}
+<CommandPalette
+  trigger={<Button variant="secondary">Search…</Button>}
+  commands={[
+    {
+      value: "rename",
+      label: "Rename file",
+      argument: {
+        placeholder: "New file name…",
+        initialValue: "untitled",
+        validate: (text) => (text.includes("/") ? "A name can't hold a slash" : undefined),
+      },
+      onSelect: (item, { argument }) => renameFile(argument),
+    },
+  ]}
+/>`,
+
+  modes: `{/* modes: sets of commands reached by typing a prefix at the start of the search. The footer hints each one. */}
+<CommandPalette
+  trigger={<Button variant="secondary">Search…</Button>}
+  commands={commands}
+  modes={[
+    { prefix: ">", label: "Actions", placeholder: "Run an action…", commands: actions },
+    { prefix: "@", label: "People", placeholder: "Find a person…", commands: people },
+  ]}
+/>`,
+
+  capped: `{/* maxPerGroup: the first few of each group while the search is empty, and a row that shows the rest. suggested
+    lists some commands first, under their own heading; neither it nor recent is cut. */}
+<CommandPalette
+  trigger={<Button variant="secondary">Search…</Button>}
+  commands={commands}
+  maxPerGroup={3}
+  recent={["settings"]}
+  suggested={["new-file", "export"]}
+/>`,
+
+  platformShortcuts: `{/* mod, cmd, ctrl, alt and shift in a shortcut are drawn for the platform: ⌘, ⌃, ⌥ and ⇧ on a Mac, and Ctrl, Alt
+    and Shift elsewhere. Any other text is drawn as written. The hint binds nothing. */}
+<CommandPalette
+  trigger={<Button variant="secondary">Search…</Button>}
+  commands={[
+    { value: "new", label: "New file", shortcut: ["mod", "N"], onSelect: newFile },
+    { value: "palette", label: "Show all commands", shortcut: "mod+shift+P", onSelect: showAll },
+  ]}
+/>`,
+
   hotkey: `{/* hotkey: "mod+k" (the default; mod is ⌘ on an Apple platform, Ctrl elsewhere), any other combination of
     ctrl, alt, shift, meta and a key, or false for none. The press is kept from the browser. */}
 <CommandPalette hotkey="mod+shift+p" commands={commands} />`,
@@ -165,6 +224,7 @@ export interface CommandPalettePlaygroundSnippetArgs {
   defaultQuery?: string;
   placeholder?: string;
   searchNested?: boolean;
+  maxPerGroup?: number;
 }
 
 /** The Playground's snippet: only the props that differ from their defaults, around a small real palette. */
@@ -181,6 +241,7 @@ export function commandPalettePlaygroundSnippet(args: CommandPalettePlaygroundSn
   if (args.error) attributes.push("error");
   if (args.dir && args.dir !== "ltr") attributes.push(`dir="${args.dir}"`);
   if (args.highlightTone && args.highlightTone !== "none") attributes.push(`highlightTone="${args.highlightTone}"`);
+  if (args.maxPerGroup && args.maxPerGroup > 0) attributes.push(`maxPerGroup={${args.maxPerGroup}}`);
   if (args.searchNested === false) attributes.push("searchNested={false}");
   if (args.defaultQuery) attributes.push(`defaultQuery=${quote(args.defaultQuery)}`);
   if (args.placeholder) attributes.push(`labels={{ placeholder: ${JSON.stringify(args.placeholder)} }}`);

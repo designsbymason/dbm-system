@@ -744,7 +744,7 @@ describe("CommandPalette", () => {
       expect(screen.getByText("Change theme", { selector: '[role="presentation"]' })).toBeInTheDocument();
       expect(screen.getAllByRole("group")).toHaveLength(2);
       await user.click(screen.getByRole("option", { name: /Dark mode/ }));
-      expect(onSelect).toHaveBeenCalledWith(expect.objectContaining({ value: "dark", label: "Dark mode" }));
+      expect(onSelect).toHaveBeenCalledWith(expect.objectContaining({ value: "dark", label: "Dark mode" }), { query: "dark" });
       await waitFor(() => expect(dialog()).toBeNull());
     });
 
@@ -853,6 +853,336 @@ describe("CommandPalette", () => {
       expect(input()).toHaveAccessibleName("Cherche Theme");
       await user.type(input(), "zzz");
       expect(screen.getByRole("option")).toHaveTextContent("Nothing");
+    });
+  });
+
+  describe("reporting the highlight", () => {
+    it("reports the highlighted command as it moves, and null when the palette closes", async () => {
+      const user = userEvent.setup();
+      const onHighlightChange = vi.fn();
+      setup({ onHighlightChange });
+      await screen.findByRole("dialog");
+      await waitFor(() => expect(onHighlightChange).toHaveBeenLastCalledWith(expect.objectContaining({ value: "new-file" })));
+      await user.keyboard("{ArrowDown}");
+      expect(onHighlightChange).toHaveBeenLastCalledWith(expect.objectContaining({ value: "open-file" }));
+      await user.keyboard("{Escape}");
+      await waitFor(() => expect(onHighlightChange).toHaveBeenLastCalledWith(null));
+    });
+
+    it("reports the original command for a nested hit, and null when nothing matches", async () => {
+      const user = userEvent.setup();
+      const onHighlightChange = vi.fn();
+      setup({ onHighlightChange });
+      await screen.findByRole("dialog");
+      await user.type(input(), "dark");
+      expect(onHighlightChange).toHaveBeenLastCalledWith(expect.objectContaining({ value: "dark", label: "Dark" }));
+      await user.type(input(), "zzz");
+      expect(onHighlightChange).toHaveBeenLastCalledWith(null);
+    });
+
+    it("reports a change once, not on every render", async () => {
+      const user = userEvent.setup();
+      const onHighlightChange = vi.fn();
+      setup({ onHighlightChange });
+      await screen.findByRole("dialog");
+      await waitFor(() => expect(onHighlightChange).toHaveBeenCalled());
+      const before = onHighlightChange.mock.calls.length;
+      await user.hover(screen.getByRole("option", { name: /New file/ }));
+      expect(onHighlightChange.mock.calls.length).toBe(before);
+    });
+  });
+
+  describe("the key that runs the highlighted row", () => {
+    const hintOn = (row: HTMLElement) => row.querySelector('[class*="enterHint"]');
+
+    it("shows Enter at the end of the highlighted row only, hidden from assistive technology", async () => {
+      const user = userEvent.setup();
+      setup();
+      await screen.findByRole("dialog");
+      expect(document.querySelectorAll('[class*="enterHint"]')).toHaveLength(1);
+      const first = screen.getByRole("option", { name: /New file/ });
+      expect(hintOn(first)).toHaveAttribute("aria-hidden", "true");
+      expect(first).toHaveAccessibleName("New file Ctrl N");
+      await user.keyboard("{ArrowDown}");
+      expect(hintOn(first)).toBeNull();
+      expect(hintOn(screen.getByRole("option", { name: /Open file/ }))).not.toBeNull();
+    });
+
+    it("is left off by showHints={false}, and never on a row that can't run", async () => {
+      const user = userEvent.setup();
+      const { unmount } = setup({ showHints: false });
+      await screen.findByRole("dialog");
+      expect(document.querySelector('[class*="enterHint"]')).toBeNull();
+      unmount();
+      setup();
+      await screen.findByRole("dialog");
+      await user.hover(screen.getByRole("option", { name: /Publish/ }));
+      expect(hintOn(screen.getByRole("option", { name: /Publish/ }))).toBeNull();
+    });
+
+    it("opens the highlighted command's list with the forward arrow when the caret is at the end, and not before", async () => {
+      const user = userEvent.setup();
+      setup();
+      await screen.findByRole("dialog");
+      await user.type(input(), "theme");
+      input().setSelectionRange(2, 2);
+      await user.keyboard("{ArrowRight}");
+      expect(screen.queryByRole("button", { name: "Back" })).toBeNull();
+      input().setSelectionRange(5, 5);
+      await user.keyboard("{ArrowRight}");
+      expect(screen.getByRole("button", { name: "Back" })).toBeInTheDocument();
+      expect(labelsOf()).toEqual(["Light", "Dark"]);
+    });
+
+    it("does nothing on a command that opens nothing", async () => {
+      const user = userEvent.setup();
+      setup();
+      await screen.findByRole("dialog");
+      await user.keyboard("{ArrowRight}");
+      expect(screen.queryByRole("button", { name: "Back" })).toBeNull();
+      expect(dialog()).toBeInTheDocument();
+    });
+
+    it("uses the other arrow in right-to-left", async () => {
+      const user = userEvent.setup();
+      setup({ dir: "rtl" });
+      await screen.findByRole("dialog");
+      await user.type(input(), "theme");
+      await user.keyboard("{ArrowRight}");
+      expect(screen.queryByRole("button", { name: "Back" })).toBeNull();
+      await user.keyboard("{ArrowLeft}");
+      expect(screen.getByRole("button", { name: "Back" })).toBeInTheDocument();
+    });
+  });
+
+  describe("shortcuts written for the platform", () => {
+    const withShortcut: CommandItem[] = [{ value: "n", label: "New", shortcut: ["mod", "N"] }, { value: "p", label: "Print", shortcut: "mod+shift+P" }];
+
+    it("draws mod as Ctrl, and a name for each symbol on a Mac", async () => {
+      setup({ commands: withShortcut });
+      await screen.findByRole("dialog");
+      expect(screen.getAllByText("Ctrl")).toHaveLength(2);
+      expect(screen.getByText("Shift")).toBeInTheDocument();
+      cleanup();
+      vi.spyOn(navigator, "platform", "get").mockReturnValue("MacIntel");
+      setup({ commands: withShortcut });
+      await screen.findByRole("dialog");
+      expect(screen.getAllByText("⌘")).toHaveLength(2);
+      expect(screen.getAllByLabelText("Command")).toHaveLength(2);
+      expect(screen.getByLabelText("Shift")).toHaveTextContent("⇧");
+    });
+  });
+
+  describe("suggested commands and capped groups", () => {
+    it("lists suggested commands after the recent ones, each command once", async () => {
+      const user = userEvent.setup();
+      setup({ recent: ["settings"], suggested: ["settings", "new-file", "nope"] });
+      await screen.findByRole("dialog");
+      expect(labelsOf().slice(0, 2)).toEqual(["Open settings", "New file"]);
+      expect(screen.getByText("Recent")).toBeInTheDocument();
+      expect(screen.getByText("Suggested")).toBeInTheDocument();
+      expect(screen.getAllByRole("option")).toHaveLength(5);
+      await user.type(input(), "o");
+      expect(screen.queryByText("Suggested")).toBeNull();
+    });
+
+    it("cuts each group to maxPerGroup with a row that shows the rest, and never cuts a promoted group", async () => {
+      const user = userEvent.setup();
+      setup({ maxPerGroup: 1, recent: ["settings"] });
+      await screen.findByRole("dialog");
+      // The recent group is never cut; File and App lose what is past the first.
+      expect(labelsOf()).toEqual(["Open settings", "New file", "Show 1 more", "Publish", "Show 1 more"]);
+      expect(screen.getAllByRole("option", { name: /Show 1 more/ })).toHaveLength(2);
+      expect(screen.queryByRole("option", { name: /Open file/ })).toBeNull();
+      await user.click(screen.getAllByRole("option", { name: /Show 1 more/ })[0] as HTMLElement);
+      expect(screen.getByRole("option", { name: /Open file/ })).toBeInTheDocument();
+      expect(highlightedLabel()).toContain("Open file");
+      expect(screen.getAllByRole("option", { name: /Show 1 more/ })).toHaveLength(1);
+      // Searching lists every match.
+      await user.type(input(), "e");
+      expect(screen.queryByRole("option", { name: /Show/ })).toBeNull();
+    });
+
+    it("reaches the row with the keys, runs nothing, and doesn't count it as a result", async () => {
+      const user = userEvent.setup();
+      const onSelect = vi.fn();
+      setup({ maxPerGroup: 1, onSelect });
+      await screen.findByRole("dialog");
+      await user.keyboard("{ArrowDown}{Enter}");
+      expect(onSelect).not.toHaveBeenCalled();
+      expect(screen.getByRole("option", { name: /Open file/ })).toBeInTheDocument();
+      expect(highlightedLabel()).toContain("Open file");
+    });
+
+    it("writes the row's words from labels", async () => {
+      setup({ maxPerGroup: 1, labels: { showMore: (count) => `Encore ${count}` } });
+      await screen.findByRole("dialog");
+      expect(screen.getAllByRole("option", { name: /Encore 1/ }).length).toBeGreaterThan(0);
+    });
+  });
+
+  describe("commands that ask for a value", () => {
+    const rename = vi.fn();
+    const asking: CommandItem[] = [
+      {
+        value: "rename",
+        label: "Rename file",
+        icon: GearIcon,
+        argument: { placeholder: "New name…", initialValue: "draft", validate: (text) => (text.includes("/") ? "A name can't hold a slash" : undefined) },
+        onSelect: rename,
+      },
+      { value: "other", label: "Other" },
+    ];
+
+    it("turns the search into the entry, with one row saying what Enter will do", async () => {
+      const user = userEvent.setup();
+      rename.mockClear();
+      setup({ commands: asking });
+      await screen.findByRole("dialog");
+      await user.click(screen.getByRole("option", { name: /Rename file/ }));
+      expect(rename).not.toHaveBeenCalled();
+      expect(input()).toHaveValue("draft");
+      expect(input()).toHaveAttribute("placeholder", "New name…");
+      expect(input()).toHaveAccessibleName("Search Rename file");
+      expect(input()).toHaveFocus();
+      expect(screen.getByRole("button", { name: "Back" })).toBeInTheDocument();
+      expect(screen.getByText("Rename file", { selector: '[class*="pageTag"], [class*="pageTag"] *' })).toBeInTheDocument();
+      expect(screen.getAllByRole("option")).toHaveLength(1);
+      expect(screen.getByRole("option")).toHaveTextContent("Run with “draft”");
+    });
+
+    it("runs it with the text on Enter, and closes", async () => {
+      const user = userEvent.setup();
+      rename.mockClear();
+      const onSelect = vi.fn();
+      setup({ commands: asking, onSelect });
+      await screen.findByRole("dialog");
+      await user.click(screen.getByRole("option", { name: /Rename file/ }));
+      await user.clear(input());
+      await user.type(input(), "  final  {Enter}");
+      expect(rename).toHaveBeenCalledWith(expect.objectContaining({ value: "rename" }), { query: "  final  ", argument: "final" });
+      expect(onSelect).toHaveBeenCalledWith(expect.objectContaining({ value: "rename" }), { query: "  final  ", argument: "final" });
+      await waitFor(() => expect(dialog()).toBeNull());
+    });
+
+    it("refuses empty text and text the command's validate refuses, showing why in place of the Run line", async () => {
+      const user = userEvent.setup();
+      rename.mockClear();
+      setup({ commands: asking });
+      await screen.findByRole("dialog");
+      await user.click(screen.getByRole("option", { name: /Rename file/ }));
+      await user.clear(input());
+      expect(screen.getByRole("option")).toHaveTextContent("Type a value, then press Enter");
+      expect(screen.getByRole("option")).toHaveAttribute("aria-disabled", "true");
+      await user.keyboard("{Enter}");
+      await user.type(input(), "a/b");
+      expect(screen.getByRole("option")).toHaveTextContent("A name can't hold a slash");
+      await user.keyboard("{Enter}");
+      expect(rename).not.toHaveBeenCalled();
+      expect(dialog()).toBeInTheDocument();
+      await user.clear(input());
+      await user.type(input(), "ok");
+      expect(screen.getByRole("option")).toHaveTextContent("Run with “ok”");
+      expect(screen.getByRole("option")).not.toHaveAttribute("aria-disabled", "true");
+    });
+
+    it("goes back with the button and with Backspace on an empty entry", async () => {
+      const user = userEvent.setup();
+      setup({ commands: asking });
+      await screen.findByRole("dialog");
+      await user.click(screen.getByRole("option", { name: /Rename file/ }));
+      await user.click(screen.getByRole("button", { name: "Back" }));
+      expect(labelsOf()).toEqual(["Rename file", "Other"]);
+      expect(input()).toHaveValue("");
+      await user.click(screen.getByRole("option", { name: /Rename file/ }));
+      await user.clear(input());
+      await user.keyboard("{Backspace}");
+      expect(screen.queryByRole("button", { name: "Back" })).toBeNull();
+      expect(labelsOf()).toEqual(["Rename file", "Other"]);
+    });
+
+    it("is reached from a nested hit and from the forward arrow, and waits for a promise", async () => {
+      const user = userEvent.setup();
+      let finish!: () => void;
+      const slow = vi.fn(() => new Promise<void>((resolve) => (finish = resolve)));
+      const nested: CommandItem[] = [{ value: "files", label: "Files", items: [{ value: "mv", label: "Move file", argument: {}, onSelect: slow }] }];
+      setup({ commands: nested });
+      await screen.findByRole("dialog");
+      await user.type(input(), "move");
+      await user.keyboard("{ArrowRight}");
+      expect(screen.getByRole("button", { name: "Back" })).toBeInTheDocument();
+      expect(input()).toHaveValue("");
+      await user.type(input(), "docs{Enter}");
+      expect(slow).toHaveBeenCalledWith(expect.objectContaining({ value: "mv" }), { query: "docs", argument: "docs" });
+      expect(dialog()).toHaveAttribute("aria-busy", "true");
+      await act(async () => finish());
+      await waitFor(() => expect(dialog()).toBeNull());
+    });
+
+    it("has no accessibility violations while asking", async () => {
+      const user = userEvent.setup();
+      setup({ commands: asking });
+      await screen.findByRole("dialog");
+      await user.click(screen.getByRole("option", { name: /Rename file/ }));
+      expect(await axe(document.body, noLandmarks)).toHaveNoViolations();
+    });
+  });
+
+  describe("modes reached by a prefix", () => {
+    const modes = [
+      { prefix: ">", label: "Actions", placeholder: "Run an action…", emptyContent: "No such action", commands: [{ value: "reload", label: "Reload window", keywords: ["restart"] }, { value: "format", label: "Format document" }] },
+      { prefix: "@", label: "People", commands: [{ value: "ada", label: "Ada Lovelace" }] },
+    ];
+
+    it("hints each prefix in the footer, and lists the top level without one", async () => {
+      setup({ modes });
+      await screen.findByRole("dialog");
+      expect(screen.getByText("Actions")).toBeInTheDocument();
+      expect(screen.getByText("People")).toBeInTheDocument();
+      expect(labelsOf()).toContain("New file");
+    });
+
+    it("switches to a mode's commands while the text starts with its prefix, and searches what follows", async () => {
+      const user = userEvent.setup();
+      const onQueryChange = vi.fn();
+      setup({ modes, onQueryChange });
+      await screen.findByRole("dialog");
+      await user.type(input(), ">");
+      expect(labelsOf()).toEqual(["Reload window", "Format document"]);
+      expect(input()).toHaveAttribute("placeholder", "Run an action…");
+      expect(input()).toHaveAccessibleName("Search Actions");
+      expect(screen.getByRole("listbox")).toHaveAccessibleName("Actions");
+      await user.type(input(), "restart");
+      expect(labelsOf()).toEqual(["Reload window"]);
+      expect(onQueryChange).toHaveBeenLastCalledWith(">restart");
+      await user.clear(input());
+      await user.type(input(), ">zzz");
+      expect(screen.getByRole("option")).toHaveTextContent("No such action");
+    });
+
+    it("marks only the words after the prefix, and goes back to the top level when the prefix is deleted", async () => {
+      const user = userEvent.setup();
+      setup({ modes });
+      await screen.findByRole("dialog");
+      await user.type(input(), "@ada");
+      expect(labelsOf()).toEqual(["Ada Lovelace"]);
+      expect([...document.querySelectorAll('[role="option"] [class*="match"]')].map((node) => node.textContent)).toEqual(["Ada"]);
+      await user.clear(input());
+      expect(labelsOf()).toContain("New file");
+      expect(input()).toHaveAttribute("placeholder", "Type a command or search…");
+    });
+
+    it("does not switch inside a list or an entry, and ignores recent in a mode", async () => {
+      const user = userEvent.setup();
+      setup({ modes, recent: ["settings"] });
+      await screen.findByRole("dialog");
+      await user.type(input(), ">");
+      expect(screen.queryByText("Recent")).toBeNull();
+      await user.clear(input());
+      await user.click(screen.getByRole("option", { name: /Change theme/ }));
+      await user.type(input(), ">");
+      expect(screen.getByRole("option")).toHaveTextContent("No results");
+      expect(input()).toHaveAttribute("placeholder", "Search themes…".replace("Search themes…", "Type a command or search…"));
     });
   });
 });

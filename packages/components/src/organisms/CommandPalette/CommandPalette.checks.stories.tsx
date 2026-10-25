@@ -8,7 +8,7 @@ import { ConfirmDialog } from "../ConfirmDialog";
 import { Dialog } from "../Dialog";
 import { CommandPalette } from "./CommandPalette";
 import type { CommandItem } from "./CommandPalette.types";
-import { manyCommands, sampleCommands } from "./CommandPaletteStoryKit";
+import { askingCommands, groupedCommands, manyCommands, sampleCommands, sampleModes } from "./CommandPaletteStoryKit";
 
 // Real-browser checks for what jsdom can't evaluate: layout, the real keyboard and pointer, the focus ring, forced
 // colours, the window of a long list, and the hand-off of focus to another overlay. Hidden from the sidebar and the
@@ -374,5 +374,100 @@ export const NestedSearchInTheBrowser: Story = {
     await expect(document.getElementById(group.getAttribute("aria-labelledby") ?? "")).toHaveTextContent("Change theme");
     await userEvent.keyboard("{Enter}");
     await waitFor(() => expect(body().queryByRole("dialog")).toBeNull());
+  },
+};
+
+const pressArrowRight = async () => {
+  await send("Input.dispatchKeyEvent", { type: "rawKeyDown", key: "ArrowRight", code: "ArrowRight", windowsVirtualKeyCode: 39 });
+  await send("Input.dispatchKeyEvent", { type: "keyUp", key: "ArrowRight", code: "ArrowRight", windowsVirtualKeyCode: 39 });
+};
+const pressEnterKey = async () => {
+  await send("Input.dispatchKeyEvent", { type: "keyDown", key: "Enter", code: "Enter", windowsVirtualKeyCode: 13, text: "\r" });
+  await send("Input.dispatchKeyEvent", { type: "keyUp", key: "Enter", code: "Enter", windowsVirtualKeyCode: 13 });
+};
+
+export const ArgumentWithRealKeys: Story = {
+  name: "The forward arrow asks for a value, and Enter runs it with the text",
+  render: () => {
+    function Host() {
+      const [ran, setRan] = useState("");
+      return (
+        <div style={{ padding: "var(--dbm-space-4)" }}>
+          <p data-testid="ran">{ran}</p>
+          <CommandPalette
+            hotkey="ctrl+k"
+            trigger={<Button>Open</Button>}
+            commands={askingCommands}
+            onSelect={(item, details) => setRan(`${item.value}:${details.argument ?? ""}`)}
+          />
+        </div>
+      );
+    }
+    return <Host />;
+  },
+  play: async () => {
+    await openFrom("Open");
+    await userEvent.type(search(), "rename");
+    await pressArrowRight();
+    await body().findByRole("button", { name: "Back" });
+    await waitFor(() => expect(search()).toHaveValue("untitled"));
+    await expect(search()).toHaveAttribute("placeholder", "New file name…");
+    await userEvent.clear(search());
+    await userEvent.type(search(), "report");
+    await waitFor(() => expect(body().getByRole("option")).toHaveTextContent("Run with “report”"));
+    await pressEnterKey();
+    await waitFor(() => expect(body().getByTestId("ran")).toHaveTextContent("rename:report"));
+    await waitFor(() => expect(body().queryByRole("dialog")).toBeNull());
+  },
+};
+
+export const ModesWithTypedPrefix: Story = {
+  name: "A typed prefix switches to a mode's commands and deleting it switches back",
+  render: () => <Page modes={sampleModes} />,
+  play: async () => {
+    await openFrom("Open");
+    // The footer says which prefixes there are.
+    await expect(body().getByText("Actions")).toBeVisible();
+    await userEvent.type(search(), "@gr");
+    await waitFor(() => expect(body().getAllByRole("option")).toHaveLength(1));
+    await expect(body().getByRole("option")).toHaveTextContent("Grace Hopper");
+    await expect(search()).toHaveAttribute("placeholder", "Find a person…");
+    await userEvent.clear(search());
+    await waitFor(() => expect(body().getByRole("option", { name: /New file/ })).toBeInTheDocument());
+    await closeWithEscape();
+  },
+};
+
+export const CappedGroupsAndTheEnterKey: Story = {
+  name: "A capped group's row is as tall as any, is reached with the keys, and the highlighted row shows Enter",
+  render: () => <Page commands={groupedCommands} maxPerGroup={2} />,
+  play: async () => {
+    await openFrom("Open");
+    const rows = body().getAllByRole("option");
+    const more = body().getAllByRole("option", { name: /Show 4 more/ });
+    await expect(more).toHaveLength(3);
+    await expect(Math.round(more[0]!.getBoundingClientRect().height)).toBe(Math.round(rows[0]!.getBoundingClientRect().height));
+    // Enter is drawn on the highlighted row, and nowhere else.
+    const hints = document.querySelectorAll('[class*="enterHint"]');
+    await expect(hints).toHaveLength(1);
+    await expect(hints[0]!.getBoundingClientRect().width).toBeGreaterThan(0);
+    await expect(rows[0]!.contains(hints[0] as Element)).toBe(true);
+    // Down twice reaches the first "Show more", Enter shows the rest of that group and highlights the first new row.
+    await userEvent.keyboard("{ArrowDown}{ArrowDown}{Enter}");
+    await waitFor(() => expect(body().getAllByRole("option", { name: /Show 4 more/ })).toHaveLength(2));
+    await expect(document.getElementById(search().getAttribute("aria-activedescendant") ?? "")).toHaveTextContent("File command 3");
+    await closeWithEscape();
+  },
+};
+
+export const ModifierKeysForThePlatform: Story = {
+  name: "A shortcut written with mod is drawn as the platform's key",
+  render: () => <Page commands={[{ value: "n", label: "New", shortcut: ["mod", "N"] }]} />,
+  play: async () => {
+    await openFrom("Open");
+    const first = body().getByRole("option", { name: /New/ }).querySelector("kbd") as HTMLElement;
+    await expect(["⌘", "Ctrl"]).toContain(first.textContent);
+    if (first.textContent === "⌘") await expect(first).toHaveAttribute("aria-label", "Command");
+    await closeWithEscape();
   },
 };

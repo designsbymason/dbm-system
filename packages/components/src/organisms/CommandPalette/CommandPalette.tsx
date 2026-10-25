@@ -19,6 +19,10 @@ const buildDefaultLabels = (formatNumber: (value: number) => string): CommandPal
   search: "Search commands",
   searchIn: (label) => `Search ${label}`,
   placeholder: "Type a command or search…",
+  runWith: (text) => `Run with “${text}”`,
+  argumentEmpty: "Type a value, then press Enter",
+  suggested: "Suggested",
+  showMore: (count) => `Show ${formatNumber(count)} more`,
   noResults: "No results",
   loading: "Loading…",
   error: "Something went wrong. Try again.",
@@ -80,6 +84,10 @@ export const CommandPalette = forwardRef<HTMLDivElement, CommandPaletteProps>(
       onQueryChange,
       filter,
       searchNested,
+      modes,
+      maxPerGroup,
+      suggested,
+      onHighlightChange,
       recent,
       loading,
       error,
@@ -208,6 +216,11 @@ export const CommandPalette = forwardRef<HTMLDivElement, CommandPaletteProps>(
               onQueryChange={onQueryChange}
               filter={filter}
               searchNested={searchNested}
+              modes={modes}
+              maxPerGroup={maxPerGroup}
+              suggested={suggested}
+              onHighlightChange={onHighlightChange}
+              dir={dir}
               recent={recent}
               loading={loading}
               error={error}
