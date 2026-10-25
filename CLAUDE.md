@@ -41,7 +41,8 @@ packages/
   tokens/           Source of truth for all design tokens (primitive + semantic + component layers)
   utils/             Small framework-agnostic utils (classname merging, ref merging,
                      the `mergeDefined` helper for `labels` props, responsive style
-                     helpers, the `useAnnouncement` live-region hook,
+                     helpers, the `useAnnouncement` live-region hook, the
+                     `useWindowedList` and `useSortable` hooks (internal),
                      the `usePersistentDismiss` hook, token types) — components import
                      Radix UI Primitives directly, not through this package. What a
                      consumer is meant to call (`usePersistentDismiss`, the `Responsive`/

@@ -1,6 +1,6 @@
 # MultiSelect — build findings
 
-Fifteenth organism and the second 🟡 v1.5 one (item 15 in the organism build order, `04-component-inventory.md`), built 2026-10-25 on `Combobox`'s list and `TagsInput`'s box with the `06-engineering-standards.md` §9 checklist applied as it was written. **Not yet declared Finalized:** the final review pass (`/review-component MultiSelect`) has not been run, and only the user declares a component Finalized.
+Fifteenth organism and the second 🟡 v1.5 one (item 15 in the organism build order, `04-component-inventory.md`), built 2026-10-25 on `Combobox`'s list and `TagsInput`'s box with the `06-engineering-standards.md` §9 checklist applied as it was written. **Finalized 2026-10-25** by the user, after the final review pass recorded below (nine findings and the optional gap, all fixed) and the empty-row fix that followed it. What is listed under "Not done" and "Known limits" is accepted as open.
 
 ## Decisions
 - **The floating list is shared with `Combobox` through `internal/optionList`, and the box and chips are `TagsInput`'s** (its stylesheet, its chip and its `fitCount`); `MultiSelect` is its own component, not a `multiple` prop on `Combobox`: [ADR-0123](../adr/0123-the-floating-option-list-is-shared-by-combobox-and-multiselect-through-internal-and-multiselect-draws-tagsinputs-box-and-chip-over-copying-them-or-adding-a-multiple-prop-to-combobox.md). Extracting the list rebuilt `Combobox` (Finalized) on it with no change to its output; see [Combobox.md](Combobox.md).
@@ -57,6 +57,9 @@ A full §9 read-through before Finalization, with nine findings (and the optiona
 9. **This file's figures were stale;** they are current above.
 - **The optional gap:** `maxTagLength` limits typed values (`allowCustomValue`) through the same check as every other route, with `labels.tooLong`; an option's own label and the typing field's search text are never limited, and the native `maxLength` is not set on the field. ADR-0127 is amended.
 - **Found while fixing them:** a tap-picked-up chip announced the wrong label on a tap-move (the drop was reported from the stale order; a move says where the chip ended up, so a tap-move reports no separate drop), and `useSortable`'s own test used buttons as items, which hid that a press on the item itself is a tap and only a control inside it is not.
+
+## Empty row under the chips, 2026-10-25 (reported from the Playground, before Finalization)
+Chips that filled a line (three at the Playground's width) left an empty row under them while the field was idle: the typing area's minimum width no longer fit beside the last chip, so it wrapped to a row of its own even with nothing to type. While the field is not in use and has chips, the typing area now asks for no room (the same rule `overflow="collapse"` uses); it gets its minimum back, and may drop to a row of its own, once it has focus, since typing needs the room. A real-browser check compares the idle field with a one-chip field, focuses it, and returns to idle.
 
 ## Deviations from the plan
 - **`controllerRef` has no matching hook.** `05` §3 pairs a controller with a `use…()` hook inside the component; `MultiSelect` renders no parts a caller's component sits inside (a `renderOption` row is drawn by the list), so a hook would have nothing to be called from. The controller (`open`, `close`, `clear`, `focus`, each returning whether it had anything to do) is the whole surface.

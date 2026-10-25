@@ -976,3 +976,28 @@ export const ChipsMoveWithAFingerTap: Story = {
     await expect(getComputedStyle(itemOf("Canada")).touchAction).toBe("none");
   },
 };
+
+export const NoEmptyRowWhileIdle: Story = {
+  name: "Chips that fill a line don't leave an empty row under them while the field is not in use, and the row comes when it has focus",
+  render: () => (
+    <div style={{ padding: "var(--dbm-space-6)", maxWidth: "26rem", display: "flex", flexDirection: "column", gap: "var(--dbm-space-4)" }}>
+      {aside}
+      <MultiSelect aria-label="Filled" options={countries} defaultValue={["ar", "au", "br"]} />
+      <MultiSelect aria-label="Reference" options={countries} defaultValue={["ar"]} />
+    </div>
+  ),
+  play: async () => {
+    const filled = boxOf(body().getByRole("combobox", { name: "Filled" }));
+    const reference = boxOf(body().getByRole("combobox", { name: "Reference" }));
+    const height = (box: HTMLElement) => box.getBoundingClientRect().height;
+    // idle: one line of chips, as tall as a field holding one chip
+    await expect(Math.abs(height(filled) - height(reference))).toBeLessThan(1.5);
+    // in use: the typing area has room to type, which is a row of its own when the chips fill the line
+    await userEvent.click(body().getByRole("combobox", { name: "Filled" }));
+    const entry = body().getByRole("combobox", { name: "Filled" }).getBoundingClientRect();
+    await expect(entry.width).toBeGreaterThanOrEqual(parseFloat(getComputedStyle(document.documentElement).fontSize) * 4);
+    // and back to idle
+    await userEvent.click(body().getByTestId("aside"));
+    await waitFor(() => expect(Math.abs(height(filled) - height(reference))).toBeLessThan(1.5));
+  },
+};

@@ -977,7 +977,9 @@ export const MultiSelect = forwardRef<HTMLInputElement, MultiSelectProps>(
                 styles.box,
                 invalid && chipStyles.invalid,
                 disabled && chipStyles.disabled,
-                (chips.collapsed || chips.idleLine || summaryMode) && chipStyles.collapsed,
+                // While the field is not in use the typing area asks for no room of its own, so chips that fill a line don't push an
+                // empty row under them; it takes its room back (and may drop to a row of its own) once it has focus.
+                (chips.collapsed || chips.idleLine || summaryMode || (!chips.engaged && values.length > 0)) && chipStyles.collapsed,
                 values.length === 0 && chipStyles.noTags,
               )}
               onMouseDown={handleBoxMouseDown}
