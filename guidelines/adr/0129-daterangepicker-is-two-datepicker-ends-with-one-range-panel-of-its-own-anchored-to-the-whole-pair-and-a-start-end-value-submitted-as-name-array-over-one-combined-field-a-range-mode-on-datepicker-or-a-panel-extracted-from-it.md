@@ -1,6 +1,6 @@
 # 0129 — `DateRangePicker` is two `DatePicker` ends with one range panel of its own, anchored to the whole pair, and a `[start, end]` value submitted as `name[]`, over one combined field, a range mode on `DatePicker` or a panel extracted from it
 
-**Status:** Accepted · **Date:** 2026-10-25
+**Status:** Accepted · **Date:** 2026-10-25 · **Amended 2026-10-25** — the clear button and the bundle size; the decision itself is unchanged, and the clear button is now [ADR-0131](./0131-daterangepicker-chooses-months-edits-the-start-from-the-start-requires-both-ends-and-clears-by-remounting-over-a-separate-month-picker-or-restarting.md)'s
 
 ## Context
 [ADR-0082](./0082-datepicker-is-a-single-date-segmented-field-with-a-calendar-popover-and-an-explicit-format-over-a-masked-text-input-a-range-mode-or-a-date-time-field.md) left a range to `DateRangePicker`, which "composes this field or shares its segments", and [ADR-0031](./0031-timerangepicker-keeps-a-pair-of-times-of-day-and-judges-length-through-the-ends-own-rules.md) did the same for times: two fields, one value, and each end's own rules doing the judging. `Calendar` already chooses a range ([ADR-0044](./0044-calendar-dates-are-yyyy-mm-dd-strings-with-a-single-and-a-range-mode-and-a-hand-built-grid.md)). Three forks were open: one field or two, whose panel it is, and what a form receives.
@@ -26,7 +26,7 @@
 ## Consequences
 - The bundle holds `DatePicker` and so `Calendar`: 19.74KB of JS, a 22KB override in `check-component-bundle-size.mjs`.
 - No new token and no new dependency.
-- The clear button shows while either end holds a complete date; an end that is only half typed is cleared with `Backspace`.
+- The clear button shows while either end shows anything, a half-typed segment included, and empties both ends ([ADR-0131](./0131-daterangepicker-chooses-months-edits-the-start-from-the-start-requires-both-ends-and-clears-by-remounting-over-a-separate-month-picker-or-restarting.md)). *(Amended 2026-10-25: this said a half-typed end was cleared with `Backspace`.)*
 - A change to `DatePicker`'s props or its panel's classes needs a look here too.
 
 ## Related

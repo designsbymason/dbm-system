@@ -1,6 +1,6 @@
 # DateRangePicker — review findings
 
-Sixteenth organism, built 2026-10-25 from the plan the maintainer approved (`/plan-component DateRangePicker`, decisions D1–D9 as recommended). **Not yet Finalized:** the §9 review pass (`/review-component DateRangePicker`) has not been run, and only the maintainer declares a component Finalized. What follows is what was decided and found while building it.
+Sixteenth organism, built 2026-10-25 from the plan the maintainer approved (`/plan-component DateRangePicker`, decisions D1–D9 as recommended). **Finalized 2026-10-25** by the user, after the §9 review pass (`/review-component DateRangePicker`) and its fixes (below), with the items under "Open (not run, for the review pass)" and the not-run list at the end accepted as open. What follows is what was decided and found while building it.
 
 ## Decisions
 - Two `DatePicker` ends with `showPicker={false}`, one panel of its own anchored to the whole pair, a `[start, end]` value submitted as `name[]`, the range's limits as the end's own reason: [ADR-0129](../adr/0129-daterangepicker-is-two-datepicker-ends-with-one-range-panel-of-its-own-anchored-to-the-whole-pair-and-a-start-end-value-submitted-as-name-array-over-one-combined-field-a-range-mode-on-datepicker-or-a-panel-extracted-from-it.md).
@@ -57,4 +57,4 @@ The §9 pass (`/review-component DateRangePicker`) found five things, all docume
 
 Checks: `pnpm lint` clean; unit project 188 files, 10,345 tests; Chromium Storybook project 285 files, 2,208 tests; `check-guidelines` 0 warnings.
 
-**Not run at this pass:** a screen-reader pass, a real phone and finger, Windows high-contrast mode, Firefox and Safari, the live "Show code" read on the Docs page, purple dark and a tablet width by eye. Awaiting the maintainer's decision to Finalize.
+**Not run at this pass:** a screen-reader pass, a real phone and finger, Windows high-contrast mode, Firefox and Safari, the live "Show code" read on the Docs page, purple dark and a tablet width by eye. Finalized by the maintainer after this pass.
