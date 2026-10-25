@@ -26,6 +26,8 @@ type Story = StoryObj;
 
 const nextFrame = () => new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
 const body = () => within(document.body);
+// Waits for the story to be drawn: a check that queries at once can run while Storybook is still preparing it, which a slower machine shows.
+const ready = () => body().findAllByRole("combobox");
 const field = () => body().getByRole("combobox") as HTMLInputElement;
 const option = (name: string | RegExp) => body().findByRole("option", { name });
 const chips = () => {
@@ -103,6 +105,7 @@ export const ListSitsUnderTheField: Story = {
     </Page>
   ),
   play: async () => {
+    await ready();
     await userEvent.click(field());
     const list = await body().findByRole("listbox");
     await settled(list);
@@ -133,6 +136,7 @@ export const PointerPicksSeveralInADialog: Story = {
     </Dialog>
   ),
   play: async () => {
+    await ready();
     await realClick(await body().findByRole("combobox"));
     const brazil = await option("Brazil");
     await nextFrame();
@@ -164,6 +168,7 @@ export const EscapeClosesTheListThenTheDialog: Story = {
     </Dialog>
   ),
   play: async () => {
+    await ready();
     await userEvent.click(await body().findByRole("combobox"));
     await body().findByRole("listbox");
     await userEvent.keyboard("{Escape}");
@@ -189,6 +194,7 @@ export const PointerPicksInAPopover: Story = {
     </Page>
   ),
   play: async () => {
+    await ready();
     await realClick(await body().findByRole("combobox"));
     const target = await option("Chile");
     await nextFrame();
@@ -208,6 +214,7 @@ export const PressesInAndOutOfTheField: Story = {
     </Page>
   ),
   play: async () => {
+    await ready();
     await realClick(field());
     await body().findByRole("listbox");
     await userEvent.keyboard("zz");
@@ -228,6 +235,7 @@ export const InsertedTextAtOnce: Story = {
     </Page>
   ),
   play: async () => {
+    await ready();
     field().focus();
     await send("Input.insertText", { text: "uru" });
     await waitFor(() => expect(field()).toHaveValue("uru"));
@@ -252,6 +260,7 @@ export const KeyboardEndToEnd: Story = {
     </Page>
   ),
   play: async () => {
+    await ready();
     body().getByTestId("aside").focus();
     await userEvent.tab();
     await expect(field()).toHaveFocus();
@@ -285,6 +294,7 @@ export const LongListIsWindowed: Story = {
     </Page>
   ),
   play: async () => {
+    await ready();
     await userEvent.click(field());
     const list = (await body().findByRole("listbox")) as HTMLElement;
     await settled(list);
@@ -325,6 +335,7 @@ export const FieldMatchesTagsInput: Story = {
     </Page>
   ),
   play: async () => {
+    await ready();
     const outer = (element: HTMLElement) => boxOf(element).getBoundingClientRect().height;
     for (const size of ["xs", "sm", "md", "lg", "xl"]) {
       const emptyReference = outer(body().getByRole("group", { name: `Tags empty ${size}` }));
@@ -345,6 +356,7 @@ export const ButtonsStayCentred: Story = {
     </Page>
   ),
   play: async () => {
+    await ready();
     for (const entry of body().getAllByRole("combobox")) {
       const box = boxOf(entry).getBoundingClientRect();
       const root = entry.closest("[dir]") as HTMLElement;
@@ -376,6 +388,7 @@ export const CollapsedRowIsOneLine: Story = {
     </Page>
   ),
   play: async () => {
+    await ready();
     const collapsed = body().getByRole("combobox", { name: "Assignees" });
     const reference = body().getByRole("combobox", { name: "Reference" });
     const box = boxOf(collapsed);
@@ -407,6 +420,7 @@ export const FullWidthOnAPhone: Story = {
     </div>
   ),
   play: async () => {
+    await ready();
     await expect(window.innerWidth).toBeLessThan(500);
     await userEvent.click(field());
     const list = (await body().findByRole("listbox")) as HTMLElement;
@@ -437,6 +451,7 @@ export const FieldFitsAPhone: Story = {
     </div>
   ),
   play: async () => {
+    await ready();
     await expect(window.innerWidth).toBeLessThan(500);
     const box = boxOf(field());
     const frame = box.getBoundingClientRect();
@@ -463,6 +478,7 @@ export const InRightToLeft: Story = {
     </div>
   ),
   play: async () => {
+    await ready();
     await userEvent.click(field());
     const list = await body().findByRole("listbox");
     await settled(list);
@@ -492,6 +508,7 @@ export const ForcedColours: Story = {
     </Page>
   ),
   play: async () => {
+    await ready();
     // A dark scheme as well: forced colours on a dark page is where a row that keeps its authored light fill and is
     // drawn in the page's light text colour becomes unreadable.
     const emulate = (value: "active" | "none") =>
@@ -555,6 +572,7 @@ export const TextOnTheChosenHighlightedRowMeetsAA: Story = {
     </Page>
   ),
   play: async () => {
+    await ready();
     const root = document.documentElement;
     const original = root.dataset.theme;
     try {
@@ -590,6 +608,7 @@ export const FormRefusesAnEmptyField: Story = {
     </Page>
   ),
   play: async () => {
+    await ready();
     const form = body().getByTestId("form") as HTMLFormElement;
     await expect(form.checkValidity()).toBe(false);
     await userEvent.click(body().getByRole("button", { name: "Send" }));
@@ -611,6 +630,7 @@ export const ListFollowsThePage: Story = {
     </div>
   ),
   play: async () => {
+    await ready();
     field().scrollIntoView({ block: "center" });
     await userEvent.click(field());
     const list = await body().findByRole("listbox");
@@ -636,6 +656,7 @@ export const ControlledOpenStaysPut: Story = {
     );
   },
   play: async () => {
+    await ready();
     await userEvent.click(field());
     await waitFor(() => expect(body().getByTestId("open")).toHaveTextContent("true"));
     await userEvent.keyboard("{Alt>}{ArrowUp}{/Alt}");
@@ -669,6 +690,7 @@ export const ChipsAreDraggedAcrossLines: Story = {
     </Page>
   ),
   play: async () => {
+    await ready();
     const order = () => chips().join("|");
     await expect(order()).toBe("Alpha chip|Beta chip|Gamma chip|Delta chip|Epsilon chip");
     // the chips are drawn on more than one line, and take no touch gestures of their own
@@ -708,6 +730,7 @@ export const DroppingWhereItStartedChangesNothing: Story = {
     </Page>
   ),
   play: async () => {
+    await ready();
     const mid = centreOf(itemOf("United States"));
     await realDrag(itemOf("United States"), { x: mid.x + 3, y: mid.y });
     await expect(chips()).toEqual(["Canada", "United States", "Uruguay"]);
@@ -724,6 +747,7 @@ export const ChipsAreDraggedInRightToLeft: Story = {
     </div>
   ),
   play: async () => {
+    await ready();
     // reading order runs right to left: Canada is rightmost. Dropping it on the left half of the next chip puts it after.
     const next = centreOf(itemOf("United States"));
     await realDrag(itemOf("Canada"), { x: next.r.left + 3, y: next.y }, () => {
@@ -741,6 +765,7 @@ export const KeyboardLiftShowsARing: Story = {
     </Page>
   ),
   play: async () => {
+    await ready();
     field().focus();
     await userEvent.keyboard("{ArrowLeft} ");
     const lifted = itemOf("Uruguay");
@@ -771,6 +796,7 @@ export const CustomValuesTypedAtOnce: Story = {
     </Page>
   ),
   play: async () => {
+    await ready();
     field().focus();
     await send("Input.insertText", { text: "one,two,thr" });
     await waitFor(() => expect(chips()).toEqual(["one", "two"]));
@@ -796,6 +822,7 @@ export const GroupRowsLineUp: Story = {
     </Page>
   ),
   play: async () => {
+    await ready();
     const left = (row: HTMLElement) => (row.querySelector("[class*=optionLabel]") as HTMLElement).getBoundingClientRect().left;
     const group = await option("Select all in Fruit");
     const apple = await option("Apple");
@@ -812,6 +839,7 @@ export const FooterSitsUnderTheListOnAPhone: Story = {
     </div>
   ),
   play: async () => {
+    await ready();
     await expect(window.innerWidth).toBeLessThan(500);
     await userEvent.click(field());
     const list = (await body().findByRole("listbox")) as HTMLElement;
@@ -852,6 +880,7 @@ export const SummaryIsOneLine: Story = {
     </Page>
   ),
   play: async () => {
+    await ready();
     for (const size of ["xs", "sm", "md", "lg", "xl"]) {
       const summary = boxOf(body().getByRole("combobox", { name: `Summary ${size}` }));
       const one = boxOf(body().getByRole("combobox", { name: `One chip ${size}` }));
@@ -885,6 +914,7 @@ export const LockedChipIsTheSameHeight: Story = {
     </Page>
   ),
   play: async () => {
+    await ready();
     const locked = boxOf(body().getByRole("combobox", { name: "Locked" }));
     const free = boxOf(body().getByRole("combobox", { name: "Free" }));
     await expect(Math.abs(locked.getBoundingClientRect().height - free.getBoundingClientRect().height)).toBeLessThan(1.5);
@@ -905,6 +935,7 @@ export const MoreButtonsAreBigEnough: Story = {
     </Page>
   ),
   play: async () => {
+    await ready();
     for (const entry of body().getAllByRole("combobox")) {
       const root = entry.closest("[dir]") as HTMLElement;
       const more = within(root).getByRole("button", { name: /^\+\d+ more$/ });
@@ -936,6 +967,7 @@ export const ChipsMoveWithTaps: Story = {
     </Page>
   ),
   play: async () => {
+    await ready();
     await realClick(itemOf("Canada"));
     await waitFor(() => expect(itemOf("Canada")).toHaveAttribute("data-lifted", "true"));
     // the ring is drawn, and the list is not opened by it
@@ -967,6 +999,7 @@ export const ChipsMoveWithAFingerTap: Story = {
     </div>
   ),
   play: async () => {
+    await ready();
     const before = window.scrollY;
     await realTap(itemOf("Canada"));
     await waitFor(() => expect(itemOf("Canada")).toHaveAttribute("data-lifted", "true"));
@@ -987,6 +1020,7 @@ export const NoEmptyRowWhileIdle: Story = {
     </div>
   ),
   play: async () => {
+    await ready();
     const filled = boxOf(body().getByRole("combobox", { name: "Filled" }));
     const reference = boxOf(body().getByRole("combobox", { name: "Reference" }));
     const height = (box: HTMLElement) => box.getBoundingClientRect().height;
