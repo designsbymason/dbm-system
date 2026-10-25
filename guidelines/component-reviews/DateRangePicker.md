@@ -41,3 +41,7 @@ Added 15 unit tests and 3 real-browser checks (and the Months-only story); the t
 - A screen-reader pass, a real phone's on-screen keyboard and touch, Windows high-contrast mode (the ends are `DatePicker`'s and carry its forced-colours check; the range adds no colour of its own), Firefox and Safari, light Emerald and a tablet width.
 - The full §9 checklist, including the feature-completeness pass, the Radix `Popover` prop audit and the theming sweep across all four themes.
 - `DateRangePicker` imports `DatePicker`'s stylesheet, its types and its `datePickerReason` helper, and `Calendar`'s `calendarHelpers` and `calendarLabels`; a change there needs a look here too.
+
+## `rounded`, 2026-10-25
+
+`rounded` on the pair, as on [DatePicker](DatePicker.md): the calendar's days and month buttons, and by month the month cells, are circles; the strip behind a range keeps its straight edges and the fields keep their corners. Two unit tests and two real-browser checks.

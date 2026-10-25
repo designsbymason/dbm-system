@@ -546,3 +546,38 @@ export const StartChangedFromTheStart: Story = {
     await waitFor(() => expect(segment(startGroup(), "Day")).toHaveFocus());
   },
 };
+
+export const RoundedDaysAndMonths: Story = {
+  name: "rounded draws the days, and by month the month cells, as circles; the fields keep their corners",
+  render: () => (
+    <Page>
+      <DateRangePicker aria-label="Stay" defaultValue={["2026-10-12", "2026-10-15"]} today={TODAY} rounded />
+    </Page>
+  ),
+  play: async () => {
+    const radius = (element: Element) => parseFloat(getComputedStyle(element).borderTopLeftRadius);
+    const fieldRadius = radius(startGroup());
+    await userEvent.click(openButton());
+    const dialog = await body().findByRole("dialog", { name: "Choose a date range" });
+    await settled(dialog);
+    const day = dayButton("2026-10-12") as HTMLButtonElement;
+    await expect(radius(day)).toBeGreaterThanOrEqual(day.getBoundingClientRect().height / 2 - 0.5);
+    await expect(radius(startGroup())).toBe(fieldRadius);
+  },
+};
+
+export const RoundedMonthCells: Story = {
+  name: "By month, rounded draws the month cells as circles",
+  render: () => (
+    <Page>
+      <DateRangePicker aria-label="Stay" granularity="month" today={TODAY} rounded />
+    </Page>
+  ),
+  play: async () => {
+    await userEvent.click(openButton());
+    const dialog = await body().findByRole("dialog", { name: "Choose a date range" });
+    await settled(dialog);
+    const cell = dialog.querySelector("button[data-picker-cell]") as HTMLButtonElement;
+    await expect(parseFloat(getComputedStyle(cell).borderTopLeftRadius)).toBeGreaterThanOrEqual(cell.getBoundingClientRect().height / 2 - 0.5);
+  },
+};

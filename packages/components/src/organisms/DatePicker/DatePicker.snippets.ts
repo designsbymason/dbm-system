@@ -130,6 +130,7 @@ export interface DatePickerPlaygroundSnippetArgs {
   max?: string;
   weekStartsOn?: number;
   showTodayButton?: boolean;
+  rounded?: boolean;
   size?: DatePickerSize;
   hasError?: boolean;
   disabled?: boolean;
@@ -156,6 +157,7 @@ export function datePickerPlaygroundSnippet(args: DatePickerPlaygroundSnippetArg
   if (args.max) attributes.push(`max="${args.max}"`);
   if (args.weekStartsOn !== undefined && args.weekStartsOn !== 0) attributes.push(`weekStartsOn={${args.weekStartsOn}}`);
   if (args.showTodayButton) attributes.push("showTodayButton");
+  if (args.rounded) attributes.push("rounded");
   if (args.side && args.side !== "bottom") attributes.push(`side="${args.side}"`);
   if (args.align && args.align !== "start") attributes.push(`align="${args.align}"`);
   if (args.presentation && args.presentation !== "anchored") attributes.push(`presentation="${args.presentation}"`);

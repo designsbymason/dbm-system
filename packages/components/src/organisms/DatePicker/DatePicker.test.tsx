@@ -4,6 +4,7 @@ import { axe } from "jest-axe";
 import { createRef, StrictMode, useState } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { FieldLabel } from "../../atoms/FieldLabel";
+import calendarStyles from "../../molecules/Calendar/Calendar.module.css";
 import { FormField } from "../../molecules/FormField";
 import { DatePicker } from "./DatePicker";
 import type {
@@ -785,6 +786,28 @@ describe("DatePicker form validation", () => {
     await userEvent.keyboard("{Backspace}");
     act(() => input(container).focus());
     expect(segment("Day")).toHaveFocus();
+  });
+});
+
+describe("DatePicker rounded", () => {
+  const calendarRoot = () => within(screen.getByRole("dialog")).getByRole("grid").closest(`.${calendarStyles.root}`) as HTMLElement;
+
+  it("is square-cornered by default, and rounds the calendar's days and month buttons with rounded", async () => {
+    const { rerender } = render(<DatePicker aria-label="d" defaultValue="2026-10-15" defaultOpen />);
+    await screen.findByRole("dialog");
+    expect(calendarRoot()).not.toHaveClass(calendarStyles.rounded ?? "");
+    rerender(<DatePicker aria-label="d" defaultValue="2026-10-15" defaultOpen rounded />);
+    expect(calendarRoot()).toHaveClass(calendarStyles.rounded ?? "");
+  });
+
+  it("rounds the grid of months by month too, and keeps the field's own corners", async () => {
+    const { rerender } = render(<DatePicker aria-label="d" granularity="month" defaultValue="2026-10" defaultOpen />);
+    const dialog = await screen.findByRole("dialog");
+    const wrapper = () => dialog.querySelector(`.${calendarStyles.root}`) as HTMLElement;
+    expect(wrapper()).not.toHaveClass(calendarStyles.rounded ?? "");
+    rerender(<DatePicker aria-label="d" granularity="month" defaultValue="2026-10" defaultOpen rounded />);
+    expect(wrapper()).toHaveClass(calendarStyles.rounded ?? "");
+    expect(screen.getByRole("group", { name: "d" }).className).not.toMatch(/rounded/);
   });
 });
 

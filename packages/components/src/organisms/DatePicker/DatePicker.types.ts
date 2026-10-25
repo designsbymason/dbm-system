@@ -80,6 +80,7 @@ export type DatePickerCalendarProps = Omit<
   | "weekStartsOn"
   | "today"
   | "showTodayButton"
+  | "rounded"
   | "name"
   | "disabled"
   | "readOnly"
@@ -187,6 +188,12 @@ export interface DatePickerProps
    */
   showTodayButton?: boolean;
   /**
+   * Draws the calendar's days and month buttons round: a circle for each day, the chosen days, today's ring and the focus
+   * ring, and round month buttons (including the grid of months). Only the panel changes; the field itself keeps its corners.
+   * @default false
+   */
+  rounded?: boolean;
+  /**
    * Today's date as `"YYYY-MM-DD"`, for marking today in the calendar, `min="today"`, the date presets and starting
    * an empty year at this year. By default the browser's date is read after the first render, so nothing differs between a server
    * and the browser.
@@ -196,7 +203,7 @@ export interface DatePickerProps
    * Any other `Calendar` prop for the calendar inside the panel (by day): `numberOfMonths`, `captionLayout`,
    * `showWeekNumbers`, `getMarker`, `footer`, `labels` (month and weekday names), `size` and the rest. The
    * props `DatePicker` owns itself (`value`, `min`, `max`, `isDateDisabled`, `weekStartsOn`, `today`,
-   * `showTodayButton`) are not accepted here.
+   * `showTodayButton`, `rounded`) are not accepted here.
    */
   calendarProps?: DatePickerCalendarProps;
   /**

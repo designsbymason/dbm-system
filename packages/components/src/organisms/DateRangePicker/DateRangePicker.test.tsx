@@ -3,6 +3,7 @@ import userEvent from "@testing-library/user-event";
 import { axe } from "jest-axe";
 import { createRef, StrictMode, useState } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
+import calendarStyles from "../../molecules/Calendar/Calendar.module.css";
 import { FormField } from "../../molecules/FormField";
 import { DateRangePicker } from "./DateRangePicker";
 import type { DateRangePickerProps, DateRangeValue } from "./index";
@@ -898,6 +899,24 @@ describe("dateRangeValue", () => {
     expect(laterOf(undefined, "2026-10-09")).toBe("2026-10-09");
     expect(laterOf("2026-10-09", undefined)).toBe("2026-10-09");
     expect(laterOf(undefined, undefined)).toBeUndefined();
+  });
+});
+
+describe("DateRangePicker rounded", () => {
+  const wrapper = () => screen.getByRole("dialog").querySelector(`.${calendarStyles.root}`) as HTMLElement;
+
+  it("is square-cornered by default, and rounds the days and month buttons with rounded", async () => {
+    const { rerender } = render(<DateRangePicker aria-label="Stay" defaultValue={["2026-10-05", "2026-10-09"]} defaultOpen />);
+    await screen.findByRole("dialog");
+    expect(wrapper()).not.toHaveClass(calendarStyles.rounded ?? "");
+    rerender(<DateRangePicker aria-label="Stay" defaultValue={["2026-10-05", "2026-10-09"]} defaultOpen rounded />);
+    expect(wrapper()).toHaveClass(calendarStyles.rounded ?? "");
+  });
+
+  it("rounds the grid of months by month too", async () => {
+    render(<DateRangePicker aria-label="Period" granularity="month" defaultValue={["2026-03", "2026-05"]} defaultOpen rounded />);
+    await screen.findByRole("dialog");
+    expect(wrapper()).toHaveClass(calendarStyles.rounded ?? "");
   });
 });
 

@@ -103,6 +103,12 @@ const meta: Meta<typeof DatePicker> = {
       description: "Shows a Today button in the calendar that chooses today's date.",
       table: { defaultValue: { summary: "false" } },
     },
+    rounded: {
+      control: "boolean",
+      description:
+        "Draws the calendar's days and month buttons round: a circle for each day, the chosen days, today's ring and the focus ring, and round month buttons (the grid of months too). Only the panel changes; the field itself keeps its corners.",
+      table: { defaultValue: { summary: "false" } },
+    },
     today: {
       control: false,
       description:
@@ -266,6 +272,7 @@ const meta: Meta<typeof DatePicker> = {
     max: "",
     weekStartsOn: 0,
     showTodayButton: false,
+    rounded: false,
     side: "bottom",
     align: "start",
     presentation: "anchored",
@@ -306,6 +313,7 @@ const noControls = {
   container: { control: false },
   weekStartsOn: { control: false },
   showTodayButton: { control: false },
+  rounded: { control: false },
   today: { control: false },
   onFocus: { control: false },
   onBlur: { control: false },

@@ -111,6 +111,12 @@ const meta: Meta<typeof DateRangePicker> = {
       description: "How many months are on show side by side in the calendar, 1 to 4. Takes a breakpoint map. The default is one month on a phone and two from sm up.",
       table: { defaultValue: { summary: "{ base: 1, sm: 2 }" } },
     },
+    rounded: {
+      control: "boolean",
+      description:
+        "Draws the calendar's days and month buttons round: a circle for each day, the chosen days, today's ring and the focus ring, and round month buttons (the grid of months too). The strip behind a range keeps its straight edges. Only the panel changes; the fields keep their corners.",
+      table: { defaultValue: { summary: "false" } },
+    },
     weekStartsOn: {
       control: "select",
       options: [0, 1, 2, 3, 4, 5, 6],
@@ -281,6 +287,7 @@ const meta: Meta<typeof DateRangePicker> = {
     minRangeDays: 1,
     rangeSpansUnavailable: true,
     weekStartsOn: 0,
+    rounded: false,
     side: "bottom",
     align: "start",
     presentation: "anchored",
@@ -324,6 +331,7 @@ const noControls = {
   presentation: { control: false },
   container: { control: false },
   weekStartsOn: { control: false },
+  rounded: { control: false },
   today: { control: false },
   onFocus: { control: false },
   onBlur: { control: false },

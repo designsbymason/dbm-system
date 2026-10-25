@@ -68,3 +68,7 @@ At explicit direction, following `Input`'s own change (see [Input](Input.md)): t
 ## Status region only with a calendar (2026-10-25, authorized fix; stays Finalized)
 
 At explicit direction, while building [DateRangePicker](DateRangePicker.md): the empty `role="status"` region the field announces a chosen date in is drawn only when `showPicker` is on. With the calendar off nothing can be announced there, and two of them were an empty region apiece inside every `DateRangePicker`. Additive to what anyone hears or sees (the only change is a DOM node that never had text, gone when `showPicker={false}`), so it stays Finalized under the three-question test; one unit test checks it.
+
+## `rounded`, 2026-10-25 (authorized addition; stays Finalized)
+
+At explicit direction: a `rounded` prop (default `false`) draws the calendar's days and month buttons as circles, and the cells of the grid of months by month, by putting `Calendar`'s own `rounded` class on the months wrapper and passing the prop to its buttons. Only the panel changes; the field keeps its corners. It replaces `rounded` through `calendarProps`, whose type now leaves it out (unpublished, so no migration). Purely additive: no existing value renders differently, so the component stays Finalized, with the new surface's own mini-pass (JSDoc, Storybook control and Playground snippet, Docs line, two unit tests and a real-browser check of the radii, broken on purpose once to see it fail).

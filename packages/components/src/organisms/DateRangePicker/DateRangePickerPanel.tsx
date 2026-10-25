@@ -49,6 +49,8 @@ export interface DateRangePickerPanelProps {
   /** The calendar's labels in force, for the base of a day's name. */
   calendarLabels: CalendarLabels;
   weekStartsOn: 0 | 1 | 2 | 3 | 4 | 5 | 6 | undefined;
+  /** Draws the days and the month buttons round. */
+  rounded: boolean;
   /** Whether a date is ruled out, by `isDateDisabled` or a reason. */
   isBlocked: (date: string) => boolean;
   unavailableReason: ((date: string) => string | null | undefined | false) | undefined;
@@ -82,6 +84,7 @@ export function DateRangePickerPanel({
   calendarProps,
   calendarLabels,
   weekStartsOn,
+  rounded,
   isBlocked,
   unavailableReason,
   presets,
@@ -113,14 +116,14 @@ export function DateRangePickerPanel({
   return (
     <div className={datePickerStyles.panelBody} onFocusCapture={(event) => hintFrom(event.target)} onMouseOverCapture={(event) => hintFrom(event.target)}>
       {byMonth ? (
-        <div className={cx(calendarStyles.root, calendarSizeClass[calendarSize])}>
+        <div className={cx(calendarStyles.root, calendarSizeClass[calendarSize], rounded && calendarStyles.rounded)}>
           <CalendarPicker
             shown={shown ?? { year: 1, month: 1 }}
             today={today}
             min={minDate ? `${minDate}-01` : ""}
             max={maxDate ? `${maxDate}-01` : ""}
             size={calendarSize}
-            rounded={false}
+            rounded={rounded}
             disabled={false}
             dir={dir ?? "ltr"}
             labels={calendarLabels}
@@ -141,6 +144,7 @@ export function DateRangePickerPanel({
           max={maxDate}
           isDateDisabled={isBlocked}
           weekStartsOn={weekStartsOn}
+          rounded={rounded}
           today={todayProp}
           dir={dir}
           formatNumber={formatNumber}

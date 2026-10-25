@@ -46,6 +46,8 @@ export interface DatePickerPanelProps {
   calendarLabels: CalendarLabels;
   weekStartsOn: DatePickerPanelWeekStart;
   showTodayButton: boolean | undefined;
+  /** Draws the days and the month buttons round. */
+  rounded: boolean;
   /** Whether a date is ruled out, by `isDateDisabled` or a reason. */
   isBlocked: (date: string) => boolean;
   unavailableReason: ((date: string) => string | null | undefined | false) | undefined;
@@ -78,6 +80,7 @@ export function DatePickerPanel({
   calendarLabels,
   weekStartsOn,
   showTodayButton,
+  rounded,
   isBlocked,
   unavailableReason,
   presets,
@@ -125,14 +128,14 @@ export function DatePickerPanel({
       onMouseOverCapture={(event) => hintFrom(event.target)}
     >
       {byMonth ? (
-        <div className={cx(calendarStyles.root, calendarSizeClass[calendarSize])}>
+        <div className={cx(calendarStyles.root, calendarSizeClass[calendarSize], rounded && calendarStyles.rounded)}>
           <CalendarPicker
             shown={shown ?? { year: 1, month: 1 }}
             today={today}
             min={minDate ? `${minDate}-01` : ""}
             max={maxDate ? `${maxDate}-01` : ""}
             size={calendarSize}
-            rounded={false}
+            rounded={rounded}
             disabled={false}
             dir={dir ?? "ltr"}
             labels={calendarLabels}
@@ -153,6 +156,7 @@ export function DatePickerPanel({
           isDateDisabled={isBlocked}
           weekStartsOn={weekStartsOn}
           showTodayButton={showTodayButton}
+          rounded={rounded}
           today={todayProp}
           dir={dir}
           formatNumber={formatNumber}

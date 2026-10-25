@@ -95,6 +95,7 @@ export const DateRangePicker = forwardRef<HTMLDivElement, DateRangePickerProps>(
       presets,
       numberOfMonths = { base: 1, sm: 2 },
       weekStartsOn,
+      rounded = false,
       today: todayProp,
       calendarProps,
       side = "bottom",
@@ -571,6 +572,7 @@ export const DateRangePicker = forwardRef<HTMLDivElement, DateRangePickerProps>(
                 calendarProps={calendarProps}
                 calendarLabels={calendarLabels}
                 weekStartsOn={weekStartsOn}
+                rounded={rounded}
                 isBlocked={isBlocked}
                 unavailableReason={unavailableReason}
                 presets={presetList}

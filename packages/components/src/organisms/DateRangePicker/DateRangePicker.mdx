@@ -28,6 +28,7 @@ export const propOrder = [
   "presets",
   "numberOfMonths",
   "weekStartsOn",
+  "rounded",
   "today",
   "calendarProps",
   "side",
@@ -240,6 +241,9 @@ import { DateRangePicker } from "@dbm-system/components";
 - The clear button shows while either end shows anything, a half-typed segment included, and empties both ends.
 - A preset's function is asked for its range only once today is known, so a server-rendered preset button starts disabled
   and is enabled after the first render in the browser.
+- `rounded` draws the calendar's days (the chosen days, today's ring and the focus ring included) and its month buttons as
+  circles, and the cells of the grid of months by month; the strip behind a range keeps its straight edges, and the fields'
+  own corners do not change.
 - In a table row or a toolbar, drop to `size="sm"` or `"xs"`; each end is as tall as an `Input` at the same step. The pair
   wraps, so on a narrow screen the end drops under the start.
 

@@ -136,6 +136,7 @@ export interface DateRangePickerPlaygroundSnippetArgs {
   maxRangeDays?: number;
   rangeSpansUnavailable?: boolean;
   weekStartsOn?: number;
+  rounded?: boolean;
   size?: DateRangePickerSize;
   hasError?: boolean;
   disabled?: boolean;
@@ -162,6 +163,7 @@ export function dateRangePickerPlaygroundSnippet(args: DateRangePickerPlayground
   if (args.maxRangeDays !== undefined && args.maxRangeDays > 0) attributes.push(`maxRangeDays={${args.maxRangeDays}}`);
   if (args.rangeSpansUnavailable === false) attributes.push("rangeSpansUnavailable={false}");
   if (args.weekStartsOn !== undefined && args.weekStartsOn !== 0) attributes.push(`weekStartsOn={${args.weekStartsOn}}`);
+  if (args.rounded) attributes.push("rounded");
   if (args.side && args.side !== "bottom") attributes.push(`side="${args.side}"`);
   if (args.align && args.align !== "start") attributes.push(`align="${args.align}"`);
   if (args.presentation && args.presentation !== "anchored") attributes.push(`presentation="${args.presentation}"`);

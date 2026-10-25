@@ -619,3 +619,31 @@ export const ReasonDoesNotMoveThePanel: Story = {
     await expect(dialog.getBoundingClientRect().height).toBe(before);
   },
 };
+
+export const RoundedDaysAndMonths: Story = {
+  name: "rounded draws the days, and by month the month cells, as circles; the field keeps its corners",
+  render: () => (
+    <Page>
+      <DatePicker aria-label="Start date" defaultValue="2026-10-15" today={TODAY} rounded />
+      <DatePicker aria-label="Card expires" granularity="month" defaultValue="2026-10" today={TODAY} rounded />
+    </Page>
+  ),
+  play: async () => {
+    const radius = (element: Element) => parseFloat(getComputedStyle(element).borderTopLeftRadius);
+    const fieldRadius = radius(body().getByRole("group", { name: "Start date" }));
+    await userEvent.click(body().getAllByRole("button", { name: "Choose date" })[0] as HTMLElement);
+    const dialog = await body().findByRole("dialog", { name: "Choose a date" });
+    await settled(dialog);
+    const day = dayButton("2026-10-15") as HTMLButtonElement;
+    await expect(radius(day)).toBeGreaterThanOrEqual(day.getBoundingClientRect().height / 2 - 0.5);
+    // the field's own corners are the same as ever
+    await expect(radius(body().getByRole("group", { name: "Start date" }))).toBe(fieldRadius);
+    await userEvent.keyboard("{Escape}");
+    await waitFor(() => expect(body().queryByRole("dialog")).toBeNull());
+    await userEvent.click(body().getAllByRole("button", { name: /Choose (date|month)/ })[1] as HTMLElement);
+    const months = await body().findByRole("dialog");
+    await settled(months);
+    const cell = months.querySelector("button[data-picker-cell]") as HTMLButtonElement;
+    await expect(radius(cell)).toBeGreaterThanOrEqual(cell.getBoundingClientRect().height / 2 - 0.5);
+  },
+};

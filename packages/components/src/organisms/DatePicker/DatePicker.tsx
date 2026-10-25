@@ -122,6 +122,7 @@ export const DatePicker = forwardRef<HTMLDivElement, DatePickerProps>(
       presets,
       weekStartsOn,
       showTodayButton,
+      rounded = false,
       today: todayProp,
       calendarProps,
       side = "bottom",
@@ -643,6 +644,7 @@ export const DatePicker = forwardRef<HTMLDivElement, DatePickerProps>(
                 calendarLabels={calendarLabels}
                 weekStartsOn={weekStartsOn}
                 showTodayButton={showTodayButton}
+                rounded={rounded}
                 isBlocked={isBlocked}
                 unavailableReason={unavailableReason}
                 presets={presetList}

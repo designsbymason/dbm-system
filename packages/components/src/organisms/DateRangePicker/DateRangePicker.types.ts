@@ -91,6 +91,7 @@ export type DateRangePickerCalendarProps = Omit<
   | "weekStartsOn"
   | "today"
   | "showTodayButton"
+  | "rounded"
   | "numberOfMonths"
   | "minRangeDays"
   | "maxRangeDays"
@@ -209,6 +210,12 @@ export interface DateRangePickerProps extends Omit<ComponentPropsWithoutRef<"div
    * @default 0
    */
   weekStartsOn?: CalendarWeekStart;
+  /**
+   * Draws the calendar's days and month buttons round: a circle for each day, the chosen days, today's ring and the focus
+   * ring, and round month buttons (including the grid of months). Only the panel changes; the field itself keeps its corners.
+   * @default false
+   */
+  rounded?: boolean;
   /**
    * Today's date as `"YYYY-MM-DD"`, for marking today in the calendar, `min="today"` and the date presets. By default
    * the browser's date is read after the first render, so nothing differs between a server and the browser.

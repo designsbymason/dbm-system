@@ -25,6 +25,7 @@ export const propOrder = [
   "presets",
   "weekStartsOn",
   "showTodayButton",
+  "rounded",
   "today",
   "calendarProps",
   "side",
@@ -243,6 +244,9 @@ and the `id` goes on the first segment, which is what a `FieldLabel`'s `htmlFor`
   flag a month that has been chosen, and are written as `"YYYY-MM"`, but the grid does not grey it out.
 - A preset's function is asked for its date only once today is known, so a server-rendered preset button starts
   disabled and is enabled after the first render in the browser.
+- `rounded` draws the calendar's days (the chosen day, today's ring and the focus ring included) and its month buttons as
+  circles, and the cells of the grid of months by month; the field's own corners do not change. It replaces passing
+  `rounded` through `calendarProps`.
 - In a table row or a toolbar, drop to `size="sm"` or `"xs"`; each size is as tall as an `Input` at the
   same step, so a row of fields lines up.
 
