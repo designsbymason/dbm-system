@@ -31,6 +31,7 @@ export const propOrder = [
   "emptyContent",
   "onSelect",
   "onSelectError",
+  "onDisabledSelect",
   "renderItem",
   "highlightTone",
   "showHints",
@@ -100,6 +101,7 @@ import { CommandPalette } from "@dbm-system/components";
     "emptyContent",
     "onSelect",
     "onSelectError",
+    "onDisabledSelect",
     "renderItem",
     "footer",
     "fullScreen",
@@ -163,6 +165,10 @@ A command is an object in the `commands` array.
 ### Remembering recent commands
 
 <Canvas of={CommandPaletteStories.Remembered} />
+
+### Explaining a disabled command
+
+<Canvas of={CommandPaletteStories.DisabledCommands} />
 
 ### Commands that take time
 
@@ -257,6 +263,7 @@ A command is an object in the `commands` array.
 - **The forward arrow opens a list.** With the caret at the end of the text, Right (Left in right-to-left) opens the highlighted command's list or asks for its value; Tab is not used for this, so it keeps moving focus as it does everywhere in the dialog. The highlighted row ends with an Enter key to say what runs it.
 - **A list can speak for itself.** A command with `items` can set a `placeholder` ("Search themes…") and an `emptyContent` for its own list; the search field is then named after the list (`labels.searchIn`) and so is the listbox.
 - **`recent` is a list of values you keep.** The palette remembers nothing between openings, because what counts as recent (per person, per workspace, after a round trip) is yours to say. `useRecentCommands(key, { storage, max })` is the usual way to keep it: it returns `recent` and an `add`, remembers the list in the browser (this tab only with `storage: "session"`), keeps it newest first and capped, keeps other tabs in step, falls back to memory when storage is blocked, and renders empty on the server. Call `add(item.value)` from `onSelect`, and store ids, never text a person typed. A command shows once: under the Recent heading while the search is empty, and in its usual place once something is typed.
+- **Say why a command can't run.** `disabled="reason"` shows the reason as the row's tooltip and reads it after the row's name. Pressing such a row calls `onDisabledSelect(item, { reason })` and does nothing else, so an app can say more (a message, a link to what unlocks it). The arrow keys skip disabled rows, so only a pointer or a finger reaches it.
 - **A command that returns a promise is busy until it settles.** The row shows a spinner, the palette ignores Escape and a press on the scrim, no other command runs, and it closes when the promise resolves unless `closeOnSelect` is `false`. A rejection keeps it open, announces `labels.failed` and calls `onSelectError`; with no handler the rejection is left unhandled so it is not lost silently.
 - **A command that opens something else needs nothing special.** Open a `ConfirmDialog` or a `Dialog` from `onSelect` and focus goes to it, not back to where the palette was opened.
 - **Search on a server with `filter={false}`.** Pass new `commands` as `onQueryChange` reports typing, and `loading` while they are on their way. The palette then lists exactly what you give it.

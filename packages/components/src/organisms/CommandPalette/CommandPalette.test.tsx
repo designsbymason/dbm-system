@@ -1185,4 +1185,49 @@ describe("CommandPalette", () => {
       expect(input()).toHaveAttribute("placeholder", "Search themes…".replace("Search themes…", "Type a command or search…"));
     });
   });
+
+  describe("pressing a command that can't run", () => {
+    it("tells onDisabledSelect which command and why, and leaves the palette open", async () => {
+      const user = userEvent.setup();
+      const onDisabledSelect = vi.fn();
+      const onSelect = vi.fn();
+      setup({ onDisabledSelect, onSelect });
+      await screen.findByRole("dialog");
+      await user.click(screen.getByRole("option", { name: /Publish/ }));
+      expect(onDisabledSelect).toHaveBeenCalledTimes(1);
+      expect(onDisabledSelect).toHaveBeenCalledWith(expect.objectContaining({ value: "locked" }), { reason: "Needs a connection" });
+      expect(onSelect).not.toHaveBeenCalled();
+      expect(dialog()).toBeInTheDocument();
+    });
+
+    it("gives no reason for a command that is simply disabled, and works for a disabled nested hit", async () => {
+      const user = userEvent.setup();
+      const onDisabledSelect = vi.fn();
+      const nested: CommandItem[] = [{ value: "p", label: "Parent", items: [{ value: "c", label: "Child one", disabled: true }] }];
+      setup({ commands: nested, onDisabledSelect });
+      await screen.findByRole("dialog");
+      await user.type(input(), "child");
+      await user.click(screen.getByRole("option", { name: /Child one/ }));
+      expect(onDisabledSelect).toHaveBeenCalledWith(expect.objectContaining({ value: "c" }), {});
+    });
+
+    it("is not called for a command that can run, or by the keys, which skip the row", async () => {
+      const user = userEvent.setup();
+      const onDisabledSelect = vi.fn();
+      setup({ onDisabledSelect });
+      await screen.findByRole("dialog");
+      await user.keyboard("{ArrowDown}{ArrowDown}{ArrowDown}");
+      expect(highlightedLabel()).toContain("Change theme");
+      await user.click(screen.getByRole("option", { name: /New file/ }));
+      expect(onDisabledSelect).not.toHaveBeenCalled();
+    });
+
+    it("does nothing without a handler", async () => {
+      const user = userEvent.setup();
+      setup();
+      await screen.findByRole("dialog");
+      await user.click(screen.getByRole("option", { name: /Publish/ }));
+      expect(dialog()).toBeInTheDocument();
+    });
+  });
 });

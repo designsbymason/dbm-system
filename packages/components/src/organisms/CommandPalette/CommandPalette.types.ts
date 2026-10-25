@@ -287,6 +287,12 @@ export interface CommandPaletteProps
    */
   onSelect?: (item: CommandItem, details: CommandPaletteSelectDetails) => void;
   /**
+   * Called when a command that is `disabled` is pressed (clicked or tapped: the arrow keys skip such rows), with the
+   * command and its reason if `disabled` was a string. The row does nothing else and the palette stays open, so this is
+   * where to say why: a message, a link to what unlocks it.
+   */
+  onDisabledSelect?: (item: CommandItem, details: { reason?: string }) => void;
+  /**
    * Called when a command's `onSelect` returned a promise that rejected. Without it the rejection is left unhandled,
    * so it is never lost silently. The palette stays open and announces `labels.failed`.
    */

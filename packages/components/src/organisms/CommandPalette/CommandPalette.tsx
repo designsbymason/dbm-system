@@ -94,6 +94,7 @@ export const CommandPalette = forwardRef<HTMLDivElement, CommandPaletteProps>(
       emptyContent,
       onSelect,
       onSelectError,
+      onDisabledSelect,
       renderItem,
       highlightTone,
       showHints,
@@ -227,6 +228,7 @@ export const CommandPalette = forwardRef<HTMLDivElement, CommandPaletteProps>(
               emptyContent={emptyContent}
               onSelect={onSelect}
               onSelectError={onSelectError}
+              onDisabledSelect={onDisabledSelect}
               renderItem={renderItem}
               highlightTone={highlightTone}
               showHints={showHints}

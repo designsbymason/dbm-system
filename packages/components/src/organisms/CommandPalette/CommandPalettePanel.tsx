@@ -51,6 +51,7 @@ interface CommandPalettePanelProps
     | "emptyContent"
     | "onSelect"
     | "onSelectError"
+    | "onDisabledSelect"
     | "onHighlightChange"
     | "renderItem"
     | "highlightTone"
@@ -87,6 +88,7 @@ export function CommandPalettePanel({
   emptyContent,
   onSelect,
   onSelectError,
+  onDisabledSelect,
   onHighlightChange,
   renderItem,
   highlightTone,
@@ -337,7 +339,12 @@ export function CommandPalettePanel({
       return;
     }
     const entry = entries.get(option.value);
-    if (!entry || isDisabled(entry.item)) return;
+    if (!entry) return;
+    if (isDisabled(entry.item)) {
+      const reason = entry.item.disabled;
+      onDisabledSelect?.(entry.item, typeof reason === "string" ? { reason } : {});
+      return;
+    }
     if (entry.item.items !== undefined && !page && !entry.parent) openPage(entry.item);
     else if (entry.item.argument !== undefined) openArgument(entry.item);
     else run(entry.item);

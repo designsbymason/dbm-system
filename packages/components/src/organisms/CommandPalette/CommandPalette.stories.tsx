@@ -151,6 +151,11 @@ const meta: Meta<PlaygroundArgs> = {
       control: false,
       description: "Called when a command is chosen, after its own onSelect, with the command and the text in the search. A command that opens a list does not call it.",
     },
+    onDisabledSelect: {
+      control: false,
+      description:
+        "Called when a disabled command is pressed (clicked or tapped; the arrow keys skip such rows), with the command and its reason if disabled was a string. The palette stays open: this is where to say why.",
+    },
     onSelectError: {
       control: false,
       description:
@@ -352,6 +357,32 @@ export const Recent: Story = {
       )}
     </PaletteStage>
   ),
+};
+
+function DisabledExample({ container }: { container: HTMLElement | null }) {
+  const [message, setMessage] = useState("Press “Publish”, which can't run.");
+  return (
+    <Stack gap={3} align="center">
+      <CommandPalette
+        container={container}
+        hotkey={false}
+        trigger={searchTrigger}
+        commands={sampleCommands.filter((command) => command.group !== "Account")}
+        onDisabledSelect={(item, details) => setMessage(`“${item.label}” can't run: ${details.reason ?? "no reason given"}.`)}
+      />
+      <Text size="sm" color="secondary">
+        {message}
+      </Text>
+    </Stack>
+  );
+}
+
+/** Pressing a disabled command calls `onDisabledSelect`, so an app can say why. */
+export const DisabledCommands: Story = {
+  name: "Explaining a disabled command",
+  parameters: { docs: { source: { code: commandPaletteSnippets.disabled } } },
+  argTypes: { ...noControls },
+  render: () => <PaletteStage>{(container) => <DisabledExample container={container} />}</PaletteStage>,
 };
 
 function RememberedExample({ container }: { container: HTMLElement | null }) {

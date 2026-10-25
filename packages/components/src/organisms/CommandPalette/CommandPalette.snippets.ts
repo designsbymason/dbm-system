@@ -68,6 +68,14 @@ export const commandPaletteSnippets = {
   commands={commands}
 />`,
 
+  disabled: `{/* disabled: true, or a string giving the reason (shown as the row's tooltip and read after its name).
+    onDisabledSelect is called when such a row is pressed, with the reason, so you can say more. The arrow keys skip it. */}
+<CommandPalette
+  trigger={<Button variant="secondary">Search…</Button>}
+  commands={[{ value: "publish", label: "Publish", disabled: "Connect to the internet first" }]}
+  onDisabledSelect={(item, { reason }) => toast.info(reason ?? \`\${item.label} can't run\`)}
+/>`,
+
   remembered: `{/* useRecentCommands keeps the values of the commands that were run (most recent first, at most max) in the
     browser's storage, and returns them for recent. const { recent, add } = useRecentCommands("app-commands", { max: 5 }); */}
 <CommandPalette
