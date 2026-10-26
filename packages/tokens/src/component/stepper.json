@@ -1,0 +1,27 @@
+{
+  "stepper": {
+    "indicator-size": {
+      "xs": {
+        "$type": "dimension",
+        "$value": "24px",
+        "$description": "New token (2026-10-26), added for Stepper's step indicator: its diameter at each size step. The spacing scale has no 28px, and 24px is the target-size floor for a step that can be entered."
+      },
+      "sm": {
+        "$type": "dimension",
+        "$value": "28px"
+      },
+      "md": {
+        "$type": "dimension",
+        "$value": "32px"
+      },
+      "lg": {
+        "$type": "dimension",
+        "$value": "40px"
+      },
+      "xl": {
+        "$type": "dimension",
+        "$value": "48px"
+      }
+    }
+  }
+}

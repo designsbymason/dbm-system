@@ -1,0 +1,464 @@
+/* The stepper. Every value is a token. The custom properties below are set per size and per tone:
+   `--stepper-indicator` the indicator's diameter, `--stepper-font` the title's size, `--stepper-gap` the room between an
+   indicator and its text, and `--stepper-solid`, `--stepper-on`, `--stepper-subtle`, `--stepper-ring`,
+   `--stepper-text` the tone's fill, the icon on it, its soft tint, its line and its text. */
+.root {
+  --stepper-indicator: var(--dbm-stepper-indicator-size-md);
+  --stepper-font: var(--dbm-font-size-base);
+  --stepper-small-font: var(--dbm-font-size-sm);
+  --stepper-number-font: var(--dbm-font-size-sm);
+  --stepper-gap: var(--dbm-space-3);
+  --stepper-pad-inline: var(--dbm-space-2);
+  --stepper-pad-block: var(--dbm-space-1);
+  --stepper-line: var(--dbm-border-width-2);
+
+  --stepper-solid: var(--dbm-bg-brand);
+  --stepper-on: var(--dbm-icon-on-brand);
+  --stepper-subtle: var(--dbm-bg-brand-subtle);
+  --stepper-ring: var(--dbm-border-brand);
+  --stepper-text: var(--dbm-text-brand);
+  --stepper-icon: var(--dbm-icon-brand);
+
+  color: var(--dbm-text-primary);
+  font-family: var(--dbm-font-family-primary);
+  font-size: var(--stepper-font);
+  line-height: var(--dbm-line-height-normal);
+  min-inline-size: 0;
+}
+
+/* A strip of many steps scrolls on its own instead of squeezing them. */
+.scroller {
+  overflow-x: auto;
+}
+
+/* Focusable only while it scrolls and holds nothing else to focus; the ring is drawn inside, where the box cannot clip it. */
+.scroller:focus-visible {
+  border-radius: var(--dbm-radius-sm);
+  outline: var(--dbm-border-width-2) solid var(--dbm-border-focus);
+  outline-offset: calc(-1 * var(--dbm-border-width-2));
+}
+
+.sizeXs {
+  --stepper-indicator: var(--dbm-stepper-indicator-size-xs);
+  --stepper-font: var(--dbm-font-size-xs);
+  --stepper-small-font: var(--dbm-font-size-xs);
+  --stepper-number-font: var(--dbm-font-size-xs);
+  --stepper-gap: var(--dbm-space-2);
+}
+
+.sizeSm {
+  --stepper-indicator: var(--dbm-stepper-indicator-size-sm);
+  --stepper-font: var(--dbm-font-size-sm);
+  --stepper-small-font: var(--dbm-font-size-xs);
+  --stepper-number-font: var(--dbm-font-size-xs);
+  --stepper-gap: var(--dbm-space-2);
+}
+
+.sizeMd {
+  --stepper-indicator: var(--dbm-stepper-indicator-size-md);
+  --stepper-font: var(--dbm-font-size-base);
+  --stepper-small-font: var(--dbm-font-size-sm);
+  --stepper-number-font: var(--dbm-font-size-sm);
+  --stepper-gap: var(--dbm-space-3);
+}
+
+.sizeLg {
+  --stepper-indicator: var(--dbm-stepper-indicator-size-lg);
+  --stepper-font: var(--dbm-font-size-md);
+  --stepper-small-font: var(--dbm-font-size-sm);
+  --stepper-number-font: var(--dbm-font-size-base);
+  --stepper-gap: var(--dbm-space-3);
+}
+
+.sizeXl {
+  --stepper-indicator: var(--dbm-stepper-indicator-size-xl);
+  --stepper-font: var(--dbm-font-size-lg);
+  --stepper-small-font: var(--dbm-font-size-base);
+  --stepper-number-font: var(--dbm-font-size-md);
+  --stepper-gap: var(--dbm-space-4);
+}
+
+.toneInfo {
+  --stepper-solid: var(--dbm-bg-info);
+  --stepper-on: var(--dbm-icon-on-info);
+  --stepper-subtle: var(--dbm-bg-info-subtle);
+  --stepper-ring: var(--dbm-border-info);
+  --stepper-text: var(--dbm-text-info);
+  --stepper-icon: var(--dbm-icon-info);
+}
+
+.toneSuccess {
+  --stepper-solid: var(--dbm-bg-success);
+  --stepper-on: var(--dbm-icon-on-success);
+  --stepper-subtle: var(--dbm-bg-success-subtle);
+  --stepper-ring: var(--dbm-border-success);
+  --stepper-text: var(--dbm-text-success);
+  --stepper-icon: var(--dbm-icon-success);
+}
+
+.toneHighlight {
+  --stepper-solid: var(--dbm-bg-highlight);
+  --stepper-on: var(--dbm-icon-on-highlight);
+  --stepper-subtle: var(--dbm-bg-highlight-subtle);
+  --stepper-ring: var(--dbm-border-highlight);
+  --stepper-text: var(--dbm-text-highlight);
+  --stepper-icon: var(--dbm-icon-highlight);
+}
+
+.list {
+  display: flex;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+/* --- Horizontal: steps in a row, a line growing between them. --- */
+
+.horizontal .list {
+  align-items: flex-start;
+}
+
+/* A step never shrinks below its content: a row with too many steps scrolls instead of squeezing them. */
+.horizontal .item {
+  align-items: flex-start;
+  display: flex;
+  flex: 1 0 auto;
+}
+
+.horizontal .item.last {
+  flex: 0 0 auto;
+}
+
+/* The line sits level with the middle of the indicator whatever the text under or beside it does. */
+.horizontal .connector {
+  flex: 1 1 auto;
+  margin-block-start: calc(var(--stepper-pad-block) + (var(--stepper-indicator) - var(--stepper-line)) / 2);
+  margin-inline: var(--dbm-space-2);
+  min-inline-size: var(--dbm-space-6);
+}
+
+/* --- Vertical: steps in a column, the line running down from each indicator. --- */
+
+.vertical .list {
+  flex-direction: column;
+}
+
+.vertical .step {
+  column-gap: var(--stepper-gap);
+  display: grid;
+  grid-template-columns: var(--stepper-indicator) minmax(0, 1fr);
+  grid-template-rows: auto 1fr;
+  inline-size: 100%;
+  row-gap: var(--dbm-space-1);
+}
+
+.vertical .indicator {
+  grid-column: 1;
+  grid-row: 1;
+}
+
+.vertical .content {
+  grid-column: 2;
+  grid-row: 1 / -1;
+}
+
+.vertical .item:not(.last) .content {
+  padding-block-end: var(--dbm-space-4);
+}
+
+/* `.step` aligns its items to the start, which would leave the line at its minimum height: stretch it down the row. */
+.vertical .connector {
+  align-self: stretch;
+  block-size: auto;
+  grid-column: 1;
+  grid-row: 2;
+  inline-size: var(--stepper-line);
+  justify-self: center;
+  min-block-size: var(--dbm-space-4);
+}
+
+/* --- One step. --- */
+
+.step {
+  align-items: flex-start;
+  background: none;
+  border: 0;
+  border-radius: var(--dbm-radius-sm);
+  color: inherit;
+  display: flex;
+  flex: none;
+  font: inherit;
+  gap: var(--stepper-gap);
+  margin: 0;
+  padding: var(--stepper-pad-block) var(--stepper-pad-inline);
+  text-align: start;
+}
+
+/* Under the indicator, centred: the line then joins the indicators, not the text. */
+.horizontal .item[data-label-placement="bottom"] .step {
+  align-items: center;
+  flex-direction: column;
+  gap: var(--dbm-space-2);
+  text-align: center;
+}
+
+.horizontal .item[data-label-placement="bottom"] .content {
+  align-items: center;
+  min-block-size: 0;
+}
+
+.enterable {
+  cursor: pointer;
+  transition: background-color var(--dbm-motion-duration-fast) var(--dbm-motion-easing-standard);
+}
+
+.enterable:hover {
+  background-color: var(--dbm-bg-neutral-subtle);
+}
+
+/* The strip scrolls, and a scrolling box clips whatever is drawn outside its edge, so the ring is drawn inside. */
+.enterable:focus-visible {
+  border-radius: var(--dbm-radius-sm);
+  outline: var(--dbm-border-width-2) solid var(--dbm-border-focus);
+  outline-offset: calc(-1 * var(--dbm-border-width-2));
+}
+
+.disabled {
+  cursor: not-allowed;
+}
+
+/* --- Indicator. --- */
+
+.indicator {
+  align-items: center;
+  background-color: transparent;
+  block-size: var(--stepper-indicator);
+  border: var(--dbm-border-width-2) solid var(--dbm-border-strong);
+  border-radius: var(--dbm-radius-full);
+  box-sizing: border-box;
+  color: var(--dbm-text-secondary);
+  display: inline-flex;
+  flex: none;
+  font-size: var(--stepper-number-font);
+  font-variant-numeric: tabular-nums;
+  font-weight: var(--dbm-font-weight-semibold);
+  inline-size: var(--stepper-indicator);
+  justify-content: center;
+  line-height: 1;
+  transition:
+    background-color var(--dbm-motion-duration-base) var(--dbm-motion-easing-standard),
+    border-color var(--dbm-motion-duration-base) var(--dbm-motion-easing-standard),
+    color var(--dbm-motion-duration-base) var(--dbm-motion-easing-standard);
+}
+
+.item[data-status="current"] .indicator {
+  background-color: var(--stepper-subtle);
+  border-color: var(--stepper-ring);
+  color: var(--stepper-text);
+}
+
+.item[data-status="complete"] .indicator {
+  background-color: var(--stepper-solid);
+  border-color: var(--stepper-solid);
+  color: var(--stepper-on);
+}
+
+.item[data-status="error"] .indicator {
+  background-color: var(--dbm-bg-danger);
+  border-color: var(--dbm-bg-danger);
+  color: var(--dbm-icon-on-danger);
+}
+
+.item[data-status="skipped"] .indicator {
+  background-color: var(--dbm-bg-neutral-subtle);
+  border-color: var(--dbm-border-strong);
+  color: var(--dbm-icon-secondary);
+}
+
+/* Outlined: every indicator is a ring on the page; the mark carries the colour. */
+.variantOutlined .item[data-status="current"] .indicator {
+  background-color: transparent;
+}
+
+.variantOutlined .item[data-status="complete"] .indicator {
+  background-color: transparent;
+  border-color: var(--stepper-ring);
+  color: var(--stepper-icon);
+}
+
+.variantOutlined .item[data-status="error"] .indicator {
+  background-color: transparent;
+  border-color: var(--dbm-border-danger);
+  color: var(--dbm-icon-danger);
+}
+
+/* --- Text. --- */
+
+.content {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-block-size: var(--stepper-indicator);
+  min-inline-size: 0;
+}
+
+.titleRow {
+  align-items: baseline;
+  column-gap: var(--dbm-space-2);
+  display: flex;
+  flex-wrap: wrap;
+}
+
+.title {
+  color: var(--dbm-text-secondary);
+  font-weight: var(--dbm-font-weight-medium);
+  overflow-wrap: anywhere;
+}
+
+/* The bold form of the title, drawn invisibly and zero tall, holds the step's width whichever weight is showing.
+   `visibility: hidden` keeps the generated text out of the accessibility tree. */
+.title[data-text]::after {
+  block-size: 0;
+  content: attr(data-text);
+  display: block;
+  font-weight: var(--dbm-font-weight-semibold);
+  overflow: hidden;
+  visibility: hidden;
+}
+
+.item[data-status="current"] .title,
+.item[data-status="complete"] .title {
+  color: var(--dbm-text-primary);
+}
+
+.item[data-status="current"] .title {
+  font-weight: var(--dbm-font-weight-semibold);
+}
+
+.optional,
+.description {
+  color: var(--dbm-text-secondary);
+  font-size: var(--stepper-small-font);
+}
+
+.description {
+  overflow-wrap: anywhere;
+}
+
+.disabled .title,
+.disabled .optional,
+.disabled .description {
+  color: var(--dbm-text-disabled);
+}
+
+/* --- The line between steps. A finished step's line is the tone's colour. --- */
+
+.connector {
+  background-color: var(--dbm-border-default);
+  border-radius: var(--dbm-radius-full);
+  block-size: var(--stepper-line);
+  transition: background-color var(--dbm-motion-duration-base) var(--dbm-motion-easing-standard);
+}
+
+.item[data-status="complete"] .connector {
+  background-color: var(--stepper-solid);
+}
+
+/* --- Compact: a one-line summary above a row of segments, in place of the steps. --- */
+
+.summary {
+  display: none;
+  gap: var(--dbm-space-2);
+}
+
+.summaryText {
+  color: var(--dbm-text-primary);
+  font-weight: var(--dbm-font-weight-semibold);
+}
+
+.segments {
+  display: flex;
+  gap: var(--dbm-space-1);
+}
+
+.segment {
+  background-color: var(--dbm-border-default);
+  block-size: var(--dbm-space-1);
+  border-radius: var(--dbm-radius-full);
+  flex: 1 1 0;
+}
+
+.segment[data-done] {
+  background-color: var(--stepper-solid);
+}
+
+.segment[data-status="error"] {
+  background-color: var(--dbm-bg-danger);
+}
+
+.compactAlways .summary {
+  display: flex;
+  flex-direction: column;
+}
+
+.compactAlways .list {
+  display: none;
+}
+
+/* The threshold is one pixel under the literal value of the breakpoint.sm primitive token — custom properties can't be
+   used in an @media condition (the same limitation `Breadcrumb` and `Pagination` note), so if that token changes this
+   must be updated by hand. */
+@media (max-width: 639px) {
+  .compactAuto .summary {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .compactAuto .list {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .enterable,
+  .indicator,
+  .connector {
+    transition: none;
+  }
+}
+
+/* --- Forced colours. A fill and a background line are not kept, so progress is told by border and system colour. --- */
+
+@media (forced-colors: active) {
+  .indicator {
+    border-color: GrayText;
+    color: CanvasText;
+  }
+
+  .item[data-status="current"] .indicator,
+  .item[data-status="complete"] .indicator,
+  .item[data-status="error"] .indicator {
+    border-color: Highlight;
+    border-width: var(--dbm-border-width-4);
+    color: CanvasText;
+  }
+
+  .item[data-status="skipped"] .indicator {
+    border-style: dashed;
+  }
+
+  .connector,
+  .segment {
+    background-color: GrayText;
+    forced-color-adjust: none;
+  }
+
+  .item[data-status="complete"] .connector,
+  .segment[data-done] {
+    background-color: Highlight;
+  }
+
+  .enterable:hover {
+    outline: var(--dbm-border-width-1) solid Highlight;
+  }
+}

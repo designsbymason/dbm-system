@@ -1,0 +1,375 @@
+import { Canvas, Meta } from "@storybook/addon-docs/blocks";
+import { Callout, ComponentHeader, PlaygroundControls, PropertiesTable, RelatedCard, TokenRow } from "../../../.storybook/blocks";
+import { Breadcrumb } from "../../molecules/Breadcrumb";
+import { Tabs } from "../../molecules/Tabs";
+import { ProgressBar } from "../../atoms/ProgressBar";
+import { VisuallyHidden } from "../../atoms/VisuallyHidden";
+import * as StepperStories from "./Stepper.stories";
+import * as StepperStepStories from "./StepperStep.stories";
+
+export const rootPropOrder = [
+  "children",
+  "value",
+  "defaultValue",
+  "onValueChange",
+  "orientation",
+  "size",
+  "variant",
+  "tone",
+  "labelPlacement",
+  "interactive",
+  "compact",
+  "announce",
+  "formatNumber",
+  "labels",
+  "dir",
+  "aria-label",
+  "aria-labelledby",
+  "id",
+  "className",
+  "style",
+  "data-testid",
+];
+export const stepPropOrder = [
+  "value",
+  "title",
+  "description",
+  "icon",
+  "status",
+  "optional",
+  "disabled",
+  "textValue",
+  "asChild",
+  "children",
+  "onClick",
+  "id",
+  "className",
+  "style",
+  "data-testid",
+];
+
+<Meta of={StepperStories} />
+
+<VisuallyHidden asChild><h2>Intro</h2></VisuallyHidden>
+
+<ComponentHeader title="Stepper" tier="Organism" />
+
+A stepper shows where a person is in a flow that happens in a fixed order — a checkout, an onboarding,
+a setup wizard — as a row (or column) of steps, each with an indicator and a title. A compound
+component: put one `Stepper.Step` per step inside `Stepper`, and say which one is current with `value`.
+Steps before it show as finished, steps after it as not started, and any step can say otherwise with
+its own `status` (an error, a skipped step, one finished out of order).
+
+`Stepper` draws the indicator and nothing else. The current step's content — usually a form — and the
+buttons that move between steps are yours, and so is deciding whether a step may be left. It renders a
+`<nav>` around an ordered list, so it reads as a list of steps to a screen reader, and it is a read-out
+of progress by default; `interactive` lets a person click back to a finished step, or to any step.
+
+Choose how big it is with `size`, how the indicators look with `variant`, the colour of the progress
+with `tone`, and which way it runs with `orientation`. `compact` swaps the steps for a one-line summary
+("Step 2 of 4 — Shipping") on a phone.
+
+### Import
+
+```tsx
+import { Stepper } from "@dbm-system/components";
+```
+
+## Playground
+
+<div className="dbm-playground-canvas">
+
+<Canvas of={StepperStories.Playground} />
+
+</div>
+<PlaygroundControls of={StepperStories.Playground} order={rootPropOrder} exclude={["children", "value", "onValueChange", "formatNumber", "labels", "aria-labelledby", "id", "className", "style", "data-testid"]} />
+
+## Properties
+
+Every step reads `size`, `variant`, `tone` and `orientation` from `Stepper`, so they are set once, on the
+root. `ref` forwards to the `<nav>`. Also accepts any other native `<nav>` attribute beyond what's
+listed here (e.g. `onFocus`, `title`) — passed straight through to the root element.
+
+<PropertiesTable of={StepperStories} order={rootPropOrder} />
+
+Only `Stepper.Step` elements are drawn: a fragment, or plain text, placed among the children is ignored
+(with a warning in development), so build the list from steps directly. Give each step a unique `value`;
+a `value` that matches no step shows every step as not started, with a warning in development. To show a
+finished flow, set the last step's `status="complete"`.
+
+### Stepper.Step properties
+
+One step — the `<li>`. Its indicator and text are drawn inside it, in a button when the step can be
+entered. Also accepts any other native `<li>` attribute beyond what's listed here (e.g. `title`) —
+passed straight through to the underlying element.
+
+<PropertiesTable of={StepperStepStories} order={stepPropOrder} />
+
+## Variants
+
+### All sizes
+
+<Canvas of={StepperStories.Sizes} />
+
+### Variants
+
+<Canvas of={StepperStories.Variants} />
+
+### Tones
+
+<Canvas of={StepperStories.Tones} />
+
+### With descriptions and an optional step
+
+<Canvas of={StepperStories.WithDescriptions} />
+
+### With icons
+
+<Canvas of={StepperStories.WithIcons} />
+
+### Vertical
+
+<Canvas of={StepperStories.Vertical} />
+
+### Labels under the indicators
+
+<Canvas of={StepperStories.LabelsUnderneath} />
+
+### Error, skipped and out-of-order steps
+
+<Canvas of={StepperStories.Statuses} />
+
+### Controlled, with Back and Next
+
+<Canvas of={StepperStories.Controlled} />
+
+### Every step enterable
+
+<Canvas of={StepperStories.Interactive} />
+
+### With a router's link (asChild)
+
+<Canvas of={StepperStories.AsRouterLink} />
+
+### Compact
+
+<Canvas of={StepperStories.Compact} />
+
+### Naming the navigation
+
+<Canvas of={StepperStories.NamedNav} />
+
+### Translated text
+
+<Canvas of={StepperStories.Translated} />
+
+### Right-to-left
+
+<Canvas of={StepperStories.RightToLeft} />
+
+## Usage guidelines
+
+<div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(16rem, 1fr))", gap: "var(--dbm-space-4)" }}>
+<Callout tone="success" title="Do">
+
+- Use it for a flow with a fixed order that a person works through: a checkout, a setup wizard, an onboarding.
+- Keep the titles short — one or two words — and put detail in `description`.
+- Set `status="error"` on a step whose content has a problem, so a person who has moved on can see where to go back.
+- Keep `interactive="none"` for a strictly linear flow, and `"completed"` where going back is safe.
+
+</Callout>
+<Callout tone="danger" title="Don't">
+
+- Don't use it for peer views a person switches between in any order — that is `Tabs`.
+- Don't use it for a page's place in a site — that is `Breadcrumb`.
+- Don't use it for one number moving towards a target — that is `ProgressBar`.
+- Don't put more than about seven steps in one stepper; group them, or use `compact`.
+
+</Callout>
+</div>
+
+## Best practices
+
+- `Stepper` owns no content and no navigation logic. Keep the current step in your own state (or the
+  router), pass it as `value`, and let a Back/Next button or a form's submit change it.
+- Decide whether a step may be left in your own code (validate before calling the setter) and show the
+  result with `status="error"`; `Stepper` does not read a `Form`.
+- Move focus to the new step's content when the step changes, then leave `announce` on only if you do not:
+  a screen reader should hear the step change once, not twice.
+- A horizontal stepper with many steps scrolls sideways inside its own width instead of squeezing them.
+  For more than a handful on a phone, use `compact="auto"`.
+- The compact summary is read-only: its steps cannot be entered, so use it only where going back is done
+  with a Back button.
+- Every piece of text the component writes itself is in `labels`, so a translated flow replaces the whole
+  set in one place; `formatNumber` writes the digits.
+
+## Accessibility
+
+<Callout tone="info" title="A named navigation landmark holding an ordered list, with the current step marked">
+
+The stepper is a `<nav>` — a navigation landmark, named "Progress" (or your own name, through
+`labels.navigation` or `aria-label`) — around an ordered list, so a screen reader announces how many
+steps there are and which one it is on. The list and its items state their `list` and `listitem` roles
+outright, because Safari with VoiceOver otherwise stops treating a list with its markers removed as one.
+The current step carries `aria-current="step"`. Each step's text is its title, followed by a visually
+hidden "(Step 2 of 4, current)", so its place and status are heard without relying on colour; the number
+or check inside the indicator is hidden. When the current step changes, a polite live region announces
+"Step 3 of 4: Payment" — only a change, never the first render.
+
+A step that can be entered is a real `<button>` (or your link), so it has a focus stop; every other step
+has none. With the default `interactive="none"`, the stepper has no keyboard interaction at all.
+
+| Key | Behaviour |
+|---|---|
+| `Tab` | Moves to the next step that can be entered, in order — one stop each, nothing roving |
+| `Shift+Tab` | Moves to the previous one |
+| `Enter` / `Space` | Chooses the focused step (asks through `onValueChange`) |
+
+The compact form hides the steps with `display: none` and shows a visible summary, so a screen reader
+hears one line, not a list; use `"never"` where a phone reader should hear every step. In forced-colours
+mode a finished or current step is told by a thicker `Highlight` border, an unreached one by `GrayText`,
+and the line between steps is drawn in system colours.
+
+</Callout>
+
+## Code examples
+
+```tsx
+{/* A checkout: your own state decides the step; Stepper shows it */}
+const [step, setStep] = useState("shipping");
+
+<Stepper value={step} onValueChange={setStep} interactive="completed">
+  <Stepper.Step value="account" title="Account" />
+  <Stepper.Step value="shipping" title="Shipping" description="Where it goes" />
+  <Stepper.Step value="payment" title="Payment" />
+</Stepper>
+
+{/* An error set from your own validation */}
+<Stepper.Step value="shipping" title="Shipping" status="error" />
+
+{/* Vertical, with the text beside each indicator */}
+<Stepper orientation="vertical" defaultValue="payment" size="lg">
+  {/* ... */}
+</Stepper>
+
+{/* With a router: the router's own link carries the navigation */}
+<Stepper.Step value="account" title="Account" asChild>
+  <RouterLink to="/checkout/account">Account</RouterLink>
+</Stepper.Step>
+
+{/* Translated */}
+<Stepper
+  labels={{ navigation: "Progression", stepOf: (n, total) => `Étape ${n} sur ${total}` }}
+>
+  {/* ... */}
+</Stepper>
+
+{/* A native <nav> attribute, passed straight through */}
+<Stepper title="Checkout progress" onFocus={() => track("stepper-focus")}>
+  {/* ... */}
+</Stepper>
+```
+
+## Design tokens used
+
+<TokenRow token="bg.brand" usage="a finished step's disc and line in the brand tone" />
+<TokenRow token="bg.brand-subtle" usage="the current step's tint in the brand tone" />
+<TokenRow token="bg.info" usage="a finished step's disc and line in the info tone" />
+<TokenRow token="bg.info-subtle" usage="the current step's tint in the info tone" />
+<TokenRow token="bg.success" usage="a finished step's disc and line in the success tone" />
+<TokenRow token="bg.success-subtle" usage="the current step's tint in the success tone" />
+<TokenRow token="bg.highlight" usage="a finished step's disc and line in the highlight tone" />
+<TokenRow token="bg.highlight-subtle" usage="the current step's tint in the highlight tone" />
+<TokenRow token="bg.danger" usage="a step with an error" />
+<TokenRow token="bg.neutral-subtle" usage="a skipped step; the hover background of a step that can be entered" />
+<TokenRow token="border.brand" usage="the current step's ring in the brand tone; a finished step's ring when outlined" />
+<TokenRow token="border.info" usage="the same, in the info tone" />
+<TokenRow token="border.success" usage="the same, in the success tone" />
+<TokenRow token="border.highlight" usage="the same, in the highlight tone" />
+<TokenRow token="border.danger" usage="an outlined step with an error" />
+<TokenRow token="border.strong" usage="the ring of a step not yet reached; a skipped step" />
+<TokenRow token="border.default" usage="the line between steps and the compact segments before they are reached" />
+<TokenRow token="border.focus" usage="the focus ring on a step that can be entered" />
+<TokenRow token="icon.on-brand" usage="the check on a finished step, in the brand tone" />
+<TokenRow token="icon.on-info" usage="the check on a finished step, in the info tone" />
+<TokenRow token="icon.on-success" usage="the check on a finished step, in the success tone" />
+<TokenRow token="icon.on-highlight" usage="the check on a finished step, in the highlight tone" />
+<TokenRow token="icon.on-danger" usage="the warning mark on a step with an error" />
+<TokenRow token="icon.brand" usage="the check on a finished outlined step, in the brand tone" />
+<TokenRow token="icon.info" usage="the same, in the info tone" />
+<TokenRow token="icon.success" usage="the same, in the success tone" />
+<TokenRow token="icon.highlight" usage="the same, in the highlight tone" />
+<TokenRow token="icon.danger" usage="the warning mark on an outlined step with an error" />
+<TokenRow token="icon.secondary" usage="the mark on a skipped step" />
+<TokenRow token="text.primary" usage="the title of the current and finished steps; the summary" />
+<TokenRow token="text.secondary" usage="the title of a step not yet reached; descriptions; the number in an unreached indicator" />
+<TokenRow token="text.disabled" usage="a disabled step's text" />
+<TokenRow token="text.brand" usage="the current step's number in the brand tone" />
+<TokenRow token="text.info" usage="the same, in the info tone" />
+<TokenRow token="text.success" usage="the same, in the success tone" />
+<TokenRow token="text.highlight" usage="the same, in the highlight tone" />
+<TokenRow token="stepper.indicator-size.xs" usage="the indicator's diameter at size xs" />
+<TokenRow token="stepper.indicator-size.sm" usage="the indicator's diameter at size sm" />
+<TokenRow token="stepper.indicator-size.md" usage="the indicator's diameter at size md" />
+<TokenRow token="stepper.indicator-size.lg" usage="the indicator's diameter at size lg" />
+<TokenRow token="stepper.indicator-size.xl" usage="the indicator's diameter at size xl" />
+<TokenRow token="font-family.primary" usage="the stepper's typography" />
+<TokenRow token="font-size.xs" usage="text and numbers at the smaller sizes; descriptions" />
+<TokenRow token="font-size.sm" usage="text, numbers and descriptions across the sizes" />
+<TokenRow token="font-size.base" usage="text and numbers across the sizes" />
+<TokenRow token="font-size.md" usage="text and numbers at the larger sizes" />
+<TokenRow token="font-size.lg" usage="the title at size xl" />
+<TokenRow token="font-weight.medium" usage="a step's title" />
+<TokenRow token="font-weight.semibold" usage="the current step's title; the numbers; the summary" />
+<TokenRow token="line-height.normal" usage="the stepper's line height" />
+<TokenRow token="space.1" usage="a step's vertical padding; the compact segments' gap and height" />
+<TokenRow token="space.2" usage="a step's horizontal padding; the room beside a line; the gap under a bottom label" />
+<TokenRow token="space.3" usage="the gap between an indicator and its text, across the sizes" />
+<TokenRow token="space.4" usage="the room under a vertical step; the gap at the largest size" />
+<TokenRow token="space.6" usage="the shortest a line between steps may get" />
+<TokenRow token="radius.full" usage="the indicator, the line and the segments" />
+<TokenRow token="radius.sm" usage="a step's hover background and focus ring" />
+<TokenRow token="border-width.1" usage="the hover outline in forced colours" />
+<TokenRow token="border-width.2" usage="the indicator's ring; the line; the focus ring" />
+<TokenRow token="border-width.4" usage="the ring of a current, finished or errored step in forced colours" />
+<TokenRow token="motion.duration.fast" usage="the hover background" />
+<TokenRow token="motion.duration.base" usage="the indicator and the line changing state" />
+<TokenRow token="motion.easing.standard" usage="the same transitions" />
+
+## Related components
+
+<div className="dbm-card-grid">
+<RelatedCard
+  name="Tabs"
+  description="Switches between peer views in place, in any order, instead of working through a sequence"
+  href="/?path=/docs/molecules-navigation-tabs--docs"
+>
+  <Tabs defaultValue="a">
+    <Tabs.List aria-label="Example">
+      <Tabs.Trigger value="a">One</Tabs.Trigger>
+      <Tabs.Trigger value="b">Two</Tabs.Trigger>
+    </Tabs.List>
+  </Tabs>
+</RelatedCard>
+<RelatedCard
+  name="Breadcrumb"
+  description="Shows where a page sits in a site's structure, rather than how far through a flow"
+  href="/?path=/docs/molecules-navigation-breadcrumb--docs"
+>
+  <Breadcrumb>
+    <Breadcrumb.Item>
+      <Breadcrumb.Link href="/docs">Docs</Breadcrumb.Link>
+    </Breadcrumb.Item>
+    <Breadcrumb.Item>
+      <Breadcrumb.Page>Page</Breadcrumb.Page>
+    </Breadcrumb.Item>
+  </Breadcrumb>
+</RelatedCard>
+<RelatedCard
+  name="ProgressBar"
+  description="Shows one value moving towards a target, with no steps to name"
+  href="/?path=/docs/atoms-feedback-progressbar--docs"
+>
+  <ProgressBar value={60} aria-label="Example" />
+</RelatedCard>
+</div>
