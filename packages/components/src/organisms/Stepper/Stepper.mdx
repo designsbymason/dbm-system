@@ -16,12 +16,15 @@ export const rootPropOrder = [
   "size",
   "variant",
   "tone",
+  "shape",
+  "connector",
   "labelPlacement",
   "interactive",
   "compact",
   "announce",
   "formatNumber",
   "labels",
+  "controllerRef",
   "dir",
   "aria-label",
   "aria-labelledby",
@@ -36,6 +39,7 @@ export const stepPropOrder = [
   "description",
   "icon",
   "status",
+  "busy",
   "optional",
   "disabled",
   "textValue",
@@ -58,16 +62,18 @@ A stepper shows where a person is in a flow that happens in a fixed order — a 
 a setup wizard — as a row (or column) of steps, each with an indicator and a title. A compound
 component: put one `Stepper.Step` per step inside `Stepper`, and say which one is current with `value`.
 Steps before it show as finished, steps after it as not started, and any step can say otherwise with
-its own `status` (an error, a skipped step, one finished out of order).
+its own `status` (an error, a warning, a skipped step, one finished out of order), and a step can be `busy`
+while its check or save runs.
 
 `Stepper` draws the indicator and nothing else. The current step's content — usually a form — and the
 buttons that move between steps are yours, and so is deciding whether a step may be left. It renders a
 `<nav>` around an ordered list, so it reads as a list of steps to a screen reader, and it is a read-out
 of progress by default; `interactive` lets a person click back to a finished step, or to any step.
 
-Choose how big it is with `size`, how the indicators look with `variant`, the colour of the progress
-with `tone`, and which way it runs with `orientation`. `compact` swaps the steps for a one-line summary
-("Step 2 of 4 — Shipping") on a phone.
+Choose how big it is with `size`, how the indicators look with `variant` and `shape`, the colour of the
+progress with `tone`, the line between steps with `connector`, and which way it runs with `orientation`
+(which can change with the width). `compact` swaps the steps for a one-line summary ("Step 2 of 4 —
+Shipping") on a phone, and `controllerRef` hands Next, Back and go-to-step to a button of your own.
 
 ### Import
 
@@ -96,6 +102,11 @@ Only `Stepper.Step` elements are drawn: a fragment, or plain text, placed among 
 (with a warning in development), so build the list from steps directly. Give each step a unique `value`;
 a `value` that matches no step shows every step as not started, with a warning in development. To show a
 finished flow, set the last step's `status="complete"`.
+
+`controllerRef` receives `{ value, next(), back(), goTo(value) }`: the same object for the stepper's life,
+whose methods ask for a change the way a click on a step does (through `onValueChange` when the stepper is
+controlled) and return whether there was a step to ask for. There is no hook for it, since the only parts
+inside a stepper are its steps' titles.
 
 ### Stepper.Step properties
 
@@ -139,6 +150,22 @@ passed straight through to the underlying element.
 
 <Canvas of={StepperStories.Statuses} />
 
+### Busy and warning steps
+
+<Canvas of={StepperStories.BusyAndWarning} />
+
+### Square indicators
+
+<Canvas of={StepperStories.Square} />
+
+### Dashed and hidden lines
+
+<Canvas of={StepperStories.Connectors} />
+
+### Changing direction with the width
+
+<Canvas of={StepperStories.ResponsiveOrientation} />
+
 ### Controlled, with Back and Next
 
 <Canvas of={StepperStories.Controlled} />
@@ -154,6 +181,14 @@ passed straight through to the underlying element.
 ### Compact
 
 <Canvas of={StepperStories.Compact} />
+
+### Compact, with a way back
+
+<Canvas of={StepperStories.CompactBack} />
+
+### Next and Back from a controller
+
+<Canvas of={StepperStories.WithController} />
 
 ### Naming the navigation
 
@@ -174,7 +209,7 @@ passed straight through to the underlying element.
 
 - Use it for a flow with a fixed order that a person works through: a checkout, a setup wizard, an onboarding.
 - Keep the titles short — one or two words — and put detail in `description`.
-- Set `status="error"` on a step whose content has a problem, so a person who has moved on can see where to go back.
+- Set `status="error"` on a step whose content has a problem, so a person who has moved on can see where to go back; with `interactive="completed"` every step before the current one can be entered, whatever it shows.
 - Keep `interactive="none"` for a strictly linear flow, and `"completed"` where going back is safe.
 
 </Callout>
@@ -198,8 +233,12 @@ passed straight through to the underlying element.
   a screen reader should hear the step change once, not twice.
 - A horizontal stepper with many steps scrolls sideways inside its own width instead of squeezing them.
   For more than a handful on a phone, use `compact="auto"`.
-- The compact summary is read-only: its steps cannot be entered, so use it only where going back is done
-  with a Back button.
+- The compact summary has no steps to enter. With `interactive` set it gains a button that goes back a step;
+  going forward is your own button, or `controllerRef.next()`.
+- Show a running check with `busy` on the step, not by changing its status, and set `status="warning"` for a
+  step that can be continued from but needs another look; keep `"error"` for one that must be fixed.
+- Use `orientation={{ base: "vertical", md: "horizontal" }}` to stack the steps on a phone and keep each of them;
+  use `compact` to replace them with a summary instead.
 - Every piece of text the component writes itself is in `labels`, so a translated flow replaces the whole
   set in one place; `formatNumber` writes the digits.
 
@@ -217,7 +256,9 @@ or check inside the indicator is hidden. When the current step changes, a polite
 "Step 3 of 4: Payment" — only a change, never the first render.
 
 A step that can be entered is a real `<button>` (or your link), so it has a focus stop; every other step
-has none. With the default `interactive="none"`, the stepper has no keyboard interaction at all.
+has none. A step that is `busy` is `aria-busy` and its status text adds "in progress"; a step with a warning
+adds "has a warning". A strip too narrow for its steps scrolls sideways, brings the current and the focused
+step into view, and is itself a tab stop only while it scrolls and has no step to focus. With the default `interactive="none"`, the stepper has no keyboard interaction at all.
 
 | Key | Behaviour |
 |---|---|
@@ -226,7 +267,9 @@ has none. With the default `interactive="none"`, the stepper has no keyboard int
 | `Enter` / `Space` | Chooses the focused step (asks through `onValueChange`) |
 
 The compact form hides the steps with `display: none` and shows a visible summary, so a screen reader
-hears one line, not a list; use `"never"` where a phone reader should hear every step. In forced-colours
+hears one line, not a list; use `"never"` where a phone reader should hear every step. When the width
+crosses the `"auto"` breakpoint with focus inside the stepper, focus moves to the other form (the summary's
+back button, or the first step that can be entered) instead of being lost. In forced-colours
 mode a finished or current step is told by a thicker `Highlight` border, an unreached one by `GrayText`,
 and the line between steps is drawn in system colours.
 
@@ -243,6 +286,14 @@ const [step, setStep] = useState("shipping");
   <Stepper.Step value="shipping" title="Shipping" description="Where it goes" />
   <Stepper.Step value="payment" title="Payment" />
 </Stepper>
+
+{/* A Next button outside the stepper, through the controller */}
+const controller = useRef<StepperController>(null);
+<Stepper controllerRef={controller} value={step} onValueChange={setStep}>{/* ... */}</Stepper>
+<Button onClick={() => controller.current?.next()}>Next</Button>
+
+{/* A step whose check is running */}
+<Stepper.Step value="payment" title="Payment" busy />
 
 {/* An error set from your own validation */}
 <Stepper.Step value="shipping" title="Shipping" status="error" />
@@ -281,12 +332,14 @@ const [step, setStep] = useState("shipping");
 <TokenRow token="bg.highlight" usage="a finished step's disc and line in the highlight tone" />
 <TokenRow token="bg.highlight-subtle" usage="the current step's tint in the highlight tone" />
 <TokenRow token="bg.danger" usage="a step with an error" />
+<TokenRow token="bg.warning" usage="a step with a warning" />
 <TokenRow token="bg.neutral-subtle" usage="a skipped step; the hover background of a step that can be entered" />
 <TokenRow token="border.brand" usage="the current step's ring in the brand tone; a finished step's ring when outlined" />
 <TokenRow token="border.info" usage="the same, in the info tone" />
 <TokenRow token="border.success" usage="the same, in the success tone" />
 <TokenRow token="border.highlight" usage="the same, in the highlight tone" />
 <TokenRow token="border.danger" usage="an outlined step with an error" />
+<TokenRow token="border.warning" usage="an outlined step with a warning" />
 <TokenRow token="border.strong" usage="the ring of a step not yet reached; a skipped step" />
 <TokenRow token="border.default" usage="the line between steps and the compact segments before they are reached" />
 <TokenRow token="border.focus" usage="the focus ring on a step that can be entered" />
@@ -294,12 +347,14 @@ const [step, setStep] = useState("shipping");
 <TokenRow token="icon.on-info" usage="the check on a finished step, in the info tone" />
 <TokenRow token="icon.on-success" usage="the check on a finished step, in the success tone" />
 <TokenRow token="icon.on-highlight" usage="the check on a finished step, in the highlight tone" />
-<TokenRow token="icon.on-danger" usage="the warning mark on a step with an error" />
+<TokenRow token="icon.on-danger" usage="the mark on a step with an error" />
+<TokenRow token="icon.on-warning" usage="the mark on a step with a warning" />
 <TokenRow token="icon.brand" usage="the check on a finished outlined step, in the brand tone" />
 <TokenRow token="icon.info" usage="the same, in the info tone" />
 <TokenRow token="icon.success" usage="the same, in the success tone" />
 <TokenRow token="icon.highlight" usage="the same, in the highlight tone" />
-<TokenRow token="icon.danger" usage="the warning mark on an outlined step with an error" />
+<TokenRow token="icon.danger" usage="the mark on an outlined step with an error" />
+<TokenRow token="icon.warning" usage="the mark on an outlined step with a warning" />
 <TokenRow token="icon.secondary" usage="the mark on a skipped step" />
 <TokenRow token="text.primary" usage="the title of the current and finished steps; the summary" />
 <TokenRow token="text.secondary" usage="the title of a step not yet reached; descriptions; the number in an unreached indicator" />
@@ -313,6 +368,7 @@ const [step, setStep] = useState("shipping");
 <TokenRow token="stepper.indicator-size.md" usage="the indicator's diameter at size md" />
 <TokenRow token="stepper.indicator-size.lg" usage="the indicator's diameter at size lg" />
 <TokenRow token="stepper.indicator-size.xl" usage="the indicator's diameter at size xl" />
+<TokenRow token="stepper.label-max-width" usage="the widest a step's title and description grow in a horizontal stepper before they wrap" />
 <TokenRow token="font-family.primary" usage="the stepper's typography" />
 <TokenRow token="font-size.xs" usage="text and numbers at the smaller sizes; descriptions" />
 <TokenRow token="font-size.sm" usage="text, numbers and descriptions across the sizes" />
@@ -329,11 +385,12 @@ const [step, setStep] = useState("shipping");
 <TokenRow token="space.6" usage="the shortest a line between steps may get" />
 <TokenRow token="radius.full" usage="the indicator, the line and the segments" />
 <TokenRow token="radius.sm" usage="a step's hover background and focus ring" />
+<TokenRow token="radius.md" usage="the corners of a square indicator" />
 <TokenRow token="border-width.1" usage="the hover outline in forced colours" />
 <TokenRow token="border-width.2" usage="the indicator's ring; the line; the focus ring" />
 <TokenRow token="border-width.4" usage="the ring of a current, finished or errored step in forced colours" />
 <TokenRow token="motion.duration.fast" usage="the hover background" />
-<TokenRow token="motion.duration.base" usage="the indicator and the line changing state" />
+<TokenRow token="motion.duration.base" usage="the indicator changing state; the line filling in" />
 <TokenRow token="motion.easing.standard" usage="the same transitions" />
 
 ## Related components

@@ -1,5 +1,5 @@
 import type { Meta, StoryContext, StoryObj } from "@storybook/react-vite";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import type { CSSProperties } from "react";
 import { CreditCardIcon, PackageIcon, UserIcon } from "@dbm-system/icons";
 import { Button } from "../../atoms/Button";
@@ -7,10 +7,13 @@ import { Stepper } from "./Stepper";
 import { stepperPlaygroundSnippet, stepperSnippets } from "./Stepper.snippets";
 import type {
   StepperCompact,
+  StepperConnector,
+  StepperController,
   StepperInteractive,
   StepperLabelPlacement,
   StepperOrientation,
   StepperProps,
+  StepperShape,
   StepperSize,
   StepperTone,
   StepperVariant,
@@ -23,6 +26,8 @@ interface PlaygroundArgs {
   size: StepperSize;
   variant: StepperVariant;
   tone: StepperTone;
+  shape: StepperShape;
+  connector: StepperConnector;
   labelPlacement: StepperLabelPlacement;
   compact: StepperCompact;
   interactive: StepperInteractive;
@@ -39,6 +44,7 @@ interface PlaygroundArgs {
   style: CSSProperties;
   "data-testid": string;
   labels: StepperProps["labels"];
+  controllerRef: StepperProps["controllerRef"];
   children: StepperProps["children"];
 }
 
@@ -71,6 +77,8 @@ const noControls = {
   size: off,
   variant: off,
   tone: off,
+  shape: off,
+  connector: off,
   labelPlacement: off,
   compact: off,
   interactive: off,
@@ -128,6 +136,18 @@ const meta: Meta<PlaygroundArgs> = {
       description: "The colour of the progress: finished steps, the current step and the line between finished steps. A step with an error is always red.",
       table: { defaultValue: { summary: '"brand"' } },
     },
+    shape: {
+      control: "select",
+      options: ["circle", "square"],
+      description: "The shape of the indicators: a circle, or a square with rounded corners.",
+      table: { defaultValue: { summary: '"circle"' } },
+    },
+    connector: {
+      control: "select",
+      options: ["solid", "dashed", "none"],
+      description: "The line between steps: solid, dashed, or none. The line leaving a skipped step is always dashed.",
+      table: { defaultValue: { summary: '"solid"' } },
+    },
     labelPlacement: {
       control: "select",
       options: ["end", "bottom"],
@@ -164,6 +184,11 @@ const meta: Meta<PlaygroundArgs> = {
       description:
         "The text the component supplies itself, each part replaceable: navigation, stepOf (a function of a step's place and the total), complete, current, upcoming, error, skipped and optional.",
     },
+    controllerRef: {
+      control: false,
+      description:
+        "Hands the stepper's controls (next, back, goTo and the current value) to code outside it, such as a Next button. Each asks for a change the way a click on a step does and says whether there was a step to ask for.",
+    },
     dir: {
       control: "select",
       options: ["ltr", "rtl"],
@@ -189,6 +214,8 @@ const meta: Meta<PlaygroundArgs> = {
     size: "md",
     variant: "filled",
     tone: "brand",
+    shape: "circle",
+    connector: "solid",
     labelPlacement: "end",
     compact: "never",
     interactive: "none",
@@ -206,6 +233,8 @@ const meta: Meta<PlaygroundArgs> = {
       size={args.size}
       variant={args.variant}
       tone={args.tone}
+      shape={args.shape}
+      connector={args.connector}
       labelPlacement={args.orientation === "vertical" ? undefined : args.labelPlacement}
       compact={args.compact}
       interactive={args.interactive}
@@ -337,6 +366,53 @@ export const Statuses: Story = {
   parameters: { docs: { source: { code: stepperSnippets.statuses } } },
 };
 
+export const BusyAndWarning: Story = {
+  name: "Busy and warning steps",
+  argTypes: { ...except("variant") },
+  render: (args) => (
+    <Stepper defaultValue="payment" variant={args.variant} aria-label="Busy and warning">
+      <Stepper.Step value="account" title="Account" />
+      <Stepper.Step value="shipping" title="Shipping" status="warning" description="Address not verified" />
+      <Stepper.Step value="payment" title="Payment" busy description="Checking your card" />
+      <Stepper.Step value="review" title="Review" />
+    </Stepper>
+  ),
+  parameters: { docs: { source: { code: stepperSnippets.busyAndWarning } } },
+};
+
+export const Square: Story = {
+  name: "Square indicators",
+  argTypes: { ...except("variant", "size") },
+  render: (args) => <Demo shape="square" variant={args.variant} size={args.size} aria-label="Square" />,
+  parameters: { docs: { source: { code: stepperSnippets.square } } },
+};
+
+export const Connectors: Story = {
+  name: "Dashed and hidden lines",
+  argTypes: { ...noControls },
+  render: () => (
+    <div style={{ display: "grid", gap: "var(--dbm-space-6)" }}>
+      <Demo connector="dashed" aria-label="Dashed" />
+      <Demo connector="none" aria-label="No line" />
+      <Stepper defaultValue="payment" aria-label="A skipped step">
+        <Stepper.Step value="account" title="Account" />
+        <Stepper.Step value="gift" title="Gift note" status="skipped" optional />
+        <Stepper.Step value="payment" title="Payment" />
+      </Stepper>
+    </div>
+  ),
+  parameters: { docs: { source: { code: stepperSnippets.connectors } } },
+};
+
+export const ResponsiveOrientation: Story = {
+  name: "Changing direction with the width",
+  argTypes: { ...noControls },
+  render: () => (
+    <Demo orientation={{ base: "vertical", md: "horizontal" }} aria-label="Responsive direction" />
+  ),
+  parameters: { docs: { source: { code: stepperSnippets.responsiveOrientation } } },
+};
+
 /** Back and Next drive `value`; a finished step can be entered to go back. */
 export const Controlled: Story = {
   argTypes: { ...noControls },
@@ -391,6 +467,34 @@ export const Compact: Story = {
   argTypes: { ...except("tone") },
   render: (args) => <Demo compact="always" tone={args.tone} aria-label="Compact" />,
   parameters: { docs: { source: { code: stepperSnippets.compact } } },
+};
+
+export const CompactBack: Story = {
+  name: "Compact, with a way back",
+  argTypes: { ...noControls },
+  render: () => <Demo compact="always" defaultValue="payment" interactive="completed" aria-label="Compact with back" />,
+  parameters: { docs: { source: { code: stepperSnippets.compactBack } } },
+};
+
+/** Next and Back are buttons of your own, outside the stepper; the controller asks for the change. */
+export const WithController: Story = {
+  name: "Next and Back from a controller",
+  argTypes: { ...noControls },
+  render: function ControllerStory() {
+    const controller = useRef<StepperController>(null);
+    return (
+      <div style={{ display: "grid", gap: "var(--dbm-space-4)" }}>
+        <Demo controllerRef={controller} aria-label="Controller" />
+        <div style={{ display: "flex", gap: "var(--dbm-space-2)" }}>
+          <Button variant="secondary" onClick={() => controller.current?.back()}>
+            Back
+          </Button>
+          <Button onClick={() => controller.current?.next()}>Next</Button>
+        </div>
+      </div>
+    );
+  },
+  parameters: { docs: { source: { code: stepperSnippets.controller } } },
 };
 
 export const NamedNav: Story = {

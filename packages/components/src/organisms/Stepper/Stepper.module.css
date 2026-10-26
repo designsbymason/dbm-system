@@ -269,6 +269,12 @@
   color: var(--dbm-icon-on-danger);
 }
 
+.item[data-status="warning"] .indicator {
+  background-color: var(--dbm-bg-warning);
+  border-color: var(--dbm-bg-warning);
+  color: var(--dbm-icon-on-warning);
+}
+
 .item[data-status="skipped"] .indicator {
   background-color: var(--dbm-bg-neutral-subtle);
   border-color: var(--dbm-border-strong);
@@ -292,7 +298,23 @@
   color: var(--dbm-icon-danger);
 }
 
+.variantOutlined .item[data-status="warning"] .indicator {
+  background-color: transparent;
+  border-color: var(--dbm-border-warning);
+  color: var(--dbm-icon-warning);
+}
+
+/* A square with rounded corners, in place of the circle. */
+.shapeSquare .indicator {
+  border-radius: var(--dbm-radius-md);
+}
+
 /* --- Text. --- */
+
+/* A long title wraps at this width instead of stretching its step. */
+.horizontal .content {
+  max-inline-size: var(--dbm-stepper-label-max-width);
+}
 
 .content {
   display: flex;
@@ -351,17 +373,65 @@
   color: var(--dbm-text-disabled);
 }
 
-/* --- The line between steps. A finished step's line is the tone's colour. --- */
+/* --- The line between steps. It is a grey track with the tone's colour drawn over it, scaled in from the start when a
+   step is finished (a transform, so nothing is laid out again). --- */
 
 .connector {
   background-color: var(--dbm-border-default);
-  border-radius: var(--dbm-radius-full);
   block-size: var(--stepper-line);
-  transition: background-color var(--dbm-motion-duration-base) var(--dbm-motion-easing-standard);
+  border-radius: var(--dbm-radius-full);
+  overflow: hidden;
+  position: relative;
 }
 
-.item[data-status="complete"] .connector {
+.connector::after {
   background-color: var(--stepper-solid);
+  content: "";
+  inset: 0;
+  position: absolute;
+  scale: 0 1;
+  transform-origin: left center;
+  transition: scale var(--dbm-motion-duration-base) var(--dbm-motion-easing-standard);
+}
+
+.connector:dir(rtl)::after {
+  transform-origin: right center;
+}
+
+.vertical .connector::after {
+  scale: 1 0;
+  transform-origin: center top;
+}
+
+.item[data-status="complete"] .connector::after {
+  scale: 1 1;
+}
+
+/* Dashed: the track becomes a dashed border in the same colours, and the sweep goes. The line leaving a skipped step is
+   always dashed, since the flow did not run through it. */
+.connectorDashed .connector,
+.item[data-status="skipped"] .connector {
+  background: none;
+  block-size: 0;
+  border-block-start: var(--stepper-line) dashed var(--dbm-border-default);
+  border-radius: 0;
+}
+
+.vertical.connectorDashed .connector,
+.vertical .item[data-status="skipped"] .connector {
+  block-size: auto;
+  border-block-start: 0;
+  border-inline-start: var(--stepper-line) dashed var(--dbm-border-default);
+  inline-size: 0;
+}
+
+.connectorDashed .item[data-status="complete"] .connector {
+  border-color: var(--stepper-solid);
+}
+
+.connectorDashed .connector::after,
+.item[data-status="skipped"] .connector::after {
+  display: none;
 }
 
 /* --- Compact: a one-line summary above a row of segments, in place of the steps. --- */
@@ -369,6 +439,23 @@
 .summary {
   display: none;
   gap: var(--dbm-space-2);
+}
+
+.summaryRow {
+  align-items: center;
+  display: flex;
+  gap: var(--dbm-space-2);
+}
+
+.back:dir(rtl) {
+  transform: scaleX(-1);
+}
+
+/* Focus lands on the summary itself when the width crosses over with focus inside the steps. */
+.summary:focus-visible {
+  border-radius: var(--dbm-radius-sm);
+  outline: var(--dbm-border-width-2) solid var(--dbm-border-focus);
+  outline-offset: calc(-1 * var(--dbm-border-width-2));
 }
 
 .summaryText {
@@ -422,7 +509,7 @@
 @media (prefers-reduced-motion: reduce) {
   .enterable,
   .indicator,
-  .connector {
+  .connector::after {
     transition: none;
   }
 }
@@ -447,15 +534,35 @@
     border-style: dashed;
   }
 
+  .item[data-status="warning"] .indicator {
+    border-color: Highlight;
+    border-width: var(--dbm-border-width-4);
+    color: CanvasText;
+  }
+
   .connector,
   .segment {
     background-color: GrayText;
     forced-color-adjust: none;
   }
 
-  .item[data-status="complete"] .connector,
+  .connector::after {
+    background-color: Highlight;
+    forced-color-adjust: none;
+  }
+
   .segment[data-done] {
     background-color: Highlight;
+  }
+
+  .connectorDashed .connector,
+  .item[data-status="skipped"] .connector {
+    background: none;
+    border-color: GrayText;
+  }
+
+  .connectorDashed .item[data-status="complete"] .connector {
+    border-color: Highlight;
   }
 
   .enterable:hover {

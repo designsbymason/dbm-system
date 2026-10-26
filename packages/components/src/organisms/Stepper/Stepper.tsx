@@ -1,5 +1,5 @@
-import { CheckIcon, MinusIcon, WarningIcon } from "@dbm-system/icons";
-import { cx, mergeDefined, useAnnouncement, useIsScrollable } from "@dbm-system/utils";
+import { CaretLeftIcon, CheckIcon, MinusIcon, WarningIcon, XIcon } from "@dbm-system/icons";
+import { cx, mergeDefined, useAnnouncement, useIsScrollable, useResolvedResponsiveValue } from "@dbm-system/utils";
 import { Slot } from "@radix-ui/react-slot";
 import {
   Children,
@@ -9,21 +9,29 @@ import {
   isValidElement,
   useContext,
   useEffect,
+  useImperativeHandle,
+  useMemo,
   useRef,
   useState,
 } from "react";
 import type { FocusEvent, MouseEvent, ReactElement, ReactNode } from "react";
 import { Icon } from "../../atoms/Icon";
+import { IconButton } from "../../atoms/IconButton";
+import { Spinner } from "../../atoms/Spinner";
+import type { SpinnerSize } from "../../atoms/Spinner";
 import type { IconSize } from "../../atoms/Icon";
 import { VisuallyHidden } from "../../atoms/VisuallyHidden";
 import styles from "./Stepper.module.css";
 import type {
   StepperCompact,
+  StepperConnector,
+  StepperController,
   StepperInteractive,
   StepperLabelPlacement,
   StepperLabels,
   StepperOrientation,
   StepperProps,
+  StepperShape,
   StepperSize,
   StepperStepProps,
   StepperTone,
@@ -37,6 +45,7 @@ interface StepperContextValue {
   tone: StepperTone;
   orientation: StepperOrientation;
   labelPlacement: StepperLabelPlacement;
+  connector: StepperConnector;
   labels: StepperLabels;
   formatNumber: (value: number) => string;
   /** Asks for a step to become the current one. */
@@ -63,6 +72,24 @@ const sizeClass: Record<StepperSize, string | undefined> = {
   lg: styles.sizeLg,
   xl: styles.sizeXl,
 };
+
+const shapeClass: Record<StepperShape, string | undefined> = {
+  circle: undefined,
+  square: styles.shapeSquare,
+};
+
+const connectorClass: Record<StepperConnector, string | undefined> = {
+  solid: undefined,
+  dashed: styles.connectorDashed,
+  none: undefined,
+};
+
+// The spinner that replaces a mark: the same step down from the indicator as the icons.
+const spinnerSizeForSize: Record<StepperSize, SpinnerSize> = { xs: "xs", sm: "xs", md: "sm", lg: "md", xl: "lg" };
+
+// The width at which `compact="auto"` switches, one pixel under the literal value of the breakpoint.sm primitive token
+// (the stylesheet's own `@media` condition says the same, and custom properties can't be used in one).
+const COMPACT_QUERY = "(max-width: 639px)";
 
 const toneClass: Record<StepperTone, string | undefined> = {
   brand: styles.toneBrand,
@@ -92,7 +119,10 @@ const defaultLabels: StepperLabels = {
   current: "current",
   upcoming: "not started",
   error: "has an error",
+  warning: "has a warning",
   skipped: "skipped",
+  busy: "in progress",
+  previous: "Previous step",
   optional: "Optional",
 };
 
@@ -128,6 +158,7 @@ const useStepperContext = (): StepperContextValue => {
  * ```tsx
  * <Stepper.Step value="shipping" title="Shipping" description="Where it goes" />
  * <Stepper.Step value="payment" title="Payment" status="error" />
+ * <Stepper.Step value="review" title="Review" busy />
  * ```
  */
 const StepperStep = forwardRef<HTMLLIElement, StepperStepProps>(
@@ -139,6 +170,7 @@ const StepperStep = forwardRef<HTMLLIElement, StepperStepProps>(
       textValue: _textValue,
       icon,
       status: _status,
+      busy = false,
       optional = false,
       disabled = false,
       asChild = false,
@@ -149,15 +181,17 @@ const StepperStep = forwardRef<HTMLLIElement, StepperStepProps>(
     },
     ref,
   ) => {
-    const { size, orientation, labelPlacement, labels, formatNumber, request } = useStepperContext();
+    const { size, orientation, labelPlacement, connector: connectorStyle, labels, formatNumber, request } = useStepperContext();
     const { index, total, status, enterable } = useContext(StepPositionContext);
     const isLast = index === total - 1;
     const canEnter = enterable && !disabled;
 
     const mark = (() => {
       const iconSize = iconSizeForSize[size];
+      if (busy) return <Spinner size={spinnerSizeForSize[size]} />;
       if (status === "complete") return <Icon icon={CheckIcon} size={iconSize} />;
-      if (status === "error") return <Icon icon={WarningIcon} size={iconSize} />;
+      if (status === "error") return <Icon icon={XIcon} size={iconSize} />;
+      if (status === "warning") return <Icon icon={WarningIcon} size={iconSize} />;
       if (status === "skipped") return <Icon icon={MinusIcon} size={iconSize} />;
       if (icon) return <Icon icon={icon} size={iconSize} />;
       return formatNumber(index + 1);
@@ -182,11 +216,11 @@ const StepperStep = forwardRef<HTMLLIElement, StepperStepProps>(
         </span>
         {description != null && description !== false && <span className={styles.description}>{description}</span>}
         {/* After the title and description, so the control's name starts with the words that are shown. */}
-        <VisuallyHidden>{` (${labels.stepOf(index + 1, total)}, ${statusWord(labels, status)})`}</VisuallyHidden>
+        <VisuallyHidden>{` (${labels.stepOf(index + 1, total)}, ${statusWord(labels, status)}${busy ? `, ${labels.busy}` : ""})`}</VisuallyHidden>
       </span>
     );
 
-    const connector = !isLast && <span aria-hidden="true" className={styles.connector} />;
+    const connector = !isLast && connectorStyle !== "none" && <span aria-hidden="true" className={styles.connector} />;
     const inner = (heading: ReactNode) => (
       <>
         <span aria-hidden="true" className={styles.indicator}>
@@ -200,6 +234,7 @@ const StepperStep = forwardRef<HTMLLIElement, StepperStepProps>(
     const stepProps = {
       className: cx(styles.step, canEnter && styles.enterable, disabled && styles.disabled),
       "aria-current": status === "current" ? ("step" as const) : undefined,
+      "aria-busy": busy || undefined,
     };
 
     let control: ReactNode;
@@ -248,7 +283,7 @@ StepperStep.displayName = "Stepper.Step";
  * A multi-step flow indicator (a checkout, an onboarding, a wizard): a `<nav>` around an ordered list of
  * `Stepper.Step`s, each with an indicator and a title. The current step is `value` (controlled, with `onValueChange`)
  * or `defaultValue`; steps before it show as finished and steps after it as not started, and a step may set its own
- * `status` (`"error"`, `"skipped"`, `"complete"`).
+ * `status` (`"error"`, `"warning"`, `"skipped"`, `"complete"`) or be `busy` while its check or save runs.
  *
  * It draws the indicator and nothing else: the current step's content, next and back, and deciding whether a step may
  * be left are the caller's. By default it only shows progress and has no focus stop; `interactive` lets a person
@@ -256,9 +291,11 @@ StepperStep.displayName = "Stepper.Step";
  * order. The current step carries `aria-current="step"`, and a change of step is announced to a screen reader
  * (`announce`).
  *
- * `size`, `variant`, `tone` and `orientation` set how every step looks, `labelPlacement` puts a horizontal step's text
- * under its indicator, and `compact` swaps the steps for a one-line summary on a phone (or always). Text the component
- * writes itself is in `labels`, and `formatNumber` writes its digits.
+ * `size`, `variant`, `shape`, `tone`, `connector` and `orientation` (which takes a breakpoint map) set how every step
+ * looks, `labelPlacement` puts a horizontal step's text under its indicator, and `compact` swaps the steps for a
+ * one-line summary on a phone (or always), with a way back when `interactive`. `controllerRef` hands `next()`,
+ * `back()` and `goTo()` to a button of your own. Text the component writes itself is in `labels`, and `formatNumber`
+ * writes its digits.
  *
  * `ref` forwards to the `<nav>`.
  *
@@ -280,26 +317,31 @@ const StepperRoot = forwardRef<HTMLElement, StepperProps>(
       value: valueProp,
       defaultValue,
       onValueChange,
-      orientation = "horizontal",
+      orientation: orientationProp = "horizontal",
       size = "md",
       variant = "filled",
       tone = "brand",
+      shape = "circle",
+      connector = "solid",
       labelPlacement = "end",
       compact = "never",
       interactive = "none",
       announce = true,
       formatNumber = String,
       labels: labelsProp,
+      controllerRef,
       dir = "ltr",
       "aria-label": ariaLabel,
       "aria-labelledby": ariaLabelledBy,
       className,
       onFocus,
+      onBlur,
       ...props
     },
     ref,
   ) => {
     const labels = mergeDefined(defaultLabels, labelsProp);
+    const orientation = useResolvedResponsiveValue<StepperOrientation>(orientationProp, "horizontal");
     const rawChildren = Children.toArray(children);
     const steps = rawChildren.filter(isStep);
     const ignored = rawChildren.length - steps.length;
@@ -348,39 +390,156 @@ const StepperRoot = forwardRef<HTMLElement, StepperProps>(
       say(currentText ? `${position}: ${currentText}` : position);
     }, [announce, current, currentIndex, currentText, say, stepOfLabel, total]);
 
-    const context: StepperContextValue = { size, variant, tone, orientation, labelPlacement, labels, formatNumber, request };
+    const context: StepperContextValue = {
+      size,
+      variant,
+      tone,
+      orientation,
+      labelPlacement,
+      connector,
+      labels,
+      formatNumber,
+      request,
+    };
 
     const positionFor = (step: ReactElement<StepperStepProps>, index: number): StepPosition => {
       const override = step.props.status;
       const status: StepStatus =
         override ?? (index < currentIndex ? "complete" : index === currentIndex ? "current" : "upcoming");
-      const enterable = canEnter(interactive, status, index === currentIndex);
+      const enterable = canEnter(interactive, status, index, currentIndex);
       return { index, total, status, enterable };
     };
+
+    const listRef = useRef<HTMLOListElement | null>(null);
+    const navRef = useRef<HTMLElement | null>(null);
+    const summaryRef = useRef<HTMLDivElement | null>(null);
+    const backRef = useRef<HTMLButtonElement | null>(null);
+    const setNavRefs = (node: HTMLElement | null) => {
+      navRef.current = node;
+      if (typeof ref === "function") ref(node);
+      else if (ref) ref.current = node;
+    };
+
+    // The controls handed to code outside: one object for the stepper's life, reading the latest state.
+    const latest = useRef({ values, disabled: steps.map((step) => step.props.disabled === true), currentIndex, request });
+    useEffect(() => {
+      latest.current = { values, disabled: steps.map((step) => step.props.disabled === true), currentIndex, request };
+    });
+    const controller = useMemo<StepperController>(() => {
+      const ask = (index: number): boolean => {
+        const { values: all, disabled, currentIndex: now, request: ask } = latest.current;
+        if (index < 0 || index >= all.length || index === now || disabled[index]) return false;
+        ask(all[index]!);
+        return true;
+      };
+      const find = (from: number, direction: 1 | -1): number => {
+        const { values: all, disabled } = latest.current;
+        for (let index = from + direction; index >= 0 && index < all.length; index += direction) {
+          if (!disabled[index]) return index;
+        }
+        return -1;
+      };
+      return {
+        get value() {
+          const { values: all, currentIndex: now } = latest.current;
+          return now >= 0 ? all[now] : undefined;
+        },
+        next: () => ask(find(latest.current.currentIndex, 1)),
+        back: () => {
+          const { currentIndex: now } = latest.current;
+          return now > 0 && ask(find(now, -1));
+        },
+        goTo: (target) => ask(latest.current.values.indexOf(target)),
+      };
+    }, []);
+    useImperativeHandle(controllerRef, () => controller, [controller]);
 
     // A focused step that is only partly inside the scrolling strip is brought fully into view: a browser scrolls only
     // when the control is completely hidden.
     const scrollerRef = useRef<HTMLDivElement | null>(null);
     const scrollable = useIsScrollable(scrollerRef, "x");
     const hasEnterable = steps.some((step, index) => positionFor(step, index).enterable && !step.props.disabled);
+    // Where focus is in the stepper, kept from the focus events: by the time the width changes, the browser has already
+    // taken focus off a control it hid, so asking where focus is then finds nothing. A blur that comes from the control
+    // being hidden leaves it as it was; any other leaving of the stepper clears it.
+    const focusPlace = useRef<"list" | "summary" | null>(null);
     const handleFocus = (event: FocusEvent<HTMLElement>) => {
       onFocus?.(event);
       const scroller = scrollerRef.current;
       const target = event.target;
-      if (!scroller || !(target instanceof HTMLElement) || target === scroller) return;
-      requestAnimationFrame(() => {
-        const box = scroller.getBoundingClientRect();
-        const rect = target.getBoundingClientRect();
-        const delta = rect.left < box.left ? rect.left - box.left : rect.right > box.right ? rect.right - box.right : 0;
-        if (delta !== 0) scroller.scrollBy({ left: delta });
-      });
+      if (!(target instanceof HTMLElement)) return;
+      if (summaryRef.current?.contains(target)) focusPlace.current = "summary";
+      else if (listRef.current?.contains(target)) focusPlace.current = "list";
+      if (!scroller || target === scroller) return;
+      requestAnimationFrame(() => revealInline(scroller, target));
+    };
+    const handleBlur = (event: FocusEvent<HTMLElement>) => {
+      onBlur?.(event);
+      const next = event.relatedTarget;
+      if (next instanceof Node) {
+        if (!navRef.current?.contains(next)) focusPlace.current = null;
+      } else if (event.target instanceof HTMLElement && event.target.getClientRects().length > 0) {
+        focusPlace.current = null;
+      }
     };
 
-    const summary = currentStep && (
-      <div className={styles.summary}>
-        <span className={styles.summaryText}>
-          {labels.stepOf(currentIndex + 1, total)}
-          {currentStep.props.title ? <> — {currentStep.props.title}</> : null}
+    // The current step is in view whenever it changes, and when the stepper first draws: a strip that scrolls can
+    // otherwise hold it off the edge.
+    useEffect(() => {
+      const scroller = scrollerRef.current;
+      const item = currentIndex >= 0 ? listRef.current?.children[currentIndex] : undefined;
+      if (scroller && item instanceof HTMLElement) revealInline(scroller, item);
+    }, [currentIndex, orientation, size]);
+
+    // The nearest step before the current one that the compact summary's back button can enter.
+    let previousIndex = -1;
+    for (let index = currentIndex - 1; index >= 0; index -= 1) {
+      const { enterable } = positionFor(steps[index]!, index);
+      if (enterable && !steps[index]!.props.disabled) {
+        previousIndex = index;
+        break;
+      }
+    }
+
+    // When the width crosses the breakpoint `compact="auto"` switches at, the form that was drawn is hidden: focus inside
+    // it moves to the other form instead of falling to the top of the page. Done here, in the change event, while the
+    // focused element is still the one that was focused.
+    useEffect(() => {
+      if (compact !== "auto" || typeof window.matchMedia !== "function") return;
+      const query = window.matchMedia(COMPACT_QUERY);
+      const onChange = (event: MediaQueryListEvent) => {
+        const place = focusPlace.current;
+        if (event.matches && place === "list") {
+          (backRef.current ?? summaryRef.current)?.focus();
+        } else if (!event.matches && place === "summary") {
+          const target = listRef.current?.querySelector<HTMLElement>("button, a[href]") ?? scrollerRef.current;
+          target?.focus();
+        }
+      };
+      query.addEventListener("change", onChange);
+      return () => query.removeEventListener("change", onChange);
+    }, [compact]);
+
+    const summary = compact !== "never" && (
+      <div ref={summaryRef} tabIndex={-1} className={styles.summary}>
+        <span className={styles.summaryRow}>
+          {previousIndex >= 0 && (
+            <IconButton
+              ref={backRef}
+              icon={CaretLeftIcon}
+              variant="tertiary"
+              size="xs"
+              aria-label={labels.previous}
+              className={styles.back}
+              onClick={() => request(values[previousIndex]!)}
+            />
+          )}
+          {currentStep && (
+            <span className={styles.summaryText}>
+              {labels.stepOf(currentIndex + 1, total)}
+              {currentStep.props.title ? <> — {currentStep.props.title}</> : null}
+            </span>
+          )}
         </span>
         <span aria-hidden="true" className={styles.segments}>
           {steps.map((step, index) => (
@@ -399,17 +558,20 @@ const StepperRoot = forwardRef<HTMLElement, StepperProps>(
       <StepperContext.Provider value={context}>
         <nav
           {...props}
-          ref={ref}
+          ref={setNavRefs}
           dir={dir}
           aria-label={ariaLabelledBy ? undefined : (ariaLabel ?? labels.navigation)}
           aria-labelledby={ariaLabelledBy}
           data-orientation={orientation}
           onFocus={handleFocus}
+          onBlur={handleBlur}
           className={cx(
             styles.root,
             sizeClass[size],
             toneClass[tone],
             variantClass[variant],
+            shapeClass[shape],
+            connectorClass[connector],
             compactClass[compact],
             orientation === "vertical" ? styles.vertical : styles.horizontal,
             className,
@@ -420,7 +582,7 @@ const StepperRoot = forwardRef<HTMLElement, StepperProps>(
             {summary}
             {/* The `list` role is stated outright, for the reason given at `StepperStep`. */}
             {/* eslint-disable-next-line jsx-a11y/no-redundant-roles -- deliberate; see `StepperStep`. */}
-            <ol role="list" className={styles.list}>
+            <ol ref={listRef} role="list" className={styles.list}>
               {steps.map((step, index) => (
                 <StepPositionContext.Provider key={step.props.value} value={positionFor(step, index)}>
                   {step}
@@ -436,10 +598,23 @@ const StepperRoot = forwardRef<HTMLElement, StepperProps>(
 );
 StepperRoot.displayName = "Stepper";
 
-function canEnter(interactive: StepperInteractive, status: StepStatus, isCurrent: boolean): boolean {
-  if (interactive === "none" || isCurrent) return false;
+/**
+ * Whether a step can be entered. `"completed"` allows every step before the current one — whatever it shows, so a step
+ * with an error that was left behind can be gone back to — and any step marked complete.
+ */
+function canEnter(interactive: StepperInteractive, status: StepStatus, index: number, currentIndex: number): boolean {
+  if (interactive === "none" || index === currentIndex) return false;
   if (interactive === "all") return true;
-  return status === "complete";
+  return index < currentIndex || status === "complete";
+}
+
+/** Scrolls `scroller` sideways just far enough for `element` to lie fully inside it. Nothing when it has no box (hidden). */
+function revealInline(scroller: HTMLElement, element: HTMLElement): void {
+  const rect = element.getBoundingClientRect();
+  if (rect.width === 0 && rect.height === 0) return;
+  const box = scroller.getBoundingClientRect();
+  const delta = rect.left < box.left ? rect.left - box.left : rect.right > box.right ? rect.right - box.right : 0;
+  if (delta !== 0) scroller.scrollBy({ left: delta });
 }
 
 type StepperComponent = typeof StepperRoot & {

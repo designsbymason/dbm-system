@@ -1,5 +1,6 @@
 import type { Icon as PhosphorIcon } from "@dbm-system/icons";
-import type { ComponentPropsWithoutRef, CSSProperties, MouseEvent, ReactNode } from "react";
+import type { Responsive } from "@dbm-system/utils";
+import type { ComponentPropsWithoutRef, CSSProperties, MouseEvent, ReactNode, Ref } from "react";
 
 /**
  * The size of the indicators, text and gaps, on the standard 5-step scale
@@ -38,7 +39,9 @@ export type StepperLabelPlacement = "end" | "bottom";
  * - `"auto"` — the full stepper from the `sm` breakpoint up, the summary on a phone-width screen.
  * - `"always"` — the summary at every width.
  *
- * The summary is read-only: its steps cannot be entered, whatever `interactive` says.
+ * The summary has no steps to enter. With `interactive` set it gains a button that goes back a step (the nearest
+ * enterable one before the current step); going forward is the caller's own button. When the width crosses the
+ * `"auto"` breakpoint with focus inside the stepper, focus moves to the other form instead of being lost.
  */
 export type StepperCompact = "never" | "auto" | "always";
 
@@ -53,8 +56,37 @@ export type StepperCompact = "never" | "auto" | "always";
  */
 export type StepperInteractive = "none" | "completed" | "all";
 
+/**
+ * The shape of the indicators: `"circle"` (the default) or `"square"`, a square with rounded corners. The same two names
+ * `Avatar`'s `shape` uses.
+ */
+export type StepperShape = "circle" | "square";
+
+/**
+ * The line between steps: `"solid"` (the default), `"dashed"`, or `"none"` to draw no line at all. Whatever this is,
+ * the line leaving a skipped step is dashed, since the flow did not run through it.
+ */
+export type StepperConnector = "solid" | "dashed" | "none";
+
 /** What a step shows. Worked out from the stepper's `value` unless a step sets its own `status`. */
-export type StepStatus = "complete" | "current" | "upcoming" | "error" | "skipped";
+export type StepStatus = "complete" | "current" | "upcoming" | "error" | "warning" | "skipped";
+
+/**
+ * The controls `controllerRef` hands to code outside the stepper, such as a Next button. Each asks for a change the way
+ * a click on a step does — through `onValueChange` when the stepper is controlled, by moving itself when it is not — and
+ * says whether there was a step to ask for (`false` for the last step's `next`, a disabled step, a `value` that matches
+ * none). The object is the same for the stepper's life, and its methods read the latest state.
+ */
+export interface StepperController {
+  /** The `value` of the current step, or `undefined` when none matches. */
+  readonly value: string | undefined;
+  /** Asks for the next step that is not disabled. */
+  next: () => boolean;
+  /** Asks for the nearest step before the current one that is not disabled. */
+  back: () => boolean;
+  /** Asks for the step with this `value`, unless it is the current step, disabled or missing. */
+  goTo: (value: string) => boolean;
+}
 
 /**
  * The text `Stepper` supplies itself, translatable through the `labels` prop (`ADR-0021`). A label that needs numbers
@@ -73,8 +105,14 @@ export interface StepperLabels {
   upcoming: string;
   /** Said after a step with an error. @default 'has an error' */
   error: string;
+  /** Said after a step with a warning. @default 'has a warning' */
+  warning: string;
   /** Said after a step that was skipped. @default 'skipped' */
   skipped: string;
+  /** Said after a step that is `busy`. @default 'in progress' */
+  busy: string;
+  /** The accessible name of the compact summary's button that goes back a step. @default 'Previous step' */
+  previous: string;
   /** The mark on a step that may be left out. @default 'Optional' */
   optional: string;
 }
@@ -99,10 +137,12 @@ export interface StepperProps
   /** Called with the `value` of a step the person chose to enter. */
   onValueChange?: (value: string) => void;
   /**
-   * Which way the steps run.
+   * Which way the steps run. Takes a mobile-first map by breakpoint to change it with the width (`{ base:
+   * "vertical", md: "horizontal" }`); it is worked out in the browser, so a server render and the first client
+   * render draw the `base` value.
    * @default 'horizontal'
    */
-  orientation?: StepperOrientation;
+  orientation?: Responsive<StepperOrientation>;
   /**
    * The size of the indicators, text and gaps.
    * @default 'md'
@@ -118,6 +158,16 @@ export interface StepperProps
    * @default 'brand'
    */
   tone?: StepperTone;
+  /**
+   * The shape of the indicators — see {@link StepperShape}.
+   * @default 'circle'
+   */
+  shape?: StepperShape;
+  /**
+   * The line between steps — see {@link StepperConnector}.
+   * @default 'solid'
+   */
+  connector?: StepperConnector;
   /**
    * Where a horizontal stepper puts each step's text — see {@link StepperLabelPlacement}.
    * @default 'end'
@@ -146,6 +196,12 @@ export interface StepperProps
   formatNumber?: (value: number) => string;
   /** The text the component supplies itself, each part replaceable. See {@link StepperLabels}. */
   labels?: Partial<StepperLabels>;
+  /**
+   * Hands the stepper's controls — `next`, `back`, `goTo` and the current `value` — to code outside it, such as a
+   * Next button. See {@link StepperController}. There is no hook for it: the only parts inside a stepper are its
+   * steps' titles, so code that needs it is outside.
+   */
+  controllerRef?: Ref<StepperController>;
   /**
    * The reading direction. Passed to the stepper rather than read from the page, so the line between steps and the
    * order of the steps agree with the text.
@@ -185,9 +241,16 @@ export interface StepperStepProps
   icon?: PhosphorIcon;
   /**
    * Overrides what the step shows, in place of working it out from the current step. `"error"` is for a step whose
-   * content has a problem; `"complete"` for one finished out of order; `"skipped"` for one that was passed over.
+   * content has a problem; `"warning"` for one that can go on but needs a second look; `"complete"` for one finished
+   * out of order; `"skipped"` for one that was passed over.
    */
-  status?: "complete" | "error" | "skipped";
+  status?: "complete" | "error" | "warning" | "skipped";
+  /**
+   * Shows a spinner in the indicator in place of its mark and marks the control `aria-busy`, for a step whose check or
+   * save is running. The status word (`labels.busy`) is added to what a screen reader hears.
+   * @default false
+   */
+  busy?: boolean;
   /** Marks the step as one that may be left out, with `labels.optional` beside its title. @default false */
   optional?: boolean;
   /** Stops the step being entered, whatever `interactive` says. @default false */

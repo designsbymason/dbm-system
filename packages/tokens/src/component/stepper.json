@@ -22,6 +22,11 @@
         "$type": "dimension",
         "$value": "48px"
       }
+    },
+    "label-max-width": {
+      "$type": "dimension",
+      "$value": "14rem",
+      "$description": "New token (2026-10-27), added for Stepper's step text: the widest a step's title and description may grow in a horizontal stepper before they wrap, so a long title does not stretch its step or its column. No home on any existing primitive scale (the spacing scale tops out at 8rem)."
     }
   }
 }

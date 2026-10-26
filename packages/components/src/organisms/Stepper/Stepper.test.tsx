@@ -6,7 +6,7 @@ import type { ReactNode } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { HouseIcon } from "@dbm-system/icons";
 import { Stepper } from "./Stepper";
-import type { StepperProps } from "./Stepper.types";
+import type { StepperController, StepperProps } from "./Stepper.types";
 
 const steps: Array<[string, string]> = [
   ["account", "Account"],
@@ -410,5 +410,248 @@ describe("Stepper — in a StrictMode tree", () => {
       </StrictMode>,
     );
     expect(screen.getAllByRole("listitem")).toHaveLength(4);
+  });
+});
+
+describe("Stepper — which steps can be entered", () => {
+  it("lets interactive=completed enter any step before the current one, whatever it shows", () => {
+    render(
+      <Basic interactive="completed" defaultValue="d">
+        <Stepper.Step value="a" title="One" status="error" />
+        <Stepper.Step value="b" title="Two" status="skipped" />
+        <Stepper.Step value="c" title="Three" status="warning" />
+        <Stepper.Step value="d" title="Four" />
+        <Stepper.Step value="e" title="Five" />
+      </Basic>,
+    );
+    expect(screen.getAllByRole("button").map((button) => button.textContent?.slice(0, 5))).toHaveLength(3);
+    expect(screen.queryByRole("button", { name: /^Five/ })).toBeNull();
+  });
+
+  it("also lets interactive=completed enter a step marked complete after the current one", () => {
+    render(
+      <Basic interactive="completed" defaultValue="a">
+        <Stepper.Step value="a" title="One" />
+        <Stepper.Step value="b" title="Two" />
+        <Stepper.Step value="c" title="Three" status="complete" />
+      </Basic>,
+    );
+    expect(screen.getAllByRole("button")).toHaveLength(1);
+    expect(screen.getByRole("button", { name: /^Three/ })).toBeInTheDocument();
+  });
+});
+
+describe("Stepper — busy, warning and error steps", () => {
+  it("shows a spinner and says the step is in progress", () => {
+    const { container } = render(
+      <Basic defaultValue="a">
+        <Stepper.Step value="a" title="One" busy />
+        <Stepper.Step value="b" title="Two" />
+      </Basic>,
+    );
+    expect(item("One").querySelector("[aria-busy='true']")).not.toBeNull();
+    expect(item("One")).toHaveTextContent("Step 1 of 2, current, in progress");
+    expect(container.querySelectorAll("[aria-busy]")).toHaveLength(1);
+  });
+
+  it("names a warning and an error step, with different marks", () => {
+    render(
+      <Basic>
+        <Stepper.Step value="a" title="One" status="warning" />
+        <Stepper.Step value="b" title="Two" status="error" />
+      </Basic>,
+    );
+    expect(item("One")).toHaveAttribute("data-status", "warning");
+    expect(item("One")).toHaveTextContent("has a warning");
+    expect(item("Two")).toHaveTextContent("has an error");
+    expect(item("One").querySelector("svg")!.innerHTML).not.toBe(item("Two").querySelector("svg")!.innerHTML);
+  });
+
+  it("translates the new labels", () => {
+    render(
+      <Basic labels={{ busy: "en cours", warning: "à vérifier" }}>
+        <Stepper.Step value="a" title="One" status="warning" busy />
+      </Basic>,
+    );
+    expect(item("One")).toHaveTextContent("à vérifier, en cours");
+  });
+});
+
+describe("Stepper — the line, the shape and the direction", () => {
+  it("draws no line with connector=none, and one fewer line than steps otherwise", () => {
+    const { container, rerender } = render(<Basic />);
+    expect(container.querySelectorAll("[class*='_connector_']")).toHaveLength(3);
+    rerender(<Basic connector="none" />);
+    expect(container.querySelectorAll("[class*='_connector_']")).toHaveLength(0);
+  });
+
+  it("marks a dashed line and a square shape on the nav", () => {
+    render(<Basic connector="dashed" shape="square" data-testid="nav" />);
+    const nav = screen.getByTestId("nav");
+    expect(nav.className).toMatch(/connectorDashed/);
+    expect(nav.className).toMatch(/shapeSquare/);
+  });
+
+  it("resolves a responsive orientation from the width", () => {
+    const original = window.matchMedia;
+    window.matchMedia = ((query: string) =>
+      ({ matches: query === "(min-width: 640px)", media: query, addEventListener: () => {}, removeEventListener: () => {}, addListener: () => {}, removeListener: () => {} }) as unknown as MediaQueryList) as typeof window.matchMedia;
+    try {
+      render(<Basic orientation={{ base: "vertical", sm: "horizontal" }} data-testid="nav" />);
+      expect(screen.getByTestId("nav")).toHaveAttribute("data-orientation", "horizontal");
+    } finally {
+      window.matchMedia = original;
+    }
+  });
+
+  it("starts from the base orientation", () => {
+    render(<Basic orientation={{ base: "vertical", md: "horizontal" }} data-testid="nav" />);
+    expect(screen.getByTestId("nav")).toHaveAttribute("data-orientation", "vertical");
+  });
+});
+
+describe("Stepper — the controller", () => {
+  function WithController(props: Partial<StepperProps> & { onController?: (controller: StepperController) => void }) {
+    const { onController, ...rest } = props;
+    return (
+      <Basic
+        controllerRef={(controller) => {
+          if (controller) onController?.(controller);
+        }}
+        {...rest}
+      />
+    );
+  }
+
+  it("moves to the next and previous step, and says whether it could", () => {
+    let controller!: StepperController;
+    render(<WithController onController={(c) => (controller = c)} />);
+    expect(controller.value).toBe("shipping");
+    act(() => expect(controller.next()).toBe(true));
+    expect(item("Payment")).toHaveAttribute("data-status", "current");
+    expect(controller.value).toBe("payment");
+    act(() => expect(controller.back()).toBe(true));
+    act(() => expect(controller.back()).toBe(true));
+    expect(item("Account")).toHaveAttribute("data-status", "current");
+    act(() => expect(controller.back()).toBe(false));
+    act(() => expect(controller.goTo("review")).toBe(true));
+    act(() => expect(controller.next()).toBe(false));
+    act(() => expect(controller.goTo("review")).toBe(false));
+    act(() => expect(controller.goTo("nowhere")).toBe(false));
+  });
+
+  it("skips a disabled step, and will not go to one", () => {
+    let controller!: StepperController;
+    render(
+      <WithController onController={(c) => (controller = c)} defaultValue="a">
+        <Stepper.Step value="a" title="One" />
+        <Stepper.Step value="b" title="Two" disabled />
+        <Stepper.Step value="c" title="Three" />
+      </WithController>,
+    );
+    act(() => expect(controller.goTo("b")).toBe(false));
+    act(() => expect(controller.next()).toBe(true));
+    expect(item("Three")).toHaveAttribute("data-status", "current");
+    act(() => expect(controller.back()).toBe(true));
+    expect(item("One")).toHaveAttribute("data-status", "current");
+  });
+
+  it("only asks when the stepper is controlled", () => {
+    let controller!: StepperController;
+    const onValueChange = vi.fn();
+    render(<WithController onController={(c) => (controller = c)} value="shipping" onValueChange={onValueChange} />);
+    act(() => expect(controller.next()).toBe(true));
+    expect(onValueChange).toHaveBeenCalledWith("payment");
+    expect(item("Shipping")).toHaveAttribute("data-status", "current");
+  });
+
+  it("is one object for the stepper's life and reads the latest state", () => {
+    const seen = new Set<StepperController>();
+    const { rerender } = render(<WithController onController={(c) => seen.add(c)} value="account" />);
+    rerender(<WithController onController={(c) => seen.add(c)} value="payment" />);
+    expect([...seen]).toHaveLength(1);
+    expect([...seen][0]!.value).toBe("payment");
+  });
+});
+
+describe("Stepper — the compact form", () => {
+  const queryListeners = new Set<(event: { matches: boolean }) => void>();
+  const original = window.matchMedia;
+  afterEach(() => {
+    window.matchMedia = original;
+    queryListeners.clear();
+  });
+  const mockMedia = () => {
+    window.matchMedia = ((query: string) =>
+      ({
+        matches: false,
+        media: query,
+        addEventListener: (_: string, listener: (event: { matches: boolean }) => void) => queryListeners.add(listener),
+        removeEventListener: (_: string, listener: (event: { matches: boolean }) => void) => queryListeners.delete(listener),
+        addListener: () => {},
+        removeListener: () => {},
+      }) as unknown as MediaQueryList) as typeof window.matchMedia;
+  };
+
+  it("draws no summary unless compact", () => {
+    const { container, rerender } = render(<Basic />);
+    expect(container.querySelector("[class*='_summary_']")).toBeNull();
+    rerender(<Basic compact="auto" />);
+    expect(container.querySelector("[class*='_summary_']")).not.toBeNull();
+  });
+
+  it("offers a button back to the nearest step that can be entered, and goes there", async () => {
+    const onValueChange = vi.fn();
+    const user = userEvent.setup();
+    render(<Basic compact="always" interactive="completed" defaultValue="payment" onValueChange={onValueChange} />);
+    await user.click(screen.getByRole("button", { name: "Previous step" }));
+    expect(onValueChange).toHaveBeenCalledWith("shipping");
+  });
+
+  it("has no back button on the first step or without interactive", () => {
+    const { rerender } = render(<Basic compact="always" interactive="completed" defaultValue="account" />);
+    expect(screen.queryByRole("button", { name: "Previous step" })).toBeNull();
+    rerender(<Basic compact="always" defaultValue="payment" />);
+    expect(screen.queryByRole("button", { name: "Previous step" })).toBeNull();
+  });
+
+  it("moves focus to the back button when the width goes compact with focus in the steps", () => {
+    mockMedia();
+    render(<Basic compact="auto" interactive="all" defaultValue="payment" />);
+    const step = screen.getAllByRole("button").find((button) => button.textContent?.startsWith("Account"))!;
+    step.focus();
+    expect(step).toHaveFocus();
+    act(() => queryListeners.forEach((listener) => listener({ matches: true })));
+    expect(screen.getByRole("button", { name: "Previous step", hidden: true })).toHaveFocus();
+  });
+
+  it("moves focus to the summary when there is no back button", () => {
+    mockMedia();
+    render(<Basic compact="auto" interactive="all" defaultValue="account" />);
+    screen.getAllByRole("button")[0]!.focus();
+    act(() => queryListeners.forEach((listener) => listener({ matches: true })));
+    expect(document.activeElement?.className).toMatch(/summary/);
+  });
+
+  it("moves focus back to a step when the width goes full with focus in the summary", () => {
+    mockMedia();
+    render(<Basic compact="auto" interactive="completed" defaultValue="payment" />);
+    screen.getByRole("button", { name: "Previous step", hidden: true }).focus();
+    act(() => queryListeners.forEach((listener) => listener({ matches: false })));
+    expect(document.activeElement?.tagName).toBe("BUTTON");
+    expect(document.activeElement?.className).toMatch(/step/);
+  });
+
+  it("leaves focus alone when it is outside the stepper", () => {
+    mockMedia();
+    render(
+      <>
+        <button>outside</button>
+        <Basic compact="auto" interactive="all" />
+      </>,
+    );
+    screen.getByRole("button", { name: "outside" }).focus();
+    act(() => queryListeners.forEach((listener) => listener({ matches: true })));
+    expect(screen.getByRole("button", { name: "outside" })).toHaveFocus();
   });
 });

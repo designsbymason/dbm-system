@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { expect, userEvent, waitFor, within } from "storybook/test";
+import { useState } from "react";
 import { send } from "../../molecules/CodeBlock/browserProtocol";
 import { Stepper } from "./Stepper";
 import type { StepperProps } from "./Stepper.types";
@@ -233,7 +234,7 @@ export const CompactOnAPhone: Story = {
     await expect(getComputedStyle(cls(auto, "summary")).display).not.toBe("none");
     await expect(cls(auto, "summary").textContent).toContain("Step 2 of 4 — Shipping");
     await expect(getComputedStyle(cls(never, "list")).display).not.toBe("none");
-    await expect(getComputedStyle(cls(never, "summary")).display).toBe("none");
+    await expect(never.querySelector("[class*='_summary_']")).toBeNull();
   },
 };
 
@@ -266,7 +267,7 @@ export const ForcedColours: Story = {
       await expect(ring(items[0]!)).toBe(colour("Highlight"));
       await expect(ring(items[3]!)).toBe(colour("GrayText"));
       await expect(parseFloat(getComputedStyle(cls(items[2]!, "indicator")).borderTopWidth)).toBeGreaterThanOrEqual(4);
-      await expect(getComputedStyle(cls(items[0]!, "connector")).backgroundColor).toBe(colour("Highlight"));
+      await expect(getComputedStyle(cls(items[0]!, "connector"), "::after").backgroundColor).toBe(colour("Highlight"));
       await expect(getComputedStyle(cls(items[2]!, "connector")).backgroundColor).toBe(colour("GrayText"));
     } finally {
       await emulate("none");
@@ -289,9 +290,221 @@ export const ReducedMotion: Story = {
       await emulate("reduce");
       await settle(200);
       await expect(getComputedStyle(indicator).transitionDuration).toBe("0s");
-      await expect(getComputedStyle(cls(canvasElement, "connector")).transitionDuration).toBe("0s");
+      await expect(getComputedStyle(cls(canvasElement, "connector"), "::after").transitionDuration).toBe("0s");
     } finally {
       await emulate("no-preference");
+    }
+  },
+};
+
+export const FilledLineIsScaledIn: Story = {
+  name: "A finished step's line is the tone's colour scaled in over the grey track; the rest are not",
+  render: () => <Demo defaultValue="payment" />,
+  play: async ({ canvasElement }) => {
+    const items = within(canvasElement).getAllByRole("listitem");
+    const scale = (item: HTMLElement) => getComputedStyle(cls(item, "connector"), "::after").scale;
+    await expect(scale(items[0]!)).toBe("1");
+    await expect(scale(items[1]!)).toBe("1");
+    await expect(scale(items[2]!)).toBe("0 1");
+  },
+};
+
+export const BusyStepKeepsItsSize: Story = {
+  name: "A busy step shows a spinner without changing the indicator's size or the step's place",
+  render: function BusyStory() {
+    return (
+      <div style={{ display: "grid", gap: "var(--dbm-space-4)" }}>
+        {sizes.map((size) => (
+          <Stepper key={size} size={size} defaultValue="b" aria-label={`busy ${size}`}>
+            <Stepper.Step value="a" title="One" />
+            <Stepper.Step value="b" title="Two" busy data-testid={`busy-${size}`} />
+            <Stepper.Step value="c" title="Three" data-testid={`idle-${size}`} />
+          </Stepper>
+        ))}
+      </div>
+    );
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    for (const size of sizes) {
+      const busy = canvas.getByTestId(`busy-${size}`);
+      const idle = canvas.getByTestId(`idle-${size}`);
+      const indicator = cls(busy, "indicator");
+      await expect(box(indicator).width, size).toBe(box(cls(idle, "indicator")).width);
+      const spinner = indicator.firstElementChild as HTMLElement;
+      await expect(spinner, size).not.toBeNull();
+      await expect(box(spinner).width, `${size} spinner is drawn`).toBeGreaterThan(0);
+      await expect(box(spinner).width, `${size} fits the indicator`).toBeLessThanOrEqual(box(indicator).width);
+      await expect(centreX(spinner) - centreX(indicator), `${size} centred`).toBeLessThanOrEqual(1);
+    }
+  },
+};
+
+export const SquareIndicators: Story = {
+  name: "A square indicator has rounded corners, not a circle's, at every size",
+  render: () => (
+    <div style={{ display: "grid", gap: "var(--dbm-space-4)" }}>
+      {sizes.map((size) => (
+        <Demo key={size} size={size} shape="square" aria-label={`square ${size}`} />
+      ))}
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    for (const indicator of all(canvasElement, "indicator")) {
+      const radius = parseFloat(getComputedStyle(indicator).borderTopLeftRadius);
+      await expect(radius).toBeGreaterThan(0);
+      await expect(radius).toBeLessThan(box(indicator).width / 2);
+    }
+  },
+};
+
+export const DashedLines: Story = {
+  name: "A dashed line stays level with the indicators, horizontally and down the column, and a skipped step's line is dashed",
+  render: () => (
+    <div style={{ display: "grid", gap: "var(--dbm-space-6)" }}>
+      <div data-testid="h">
+        <Demo connector="dashed" aria-label="dashed h" />
+      </div>
+      <div data-testid="v">
+        <Demo connector="dashed" orientation="vertical" aria-label="dashed v" />
+      </div>
+      <div data-testid="s">
+        <Stepper defaultValue="c" aria-label="skipped">
+          <Stepper.Step value="a" title="One" />
+          <Stepper.Step value="b" title="Two" status="skipped" />
+          <Stepper.Step value="c" title="Three" />
+        </Stepper>
+      </div>
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const h = canvas.getByTestId("h");
+    for (const connector of all(h, "connector")) {
+      await expect(getComputedStyle(connector).borderTopStyle).toBe("dashed");
+      await expect(Math.abs(centreY(connector) - centreY(cls(h, "indicator")))).toBeLessThanOrEqual(1);
+    }
+    const v = canvas.getByTestId("v");
+    const indicators = all(v, "indicator");
+    for (const [index, connector] of all(v, "connector").entries()) {
+      await expect(getComputedStyle(connector).borderInlineStartStyle).toBe("dashed");
+      await expect(Math.abs(centreX(connector) - centreX(indicators[index]!))).toBeLessThanOrEqual(1);
+    }
+    const s = canvas.getByTestId("s");
+    const lines = all(s, "connector");
+    await expect(getComputedStyle(lines[0]!).borderTopStyle).toBe("none");
+    await expect(getComputedStyle(lines[1]!).borderTopStyle).toBe("dashed");
+  },
+};
+
+export const LongTitlesWrap: Story = {
+  name: "A long title wraps at the label width instead of stretching its step, beside and under the indicator",
+  render: () => (
+    <div style={{ display: "grid", gap: "var(--dbm-space-6)" }}>
+      {(["end", "bottom"] as const).map((placement) => (
+        <Stepper key={placement} labelPlacement={placement} defaultValue="a" aria-label={placement}>
+          <Stepper.Step
+            value="a"
+            title="Verify the billing address on the account holder's most recent statement"
+            description="A description that is also quite a lot longer than any step should ever need to hold"
+            data-testid={`long-${placement}`}
+          />
+          <Stepper.Step value="b" title="Done" />
+        </Stepper>
+      ))}
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const cap = parseFloat(getComputedStyle(document.documentElement).fontSize) * 14;
+    for (const placement of ["end", "bottom"]) {
+      const content = cls(canvas.getByTestId(`long-${placement}`), "content");
+      await expect(box(content).width, placement).toBeLessThanOrEqual(cap + 1);
+      await expect(box(content).height, `${placement} wrapped`).toBeGreaterThan(48);
+    }
+  },
+};
+
+export const CurrentStepIsBroughtIntoView: Story = {
+  name: "In a strip too narrow for the steps, a current step off the edge is scrolled fully into view, and again when it changes",
+  render: function StripStory() {
+    const [value, setValue] = useState("e");
+    return (
+      <div style={{ inlineSize: "22rem" }}>
+        <Stepper value={value} onValueChange={setValue} aria-label="strip" data-testid="strip">
+          {["a", "b", "c", "d", "e", "f", "g"].map((id) => (
+            <Stepper.Step key={id} value={id} title={`Step ${id}`} description="Some detail" />
+          ))}
+        </Stepper>
+        <button onClick={() => setValue("a")}>first</button>
+      </div>
+    );
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const scroller = canvas.getByTestId("strip").firstElementChild as HTMLElement;
+    const current = () => canvas.getByTestId("strip").querySelector<HTMLElement>("[data-status='current']")!;
+    const inside = () => {
+      const strip = box(scroller);
+      const step = box(current());
+      return step.left >= strip.left - 0.5 && step.right <= strip.right + 0.5;
+    };
+    await waitFor(() => expect(inside()).toBe(true));
+    await expect(scroller.scrollLeft).toBeGreaterThan(0);
+    await userEvent.click(canvas.getByRole("button", { name: "first" }));
+    await waitFor(() => expect(inside()).toBe(true));
+    await waitFor(() => expect(scroller.scrollLeft).toBeLessThanOrEqual(1));
+  },
+};
+
+export const ResponsiveOrientationOnAPhone: Story = {
+  name: "A responsive orientation is vertical at a phone's width and horizontal on a wide screen",
+  globals: { viewport: { value: "mobile1", isRotated: false } },
+  render: () => <Demo orientation={{ base: "vertical", md: "horizontal" }} data-testid="r" />,
+  play: async ({ canvasElement }) => {
+    await expect(window.innerWidth).toBeLessThan(768);
+    const nav = within(canvasElement).getByTestId("r");
+    await expect(nav).toHaveAttribute("data-orientation", "vertical");
+    const items = within(nav).getAllByRole("listitem");
+    await expect(box(items[1]!).top).toBeGreaterThan(box(items[0]!).top);
+    await expect(Math.abs(box(items[1]!).left - box(items[0]!).left)).toBeLessThanOrEqual(1);
+  },
+};
+
+export const ResponsiveOrientationWide: Story = {
+  name: "On a wide screen the same stepper runs in a row",
+  render: () => <Demo orientation={{ base: "vertical", md: "horizontal" }} data-testid="r" />,
+  play: async ({ canvasElement }) => {
+    await expect(window.innerWidth).toBeGreaterThanOrEqual(768);
+    const nav = within(canvasElement).getByTestId("r");
+    await waitFor(() => expect(nav).toHaveAttribute("data-orientation", "horizontal"));
+    const items = within(nav).getAllByRole("listitem");
+    await expect(Math.abs(box(items[1]!).top - box(items[0]!).top)).toBeLessThanOrEqual(1);
+  },
+};
+
+export const FocusFollowsTheWidth: Story = {
+  name: "Crossing the compact breakpoint with focus in the steps moves focus to the summary, and back, instead of losing it",
+  render: () => <Demo compact="auto" interactive="completed" defaultValue="payment" />,
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    // The story runs in a frame whose width is the page's width, so the width the page sees is changed on the frame.
+    const frame = window.frameElement as HTMLElement | null;
+    await expect(frame, "the story runs in a frame").not.toBeNull();
+    const original = frame!.style.width;
+    const list = canvasElement.querySelector<HTMLElement>("[class*='_list_']")!;
+    const step = canvas.getAllByRole("button").find((button) => list.contains(button))!;
+    step.focus();
+    await expect(step).toHaveFocus();
+    try {
+      frame!.style.width = "400px";
+      await waitFor(() => expect(window.innerWidth).toBeLessThan(640));
+      await waitFor(() => expect(document.activeElement).toBe(canvas.getByRole("button", { name: "Previous step" })));
+      frame!.style.width = original || "";
+      await waitFor(() => expect(window.innerWidth).toBeGreaterThanOrEqual(640));
+      await waitFor(() => expect(list.contains(document.activeElement)).toBe(true));
+    } finally {
+      frame!.style.width = original;
     }
   },
 };

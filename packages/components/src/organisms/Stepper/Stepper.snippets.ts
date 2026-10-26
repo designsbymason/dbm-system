@@ -9,9 +9,11 @@
 import { quote } from "../../snippetHelpers";
 import type {
   StepperCompact,
+  StepperConnector,
   StepperInteractive,
   StepperLabelPlacement,
   StepperOrientation,
+  StepperShape,
   StepperSize,
   StepperTone,
   StepperVariant,
@@ -78,6 +80,37 @@ ${stepper('labelPlacement="bottom"')}`,
   <Stepper.Step value="review" title="Review" />
 </Stepper>`,
 
+  busyAndWarning: `{/* busy shows a spinner while a check or save runs. status="warning" is a step that can
+    be continued from but needs another look; "error" is one that must be fixed. */}
+<Stepper defaultValue="payment">
+  <Stepper.Step value="account" title="Account" />
+  <Stepper.Step value="shipping" title="Shipping" status="warning" description="Address not verified" />
+  <Stepper.Step value="payment" title="Payment" busy description="Checking your card" />
+  <Stepper.Step value="review" title="Review" />
+</Stepper>`,
+
+  square: `{/* shape: "circle" (default) | "square" — a square with rounded corners */}
+${stepper('shape="square"')}`,
+
+  connectors: `{/* connector: "solid" (default) | "dashed" | "none". The line leaving a skipped step is
+    always dashed, since the flow did not run through it. */}
+${stepper('connector="dashed"')}`,
+
+  responsiveOrientation: `{/* orientation takes a mobile-first map by breakpoint: stacked on a phone, in a row from md up */}
+${stepper('orientation={{ base: "vertical", md: "horizontal" }}')}`,
+
+  compactBack: `{/* With interactive set, the compact summary gains a button that goes back a step */}
+${stepper('compact="always" interactive="completed" defaultValue="payment"').replace('defaultValue="shipping" ', '')}`,
+
+  controller: `{/* const controller = useRef<StepperController>(null);
+    const [step, setStep] = useState("shipping");
+    next(), back() and goTo(value) ask the way a click does — through onValueChange — and
+    return whether there was a step to ask for. */}
+<Stepper controllerRef={controller} value={step} onValueChange={setStep}>
+${defaultSteps}
+</Stepper>
+<button onClick={() => controller.current?.next()}>Next</button>`,
+
   controlled: `{/* const [step, setStep] = useState("shipping"); — a click asks through onValueChange and the
     current step changes when value does. interactive="completed" lets a person go back. */}
 <Stepper value={step} onValueChange={setStep} interactive="completed">
@@ -120,6 +153,8 @@ export interface StepperPlaygroundSnippetArgs {
   size?: StepperSize;
   variant?: StepperVariant;
   tone?: StepperTone;
+  shape?: StepperShape;
+  connector?: StepperConnector;
   labelPlacement?: StepperLabelPlacement;
   compact?: StepperCompact;
   interactive?: StepperInteractive;
@@ -135,6 +170,8 @@ export function stepperPlaygroundSnippet(args: StepperPlaygroundSnippetArgs): st
   if (args.size && args.size !== "md") attributes.push(`size="${args.size}"`);
   if (args.variant && args.variant !== "filled") attributes.push(`variant="${args.variant}"`);
   if (args.tone && args.tone !== "brand") attributes.push(`tone="${args.tone}"`);
+  if (args.shape && args.shape !== "circle") attributes.push(`shape="${args.shape}"`);
+  if (args.connector && args.connector !== "solid") attributes.push(`connector="${args.connector}"`);
   if (args.labelPlacement && args.labelPlacement !== "end" && args.orientation !== "vertical") {
     attributes.push(`labelPlacement="${args.labelPlacement}"`);
   }
