@@ -304,7 +304,7 @@ export interface CommandPaletteProps
   /** Adds colour to the bold match in each label. Without it the match is bold only. */
   highlightTone?: HighlightTone;
   /**
-   * Shows the footer's key hints (arrows, Enter, Escape). They are not drawn on a touch screen either way.
+   * Shows the footer's key hints (arrows, Enter, Escape) and the Enter key on the highlighted row. They are not drawn, with a row's own `shortcut` keys, on a device with no mouse or trackpad.
    * @default true
    */
   showHints?: boolean;

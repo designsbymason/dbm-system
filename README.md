@@ -1,6 +1,6 @@
 # DBM System
 
-> **Status: in active development, not yet published.** The component library is substantial — 105 of a planned 115 components (all 48 atoms and 40 of 40 molecules) are built, with the first seventeen organisms, `Dialog`, `AlertDialog`, `ConfirmDialog`, `Drawer`, `Menu`, `Toast`, `Form`, `Combobox`, `DatePicker`, `DataTable`, `Navbar`, `Sidebar`, `FileUpload`, `ContextMenu`, `MultiSelect`, `DateRangePicker` and `CommandPalette`, among them; every one but `CommandPalette` (built, its review pass still to run) is reviewed and Finalized — but nothing has shipped to npm yet; the API can still change before the first publish.
+> **Status: in active development, not yet published.** The component library is substantial — 105 of a planned 115 components (all 48 atoms and 40 of 40 molecules) are built, with the first seventeen organisms, `Dialog`, `AlertDialog`, `ConfirmDialog`, `Drawer`, `Menu`, `Toast`, `Form`, `Combobox`, `DatePicker`, `DataTable`, `Navbar`, `Sidebar`, `FileUpload`, `ContextMenu`, `MultiSelect`, `DateRangePicker` and `CommandPalette`, among them; every one is reviewed and Finalized — but nothing has shipped to npm yet; the API can still change before the first publish.
 
 An agentic, standalone React component library built for both AI coding agents and human developers to compose web and enterprise applications quickly, consistently, and accessibly. Token-driven, multi-brand, multi-theme (light/dark), and built with a strong TypeScript + JSDoc contract so AI agents can work against a structured, predictable API.
 

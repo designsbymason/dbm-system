@@ -302,7 +302,7 @@ export function CommandPalettePanel({
       <span className={styles.trailing}>
         {hints.length > 0 ? <span className={styles.matchHint}>{`“${hints.join(", ")}”`}</span> : null}
         {keys.map((key, index) => (
-          <Kbd key={`${key.text}-${index}`} aria-label={key.label}>
+          <Kbd key={`${key.text}-${index}`} aria-label={key.label} className={styles.shortcutKey}>
             {key.text}
           </Kbd>
         ))}

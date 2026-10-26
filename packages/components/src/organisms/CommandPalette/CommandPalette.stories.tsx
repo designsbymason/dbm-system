@@ -172,7 +172,7 @@ const meta: Meta<PlaygroundArgs> = {
     },
     showHints: {
       control: "boolean",
-      description: "Shows the footer's key hints (arrows, Enter, Escape). They are not drawn on a touch screen either way.",
+      description: "Shows the footer's key hints (arrows, Enter, Escape) and the Enter key on the highlighted row. They are not drawn, with a row's own shortcut keys, on a device with no mouse or trackpad.",
       table: { defaultValue: { summary: "true" } },
     },
     footer: {

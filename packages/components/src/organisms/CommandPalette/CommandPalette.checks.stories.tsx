@@ -559,3 +559,33 @@ export const TabOrderInTheBrowser: Story = {
     await waitFor(() => expect(body().queryByRole("dialog")).toBeNull());
   },
 };
+
+export const KeyHintsLeaveDevicesWithoutAMouse: Story = {
+  name: "Key hints and a row's shortcut keys are drawn with a fine pointer, and the stylesheet drops them without one",
+  render: () => <Page commands={[{ value: "n", label: "New", shortcut: ["Ctrl", "N"] }]} />,
+  play: async () => {
+    await openFrom("Open");
+    // The test browser has a mouse, so everything is drawn.
+    await expect(matchMedia("(any-pointer: fine)").matches).toBe(true);
+    const shortcut = body().getByRole("option", { name: /New/ }).querySelector('[class*="shortcutKey"]') as HTMLElement;
+    await expect(getComputedStyle(shortcut).display).not.toBe("none");
+    await expect(getComputedStyle(document.querySelector('[class*="hints"]') as HTMLElement).display).not.toBe("none");
+    // The rule for a device without one is in the loaded stylesheet and names all three.
+    const readable = (sheet: CSSStyleSheet) => {
+      try {
+        return [...sheet.cssRules];
+      } catch {
+        // A stylesheet from another origin can't be read, and isn't one of ours.
+        return [];
+      }
+    };
+    const rule = [...document.styleSheets]
+      .flatMap(readable)
+      .find((candidate) => candidate instanceof CSSMediaRule && candidate.conditionText.includes("any-pointer: coarse") && candidate.conditionText.includes("not (any-pointer: fine)")) as CSSMediaRule | undefined;
+    await expect(rule).toBeDefined();
+    const text = rule?.cssText ?? "";
+    for (const name of ["hints", "enterHint", "shortcutKey"]) await expect(text).toContain(name);
+    await expect(text).toContain("display: none");
+    await closeWithEscape();
+  },
+};

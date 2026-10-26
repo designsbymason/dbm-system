@@ -92,7 +92,7 @@
   white-space: nowrap;
 }
 
-/* The key that runs the highlighted row; a touch screen has no key to press. */
+/* The key that runs the highlighted row. */
 .enterHint {
   margin-inline-start: var(--dbm-space-1);
 }
@@ -102,8 +102,18 @@
   visibility: hidden;
 }
 
-@media (pointer: coarse) {
-  .enterHint {
+/* A row's own shortcut keys. */
+.shortcutKey {
+  flex-shrink: 0;
+}
+
+/* A device with no mouse or trackpad (a phone, a tablet with neither paired) has no keys to hint at: the footer's hints,
+   the Enter key on the highlighted row and a row's shortcut keys are not drawn, and so are not read out either. A
+   tablet with a keyboard and a trackpad keeps them. */
+@media (any-pointer: coarse) and (not (any-pointer: fine)) {
+  .hints,
+  .enterHint,
+  .shortcutKey {
     display: none;
   }
 }
@@ -140,13 +150,6 @@
 
 .footerExtra {
   margin-inline-start: auto;
-}
-
-/* A touch screen has no keys to hint at. */
-@media (pointer: coarse) {
-  .hints {
-    display: none;
-  }
 }
 
 /* Forced colours replaces backgrounds, so the lines that tell the sections apart are drawn in a system colour. */

@@ -282,7 +282,7 @@ A command is an object in the `commands` array.
 - The number of results is announced in a status region that was already in the page, only when it changes as someone types or opens a list, never when the palette merely opens. A failed command and an error are announced when they appear.
 - The Back button has an accessible name (`labels.back`) and is at least 24 × 24 pixels, as is every row. Enter while an input method is composing a character does nothing.
 - The Enter key drawn at the end of the highlighted row is hidden from assistive technology, so a row's name does not change as the highlight moves. A shortcut's modifier symbols (⌘ ⌃ ⌥ ⇧) have plain-language names.
-- The footer's key hints are decoration and are hidden from assistive technology; they are also not drawn on a touch screen. A shortcut on a row is part of the row's name.
+- The footer's key hints are decoration and are hidden from assistive technology. On a device with no mouse or trackpad (a phone, a tablet with neither paired) the footer's hints, the Enter key and a row's shortcut keys are not drawn at all, so they are not read out either; a tablet with a keyboard and a trackpad keeps them. A shortcut on a row is otherwise part of the row's name.
 - The search row's focus ring is drawn inside its own edge. In Windows high contrast the highlighted row is outlined and the lines between the sections are kept.
 
 </Callout>

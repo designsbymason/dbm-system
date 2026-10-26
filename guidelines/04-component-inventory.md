@@ -258,7 +258,7 @@ Dependency order, then priority (🟢 before 🟡 before ⚪). `Grid`, `List` an
 
 ### Organism-tier build order
 
-Dependency order, then priority (🟢 before 🟡 before ⚪). Build one at a time, each with the full `06-engineering-standards.md` §9 pass; note any deviation here. `Dialog`, `AlertDialog`, `ConfirmDialog`, `Drawer`, `Menu`, `Toast`, `Form`, `Combobox`, `DatePicker`, `DataTable`, `Navbar`, `Sidebar` and `FileUpload`, `ContextMenu`, `MultiSelect` and `DateRangePicker` are built and Finalized, `CommandPalette` is built and awaiting its review pass, and the rest are not started.
+Dependency order, then priority (🟢 before 🟡 before ⚪). Build one at a time, each with the full `06-engineering-standards.md` §9 pass; note any deviation here. `Dialog`, `AlertDialog`, `ConfirmDialog`, `Drawer`, `Menu`, `Toast`, `Form`, `Combobox`, `DatePicker`, `DataTable`, `Navbar`, `Sidebar` and `FileUpload`, `ContextMenu`, `MultiSelect`, `DateRangePicker` and `CommandPalette` are built and Finalized, and the rest are not started.
 
 **🟢 core**
 1. Dialog — foundation for every modal (Radix Dialog, `Backdrop`, `CloseButton`, `ScrollArea`); built, review in [Dialog.md](component-reviews/Dialog.md)
@@ -274,7 +274,7 @@ Dependency order, then priority (🟢 before 🟡 before ⚪). Build one at a ti
 13. FileUpload — built and Finalized, review in [FileUpload.md](component-reviews/FileUpload.md)
 
 **🟡 v1.5**
-14. ContextMenu (on Menu; built and Finalized, review in [ContextMenu.md](component-reviews/ContextMenu.md)), 15. MultiSelect (on Combobox and TagsInput; built and Finalized, review in [MultiSelect.md](component-reviews/MultiSelect.md)), 16. DateRangePicker (on Calendar and DatePicker; built and Finalized, review in [DateRangePicker.md](component-reviews/DateRangePicker.md)), 17. CommandPalette (Dialog plus Combobox-style search; built, review in [CommandPalette.md](component-reviews/CommandPalette.md)), 18. NavigationMenu (`Navbar` covers a bar of links; this is for mega-menu panels), 19. Stepper, 20. Timeline, 21. Tree / TreeView
+14. ContextMenu (on Menu; built and Finalized, review in [ContextMenu.md](component-reviews/ContextMenu.md)), 15. MultiSelect (on Combobox and TagsInput; built and Finalized, review in [MultiSelect.md](component-reviews/MultiSelect.md)), 16. DateRangePicker (on Calendar and DatePicker; built and Finalized, review in [DateRangePicker.md](component-reviews/DateRangePicker.md)), 17. CommandPalette (Dialog plus Combobox-style search; built and Finalized, review in [CommandPalette.md](component-reviews/CommandPalette.md)), 18. NavigationMenu (`Navbar` covers a bar of links; this is for mega-menu panels), 19. Stepper, 20. Timeline, 21. Tree / TreeView
 
 **⚪ deferred**
 22. Menubar (after Menu), 23. EditorTabs (wraps `Tabs`; reordering needs the drag-and-drop decision), 24. Carousel, 25. ImageViewer / Lightbox (Dialog, optionally Carousel), 26. ColorPicker (Popover plus Slider), 27. Tour (Popover-style cards and a spotlight)
