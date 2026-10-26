@@ -115,10 +115,20 @@ const useStepperContext = (): StepperContextValue => {
 };
 
 /**
- * One step: an indicator and its text. Its `listitem` role is stated outright, since Safari with VoiceOver stops
- * treating a list as one once its markers are removed (`list-style: none`) — the same fix `List` and `Breadcrumb`
- * apply. A step that can be entered draws its indicator and text inside a `<button>` (or the caller's own link through
- * `asChild`); any other step draws them in a plain box with no focus stop.
+ * One step of a `Stepper`: an indicator (its number, an icon, or a check, warning or dash for its status) and its
+ * title, with an optional description and "Optional" mark. Its status is worked out from the stepper's `value` unless
+ * `status` sets it. A step that can be entered (see `Stepper`'s `interactive`) draws its indicator and text inside a
+ * `<button>`, or the caller's own link through `asChild`; any other step draws them in a plain box with no focus stop.
+ * Its `listitem` role is stated outright, since Safari with VoiceOver stops treating a list as one once its markers are
+ * removed (`list-style: none`) — the same fix `List` and `Breadcrumb` apply.
+ *
+ * `ref` forwards to the `<li>`.
+ *
+ * @example
+ * ```tsx
+ * <Stepper.Step value="shipping" title="Shipping" description="Where it goes" />
+ * <Stepper.Step value="payment" title="Payment" status="error" />
+ * ```
  */
 const StepperStep = forwardRef<HTMLLIElement, StepperStepProps>(
   (
@@ -234,6 +244,35 @@ const StepperStep = forwardRef<HTMLLIElement, StepperStepProps>(
 );
 StepperStep.displayName = "Stepper.Step";
 
+/**
+ * A multi-step flow indicator (a checkout, an onboarding, a wizard): a `<nav>` around an ordered list of
+ * `Stepper.Step`s, each with an indicator and a title. The current step is `value` (controlled, with `onValueChange`)
+ * or `defaultValue`; steps before it show as finished and steps after it as not started, and a step may set its own
+ * `status` (`"error"`, `"skipped"`, `"complete"`).
+ *
+ * It draws the indicator and nothing else: the current step's content, next and back, and deciding whether a step may
+ * be left are the caller's. By default it only shows progress and has no focus stop; `interactive` lets a person
+ * enter finished steps (`"completed"`) or any step but the current one (`"all"`), each a real button in the tab
+ * order. The current step carries `aria-current="step"`, and a change of step is announced to a screen reader
+ * (`announce`).
+ *
+ * `size`, `variant`, `tone` and `orientation` set how every step looks, `labelPlacement` puts a horizontal step's text
+ * under its indicator, and `compact` swaps the steps for a one-line summary on a phone (or always). Text the component
+ * writes itself is in `labels`, and `formatNumber` writes its digits.
+ *
+ * `ref` forwards to the `<nav>`.
+ *
+ * @example
+ * ```tsx
+ * const [step, setStep] = useState("shipping");
+ *
+ * <Stepper value={step} onValueChange={setStep} interactive="completed">
+ *   <Stepper.Step value="account" title="Account" />
+ *   <Stepper.Step value="shipping" title="Shipping" description="Where it goes" />
+ *   <Stepper.Step value="payment" title="Payment" />
+ * </Stepper>
+ * ```
+ */
 const StepperRoot = forwardRef<HTMLElement, StepperProps>(
   (
     {
