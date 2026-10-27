@@ -13,7 +13,6 @@ import type {
   StepperInteractive,
   StepperLabelPlacement,
   StepperOrientation,
-  StepperShape,
   StepperSize,
   StepperTone,
   StepperVariant,
@@ -40,7 +39,7 @@ ${stepper('size="lg"')}`,
     | "outlined" — every indicator is a ring on the page */}
 ${stepper('variant="outlined"')}`,
 
-  tones: `{/* tone: "brand" (default) | "info" | "success" | "highlight" — the colour of the progress.
+  tones: `{/* tone: "brand" (default) | "info" | "success" | "highlight" | "neutral" — the colour of the progress.
     A step with an error is always red. Put "highlight" on a surface, not on the canvas. */}
 ${stepper('tone="success"')}`,
 
@@ -89,8 +88,8 @@ ${stepper('labelPlacement="bottom"')}`,
   <Stepper.Step value="review" title="Review" />
 </Stepper>`,
 
-  square: `{/* shape: "circle" (default) | "square" — a square with rounded corners */}
-${stepper('shape="square"')}`,
+  square: `{/* rounded is on by default: round indicators. rounded={false} draws squares with rounded corners. */}
+${stepper("rounded={false}")}`,
 
   connectors: `{/* connector: "solid" (default) | "dashed" | "none". The line leaving a skipped step is
     always dashed, since the flow did not run through it. */}
@@ -99,8 +98,12 @@ ${stepper('connector="dashed"')}`,
   responsiveOrientation: `{/* orientation takes a mobile-first map by breakpoint: stacked on a phone, in a row from md up */}
 ${stepper('orientation={{ base: "vertical", md: "horizontal" }}')}`,
 
-  compactBack: `{/* With interactive set, the compact summary gains a button that goes back a step */}
-${stepper('compact="always" interactive="completed" defaultValue="payment"').replace('defaultValue="shipping" ', '')}`,
+  compactBack: `{/* With interactive set, the compact summary always shows Back and Next; one with nowhere to go is
+    disabled. interactive="completed" enables Next only after going back, to a step already reached. */}
+${stepper('compact="always" interactive="all" defaultValue="payment"').replace('defaultValue="shipping" ', '')}`,
+
+  compactVertical: `{/* orientation="vertical" with compact: one column — Up, the bars, Down, then "3/4" as text */}
+${stepper('compact="always" orientation="vertical" interactive="all" defaultValue="payment"').replace('defaultValue="shipping" ', '')}`,
 
   controller: `{/* const controller = useRef<StepperController>(null);
     const [step, setStep] = useState("shipping");
@@ -153,7 +156,7 @@ export interface StepperPlaygroundSnippetArgs {
   size?: StepperSize;
   variant?: StepperVariant;
   tone?: StepperTone;
-  shape?: StepperShape;
+  rounded?: boolean;
   connector?: StepperConnector;
   labelPlacement?: StepperLabelPlacement;
   compact?: StepperCompact;
@@ -170,7 +173,7 @@ export function stepperPlaygroundSnippet(args: StepperPlaygroundSnippetArgs): st
   if (args.size && args.size !== "md") attributes.push(`size="${args.size}"`);
   if (args.variant && args.variant !== "filled") attributes.push(`variant="${args.variant}"`);
   if (args.tone && args.tone !== "brand") attributes.push(`tone="${args.tone}"`);
-  if (args.shape && args.shape !== "circle") attributes.push(`shape="${args.shape}"`);
+  if (args.rounded === false) attributes.push("rounded={false}");
   if (args.connector && args.connector !== "solid") attributes.push(`connector="${args.connector}"`);
   if (args.labelPlacement && args.labelPlacement !== "end" && args.orientation !== "vertical") {
     attributes.push(`labelPlacement="${args.labelPlacement}"`);

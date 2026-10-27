@@ -8,7 +8,6 @@ export type {
   StepperLabels,
   StepperOrientation,
   StepperProps,
-  StepperShape,
   StepperSize,
   StepperStepProps,
   StepperTone,

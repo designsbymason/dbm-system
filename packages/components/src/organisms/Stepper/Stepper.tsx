@@ -1,4 +1,4 @@
-import { CaretLeftIcon, CheckIcon, MinusIcon, WarningIcon, XIcon } from "@dbm-system/icons";
+import { CaretDownIcon, CaretLeftIcon, CaretRightIcon, CaretUpIcon, CheckIcon, MinusIcon, WarningIcon, XIcon } from "@dbm-system/icons";
 import { cx, mergeDefined, useAnnouncement, useIsScrollable, useResolvedResponsiveValue } from "@dbm-system/utils";
 import { Slot } from "@radix-ui/react-slot";
 import {
@@ -31,7 +31,6 @@ import type {
   StepperLabels,
   StepperOrientation,
   StepperProps,
-  StepperShape,
   StepperSize,
   StepperStepProps,
   StepperTone,
@@ -73,11 +72,6 @@ const sizeClass: Record<StepperSize, string | undefined> = {
   xl: styles.sizeXl,
 };
 
-const shapeClass: Record<StepperShape, string | undefined> = {
-  circle: undefined,
-  square: styles.shapeSquare,
-};
-
 const connectorClass: Record<StepperConnector, string | undefined> = {
   solid: undefined,
   dashed: styles.connectorDashed,
@@ -96,6 +90,7 @@ const toneClass: Record<StepperTone, string | undefined> = {
   info: styles.toneInfo,
   success: styles.toneSuccess,
   highlight: styles.toneHighlight,
+  neutral: styles.toneNeutral,
 };
 
 const variantClass: Record<StepperVariant, string | undefined> = {
@@ -112,9 +107,11 @@ const compactClass: Record<StepperCompact, string | undefined> = {
 // The icon inside the indicator: one step down from the indicator's own size.
 const iconSizeForSize: Record<StepperSize, IconSize> = { xs: "xs", sm: "xs", md: "sm", lg: "md", xl: "lg" };
 
-const defaultLabels: StepperLabels = {
+// The default numbers go through `formatNumber`, so a step's digits and the words that name it agree.
+const defaultLabelsFor = (format: (value: number) => string): StepperLabels => ({
   navigation: "Progress",
-  stepOf: (position, total) => `Step ${position} of ${total}`,
+  stepOf: (position, total) => `Step ${format(position)} of ${format(total)}`,
+  place: (position, total) => `${format(position)}/${format(total)}`,
   complete: "completed",
   current: "current",
   upcoming: "not started",
@@ -123,8 +120,9 @@ const defaultLabels: StepperLabels = {
   skipped: "skipped",
   busy: "in progress",
   previous: "Previous step",
+  next: "Next step",
   optional: "Optional",
-};
+});
 
 const statusWord = (labels: StepperLabels, status: StepStatus): string => labels[status];
 
@@ -291,7 +289,7 @@ StepperStep.displayName = "Stepper.Step";
  * order. The current step carries `aria-current="step"`, and a change of step is announced to a screen reader
  * (`announce`).
  *
- * `size`, `variant`, `shape`, `tone`, `connector` and `orientation` (which takes a breakpoint map) set how every step
+ * `size`, `variant`, `rounded`, `tone`, `connector` and `orientation` (which takes a breakpoint map) set how every step
  * looks, `labelPlacement` puts a horizontal step's text under its indicator, and `compact` swaps the steps for a
  * one-line summary on a phone (or always), with a way back when `interactive`. `controllerRef` hands `next()`,
  * `back()` and `goTo()` to a button of your own. Text the component writes itself is in `labels`, and `formatNumber`
@@ -321,7 +319,7 @@ const StepperRoot = forwardRef<HTMLElement, StepperProps>(
       size = "md",
       variant = "filled",
       tone = "brand",
-      shape = "circle",
+      rounded = true,
       connector = "solid",
       labelPlacement = "end",
       compact = "never",
@@ -340,7 +338,7 @@ const StepperRoot = forwardRef<HTMLElement, StepperProps>(
     },
     ref,
   ) => {
-    const labels = mergeDefined(defaultLabels, labelsProp);
+    const labels = mergeDefined(defaultLabelsFor(formatNumber), labelsProp);
     const orientation = useResolvedResponsiveValue<StepperOrientation>(orientationProp, "horizontal");
     const rawChildren = Children.toArray(children);
     const steps = rawChildren.filter(isStep);
@@ -402,11 +400,17 @@ const StepperRoot = forwardRef<HTMLElement, StepperProps>(
       request,
     };
 
+    // The furthest step the person has been on: with `interactive="completed"` every step up to it can be entered, so after
+    // going back they can go forward again. Set while rendering, from the current step, the way React asks for a value
+    // derived from props and state.
+    const [furthest, setFurthest] = useState(currentIndex);
+    if (currentIndex > furthest) setFurthest(currentIndex);
+
     const positionFor = (step: ReactElement<StepperStepProps>, index: number): StepPosition => {
       const override = step.props.status;
       const status: StepStatus =
         override ?? (index < currentIndex ? "complete" : index === currentIndex ? "current" : "upcoming");
-      const enterable = canEnter(interactive, status, index, currentIndex);
+      const enterable = canEnter(interactive, status, index, currentIndex, furthest);
       return { index, total, status, enterable };
     };
 
@@ -414,6 +418,7 @@ const StepperRoot = forwardRef<HTMLElement, StepperProps>(
     const navRef = useRef<HTMLElement | null>(null);
     const summaryRef = useRef<HTMLDivElement | null>(null);
     const backRef = useRef<HTMLButtonElement | null>(null);
+    const nextRef = useRef<HTMLButtonElement | null>(null);
     const setNavRefs = (node: HTMLElement | null) => {
       navRef.current = node;
       if (typeof ref === "function") ref(node);
@@ -491,15 +496,53 @@ const StepperRoot = forwardRef<HTMLElement, StepperProps>(
       if (scroller && item instanceof HTMLElement) revealInline(scroller, item);
     }, [currentIndex, orientation, size]);
 
-    // The nearest step before the current one that the compact summary's back button can enter.
+    // The nearest steps either side of the current one that the compact summary's buttons can enter.
+    const enterableAt = (index: number): boolean => positionFor(steps[index]!, index).enterable && !steps[index]!.props.disabled;
     let previousIndex = -1;
     for (let index = currentIndex - 1; index >= 0; index -= 1) {
-      const { enterable } = positionFor(steps[index]!, index);
-      if (enterable && !steps[index]!.props.disabled) {
+      if (enterableAt(index)) {
         previousIndex = index;
         break;
       }
     }
+    let nextIndex = -1;
+    for (let index = Math.max(currentIndex, -1) + 1; index < steps.length; index += 1) {
+      if (enterableAt(index)) {
+        nextIndex = index;
+        break;
+      }
+    }
+    const summaryButtons = compact !== "never" && interactive !== "none";
+
+    // A summary button that is pressed and then leaves (back at the first step, next at the last) would drop focus to the
+    // page. A press leaves a short-lived note, and if focus is lost by the next commit it goes to the other button, or
+    // the summary.
+    const pendingFocus = useRef(0);
+    const firstEnabledSummaryButton = (): HTMLElement | null => {
+      for (const button of [backRef.current, nextRef.current]) {
+        if (button && !button.disabled) return button;
+      }
+      return summaryRef.current;
+    };
+    useEffect(() => {
+      if (pendingFocus.current === 0) return;
+      if (Date.now() - pendingFocus.current > 1000) {
+        pendingFocus.current = 0;
+        return;
+      }
+      // Focus is lost when it fell to the page, and, in a browser that leaves it on a button that has just been disabled,
+      // when it is still on that dead button.
+      const active = document.activeElement;
+      const stillAlive =
+        active && active !== document.body && navRef.current?.contains(active) && !(active instanceof HTMLButtonElement && active.disabled);
+      if (stillAlive) return;
+      pendingFocus.current = 0;
+      firstEnabledSummaryButton()?.focus();
+    });
+    const pressSummaryButton = (index: number) => {
+      pendingFocus.current = Date.now();
+      request(values[index]!);
+    };
 
     // When the width crosses the breakpoint `compact="auto"` switches at, the form that was drawn is hidden: focus inside
     // it moves to the other form instead of falling to the top of the page. Done here, in the change event, while the
@@ -510,7 +553,7 @@ const StepperRoot = forwardRef<HTMLElement, StepperProps>(
       const onChange = (event: MediaQueryListEvent) => {
         const place = focusPlace.current;
         if (event.matches && place === "list") {
-          (backRef.current ?? summaryRef.current)?.focus();
+          firstEnabledSummaryButton()?.focus();
         } else if (!event.matches && place === "summary") {
           const target = listRef.current?.querySelector<HTMLElement>("button, a[href]") ?? scrollerRef.current;
           target?.focus();
@@ -520,37 +563,89 @@ const StepperRoot = forwardRef<HTMLElement, StepperProps>(
       return () => query.removeEventListener("change", onChange);
     }, [compact]);
 
+    const vertical = orientation === "vertical";
+    // Both buttons are always drawn when the stepper is interactive: one with nowhere to go is disabled, not removed, so
+    // nothing in the row moves or changes size.
+    const backNode = summaryButtons && (
+      <IconButton
+        ref={backRef}
+        icon={vertical ? CaretUpIcon : CaretLeftIcon}
+        variant="tertiary"
+        size="xs"
+        aria-label={labels.previous}
+        className={styles.back}
+        disabled={previousIndex < 0}
+        onClick={() => pressSummaryButton(previousIndex)}
+      />
+    );
+    const nextNode = summaryButtons && (
+      <IconButton
+        ref={nextRef}
+        icon={vertical ? CaretDownIcon : CaretRightIcon}
+        variant="tertiary"
+        size="xs"
+        aria-label={labels.next}
+        className={styles.next}
+        disabled={nextIndex < 0}
+        onClick={() => pressSummaryButton(nextIndex)}
+      />
+    );
+    // Vertically the text is only the place ("3/4"), drawn for the eye; a screen reader gets the full words and the title.
+    const textNode = currentStep && (
+      <span className={styles.summaryText}>
+        {vertical ? (
+          <>
+            <span aria-hidden="true">{labels.place(currentIndex + 1, total)}</span>
+            <VisuallyHidden>
+              {labels.stepOf(currentIndex + 1, total)}
+              {currentStep.props.title ? ` — ${titleText(currentStep.props) || ""}` : ""}
+            </VisuallyHidden>
+          </>
+        ) : (
+          <>
+            {labels.stepOf(currentIndex + 1, total)}
+            {currentStep.props.title ? <> — {currentStep.props.title}</> : null}
+          </>
+        )}
+      </span>
+    );
+    const segmentsNode = (
+      <span aria-hidden="true" className={styles.segments}>
+        {steps.map((step, index) => (
+          <span
+            key={step.props.value}
+            className={styles.segment}
+            data-status={positionFor(step, index).status}
+            data-done={index <= currentIndex || undefined}
+          />
+        ))}
+      </span>
+    );
+    // Horizontally: the text, then Back and Next side by side at the end, with the bars beneath. Vertically, one column:
+    // Back (up), the bars, Next (down), then the place as text.
     const summary = compact !== "never" && (
       <div ref={summaryRef} tabIndex={-1} className={styles.summary}>
-        <span className={styles.summaryRow}>
-          {previousIndex >= 0 && (
-            <IconButton
-              ref={backRef}
-              icon={CaretLeftIcon}
-              variant="tertiary"
-              size="xs"
-              aria-label={labels.previous}
-              className={styles.back}
-              onClick={() => request(values[previousIndex]!)}
-            />
-          )}
-          {currentStep && (
-            <span className={styles.summaryText}>
-              {labels.stepOf(currentIndex + 1, total)}
-              {currentStep.props.title ? <> — {currentStep.props.title}</> : null}
+        {vertical ? (
+          <>
+            {backNode}
+            {segmentsNode}
+            {nextNode}
+            {textNode}
+          </>
+        ) : (
+          <>
+            <span className={cx(styles.summaryRow, summaryButtons && styles.summaryRowButtons)}>
+              {textNode}
+              {summaryButtons && (
+                <span className={styles.summaryButtons}>
+                  {backNode}
+                  {nextNode}
+                </span>
+              )}
             </span>
-          )}
-        </span>
-        <span aria-hidden="true" className={styles.segments}>
-          {steps.map((step, index) => (
-            <span
-              key={step.props.value}
-              className={styles.segment}
-              data-status={positionFor(step, index).status}
-              data-done={index <= currentIndex || undefined}
-            />
-          ))}
-        </span>
+            {segmentsNode}
+          </>
+        )}
       </div>
     );
 
@@ -570,7 +665,7 @@ const StepperRoot = forwardRef<HTMLElement, StepperProps>(
             sizeClass[size],
             toneClass[tone],
             variantClass[variant],
-            shapeClass[shape],
+            rounded && styles.rounded,
             connectorClass[connector],
             compactClass[compact],
             orientation === "vertical" ? styles.vertical : styles.horizontal,
@@ -599,13 +694,20 @@ const StepperRoot = forwardRef<HTMLElement, StepperProps>(
 StepperRoot.displayName = "Stepper";
 
 /**
- * Whether a step can be entered. `"completed"` allows every step before the current one — whatever it shows, so a step
- * with an error that was left behind can be gone back to — and any step marked complete.
+ * Whether a step can be entered. `"completed"` allows every step the person has reached — the furthest one they have been
+ * on and all before it, whatever they show, so a step with an error that was left behind can be gone back to and a step
+ * that was gone back from can be returned to — and any step marked complete.
  */
-function canEnter(interactive: StepperInteractive, status: StepStatus, index: number, currentIndex: number): boolean {
+function canEnter(
+  interactive: StepperInteractive,
+  status: StepStatus,
+  index: number,
+  currentIndex: number,
+  furthestIndex: number,
+): boolean {
   if (interactive === "none" || index === currentIndex) return false;
   if (interactive === "all") return true;
-  return index < currentIndex || status === "complete";
+  return index <= furthestIndex || status === "complete";
 }
 
 /** Scrolls `scroller` sideways just far enough for `element` to lie fully inside it. Nothing when it has no box (hidden). */

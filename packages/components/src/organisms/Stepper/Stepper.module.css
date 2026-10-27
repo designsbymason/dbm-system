@@ -15,6 +15,7 @@
   --stepper-solid: var(--dbm-bg-brand);
   --stepper-on: var(--dbm-icon-on-brand);
   --stepper-subtle: var(--dbm-bg-brand-subtle);
+  --stepper-subtle-border: var(--dbm-border-brand-subtle);
   --stepper-ring: var(--dbm-border-brand);
   --stepper-text: var(--dbm-text-brand);
   --stepper-icon: var(--dbm-icon-brand);
@@ -82,6 +83,7 @@
   --stepper-solid: var(--dbm-bg-info);
   --stepper-on: var(--dbm-icon-on-info);
   --stepper-subtle: var(--dbm-bg-info-subtle);
+  --stepper-subtle-border: var(--dbm-border-info-subtle);
   --stepper-ring: var(--dbm-border-info);
   --stepper-text: var(--dbm-text-info);
   --stepper-icon: var(--dbm-icon-info);
@@ -91,6 +93,7 @@
   --stepper-solid: var(--dbm-bg-success);
   --stepper-on: var(--dbm-icon-on-success);
   --stepper-subtle: var(--dbm-bg-success-subtle);
+  --stepper-subtle-border: var(--dbm-border-success-subtle);
   --stepper-ring: var(--dbm-border-success);
   --stepper-text: var(--dbm-text-success);
   --stepper-icon: var(--dbm-icon-success);
@@ -100,9 +103,21 @@
   --stepper-solid: var(--dbm-bg-highlight);
   --stepper-on: var(--dbm-icon-on-highlight);
   --stepper-subtle: var(--dbm-bg-highlight-subtle);
+  --stepper-subtle-border: var(--dbm-border-highlight-subtle);
   --stepper-ring: var(--dbm-border-highlight);
   --stepper-text: var(--dbm-text-highlight);
   --stepper-icon: var(--dbm-icon-highlight);
+}
+
+/* Neutral: grey progress. `border.neutral` is under 3:1 on the surface in light mode, so the ring is `border.neutral-strong`. */
+.toneNeutral {
+  --stepper-solid: var(--dbm-bg-neutral);
+  --stepper-on: var(--dbm-icon-on-neutral);
+  --stepper-subtle: var(--dbm-bg-neutral-subtle);
+  --stepper-subtle-border: var(--dbm-border-neutral-subtle);
+  --stepper-ring: var(--dbm-border-neutral-strong);
+  --stepper-text: var(--dbm-text-primary);
+  --stepper-icon: var(--dbm-icon-default);
 }
 
 .list {
@@ -231,10 +246,10 @@
 
 .indicator {
   align-items: center;
-  background-color: transparent;
+  background-color: var(--stepper-subtle);
   block-size: var(--stepper-indicator);
-  border: var(--dbm-border-width-2) solid var(--dbm-border-strong);
-  border-radius: var(--dbm-radius-full);
+  border: var(--dbm-border-width-2) solid var(--stepper-subtle-border);
+  border-radius: var(--dbm-radius-md);
   box-sizing: border-box;
   color: var(--dbm-text-secondary);
   display: inline-flex;
@@ -281,7 +296,11 @@
   color: var(--dbm-icon-secondary);
 }
 
-/* Outlined: every indicator is a ring on the page; the mark carries the colour. */
+/* Outlined: every indicator is a ring on the page; the mark carries the colour. A step not reached keeps the soft ring. */
+.variantOutlined .indicator {
+  background-color: transparent;
+}
+
 .variantOutlined .item[data-status="current"] .indicator {
   background-color: transparent;
 }
@@ -304,9 +323,9 @@
   color: var(--dbm-icon-warning);
 }
 
-/* A square with rounded corners, in place of the circle. */
-.shapeSquare .indicator {
-  border-radius: var(--dbm-radius-md);
+/* Round by default, as a stepper's indicators are; `rounded={false}` leaves the square with rounded corners. */
+.rounded .indicator {
+  border-radius: var(--dbm-radius-full);
 }
 
 /* --- Text. --- */
@@ -438,6 +457,7 @@
 
 .summary {
   display: none;
+  flex-direction: column;
   gap: var(--dbm-space-2);
 }
 
@@ -447,8 +467,26 @@
   gap: var(--dbm-space-2);
 }
 
-.back:dir(rtl) {
+/* The arrows point along the reading direction, so they flip under right-to-left text; vertically they are up and down. */
+.horizontal .back:dir(rtl),
+.horizontal .next:dir(rtl) {
   transform: scaleX(-1);
+}
+
+/* With buttons the row is as tall as one, so a step with none of them showing does not change its height. */
+.summaryRowButtons {
+  min-block-size: var(--dbm-icon-button-size-xs);
+}
+
+/* Back and Next side by side. */
+.summaryButtons {
+  display: flex;
+  flex: none;
+  gap: var(--dbm-space-1);
+}
+
+.summaryText {
+  flex: 1 1 auto;
 }
 
 /* Focus lands on the summary itself when the width crosses over with focus inside the steps. */
@@ -483,9 +521,31 @@
   background-color: var(--dbm-bg-danger);
 }
 
+/* Compact, vertical: one column — Up, the bars, Down, then the step's place as text — centred on one axis. */
+.vertical .summary {
+  align-items: center;
+  align-self: flex-start;
+  gap: var(--dbm-space-1);
+  inline-size: fit-content;
+}
+
+.vertical .summaryText {
+  flex: none;
+  text-align: center;
+}
+
+.vertical .segments {
+  flex-direction: column;
+}
+
+.vertical .segment {
+  block-size: auto;
+  inline-size: var(--dbm-space-1);
+  min-block-size: var(--dbm-space-4);
+}
+
 .compactAlways .summary {
   display: flex;
-  flex-direction: column;
 }
 
 .compactAlways .list {
@@ -498,7 +558,6 @@
 @media (max-width: 639px) {
   .compactAuto .summary {
     display: flex;
-    flex-direction: column;
   }
 
   .compactAuto .list {

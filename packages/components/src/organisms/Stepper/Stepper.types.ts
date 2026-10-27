@@ -18,10 +18,11 @@ export type StepperSize = "xs" | "sm" | "md" | "lg" | "xl";
 export type StepperVariant = "filled" | "outlined";
 
 /**
- * The colour of the progress: finished steps, the current step and the line between finished steps. A step with an
- * error is always `danger`, whatever the tone.
+ * The colour of the progress: finished steps, the current step and the line between finished steps, and the soft tint
+ * and border of a step not yet reached. `"neutral"` is grey. A step with an error is always `danger`, and one with a
+ * warning `warning`, whatever the tone.
  */
-export type StepperTone = "brand" | "info" | "success" | "highlight";
+export type StepperTone = "brand" | "info" | "success" | "highlight" | "neutral";
 
 /** Which way the steps run. A `"vertical"` stepper puts each step's text beside its indicator. */
 export type StepperOrientation = "horizontal" | "vertical";
@@ -39,8 +40,9 @@ export type StepperLabelPlacement = "end" | "bottom";
  * - `"auto"` — the full stepper from the `sm` breakpoint up, the summary on a phone-width screen.
  * - `"always"` — the summary at every width.
  *
- * The summary has no steps to enter. With `interactive` set it gains a button that goes back a step (the nearest
- * enterable one before the current step); going forward is the caller's own button. When the width crosses the
+ * The summary has no steps to enter. With `interactive` set it gains a back and a forward button, always both: one with
+ * nowhere to go (to the nearest step before or after the current one that `interactive` lets a person enter; with
+ * `"completed"` that is every step ahead of the furthest one reached) is disabled. When the width crosses the
  * `"auto"` breakpoint with focus inside the stepper, focus moves to the other form instead of being lost.
  */
 export type StepperCompact = "never" | "auto" | "always";
@@ -49,18 +51,13 @@ export type StepperCompact = "never" | "auto" | "always";
  * Which steps can be entered with a click or the keyboard.
  *
  * - `"none"` (the default) — none; the stepper only shows progress and has no focus stop.
- * - `"completed"` — the steps that are finished, to go back to one.
+ * - `"completed"` — the steps the person has reached: the furthest one they have been on and all before it (or marked
+ *   complete), so they can go back to one and forward again. Steps they have not reached stay closed.
  * - `"all"` — every step but the current one, for a flow that may be done in any order.
  *
  * A step that is `disabled` can never be entered.
  */
 export type StepperInteractive = "none" | "completed" | "all";
-
-/**
- * The shape of the indicators: `"circle"` (the default) or `"square"`, a square with rounded corners. The same two names
- * `Avatar`'s `shape` uses.
- */
-export type StepperShape = "circle" | "square";
 
 /**
  * The line between steps: `"solid"` (the default), `"dashed"`, or `"none"` to draw no line at all. Whatever this is,
@@ -95,7 +92,7 @@ export interface StepperController {
 export interface StepperLabels {
   /** The `<nav>`'s accessible name. @default 'Progress' */
   navigation: string;
-  /** Where a step is in the flow, given its place and the number of steps. @default (n, total) => `Step ${n} of ${total}` */
+  /** Where a step is in the flow, given its place and the number of steps. @default (n, total) => `Step ${n} of ${total}` (the numbers through `formatNumber`) */
   stepOf: (position: number, total: number) => string;
   /** Said after a finished step's title. @default 'completed' */
   complete: string;
@@ -109,10 +106,17 @@ export interface StepperLabels {
   warning: string;
   /** Said after a step that was skipped. @default 'skipped' */
   skipped: string;
+  /**
+   * The place of the current step in the compact vertical summary, which shows nothing else: given its place and the
+   * number of steps. @default (n, total) => `${n}/${total}`
+   */
+  place: (position: number, total: number) => string;
   /** Said after a step that is `busy`. @default 'in progress' */
   busy: string;
   /** The accessible name of the compact summary's button that goes back a step. @default 'Previous step' */
   previous: string;
+  /** The accessible name of the compact summary's button that goes forward a step. @default 'Next step' */
+  next: string;
   /** The mark on a step that may be left out. @default 'Optional' */
   optional: string;
 }
@@ -159,10 +163,12 @@ export interface StepperProps
    */
   tone?: StepperTone;
   /**
-   * The shape of the indicators — see {@link StepperShape}.
-   * @default 'circle'
+   * Draws the indicators as circles. Turn it off for squares with rounded corners. Matches the `rounded` prop on
+   * `Button`, `IconButton` and `CloseButton`, except that the default here is on: a stepper's indicators are round
+   * unless asked otherwise.
+   * @default true
    */
-  shape?: StepperShape;
+  rounded?: boolean;
   /**
    * The line between steps — see {@link StepperConnector}.
    * @default 'solid'

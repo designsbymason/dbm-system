@@ -341,19 +341,27 @@ export const BusyStepKeepsItsSize: Story = {
 };
 
 export const SquareIndicators: Story = {
-  name: "A square indicator has rounded corners, not a circle's, at every size",
+  name: "With rounded off an indicator is a square with rounded corners, and by default a circle, at every size",
   render: () => (
     <div style={{ display: "grid", gap: "var(--dbm-space-4)" }}>
-      {sizes.map((size) => (
-        <Demo key={size} size={size} shape="square" aria-label={`square ${size}`} />
-      ))}
+      <div data-testid="squares" style={{ display: "grid", gap: "var(--dbm-space-4)" }}>
+        {sizes.map((size) => (
+          <Demo key={size} size={size} rounded={false} aria-label={`square ${size}`} />
+        ))}
+      </div>
+      <div data-testid="circles">
+        <Demo aria-label="circles" />
+      </div>
     </div>
   ),
   play: async ({ canvasElement }) => {
-    for (const indicator of all(canvasElement, "indicator")) {
+    for (const indicator of all(canvasElement.querySelector<HTMLElement>("[data-testid='squares']")!, "indicator")) {
       const radius = parseFloat(getComputedStyle(indicator).borderTopLeftRadius);
       await expect(radius).toBeGreaterThan(0);
       await expect(radius).toBeLessThan(box(indicator).width / 2);
+    }
+    for (const indicator of all(canvasElement.querySelector<HTMLElement>("[data-testid='circles']")!, "indicator")) {
+      await expect(parseFloat(getComputedStyle(indicator).borderTopLeftRadius)).toBeGreaterThanOrEqual(box(indicator).width / 2);
     }
   },
 };
@@ -506,5 +514,135 @@ export const FocusFollowsTheWidth: Story = {
     } finally {
       frame!.style.width = original;
     }
+  },
+};
+
+export const UpcomingStepsAreTheSoftTone: Story = {
+  name: "A step not yet reached has the tone's subtle border, and its subtle fill when filled and none when outlined, in every tone",
+  render: () => (
+    <div style={{ display: "grid", gap: "var(--dbm-space-4)" }}>
+      {(["brand", "info", "success", "highlight", "neutral"] as const).flatMap((tone) =>
+        (["filled", "outlined"] as const).map((variant) => (
+          <div key={`${tone}-${variant}`} data-testid={`${tone}-${variant}`}>
+            <Demo tone={tone} variant={variant} aria-label={`${tone} ${variant}`} />
+          </div>
+        )),
+      )}
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const token = (name: string) => {
+      const probe = document.createElement("span");
+      probe.style.color = `var(--dbm-${name})`;
+      document.body.appendChild(probe);
+      const resolved = getComputedStyle(probe).color;
+      probe.remove();
+      return resolved;
+    };
+    for (const tone of ["brand", "info", "success", "highlight", "neutral"]) {
+      for (const variant of ["filled", "outlined"]) {
+        const items = within(canvas.getByTestId(`${tone}-${variant}`)).getAllByRole("listitem");
+        const upcoming = getComputedStyle(cls(items[3]!, "indicator"));
+        await expect(upcoming.borderTopColor, `${tone} ${variant} border`).toBe(token(`border-${tone}-subtle`));
+        await expect(upcoming.backgroundColor, `${tone} ${variant} fill`).toBe(
+          variant === "filled" ? token(`bg-${tone}-subtle`) : "rgba(0, 0, 0, 0)",
+        );
+      }
+    }
+  },
+};
+
+export const CompactRowDoesNotShift: Story = {
+  name: "Compact, from the first step to the last and back: Back and Next are always there side by side, and the row's size, the text and the buttons never move",
+  render: () => <Demo compact="always" interactive="all" defaultValue="account" data-testid="c" />,
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const nav = canvas.getByTestId("c");
+    const back = () => canvas.getByRole("button", { name: "Previous step" });
+    const next = () => canvas.getByRole("button", { name: "Next step" });
+    const textLeft = () => {
+      const range = document.createRange();
+      range.selectNodeContents(cls(nav, "summaryText"));
+      return range.getBoundingClientRect().left;
+    };
+    const measure = () => [box(nav).height, box(nav).width, box(cls(nav, "segments")).top, textLeft(), box(back()).left, box(next()).left];
+    const first = measure();
+    // Side by side: Back ends where Next begins, bar the gap.
+    await expect(box(next()).left - box(back()).right).toBeLessThanOrEqual(8);
+    await expect(box(next()).left - box(back()).right).toBeGreaterThanOrEqual(0);
+    await expect(back()).toBeDisabled();
+    await expect(next()).toBeEnabled();
+    for (const _ of [0, 1, 2]) {
+      await userEvent.click(next());
+      const now = measure();
+      for (const [axis, value] of first.entries()) {
+        await expect(Math.abs(now[axis]! - value), `forward axis ${axis}`).toBeLessThanOrEqual(0.5);
+      }
+    }
+    await expect(next()).toBeDisabled();
+    await expect(back()).toBeEnabled();
+    await expect(nav.contains(document.activeElement) && document.activeElement !== document.body).toBe(true);
+    await expect(document.activeElement).toBe(back());
+    for (const _ of [0, 1, 2]) {
+      await userEvent.click(back());
+      const now = measure();
+      for (const [axis, value] of first.entries()) {
+        await expect(Math.abs(now[axis]! - value), `back axis ${axis}`).toBeLessThanOrEqual(0.5);
+      }
+    }
+    await expect(back()).toBeDisabled();
+    await expect(document.activeElement).toBe(next());
+  },
+};
+
+export const CompactVerticalColumn: Story = {
+  name: "Compact and vertical: one column of Up, the bars, Down and the place as numbers, both arrows always there, and nothing moving from the first step to the last and back",
+  render: () => <Demo compact="always" orientation="vertical" interactive="all" defaultValue="account" data-testid="cv" />,
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const nav = canvas.getByTestId("cv");
+    const segments = all(nav, "segment");
+    const text = cls(nav, "summaryText");
+    const back = () => canvas.getByRole("button", { name: "Previous step" });
+    const next = () => canvas.getByRole("button", { name: "Next step" });
+    const measure = () => [box(nav).height, box(nav).width, box(cls(nav, "segments")).top, box(text).top, box(text).left, box(back()).top, box(next()).top];
+    const first = measure();
+    // The bars: a column, in order, each taller than wide, the same x.
+    await expect(segments).toHaveLength(4);
+    for (const [index, segment] of segments.entries()) {
+      if (index > 0) await expect(box(segment).top).toBeGreaterThan(box(segments[index - 1]!).top);
+      await expect(Math.abs(box(segment).left - box(segments[0]!).left)).toBeLessThanOrEqual(0.5);
+      await expect(box(segment).width).toBeLessThan(box(segment).height);
+    }
+    // Up above the bars, Down below them, the place below Down, all on one axis; the place is just numbers.
+    await expect(box(back()).bottom).toBeLessThanOrEqual(box(segments[0]!).top + 0.5);
+    await expect(box(next()).top).toBeGreaterThanOrEqual(box(segments[3]!).bottom - 0.5);
+    await expect(box(text).top).toBeGreaterThanOrEqual(box(next()).bottom - 0.5);
+    await expect(Math.abs(centreX(back()) - centreX(segments[0]!))).toBeLessThanOrEqual(1);
+    await expect(Math.abs(centreX(next()) - centreX(segments[0]!))).toBeLessThanOrEqual(1);
+    await expect(text.querySelector("[aria-hidden='true']")!.textContent).toBe("1/4");
+    await expect(back()).toBeDisabled();
+    for (const _ of [0, 1, 2]) {
+      await userEvent.click(next());
+      const now = measure();
+      for (const [axis, value] of first.entries()) {
+        await expect(Math.abs(now[axis]! - value), `forward axis ${axis}`).toBeLessThanOrEqual(0.5);
+      }
+    }
+    await expect(text.querySelector("[aria-hidden='true']")!.textContent).toBe("4/4");
+    await expect(next()).toBeDisabled();
+    await expect(document.activeElement).toBe(back());
+    for (const _ of [0, 1, 2]) {
+      await userEvent.click(back());
+      const now = measure();
+      for (const [axis, value] of first.entries()) {
+        await expect(Math.abs(now[axis]! - value), `back axis ${axis}`).toBeLessThanOrEqual(0.5);
+      }
+    }
+    await expect(back()).toBeDisabled();
+    await expect(document.activeElement).toBe(next());
+    const done = segments.map((segment) => getComputedStyle(segment).backgroundColor);
+    await expect(done[1]).not.toBe(done[0]);
   },
 };

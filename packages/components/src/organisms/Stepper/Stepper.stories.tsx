@@ -13,7 +13,6 @@ import type {
   StepperLabelPlacement,
   StepperOrientation,
   StepperProps,
-  StepperShape,
   StepperSize,
   StepperTone,
   StepperVariant,
@@ -26,7 +25,7 @@ interface PlaygroundArgs {
   size: StepperSize;
   variant: StepperVariant;
   tone: StepperTone;
-  shape: StepperShape;
+  rounded: boolean;
   connector: StepperConnector;
   labelPlacement: StepperLabelPlacement;
   compact: StepperCompact;
@@ -67,7 +66,7 @@ const Demo = (props: DemoProps) => (
 );
 
 const allSizes: StepperSize[] = ["xs", "sm", "md", "lg", "xl"];
-const allTones: StepperTone[] = ["brand", "info", "success", "highlight"];
+const allTones: StepperTone[] = ["brand", "info", "success", "highlight", "neutral"];
 
 // A fixed-render story ignores its own args, so every control it can't honour is
 // turned off (07-storybook-and-documentation-standards.md §5).
@@ -77,7 +76,7 @@ const noControls = {
   size: off,
   variant: off,
   tone: off,
-  shape: off,
+  rounded: off,
   connector: off,
   labelPlacement: off,
   compact: off,
@@ -132,15 +131,14 @@ const meta: Meta<PlaygroundArgs> = {
     },
     tone: {
       control: "select",
-      options: ["brand", "info", "success", "highlight"],
+      options: ["brand", "info", "success", "highlight", "neutral"],
       description: "The colour of the progress: finished steps, the current step and the line between finished steps. A step with an error is always red.",
       table: { defaultValue: { summary: '"brand"' } },
     },
-    shape: {
-      control: "select",
-      options: ["circle", "square"],
-      description: "The shape of the indicators: a circle, or a square with rounded corners.",
-      table: { defaultValue: { summary: '"circle"' } },
+    rounded: {
+      control: "boolean",
+      description: "Draws the indicators as circles. Turn it off for squares with rounded corners.",
+      table: { defaultValue: { summary: "true" } },
     },
     connector: {
       control: "select",
@@ -182,7 +180,7 @@ const meta: Meta<PlaygroundArgs> = {
     labels: {
       control: false,
       description:
-        "The text the component supplies itself, each part replaceable: navigation, stepOf (a function of a step's place and the total), complete, current, upcoming, error, skipped and optional.",
+        "The text the component supplies itself, each part replaceable: navigation, stepOf and place (functions of a step's place and the total), complete, current, upcoming, error, warning, skipped, busy, previous, next and optional.",
     },
     controllerRef: {
       control: false,
@@ -214,7 +212,7 @@ const meta: Meta<PlaygroundArgs> = {
     size: "md",
     variant: "filled",
     tone: "brand",
-    shape: "circle",
+    rounded: true,
     connector: "solid",
     labelPlacement: "end",
     compact: "never",
@@ -233,7 +231,7 @@ const meta: Meta<PlaygroundArgs> = {
       size={args.size}
       variant={args.variant}
       tone={args.tone}
-      shape={args.shape}
+      rounded={args.rounded}
       connector={args.connector}
       labelPlacement={args.orientation === "vertical" ? undefined : args.labelPlacement}
       compact={args.compact}
@@ -383,7 +381,7 @@ export const BusyAndWarning: Story = {
 export const Square: Story = {
   name: "Square indicators",
   argTypes: { ...except("variant", "size") },
-  render: (args) => <Demo shape="square" variant={args.variant} size={args.size} aria-label="Square" />,
+  render: (args) => <Demo rounded={false} variant={args.variant} size={args.size} aria-label="Square" />,
   parameters: { docs: { source: { code: stepperSnippets.square } } },
 };
 
@@ -470,10 +468,17 @@ export const Compact: Story = {
 };
 
 export const CompactBack: Story = {
-  name: "Compact, with a way back",
+  name: "Compact, with Back and Next",
   argTypes: { ...noControls },
-  render: () => <Demo compact="always" defaultValue="payment" interactive="completed" aria-label="Compact with back" />,
+  render: () => <Demo compact="always" defaultValue="payment" interactive="all" aria-label="Compact with back and next" />,
   parameters: { docs: { source: { code: stepperSnippets.compactBack } } },
+};
+
+export const CompactVertical: Story = {
+  name: "Compact and vertical, in one column",
+  argTypes: { ...noControls },
+  render: () => <Demo compact="always" orientation="vertical" defaultValue="payment" interactive="all" aria-label="Compact vertical" />,
+  parameters: { docs: { source: { code: stepperSnippets.compactVertical } } },
 };
 
 /** Next and Back are buttons of your own, outside the stepper; the controller asks for the change. */

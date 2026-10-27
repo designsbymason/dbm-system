@@ -16,7 +16,7 @@ export const rootPropOrder = [
   "size",
   "variant",
   "tone",
-  "shape",
+  "rounded",
   "connector",
   "labelPlacement",
   "interactive",
@@ -70,7 +70,7 @@ buttons that move between steps are yours, and so is deciding whether a step may
 `<nav>` around an ordered list, so it reads as a list of steps to a screen reader, and it is a read-out
 of progress by default; `interactive` lets a person click back to a finished step, or to any step.
 
-Choose how big it is with `size`, how the indicators look with `variant` and `shape`, the colour of the
+Choose how big it is with `size`, how the indicators look with `variant` and `rounded`, the colour of the
 progress with `tone`, the line between steps with `connector`, and which way it runs with `orientation`
 (which can change with the width). `compact` swaps the steps for a one-line summary ("Step 2 of 4 —
 Shipping") on a phone, and `controllerRef` hands Next, Back and go-to-step to a button of your own.
@@ -182,9 +182,13 @@ passed straight through to the underlying element.
 
 <Canvas of={StepperStories.Compact} />
 
-### Compact, with a way back
+### Compact, with Back and Next
 
 <Canvas of={StepperStories.CompactBack} />
+
+### Compact and vertical, in one column
+
+<Canvas of={StepperStories.CompactVertical} />
 
 ### Next and Back from a controller
 
@@ -209,8 +213,8 @@ passed straight through to the underlying element.
 
 - Use it for a flow with a fixed order that a person works through: a checkout, a setup wizard, an onboarding.
 - Keep the titles short — one or two words — and put detail in `description`.
-- Set `status="error"` on a step whose content has a problem, so a person who has moved on can see where to go back; with `interactive="completed"` every step before the current one can be entered, whatever it shows.
-- Keep `interactive="none"` for a strictly linear flow, and `"completed"` where going back is safe.
+- Set `status="error"` on a step whose content has a problem, so a person who has moved on can see where to go back; with `interactive="completed"` every step the person has reached can be entered, whatever it shows.
+- Keep `interactive="none"` for a strictly linear flow, and `"completed"` where going back is safe: the person can then return to a step they came back from, but never jump past the furthest one they reached. To close the steps ahead again (their content must be redone), remount the stepper with a new `key`.
 
 </Callout>
 <Callout tone="danger" title="Don't">
@@ -233,8 +237,14 @@ passed straight through to the underlying element.
   a screen reader should hear the step change once, not twice.
 - A horizontal stepper with many steps scrolls sideways inside its own width instead of squeezing them.
   For more than a handful on a phone, use `compact="auto"`.
-- The compact summary has no steps to enter. With `interactive` set it gains a button that goes back a step;
-  going forward is your own button, or `controllerRef.next()`.
+- The compact summary has no steps to enter. With `interactive` set it always shows a Back and a Next button
+  (to the nearest step either side of the current one that `interactive` lets a person enter), and one with
+  nowhere to go is disabled, not hidden, so nothing moves as a person goes along. Horizontally they sit side by
+  side after the text; vertically the summary is one column — an up arrow, the bars, a down arrow, then the
+  step's place as numbers ("3/4"), with the full words and the title kept for a screen reader. The bars are a
+  picture of progress, not controls: each is a few pixels tall, far under a usable target. With
+  `interactive="completed"` Next is enabled only for a step ahead that was reached before going back, and is
+  disabled at the furthest step: use your own button, or `controllerRef.next()`, to move on.
 - Show a running check with `busy` on the step, not by changing its status, and set `status="warning"` for a
   step that can be continued from but needs another look; keep `"error"` for one that must be fixed.
 - Use `orientation={{ base: "vertical", md: "horizontal" }}` to stack the steps on a phone and keep each of them;
@@ -269,7 +279,8 @@ step into view, and is itself a tab stop only while it scrolls and has no step t
 The compact form hides the steps with `display: none` and shows a visible summary, so a screen reader
 hears one line, not a list; use `"never"` where a phone reader should hear every step. When the width
 crosses the `"auto"` breakpoint with focus inside the stepper, focus moves to the other form (the summary's
-back button, or the first step that can be entered) instead of being lost. In forced-colours
+back or forward button that is enabled, or the first step that can be entered) instead of being lost. A button that is pressed and then becomes
+disabled (back at the first step, forward at the last) hands its focus to the other one, or the summary. In forced-colours
 mode a finished or current step is told by a thicker `Highlight` border, an unreached one by `GrayText`,
 and the line between steps is drawn in system colours.
 
@@ -324,25 +335,34 @@ const controller = useRef<StepperController>(null);
 ## Design tokens used
 
 <TokenRow token="bg.brand" usage="a finished step's disc and line in the brand tone" />
-<TokenRow token="bg.brand-subtle" usage="the current step's tint in the brand tone" />
+<TokenRow token="bg.brand-subtle" usage="the tint of the current step and of a step not yet reached, in the brand tone" />
 <TokenRow token="bg.info" usage="a finished step's disc and line in the info tone" />
-<TokenRow token="bg.info-subtle" usage="the current step's tint in the info tone" />
+<TokenRow token="bg.info-subtle" usage="the same, in the info tone" />
 <TokenRow token="bg.success" usage="a finished step's disc and line in the success tone" />
-<TokenRow token="bg.success-subtle" usage="the current step's tint in the success tone" />
+<TokenRow token="bg.success-subtle" usage="the same, in the success tone" />
 <TokenRow token="bg.highlight" usage="a finished step's disc and line in the highlight tone" />
-<TokenRow token="bg.highlight-subtle" usage="the current step's tint in the highlight tone" />
+<TokenRow token="bg.highlight-subtle" usage="the same, in the highlight tone" />
+<TokenRow token="bg.neutral" usage="a finished step's disc and line in the neutral tone" />
+<TokenRow token="bg.neutral-subtle" usage="the same tint in the neutral tone; a skipped step; the hover background of a step that can be entered" />
 <TokenRow token="bg.danger" usage="a step with an error" />
 <TokenRow token="bg.warning" usage="a step with a warning" />
-<TokenRow token="bg.neutral-subtle" usage="a skipped step; the hover background of a step that can be entered" />
+<TokenRow token="border.brand-subtle" usage="the soft ring of a step not yet reached, in the brand tone" />
+<TokenRow token="border.info-subtle" usage="the same, in the info tone" />
+<TokenRow token="border.success-subtle" usage="the same, in the success tone" />
+<TokenRow token="border.highlight-subtle" usage="the same, in the highlight tone" />
+<TokenRow token="border.neutral-subtle" usage="the same, in the neutral tone" />
 <TokenRow token="border.brand" usage="the current step's ring in the brand tone; a finished step's ring when outlined" />
 <TokenRow token="border.info" usage="the same, in the info tone" />
 <TokenRow token="border.success" usage="the same, in the success tone" />
 <TokenRow token="border.highlight" usage="the same, in the highlight tone" />
 <TokenRow token="border.danger" usage="an outlined step with an error" />
 <TokenRow token="border.warning" usage="an outlined step with a warning" />
-<TokenRow token="border.strong" usage="the ring of a step not yet reached; a skipped step" />
+<TokenRow token="border.strong" usage="a skipped step's ring" />
+<TokenRow token="border.neutral-strong" usage="the ring of the current step and of a finished outlined step, in the neutral tone" />
 <TokenRow token="border.default" usage="the line between steps and the compact segments before they are reached" />
 <TokenRow token="border.focus" usage="the focus ring on a step that can be entered" />
+<TokenRow token="icon.on-neutral" usage="the check on a finished step, in the neutral tone" />
+<TokenRow token="icon.default" usage="the check on a finished outlined step, in the neutral tone" />
 <TokenRow token="icon.on-brand" usage="the check on a finished step, in the brand tone" />
 <TokenRow token="icon.on-info" usage="the check on a finished step, in the info tone" />
 <TokenRow token="icon.on-success" usage="the check on a finished step, in the success tone" />
@@ -368,6 +388,7 @@ const controller = useRef<StepperController>(null);
 <TokenRow token="stepper.indicator-size.md" usage="the indicator's diameter at size md" />
 <TokenRow token="stepper.indicator-size.lg" usage="the indicator's diameter at size lg" />
 <TokenRow token="stepper.indicator-size.xl" usage="the indicator's diameter at size xl" />
+<TokenRow token="icon-button.size.xs" usage="the height a compact summary keeps for its buttons, shown or not, so the row never changes height" />
 <TokenRow token="stepper.label-max-width" usage="the widest a step's title and description grow in a horizontal stepper before they wrap" />
 <TokenRow token="font-family.primary" usage="the stepper's typography" />
 <TokenRow token="font-size.xs" usage="text and numbers at the smaller sizes; descriptions" />
