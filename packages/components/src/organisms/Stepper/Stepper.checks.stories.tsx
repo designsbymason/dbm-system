@@ -646,3 +646,91 @@ export const CompactVerticalColumn: Story = {
     await expect(done[1]).not.toBe(done[0]);
   },
 };
+
+export const SummaryButtonsAreBigEnough: Story = {
+  name: "The compact summary's Back and Next are at least 24 by 24 pixels, horizontally and vertically",
+  render: () => (
+    <div style={{ display: "grid", gap: "var(--dbm-space-6)" }}>
+      <Demo compact="always" interactive="all" aria-label="horizontal summary" />
+      <Demo compact="always" interactive="all" orientation="vertical" aria-label="vertical summary" />
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    const buttons = [...within(canvasElement).getAllByRole("button", { name: /(Previous|Next) step/ })];
+    await expect(buttons).toHaveLength(4);
+    for (const button of buttons) {
+      await expect(box(button).width).toBeGreaterThanOrEqual(24);
+      await expect(box(button).height).toBeGreaterThanOrEqual(24);
+    }
+  },
+};
+
+export const CompactRightToLeft: Story = {
+  name: "Compact, right to left: the text starts at the right, Back is to the right of Next, and their arrows point the reading way",
+  render: () => <Demo compact="always" interactive="all" defaultValue="shipping" dir="rtl" data-testid="rtl" />,
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const nav = canvas.getByTestId("rtl");
+    const back = canvas.getByRole("button", { name: "Previous step" });
+    const next = canvas.getByRole("button", { name: "Next step" });
+    await expect(box(back).left).toBeGreaterThan(box(next).left);
+    const range = document.createRange();
+    range.selectNodeContents(cls(nav, "summaryText"));
+    await expect(box(cls(nav, "summaryRow")).right - range.getBoundingClientRect().right).toBeLessThanOrEqual(2);
+    // The arrows flip so Back points right and Next left, as the reading direction runs.
+    await expect(getComputedStyle(back).transform).toBe("matrix(-1, 0, 0, 1, 0, 0)");
+    await expect(getComputedStyle(next).transform).toBe("matrix(-1, 0, 0, 1, 0, 0)");
+    await userEvent.click(next);
+    await expect(cls(nav, "summaryText").textContent).toContain("Step 3 of 4");
+  },
+};
+
+export const LongTitleKeepsTheSummaryOneLine: Story = {
+  name: "Compact, a long title is cut with an ellipsis, so the row's height is the same on every step",
+  render: function LongTitleStory() {
+    return (
+      <div style={{ inlineSize: "18rem" }}>
+        <Stepper compact="always" interactive="all" defaultValue="a" aria-label="long" data-testid="long">
+          <Stepper.Step value="a" title="Short" />
+          <Stepper.Step value="b" title="Verify the billing address on the account holder's most recent statement" />
+          <Stepper.Step value="c" title="Done" />
+        </Stepper>
+      </div>
+    );
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const nav = canvas.getByTestId("long");
+    const first = box(nav).height;
+    await userEvent.click(canvas.getByRole("button", { name: "Next step" }));
+    const text = cls(nav, "summaryText");
+    await expect(text.scrollWidth, "the text is longer than its box").toBeGreaterThan(text.clientWidth);
+    await expect(getComputedStyle(text).textOverflow).toBe("ellipsis");
+    await expect(Math.abs(box(nav).height - first)).toBeLessThanOrEqual(0.5);
+    // Cut visually only: the whole title is still in the text, and the buttons stay on the row.
+    await expect(text.textContent).toContain("most recent statement");
+    await expect(box(canvas.getByRole("button", { name: "Next step" })).right).toBeLessThanOrEqual(box(nav).right + 0.5);
+    await userEvent.click(canvas.getByRole("button", { name: "Next step" }));
+    await expect(Math.abs(box(nav).height - first)).toBeLessThanOrEqual(0.5);
+  },
+};
+
+export const DisabledStepIsAnUnavailableButton: Story = {
+  name: "A disabled step is a disabled button in the page: not a tab stop, and not pressed by a click",
+  render: () => (
+    <Stepper interactive="all" defaultValue="a" aria-label="disabled" data-testid="dis">
+      <Stepper.Step value="a" title="One" />
+      <Stepper.Step value="b" title="Two" disabled />
+      <Stepper.Step value="c" title="Three" />
+    </Stepper>
+  ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const two = canvas.getByRole("button", { name: /^Two/ });
+    await expect(two).toBeDisabled();
+    await expect(getComputedStyle(two).cursor).toBe("not-allowed");
+    await userEvent.tab();
+    await expect(canvas.getByRole("button", { name: /^Three/ })).toHaveFocus();
+    await expect(canvas.getByText("One").closest("li")).toHaveAttribute("aria-current", "step");
+  },
+};

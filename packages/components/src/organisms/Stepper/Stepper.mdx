@@ -250,7 +250,10 @@ passed straight through to the underlying element.
 - Use `orientation={{ base: "vertical", md: "horizontal" }}` to stack the steps on a phone and keep each of them;
   use `compact` to replace them with a summary instead.
 - Every piece of text the component writes itself is in `labels`, so a translated flow replaces the whole
-  set in one place; `formatNumber` writes the digits.
+  set in one place; `formatNumber` writes the digits. Three of the labels are whole sentences — `summary`
+  (the compact text), `announcement` (what a screen reader hears when the step changes) and `statusText` (what
+  it hears after each step's title) — so a translation chooses its own punctuation and word order. By default
+  they build on `stepOf`, so translating `stepOf` alone reaches all of them.
 
 ## Accessibility
 
@@ -260,13 +263,13 @@ The stepper is a `<nav>` — a navigation landmark, named "Progress" (or your ow
 `labels.navigation` or `aria-label`) — around an ordered list, so a screen reader announces how many
 steps there are and which one it is on. The list and its items state their `list` and `listitem` roles
 outright, because Safari with VoiceOver otherwise stops treating a list with its markers removed as one.
-The current step carries `aria-current="step"`. Each step's text is its title, followed by a visually
+The current step's list item carries `aria-current="step"`. Each step's text is its title, followed by a visually
 hidden "(Step 2 of 4, current)", so its place and status are heard without relying on colour; the number
 or check inside the indicator is hidden. When the current step changes, a polite live region announces
 "Step 3 of 4: Payment" — only a change, never the first render.
 
 A step that can be entered is a real `<button>` (or your link), so it has a focus stop; every other step
-has none. A step that is `busy` is `aria-busy` and its status text adds "in progress"; a step with a warning
+has none. A step that is `disabled` is a disabled button, announced as unavailable and not a tab stop. A step that is `busy` is `aria-busy` and its status text adds "in progress"; a step with a warning
 adds "has a warning". A strip too narrow for its steps scrolls sideways, brings the current and the focused
 step into view, and is itself a tab stop only while it scrolls and has no step to focus. With the default `interactive="none"`, the stepper has no keyboard interaction at all.
 
@@ -276,7 +279,7 @@ step into view, and is itself a tab stop only while it scrolls and has no step t
 | `Shift+Tab` | Moves to the previous one |
 | `Enter` / `Space` | Chooses the focused step (asks through `onValueChange`) |
 
-The compact form hides the steps with `display: none` and shows a visible summary, so a screen reader
+The compact form hides the steps with `display: none` and shows a visible summary (one line, cut with an ellipsis if the title is long, so the row never changes height), so a screen reader
 hears one line, not a list; use `"never"` where a phone reader should hear every step. When the width
 crosses the `"auto"` breakpoint with focus inside the stepper, focus moves to the other form (the summary's
 back or forward button that is enabled, or the first step that can be entered) instead of being lost. A button that is pressed and then becomes

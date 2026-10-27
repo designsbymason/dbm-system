@@ -141,7 +141,8 @@ ${stepper('compact="always"')}`,
   namedNav: `{/* Name each stepper when a page holds more than one */}
 ${stepper('aria-label="Checkout progress"')}`,
 
-  translated: `{/* labels holds every piece of text the component writes itself; formatNumber writes the digits */}
+  translated: `{/* labels holds every piece of text the component writes itself; formatNumber writes the digits.
+    The summary, announcement and statusText sentences build on stepOf unless you give them too. */}
 ${stepper(
   `labels={{ navigation: "Progression", stepOf: (n, total) => \`Étape \${n} sur \${total}\`, complete: "terminée", current: "en cours", upcoming: "à venir" }}`,
 )}`,

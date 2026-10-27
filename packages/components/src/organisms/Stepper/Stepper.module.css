@@ -485,10 +485,6 @@
   gap: var(--dbm-space-1);
 }
 
-.summaryText {
-  flex: 1 1 auto;
-}
-
 /* Focus lands on the summary itself when the width crosses over with focus inside the steps. */
 .summary:focus-visible {
   border-radius: var(--dbm-radius-sm);
@@ -496,9 +492,16 @@
   outline-offset: calc(-1 * var(--dbm-border-width-2));
 }
 
+/* One line, cut with an ellipsis (the whole text is a tooltip and is read in full), so a long title never changes the
+   row's height as a person moves from step to step. */
 .summaryText {
   color: var(--dbm-text-primary);
+  flex: 1 1 auto;
   font-weight: var(--dbm-font-weight-semibold);
+  min-inline-size: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .segments {
@@ -531,6 +534,7 @@
 
 .vertical .summaryText {
   flex: none;
+  overflow: visible;
   text-align: center;
 }
 

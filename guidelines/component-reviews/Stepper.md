@@ -56,3 +56,16 @@ At the maintainer's direction:
 
 ## Returning to a reached step
 `interactive="completed"` now means the steps the person has reached (the furthest step they have been on, and all before it) rather than only those before the current one, so after going back they can go forward again and the compact Next button is enabled for it. The furthest step is kept inside the stepper from the current step (controlled or not) and never goes down; a flow that must close the steps ahead again remounts the stepper with a new `key`. A step ahead that was reached still shows as not started (the statuses are drawn from the current step, as before); set `status="complete"` on it to show it finished.
+
+## Final review pass
+Findings of the final §9 pass, all fixed:
+- **A disabled step is a native disabled button** (it was a role-less `div` with `aria-disabled`, which assistive technology ignores): announced as unavailable, out of the tab order, `cursor: not-allowed`.
+- **`aria-current="step"` is on the current step's `<li>`.** The current step is never one that can be entered, so it was always on a role-less `div`.
+- **The compact horizontal summary is one line**, cut with an ellipsis (the full text is the tooltip and is read in full), so a long title does not change the row's height from step to step; a real-browser check with a long title in a narrow box asserts it (and fails with the rule removed).
+- **`Stepper.tsx` is split** from 728 lines, the root one function of about 380, into `StepperStep.tsx`, `StepperSummary.tsx`, `StepperContext.ts`, `stepperHelpers.ts` (`canEnter`, `derivedStatus`, `revealInline`, `titleText`, the English labels) and the hooks `useStepperState` (value, furthest step, announcement), `useStepperController` and `useStepperFocus` (the strip, focus kept across the breakpoint and when a summary button becomes disabled). No behaviour changed; the helpers have their own tests.
+- **A server-render and hydration test** (`Stepper.ssr.test.tsx`), with a responsive orientation, `compact="auto"` and `interactive="completed"`.
+- **Docs table:** `Stepper.Step`'s `busy` row was missing; `formatNumber`'s description now states its default.
+- **The stylesheet's duplicate `.summaryText` blocks are merged.**
+- **Checks added:** the summary buttons are at least 24 by 24 at both orientations; the compact form in right-to-left (text at the right, Back right of Next, arrows flipped); a disabled step is a disabled button.
+- **Text it writes is all in `labels`:** `summary`, `announcement` and `statusText` are whole-sentence labels (a translation chooses its own punctuation and order), built by default on the `stepOf` in use, so translating `stepOf` alone reaches all of them. The compact summary's title is the plain `textValue`/string title, since a label is a string.
+- **Story names** match their Docs headings.

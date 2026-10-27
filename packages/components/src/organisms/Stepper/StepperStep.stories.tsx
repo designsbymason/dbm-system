@@ -15,12 +15,17 @@ const meta: Meta<typeof Stepper.Step> = {
     },
     title: { control: "text", description: "The step's name. Also announced when the step becomes current, if it is plain text (or textValue is set)." },
     description: { control: "text", description: "A line of text under the title." },
-    textValue: { control: "text", description: "The title as plain text, for the announcement, when title is not a string." },
+    textValue: { control: "text", description: "The title as plain text, for the announcement and the compact summary, when title is not a string." },
     icon: { control: false, description: "An icon to draw in the indicator in place of the number. A finished step still shows its check." },
     status: {
       control: "select",
       options: [undefined, "complete", "error", "skipped"],
       description: "Overrides what the step shows, in place of working it out from the current step.",
+    },
+    busy: {
+      control: "boolean",
+      description: "Shows a spinner in the indicator in place of its mark and marks the control aria-busy, for a step whose check or save is running. The status word for busy is added to what a screen reader hears.",
+      table: { defaultValue: { summary: "false" } },
     },
     optional: { control: "boolean", description: "Marks the step as one that may be left out.", table: { defaultValue: { summary: "false" } } },
     disabled: { control: "boolean", description: "Stops the step being entered, whatever interactive says.", table: { defaultValue: { summary: "false" } } },

@@ -319,8 +319,36 @@ describe("Stepper — interaction", () => {
         <Stepper.Step value="b" title="Two" disabled />
       </Basic>,
     );
-    expect(screen.queryByRole("button")).toBeNull();
-    expect(item("Two").querySelector("[aria-disabled='true']")).not.toBeNull();
+    // A native disabled button: announced as unavailable, and never a tab stop.
+    const two = screen.getByRole("button", { name: /^Two/ });
+    expect(two).toBeDisabled();
+    expect(screen.getAllByRole("button")).toHaveLength(1);
+  });
+
+  it("keeps a disabled step out of the tab order and does not act on a click", async () => {
+    const onValueChange = vi.fn();
+    const user = userEvent.setup();
+    render(
+      <>
+        <button>before</button>
+        <Basic interactive="all" defaultValue="a" onValueChange={onValueChange}>
+          <Stepper.Step value="a" title="One" />
+          <Stepper.Step value="b" title="Two" disabled />
+          <Stepper.Step value="c" title="Three" />
+        </Basic>
+      </>,
+    );
+    await user.tab();
+    await user.tab();
+    expect(screen.getByRole("button", { name: /^Three/ })).toHaveFocus();
+    await user.click(screen.getByRole("button", { name: /^Two/ }));
+    expect(onValueChange).not.toHaveBeenCalled();
+  });
+
+  it("puts aria-current on the current step's list item, where a list reader finds it", () => {
+    render(<Basic />);
+    expect(item("Shipping")).toHaveAttribute("aria-current", "step");
+    expect(item("Account")).not.toHaveAttribute("aria-current");
   });
 
   it("draws a summary of the current step for the compact form", () => {
@@ -345,6 +373,84 @@ describe("Stepper — interaction", () => {
     link.addEventListener("click", (event) => event.preventDefault());
     await user.click(link);
     expect(onValueChange).toHaveBeenCalledWith("a");
+  });
+});
+
+describe("Stepper — the text it writes", () => {
+  it("writes the compact summary, the announcement and the status text from one place by default", () => {
+    vi.useFakeTimers();
+    const { container, rerender } = render(<Basic compact="always" value="shipping" />);
+    expect(container.querySelector("[class*='_summaryText_']")).toHaveTextContent("Step 2 of 4 — Shipping");
+    rerender(<Basic compact="always" value="payment" />);
+    act(() => vi.advanceTimersByTime(200));
+    expect(screen.getByRole("status")).toHaveTextContent("Step 3 of 4: Payment");
+    expect(item("Payment")).toHaveTextContent("(Step 3 of 4, current)");
+  });
+
+  it("leaves the title out of the summary and the announcement when there is none", () => {
+    vi.useFakeTimers();
+    const { container, rerender } = render(
+      <Basic compact="always" value="a">
+        <Stepper.Step value="a" title={<em>One</em>} />
+        <Stepper.Step value="b" title={<em>Two</em>} />
+      </Basic>,
+    );
+    expect(container.querySelector("[class*='_summaryText_']")).toHaveTextContent(/^Step 1 of 2$/);
+    rerender(
+      <Basic compact="always" value="b">
+        <Stepper.Step value="a" title={<em>One</em>} />
+        <Stepper.Step value="b" title={<em>Two</em>} />
+      </Basic>,
+    );
+    act(() => vi.advanceTimersByTime(200));
+    expect(screen.getByRole("status")).toHaveTextContent(/^Step 2 of 2$/);
+  });
+
+  it("uses textValue for a title that is not plain text", () => {
+    const { container } = render(
+      <Basic compact="always" value="a">
+        <Stepper.Step value="a" title={<em>One</em>} textValue="First" />
+      </Basic>,
+    );
+    expect(container.querySelector("[class*='_summaryText_']")).toHaveTextContent("Step 1 of 1 — First");
+  });
+
+  it("applies a translated summary, announcement and status text", () => {
+    vi.useFakeTimers();
+    const labels = {
+      summary: (n: number, total: number, title: string) => `${title} (${n}/${total})`,
+      announcement: (n: number, total: number, title: string) => `Now ${title}, ${n} of ${total}`,
+      statusText: (n: number, total: number, words: string[]) => ` [${n}/${total}: ${words.join(" + ")}]`,
+    };
+    const { container, rerender } = render(<Basic compact="always" value="shipping" labels={labels} />);
+    expect(container.querySelector("[class*='_summaryText_']")).toHaveTextContent("Shipping (2/4)");
+    expect(item("Shipping")).toHaveTextContent("[2/4: current]");
+    rerender(<Basic compact="always" value="payment" labels={labels} />);
+    act(() => vi.advanceTimersByTime(200));
+    expect(screen.getByRole("status")).toHaveTextContent("Now Payment, 3 of 4");
+  });
+
+  it("passes the busy words after the status words", () => {
+    const statusText = vi.fn((_n: number, _total: number, words: string[]) => ` <${words.join("|")}>`);
+    render(
+      <Basic labels={{ statusText }} defaultValue="a">
+        <Stepper.Step value="a" title="One" busy />
+      </Basic>,
+    );
+    expect(statusText).toHaveBeenCalledWith(1, 1, ["current", "in progress"]);
+  });
+
+  it("builds the defaults on a translated stepOf alone, and keeps a default when an override is undefined", () => {
+    const { container } = render(
+      <Basic compact="always" value="shipping" labels={{ stepOf: (n, total) => `Étape ${n} sur ${total}`, summary: undefined }} />,
+    );
+    expect(container.querySelector("[class*='_summaryText_']")).toHaveTextContent("Étape 2 sur 4 — Shipping");
+    expect(item("Shipping")).toHaveTextContent("(Étape 2 sur 4, current)");
+  });
+
+  it("writes the numbers in the defaults through formatNumber", () => {
+    const { container } = render(<Basic compact="always" value="shipping" formatNumber={(n) => `#${n}`} />);
+    expect(container.querySelector("[class*='_summaryText_']")).toHaveTextContent("Step #2 of #4 — Shipping");
   });
 });
 

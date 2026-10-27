@@ -94,6 +94,23 @@ export interface StepperLabels {
   navigation: string;
   /** Where a step is in the flow, given its place and the number of steps. @default (n, total) => `Step ${n} of ${total}` (the numbers through `formatNumber`) */
   stepOf: (position: number, total: number) => string;
+  /**
+   * The compact summary's text (horizontally, and read out vertically): a step's place and its title, given the plain
+   * title (`""` when the step has none: see `textValue`). @default (n, total, title) => `Step ${n} of ${total} — ${title}`
+   * (just the place when there is no title; the numbers through `formatNumber`). The place is written with `stepOf`.
+   */
+  summary: (position: number, total: number, title: string) => string;
+  /**
+   * The message announced when the current step changes, given the same three values as `summary`.
+   * @default (n, total, title) => `Step ${n} of ${total}: ${title}` (just the place when there is no title)
+   */
+  announcement: (position: number, total: number, title: string) => string;
+  /**
+   * The text a screen reader hears after a step's title, given its place, the number of steps and the words for its
+   * status (`labels.complete` and the like), with the `busy` words after it when the step is busy. Written as one string,
+   * so a translation chooses its own punctuation. @default (n, total, words) => ` (Step ${n} of ${total}, ${words.join(", ")})`
+   */
+  statusText: (position: number, total: number, words: string[]) => string;
   /** Said after a finished step's title. @default 'completed' */
   complete: string;
   /** Said after the current step's title. @default 'current' */
@@ -241,7 +258,7 @@ export interface StepperStepProps
   title: ReactNode;
   /** A line of text under the title. */
   description?: ReactNode;
-  /** The title as plain text, for the announcement, when `title` is not a string. */
+  /** The title as plain text, for the announcement and the compact summary, when `title` is not a string. */
   textValue?: string;
   /** An icon to draw in the indicator in place of the number. A finished step still shows its check. */
   icon?: PhosphorIcon;

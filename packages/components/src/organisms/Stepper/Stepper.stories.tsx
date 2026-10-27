@@ -174,13 +174,14 @@ const meta: Meta<PlaygroundArgs> = {
     },
     formatNumber: {
       control: false,
-      description: "Formats the numbers the stepper shows (the digit in an indicator, and the plain numbers in labels.stepOf).",
+      description:
+        "Formats the numbers the stepper shows: the digit in an indicator, and the numbers in the labels it writes by default (stepOf, place and the labels built on them). The default is String.",
       table: { defaultValue: { summary: "" } },
     },
     labels: {
       control: false,
       description:
-        "The text the component supplies itself, each part replaceable: navigation, stepOf and place (functions of a step's place and the total), complete, current, upcoming, error, warning, skipped, busy, previous, next and optional.",
+        "The text the component supplies itself, each part replaceable: navigation; stepOf and place (functions of a step's place and the total); summary, announcement and statusText (functions that write a whole sentence, so a translation chooses its own punctuation; by default they build on stepOf); complete, current, upcoming, error, warning, skipped and busy (the status words); previous, next and optional.",
     },
     controllerRef: {
       control: false,
@@ -319,6 +320,7 @@ export const WithDescriptions: Story = {
 };
 
 export const WithIcons: Story = {
+  name: "With icons",
   argTypes: { ...noControls },
   render: () => (
     <Stepper defaultValue="shipping" aria-label="Checkout icons">
@@ -413,6 +415,7 @@ export const ResponsiveOrientation: Story = {
 
 /** Back and Next drive `value`; a finished step can be entered to go back. */
 export const Controlled: Story = {
+  name: "Controlled, with Back and Next",
   argTypes: { ...noControls },
   render: function ControlledStory() {
     const [step, setStep] = useState("shipping");
@@ -446,6 +449,7 @@ export const Interactive: Story = {
 };
 
 export const AsRouterLink: Story = {
+  name: "With a router's link (asChild)",
   argTypes: { ...noControls },
   render: () => (
     <Stepper defaultValue="shipping" interactive="completed" aria-label="Router links">
@@ -510,6 +514,7 @@ export const NamedNav: Story = {
 };
 
 export const Translated: Story = {
+  name: "Translated text",
   argTypes: { ...noControls },
   render: () => (
     <Demo
@@ -527,6 +532,7 @@ export const Translated: Story = {
 };
 
 export const RightToLeft: Story = {
+  name: "Right-to-left",
   argTypes: { ...noControls },
   render: () => <Demo dir="rtl" aria-label="Right to left" />,
   parameters: { docs: { source: { code: stepperSnippets.rightToLeft } } },
