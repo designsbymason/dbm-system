@@ -29,8 +29,8 @@ const defaultSteps = [
   step("review", "Review"),
 ].join("\n");
 
-const stepper = (attributes = "", steps = defaultSteps) =>
-  `<Stepper defaultValue="shipping"${attributes ? ` ${attributes}` : ""}>\n${steps}\n</Stepper>`;
+const stepper = (attributes = "", steps = defaultSteps, start = "shipping") =>
+  `<Stepper defaultValue="${start}"${attributes ? ` ${attributes}` : ""}>\n${steps}\n</Stepper>`;
 
 export const stepperSnippets = {
   sizes: `{/* size: "xs" | "sm" | "md" (default) | "lg" | "xl" — indicators, text and gaps */}
@@ -70,8 +70,9 @@ ${stepper('tone="info"')}`,
   labelBottom: `{/* labelPlacement: "end" (default) | "bottom" — horizontal steppers only */}
 ${stepper('labelPlacement="bottom"')}`,
 
-  statuses: `{/* status overrides what a step shows: "error", "complete" (finished out of order) or "skipped".
-    The error is yours to set — Stepper does not read your form. */}
+  statuses: `{/* status overrides what a step shows: "error", "complete" (finished out of order) or "skipped"
+    (see the next two examples for "warning" and "started"). The error is yours to set — Stepper does not read
+    your form. */}
 <Stepper defaultValue="payment">
   <Stepper.Step value="account" title="Account" />
   <Stepper.Step value="shipping" title="Shipping" status="error" description="Choose a delivery address" />
@@ -148,7 +149,7 @@ ${defaultSteps}
 </Stepper>`,
 
   colourful: `{/* colorful: a finished step (and the line after it) is success; the current step and a started step keep
-    the tone. */}
+    the tone. const [step, setStep] = useState("payment"). */}
 <Stepper colorful value={step} onValueChange={setStep} interactive="completed">
 ${defaultSteps}
 </Stepper>`,
@@ -159,8 +160,9 @@ ${defaultSteps}
 ${defaultSteps}
 </Stepper>`,
 
-  interactive: `{/* interactive: "none" (default) | "completed" | "all". An enterable step is a real button
-    in the tab order; any other step has no focus stop. disabled blocks one step. */}
+  interactive: `{/* interactive: "none" (default) | "completed" (the steps reached so far) | "all" (every step but the
+    current one). An enterable step is a real button in the tab order; any other step has no focus stop.
+    disabled blocks one step. */}
 ${stepper('interactive="all"')}`,
 
   asChild: `{/* asChild renders your own single child element as the step — here a plain <a>, standing in for
@@ -174,7 +176,7 @@ ${stepper('interactive="all"')}`,
 
   compact: `{/* compact: "never" (default) | "auto" | "always". The summary — "Step 2 of 4 — Shipping" above a row
     of segments — replaces the steps on a phone-width screen ("auto") or everywhere ("always").
-    It is read-only: its steps cannot be entered. */}
+    Read-only here; with interactive it gains Back and Next buttons (see the next examples). */}
 ${stepper('compact="always"')}`,
 
   namedNav: `{/* Name each stepper when a page holds more than one */}
@@ -207,6 +209,8 @@ export interface StepperPlaygroundSnippetArgs {
   announce?: boolean;
   "aria-label"?: string;
   dir?: "ltr" | "rtl";
+  /** The step the Playground starts on. */
+  defaultValue?: string;
 }
 
 /** The Playground's snippet, built from its current controls: only the props that differ from their defaults. */
@@ -231,5 +235,5 @@ export function stepperPlaygroundSnippet(args: StepperPlaygroundSnippetArgs): st
   if (args.announce === false) attributes.push("announce={false}");
   if (args["aria-label"] && args["aria-label"] !== "Progress") attributes.push(`aria-label=${quote(args["aria-label"])}`);
   if (args.dir === "rtl") attributes.push('dir="rtl"');
-  return stepper(attributes.join(" "));
+  return stepper(attributes.join(" "), defaultSteps, args.defaultValue || "shipping");
 }

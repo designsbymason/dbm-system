@@ -100,3 +100,9 @@ A read-through of the finished code found, and fixed:
 
 ## `status="started"`
 A step can now be set as started by the caller, not only derived after going back: for a step known to be begun and not finished, such as a saved draft when a person returns to a flow, in any `interactive` mode. It is drawn dashed, announced as "started, not completed", and with `interactive="completed"` it can be entered, as a step marked complete can. The derived behaviour is unchanged and is the default. The `Stepper.Step` Properties table lists the new value (it had also left out `warning`, now added).
+
+## Docs page and snippets pass
+The Docs page and the Show-code snippets were read end to end against the finished component and corrected:
+- **Page text:** the intro, the "Properties" lead-in (the props every step reads from the root), the compact best practices (one long bullet split into three), the accessibility notes (the tooltip and Escape, the compact buttons in the key table, started in forced colours, the strip scrolling when too short) and the code examples (a saved draft, `colorful`, indicators alone and a centred compact summary).
+- **Snippets:** stale comments fixed (`compact` said read-only; `interactive` and `statuses` did not say what `"completed"` means or point at `warning` and `started`; `colourful` left `step` undefined). The Playground's snippet now starts on the step the Playground starts on (it always wrote `shipping`), with a unit test of the builder. Every snippet and both Playground outputs were typechecked against the real components again, with a planted bad value that the check caught.
+- **The ProgressBar card** drew nothing: the bar had no width in the card's preview, and it was given `aria-label`, a prop it does not have (it logged a warning for every card render). It now sits in a 10rem box with `label`, and the console is clean.

@@ -74,13 +74,14 @@ and a step can be `busy` while its check or save runs.
 `Stepper` draws the indicator and nothing else. The current step's content — usually a form — and the
 buttons that move between steps are yours, and so is deciding whether a step may be left. It renders a
 `<nav>` around an ordered list, so it reads as a list of steps to a screen reader, and it is a read-out
-of progress by default; `interactive` lets a person click back to a finished step, or to any step.
+of progress by default; `interactive` lets a person click to a step they have reached, or to any step.
 
 Every step needs a `title`, but the text need not be shown: `showLabels={false}` draws indicators alone, with the titles
 still read by a screen reader and shown in a tooltip on hover or focus. Choose how big it is with `size`, how the indicators look with `variant` and `rounded`, the colour of the
-progress with `tone`, the line between steps with `connector`, and which way it runs with `orientation`
-(which can change with the width). `compact` swaps the steps for a one-line summary ("Step 2 of 4 —
-Shipping") on a phone, and `controllerRef` hands Next, Back and go-to-step to a button of your own.
+progress with `tone` (or `colorful`, to make a finished step success), the line between steps with `connector`, and which
+way it runs with `orientation` (which can change with the width). `compact` swaps the steps for a one-line summary
+("Step 2 of 4 — Shipping") on a phone, with Back and Next when `interactive`, and `controllerRef` hands Next, Back and
+go-to-step to a button of your own.
 
 ### Import
 
@@ -99,8 +100,8 @@ import { Stepper } from "@dbm-system/components";
 
 ## Properties
 
-Every step reads `size`, `variant`, `tone` and `orientation` from `Stepper`, so they are set once, on the
-root. `ref` forwards to the `<nav>`. Also accepts any other native `<nav>` attribute beyond what's
+Every step reads `size`, `variant`, `rounded`, `tone`, `colorful`, `connector`, `showLabels`, `labelPlacement` and
+`orientation` from `Stepper`, so they are set once, on the root. `ref` forwards to the `<nav>`. Also accepts any other native `<nav>` attribute beyond what's
 listed here (e.g. `onFocus`, `title`) — passed straight through to the root element.
 
 <PropertiesTable of={StepperStories} order={rootPropOrder} />
@@ -272,13 +273,15 @@ passed straight through to the underlying element.
   a screen reader should hear the step change once, not twice.
 - A horizontal stepper with many steps scrolls sideways inside its own width instead of squeezing them.
   For more than a handful on a phone, use `compact="auto"`.
-- The compact summary has no steps to enter. With `interactive` set it always shows a Back and a Next button
-  (to the nearest step either side of the current one that `interactive` lets a person enter), and one with
-  nowhere to go is disabled, not hidden, so nothing moves as a person goes along. Horizontally they sit side by
-  side after the text (or, with `labelAlignment="center"`, Back at the start of the row, the text in the middle and
-  Next at the end); vertically the summary is one column — an up arrow, the bars, a down arrow, then the
-  step's place as numbers ("3/4"), with the full words and the title kept for a screen reader. In a container with a set height the vertical summary fills it: the bars share the room between the arrows, so the down arrow and the place sit at the bottom. The bars are a
-  picture of progress, not controls: each is a few pixels tall, far under a usable target. With
+- The compact summary has no steps to enter. With `interactive` set it always shows a Back and a Next button (to the
+  nearest step either side of the current one that `interactive` lets a person enter), and one with nowhere to go is
+  disabled, not hidden, so nothing moves as a person goes along.
+- Horizontally the compact buttons sit side by side after the text (or, with `labelAlignment="center"`, Back at the
+  start of the row, the text in the middle and Next at the end; with `showLabels={false}`, at the two ends of the bars).
+  Vertically the summary is one column — an up arrow, the bars, a down arrow, then the step's place as numbers
+  ("3/4"), with the full words and the title kept for a screen reader — and in a container with a set height it fills
+  it: the bars share the room between the arrows, so the down arrow and the place sit at the bottom.
+- The bars are a picture of progress, not controls: each is a few pixels tall, far under a usable target. With
   `interactive="completed"` Next is enabled only for a step ahead that was reached before going back, and is
   disabled at the furthest step: use your own button, or `controllerRef.next()`, to move on.
 - With `interactive="completed"`, after going back the steps passed on the way stay finished, and the furthest step the
@@ -313,21 +316,23 @@ or check inside the indicator is hidden. When the current step changes, a polite
 
 A step that can be entered is a real `<button>` (or your link), so it has a focus stop; every other step
 has none. A step that was started and left before it was completed is announced as "started, not completed" (`labels.started`) and drawn with a dashed ring, so the dash is never the only cue. A step that is `disabled` is a disabled button, announced as unavailable and not a tab stop. A step that is `busy` is `aria-busy` and its status text adds "in progress"; a step with a warning
-adds "has a warning". A strip too narrow for its steps scrolls sideways, brings the current and the focused
-step into view, and is itself a tab stop only while it scrolls and has no step to focus. With the default `interactive="none"`, the stepper has no keyboard interaction at all.
+adds "has a warning". A strip too narrow for its steps (or, compact and vertical, too short for them) scrolls, brings the current and the focused
+step into view, and is itself a tab stop only while it scrolls and has no step to focus. With `showLabels={false}` the text is
+hidden from the eye but read in full, and a step's title shows in a tooltip on hover or focus. With the default `interactive="none"`, the stepper has no keyboard interaction at all.
 
 | Key | Behaviour |
 |---|---|
 | `Tab` | Moves to the next step that can be entered, in order — one stop each, nothing roving |
 | `Shift+Tab` | Moves to the previous one |
-| `Enter` / `Space` | Chooses the focused step (asks through `onValueChange`) |
+| `Enter` / `Space` | Chooses the focused step, or the compact summary's Back or Next (asks through `onValueChange`) |
+| `Escape` | Closes the tooltip shown for a step when `showLabels` is off |
 
 The compact form hides the steps with `display: none` and shows a visible summary (one line, cut with an ellipsis if the title is long, so the row never changes height), so a screen reader
 hears one line, not a list; use `"never"` where a phone reader should hear every step. When the width
 crosses the `"auto"` breakpoint with focus inside the stepper, focus moves to the other form (the summary's
 back or forward button that is enabled, or the first step that can be entered) instead of being lost. A button that is pressed and then becomes
 disabled (back at the first step, forward at the last) hands its focus to the other one, or the summary. In forced-colours
-mode a finished or current step is told by a thicker `Highlight` border, an unreached one by `GrayText`,
+mode a finished or current step is told by a thicker `Highlight` border, a started one by a thicker dashed one, an unreached one by `GrayText`,
 and the line between steps is drawn in system colours.
 
 </Callout>
@@ -351,6 +356,14 @@ const controller = useRef<StepperController>(null);
 
 {/* A step whose check is running */}
 <Stepper.Step value="payment" title="Payment" busy />
+
+{/* A saved draft: this step was begun and not finished */}
+<Stepper.Step value="shipping" title="Shipping" status="started" />
+
+{/* Finished steps in success, indicators only, and a centred compact summary */}
+<Stepper colorful showLabels={false} compact="auto" labelAlignment="center" interactive="completed">
+  {/* ... */}
+</Stepper>
 
 {/* An error set from your own validation */}
 <Stepper.Step value="shipping" title="Shipping" status="error" />
@@ -500,6 +513,8 @@ const controller = useRef<StepperController>(null);
   description="Shows one value moving towards a target, with no steps to name"
   href="/?path=/docs/atoms-feedback-progressbar--docs"
 >
-  <ProgressBar value={60} aria-label="Example" />
+  <div style={{ inlineSize: "10rem" }}>
+    <ProgressBar value={60} label="Progress" size="sm" />
+  </div>
 </RelatedCard>
 </div>
