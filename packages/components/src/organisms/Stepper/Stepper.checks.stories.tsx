@@ -240,7 +240,7 @@ export const CompactOnAPhone: Story = {
 
 export const CompactAlways: Story = {
   name: "Compact always shows the summary on a wide screen, and the segments say the progress",
-  render: () => <Demo compact="always" tone="success" />,
+  render: () => <Demo compact="always" tone="info" />,
   play: async ({ canvasElement }) => {
     await expect(window.innerWidth).toBeGreaterThanOrEqual(640);
     await expect(getComputedStyle(cls(canvasElement, "list")).display).toBe("none");
@@ -521,7 +521,7 @@ export const UpcomingStepsAreTheSoftTone: Story = {
   name: "A step not yet reached has the tone's subtle border, and its subtle fill when filled and none when outlined, in every tone",
   render: () => (
     <div style={{ display: "grid", gap: "var(--dbm-space-4)" }}>
-      {(["brand", "info", "success", "highlight", "neutral"] as const).flatMap((tone) =>
+      {(["brand", "info", "highlight", "neutral"] as const).flatMap((tone) =>
         (["filled", "outlined"] as const).map((variant) => (
           <div key={`${tone}-${variant}`} data-testid={`${tone}-${variant}`}>
             <Demo tone={tone} variant={variant} aria-label={`${tone} ${variant}`} />
@@ -540,7 +540,7 @@ export const UpcomingStepsAreTheSoftTone: Story = {
       probe.remove();
       return resolved;
     };
-    for (const tone of ["brand", "info", "success", "highlight", "neutral"]) {
+    for (const tone of ["brand", "info", "highlight", "neutral"]) {
       for (const variant of ["filled", "outlined"]) {
         const items = within(canvas.getByTestId(`${tone}-${variant}`)).getAllByRole("listitem");
         const upcoming = getComputedStyle(cls(items[3]!, "indicator"));
@@ -709,6 +709,11 @@ export const LongTitleKeepsTheSummaryOneLine: Story = {
     await expect(Math.abs(box(nav).height - first)).toBeLessThanOrEqual(0.5);
     // Cut visually only: the whole title is still in the text, and the buttons stay on the row.
     await expect(text.textContent).toContain("most recent statement");
+    // The whole text is in a tooltip, shown because it was cut short.
+    await userEvent.hover(text);
+    await expect((await within(document.body).findByRole("tooltip")).textContent).toContain("most recent statement");
+    await userEvent.unhover(text);
+    await waitFor(() => expect(within(document.body).queryByRole("tooltip")).toBeNull());
     await expect(box(canvas.getByRole("button", { name: "Next step" })).right).toBeLessThanOrEqual(box(nav).right + 0.5);
     await userEvent.click(canvas.getByRole("button", { name: "Next step" }));
     await expect(Math.abs(box(nav).height - first)).toBeLessThanOrEqual(0.5);
@@ -732,5 +737,238 @@ export const DisabledStepIsAnUnavailableButton: Story = {
     await userEvent.tab();
     await expect(canvas.getByRole("button", { name: /^Three/ })).toHaveFocus();
     await expect(canvas.getByText("One").closest("li")).toHaveAttribute("aria-current", "step");
+  },
+};
+
+export const CompactVerticalFillsTheContainer: Story = {
+  name: "Compact and vertical in a container of set height: the stepper fills it, the bars share the room between Up and Down, and Down and the place sit at the bottom",
+  render: () => (
+    <div data-testid="frame" style={{ blockSize: "24rem" }}>
+      <Demo compact="always" orientation="vertical" interactive="all" defaultValue="shipping" data-testid="full" />
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const frame = canvas.getByTestId("frame");
+    const nav = canvas.getByTestId("full");
+    await expect(Math.abs(box(nav).height - box(frame).height)).toBeLessThanOrEqual(1);
+    const segments = all(nav, "segment");
+    const heights = segments.map((segment) => box(segment).height);
+    await expect(Math.min(...heights)).toBeGreaterThan(40);
+    await expect(Math.max(...heights) - Math.min(...heights)).toBeLessThanOrEqual(1);
+    const text = cls(nav, "summaryText");
+    await expect(box(frame).bottom - box(text).bottom).toBeLessThanOrEqual(2);
+    await expect(box(canvas.getByRole("button", { name: "Next step" })).top).toBeGreaterThanOrEqual(box(segments[3]!).bottom - 0.5);
+    await expect(box(canvas.getByRole("button", { name: "Previous step" })).bottom).toBeLessThanOrEqual(box(segments[0]!).top + 0.5);
+  },
+};
+
+export const CompactVerticalInAnAutoHeightContainer: Story = {
+  name: "Compact and vertical with no set height keeps its own natural height",
+  render: () => (
+    <div data-testid="frame">
+      <Demo compact="always" orientation="vertical" interactive="all" defaultValue="shipping" data-testid="natural" />
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(box(canvas.getByTestId("natural")).height).toBeLessThan(200);
+    await expect(Math.max(...all(canvasElement, "segment").map((segment) => box(segment).height))).toBeLessThanOrEqual(20);
+  },
+};
+
+export const CompactCentredLayout: Story = {
+  name: "Compact with the text centred: the text is in the middle of the row, Back at the start edge and Next at the end, mirrored right to left",
+  render: () => (
+    <div style={{ display: "grid", gap: "var(--dbm-space-6)" }}>
+      <div data-testid="ltr">
+        <Demo compact="always" interactive="all" labelAlignment="center" defaultValue="shipping" aria-label="centred ltr" />
+      </div>
+      <div data-testid="rtl">
+        <Demo compact="always" interactive="all" labelAlignment="center" defaultValue="shipping" dir="rtl" aria-label="centred rtl" />
+      </div>
+      <div data-testid="plain">
+        <Demo compact="always" labelAlignment="center" defaultValue="shipping" aria-label="centred read only" />
+      </div>
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const textBox = (root: HTMLElement) => {
+      const range = document.createRange();
+      range.selectNodeContents(cls(root, "summaryText"));
+      return range.getBoundingClientRect();
+    };
+    for (const dir of ["ltr", "rtl"]) {
+      const root = canvas.getByTestId(dir);
+      const row = box(cls(root, "summaryRow"));
+      const back = box(within(root).getByRole("button", { name: "Previous step" }));
+      const next = box(within(root).getByRole("button", { name: "Next step" }));
+      const text = textBox(root);
+      // The text is centred on the row, within a pixel or two, and Back and Next are at the two ends.
+      await expect(Math.abs(text.left + text.width / 2 - (row.left + row.width / 2)), `${dir} centred`).toBeLessThanOrEqual(2);
+      if (dir === "ltr") {
+        await expect(back.left - row.left).toBeLessThanOrEqual(1);
+        await expect(row.right - next.right).toBeLessThanOrEqual(1);
+      } else {
+        await expect(row.right - back.right).toBeLessThanOrEqual(1);
+        await expect(next.left - row.left).toBeLessThanOrEqual(1);
+      }
+    }
+    // With no buttons the text is centred across the whole row.
+    const plain = canvas.getByTestId("plain");
+    const row = box(cls(plain, "summaryRow"));
+    const text = textBox(plain);
+    await expect(Math.abs(text.left + text.width / 2 - (row.left + row.width / 2))).toBeLessThanOrEqual(2);
+  },
+};
+
+export const WithoutLabelsDrawsIndicatorsOnly: Story = {
+  name: "Without labels no text is seen, the steps still meet the 24 pixel target and keep the line level, and the titles are tooltips",
+  render: () => (
+    <div style={{ display: "grid", gap: "var(--dbm-space-6)" }}>
+      {sizes.map((size) => (
+        <div key={size} data-testid={`nl-${size}`}>
+          <Demo showLabels={false} size={size} interactive="all" aria-label={`no labels ${size}`} />
+        </div>
+      ))}
+      <div data-testid="nl-v">
+        <Demo showLabels={false} orientation="vertical" aria-label="no labels vertical" />
+      </div>
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    for (const size of sizes) {
+      const root = canvas.getByTestId(`nl-${size}`);
+      for (const content of all(root, "content")) {
+        await expect(box(content.parentElement!).width, `${size} hidden text`).toBeLessThanOrEqual(1);
+      }
+      for (const button of within(root).getAllByRole("button")) {
+        await expect(box(button).width, `${size} width`).toBeGreaterThanOrEqual(24);
+        await expect(box(button).height, `${size} height`).toBeGreaterThanOrEqual(24);
+        await expect(button.getAttribute("title"), "a native tooltip is not used").toBeNull();
+      }
+      const indicator = cls(root, "indicator");
+      for (const connector of all(root, "connector")) {
+        await expect(Math.abs(centreY(connector) - centreY(indicator)), `${size} line level`).toBeLessThanOrEqual(1);
+      }
+    }
+    // The DBM tooltip shows the title for the focused step.
+    await userEvent.tab();
+    const tip = await within(document.body).findByRole("tooltip");
+    await expect(tip.textContent).toMatch(/Account|Payment|Review/);
+    // An overlay a check opens is closed again, and gone, before it ends.
+    await userEvent.keyboard("{Escape}");
+    await waitFor(() => expect(within(document.body).queryByRole("tooltip")).toBeNull());
+    const vertical = canvas.getByTestId("nl-v");
+    const indicators = all(vertical, "indicator");
+    for (const [index, connector] of all(vertical, "connector").entries()) {
+      await expect(Math.abs(centreX(connector) - centreX(indicators[index]!))).toBeLessThanOrEqual(1);
+    }
+  },
+};
+
+export const StartedStepIsDashed: Story = {
+  name: "A started step has a dashed ring in the tone's colour, filled and outlined; no other step is dashed; colourful makes finished steps success and leaves the started step in the tone",
+  render: function StartedStory() {
+    const Flow = ({ testId, ...props }: Partial<StepperProps> & { testId: string }) => {
+      const [value, setValue] = useState("c");
+      return (
+        <div data-testid={testId}>
+          <Stepper value={value} onValueChange={setValue} interactive="completed" aria-label={testId} {...props}>
+            {["a", "b", "c", "d"].map((id) => (
+              <Stepper.Step key={id} value={id} title={`Step ${id}`} />
+            ))}
+          </Stepper>
+          <button onClick={() => setValue("a")}>back-{testId}</button>
+        </div>
+      );
+    };
+    return (
+      <div style={{ display: "grid", gap: "var(--dbm-space-4)" }}>
+        <Flow testId="filled" />
+        <Flow testId="outlined" variant="outlined" />
+        <Flow testId="colourful" colorful />
+        <Flow testId="colourfulOutlined" colorful variant="outlined" />
+      </div>
+    );
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const token = (name: string) => {
+      const probe = document.createElement("span");
+      probe.style.color = `var(--dbm-${name})`;
+      document.body.appendChild(probe);
+      const resolved = getComputedStyle(probe).color;
+      probe.remove();
+      return resolved;
+    };
+    for (const id of ["filled", "outlined", "colourful", "colourfulOutlined"]) {
+      await userEvent.click(canvas.getByRole("button", { name: `back-${id}` }));
+    }
+    const indicators = (id: string) => all(canvas.getByTestId(id), "indicator").map((indicator) => getComputedStyle(indicator));
+    for (const id of ["filled", "outlined", "colourful", "colourfulOutlined"]) {
+      const styles = indicators(id);
+      // Steps a, b, c, d: current a, finished b, started c, not started d.
+      await expect(styles.map((style) => style.borderTopStyle), id).toEqual(["solid", "solid", "dashed", "solid"]);
+    }
+    await expect(indicators("filled")[2]!.borderTopColor).toBe(token("border-brand"));
+    await expect(indicators("outlined")[2]!.borderTopColor).toBe(token("border-brand"));
+    await expect(indicators("outlined")[2]!.backgroundColor).toBe("rgba(0, 0, 0, 0)");
+    // Colourful: success for a finished step; the current and the started step keep the tone.
+    await expect(indicators("colourful")[1]!.backgroundColor).toBe(token("bg-success"));
+    await expect(indicators("colourful")[2]!.borderTopColor).toBe(token("border-brand"));
+    await expect(indicators("colourful")[2]!.backgroundColor).toBe(token("bg-brand-subtle"));
+    await expect(indicators("colourful")[0]!.borderTopColor).toBe(token("border-brand"));
+    await expect(indicators("colourfulOutlined")[1]!.borderTopColor).toBe(token("border-success"));
+    await expect(indicators("colourfulOutlined")[2]!.borderTopColor).toBe(token("border-brand"));
+    await expect(indicators("colourfulOutlined")[2]!.backgroundColor).toBe("rgba(0, 0, 0, 0)");
+    // The line after a finished step is success when colourful, the tone when not.
+    const line = (id: string) => getComputedStyle(cls(canvas.getByTestId(id).querySelectorAll("li")[1] as HTMLElement, "connector"), "::after").backgroundColor;
+    await expect(line("colourful")).toBe(token("bg-success"));
+    await expect(line("filled")).toBe(token("bg-brand"));
+  },
+};
+
+export const CompactNoLabelsButtonsAtTheEnds: Story = {
+  name: "Compact without labels: Back and Next are at the two ends of the bars, in one row, mirrored right to left, and nothing moves from the first step to the last",
+  render: () => (
+    <div style={{ display: "grid", gap: "var(--dbm-space-6)" }}>
+      <div data-testid="ltr">
+        <Demo compact="always" interactive="all" showLabels={false} defaultValue="account" aria-label="ltr" />
+      </div>
+      <div data-testid="rtl">
+        <Demo compact="always" interactive="all" showLabels={false} defaultValue="shipping" dir="rtl" aria-label="rtl" />
+      </div>
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    for (const dir of ["ltr", "rtl"]) {
+      const root = canvas.getByTestId(dir);
+      const back = box(within(root).getByRole("button", { name: "Previous step" }));
+      const next = box(within(root).getByRole("button", { name: "Next step" }));
+      const bars = box(cls(root, "segments"));
+      const start = dir === "ltr" ? back : next;
+      const end = dir === "ltr" ? next : back;
+      await expect(start.right, `${dir} first end`).toBeLessThanOrEqual(bars.left + 0.5);
+      await expect(end.left, `${dir} last end`).toBeGreaterThanOrEqual(bars.right - 0.5);
+      // One row: the buttons and the bars share a centre line.
+      await expect(Math.abs(back.top + back.height / 2 - (bars.top + bars.height / 2))).toBeLessThanOrEqual(1);
+      await expect(Math.abs(next.top + next.height / 2 - (bars.top + bars.height / 2))).toBeLessThanOrEqual(1);
+    }
+    // Nothing moves as a person goes from the first step to the last: both buttons are always there.
+    const ltr = canvas.getByTestId("ltr");
+    const measure = () => [box(ltr).height, box(cls(ltr, "segments")).left, box(cls(ltr, "segments")).right];
+    const first = measure();
+    for (const _ of [0, 1, 2]) {
+      await userEvent.click(within(ltr).getByRole("button", { name: "Next step" }));
+      for (const [axis, value] of first.entries()) {
+        await expect(Math.abs(measure()[axis]! - value), `axis ${axis}`).toBeLessThanOrEqual(0.5);
+      }
+    }
+    await expect(within(ltr).getByRole("button", { name: "Next step" })).toBeDisabled();
+    await expect(ltr.contains(document.activeElement) && document.activeElement !== document.body).toBe(true);
   },
 };

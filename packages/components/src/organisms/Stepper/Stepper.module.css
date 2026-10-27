@@ -89,16 +89,6 @@
   --stepper-icon: var(--dbm-icon-info);
 }
 
-.toneSuccess {
-  --stepper-solid: var(--dbm-bg-success);
-  --stepper-on: var(--dbm-icon-on-success);
-  --stepper-subtle: var(--dbm-bg-success-subtle);
-  --stepper-subtle-border: var(--dbm-border-success-subtle);
-  --stepper-ring: var(--dbm-border-success);
-  --stepper-text: var(--dbm-text-success);
-  --stepper-icon: var(--dbm-icon-success);
-}
-
 .toneHighlight {
   --stepper-solid: var(--dbm-bg-highlight);
   --stepper-on: var(--dbm-icon-on-highlight);
@@ -323,6 +313,27 @@
   color: var(--dbm-icon-warning);
 }
 
+/* A step started and left before it was completed (`interactive="completed"`, after going back): a dashed ring in the tone's
+   colour, with the number in it, so it reads as begun and not finished. */
+.item[data-status="started"] .indicator {
+  border-color: var(--stepper-ring);
+  border-style: dashed;
+  color: var(--stepper-text);
+}
+
+/* Colourful: colour by meaning. A finished step is success; the current and the started step keep the tone. */
+.colorful .item[data-status="complete"] .indicator {
+  background-color: var(--dbm-bg-success);
+  border-color: var(--dbm-bg-success);
+  color: var(--dbm-icon-on-success);
+}
+
+.colorful.variantOutlined .item[data-status="complete"] .indicator {
+  background-color: transparent;
+  border-color: var(--dbm-border-success);
+  color: var(--dbm-icon-success);
+}
+
 /* Round by default, as a stepper's indicators are; `rounded={false}` leaves the square with rounded corners. */
 .rounded .indicator {
   border-radius: var(--dbm-radius-full);
@@ -368,6 +379,7 @@
 }
 
 .item[data-status="current"] .title,
+.item[data-status="started"] .title,
 .item[data-status="complete"] .title {
   color: var(--dbm-text-primary);
 }
@@ -426,6 +438,10 @@
   scale: 1 1;
 }
 
+.colorful .item[data-status="complete"] .connector::after {
+  background-color: var(--dbm-bg-success);
+}
+
 /* Dashed: the track becomes a dashed border in the same colours, and the sweep goes. The line leaving a skipped step is
    always dashed, since the flow did not run through it. */
 .connectorDashed .connector,
@@ -446,6 +462,10 @@
 
 .connectorDashed .item[data-status="complete"] .connector {
   border-color: var(--stepper-solid);
+}
+
+.colorful.connectorDashed .item[data-status="complete"] .connector {
+  border-color: var(--dbm-bg-success);
 }
 
 .connectorDashed .connector::after,
@@ -478,9 +498,30 @@
   min-block-size: var(--dbm-icon-button-size-xs);
 }
 
+/* Centred: Back at the start of the row, the text in the middle, Next at the end. */
+.summaryRowCenter {
+  justify-content: space-between;
+}
+
+.summaryRowCenter .summaryText {
+  text-align: center;
+}
+
+/* Without labels, horizontally: Back and Next at the two ends of the bars, in one row. */
+.summaryTrack {
+  align-items: center;
+  display: flex;
+  gap: var(--dbm-space-1);
+}
+
+.summaryTrack .segments {
+  flex: 1 1 auto;
+}
+
 /* Back and Next side by side. */
 .summaryButtons {
   display: flex;
+  margin-inline-start: auto;
   flex: none;
   gap: var(--dbm-space-1);
 }
@@ -524,6 +565,10 @@
   background-color: var(--dbm-bg-danger);
 }
 
+.colorful .segment[data-status="complete"] {
+  background-color: var(--dbm-bg-success);
+}
+
 /* Compact, vertical: one column — Up, the bars, Down, then the step's place as text — centred on one axis. */
 .vertical .summary {
   align-items: center;
@@ -539,13 +584,24 @@
 }
 
 .vertical .segments {
+  flex: 1 1 auto;
   flex-direction: column;
+  min-block-size: 0;
 }
 
 .vertical .segment {
   block-size: auto;
+  flex: 1 1 0;
   inline-size: var(--dbm-space-1);
   min-block-size: var(--dbm-space-4);
+}
+
+/* Given a container of a definite height, the compact vertical form fills it: the bars take the room between Up and Down, so
+   Down and the place sit at the bottom. In a container with no set height the percentages are `auto` and nothing changes. */
+.vertical.compactAlways,
+.vertical.compactAlways .scroller,
+.vertical.compactAlways .summary {
+  block-size: 100%;
 }
 
 .compactAlways .summary {
@@ -562,6 +618,12 @@
 @media (max-width: 639px) {
   .compactAuto .summary {
     display: flex;
+  }
+
+  .vertical.compactAuto,
+  .vertical.compactAuto .scroller,
+  .vertical.compactAuto .summary {
+    block-size: 100%;
   }
 
   .compactAuto .list {
@@ -595,6 +657,13 @@
 
   .item[data-status="skipped"] .indicator {
     border-style: dashed;
+  }
+
+  .item[data-status="started"] .indicator {
+    border-color: Highlight;
+    border-style: dashed;
+    border-width: var(--dbm-border-width-4);
+    color: CanvasText;
   }
 
   .item[data-status="warning"] .indicator {

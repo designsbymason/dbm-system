@@ -18,11 +18,11 @@ export type StepperSize = "xs" | "sm" | "md" | "lg" | "xl";
 export type StepperVariant = "filled" | "outlined";
 
 /**
- * The colour of the progress: finished steps, the current step and the line between finished steps, and the soft tint
+ * The colour of the progress (see `colorful` for colour by meaning): finished steps, the current step and the line between finished steps, and the soft tint
  * and border of a step not yet reached. `"neutral"` is grey. A step with an error is always `danger`, and one with a
  * warning `warning`, whatever the tone.
  */
-export type StepperTone = "brand" | "info" | "success" | "highlight" | "neutral";
+export type StepperTone = "brand" | "info" | "highlight" | "neutral";
 
 /** Which way the steps run. A `"vertical"` stepper puts each step's text beside its indicator. */
 export type StepperOrientation = "horizontal" | "vertical";
@@ -52,7 +52,9 @@ export type StepperCompact = "never" | "auto" | "always";
  *
  * - `"none"` (the default) — none; the stepper only shows progress and has no focus stop.
  * - `"completed"` — the steps the person has reached: the furthest one they have been on and all before it (or marked
- *   complete), so they can go back to one and forward again. Steps they have not reached stay closed.
+ *   complete), so they can go back to one and forward again. Steps they have not reached stay closed. After going back,
+ *   the steps passed on the way stay finished, and the furthest step reached, if it was not completed (give it
+ *   `status="complete"` once it is), is shown as started: a dashed ring.
  * - `"all"` — every step but the current one, for a flow that may be done in any order.
  *
  * A step that is `disabled` can never be entered.
@@ -65,8 +67,15 @@ export type StepperInteractive = "none" | "completed" | "all";
  */
 export type StepperConnector = "solid" | "dashed" | "none";
 
+/**
+ * Where the compact horizontal summary puts its text: `"start"` (the default) at the start of the row, with Back and Next
+ * side by side at the end; `"center"` in the middle of the row, with Back at the start and Next at the end. Used only by
+ * the compact horizontal form.
+ */
+export type StepperLabelAlignment = "start" | "center";
+
 /** What a step shows. Worked out from the stepper's `value` unless a step sets its own `status`. */
-export type StepStatus = "complete" | "current" | "upcoming" | "error" | "warning" | "skipped";
+export type StepStatus = "complete" | "current" | "upcoming" | "started" | "error" | "warning" | "skipped";
 
 /**
  * The controls `controllerRef` hands to code outside the stepper, such as a Next button. Each asks for a change the way
@@ -119,6 +128,8 @@ export interface StepperLabels {
   upcoming: string;
   /** Said after a step with an error. @default 'has an error' */
   error: string;
+  /** Said after a step that was started and left before it was completed (see `interactive`). @default 'started, not completed' */
+  started: string;
   /** Said after a step with a warning. @default 'has a warning' */
   warning: string;
   /** Said after a step that was skipped. @default 'skipped' */
@@ -192,10 +203,28 @@ export interface StepperProps
    */
   connector?: StepperConnector;
   /**
+   * Shows each step's title, description and "Optional" mark, and the compact summary's text. Turn it off for a stepper of
+   * indicators alone: the text is then visually hidden but still read by a screen reader (it names each step), and a
+   * step's plain-text title is shown in a `Tooltip` when the step is hovered or focused. Each step's `title` stays required for that reason.
+   * @default true
+   */
+  showLabels?: boolean;
+  /**
+   * Colours the progress by what it means instead of by `tone`: a finished step (and the line after it) is `success`. The current step and a started step keep the `tone`.
+   * @default false
+   */
+  colorful?: boolean;
+  /**
    * Where a horizontal stepper puts each step's text — see {@link StepperLabelPlacement}.
    * @default 'end'
    */
   labelPlacement?: StepperLabelPlacement;
+  /**
+   * Where the compact horizontal summary puts its text — see {@link StepperLabelAlignment}. Has no effect unless `compact`
+   * is on and `orientation` is horizontal (with a warning in development when set to `"center"` otherwise).
+   * @default 'start'
+   */
+  labelAlignment?: StepperLabelAlignment;
   /**
    * Whether the stepper collapses to a summary — see {@link StepperCompact}.
    * @default 'never'
@@ -254,7 +283,7 @@ export interface StepperStepProps
    * children are the title, in place of the `title` prop.
    */
   children?: ReactNode;
-  /** The step's name. Also announced when the step becomes current, if it is plain text (or `textValue` is set). */
+  /** The step's name. Required: it is what a screen reader hears even when the stepper's `showLabels` is off. Also announced when the step becomes current, if it is plain text (or `textValue` is set). */
   title: ReactNode;
   /** A line of text under the title. */
   description?: ReactNode;

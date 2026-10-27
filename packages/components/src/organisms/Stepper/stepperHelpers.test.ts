@@ -46,6 +46,25 @@ describe("derivedStatus", () => {
   });
 });
 
+describe("derivedStatus with interactive=completed", () => {
+  const step = (status?: "complete") => createElement(StepperStep, { value: "a", title: "A", status });
+  it("keeps the steps passed on the way finished, and the furthest one reached, if not completed, started", () => {
+    // Went as far as step 3 (index 3), came back to step 1.
+    const statuses = [0, 1, 2, 3, 4].map((index) => derivedStatus(step(), index, 1, 3, "completed"));
+    expect(statuses).toEqual(["complete", "current", "complete", "started", "upcoming"]);
+  });
+
+  it("shows nothing as started when the current step is the furthest, or without interactive=completed", () => {
+    expect(derivedStatus(step(), 2, 2, 2, "completed")).toBe("current");
+    expect([2, 3].map((index) => derivedStatus(step(), index, 1, 3, "all"))).toEqual(["upcoming", "upcoming"]);
+    expect([2, 3].map((index) => derivedStatus(step(), index, 1, 3, "none"))).toEqual(["upcoming", "upcoming"]);
+  });
+
+  it("takes a step's own status over started", () => {
+    expect(derivedStatus(step("complete"), 3, 1, 3, "completed")).toBe("complete");
+  });
+});
+
 describe("defaultLabelsFor", () => {
   it("writes English, with the numbers through the formatter", () => {
     const labels = defaultLabelsFor((n) => `<${n}>`);

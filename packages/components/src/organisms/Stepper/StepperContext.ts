@@ -18,6 +18,8 @@ export interface StepperContextValue {
   orientation: StepperOrientation;
   labelPlacement: StepperLabelPlacement;
   connector: StepperConnector;
+  /** Whether the steps' text is shown. */
+  showLabels: boolean;
   labels: StepperLabels;
   formatNumber: (value: number) => string;
   /** Asks for a step to become the current one. */

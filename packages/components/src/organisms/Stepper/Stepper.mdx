@@ -1,5 +1,7 @@
 import { Canvas, Meta } from "@storybook/addon-docs/blocks";
 import { Callout, ComponentHeader, PlaygroundControls, PropertiesTable, RelatedCard, TokenRow } from "../../../.storybook/blocks";
+import { Button } from "../../atoms/Button";
+import { Tooltip } from "../../atoms/Tooltip";
 import { Breadcrumb } from "../../molecules/Breadcrumb";
 import { Tabs } from "../../molecules/Tabs";
 import { ProgressBar } from "../../atoms/ProgressBar";
@@ -18,7 +20,10 @@ export const rootPropOrder = [
   "tone",
   "rounded",
   "connector",
+  "colorful",
+  "showLabels",
   "labelPlacement",
+  "labelAlignment",
   "interactive",
   "compact",
   "announce",
@@ -70,7 +75,8 @@ buttons that move between steps are yours, and so is deciding whether a step may
 `<nav>` around an ordered list, so it reads as a list of steps to a screen reader, and it is a read-out
 of progress by default; `interactive` lets a person click back to a finished step, or to any step.
 
-Choose how big it is with `size`, how the indicators look with `variant` and `rounded`, the colour of the
+Every step needs a `title`, but the text need not be shown: `showLabels={false}` draws indicators alone, with the titles
+still read by a screen reader and shown in a tooltip on hover or focus. Choose how big it is with `size`, how the indicators look with `variant` and `rounded`, the colour of the
 progress with `tone`, the line between steps with `connector`, and which way it runs with `orientation`
 (which can change with the width). `compact` swaps the steps for a one-line summary ("Step 2 of 4 —
 Shipping") on a phone, and `controllerRef` hands Next, Back and go-to-step to a button of your own.
@@ -186,9 +192,33 @@ passed straight through to the underlying element.
 
 <Canvas of={StepperStories.CompactBack} />
 
+### A started step, after going back
+
+<Canvas of={StepperStories.StartedStep} />
+
+### Colourful
+
+<Canvas of={StepperStories.Colourful} />
+
+### Indicators only, without labels
+
+<Canvas of={StepperStories.WithoutLabels} />
+
+### Compact, with the text centred
+
+<Canvas of={StepperStories.CompactCentred} />
+
+### Compact, without labels
+
+<Canvas of={StepperStories.CompactNoLabels} />
+
 ### Compact and vertical, in one column
 
 <Canvas of={StepperStories.CompactVertical} />
+
+### Compact and vertical, filling its container
+
+<Canvas of={StepperStories.CompactVerticalFull} />
 
 ### Next and Back from a controller
 
@@ -240,11 +270,16 @@ passed straight through to the underlying element.
 - The compact summary has no steps to enter. With `interactive` set it always shows a Back and a Next button
   (to the nearest step either side of the current one that `interactive` lets a person enter), and one with
   nowhere to go is disabled, not hidden, so nothing moves as a person goes along. Horizontally they sit side by
-  side after the text; vertically the summary is one column — an up arrow, the bars, a down arrow, then the
-  step's place as numbers ("3/4"), with the full words and the title kept for a screen reader. The bars are a
+  side after the text (or, with `labelAlignment="center"`, Back at the start of the row, the text in the middle and
+  Next at the end); vertically the summary is one column — an up arrow, the bars, a down arrow, then the
+  step's place as numbers ("3/4"), with the full words and the title kept for a screen reader. In a container with a set height the vertical summary fills it: the bars share the room between the arrows, so the down arrow and the place sit at the bottom. The bars are a
   picture of progress, not controls: each is a few pixels tall, far under a usable target. With
   `interactive="completed"` Next is enabled only for a step ahead that was reached before going back, and is
   disabled at the furthest step: use your own button, or `controllerRef.next()`, to move on.
+- With `interactive="completed"`, after going back the steps passed on the way stay finished, and the furthest step the
+  person reached, if it was not completed, is drawn as started: a dashed ring in the tone's colour. When that step is
+  completed, give it `status="complete"` so it is drawn finished. Set `colorful` to colour a finished step
+  success instead of the `tone`; the current step and a started step keep the tone.
 - Show a running check with `busy` on the step, not by changing its status, and set `status="warning"` for a
   step that can be continued from but needs another look; keep `"error"` for one that must be fixed.
 - Use `orientation={{ base: "vertical", md: "horizontal" }}` to stack the steps on a phone and keep each of them;
@@ -269,7 +304,7 @@ or check inside the indicator is hidden. When the current step changes, a polite
 "Step 3 of 4: Payment" — only a change, never the first render.
 
 A step that can be entered is a real `<button>` (or your link), so it has a focus stop; every other step
-has none. A step that is `disabled` is a disabled button, announced as unavailable and not a tab stop. A step that is `busy` is `aria-busy` and its status text adds "in progress"; a step with a warning
+has none. A step that was started and left before it was completed is announced as "started, not completed" (`labels.started`) and drawn with a dashed ring, so the dash is never the only cue. A step that is `disabled` is a disabled button, announced as unavailable and not a tab stop. A step that is `busy` is `aria-busy` and its status text adds "in progress"; a step with a warning
 adds "has a warning". A strip too narrow for its steps scrolls sideways, brings the current and the focused
 step into view, and is itself a tab stop only while it scrolls and has no step to focus. With the default `interactive="none"`, the stepper has no keyboard interaction at all.
 
@@ -341,8 +376,7 @@ const controller = useRef<StepperController>(null);
 <TokenRow token="bg.brand-subtle" usage="the tint of the current step and of a step not yet reached, in the brand tone" />
 <TokenRow token="bg.info" usage="a finished step's disc and line in the info tone" />
 <TokenRow token="bg.info-subtle" usage="the same, in the info tone" />
-<TokenRow token="bg.success" usage="a finished step's disc and line in the success tone" />
-<TokenRow token="bg.success-subtle" usage="the same, in the success tone" />
+<TokenRow token="bg.success" usage="a finished step's disc and line when colourful" />
 <TokenRow token="bg.highlight" usage="a finished step's disc and line in the highlight tone" />
 <TokenRow token="bg.highlight-subtle" usage="the same, in the highlight tone" />
 <TokenRow token="bg.neutral" usage="a finished step's disc and line in the neutral tone" />
@@ -351,12 +385,11 @@ const controller = useRef<StepperController>(null);
 <TokenRow token="bg.warning" usage="a step with a warning" />
 <TokenRow token="border.brand-subtle" usage="the soft ring of a step not yet reached, in the brand tone" />
 <TokenRow token="border.info-subtle" usage="the same, in the info tone" />
-<TokenRow token="border.success-subtle" usage="the same, in the success tone" />
 <TokenRow token="border.highlight-subtle" usage="the same, in the highlight tone" />
 <TokenRow token="border.neutral-subtle" usage="the same, in the neutral tone" />
 <TokenRow token="border.brand" usage="the current step's ring in the brand tone; a finished step's ring when outlined" />
 <TokenRow token="border.info" usage="the same, in the info tone" />
-<TokenRow token="border.success" usage="the same, in the success tone" />
+<TokenRow token="border.success" usage="a finished outlined step's ring when colourful" />
 <TokenRow token="border.highlight" usage="the same, in the highlight tone" />
 <TokenRow token="border.danger" usage="an outlined step with an error" />
 <TokenRow token="border.warning" usage="an outlined step with a warning" />
@@ -368,13 +401,13 @@ const controller = useRef<StepperController>(null);
 <TokenRow token="icon.default" usage="the check on a finished outlined step, in the neutral tone" />
 <TokenRow token="icon.on-brand" usage="the check on a finished step, in the brand tone" />
 <TokenRow token="icon.on-info" usage="the check on a finished step, in the info tone" />
-<TokenRow token="icon.on-success" usage="the check on a finished step, in the success tone" />
+<TokenRow token="icon.on-success" usage="the check on a finished step when colourful" />
 <TokenRow token="icon.on-highlight" usage="the check on a finished step, in the highlight tone" />
 <TokenRow token="icon.on-danger" usage="the mark on a step with an error" />
 <TokenRow token="icon.on-warning" usage="the mark on a step with a warning" />
 <TokenRow token="icon.brand" usage="the check on a finished outlined step, in the brand tone" />
 <TokenRow token="icon.info" usage="the same, in the info tone" />
-<TokenRow token="icon.success" usage="the same, in the success tone" />
+<TokenRow token="icon.success" usage="the check on a finished outlined step when colourful" />
 <TokenRow token="icon.highlight" usage="the same, in the highlight tone" />
 <TokenRow token="icon.danger" usage="the mark on an outlined step with an error" />
 <TokenRow token="icon.warning" usage="the mark on an outlined step with a warning" />
@@ -384,7 +417,6 @@ const controller = useRef<StepperController>(null);
 <TokenRow token="text.disabled" usage="a disabled step's text" />
 <TokenRow token="text.brand" usage="the current step's number in the brand tone" />
 <TokenRow token="text.info" usage="the same, in the info tone" />
-<TokenRow token="text.success" usage="the same, in the success tone" />
 <TokenRow token="text.highlight" usage="the same, in the highlight tone" />
 <TokenRow token="stepper.indicator-size.xs" usage="the indicator's diameter at size xs" />
 <TokenRow token="stepper.indicator-size.sm" usage="the indicator's diameter at size sm" />
@@ -420,6 +452,15 @@ const controller = useRef<StepperController>(null);
 ## Related components
 
 <div className="dbm-card-grid">
+<RelatedCard
+  name="Tooltip"
+  description="The tooltip Stepper shows a step's title in when its labels are off, and a cut-short compact summary"
+  href="/?path=/docs/atoms-overlay-tooltip--docs"
+>
+  <Tooltip content="Shipping" defaultOpen={false}>
+    <Button variant="secondary" size="sm">Hover me</Button>
+  </Tooltip>
+</RelatedCard>
 <RelatedCard
   name="Tabs"
   description="Switches between peer views in place, in any order, instead of working through a sequence"

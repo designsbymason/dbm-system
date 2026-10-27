@@ -4,6 +4,7 @@ export type {
   StepperConnector,
   StepperController,
   StepperInteractive,
+  StepperLabelAlignment,
   StepperLabelPlacement,
   StepperLabels,
   StepperOrientation,

@@ -29,6 +29,7 @@ export const defaultLabelsFor = (
     upcoming: "not started",
     error: "has an error",
     warning: "has a warning",
+    started: "started, not completed",
     skipped: "skipped",
     busy: "in progress",
     previous: "Previous step",
@@ -69,7 +70,21 @@ export function revealInline(scroller: HTMLElement, element: HTMLElement): void 
   if (delta !== 0) scroller.scrollBy({ left: delta });
 }
 
-/** The step's status when none is given: finished before the current step, current, then not started. */
-export function derivedStatus(step: ReactElement<StepperStepProps>, index: number, currentIndex: number): StepStatus {
-  return step.props.status ?? (index < currentIndex ? "complete" : index === currentIndex ? "current" : "upcoming");
+/**
+ * The step's status when none is given: finished before the current step, current, then not started. With
+ * `interactive="completed"` the steps after the current one that the person has reached stay finished, except the furthest
+ * of them, which was started and left before it was completed.
+ */
+export function derivedStatus(
+  step: ReactElement<StepperStepProps>,
+  index: number,
+  currentIndex: number,
+  furthestIndex = currentIndex,
+  interactive: StepperInteractive = "none",
+): StepStatus {
+  if (step.props.status) return step.props.status;
+  if (index < currentIndex) return "complete";
+  if (index === currentIndex) return "current";
+  if (interactive === "completed" && index <= furthestIndex) return index === furthestIndex ? "started" : "complete";
+  return "upcoming";
 }

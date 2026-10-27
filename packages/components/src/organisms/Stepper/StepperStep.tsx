@@ -2,12 +2,14 @@ import { CheckIcon, MinusIcon, WarningIcon, XIcon } from "@dbm-system/icons";
 import { cx } from "@dbm-system/utils";
 import { Slot } from "@radix-ui/react-slot";
 import { cloneElement, forwardRef, isValidElement, useContext } from "react";
-import type { MouseEvent, ReactNode } from "react";
+import type { MouseEvent, ReactElement, ReactNode } from "react";
 import { Icon } from "../../atoms/Icon";
 import type { IconSize } from "../../atoms/Icon";
 import { Spinner } from "../../atoms/Spinner";
 import type { SpinnerSize } from "../../atoms/Spinner";
+import { Tooltip } from "../../atoms/Tooltip";
 import { VisuallyHidden } from "../../atoms/VisuallyHidden";
+import { titleText } from "./stepperHelpers";
 import { StepPositionContext, useStepperContext } from "./StepperContext";
 import styles from "./Stepper.module.css";
 import type { StepperSize, StepperStepProps } from "./Stepper.types";
@@ -53,7 +55,7 @@ export const StepperStep = forwardRef<HTMLLIElement, StepperStepProps>(
     },
     ref,
   ) => {
-    const { size, orientation, labelPlacement, connector: connectorStyle, labels, formatNumber, request } = useStepperContext();
+    const { size, orientation, labelPlacement, connector: connectorStyle, showLabels, labels, formatNumber, request } = useStepperContext();
     const { index, total, status, enterable } = useContext(StepPositionContext);
     const isLast = index === total - 1;
     const canEnter = enterable && !disabled;
@@ -98,7 +100,8 @@ export const StepperStep = forwardRef<HTMLLIElement, StepperStepProps>(
         <span aria-hidden="true" className={styles.indicator}>
           {mark}
         </span>
-        {textWrap(heading)}
+        {/* Without labels the text is hidden from the eye and still read: it names the step. */}
+        {showLabels ? textWrap(heading) : <VisuallyHidden>{textWrap(heading)}</VisuallyHidden>}
         {orientation === "vertical" && connector}
       </>
     );
@@ -108,7 +111,7 @@ export const StepperStep = forwardRef<HTMLLIElement, StepperStepProps>(
       "aria-busy": busy || undefined,
     };
 
-    let control: ReactNode;
+    let control: ReactElement;
     if (canEnter && asChild && isValidElement<{ children?: ReactNode }>(children)) {
       // The caller's link becomes the clickable part; its own text is the title.
       const child = children;
@@ -134,6 +137,10 @@ export const StepperStep = forwardRef<HTMLLIElement, StepperStepProps>(
       control = <div {...stepProps}>{inner(title)}</div>;
     }
 
+    // With the text hidden, the title is the step's tooltip. A disabled button gets no pointer events, so it has none.
+    const tooltipTitle = canEnter && asChild && isValidElement<{ children?: ReactNode }>(children) ? (children.props.children ?? title) : title;
+    const tooltip = showLabels || (disabled && enterable) ? "" : titleText({ title: tooltipTitle, textValue: _textValue });
+
     return (
       // eslint-disable-next-line jsx-a11y/no-redundant-roles -- deliberate; see the comment above.
       <li
@@ -147,7 +154,7 @@ export const StepperStep = forwardRef<HTMLLIElement, StepperStepProps>(
         data-label-placement={orientation === "horizontal" ? labelPlacement : "end"}
         className={cx(styles.item, isLast && styles.last, className)}
       >
-        {control}
+        {tooltip ? <Tooltip content={tooltip}>{control}</Tooltip> : control}
         {orientation === "horizontal" && connector}
       </li>
     );

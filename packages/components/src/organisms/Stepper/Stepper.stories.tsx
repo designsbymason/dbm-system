@@ -1,5 +1,5 @@
 import type { Meta, StoryContext, StoryObj } from "@storybook/react-vite";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { CSSProperties } from "react";
 import { CreditCardIcon, PackageIcon, UserIcon } from "@dbm-system/icons";
 import { Button } from "../../atoms/Button";
@@ -10,6 +10,7 @@ import type {
   StepperConnector,
   StepperController,
   StepperInteractive,
+  StepperLabelAlignment,
   StepperLabelPlacement,
   StepperOrientation,
   StepperProps,
@@ -27,7 +28,10 @@ interface PlaygroundArgs {
   tone: StepperTone;
   rounded: boolean;
   connector: StepperConnector;
+  colorful: boolean;
+  showLabels: boolean;
   labelPlacement: StepperLabelPlacement;
+  labelAlignment: StepperLabelAlignment;
   compact: StepperCompact;
   interactive: StepperInteractive;
   announce: boolean;
@@ -66,7 +70,7 @@ const Demo = (props: DemoProps) => (
 );
 
 const allSizes: StepperSize[] = ["xs", "sm", "md", "lg", "xl"];
-const allTones: StepperTone[] = ["brand", "info", "success", "highlight", "neutral"];
+const allTones: StepperTone[] = ["brand", "info", "highlight", "neutral"];
 
 // A fixed-render story ignores its own args, so every control it can't honour is
 // turned off (07-storybook-and-documentation-standards.md §5).
@@ -78,7 +82,10 @@ const noControls = {
   tone: off,
   rounded: off,
   connector: off,
+  colorful: off,
+  showLabels: off,
   labelPlacement: off,
+  labelAlignment: off,
   compact: off,
   interactive: off,
   announce: off,
@@ -90,6 +97,13 @@ const noControls = {
 /** The same, except the one axis a story does draw from its own args. */
 const except = (...keys: Array<keyof typeof noControls>) =>
   Object.fromEntries(Object.entries(noControls).filter(([key]) => !keys.includes(key as keyof typeof noControls)));
+
+/** How tall the Playground's demo box is: all the room the canvas has for the compact vertical form, nothing set otherwise. */
+const playgroundBoxHeight = (args: Pick<PlaygroundArgs, "orientation" | "compact">, viewMode: string): string | undefined => {
+  if (args.orientation !== "vertical" || args.compact === "never") return undefined;
+  // The decorator pads the story by `space-6` and the canvas by 1rem, each side.
+  return viewMode === "docs" ? "24rem" : "calc(100vh - 2 * var(--dbm-space-6) - 2rem)";
+};
 
 const meta: Meta<PlaygroundArgs> = {
   title: "Organisms/Navigation/Stepper",
@@ -131,7 +145,7 @@ const meta: Meta<PlaygroundArgs> = {
     },
     tone: {
       control: "select",
-      options: ["brand", "info", "success", "highlight", "neutral"],
+      options: ["brand", "info", "highlight", "neutral"],
       description: "The colour of the progress: finished steps, the current step and the line between finished steps. A step with an error is always red.",
       table: { defaultValue: { summary: '"brand"' } },
     },
@@ -146,12 +160,32 @@ const meta: Meta<PlaygroundArgs> = {
       description: "The line between steps: solid, dashed, or none. The line leaving a skipped step is always dashed.",
       table: { defaultValue: { summary: '"solid"' } },
     },
+    colorful: {
+      control: "boolean",
+      description:
+        "Colours a finished step (and the line after it) success instead of the tone. The current step and a step that was started and left before it was completed keep the tone.",
+      table: { defaultValue: { summary: "false" } },
+    },
+    showLabels: {
+      control: "boolean",
+      description:
+        "Shows each step's title, description and Optional mark, and the compact summary's text. Off, the stepper is indicators alone: the text is hidden from the eye but still read by a screen reader, and a step's title shows in a tooltip on hover or focus.",
+      table: { defaultValue: { summary: "true" } },
+    },
     labelPlacement: {
       control: "select",
       options: ["end", "bottom"],
       if: { arg: "orientation", eq: "horizontal" },
       description: "Where a horizontal stepper puts each step's text: beside the indicator (end) or under it (bottom).",
       table: { defaultValue: { summary: '"end"' } },
+    },
+    labelAlignment: {
+      control: "select",
+      options: ["start", "center"],
+      if: { arg: "compact", neq: "never" },
+      description:
+        "Where the compact horizontal summary puts its text: at the start of the row, with Back and Next side by side at the end, or centred, with Back at the start and Next at the end. Has no effect on the vertical form.",
+      table: { defaultValue: { summary: '"start"' } },
     },
     compact: {
       control: "select",
@@ -215,7 +249,10 @@ const meta: Meta<PlaygroundArgs> = {
     tone: "brand",
     rounded: true,
     connector: "solid",
+    colorful: false,
+    showLabels: true,
     labelPlacement: "end",
+    labelAlignment: "start",
     compact: "never",
     interactive: "none",
     announce: true,
@@ -223,29 +260,37 @@ const meta: Meta<PlaygroundArgs> = {
     dir: "ltr",
     defaultValue: "shipping",
   },
-  render: (args) => (
-    <Stepper
-      // Keyed by the starting step, so choosing another in the control restarts the (uncontrolled) stepper there.
-      key={args.defaultValue}
-      defaultValue={args.defaultValue}
-      orientation={args.orientation}
-      size={args.size}
-      variant={args.variant}
-      tone={args.tone}
-      rounded={args.rounded}
-      connector={args.connector}
-      labelPlacement={args.orientation === "vertical" ? undefined : args.labelPlacement}
-      compact={args.compact}
-      interactive={args.interactive}
-      announce={args.announce}
-      aria-label={args["aria-label"]}
-      dir={args.dir}
-    >
-      <Stepper.Step value="account" title="Account" description="Your details" />
-      <Stepper.Step value="shipping" title="Shipping" description="Where it goes" />
-      <Stepper.Step value="payment" title="Payment" description="Card or invoice" />
-      <Stepper.Step value="review" title="Review" description="Check and place" />
-    </Stepper>
+  render: (args, context) => (
+    // The demo box. The compact vertical form fills the height it is given, so there the box takes all the room the
+    // canvas has: the page's height standalone (less the story's own padding), a set height inside a Docs page. Any other
+    // form takes its own height.
+    <div style={{ blockSize: playgroundBoxHeight(args, context.viewMode) }}>
+      <Stepper
+        // Keyed by the starting step, so choosing another in the control restarts the (uncontrolled) stepper there.
+        key={args.defaultValue}
+        defaultValue={args.defaultValue}
+        orientation={args.orientation}
+        size={args.size}
+        variant={args.variant}
+        tone={args.tone}
+        rounded={args.rounded}
+        connector={args.connector}
+        colorful={args.colorful}
+        showLabels={args.showLabels}
+        labelPlacement={args.orientation === "vertical" ? undefined : args.labelPlacement}
+        compact={args.compact}
+        labelAlignment={args.orientation === "vertical" || args.compact === "never" ? undefined : args.labelAlignment}
+        interactive={args.interactive}
+        announce={args.announce}
+        aria-label={args["aria-label"]}
+        dir={args.dir}
+      >
+        <Stepper.Step value="account" title="Account" description="Your details" />
+        <Stepper.Step value="shipping" title="Shipping" description="Where it goes" />
+        <Stepper.Step value="payment" title="Payment" description="Card or invoice" />
+        <Stepper.Step value="review" title="Review" description="Check and place" />
+      </Stepper>
+    </div>
   ),
 };
 
@@ -413,6 +458,51 @@ export const ResponsiveOrientation: Story = {
   parameters: { docs: { source: { code: stepperSnippets.responsiveOrientation } } },
 };
 
+/**
+ * A flow that went to Payment and came back to Shipping: with `interactive="completed"` the steps passed on the way stay
+ * finished, and Payment, the furthest step reached and not completed, is started. It starts at Payment and goes back once,
+ * on mount, so the demo shows the state without a click.
+ */
+const WentBack = (props: DemoProps) => {
+  const [value, setValue] = useState("payment");
+  useEffect(() => {
+    const timer = setTimeout(() => setValue("shipping"), 0);
+    return () => clearTimeout(timer);
+  }, []);
+  return (
+    <Stepper value={value} onValueChange={setValue} interactive="completed" {...props}>
+      {demoSteps.map(([step, title]) => (
+        <Stepper.Step key={step} value={step} title={title} />
+      ))}
+      <Stepper.Step value="confirmation" title="Confirmation" />
+    </Stepper>
+  );
+};
+
+export const StartedStep: Story = {
+  name: "A started step, after going back",
+  argTypes: { ...except("size", "variant", "tone") },
+  render: (args) => (
+    <div style={{ display: "grid", gap: "var(--dbm-space-6)" }}>
+      <WentBack size={args.size} variant={args.variant} tone={args.tone} aria-label="Went back" />
+      <WentBack size={args.size} variant={args.variant} tone={args.tone} orientation="vertical" aria-label="Went back, vertical" />
+    </div>
+  ),
+  parameters: { docs: { source: { code: stepperSnippets.startedStep } } },
+};
+
+export const Colourful: Story = {
+  name: "Colourful",
+  argTypes: { ...except("size", "variant") },
+  render: (args) => (
+    <div style={{ display: "grid", gap: "var(--dbm-space-6)" }}>
+      <WentBack colorful size={args.size} variant={args.variant} aria-label="Colourful" />
+      <WentBack colorful size={args.size} variant={args.variant} orientation="vertical" aria-label="Colourful, vertical" />
+    </div>
+  ),
+  parameters: { docs: { source: { code: stepperSnippets.colourful } } },
+};
+
 /** Back and Next drive `value`; a finished step can be entered to go back. */
 export const Controlled: Story = {
   name: "Controlled, with Back and Next",
@@ -478,11 +568,56 @@ export const CompactBack: Story = {
   parameters: { docs: { source: { code: stepperSnippets.compactBack } } },
 };
 
+export const WithoutLabels: Story = {
+  name: "Indicators only, without labels",
+  argTypes: { ...except("size", "variant", "tone") },
+  render: (args) => (
+    <div style={{ display: "grid", gap: "var(--dbm-space-6)" }}>
+      <Demo showLabels={false} size={args.size} variant={args.variant} tone={args.tone} interactive="all" aria-label="Indicators only" />
+      <Demo showLabels={false} size={args.size} variant={args.variant} tone={args.tone} compact="always" interactive="all" aria-label="Compact, no labels" />
+      <div style={{ display: "flex", gap: "var(--dbm-space-8)" }}>
+        <Demo showLabels={false} orientation="vertical" size={args.size} variant={args.variant} tone={args.tone} aria-label="Vertical, no labels" />
+      </div>
+    </div>
+  ),
+  parameters: { docs: { source: { code: stepperSnippets.withoutLabels } } },
+};
+
+export const CompactCentred: Story = {
+  name: "Compact, with the text centred",
+  argTypes: { ...noControls },
+  render: () => (
+    <div style={{ display: "grid", gap: "var(--dbm-space-6)" }}>
+      <Demo compact="always" labelAlignment="center" defaultValue="payment" interactive="all" aria-label="Compact centred, interactive" />
+      <Demo compact="always" labelAlignment="center" defaultValue="payment" aria-label="Compact centred, read only" />
+    </div>
+  ),
+  parameters: { docs: { source: { code: stepperSnippets.compactCentred } } },
+};
+
+export const CompactNoLabels: Story = {
+  name: "Compact, without labels",
+  argTypes: { ...noControls },
+  render: () => <Demo compact="always" showLabels={false} defaultValue="payment" interactive="all" aria-label="Compact, no labels, with buttons" />,
+  parameters: { docs: { source: { code: stepperSnippets.compactNoLabels } } },
+};
+
 export const CompactVertical: Story = {
   name: "Compact and vertical, in one column",
   argTypes: { ...noControls },
   render: () => <Demo compact="always" orientation="vertical" defaultValue="payment" interactive="all" aria-label="Compact vertical" />,
   parameters: { docs: { source: { code: stepperSnippets.compactVertical } } },
+};
+
+export const CompactVerticalFull: Story = {
+  name: "Compact and vertical, filling its container",
+  argTypes: { ...noControls },
+  render: () => (
+    <div style={{ blockSize: "22rem", border: "1px dashed var(--dbm-border-default)", padding: "var(--dbm-space-2)" }}>
+      <Demo compact="always" orientation="vertical" defaultValue="payment" interactive="all" aria-label="Compact vertical, full height" />
+    </div>
+  ),
+  parameters: { docs: { source: { code: stepperSnippets.compactVerticalFull } } },
 };
 
 /** Next and Back are buttons of your own, outside the stepper; the controller asks for the change. */

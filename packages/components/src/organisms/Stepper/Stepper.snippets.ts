@@ -11,6 +11,7 @@ import type {
   StepperCompact,
   StepperConnector,
   StepperInteractive,
+  StepperLabelAlignment,
   StepperLabelPlacement,
   StepperOrientation,
   StepperSize,
@@ -39,9 +40,9 @@ ${stepper('size="lg"')}`,
     | "outlined" — every indicator is a ring on the page */}
 ${stepper('variant="outlined"')}`,
 
-  tones: `{/* tone: "brand" (default) | "info" | "success" | "highlight" | "neutral" — the colour of the progress.
+  tones: `{/* tone: "brand" (default) | "info" | "highlight" | "neutral" — the colour of the progress.
     A step with an error is always red. Put "highlight" on a surface, not on the canvas. */}
-${stepper('tone="success"')}`,
+${stepper('tone="info"')}`,
 
   descriptions: `{/* description: a line under the title. optional: marks a step that may be left out. */}
 <Stepper defaultValue="shipping">
@@ -102,8 +103,25 @@ ${stepper('orientation={{ base: "vertical", md: "horizontal" }}')}`,
     disabled. interactive="completed" enables Next only after going back, to a step already reached. */}
 ${stepper('compact="always" interactive="all" defaultValue="payment"').replace('defaultValue="shipping" ', '')}`,
 
+  withoutLabels: `{/* showLabels={false}: indicators alone. The titles are hidden from the eye but still read by a screen reader
+    (they name each step), and each shows in a Tooltip on hover or focus. The compact summary's text is hidden the same way. */}
+${stepper('showLabels={false}')}`,
+
+  compactCentred: `{/* labelAlignment: "start" (default) | "center". Centred, the text is in the middle of the row,
+    with Back at the start and Next at the end (when interactive). Compact horizontal only. */}
+${stepper('compact="always" labelAlignment="center" interactive="all" defaultValue="payment"').replace('defaultValue="shipping" ', '')}`,
+
+  compactNoLabels: `{/* showLabels={false} with compact and interactive: Back and Next go at the two ends of the bars */}
+${stepper('compact="always" showLabels={false} interactive="all" defaultValue="payment"').replace('defaultValue="shipping" ', '')}`,
+
   compactVertical: `{/* orientation="vertical" with compact: one column — Up, the bars, Down, then "3/4" as text */}
 ${stepper('compact="always" orientation="vertical" interactive="all" defaultValue="payment"').replace('defaultValue="shipping" ', '')}`,
+
+  compactVerticalFull: `{/* In a container with a set height the compact vertical form fills it: the bars take the room
+    between Up and Down, so Down and "3/4" sit at the bottom. */}
+<div style={{ height: "22rem" }}>
+${stepper('compact="always" orientation="vertical" interactive="all" defaultValue="payment"').replace('defaultValue="shipping" ', '')}
+</div>`,
 
   controller: `{/* const controller = useRef<StepperController>(null);
     const [step, setStep] = useState("shipping");
@@ -113,6 +131,19 @@ ${stepper('compact="always" orientation="vertical" interactive="all" defaultValu
 ${defaultSteps}
 </Stepper>
 <button onClick={() => controller.current?.next()}>Next</button>`,
+
+  startedStep: `{/* With interactive="completed", after going back: the steps passed on the way stay finished, and the
+    furthest step reached, if it was not completed, is started — a dashed ring. Give it status="complete" once it is.
+    const [step, setStep] = useState("payment") — then setStep("shipping") when the person goes back. */}
+<Stepper value={step} onValueChange={setStep} interactive="completed">
+${defaultSteps}
+</Stepper>`,
+
+  colourful: `{/* colorful: a finished step (and the line after it) is success; the current step and a started step keep
+    the tone. */}
+<Stepper colorful value={step} onValueChange={setStep} interactive="completed">
+${defaultSteps}
+</Stepper>`,
 
   controlled: `{/* const [step, setStep] = useState("shipping"); — a click asks through onValueChange and the
     current step changes when value does. interactive="completed" lets a person go back. */}
@@ -159,7 +190,10 @@ export interface StepperPlaygroundSnippetArgs {
   tone?: StepperTone;
   rounded?: boolean;
   connector?: StepperConnector;
+  colorful?: boolean;
+  showLabels?: boolean;
   labelPlacement?: StepperLabelPlacement;
+  labelAlignment?: StepperLabelAlignment;
   compact?: StepperCompact;
   interactive?: StepperInteractive;
   announce?: boolean;
@@ -176,10 +210,15 @@ export function stepperPlaygroundSnippet(args: StepperPlaygroundSnippetArgs): st
   if (args.tone && args.tone !== "brand") attributes.push(`tone="${args.tone}"`);
   if (args.rounded === false) attributes.push("rounded={false}");
   if (args.connector && args.connector !== "solid") attributes.push(`connector="${args.connector}"`);
+  if (args.colorful) attributes.push("colorful");
+  if (args.showLabels === false) attributes.push("showLabels={false}");
   if (args.labelPlacement && args.labelPlacement !== "end" && args.orientation !== "vertical") {
     attributes.push(`labelPlacement="${args.labelPlacement}"`);
   }
   if (args.compact && args.compact !== "never") attributes.push(`compact="${args.compact}"`);
+  if (args.labelAlignment === "center" && args.compact && args.compact !== "never" && args.orientation !== "vertical") {
+    attributes.push('labelAlignment="center"');
+  }
   if (args.interactive && args.interactive !== "none") attributes.push(`interactive="${args.interactive}"`);
   if (args.announce === false) attributes.push("announce={false}");
   if (args["aria-label"] && args["aria-label"] !== "Progress") attributes.push(`aria-label=${quote(args["aria-label"])}`);

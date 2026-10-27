@@ -33,7 +33,6 @@ const sizeClass: Record<StepperSize, string | undefined> = {
 const toneClass: Record<StepperTone, string | undefined> = {
   brand: styles.toneBrand,
   info: styles.toneInfo,
-  success: styles.toneSuccess,
   highlight: styles.toneHighlight,
   neutral: styles.toneNeutral,
 };
@@ -103,7 +102,10 @@ const StepperRoot = forwardRef<HTMLElement, StepperProps>(
       tone = "brand",
       rounded = true,
       connector = "solid",
+      colorful = false,
+      showLabels = true,
       labelPlacement = "end",
+      labelAlignment = "start",
       compact = "never",
       interactive = "none",
       announce = true,
@@ -140,6 +142,12 @@ const StepperRoot = forwardRef<HTMLElement, StepperProps>(
       }
     }, [duplicate]);
 
+    useEffect(() => {
+      if (process.env.NODE_ENV !== "production" && labelAlignment === "center" && (compact === "never" || vertical)) {
+        console.warn("Stepper: `labelAlignment=\"center\"` only applies to the compact horizontal form, so it has no effect here.");
+      }
+    }, [labelAlignment, compact, vertical]);
+
     const { current, currentIndex, furthest, request } = useStepperValue({
       value: valueProp,
       defaultValue,
@@ -159,7 +167,7 @@ const StepperRoot = forwardRef<HTMLElement, StepperProps>(
     });
 
     const positionFor = (step: ReactElement<StepperStepProps>, index: number): StepPosition => {
-      const status = derivedStatus(step, index, currentIndex);
+      const status = derivedStatus(step, index, currentIndex, furthest, interactive);
       return { index, total, status, enterable: canEnter(interactive, status, index, currentIndex, furthest) };
     };
     const enterableAt = (index: number): boolean => positionFor(steps[index]!, index).enterable && !steps[index]!.props.disabled;
@@ -203,6 +211,7 @@ const StepperRoot = forwardRef<HTMLElement, StepperProps>(
       orientation,
       labelPlacement,
       connector,
+      showLabels,
       labels,
       formatNumber,
       request,
@@ -225,6 +234,7 @@ const StepperRoot = forwardRef<HTMLElement, StepperProps>(
             toneClass[tone],
             variantClass[variant],
             rounded && styles.rounded,
+            colorful && styles.colorful,
             connectorClass[connector],
             compactClass[compact],
             vertical ? styles.vertical : styles.horizontal,
@@ -235,6 +245,8 @@ const StepperRoot = forwardRef<HTMLElement, StepperProps>(
             {compact !== "never" && (
               <StepperSummary
                 vertical={vertical}
+                alignment={labelAlignment}
+                showText={showLabels}
                 labels={labels}
                 currentIndex={currentIndex}
                 total={total}
