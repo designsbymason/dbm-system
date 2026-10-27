@@ -1,6 +1,6 @@
 # Stepper — review
 
-**Status:** Built 2026-10-26, with a second round the next day (below); the §9 review pass is complete except the items under "Not verified". Not yet declared Finalized.
+**Status:** Finalized 2026-10-27, after the full `06-engineering-standards.md` §9 review pass and the rounds below, declared by the maintainer. Not verified: the items under "Not verified" (a real device, touch and a screen reader).
 
 ## What exists
 `Stepper` and `Stepper.Step`: an indicator for an ordered flow, in an ordered list inside a named `nav`. Decisions: [ADR-0138](../adr/0138-stepper-adapts-to-the-width-by-a-responsive-orientation-resolved-in-the-browser-and-a-compact-summary-with-a-back-button-that-focus-is-handed-across-over-a-read-only-summary-or-css-only-switching.md) (width: responsive orientation, the compact form's back button, focus across the breakpoint) and [ADR-0139](../adr/0139-stepper-hands-next-back-and-go-to-to-code-outside-it-through-a-controller-ref-and-no-hook-over-a-hook-or-a-context-for-its-steps.md) (the controller). Earlier: [ADR-0136](../adr/0136-stepper-is-a-nav-and-ordered-list-with-aria-current-step-and-real-buttons-only-where-a-step-can-be-entered-over-a-tablist-with-roving-focus.md) (semantics and keyboard), [ADR-0137](../adr/0137-stepper-draws-the-indicator-only-and-leaves-the-steps-content-and-the-flows-logic-to-the-caller-over-owning-panels-or-a-controller.md) (indicator only; no panels, no controller).
@@ -22,7 +22,8 @@ Props worth knowing: `value`/`defaultValue`/`onValueChange`, `orientation`, `siz
 
 ## Not verified
 - A real device. Touch was not tried.
-- No server render and hydration test was written: the component draws no portal or node of its own.
+- A screen reader was not run: the live-region announcement, `aria-current` on the list item, the visually hidden status text and the focusable scrolling strip are checked by their markup, axe and real-browser focus tests, not by listening.
+- A hover on a real touch screen for the tooltip shown when the labels are hidden.
 
 ## Second round
 Found and fixed, then the gaps in the first round's list:
@@ -106,3 +107,4 @@ The Docs page and the Show-code snippets were read end to end against the finish
 - **Page text:** the intro, the "Properties" lead-in (the props every step reads from the root), the compact best practices (one long bullet split into three), the accessibility notes (the tooltip and Escape, the compact buttons in the key table, started in forced colours, the strip scrolling when too short) and the code examples (a saved draft, `colorful`, indicators alone and a centred compact summary).
 - **Snippets:** stale comments fixed (`compact` said read-only; `interactive` and `statuses` did not say what `"completed"` means or point at `warning` and `started`; `colourful` left `step` undefined). The Playground's snippet now starts on the step the Playground starts on (it always wrote `shipping`), with a unit test of the builder. Every snippet and both Playground outputs were typechecked against the real components again, with a planted bad value that the check caught.
 - **The ProgressBar card** drew nothing: the bar had no width in the card's preview, and it was given `aria-label`, a prop it does not have (it logged a warning for every card render). It now sits in a 10rem box with `label`, and the console is clean.
+- The ProgressBar card now uses the same `space-24`-wide box as the Spinner, ProgressCircle and FileUpload cards, in place of a hand-picked `10rem`.

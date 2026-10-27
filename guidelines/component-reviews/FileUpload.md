@@ -59,3 +59,6 @@ Thirteenth organism, built 2026-10-24 with the `06-engineering-standards.md` §9
 - The keyboard model was exercised through unit tests and one real-browser focus check, not by hand with a screen reader.
 - The Show code panels were typechecked against the real components (with a planted bad prop to prove the check bites) but not opened one by one on the live Docs page.
 - A real drop of files or a folder from the operating system was not exercised: the browser checks dispatch a `DragEvent` with a real `DataTransfer`, which is what a drop delivers to the page, and a folder is walked with stand-ins for the entries API, since a script can't make a real directory.
+
+## Related-components card
+A docs-only fix, authorized by the maintainer, that does not reopen Finalized status: the ProgressBar card drew nothing (the bar had no width in the card's preview, 0 by 6px, and its `label` is only the accessible name), so it is now wrapped in the same `space-24`-wide box the Spinner and ProgressCircle cards use. Checked live: 96 by 6px.
