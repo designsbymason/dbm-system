@@ -1,6 +1,7 @@
-import { cx, mergeDefined, useResolvedResponsiveValue } from "@dbm-system/utils";
+import { cx, mergeDefined, mergeRefs, useResolvedResponsiveValue } from "@dbm-system/utils";
 import { Children, forwardRef, isValidElement, useEffect } from "react";
 import type { ReactElement, ReactNode } from "react";
+import { TooltipProvider } from "../../atoms/Tooltip";
 import { VisuallyHidden } from "../../atoms/VisuallyHidden";
 import { canEnter, defaultLabelsFor, derivedStatus, titleText } from "./stepperHelpers";
 import { StepperContext, StepPositionContext } from "./StepperContext";
@@ -62,19 +63,21 @@ function isStep(child: ReactNode): child is ReactElement<StepperStepProps> {
  * A multi-step flow indicator (a checkout, an onboarding, a wizard): a `<nav>` around an ordered list of
  * `Stepper.Step`s, each with an indicator and a title. The current step is `value` (controlled, with `onValueChange`)
  * or `defaultValue`; steps before it show as finished and steps after it as not started, and a step may set its own
- * `status` (`"error"`, `"warning"`, `"skipped"`, `"complete"`) or be `busy` while its check or save runs.
+ * `status` (`"error"`, `"warning"`, `"skipped"`, `"complete"`, `"started"`) or be `busy` while its check or save runs.
  *
  * It draws the indicator and nothing else: the current step's content, next and back, and deciding whether a step may
  * be left are the caller's. By default it only shows progress and has no focus stop; `interactive` lets a person
- * enter finished steps (`"completed"`) or any step but the current one (`"all"`), each a real button in the tab
- * order. The current step carries `aria-current="step"`, and a change of step is announced to a screen reader
- * (`announce`).
+ * enter the steps they have reached (`"completed"`: after going back, the steps passed stay finished and the furthest one
+ * reached, if it was not completed, is shown as started, with a dashed ring) or any step but the current one (`"all"`),
+ * each a real button in the tab order. The current step's list item carries `aria-current="step"`, and a change of step
+ * is announced to a screen reader (`announce`).
  *
- * `size`, `variant`, `rounded`, `tone`, `connector` and `orientation` (which takes a breakpoint map) set how every step
- * looks, `labelPlacement` puts a horizontal step's text under its indicator, and `compact` swaps the steps for a
- * one-line summary on a phone (or always), with a way back when `interactive`. `controllerRef` hands `next()`,
- * `back()` and `goTo()` to a button of your own. Text the component writes itself is in `labels`, and `formatNumber`
- * writes its digits.
+ * `size`, `variant`, `rounded`, `tone`, `colorful` (a finished step in success), `connector` and `orientation` (which
+ * takes a breakpoint map) set how every step looks, `labelPlacement` puts a horizontal step's text under its indicator,
+ * and `showLabels={false}` draws indicators alone, with the text still read by a screen reader and shown in a tooltip.
+ * `compact` swaps the steps for a one-line summary on a phone (or always), with Back and Next when `interactive`, and
+ * `labelAlignment` centres its text. `controllerRef` hands `next()`, `back()` and `goTo()` to a button of your own. Text
+ * the component writes itself is in `labels`, and `formatNumber` writes its digits.
  *
  * `ref` forwards to the `<nav>`.
  *
@@ -166,11 +169,12 @@ const StepperRoot = forwardRef<HTMLElement, StepperProps>(
       request,
     });
 
-    const positionFor = (step: ReactElement<StepperStepProps>, index: number): StepPosition => {
+    // What each step is and whether it can be entered, worked out once for the list, the summary and the buttons.
+    const positions: StepPosition[] = steps.map((step, index) => {
       const status = derivedStatus(step, index, currentIndex, furthest, interactive);
       return { index, total, status, enterable: canEnter(interactive, status, index, currentIndex, furthest) };
-    };
-    const enterableAt = (index: number): boolean => positionFor(steps[index]!, index).enterable && !steps[index]!.props.disabled;
+    });
+    const enterableAt = (index: number): boolean => positions[index]!.enterable && !steps[index]!.props.disabled;
 
     // The nearest steps either side of the current one that the compact summary's buttons can enter.
     let previousIndex = -1;
@@ -198,11 +202,7 @@ const StepperRoot = forwardRef<HTMLElement, StepperProps>(
       onFocus,
       onBlur,
     });
-    const setNavRefs = (node: HTMLElement | null) => {
-      focus.navRef.current = node;
-      if (typeof ref === "function") ref(node);
-      else if (ref) ref.current = node;
-    };
+    const mergedRef = mergeRefs(ref, focus.navRef);
 
     const context: StepperContextValue = {
       size,
@@ -221,7 +221,7 @@ const StepperRoot = forwardRef<HTMLElement, StepperProps>(
       <StepperContext.Provider value={context}>
         <nav
           {...props}
-          ref={setNavRefs}
+          ref={mergedRef}
           dir={dir}
           aria-label={ariaLabelledBy ? undefined : (ariaLabel ?? labels.navigation)}
           aria-labelledby={ariaLabelledBy}
@@ -241,41 +241,43 @@ const StepperRoot = forwardRef<HTMLElement, StepperProps>(
             className,
           )}
         >
-          <div ref={focus.scrollerRef} className={styles.scroller} tabIndex={focus.scrollerTabIndex}>
-            {compact !== "never" && (
-              <StepperSummary
-                vertical={vertical}
-                alignment={labelAlignment}
-                showText={showLabels}
-                labels={labels}
-                currentIndex={currentIndex}
-                total={total}
-                title={currentTitle}
-                segments={steps.map((step, index) => ({
-                  value: step.props.value,
-                  status: positionFor(step, index).status,
-                  done: index <= currentIndex,
-                }))}
-                buttons={interactive !== "none"}
-                previousIndex={previousIndex}
-                nextIndex={nextIndex}
-                onPress={focus.pressSummaryButton}
-                summaryRef={focus.summaryRef}
-                backRef={focus.backRef}
-                nextRef={focus.nextRef}
-              />
-            )}
-            {/* The `list` role is stated outright, for the reason given at `StepperStep`. */}
-            {/* eslint-disable-next-line jsx-a11y/no-redundant-roles -- deliberate; see `StepperStep`. */}
-            <ol ref={focus.listRef} role="list" className={styles.list}>
-              {steps.map((step, index) => (
-                <StepPositionContext.Provider key={step.props.value} value={positionFor(step, index)}>
-                  {step}
-                </StepPositionContext.Provider>
-              ))}
-            </ol>
-            {announce && <VisuallyHidden role="status">{announcement}</VisuallyHidden>}
-          </div>
+          <TooltipProvider>
+            <div ref={focus.scrollerRef} className={styles.scroller} tabIndex={focus.scrollerTabIndex}>
+              {compact !== "never" && (
+                <StepperSummary
+                  vertical={vertical}
+                  alignment={labelAlignment}
+                  showText={showLabels}
+                  labels={labels}
+                  currentIndex={currentIndex}
+                  total={total}
+                  title={currentTitle}
+                  segments={steps.map((step, index) => ({
+                    value: step.props.value,
+                    status: positions[index]!.status,
+                    done: index <= currentIndex,
+                  }))}
+                  buttons={interactive !== "none"}
+                  previousIndex={previousIndex}
+                  nextIndex={nextIndex}
+                  onPress={focus.pressSummaryButton}
+                  summaryRef={focus.summaryRef}
+                  backRef={focus.backRef}
+                  nextRef={focus.nextRef}
+                />
+              )}
+              {/* The `list` role is stated outright, for the reason given at `StepperStep`. */}
+              {/* eslint-disable-next-line jsx-a11y/no-redundant-roles -- deliberate; see `StepperStep`. */}
+              <ol ref={focus.listRef} role="list" className={styles.list}>
+                {steps.map((step, index) => (
+                  <StepPositionContext.Provider key={step.props.value} value={positions[index]!}>
+                    {step}
+                  </StepPositionContext.Provider>
+                ))}
+              </ol>
+              {announce && <VisuallyHidden role="status">{announcement}</VisuallyHidden>}
+            </div>
+          </TooltipProvider>
         </nav>
       </StepperContext.Provider>
     );

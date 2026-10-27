@@ -40,8 +40,9 @@ export function useStepperFocus({
   const backRef = useRef<HTMLButtonElement | null>(null);
   const nextRef = useRef<HTMLButtonElement | null>(null);
 
-  // The strip: reachable by keyboard only while it scrolls and has no step to focus (WCAG 2.1.1).
-  const scrollable = useIsScrollable(scrollerRef, "x");
+  // The strip: reachable by keyboard only while it scrolls (sideways, or, in a short container, down) and has no step to focus
+  // (WCAG 2.1.1).
+  const scrollable = useIsScrollable(scrollerRef, "both");
   const scrollerTabIndex = scrollable && !hasEnterable ? 0 : undefined;
 
   // The current step is in view whenever it changes, and when the stepper first draws: a strip that scrolls can

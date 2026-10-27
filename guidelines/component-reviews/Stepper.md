@@ -88,3 +88,15 @@ At the maintainer's direction:
 
 ## Compact without labels
 At the maintainer's direction: horizontally, with `compact`, `interactive` and `showLabels={false}`, Back and Next go at the two ends of the bars in one row (there is no text to put them beside, and above the bars they read as a separate row). Both are still always drawn, so nothing moves; a real-browser check asserts the order, the shared centre line and the mirroring right to left, and that the row does not change from the first step to the last. With labels, vertically, or without `interactive`, the summary is as before.
+
+## Code review refinements
+A read-through of the finished code found, and fixed:
+- **A vertically overflowing strip was not a tab stop.** The check for a scrolling strip looked at the horizontal axis only; it now looks at both, so a read-only compact vertical stepper in a container too short for it can be reached by keyboard (a real-browser check, in a 3rem container).
+- **Stale text:** the root JSDoc (which the manifest reads), the Docs intro, the inventory row and ADR-0136 (amended in place, marked, since it had been pushed) now describe the reached/started statuses, `colorful`, `showLabels`, `labelAlignment` and where `aria-current` sits.
+- **One `TooltipProvider`** around the list instead of one per step, so moving from one step to the next shares the hover delay. A step's tooltip is always drawn when the text is hidden and kept closed (its open state is the step's own) when there is nothing to say, so a step's element does not remount as its title changes between plain text and a node.
+- **Step positions are worked out once** per render and used by the list, the summary and the buttons; the nav's ref is merged with `mergeRefs`; the slotted child of `asChild` is decided once.
+- **A warning in development when the stepper changes between controlled and uncontrolled.**
+- **`StepperStoryKit.tsx`** holds the demo the stories and the checks share (they had two copies); **the 1,071-line test file is three files** (`Stepper.test.tsx`, `Stepper.compact.test.tsx`, `Stepper.text.test.tsx`) around a small `stepperTestKit.tsx`, with the same 194 tests.
+
+## `status="started"`
+A step can now be set as started by the caller, not only derived after going back: for a step known to be begun and not finished, such as a saved draft when a person returns to a flow, in any `interactive` mode. It is drawn dashed, announced as "started, not completed", and with `interactive="completed"` it can be entered, as a step marked complete can. The derived behaviour is unchanged and is the default. The `Stepper.Step` Properties table lists the new value (it had also left out `warning`, now added).

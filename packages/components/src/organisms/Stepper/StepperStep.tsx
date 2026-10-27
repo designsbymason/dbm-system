@@ -1,7 +1,7 @@
 import { CheckIcon, MinusIcon, WarningIcon, XIcon } from "@dbm-system/icons";
 import { cx } from "@dbm-system/utils";
 import { Slot } from "@radix-ui/react-slot";
-import { cloneElement, forwardRef, isValidElement, useContext } from "react";
+import { cloneElement, forwardRef, isValidElement, useContext, useState } from "react";
 import type { MouseEvent, ReactElement, ReactNode } from "react";
 import { Icon } from "../../atoms/Icon";
 import type { IconSize } from "../../atoms/Icon";
@@ -58,6 +58,7 @@ export const StepperStep = forwardRef<HTMLLIElement, StepperStepProps>(
     const { size, orientation, labelPlacement, connector: connectorStyle, showLabels, labels, formatNumber, request } = useStepperContext();
     const { index, total, status, enterable } = useContext(StepPositionContext);
     const isLast = index === total - 1;
+    const [tooltipOpen, setTooltipOpen] = useState(false);
     const canEnter = enterable && !disabled;
 
     const mark = (() => {
@@ -111,35 +112,39 @@ export const StepperStep = forwardRef<HTMLLIElement, StepperStepProps>(
       "aria-busy": busy || undefined,
     };
 
+    // With `asChild`, the caller's link becomes the clickable part and its own text is the title.
+    const slotted = canEnter && asChild && isValidElement<{ children?: ReactNode }>(children) ? children : null;
+    const heading = slotted ? (slotted.props.children ?? title) : title;
+
     let control: ReactElement;
-    if (canEnter && asChild && isValidElement<{ children?: ReactNode }>(children)) {
-      // The caller's link becomes the clickable part; its own text is the title.
-      const child = children;
+    if (slotted) {
       control = (
         <Slot {...stepProps} onClick={handleClick}>
-          {cloneElement(child, undefined, inner(child.props.children ?? title))}
+          {cloneElement(slotted, undefined, inner(heading))}
         </Slot>
       );
     } else if (canEnter) {
       control = (
         <button type="button" {...stepProps} onClick={handleClick}>
-          {inner(title)}
+          {inner(heading)}
         </button>
       );
     } else if (disabled && enterable) {
       // A native disabled button: announced as unavailable, and out of the tab order.
       control = (
         <button type="button" disabled {...stepProps}>
-          {inner(title)}
+          {inner(heading)}
         </button>
       );
     } else {
-      control = <div {...stepProps}>{inner(title)}</div>;
+      control = <div {...stepProps}>{inner(heading)}</div>;
     }
 
-    // With the text hidden, the title is the step's tooltip. A disabled button gets no pointer events, so it has none.
-    const tooltipTitle = canEnter && asChild && isValidElement<{ children?: ReactNode }>(children) ? (children.props.children ?? title) : title;
-    const tooltip = showLabels || (disabled && enterable) ? "" : titleText({ title: tooltipTitle, textValue: _textValue });
+    // With the text hidden, the title is the step's tooltip. A disabled button gets no pointer events, so it has none. The
+    // tooltip is drawn whenever the text is hidden, and kept closed when there is nothing to say, so the step's element does
+    // not change place in the tree as its title changes between plain text and a node.
+    const tooltip = showLabels || (disabled && enterable) ? "" : titleText({ title: heading, textValue: _textValue });
+    const hasTooltip = !showLabels && !(disabled && enterable);
 
     return (
       // eslint-disable-next-line jsx-a11y/no-redundant-roles -- deliberate; see the comment above.
@@ -154,7 +159,13 @@ export const StepperStep = forwardRef<HTMLLIElement, StepperStepProps>(
         data-label-placement={orientation === "horizontal" ? labelPlacement : "end"}
         className={cx(styles.item, isLast && styles.last, className)}
       >
-        {tooltip ? <Tooltip content={tooltip}>{control}</Tooltip> : control}
+        {hasTooltip ? (
+          <Tooltip content={tooltip} open={tooltipOpen && tooltip !== ""} onOpenChange={setTooltipOpen}>
+            {control}
+          </Tooltip>
+        ) : (
+          control
+        )}
         {orientation === "horizontal" && connector}
       </li>
     );

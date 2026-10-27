@@ -16,6 +16,15 @@ interface StepperValueOptions {
  */
 export function useStepperValue({ value: valueProp, defaultValue, onValueChange, values }: StepperValueOptions) {
   const controlled = valueProp !== undefined;
+  const wasControlled = useRef(controlled);
+  useEffect(() => {
+    if (process.env.NODE_ENV !== "production" && wasControlled.current !== controlled) {
+      console.warn(
+        `Stepper: changed from ${wasControlled.current ? "controlled" : "uncontrolled"} to ${controlled ? "controlled" : "uncontrolled"}. Decide between \`value\` and \`defaultValue\` for the stepper's life.`,
+      );
+    }
+    wasControlled.current = controlled;
+  }, [controlled]);
   const [inner, setInner] = useState<string | undefined>(defaultValue);
   const current = controlled ? valueProp : (inner ?? values[0]);
   const currentIndex = current === undefined ? -1 : values.indexOf(current);

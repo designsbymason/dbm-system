@@ -294,9 +294,10 @@ export interface StepperStepProps
   /**
    * Overrides what the step shows, in place of working it out from the current step. `"error"` is for a step whose
    * content has a problem; `"warning"` for one that can go on but needs a second look; `"complete"` for one finished
-   * out of order; `"skipped"` for one that was passed over.
+   * out of order; `"started"` for one that was begun and not finished (a saved draft: a dashed ring, and a step the person
+   * can return to with `interactive="completed"`); `"skipped"` for one that was passed over.
    */
-  status?: "complete" | "error" | "warning" | "skipped";
+  status?: "complete" | "started" | "error" | "warning" | "skipped";
   /**
    * Shows a spinner in the indicator in place of its mark and marks the control `aria-busy`, for a step whose check or
    * save is running. The status word (`labels.busy`) is added to what a screen reader hears.

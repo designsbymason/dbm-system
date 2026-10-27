@@ -139,6 +139,14 @@ ${defaultSteps}
 ${defaultSteps}
 </Stepper>`,
 
+  savedDraft: `{/* status="started" is for a step you know was begun and not finished — a saved draft. It is drawn with a dashed
+    ring and announced as "started, not completed", and with interactive="completed" it can be returned to. */}
+<Stepper defaultValue="account" interactive="completed">
+  <Stepper.Step value="account" title="Account" />
+  <Stepper.Step value="shipping" title="Shipping" status="started" description="Saved draft" />
+  <Stepper.Step value="payment" title="Payment" />
+</Stepper>`,
+
   colourful: `{/* colorful: a finished step (and the line after it) is success; the current step and a started step keep
     the tone. */}
 <Stepper colorful value={step} onValueChange={setStep} interactive="completed">

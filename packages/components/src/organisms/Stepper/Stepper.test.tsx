@@ -2,34 +2,16 @@ import { act, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { axe } from "jest-axe";
 import { createRef, StrictMode, useState } from "react";
-import type { ReactNode } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { HouseIcon } from "@dbm-system/icons";
 import { Stepper } from "./Stepper";
 import type { StepperController, StepperProps } from "./Stepper.types";
-
-const steps: Array<[string, string]> = [
-  ["account", "Account"],
-  ["shipping", "Shipping"],
-  ["payment", "Payment"],
-  ["review", "Review"],
-];
-
-function Basic({ children, ...props }: Partial<StepperProps> & { children?: ReactNode }) {
-  return (
-    <Stepper defaultValue="shipping" {...props}>
-      {children ??
-        steps.map(([value, title]) => <Stepper.Step key={value} value={value} title={title} />)}
-    </Stepper>
-  );
-}
+import { Basic, item } from "./stepperTestKit";
 
 afterEach(() => {
   vi.restoreAllMocks();
   vi.useRealTimers();
 });
-
-const item = (title: string) => screen.getByText(title).closest("li") as HTMLElement;
 
 describe("Stepper — structure", () => {
   it("renders a named nav around an ordered list", () => {
@@ -376,175 +358,6 @@ describe("Stepper — interaction", () => {
   });
 });
 
-describe("Stepper — without labels", () => {
-  it("hides the text from the eye but keeps it for a screen reader, and names each step", () => {
-    render(
-      <Basic showLabels={false} interactive="all" defaultValue="a">
-        <Stepper.Step value="a" title="One" description="First" optional />
-        <Stepper.Step value="b" title="Two" />
-      </Basic>,
-    );
-    // Still in the page, so the control's name is unchanged.
-    expect(screen.getByRole("button", { name: /^Two/ })).toBeInTheDocument();
-    const text = screen.getByText("One").closest("span[style]") as HTMLElement;
-    expect(text.style.position).toBe("absolute");
-    expect(item("One")).toHaveTextContent("Step 1 of 2, current");
-  });
-
-  it("shows the title in a tooltip when a step is focused, only without labels", async () => {
-    const user = userEvent.setup();
-    const { rerender } = render(
-      <Basic showLabels={false} interactive="all" defaultValue="a">
-        <Stepper.Step value="a" title="One" />
-        <Stepper.Step value="b" title={<em>Two</em>} textValue="Second" />
-        <Stepper.Step value="c" title={<em>Three</em>} />
-      </Basic>,
-    );
-    await user.tab();
-    expect(await screen.findByRole("tooltip")).toHaveTextContent("Second");
-    await user.tab();
-    // A title that is not plain text and has no textValue has nothing to say in a tooltip.
-    expect(screen.getByRole("button", { name: /^Three/ })).toHaveFocus();
-    expect(screen.queryByRole("tooltip")).toBeNull();
-    rerender(
-      <Basic interactive="all" defaultValue="a">
-        <Stepper.Step value="a" title="One" />
-        <Stepper.Step value="b" title="Two" />
-      </Basic>,
-    );
-    await user.tab({ shift: true });
-    await user.tab();
-    expect(screen.queryByRole("tooltip")).toBeNull();
-  });
-
-  it("gives a disabled step no tooltip, since a disabled button gets no pointer events", async () => {
-    const user = userEvent.setup();
-    render(
-      <Basic showLabels={false} interactive="all" defaultValue="a">
-        <Stepper.Step value="a" title="One" />
-        <Stepper.Step value="b" title="Two" disabled />
-        <Stepper.Step value="c" title="Three" />
-      </Basic>,
-    );
-    await user.hover(screen.getByRole("button", { name: /^Two/ }));
-    expect(screen.queryByRole("tooltip")).toBeNull();
-  });
-
-  it("puts Back and Next at the two ends of the bars when there is no text, horizontally", () => {
-    const { container } = render(<Basic showLabels={false} compact="always" interactive="all" value="shipping" />);
-    const track = container.querySelector("[class*='_summaryTrack_']") as HTMLElement;
-    expect(track.children).toHaveLength(3);
-    expect(track.children[0]).toHaveAttribute("aria-label", "Previous step");
-    expect(track.children[1]).toHaveClass(/segments/);
-    expect(track.children[2]).toHaveAttribute("aria-label", "Next step");
-  });
-
-  it("keeps the track out of it with labels, vertically, or without buttons", () => {
-    const { container, rerender } = render(<Basic compact="always" interactive="all" value="shipping" />);
-    expect(container.querySelector("[class*='_summaryTrack_']")).toBeNull();
-    rerender(<Basic showLabels={false} compact="always" interactive="all" orientation="vertical" value="shipping" />);
-    expect(container.querySelector("[class*='_summaryTrack_']")).toBeNull();
-    rerender(<Basic showLabels={false} compact="always" value="shipping" />);
-    expect(container.querySelector("[class*='_summaryTrack_']")).toBeNull();
-  });
-
-  it("hides the compact summary's text the same way, and keeps the buttons", () => {
-    const { container } = render(<Basic showLabels={false} compact="always" interactive="all" value="shipping" />);
-    const summaryText = container.querySelector("[class*='_summaryText_']") as HTMLElement;
-    expect(summaryText.parentElement?.style.position).toBe("absolute");
-    expect(summaryText).toHaveTextContent("Step 2 of 4 — Shipping");
-    expect(screen.getByRole("button", { name: "Previous step" })).toBeInTheDocument();
-  });
-
-  it("has no axe violations", async () => {
-    const { container } = render(<Basic showLabels={false} interactive="all" compact="auto" />);
-    expect(await axe(container)).toHaveNoViolations();
-  });
-
-  it("shows the text by default", () => {
-    render(<Basic />);
-    expect(screen.getByText("Shipping").closest("span[style]")).toBeNull();
-  });
-});
-
-describe("Stepper — the text it writes", () => {
-  it("writes the compact summary, the announcement and the status text from one place by default", () => {
-    vi.useFakeTimers();
-    const { container, rerender } = render(<Basic compact="always" value="shipping" />);
-    expect(container.querySelector("[class*='_summaryText_']")).toHaveTextContent("Step 2 of 4 — Shipping");
-    rerender(<Basic compact="always" value="payment" />);
-    act(() => vi.advanceTimersByTime(200));
-    expect(screen.getByRole("status")).toHaveTextContent("Step 3 of 4: Payment");
-    expect(item("Payment")).toHaveTextContent("(Step 3 of 4, current)");
-  });
-
-  it("leaves the title out of the summary and the announcement when there is none", () => {
-    vi.useFakeTimers();
-    const { container, rerender } = render(
-      <Basic compact="always" value="a">
-        <Stepper.Step value="a" title={<em>One</em>} />
-        <Stepper.Step value="b" title={<em>Two</em>} />
-      </Basic>,
-    );
-    expect(container.querySelector("[class*='_summaryText_']")).toHaveTextContent(/^Step 1 of 2$/);
-    rerender(
-      <Basic compact="always" value="b">
-        <Stepper.Step value="a" title={<em>One</em>} />
-        <Stepper.Step value="b" title={<em>Two</em>} />
-      </Basic>,
-    );
-    act(() => vi.advanceTimersByTime(200));
-    expect(screen.getByRole("status")).toHaveTextContent(/^Step 2 of 2$/);
-  });
-
-  it("uses textValue for a title that is not plain text", () => {
-    const { container } = render(
-      <Basic compact="always" value="a">
-        <Stepper.Step value="a" title={<em>One</em>} textValue="First" />
-      </Basic>,
-    );
-    expect(container.querySelector("[class*='_summaryText_']")).toHaveTextContent("Step 1 of 1 — First");
-  });
-
-  it("applies a translated summary, announcement and status text", () => {
-    vi.useFakeTimers();
-    const labels = {
-      summary: (n: number, total: number, title: string) => `${title} (${n}/${total})`,
-      announcement: (n: number, total: number, title: string) => `Now ${title}, ${n} of ${total}`,
-      statusText: (n: number, total: number, words: string[]) => ` [${n}/${total}: ${words.join(" + ")}]`,
-    };
-    const { container, rerender } = render(<Basic compact="always" value="shipping" labels={labels} />);
-    expect(container.querySelector("[class*='_summaryText_']")).toHaveTextContent("Shipping (2/4)");
-    expect(item("Shipping")).toHaveTextContent("[2/4: current]");
-    rerender(<Basic compact="always" value="payment" labels={labels} />);
-    act(() => vi.advanceTimersByTime(200));
-    expect(screen.getByRole("status")).toHaveTextContent("Now Payment, 3 of 4");
-  });
-
-  it("passes the busy words after the status words", () => {
-    const statusText = vi.fn((_n: number, _total: number, words: string[]) => ` <${words.join("|")}>`);
-    render(
-      <Basic labels={{ statusText }} defaultValue="a">
-        <Stepper.Step value="a" title="One" busy />
-      </Basic>,
-    );
-    expect(statusText).toHaveBeenCalledWith(1, 1, ["current", "in progress"]);
-  });
-
-  it("builds the defaults on a translated stepOf alone, and keeps a default when an override is undefined", () => {
-    const { container } = render(
-      <Basic compact="always" value="shipping" labels={{ stepOf: (n, total) => `Étape ${n} sur ${total}`, summary: undefined }} />,
-    );
-    expect(container.querySelector("[class*='_summaryText_']")).toHaveTextContent("Étape 2 sur 4 — Shipping");
-    expect(item("Shipping")).toHaveTextContent("(Étape 2 sur 4, current)");
-  });
-
-  it("writes the numbers in the defaults through formatNumber", () => {
-    const { container } = render(<Basic compact="always" value="shipping" formatNumber={(n) => `#${n}`} />);
-    expect(container.querySelector("[class*='_summaryText_']")).toHaveTextContent("Step #2 of #4 — Shipping");
-  });
-});
-
 describe("Stepper — announcements", () => {
   it("has a status region that is empty on first render", () => {
     render(<Basic />);
@@ -671,150 +484,6 @@ describe("Stepper — returning to a step that was reached", () => {
   });
 });
 
-describe("Stepper — a started step", () => {
-  it("shows the furthest step reached as started after going back, and the steps passed as finished", async () => {
-    const user = userEvent.setup();
-    render(<Basic interactive="completed" defaultValue="payment" />);
-    expect(item("Payment")).toHaveAttribute("data-status", "current");
-    await user.click(screen.getByRole("button", { name: /^Shipping/ }));
-    expect(item("Account")).toHaveAttribute("data-status", "complete");
-    expect(item("Shipping")).toHaveAttribute("data-status", "current");
-    expect(item("Payment")).toHaveAttribute("data-status", "started");
-    expect(item("Review")).toHaveAttribute("data-status", "upcoming");
-    expect(item("Payment")).toHaveTextContent("started, not completed");
-  });
-
-  it("keeps a step in between finished, and goes back to started only the furthest", async () => {
-    const user = userEvent.setup();
-    render(<Basic interactive="completed" defaultValue="review" />);
-    await user.click(screen.getByRole("button", { name: /^Account/ }));
-    expect(item("Shipping")).toHaveAttribute("data-status", "complete");
-    expect(item("Payment")).toHaveAttribute("data-status", "complete");
-    expect(item("Review")).toHaveAttribute("data-status", "started");
-  });
-
-  it("clears it when the person returns to that step, and moves it further when they go further", async () => {
-    const user = userEvent.setup();
-    render(<Basic interactive="completed" defaultValue="payment" />);
-    await user.click(screen.getByRole("button", { name: /^Account/ }));
-    expect(item("Payment")).toHaveAttribute("data-status", "started");
-    await user.click(screen.getByRole("button", { name: /^Payment/ }));
-    expect(item("Payment")).toHaveAttribute("data-status", "current");
-    expect(item("Shipping")).toHaveAttribute("data-status", "complete");
-  });
-
-  it("does not use it without interactive=completed", async () => {
-    const user = userEvent.setup();
-    render(<Basic interactive="all" defaultValue="payment" />);
-    await user.click(screen.getByRole("button", { name: /^Account/ }));
-    expect(item("Payment")).toHaveAttribute("data-status", "upcoming");
-  });
-
-  it("lets a step's own status say it was completed", async () => {
-    const user = userEvent.setup();
-    render(
-      <Basic interactive="completed" defaultValue="c">
-        <Stepper.Step value="a" title="One" />
-        <Stepper.Step value="b" title="Two" />
-        <Stepper.Step value="c" title="Three" status="complete" />
-      </Basic>,
-    );
-    await user.click(screen.getByRole("button", { name: /^One/ }));
-    expect(item("Three")).toHaveAttribute("data-status", "complete");
-  });
-
-  it("translates the started words", () => {
-    render(
-      <Basic interactive="completed" value="a" labels={{ started: "commencée" }}>
-        <Stepper.Step value="a" title="One" />
-        <Stepper.Step value="b" title="Two" status="complete" />
-      </Basic>,
-    );
-    expect(item("One")).toBeInTheDocument();
-  });
-
-  it("is colourful only when asked", () => {
-    const { rerender } = render(<Basic data-testid="nav" />);
-    expect(screen.getByTestId("nav").className).not.toMatch(/colorful/);
-    rerender(<Basic colorful data-testid="nav" />);
-    expect(screen.getByTestId("nav").className).toMatch(/colorful/);
-  });
-});
-
-describe("Stepper — busy, warning and error steps", () => {
-  it("shows a spinner and says the step is in progress", () => {
-    const { container } = render(
-      <Basic defaultValue="a">
-        <Stepper.Step value="a" title="One" busy />
-        <Stepper.Step value="b" title="Two" />
-      </Basic>,
-    );
-    expect(item("One").querySelector("[aria-busy='true']")).not.toBeNull();
-    expect(item("One")).toHaveTextContent("Step 1 of 2, current, in progress");
-    expect(container.querySelectorAll("[aria-busy]")).toHaveLength(1);
-  });
-
-  it("names a warning and an error step, with different marks", () => {
-    render(
-      <Basic>
-        <Stepper.Step value="a" title="One" status="warning" />
-        <Stepper.Step value="b" title="Two" status="error" />
-      </Basic>,
-    );
-    expect(item("One")).toHaveAttribute("data-status", "warning");
-    expect(item("One")).toHaveTextContent("has a warning");
-    expect(item("Two")).toHaveTextContent("has an error");
-    expect(item("One").querySelector("svg")!.innerHTML).not.toBe(item("Two").querySelector("svg")!.innerHTML);
-  });
-
-  it("translates the new labels", () => {
-    render(
-      <Basic labels={{ busy: "en cours", warning: "à vérifier" }}>
-        <Stepper.Step value="a" title="One" status="warning" busy />
-      </Basic>,
-    );
-    expect(item("One")).toHaveTextContent("à vérifier, en cours");
-  });
-});
-
-describe("Stepper — the line, the corners and the direction", () => {
-  it("draws no line with connector=none, and one fewer line than steps otherwise", () => {
-    const { container, rerender } = render(<Basic />);
-    expect(container.querySelectorAll("[class*='_connector_']")).toHaveLength(3);
-    rerender(<Basic connector="none" />);
-    expect(container.querySelectorAll("[class*='_connector_']")).toHaveLength(0);
-  });
-
-  it("marks a dashed line on the nav", () => {
-    render(<Basic connector="dashed" data-testid="nav" />);
-    expect(screen.getByTestId("nav").className).toMatch(/connectorDashed/);
-  });
-
-  it("is rounded unless turned off", () => {
-    const { rerender } = render(<Basic data-testid="nav" />);
-    expect(screen.getByTestId("nav").className).toMatch(/rounded/);
-    rerender(<Basic rounded={false} data-testid="nav" />);
-    expect(screen.getByTestId("nav").className).not.toMatch(/rounded/);
-  });
-
-  it("resolves a responsive orientation from the width", () => {
-    const original = window.matchMedia;
-    window.matchMedia = ((query: string) =>
-      ({ matches: query === "(min-width: 640px)", media: query, addEventListener: () => {}, removeEventListener: () => {}, addListener: () => {}, removeListener: () => {} }) as unknown as MediaQueryList) as typeof window.matchMedia;
-    try {
-      render(<Basic orientation={{ base: "vertical", sm: "horizontal" }} data-testid="nav" />);
-      expect(screen.getByTestId("nav")).toHaveAttribute("data-orientation", "horizontal");
-    } finally {
-      window.matchMedia = original;
-    }
-  });
-
-  it("starts from the base orientation", () => {
-    render(<Basic orientation={{ base: "vertical", md: "horizontal" }} data-testid="nav" />);
-    expect(screen.getByTestId("nav")).toHaveAttribute("data-orientation", "vertical");
-  });
-});
-
 describe("Stepper — the controller", () => {
   function WithController(props: Partial<StepperProps> & { onController?: (controller: StepperController) => void }) {
     const { onController, ...rest } = props;
@@ -879,193 +548,47 @@ describe("Stepper — the controller", () => {
   });
 });
 
-describe("Stepper — the compact form", () => {
-  const queryListeners = new Set<(event: { matches: boolean }) => void>();
-  const original = window.matchMedia;
-  afterEach(() => {
-    window.matchMedia = original;
-    queryListeners.clear();
-  });
-  const mockMedia = () => {
-    window.matchMedia = ((query: string) =>
-      ({
-        matches: false,
-        media: query,
-        addEventListener: (_: string, listener: (event: { matches: boolean }) => void) => queryListeners.add(listener),
-        removeEventListener: (_: string, listener: (event: { matches: boolean }) => void) => queryListeners.delete(listener),
-        addListener: () => {},
-        removeListener: () => {},
-      }) as unknown as MediaQueryList) as typeof window.matchMedia;
-  };
-
-  it("draws no summary unless compact", () => {
-    const { container, rerender } = render(<Basic />);
-    expect(container.querySelector("[class*='_summary_']")).toBeNull();
-    rerender(<Basic compact="auto" />);
-    expect(container.querySelector("[class*='_summary_']")).not.toBeNull();
-  });
-
-  it("offers a button back to the nearest step that can be entered, and goes there", async () => {
-    const onValueChange = vi.fn();
-    const user = userEvent.setup();
-    render(<Basic compact="always" interactive="completed" defaultValue="payment" onValueChange={onValueChange} />);
-    await user.click(screen.getByRole("button", { name: "Previous step" }));
-    expect(onValueChange).toHaveBeenCalledWith("shipping");
-  });
-
-  it("offers a button forward to the nearest step that can be entered, and goes there", async () => {
-    const onValueChange = vi.fn();
-    const user = userEvent.setup();
-    render(<Basic compact="always" interactive="all" defaultValue="shipping" onValueChange={onValueChange} />);
-    await user.click(screen.getByRole("button", { name: "Next step" }));
-    expect(onValueChange).toHaveBeenCalledWith("payment");
-  });
-
-  it("disables the forward button with interactive=completed, since nothing ahead can be entered", () => {
-    render(<Basic compact="always" interactive="completed" defaultValue="shipping" />);
-    expect(screen.getByRole("button", { name: "Next step" })).toBeDisabled();
-    expect(screen.getByRole("button", { name: "Previous step" })).toBeEnabled();
-  });
-
-  it("always draws both buttons side by side when interactive, disabling the one with nowhere to go", () => {
-    const { container, rerender } = render(<Basic compact="always" interactive="all" value="shipping" />);
-    const group = container.querySelector("[class*='_summaryButtons_']")!;
-    expect(group.children).toHaveLength(2);
-    expect(screen.getByRole("button", { name: "Previous step" })).toBeEnabled();
-    expect(screen.getByRole("button", { name: "Next step" })).toBeEnabled();
-    rerender(<Basic compact="always" interactive="all" value="account" />);
-    expect(group.children).toHaveLength(2);
-    expect(screen.getByRole("button", { name: "Previous step" })).toBeDisabled();
-    expect(screen.getByRole("button", { name: "Next step" })).toBeEnabled();
-    rerender(<Basic compact="always" interactive="all" value="review" />);
-    expect(screen.getByRole("button", { name: "Previous step" })).toBeEnabled();
-    expect(screen.getByRole("button", { name: "Next step" })).toBeDisabled();
-    rerender(<Basic compact="always" value="shipping" />);
-    expect(container.querySelector("[class*='_summaryButtons_']")).toBeNull();
-  });
-
-  it("puts the text between Back and Next with labelAlignment=center", () => {
-    const { container } = render(<Basic compact="always" interactive="all" labelAlignment="center" value="shipping" />);
-    const row = container.querySelector("[class*='_summaryRow_']")!;
-    expect(row.className).toMatch(/summaryRowCenter/);
-    expect(row.children).toHaveLength(3);
-    expect(row.children[0]).toHaveAttribute("aria-label", "Previous step");
-    expect(row.children[1]).toHaveClass(/summaryText/);
-    expect(row.children[2]).toHaveAttribute("aria-label", "Next step");
-    expect(container.querySelector("[class*='_summaryButtons_']")).toBeNull();
-  });
-
-  it("starts the text at the start, with the buttons grouped at the end, by default", () => {
-    const { container } = render(<Basic compact="always" interactive="all" value="shipping" />);
-    const row = container.querySelector("[class*='_summaryRow_']")!;
-    expect(row.className).not.toMatch(/summaryRowCenter/);
-    expect(row.children[0]).toHaveClass(/summaryText/);
-    expect(row.children[1]).toHaveClass(/summaryButtons/);
-  });
-
-  it("centres the text alone when there are no buttons", () => {
-    const { container } = render(<Basic compact="always" labelAlignment="center" value="shipping" />);
-    const row = container.querySelector("[class*='_summaryRow_']")!;
-    expect(row.className).toMatch(/summaryRowCenter/);
-    expect(row.children).toHaveLength(1);
-  });
-
-  it("warns once where the centred alignment cannot apply, and not where it can", () => {
+describe("Stepper — refinements", () => {
+  it("warns when it changes between controlled and uncontrolled", () => {
     const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
-    const { rerender } = render(<Basic compact="always" labelAlignment="center" value="shipping" />);
+    const { rerender } = render(<Basic defaultValue="account" />);
     expect(warn).not.toHaveBeenCalled();
-    rerender(<Basic labelAlignment="center" value="shipping" />);
-    expect(warn).toHaveBeenCalledWith(expect.stringContaining("labelAlignment"));
-    warn.mockClear();
-    rerender(<Basic compact="always" orientation="vertical" labelAlignment="center" value="shipping" />);
-    expect(warn).toHaveBeenCalledWith(expect.stringContaining("labelAlignment"));
+    rerender(<Basic value="shipping" />);
+    expect(warn).toHaveBeenCalledWith(expect.stringContaining("uncontrolled to controlled"));
   });
 
-  it("draws the vertical summary as one column: Up, the bars, Down, then the place as numbers alone", () => {
-    const { container, rerender } = render(<Basic compact="always" orientation="vertical" interactive="all" value="shipping" />);
-    const summary = container.querySelector("[class*='_summary_']")!;
-    const parts = () => [...summary.children];
-    expect(parts()).toHaveLength(4);
-    expect(parts()[0]).toHaveAttribute("aria-label", "Previous step");
-    expect(parts()[1]).toHaveClass(/segments/);
-    expect(parts()[2]).toHaveAttribute("aria-label", "Next step");
-    expect(parts()[3]).toHaveClass(/summaryText/);
-    // What is seen is "2/4"; a screen reader gets the words and the title instead.
-    expect(parts()[3]!.querySelector("[aria-hidden='true']")).toHaveTextContent("2/4");
-    expect(parts()[3]).toHaveTextContent("Step 2 of 4 — Shipping");
-    rerender(<Basic compact="always" orientation="vertical" interactive="all" value="account" />);
-    expect(parts()).toHaveLength(4);
-    expect(parts()[0]).toBeDisabled();
-    rerender(<Basic compact="always" orientation="vertical" interactive="all" value="review" />);
-    expect(parts()).toHaveLength(4);
-    expect(parts()[2]).toBeDisabled();
-  });
-
-  it("writes the place with formatNumber and a translated label", () => {
-    const { container, rerender } = render(
-      <Basic compact="always" orientation="vertical" formatNumber={(n) => `#${n}`} value="shipping" />,
+  it("does not remount a step when its title changes between plain text and a node, with the labels hidden", () => {
+    const { rerender } = render(
+      <Basic showLabels={false} interactive="all" defaultValue="a">
+        <Stepper.Step value="a" title="One" />
+        <Stepper.Step value="b" title="Two" />
+      </Basic>,
     );
-    expect(container.querySelector("[class*='_summaryText_'] [aria-hidden='true']")).toHaveTextContent("#2/#4");
-    expect(container.querySelector("[class*='_summaryText_']")).toHaveTextContent("Step #2 of #4");
+    const button = screen.getByRole("button", { name: /^Two/ });
     rerender(
-      <Basic compact="always" orientation="vertical" labels={{ place: (n, total) => `${n} of ${total}` }} value="shipping" />,
+      <Basic showLabels={false} interactive="all" defaultValue="a">
+        <Stepper.Step value="a" title="One" />
+        <Stepper.Step value="b" title={<em>Two</em>} />
+      </Basic>,
     );
-    expect(container.querySelector("[class*='_summaryText_'] [aria-hidden='true']")).toHaveTextContent("2 of 4");
+    expect(screen.getByRole("button", { name: /^Two/ })).toBe(button);
   });
 
-  it("keeps focus in the summary when the button that was pressed becomes disabled", async () => {
-    const user = userEvent.setup();
-    render(<Basic compact="always" interactive="all" defaultValue="payment" />);
-    await user.click(screen.getByRole("button", { name: "Previous step" }));
-    await user.click(screen.getByRole("button", { name: "Previous step" }));
-    expect(screen.getByRole("button", { name: "Previous step" })).toBeDisabled();
-    expect(document.activeElement?.tagName).not.toBe("BODY");
-    expect(screen.getByRole("button", { name: "Next step" })).toHaveFocus();
-  });
-
-  it("draws no buttons without interactive", () => {
-    render(<Basic compact="always" defaultValue="payment" />);
-    expect(screen.queryByRole("button", { name: "Previous step" })).toBeNull();
-    expect(screen.queryByRole("button", { name: "Next step" })).toBeNull();
-  });
-
-  it("moves focus to the back button when the width goes compact with focus in the steps", () => {
-    mockMedia();
-    render(<Basic compact="auto" interactive="all" defaultValue="payment" />);
-    const step = screen.getAllByRole("button").find((button) => button.textContent?.startsWith("Account"))!;
-    step.focus();
-    expect(step).toHaveFocus();
-    act(() => queryListeners.forEach((listener) => listener({ matches: true })));
-    expect(screen.getByRole("button", { name: "Previous step", hidden: true })).toHaveFocus();
-  });
-
-  it("moves focus to the forward button when there is no back button", () => {
-    mockMedia();
-    render(<Basic compact="auto" interactive="all" defaultValue="account" />);
-    screen.getAllByRole("button")[0]!.focus();
-    act(() => queryListeners.forEach((listener) => listener({ matches: true })));
-    expect(screen.getByRole("button", { name: "Next step", hidden: true })).toHaveFocus();
-  });
-
-  it("moves focus back to a step when the width goes full with focus in the summary", () => {
-    mockMedia();
-    render(<Basic compact="auto" interactive="completed" defaultValue="payment" />);
-    screen.getByRole("button", { name: "Previous step", hidden: true }).focus();
-    act(() => queryListeners.forEach((listener) => listener({ matches: false })));
-    expect(document.activeElement?.tagName).toBe("BUTTON");
-    expect(document.activeElement?.className).toMatch(/step/);
-  });
-
-  it("leaves focus alone when it is outside the stepper", () => {
-    mockMedia();
-    render(
+  it("keeps the ref of the nav when it is a callback and when it is an object", () => {
+    const callback = vi.fn();
+    const object = createRef<HTMLElement>();
+    const { unmount } = render(
       <>
-        <button>outside</button>
-        <Basic compact="auto" interactive="all" />
+        <Stepper ref={callback}>
+          <Stepper.Step value="a" title="One" />
+        </Stepper>
+        <Stepper ref={object}>
+          <Stepper.Step value="a" title="One" />
+        </Stepper>
       </>,
     );
-    screen.getByRole("button", { name: "outside" }).focus();
-    act(() => queryListeners.forEach((listener) => listener({ matches: true })));
-    expect(screen.getByRole("button", { name: "outside" })).toHaveFocus();
+    expect(callback).toHaveBeenCalledWith(expect.any(HTMLElement));
+    expect(object.current?.tagName).toBe("NAV");
+    unmount();
   });
 });

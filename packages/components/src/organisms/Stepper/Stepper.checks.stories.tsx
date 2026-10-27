@@ -3,6 +3,7 @@ import { expect, userEvent, waitFor, within } from "storybook/test";
 import { useState } from "react";
 import { send } from "../../molecules/CodeBlock/browserProtocol";
 import { Stepper } from "./Stepper";
+import { allSizes, Demo as KitDemo } from "./StepperStoryKit";
 import type { StepperProps } from "./Stepper.types";
 
 // Hidden, real-browser checks (`!dev` on the whole group, ADR-0013's way of keeping a second stories file out of
@@ -18,7 +19,7 @@ export default meta;
 
 type Story = StoryObj;
 
-const sizes = ["xs", "sm", "md", "lg", "xl"] as const;
+const sizes = allSizes;
 const settle = (ms = 250) => new Promise((resolve) => setTimeout(resolve, ms));
 const box = (element: Element) => element.getBoundingClientRect();
 const centreY = (element: Element) => box(element).top + box(element).height / 2;
@@ -34,14 +35,8 @@ const colour = (value: string) => {
 const cls = (root: ParentNode, part: string) => root.querySelector<HTMLElement>(`[class*="_${part}_"]`)!;
 const all = (root: ParentNode, part: string) => [...root.querySelectorAll<HTMLElement>(`[class*="_${part}_"]`)];
 
-const Demo = (props: Partial<StepperProps>) => (
-  <Stepper defaultValue="shipping" aria-label="Checkout" {...props}>
-    <Stepper.Step value="account" title="Account" description="Your details" />
-    <Stepper.Step value="shipping" title="Shipping" description="Where it goes" />
-    <Stepper.Step value="payment" title="Payment" description="Card or invoice" />
-    <Stepper.Step value="review" title="Review" />
-  </Stepper>
-);
+/** The shared demo, with descriptions and a name, as the checks measure it. */
+const Demo = (props: Partial<StepperProps>) => <KitDemo descriptions aria-label="Checkout" {...props} />;
 
 export const TargetSizeAtEverySize: Story = {
   name: "A step that can be entered is at least 24 by 24 pixels at every size",
@@ -970,5 +965,38 @@ export const CompactNoLabelsButtonsAtTheEnds: Story = {
     }
     await expect(within(ltr).getByRole("button", { name: "Next step" })).toBeDisabled();
     await expect(ltr.contains(document.activeElement) && document.activeElement !== document.body).toBe(true);
+  },
+};
+
+export const ShortCompactVerticalIsAReachableRegion: Story = {
+  name: "A read-only compact vertical stepper in a container too short for it scrolls, and is then a tab stop of its own",
+  render: () => (
+    <div style={{ blockSize: "3rem" }}>
+      <Demo compact="always" orientation="vertical" data-testid="short" />
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    const scroller = within(canvasElement).getByTestId("short").firstElementChild as HTMLElement;
+    await expect(scroller.scrollHeight).toBeGreaterThan(scroller.clientHeight);
+    await waitFor(() => expect(scroller).toHaveAttribute("tabindex", "0"));
+    await userEvent.tab();
+    await expect(scroller).toHaveFocus();
+  },
+};
+
+export const StartedByTheCallerIsDashed: Story = {
+  name: "A step set as started is dashed, in the tone's colour, even when nothing derives it",
+  render: () => (
+    <Stepper defaultValue="a" aria-label="draft" data-testid="draft">
+      <Stepper.Step value="a" title="One" />
+      <Stepper.Step value="b" title="Two" status="started" />
+      <Stepper.Step value="c" title="Three" />
+    </Stepper>
+  ),
+  play: async ({ canvasElement }) => {
+    const nav = within(canvasElement).getByTestId("draft");
+    const styles = all(nav, "indicator").map((indicator) => getComputedStyle(indicator));
+    await expect(styles.map((style) => style.borderTopStyle)).toEqual(["solid", "dashed", "solid"]);
+    await expect(styles[1]!.borderTopColor).toBe(colour("var(--dbm-border-brand)"));
   },
 };

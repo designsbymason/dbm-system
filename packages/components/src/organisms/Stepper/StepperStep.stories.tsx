@@ -19,8 +19,9 @@ const meta: Meta<typeof Stepper.Step> = {
     icon: { control: false, description: "An icon to draw in the indicator in place of the number. A finished step still shows its check." },
     status: {
       control: "select",
-      options: [undefined, "complete", "error", "skipped"],
-      description: "Overrides what the step shows, in place of working it out from the current step.",
+      options: [undefined, "complete", "started", "error", "warning", "skipped"],
+      description:
+        "Overrides what the step shows, in place of working it out from the current step: complete (finished out of order), started (begun and not finished, such as a saved draft: a dashed ring), error, warning or skipped.",
     },
     busy: {
       control: "boolean",

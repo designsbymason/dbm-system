@@ -19,6 +19,7 @@ describe("canEnter", () => {
     expect(canEnter("completed", "upcoming", 3, 1, 3)).toBe(true);
     expect(canEnter("completed", "upcoming", 4, 1, 3)).toBe(false);
     expect(canEnter("completed", "complete", 4, 1, 3)).toBe(true);
+    expect(canEnter("completed", "started", 4, 1, 3)).toBe(true);
   });
 });
 

@@ -4,6 +4,7 @@ import type { CSSProperties } from "react";
 import { CreditCardIcon, PackageIcon, UserIcon } from "@dbm-system/icons";
 import { Button } from "../../atoms/Button";
 import { Stepper } from "./Stepper";
+import { allSizes, Demo, demoSteps } from "./StepperStoryKit";
 import { stepperPlaygroundSnippet, stepperSnippets } from "./Stepper.snippets";
 import type {
   StepperCompact,
@@ -51,25 +52,8 @@ interface PlaygroundArgs {
   children: StepperProps["children"];
 }
 
-const demoSteps = [
-  ["account", "Account"],
-  ["shipping", "Shipping"],
-  ["payment", "Payment"],
-  ["review", "Review"],
-] as const;
-
 type DemoProps = Omit<StepperProps, "children">;
 
-/** A small, real stepper the gallery stories vary. */
-const Demo = (props: DemoProps) => (
-  <Stepper defaultValue="shipping" {...props}>
-    {demoSteps.map(([value, title]) => (
-      <Stepper.Step key={value} value={value} title={title} />
-    ))}
-  </Stepper>
-);
-
-const allSizes: StepperSize[] = ["xs", "sm", "md", "lg", "xl"];
 const allTones: StepperTone[] = ["brand", "info", "highlight", "neutral"];
 
 // A fixed-render story ignores its own args, so every control it can't honour is
@@ -489,6 +473,19 @@ export const StartedStep: Story = {
     </div>
   ),
   parameters: { docs: { source: { code: stepperSnippets.startedStep } } },
+};
+
+export const SavedDraft: Story = {
+  name: "A step started earlier",
+  argTypes: { ...except("size", "variant", "tone") },
+  render: (args) => (
+    <Stepper defaultValue="account" interactive="completed" size={args.size} variant={args.variant} tone={args.tone} aria-label="Saved draft">
+      <Stepper.Step value="account" title="Account" />
+      <Stepper.Step value="shipping" title="Shipping" status="started" description="Saved draft" />
+      <Stepper.Step value="payment" title="Payment" />
+    </Stepper>
+  ),
+  parameters: { docs: { source: { code: stepperSnippets.savedDraft } } },
 };
 
 export const Colourful: Story = {

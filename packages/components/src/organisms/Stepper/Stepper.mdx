@@ -66,9 +66,10 @@ export const stepPropOrder = [
 A stepper shows where a person is in a flow that happens in a fixed order — a checkout, an onboarding,
 a setup wizard — as a row (or column) of steps, each with an indicator and a title. A compound
 component: put one `Stepper.Step` per step inside `Stepper`, and say which one is current with `value`.
-Steps before it show as finished, steps after it as not started, and any step can say otherwise with
-its own `status` (an error, a warning, a skipped step, one finished out of order), and a step can be `busy`
-while its check or save runs.
+Steps before it show as finished, steps after it as not started (with `interactive="completed"`, after going
+back, the steps passed stay finished and the furthest one reached, if it was not completed, is started), and any
+step can say otherwise with its own `status` (an error, a warning, a skipped step, one finished out of order, one started and not finished),
+and a step can be `busy` while its check or save runs.
 
 `Stepper` draws the indicator and nothing else. The current step's content — usually a form — and the
 buttons that move between steps are yours, and so is deciding whether a step may be left. It renders a
@@ -196,6 +197,10 @@ passed straight through to the underlying element.
 
 <Canvas of={StepperStories.StartedStep} />
 
+### A step started earlier
+
+<Canvas of={StepperStories.SavedDraft} />
+
 ### Colourful
 
 <Canvas of={StepperStories.Colourful} />
@@ -280,6 +285,9 @@ passed straight through to the underlying element.
   person reached, if it was not completed, is drawn as started: a dashed ring in the tone's colour. When that step is
   completed, give it `status="complete"` so it is drawn finished. Set `colorful` to colour a finished step
   success instead of the `tone`; the current step and a started step keep the tone.
+- Set `status="started"` yourself on a step you know was begun and not finished, such as a saved draft when a person
+  returns to a flow: it is drawn dashed, announced as "started, not completed", and, with `interactive="completed"`,
+  can be returned to. Without it, `started` is only worked out after going back under `interactive="completed"`.
 - Show a running check with `busy` on the step, not by changing its status, and set `status="warning"` for a
   step that can be continued from but needs another look; keep `"error"` for one that must be fixed.
 - Use `orientation={{ base: "vertical", md: "horizontal" }}` to stack the steps on a phone and keep each of them;

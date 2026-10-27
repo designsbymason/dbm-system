@@ -47,7 +47,7 @@ export function titleText(props: Pick<StepperStepProps, "title" | "textValue">):
 /**
  * Whether a step can be entered. `"completed"` allows every step the person has reached — the furthest one they have been
  * on and all before it, whatever they show, so a step with an error that was left behind can be gone back to and a step
- * that was gone back from can be returned to — and any step marked complete.
+ * that was gone back from can be returned to — and any step marked complete or started.
  */
 export function canEnter(
   interactive: StepperInteractive,
@@ -58,7 +58,7 @@ export function canEnter(
 ): boolean {
   if (interactive === "none" || index === currentIndex) return false;
   if (interactive === "all") return true;
-  return index <= furthestIndex || status === "complete";
+  return index <= furthestIndex || status === "complete" || status === "started";
 }
 
 /** Scrolls `scroller` sideways just far enough for `element` to lie fully inside it. Nothing when it has no box (hidden). */
