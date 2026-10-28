@@ -31,6 +31,12 @@ interface ArgTypeLike {
          * "unlabeled" until inspected directly) rather than a labeled one.
          */
         labels?: Record<string, string>;
+        /**
+         * The label this control shows, in place of its key: opt-in, so two Playground-only keys can both read as the prop
+         * they stand for (Timeline's `horizontalTimePlacement` reads `timePlacement`). Not Storybook's own `name`, which
+         * some stories already set for the native Controls panel's sake.
+         */
+        label?: string;
       }
     | false;
   options?: unknown[];
@@ -42,12 +48,6 @@ interface ArgTypeLike {
    * read-only rating draws) isn't offered as if it did.
    */
   if?: { arg: string; truthy?: boolean; exists?: boolean; eq?: unknown; neq?: unknown };
-  /**
-   * The label the control shows, in place of its key: Storybook gives every argType a `name` equal to its key, and a
-   * story may set another, so two Playground-only keys can both read as the prop they stand for (Timeline's
-   * `horizontalTimePlacement` reads `timePlacement`).
-   */
-  name?: string;
   table?: { disable?: boolean };
   /**
    * Opt-in, not a Storybook concept — computes what this control should
@@ -313,7 +313,7 @@ function ControlField({
           width: "var(--dbm-space-32)",
         }}
       >
-        {argType.name ?? name}
+        {(argType.control ? argType.control.label : undefined) ?? name}
       </FieldLabel>
       <div style={{ display: "flex", flex: "1 1 auto", justifyContent: "flex-end", minWidth: 0 }}>
         {widget}

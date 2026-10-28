@@ -225,8 +225,7 @@ export const Playground: Story = {
       description: "Where each event's time goes: above its title, or in a column beside the marker from the sm breakpoint up.",
     },
     horizontalTimePlacement: {
-      name: "timePlacement",
-      control: "select",
+      control: { type: "select", label: "timePlacement" },
       options: ["same", "opposite"],
       if: { arg: "orientation", eq: "horizontal" },
       description: "Where each event's time goes: on the same side of the dot as the content (above the title), or on the opposite side.",
