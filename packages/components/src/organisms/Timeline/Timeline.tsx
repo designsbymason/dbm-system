@@ -16,6 +16,7 @@ import { useTimelineAdditions } from "./useTimelineAdditions";
 import { useTimelineExpanded } from "./useTimelineExpanded";
 import styles from "./Timeline.module.css";
 import type {
+  TimelineHorizontalTimePlacement,
   TimelineOrientation,
   TimelineProps,
   TimelineSize,
@@ -58,8 +59,9 @@ function kindOf(child: ReactNode): TimelineEntry<Part>["kind"] | null {
  *
  * `size`, `variant`, `tone`, `connector` (and `colorfulConnector`, which draws each line in its event's tone) set how every
  * event looks, and an item may set its own `tone` and `connector`. `orientation` runs the events down or across (a
- * breakpoint map is accepted), `align="alternate"` puts them on both sides of the line on a wide screen, and
- * `timePlacement` puts the time above the title or beside the marker. An event still under way is `pending`; an item with
+ * breakpoint map is accepted), `align="alternate"` puts them on both sides of the line (above and below it, when
+ * horizontal) on a wide screen, and
+ * `timePlacement` puts the time above the title or beside the marker (`"same"` or `"opposite"` the content, in a horizontal one). An event still under way is `pending`; an item with
  * `href` or `onPress` is a link or a button; and `detail` keeps more of it behind a button.
  *
  * `maxVisible` shows only the first events and a button for the rest (`expanded` makes that controlled). `onLoadMore`
@@ -113,8 +115,16 @@ const TimelineRoot = forwardRef<HTMLOListElement, TimelineProps>(
   ) => {
     const labels = mergeDefined(defaultLabelsFor(formatNumber), labelsProp);
     const orientation = useResolvedResponsiveValue<TimelineOrientation>(orientationProp, "vertical");
-    const timePlacement = useResolvedResponsiveValue<TimelineTimePlacement>(placementProp, "top");
+    const requestedPlacement = useResolvedResponsiveValue<TimelineTimePlacement | TimelineHorizontalTimePlacement>(placementProp, "top");
     const horizontal = orientation === "horizontal";
+    // Each orientation reads its own two values; the other orientation's are the default.
+    const timePlacement: TimelineTimePlacement | TimelineHorizontalTimePlacement = horizontal
+      ? requestedPlacement === "opposite"
+        ? "opposite"
+        : "same"
+      : requestedPlacement === "side"
+        ? "side"
+        : "top";
 
     const listRef = useRef<HTMLOListElement>(null);
     // A row that outgrows its width scrolls on its own, so it is a keyboard-reachable region while it does.
@@ -199,8 +209,9 @@ const TimelineRoot = forwardRef<HTMLOListElement, TimelineProps>(
             toneClass[tone],
             variantClass[variant],
             horizontal ? styles.horizontal : styles.vertical,
-            !horizontal && align === "alternate" && styles.alternate,
+            align === "alternate" && styles.alternate,
             !horizontal && timePlacement === "side" && styles.timeSide,
+            horizontal && timePlacement === "opposite" && styles.timeOpposite,
             connector === "dashed" && styles.connectorDashed,
             colorfulConnector && styles.colorfulConnector,
             className,

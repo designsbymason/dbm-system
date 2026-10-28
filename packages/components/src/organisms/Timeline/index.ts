@@ -4,6 +4,7 @@ export type {
   TimelineConnector,
   TimelineEndProps,
   TimelineGroupProps,
+  TimelineHorizontalTimePlacement,
   TimelineItemProps,
   TimelineLabels,
   TimelineOrientation,

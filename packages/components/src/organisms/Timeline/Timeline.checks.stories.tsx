@@ -393,6 +393,97 @@ export const DetailByKeyboard: Story = {
   },
 };
 
+export const HorizontalAlternate: Story = {
+  name: "Horizontal alternate puts the content below the line, then above it, with the markers in one row",
+  render: () => <Demo orientation="horizontal" align="alternate" count={4} descriptions aria-label="horizontal alternate" />,
+  play: async ({ canvasElement }) => {
+    await expect(window.innerWidth).toBeGreaterThanOrEqual(768);
+    const items = within(canvasElement).getAllByRole("listitem");
+    const marker = (i: number) => box(part(items[i]!, "marker"));
+    for (let i = 1; i < items.length; i += 1) await expect(Math.abs(centreY(marker(i)) - centreY(marker(0)))).toBeLessThanOrEqual(1);
+    const title = (i: number) => box(part(items[i]!, "title"));
+    await expect(title(0).top).toBeGreaterThanOrEqual(marker(0).bottom);
+    await expect(title(1).bottom).toBeLessThanOrEqual(marker(1).top);
+    await expect(title(2).top).toBeGreaterThanOrEqual(marker(2).bottom);
+    // The line is still one rule through the markers.
+    await expect(Math.abs(centreY(box(part(items[0]!, "connector"))) - centreY(marker(0)))).toBeLessThanOrEqual(2);
+  },
+};
+
+export const HorizontalAlternateOnAPhone: Story = {
+  name: "Horizontal alternate puts every event below the line on a phone",
+  globals: { viewport: { value: "mobile1", isRotated: false } },
+  render: () => <Demo orientation="horizontal" align="alternate" count={4} aria-label="horizontal alternate" />,
+  play: async ({ canvasElement }) => {
+    // The story really is at a phone's width (fails loudly if the viewport didn't apply).
+    await expect(window.innerWidth).toBeLessThan(768);
+    const items = within(canvasElement).getAllByRole("listitem");
+    for (const item of items) await expect(box(part(item, "title")).top).toBeGreaterThanOrEqual(box(part(item, "marker")).bottom);
+  },
+};
+
+export const HorizontalTimeOpposite: Story = {
+  name: "Horizontal opposite puts the time on the other side of the dot from the content, alternating with it",
+  render: () => (
+    <div style={{ display: "grid", gap: "var(--dbm-space-10)" }}>
+      <div data-testid="plain">
+        <Demo orientation="horizontal" timePlacement="opposite" count={3} aria-label="opposite" />
+      </div>
+      <div data-testid="alternating">
+        <Demo orientation="horizontal" align="alternate" timePlacement="opposite" count={3} aria-label="opposite alternate" />
+      </div>
+      <div data-testid="same">
+        <Demo orientation="horizontal" timePlacement="same" count={3} aria-label="same" />
+      </div>
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    await expect(window.innerWidth).toBeGreaterThanOrEqual(768);
+    const canvas = within(canvasElement);
+    const rows = (id: string) => within(canvas.getByTestId(id)).getAllByRole("listitem");
+    const of = (item: HTMLElement) => ({ marker: box(part(item, "marker")), time: box(part(item, "time")), title: box(part(item, "title")) });
+    // Not alternating: the time above the dot, the content below it.
+    for (const item of rows("plain")) {
+      const { marker, time, title } = of(item);
+      await expect(time.bottom).toBeLessThanOrEqual(marker.top);
+      await expect(title.top).toBeGreaterThanOrEqual(marker.bottom);
+    }
+    // Alternating: the content below then above, the time always on the other side.
+    const [first, second] = rows("alternating") as [HTMLElement, HTMLElement];
+    await expect(of(first).time.bottom).toBeLessThanOrEqual(of(first).marker.top);
+    await expect(of(first).title.top).toBeGreaterThanOrEqual(of(first).marker.bottom);
+    await expect(of(second).title.bottom).toBeLessThanOrEqual(of(second).marker.top);
+    await expect(of(second).time.top).toBeGreaterThanOrEqual(of(second).marker.bottom);
+    // The same side: the time over its title, both below the dot.
+    for (const item of rows("same")) {
+      const { marker, time, title } = of(item);
+      await expect(time.top).toBeGreaterThanOrEqual(marker.bottom);
+      await expect(time.bottom).toBeLessThanOrEqual(title.top + 1);
+    }
+  },
+};
+
+export const PlaceholderRowsAreClose: Story = {
+  name: "The two lines of a placeholder event are one space-1 apart",
+  render: () => (
+    <Timeline aria-label="loading" loading loadingCount={1}>
+      {[]}
+    </Timeline>
+  ),
+  play: async ({ canvasElement }) => {
+    const main = canvasElement.querySelector<HTMLElement>("li [class*='_main_']")!;
+    const [first, second] = [...main.children] as [HTMLElement, HTMLElement];
+    const probe = document.createElement("span");
+    probe.style.display = "block";
+    probe.style.blockSize = "var(--dbm-space-1)";
+    canvasElement.appendChild(probe);
+    const space = probe.getBoundingClientRect().height;
+    probe.remove();
+    await expect(space).toBeGreaterThan(0);
+    await expect(Math.abs(second.getBoundingClientRect().top - first.getBoundingClientRect().bottom - space)).toBeLessThanOrEqual(0.5);
+  },
+};
+
 export const ForcedColours: Story = {
   name: "Forced colours keep the line, the dot and the icon marker in system colours",
   render: () => (

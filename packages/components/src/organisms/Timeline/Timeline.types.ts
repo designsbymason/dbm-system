@@ -32,17 +32,23 @@ export type TimelineConnector = "solid" | "dashed" | "none";
  */
 export type TimelineTimePlacement = "top" | "side";
 
+/**
+ * Where a horizontal timeline puts an event's time, relative to the dot: `"same"` (the default) on the same side as the
+ * content, above its title, or `"opposite"` on the other side of the dot from the content. With `align="alternate"` the
+ * content, and so the time, alternates sides.
+ */
+export type TimelineHorizontalTimePlacement = "same" | "opposite";
+
 /** Which way the events run: `"vertical"` (the default), one under another, or `"horizontal"`, side by side. */
 export type TimelineOrientation = "vertical" | "horizontal";
 
 /**
- * Where a vertical timeline puts its events' content, relative to the line.
+ * Where a timeline puts its events' content, relative to the line.
  *
  * - `"start"` (the default) — all on the same side, after the line.
- * - `"alternate"` — one event after the line and the next before it, from the `md` breakpoint up (a wide screen only: on a
- *   narrower one every event is on one side, so what is read stays in one column).
- *
- * A horizontal timeline ignores it.
+ * - `"alternate"` — one event after the line and the next before it (above and below it, in a horizontal timeline), from the
+ *   `md` breakpoint up (a wide screen only: on a narrower one every event is on one side, so what is read stays in one
+ *   column).
  */
 export type TimelineAlign = "start" | "alternate";
 
@@ -118,7 +124,7 @@ export interface TimelineProps extends Omit<ComponentPropsWithoutRef<"ol">, "chi
    * Which way the events run — see {@link TimelineOrientation}. Takes a mobile-first map by breakpoint (`{ base:
    * "vertical", md: "horizontal" }`); it is worked out in the browser, so a server render and the first client render
    * draw the `base` value. A horizontal timeline scrolls sideways when its events do not fit, with each event at least
-   * as wide as the `timeline.item-min-width` token; it ignores `align` and `timePlacement` (the time sits above the title).
+   * as wide as the `timeline.item-min-width` token, and reads `timePlacement` as `"same"` or `"opposite"`.
    * @default 'vertical'
    */
   orientation?: Responsive<TimelineOrientation>;
@@ -128,11 +134,13 @@ export interface TimelineProps extends Omit<ComponentPropsWithoutRef<"ol">, "chi
    */
   align?: TimelineAlign;
   /**
-   * Where each event's time goes — see {@link TimelineTimePlacement}. Takes a mobile-first map by breakpoint; it is worked
-   * out in the browser, so a server render and the first client render draw the `base` value.
-   * @default 'top'
+   * Where each event's time goes. A vertical timeline reads {@link TimelineTimePlacement} (`"top"` above the title or
+   * `"side"` in a column beside the marker) and a horizontal one {@link TimelineHorizontalTimePlacement} (`"same"` or
+   * `"opposite"`); a value for the other orientation is read as the default (`"top"`, `"same"`). Takes a mobile-first map
+   * by breakpoint; it is worked out in the browser, so a server render and the first client render draw the `base` value.
+   * @default 'top' (`"same"` when horizontal)
    */
-  timePlacement?: Responsive<TimelineTimePlacement>;
+  timePlacement?: Responsive<TimelineTimePlacement | TimelineHorizontalTimePlacement>;
   /**
    * Shows only this many events, then a button that shows the rest. Leave it out to show them all. Hidden events are not
    * rendered. There is no windowing: events have different heights, so a very long history is better paged by the caller.

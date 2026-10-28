@@ -19,6 +19,7 @@ export const rootPropOrder = [
   "connector",
   "colorfulConnector",
   "timePlacement",
+  "horizontalTimePlacement",
   "maxVisible",
   "expanded",
   "defaultExpanded",
@@ -124,8 +125,11 @@ There is no windowing, because events have different heights: a history of hundr
 (load the next page, then add its items).
 
 `align="alternate"` works from the `md` breakpoint (768px) up; on a narrower screen every event is on one side, so what is
-read stays in one column. A horizontal timeline ignores `align` and `timePlacement` (the time sits above the title) and
-scrolls sideways when its events are narrower than the `timeline.item-min-width` token allows; while it scrolls the row is
+read stays in one column (below the line, when horizontal). `timePlacement` has two sets of values: a vertical timeline
+reads `"top"` and `"side"`, and a horizontal one `"same"` (on the same side of the dot as the content, above the title)
+and `"opposite"` (on the other side of the dot, with `align="alternate"` alternating along with the content); a value for
+the other orientation is read as the default. A horizontal timeline scrolls sideways when its events are narrower than
+the `timeline.item-min-width` token allows; while it scrolls the row is
 a tab stop, so a keyboard can scroll it. `loading` with no events stands placeholders in for the list; with events it adds
 them after the last one and busies the "load more" button. `announce` says "N new events" when events are added to a
 timeline that is showing, never on its first render, and never for events a "show more" reveals.
@@ -219,6 +223,10 @@ It is drawn only once every event is shown. Also accepts any other native `<li>`
 ### Horizontal
 
 <Canvas of={TimelineStories.HorizontalLayout} />
+
+### Horizontal, alternating, with the time opposite
+
+<Canvas of={TimelineStories.HorizontalAlternating} />
 
 ### Relative times
 

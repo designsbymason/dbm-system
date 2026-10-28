@@ -353,6 +353,30 @@ describe("Timeline — looks", () => {
     expect(container.querySelector("ol")?.className).toContain("colorfulConnector");
   });
 
+  it("reads the time placement of its orientation: top and side when vertical, same and opposite when horizontal", () => {
+    const { container, rerender } = render(<Basic timePlacement="opposite" />);
+    expect(container.querySelector("ol")).toHaveAttribute("data-time-placement", "top");
+    rerender(<Basic orientation="horizontal" timePlacement="opposite" />);
+    expect(container.querySelector("ol")).toHaveAttribute("data-time-placement", "opposite");
+    rerender(<Basic orientation="horizontal" timePlacement="side" />);
+    expect(container.querySelector("ol")).toHaveAttribute("data-time-placement", "same");
+    rerender(<Basic orientation="horizontal" />);
+    expect(container.querySelector("ol")).toHaveAttribute("data-time-placement", "same");
+    rerender(<Basic timePlacement="side" />);
+    expect(container.querySelector("ol")).toHaveAttribute("data-time-placement", "side");
+  });
+
+  it("alternates the sides of a horizontal timeline too", () => {
+    render(
+      <Basic orientation="horizontal" align="alternate">
+        <Timeline.Item title="A" />
+        <Timeline.Item title="B" />
+      </Basic>,
+    );
+    expect(screen.getByText("A").closest("li")).toHaveAttribute("data-side", "end");
+    expect(screen.getByText("B").closest("li")).toHaveAttribute("data-side", "start");
+  });
+
   it("nests inside itself without leaking settings", () => {
     render(
       <Basic tone="danger">

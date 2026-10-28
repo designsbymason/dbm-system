@@ -1,5 +1,13 @@
 import { createContext, useContext } from "react";
-import type { TimelineConnector, TimelineLabels, TimelineSize, TimelineTimePlacement, TimelineTone, TimelineVariant } from "./Timeline.types";
+import type {
+  TimelineConnector,
+  TimelineHorizontalTimePlacement,
+  TimelineLabels,
+  TimelineSize,
+  TimelineTimePlacement,
+  TimelineTone,
+  TimelineVariant,
+} from "./Timeline.types";
 
 /** What the root hands every entry. */
 export interface TimelineContextValue {
@@ -7,7 +15,7 @@ export interface TimelineContextValue {
   variant: TimelineVariant;
   tone: TimelineTone;
   connector: TimelineConnector;
-  timePlacement: TimelineTimePlacement;
+  timePlacement: TimelineTimePlacement | TimelineHorizontalTimePlacement;
   labels: Pick<TimelineLabels, "pending" | "details">;
 }
 

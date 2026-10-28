@@ -10,7 +10,17 @@ import { EmptyState } from "../../molecules/EmptyState";
 import { Timeline } from "./Timeline";
 import { allSizes, Demo, demoEvents, IconDemo } from "./TimelineStoryKit";
 import { timelinePlaygroundSnippet, timelineSnippets } from "./Timeline.snippets";
-import type { TimelineAlign, TimelineConnector, TimelineOrientation, TimelineProps, TimelineSize, TimelineTimePlacement, TimelineTone, TimelineVariant } from "./Timeline.types";
+import type {
+  TimelineAlign,
+  TimelineConnector,
+  TimelineHorizontalTimePlacement,
+  TimelineOrientation,
+  TimelineProps,
+  TimelineSize,
+  TimelineTimePlacement,
+  TimelineTone,
+  TimelineVariant,
+} from "./Timeline.types";
 
 // `Timeline.Item` gets its own Properties table via a hidden docs-only stories file
 // (guidelines/adr/0013), where its argTypes are auto-resolved from real docgen.
@@ -22,7 +32,9 @@ interface PlaygroundArgs {
   align: TimelineAlign;
   connector: TimelineConnector;
   colorfulConnector: boolean;
-  timePlacement: TimelineTimePlacement;
+  timePlacement: TimelineTimePlacement | TimelineHorizontalTimePlacement;
+  /** Playground only: the two values a horizontal timeline reads, in place of `timePlacement`'s. */
+  horizontalTimePlacement: TimelineHorizontalTimePlacement;
   maxVisible: number | "All";
   defaultExpanded: boolean;
   "aria-label": string;
@@ -92,7 +104,7 @@ const meta: Meta<PlaygroundArgs> = {
     orientation: {
       control: "select",
       options: ["vertical", "horizontal"],
-      description: "Which way the events run. Takes a breakpoint map. A horizontal timeline scrolls sideways when its events do not fit, and ignores align and timePlacement.",
+      description: "Which way the events run. Takes a breakpoint map. A horizontal timeline scrolls sideways when its events do not fit.",
       table: { defaultValue: { summary: "vertical" } },
     },
     align: {
@@ -128,8 +140,9 @@ const meta: Meta<PlaygroundArgs> = {
     },
     timePlacement: {
       control: "select",
-      options: ["top", "side"],
-      description: "Where each event's time goes: above its title, or in a column beside the marker from the sm breakpoint up. Takes a breakpoint map.",
+      options: ["top", "side", "same", "opposite"],
+      description:
+        "Where each event's time goes. Vertical: top (above the title) or side (a column beside the marker, from the sm breakpoint up). Horizontal: same (on the same side of the dot as the content, above the title) or opposite (on the other side). A value for the other orientation is read as the default. Takes a breakpoint map.",
       table: { defaultValue: { summary: "top" } },
     },
     maxVisible: {
@@ -185,7 +198,7 @@ const meta: Meta<PlaygroundArgs> = {
       align={args.align}
       connector={args.connector}
       colorfulConnector={args.colorfulConnector}
-      timePlacement={args.timePlacement}
+      timePlacement={args.orientation === "horizontal" ? args.horizontalTimePlacement : args.timePlacement}
       maxVisible={typeof args.maxVisible === "number" ? args.maxVisible : undefined}
       defaultExpanded={typeof args.maxVisible === "number" ? args.defaultExpanded : undefined}
     >
@@ -202,7 +215,23 @@ type Story = StoryObj<PlaygroundArgs>;
 
 /** Drive every prop live via the Controls panel below. */
 export const Playground: Story = {
+  args: { horizontalTimePlacement: "same" },
   argTypes: {
+    // One real prop, two sets of values: the control shown follows the orientation, and the render passes the right one.
+    timePlacement: {
+      control: "select",
+      options: ["top", "side"],
+      if: { arg: "orientation", eq: "vertical" },
+      description: "Where each event's time goes: above its title, or in a column beside the marker from the sm breakpoint up.",
+    },
+    horizontalTimePlacement: {
+      name: "timePlacement",
+      control: "select",
+      options: ["same", "opposite"],
+      if: { arg: "orientation", eq: "horizontal" },
+      description: "Where each event's time goes: on the same side of the dot as the content (above the title), or on the opposite side.",
+      table: { defaultValue: { summary: "same" } },
+    },
     maxVisible: { control: "select", options: ["All", 2, 3, 4], description: "Shows only this many events, then a button that shows the rest. Leave it out to show them all." },
   },
   parameters: {
@@ -282,7 +311,7 @@ export const Pending: Story = {
 
 export const TimeBeside: Story = {
   name: "The time in a side column",
-  argTypes: { ...except("size", "timePlacement") },
+  argTypes: { ...except("size") },
   render: (args) => <Demo size={args.size} timePlacement="side" count={4} descriptions />,
   parameters: {
     docs: { source: { code: timelineSnippets.timeSide } },
@@ -393,7 +422,7 @@ export const ConnectorOverride: Story = {
 
 export const AlternateLayout: Story = {
   name: "Alternating sides",
-  argTypes: { ...except("size", "timePlacement") },
+  argTypes: { ...except("size", "timePlacement"), timePlacement: { control: "select", options: ["top", "side"] } },
   render: (args) => <Demo align="alternate" size={args.size} timePlacement={args.timePlacement} count={5} descriptions />,
   parameters: {
     docs: {
@@ -408,6 +437,28 @@ export const HorizontalLayout: Story = {
   argTypes: { ...except("size", "variant") },
   render: (args) => <Demo orientation="horizontal" size={args.size} variant={args.variant} count={5} descriptions />,
   parameters: { docs: { source: { code: timelineSnippets.horizontal } } },
+};
+
+export const HorizontalAlternating: Story = {
+  name: "Horizontal, alternating, with the time opposite",
+  argTypes: { ...except("size", "align", "timePlacement"), timePlacement: { control: "select", options: ["same", "opposite"] } },
+  args: { align: "alternate", timePlacement: "opposite" },
+  render: (args) => (
+    <Demo
+      orientation="horizontal"
+      size={args.size}
+      align={args.align}
+      timePlacement={args.timePlacement === "opposite" ? "opposite" : "same"}
+      count={5}
+      descriptions
+    />
+  ),
+  parameters: {
+    docs: {
+      description: { story: "Alternating needs the md breakpoint (768px): on a narrower screen every event is below the line." },
+      source: { code: timelineSnippets.horizontalAlternating },
+    },
+  },
 };
 
 export const LoadingMore: Story = {

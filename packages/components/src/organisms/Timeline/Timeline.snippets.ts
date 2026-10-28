@@ -7,7 +7,7 @@
 // stays true. See `07-storybook-and-documentation-standards.md` §4.2.
 
 import { quote } from "../../snippetHelpers";
-import type { TimelineAlign, TimelineConnector, TimelineOrientation, TimelineSize, TimelineTimePlacement, TimelineTone, TimelineVariant } from "./Timeline.types";
+import type { TimelineAlign, TimelineConnector, TimelineHorizontalTimePlacement, TimelineOrientation, TimelineSize, TimelineTimePlacement, TimelineTone, TimelineVariant } from "./Timeline.types";
 
 const item = (title: string, time: string, attributes = "") =>
   `  <Timeline.Item title="${title}" time="${time}"${attributes ? ` ${attributes}` : ""} />`;
@@ -134,6 +134,10 @@ ${timeline('align="alternate"', [item("Delivered", "Today, 11:02"), item("Out fo
     A breakpoint map such as { base: "vertical", md: "horizontal" } changes it with the width. */}
 ${timeline('orientation="horizontal"')}`,
 
+  horizontalAlternating: `{/* align="alternate" above and below the line, from md up; timePlacement "same" | "opposite": the time on the same
+    side of the dot as the content, or the other */}
+${timeline('orientation="horizontal" align="alternate" timePlacement="opposite"')}`,
+
   relativeTime: `{/* formatRelativeTime writes "2 hours ago" for a time you pass; dateTime keeps the machine-readable form */}
 <Timeline aria-label="Activity">
   <Timeline.Item title="Deployed" time={formatRelativeTime(deployedAt)} dateTime={deployedAt.toISOString()} />
@@ -203,6 +207,8 @@ export interface TimelinePlaygroundSnippetArgs {
   connector?: TimelineConnector;
   colorfulConnector?: boolean;
   timePlacement?: TimelineTimePlacement;
+  /** The Playground's control for a horizontal timeline's two values. */
+  horizontalTimePlacement?: TimelineHorizontalTimePlacement;
   /** A number, or `"All"` (no cap) in the Playground's own select. */
   maxVisible?: number | string;
   defaultExpanded?: boolean;
@@ -213,13 +219,18 @@ export interface TimelinePlaygroundSnippetArgs {
 export function timelinePlaygroundSnippet(args: TimelinePlaygroundSnippetArgs): string {
   const attributes: string[] = [];
   if (args.orientation && args.orientation !== "vertical") attributes.push(`orientation="${args.orientation}"`);
-  if (args.align === "alternate" && args.orientation !== "horizontal") attributes.push('align="alternate"');
+  if (args.align === "alternate") attributes.push('align="alternate"');
   if (args.size && args.size !== "md") attributes.push(`size="${args.size}"`);
   if (args.variant && args.variant !== "filled") attributes.push(`variant="${args.variant}"`);
   if (args.tone && args.tone !== "brand") attributes.push(`tone="${args.tone}"`);
   if (args.connector && args.connector !== "solid") attributes.push(`connector="${args.connector}"`);
   if (args.colorfulConnector) attributes.push("colorfulConnector");
-  if (args.timePlacement && args.timePlacement !== "top") attributes.push(`timePlacement="${args.timePlacement}"`);
+  // One prop with two sets of values: the orientation decides which control counts.
+  if (args.orientation === "horizontal") {
+    if (args.horizontalTimePlacement === "opposite") attributes.push('timePlacement="opposite"');
+  } else if (args.timePlacement === "side") {
+    attributes.push('timePlacement="side"');
+  }
   const capped = typeof args.maxVisible === "number";
   if (capped) attributes.push(`maxVisible={${args.maxVisible}}`);
   if (capped && args.defaultExpanded) attributes.push("defaultExpanded");
