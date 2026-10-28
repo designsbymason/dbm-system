@@ -14,6 +14,19 @@ auditConfig:
     # gets pinned via a normal override below — leaving it in place after a fix exists would mask a
     # genuine regression instead of a known, accepted gap.
     - GHSA-vfj7-8cjw-p6xm
+    # deepmerge's mergeObject() prototype poisoning (GHSA-gcqx-w48m-w2h4, low), vulnerable
+    # `>=4.2.0 <=4.3.1`, patched in 4.3.2 — but 4.3.1 is the latest release on the registry as of
+    # 2026-10-28, so an override cannot pin to a fix that does not exist yet. Reached only via
+    # `style-dictionary`'s `@bundled-es-modules/deepmerge` in `packages/tokens` (dev-only, never
+    # shipped), merging this repo's own token JSON. Assessment and exit condition: §3.1 of
+    # guidelines/02-tech-stack-and-structure.md. Remove this entry the same day a patched release
+    # ships and gets pinned via a capped override below.
+    - GHSA-gcqx-w48m-w2h4
+# pnpm's default minimum release age holds back a version that is only days old. `qs@6.16.2` is the
+# patched release for GHSA-6pq8-jhm2-2vcw (see the `qs` override below), so it is let through now,
+# 2026-10-28. Remove this entry once the release is older than the minimum age.
+minimumReleaseAgeExclude:
+  - qs@6.16.2
 overrides:
   # GHSA-g7r4-m6w7-qqqr: esbuild dev-server arbitrary file read on Windows,
   # patched in 0.28.1. Pulled in transitively via Storybook/Vite/tsup (dev-only,
@@ -185,6 +198,14 @@ overrides:
   # (no 5.x exists). Floor is the latest 4.x patch, 4.6.7. Found via `pnpm audit`,
   # 2026-10-23.
   zod: ">=4.6.7 <5.0.0"
+  # GHSA-6pq8-jhm2-2vcw: `qs.stringify` with `arrayFormat: "comma"` throws an uncaught
+  # TypeError on array elements with a non-callable own `toString` (DoS), vulnerable
+  # `>=6.7.0 <=6.16.0`, patched in 6.16.1. Reached only via `style-dictionary` →
+  # `@bundled-es-modules/glob` → `url` → `qs` in `packages/tokens` (dev-only, never shipped).
+  # `url@0.11.4` declares `qs: ^6.12.3`, so the floor stays in 6.x and the cap is `<7.0.0`
+  # per the §3.1 rule that every override gets an upper bound. Floor is the latest 6.x
+  # patch, 6.16.2. Found via `pnpm audit`, 2026-10-28.
+  qs: ">=6.16.2 <7.0.0"
 patchedDependencies:
   # Bridges brace-expansion's >=2 export shape (see the brace-expansion
   # override above) so the >=5.0.8 override doesn't crash this package's

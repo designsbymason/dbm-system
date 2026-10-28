@@ -141,6 +141,7 @@ Currently accepted:
 | Advisory | Package | Reached through | Why accepted | Exit condition |
 |---|---|---|---|---|
 | GHSA-vfj7-8cjw-p6xm (CVE-2026-93687), stack-overflow DoS in recursive AST walkers | `braces` | `micromatch`, dev-only, through `@changesets/cli`'s `@manypkg/get-packages` → `globby` → `fast-glob`; used at release time to find this repo's own workspace packages | Never shipped in a published package. The only glob patterns it receives come from this repo's own `pnpm-workspace.yaml`, which is trusted configuration; exploiting it needs write access to that file already | A `braces` release past `3.0.3` (watch micromatch/braces#72) |
+| GHSA-gcqx-w48m-w2h4, `mergeObject()` prototype poisoning (low) | `deepmerge` (`>=4.2.0 <=4.3.1`) | `style-dictionary` → `@bundled-es-modules/deepmerge`, dev-only, in `packages/tokens`'s token build | Never shipped in a published package. The only objects it merges are this repo's own token JSON files, which are trusted source; exploiting it needs write access to them already. Patched in 4.3.2, which is not on the registry (4.3.1 is the latest), so an override cannot be pinned | A `deepmerge` release at or past `4.3.2` |
 
 
 ## 3.2 Manual dependency-refresh pass
@@ -166,7 +167,7 @@ Dependabot version updates are off ([ADR-0022](adr/0022-dependency-updates-are-a
 
 **Scheduled maintenance:**
 - After GitHub finishes moving `ubuntu-latest` to Ubuntu 26.04 (its stated window is 2026-10-19 to 2026-11-19): return `browser-tests` to `ubuntu-latest` (drop the `ubuntu-26.04` pin), provided it has stayed green. Keep the pin instead if it has flaked, and check whether GitHub has announced when the 24.04 image goes away — the announcement gave no date. Then update the CI row above.
-- The accepted advisory in §3.1 (`braces`): at every refresh pass, check the registry for a release past the version in the table's exit condition. When one ships, add and cap the override the normal way **and remove the matching entry from `pnpm-workspace.yaml`'s `auditConfig.ignoreGhsas`**.
+- The accepted advisories in §3.1 (`braces`, `deepmerge`): at every refresh pass, check the registry for a release past the version in each table row's exit condition. When one ships, add and cap the override the normal way **and remove the matching entry from `pnpm-workspace.yaml`'s `auditConfig.ignoreGhsas`**.
 - Phase 8: the release flow versus disabled pull requests — `01-vision-and-goals.md` §13.
 
 ---
