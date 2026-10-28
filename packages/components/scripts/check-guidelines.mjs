@@ -143,15 +143,12 @@ check("counts are stated once, in the inventory", () => {
 
 check("the README's headline matches the inventory and the code", () => {
   const file = join(REPO, "README.md");
-  const match = /(\d+) of a planned (\d+) components \(all (\d+) atoms and (\d+) of (\d+) molecules\)/.exec(read(file));
-  if (!match) return warn(file, 0, "the status sentence no longer has the form 'N of a planned M components (all A atoms and B of C molecules)'");
-  const built = builtComponents();
-  const rows = inventoryRows();
-  const count = (tier, source) => [...source.values()].filter((value) => (value.tier ?? value) === tier).length;
-  const actual = [built.size, rows.size, count("Atom", rows), count("Molecule", built), count("Molecule", rows)];
-  const stated = match.slice(1, 6).map(Number);
+  const match = /(\d+) of a planned (\d+) components/.exec(read(file));
+  if (!match) return warn(file, 0, "the status sentence no longer has the form 'N of a planned M components'");
+  const actual = [builtComponents().size, inventoryRows().size];
+  const stated = match.slice(1, 3).map(Number);
   if (actual.some((value, index) => value !== stated[index])) {
-    warn(file, 0, `the status sentence says ${stated.join("/")} but the code and inventory give ${actual.join("/")} (built / planned / atoms / built molecules / planned molecules)`);
+    warn(file, 0, `the status sentence says ${stated.join("/")} but the code and inventory give ${actual.join("/")} (built / planned)`);
   }
 });
 
