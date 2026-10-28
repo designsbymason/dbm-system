@@ -152,7 +152,7 @@ Conventional Commits format (`feat(button): add loading state`) — this is what
 ## Related documents
 - `04-component-inventory.md` — what to build, in what order
 - `03-token-system-spec.md` — the tokens every value here must trace to
-- `02-tech-stack-and-structure.md` — Radix/Motion/testing tooling referenced above
+- `02-tech-stack-and-structure.md` — Radix/testing tooling referenced above
 - `06-engineering-standards.md` — the review checklist and process rules these conventions feed into
 - `07-storybook-and-documentation-standards.md` — the Docs-page template and "Show code" rules
 - `adr/` — the reasoning behind the decisions linked above

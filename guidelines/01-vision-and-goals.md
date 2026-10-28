@@ -34,7 +34,7 @@ DBM System exists to avoid both traps: a real, versioned, installable package �
 
 ### Primary goals
 1. **Agent-usable from day one.** Every component ships with complete TypeScript types and JSDoc sufficient to feed an auto-generated, machine-readable component manifest — giving AI agents a structured, authoritative contract instead of requiring them to infer behavior from scraped docs.
-2. **Standalone and dependency-light.** Minimize what consumers are forced to install. Every dependency taken on (currently: Radix UI Primitives, Phosphor Icons through `packages/icons`, optionally Motion) is a deliberate, justified exception, not a default.
+2. **Standalone and dependency-light.** Minimize what consumers are forced to install. Every dependency taken on (currently: Radix UI Primitives and Phosphor Icons through `packages/icons`) is a deliberate, justified exception, not a default.
 3. **Free/open-source tooling throughout.** No paid SaaS anywhere in the build, test, or hosting pipeline — the system should be buildable and maintainable by anyone without a procurement conversation.
 4. **Token-driven, multi-brand, multi-mode.** A rigorous 3-layer token architecture (primitive → semantic → component) that supports multiple brand themes and light/dark modes without touching component code.
 5. **Accessible by default, not by retrofit.** WCAG AA as the enforced floor on every component — contrast, keyboard navigation, focus handling, ARIA semantics — verified, not assumed.
@@ -116,7 +116,7 @@ That system is worth continued reference (not imitation) as a live proof-of-conc
 
 ## 9. Guiding constraints
 
-- **Dependency budget:** every dependency must be justified against the "no/limited dependencies" goal. Current approved exceptions: Radix UI Primitives (accessibility/interaction logic), Phosphor Icons (wrapped by `packages/icons`), Motion (optional peer dependency, not yet installed).
+- **Dependency budget:** every dependency must be justified against the "no/limited dependencies" goal. Current approved exceptions: Radix UI Primitives (accessibility/interaction logic), and Phosphor Icons (wrapped by `packages/icons`); no animation library ([ADR-0140](adr/0140-the-design-system-takes-no-animation-library-and-animates-with-css-and-the-motion-tokens-over-keeping-motion-as-an-optional-peer-dependency.md)).
 - **Free/open-source only:** no paid SaaS anywhere in the build, test, or hosting pipeline.
 - **Accessibility floor:** WCAG AA, verified via automated testing (axe) and manual contrast checks — not assumed from "looks fine."
 - **Performance:** tree-shakeable exports, minimal bundle footprint per component, no unnecessary runtime CSS-in-JS cost.
@@ -133,7 +133,7 @@ A running record of foundational decisions, cross-referenced to the detailed doc
 | Monorepo tooling | Turborepo + pnpm workspaces | `02-tech-stack-and-structure.md` |
 | Styling architecture | CSS Custom Properties + CSS Modules (no CSS-in-JS runtime) | `02-tech-stack-and-structure.md` |
 | Accessibility primitives | Radix UI Primitives | `02-tech-stack-and-structure.md` |
-| Motion library | Motion (optional peer dependency) | `02-tech-stack-and-structure.md` |
+| Animation | CSS transitions and keyframes from the motion tokens; no library | `02-tech-stack-and-structure.md` |
 | Icons | Phosphor Icons, wrapped by `packages/icons` | `02-tech-stack-and-structure.md` |
 | Token architecture | 3-layer: primitive → semantic → component | `03-token-system-spec.md` |
 | v1 brand themes | Purple (`#5548A4`) + Emerald (`#2E8A7D`), each × light/dark | `03-token-system-spec.md` |
