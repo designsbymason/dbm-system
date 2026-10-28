@@ -1,0 +1,321 @@
+/* The timeline. Every value is a token. The custom properties below are set per size and per tone:
+   `--timeline-marker` the marker's diameter, `--timeline-font` the title's size, `--timeline-gap` the room between the
+   marker and the text, `--timeline-space` the room between events, and `--timeline-solid`, `--timeline-on`,
+   `--timeline-ring`, `--timeline-icon` the tone's fill, the icon on it, its ring and its icon colour on the page. */
+.root {
+  --timeline-marker: var(--dbm-timeline-marker-size-md);
+  --timeline-font: var(--dbm-font-size-base);
+  --timeline-small-font: var(--dbm-font-size-sm);
+  --timeline-gap: var(--dbm-space-3);
+  --timeline-space: var(--dbm-space-6);
+  --timeline-line: var(--dbm-border-width-2);
+  --timeline-lh: calc(var(--timeline-font) * var(--dbm-line-height-normal));
+  --timeline-offset: calc((var(--timeline-marker) - var(--timeline-lh)) / 2);
+
+  --timeline-solid: var(--dbm-bg-neutral);
+  --timeline-on: var(--dbm-icon-on-neutral);
+  --timeline-ring: var(--dbm-border-neutral-strong);
+  --timeline-icon: var(--dbm-icon-default);
+
+  color: var(--dbm-text-primary);
+  font-family: var(--dbm-font-family-primary);
+  font-size: var(--timeline-font);
+  line-height: var(--dbm-line-height-normal);
+  list-style: none;
+  margin: 0;
+  min-inline-size: 0;
+  padding: 0;
+}
+
+.sizeXs {
+  --timeline-marker: var(--dbm-timeline-marker-size-xs);
+  --timeline-font: var(--dbm-font-size-xs);
+  --timeline-small-font: var(--dbm-font-size-xs);
+  --timeline-gap: var(--dbm-space-2);
+  --timeline-space: var(--dbm-space-3);
+}
+
+.sizeSm {
+  --timeline-marker: var(--dbm-timeline-marker-size-sm);
+  --timeline-font: var(--dbm-font-size-sm);
+  --timeline-small-font: var(--dbm-font-size-xs);
+  --timeline-gap: var(--dbm-space-2);
+  --timeline-space: var(--dbm-space-4);
+}
+
+.sizeMd {
+  --timeline-marker: var(--dbm-timeline-marker-size-md);
+  --timeline-font: var(--dbm-font-size-base);
+  --timeline-small-font: var(--dbm-font-size-sm);
+  --timeline-gap: var(--dbm-space-3);
+  --timeline-space: var(--dbm-space-6);
+}
+
+.sizeLg {
+  --timeline-marker: var(--dbm-timeline-marker-size-lg);
+  --timeline-font: var(--dbm-font-size-md);
+  --timeline-small-font: var(--dbm-font-size-sm);
+  --timeline-gap: var(--dbm-space-3);
+  --timeline-space: var(--dbm-space-6);
+}
+
+.sizeXl {
+  --timeline-marker: var(--dbm-timeline-marker-size-xl);
+  --timeline-font: var(--dbm-font-size-lg);
+  --timeline-small-font: var(--dbm-font-size-base);
+  --timeline-gap: var(--dbm-space-4);
+  --timeline-space: var(--dbm-space-8);
+}
+
+.toneBrand {
+  --timeline-solid: var(--dbm-bg-brand);
+  --timeline-on: var(--dbm-icon-on-brand);
+  --timeline-ring: var(--dbm-border-brand);
+  --timeline-icon: var(--dbm-icon-brand);
+}
+
+.toneInfo {
+  --timeline-solid: var(--dbm-bg-info);
+  --timeline-on: var(--dbm-icon-on-info);
+  --timeline-ring: var(--dbm-border-info);
+  --timeline-icon: var(--dbm-icon-info);
+}
+
+.toneSuccess {
+  --timeline-solid: var(--dbm-bg-success);
+  --timeline-on: var(--dbm-icon-on-success);
+  --timeline-ring: var(--dbm-border-success);
+  --timeline-icon: var(--dbm-icon-success);
+}
+
+.toneWarning {
+  --timeline-solid: var(--dbm-bg-warning);
+  --timeline-on: var(--dbm-icon-on-warning);
+  --timeline-ring: var(--dbm-border-warning);
+  --timeline-icon: var(--dbm-icon-warning);
+}
+
+.toneDanger {
+  --timeline-solid: var(--dbm-bg-danger);
+  --timeline-on: var(--dbm-icon-on-danger);
+  --timeline-ring: var(--dbm-border-danger);
+  --timeline-icon: var(--dbm-icon-danger);
+}
+
+.toneHighlight {
+  --timeline-solid: var(--dbm-bg-highlight);
+  --timeline-on: var(--dbm-icon-on-highlight);
+  --timeline-ring: var(--dbm-border-highlight);
+  --timeline-icon: var(--dbm-icon-highlight);
+}
+
+/* Neutral: grey markers. `border.neutral` is under 3:1 on the surface in light mode, so the ring is `border.neutral-strong`. */
+.toneNeutral {
+  --timeline-solid: var(--dbm-bg-neutral);
+  --timeline-on: var(--dbm-icon-on-neutral);
+  --timeline-ring: var(--dbm-border-neutral-strong);
+  --timeline-icon: var(--dbm-icon-default);
+}
+
+/* --- An event: the marker's column, then the text. --- */
+
+.item {
+  column-gap: var(--timeline-gap);
+  display: grid;
+  grid-template-columns: var(--timeline-marker) minmax(0, 1fr);
+  list-style: none;
+  min-block-size: var(--timeline-marker);
+}
+
+/* The marker and the line: a column as tall as the event, so the line runs on down to the next marker. */
+.rail {
+  align-items: center;
+  display: flex;
+  flex-direction: column;
+  grid-column: 1;
+  grid-row: 1;
+}
+
+.marker {
+  align-items: center;
+  border: var(--timeline-line) solid transparent;
+  border-radius: var(--dbm-radius-full);
+  box-sizing: border-box;
+  display: inline-flex;
+  flex: 0 0 auto;
+  justify-content: center;
+}
+
+/* A plain dot: a third of the marker, centred in the column on the first line of text. */
+.markerDot {
+  background-color: var(--timeline-solid);
+  block-size: calc(var(--timeline-marker) / 3);
+  border-color: var(--timeline-solid);
+  inline-size: calc(var(--timeline-marker) / 3);
+  margin-block-start: calc((var(--timeline-marker) - var(--timeline-marker) / 3) / 2);
+}
+
+.markerIcon,
+.markerNode {
+  block-size: var(--timeline-marker);
+  min-inline-size: var(--timeline-marker);
+}
+
+.markerIcon {
+  background-color: var(--timeline-solid);
+  border-color: var(--timeline-solid);
+  color: var(--timeline-on);
+  inline-size: var(--timeline-marker);
+}
+
+.markerNode {
+  overflow: hidden;
+}
+
+.variantOutlined .markerDot {
+  background-color: transparent;
+  border-color: var(--timeline-ring);
+}
+
+.variantOutlined .markerIcon {
+  background-color: transparent;
+  border-color: var(--timeline-ring);
+  color: var(--timeline-icon);
+}
+
+/* The line: a border, so forced colours (which erase a background) keeps it. It leaves a little room at both ends. */
+.connector {
+  border-inline-start: var(--timeline-line) solid var(--dbm-border-default);
+  flex: 1 1 auto;
+  margin-block: var(--dbm-space-1);
+  min-block-size: var(--dbm-space-2);
+}
+
+.connectorDashed .connector,
+.pending .connector {
+  border-inline-start-style: dashed;
+}
+
+.item:last-child .connector {
+  display: none;
+}
+
+/* --- The text. --- */
+
+.body {
+  grid-column: 2;
+  grid-row: 1;
+  /* The first line of text is level with the middle of the marker, whichever is taller. */
+  min-inline-size: 0;
+  padding-block-start: var(--timeline-offset);
+}
+
+.main {
+  display: flex;
+  flex-direction: column;
+  min-inline-size: 0;
+  padding-block-end: var(--timeline-space);
+}
+
+.item:last-child .main {
+  padding-block-end: 0;
+}
+
+.time {
+  color: var(--dbm-text-secondary);
+  display: block;
+  font-size: var(--timeline-small-font);
+  font-variant-numeric: tabular-nums;
+  line-height: var(--timeline-lh);
+  overflow-wrap: anywhere;
+}
+
+.title {
+  color: var(--dbm-text-primary);
+  font-weight: var(--dbm-font-weight-semibold);
+  line-height: var(--timeline-lh);
+  overflow-wrap: anywhere;
+}
+
+.description {
+  color: var(--dbm-text-secondary);
+  font-size: var(--timeline-small-font);
+  overflow-wrap: anywhere;
+}
+
+.content {
+  font-size: var(--timeline-small-font);
+  margin-block-start: var(--dbm-space-2);
+  min-inline-size: 0;
+}
+
+/* --- The button for the events past `maxVisible`, in the text column. --- */
+
+.more {
+  display: grid;
+  grid-template-columns: var(--timeline-marker) minmax(0, 1fr);
+  column-gap: var(--timeline-gap);
+  list-style: none;
+  margin-block-start: var(--dbm-space-2);
+}
+
+.more > button {
+  grid-column: 2;
+  justify-self: start;
+}
+
+/* --- The time in a column beside the marker, from the `sm` breakpoint up (a media query cannot read a custom
+   property, so the width is the literal value of the primitive breakpoint). --- */
+
+@media (min-width: 640px) {
+  .timeSide .item,
+  .timeSide .more {
+    grid-template-columns: var(--dbm-timeline-time-width) var(--timeline-marker) minmax(0, 1fr);
+  }
+
+  .timeSide .rail {
+    grid-column: 2;
+  }
+
+  .timeSide .body {
+    display: contents;
+  }
+
+  .timeSide .time {
+    grid-column: 1;
+    grid-row: 1;
+    padding-block-start: var(--timeline-offset);
+    text-align: end;
+  }
+
+  .timeSide .main {
+    grid-column: 3;
+    grid-row: 1;
+    padding-block-start: var(--timeline-offset);
+  }
+
+  .timeSide .more > button {
+    grid-column: 3;
+  }
+}
+
+@media (forced-colors: active) {
+  .markerDot,
+  .markerIcon {
+    background-color: Canvas;
+    border-color: CanvasText;
+    color: CanvasText;
+  }
+
+  .markerDot {
+    background-color: CanvasText;
+  }
+
+  .pending .markerIcon {
+    border-color: Highlight;
+  }
+
+  .connector {
+    border-inline-start-color: GrayText;
+  }
+}

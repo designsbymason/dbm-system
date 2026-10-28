@@ -1,0 +1,32 @@
+{
+  "timeline": {
+    "marker-size": {
+      "xs": {
+        "$type": "dimension",
+        "$value": "24px",
+        "$description": "New token (2026-10-28), added for Timeline's marker: the diameter of an icon or node marker at each size step. The spacing scale has no 28px, and 24px is the same floor Stepper's indicator uses. The plain dot is derived from this in CSS, not a second family."
+      },
+      "sm": {
+        "$type": "dimension",
+        "$value": "28px"
+      },
+      "md": {
+        "$type": "dimension",
+        "$value": "32px"
+      },
+      "lg": {
+        "$type": "dimension",
+        "$value": "40px"
+      },
+      "xl": {
+        "$type": "dimension",
+        "$value": "48px"
+      }
+    },
+    "time-width": {
+      "$type": "dimension",
+      "$value": "9rem",
+      "$description": "New token (2026-10-28), added for Timeline's side time column: the width the time text takes before it wraps. No home on any existing primitive scale (the spacing scale tops out at 8rem)."
+    }
+  }
+}

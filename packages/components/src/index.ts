@@ -109,6 +109,7 @@ export * from "./organisms/MultiSelect";
 export * from "./organisms/Navbar";
 export * from "./organisms/Sidebar";
 export * from "./organisms/Stepper";
+export * from "./organisms/Timeline";
 export * from "./organisms/Toast";
 
 // What a consumer is meant to use from `@dbm-system/utils`, re-exported so that installing only this package
