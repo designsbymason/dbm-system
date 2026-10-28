@@ -30,7 +30,7 @@ dbm-system/
 │   ├── utils/                    # Small framework-agnostic utils, not a Radix wrapper (see note below)
 │   │   └── src/
 │   │       ├── hooks/            # useResolvedResponsiveValue, useAnnouncement, usePersistentDismiss, useRecentCommands, useIsScrollable, useScrollEdges, useWindowedList, useSortable
-│   │       ├── utils/            # cx (classname merging), mergeDefined (per-key defaults for a `labels` prop), mergeRefs, responsiveStyle
+│   │       ├── utils/            # cx (classname merging), mergeDefined (per-key defaults for a `labels` prop), mergeRefs, responsiveStyle, formatRelativeTime
 │   │       └── types/            # shared token types
 │   │
 │   ├── icons/                    # Phosphor wrapper — curated re-export + typed icon prop
@@ -68,7 +68,7 @@ dbm-system/
 
 **What `utils` holds.** A small set of framework-agnostic utilities and hooks shared across components. It is not a Radix wrapper: every component that needs Radix imports `@radix-ui/react-*` directly as a dependency of `packages/components`, and `utils` has no Radix dependency of its own. `FocusTrap` and similar components implement their Radix-wrapping logic in `packages/components`.
 
-- **Utils:** `cx` (classname merging), `mergeRefs`, `responsiveStyle`, `mergeDefined` (per-key defaults for a `labels` prop), and the shared token types.
+- **Utils:** `cx` (classname merging), `mergeRefs`, `responsiveStyle`, `mergeDefined` (per-key defaults for a `labels` prop), `formatRelativeTime` (writes "2 hours ago" once, through `Intl.RelativeTimeFormat` in the language it is given, never the browser's; meant for consumers to call, for a `Timeline` event's `time`) and the shared token types.
 - **Hooks**, each extracted once a second component needed it:
 
 | Hook | What it does | Used by |
@@ -77,12 +77,12 @@ dbm-system/
 | `useAnnouncement` | The timing half of a screen-reader announcement: put text into an already-present live region a moment later, then clear it | `Pagination`, `EmptyState`, `Calendar`, `Stat`, `CodeBlock`, `TableToolbar` |
 | `usePersistentDismiss` | Remembers a dismissal across visits ([ADR-0023](adr/0023-one-alert-with-banner-and-sticky-options-and-a-separate-persistence-hook.md)) | `Alert`; also meant for consumers to call |
 | `useRecentCommands` | Remembers the values of the commands last run, newest first and capped, for `CommandPalette`'s `recent`; shares its storage helpers (memory fallback, other tabs kept in step) with `usePersistentDismiss` | `CommandPalette`; also meant for consumers to call |
-| `useIsScrollable` | Whether a scroll container overflows along an axis, so it is a keyboard-reachable region only while it scrolls (ADR-0019, ADR-0028) | `ScrollArea`, `Table`, `Splitter.Pane` |
+| `useIsScrollable` | Whether a scroll container overflows along an axis, so it is a keyboard-reachable region only while it scrolls (ADR-0019, ADR-0028) | `ScrollArea`, `Table`, `Splitter.Pane`, `Timeline` (a horizontal row) |
 | `useScrollEdges` | Which end of a scrolling container has more, for edge fades and scroll buttons; takes an optional `itemSelector` and `enabled` | `Tabs`, `Toolbar` |
 | `useWindowedList` | Draws a long list of fixed-height rows a window at a time, keeping the scrollbar true ([ADR-0080](adr/0080-long-option-lists-are-drawn-a-window-at-a-time-by-a-hand-rolled-hook-with-fixed-row-heights-from-tokens-over-a-virtualization-dependency-or-measured-rows.md)) | `Combobox`, `MultiSelect` (through `internal/optionList`), `DataTable` |
 | `useSortable` | Moves items in one list by pointer, touch, a tap pair and keyboard, with no dependency; it asks for a move and owns no order ([ADR-0043](adr/0043-reordering-is-a-hand-rolled-sortable-hook-in-primitives-for-a-single-list-over-a-drag-and-drop-dependency.md), [ADR-0126](adr/0126-multiselect-chips-move-by-a-hand-rolled-sortable-hook-that-finds-the-nearest-chip-so-a-wrapping-row-works-and-space-picks-up-with-alt-arrows-for-one-place-over-an-axis-bound-hook-or-a-drag-handle.md)); internal | `MultiSelect` |
 
-**What `packages/components` re-exports from it:** only what a consumer is meant to call or name — `usePersistentDismiss` and `useRecentCommands` with their types, and the helper types `Breakpoint`, `Responsive` and `SpaceValue` that many components' public props use (type-only, no bundle cost; `src/test/publicExports.test.ts` asserts they are the very types `utils` defines). Never the internals (`cx`, `mergeRefs`, `useAnnouncement`, `useResolvedResponsiveValue`). **Icons are deliberately not re-exported:** `@dbm-system/icons` is the whole Phosphor set, whose `Icon` type would collide with this package's own `Icon` component, so a consumer imports icons from that package (a documented second import, not a second copy of everything).
+**What `packages/components` re-exports from it:** only what a consumer is meant to call or name — `usePersistentDismiss` and `useRecentCommands` with their types, `formatRelativeTime` with its options type, and the helper types `Breakpoint`, `Responsive` and `SpaceValue` that many components' public props use (type-only, no bundle cost; `src/test/publicExports.test.ts` asserts they are the very types `utils` defines). Never the internals (`cx`, `mergeRefs`, `useAnnouncement`, `useResolvedResponsiveValue`). **Icons are deliberately not re-exported:** `@dbm-system/icons` is the whole Phosphor set, whose `Icon` type would collide with this package's own `Icon` component, so a consumer imports icons from that package (a documented second import, not a second copy of everything).
 
 ---
 

@@ -5,7 +5,7 @@ export type ScrollableAxis = "x" | "y" | "both";
 
 const noop = () => {};
 
-function overflows(el: HTMLDivElement, axis: ScrollableAxis): boolean {
+function overflows(el: HTMLElement, axis: ScrollableAxis): boolean {
   const overflowsX = el.scrollWidth > el.clientWidth;
   const overflowsY = el.scrollHeight > el.clientHeight;
   if (axis === "x") return overflowsX;
@@ -38,7 +38,7 @@ function overflows(el: HTMLDivElement, axis: ScrollableAxis): boolean {
  * environments without it: those just never re-check after the first
  * commit, leaving the container unfocusable rather than crashing.
  */
-export function useIsScrollable(containerRef: RefObject<HTMLDivElement | null>, axis: ScrollableAxis): boolean {
+export function useIsScrollable(containerRef: RefObject<HTMLElement | null>, axis: ScrollableAxis): boolean {
   const subscribe = useCallback(
     (onChange: () => void) => {
       const container = containerRef.current;

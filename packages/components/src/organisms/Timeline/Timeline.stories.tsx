@@ -1,14 +1,16 @@
 import type { Meta, StoryContext, StoryObj } from "@storybook/react-vite";
 import { PackageIcon, TruckIcon } from "@dbm-system/icons";
 import { useState } from "react";
+import { formatRelativeTime } from "@dbm-system/utils";
 import type { CSSProperties } from "react";
 import { Avatar } from "../../atoms/Avatar";
 import { Blockquote } from "../../atoms/Blockquote";
 import { Link } from "../../atoms/Link";
+import { EmptyState } from "../../molecules/EmptyState";
 import { Timeline } from "./Timeline";
 import { allSizes, Demo, demoEvents, IconDemo } from "./TimelineStoryKit";
 import { timelinePlaygroundSnippet, timelineSnippets } from "./Timeline.snippets";
-import type { TimelineConnector, TimelineProps, TimelineSize, TimelineTimePlacement, TimelineTone, TimelineVariant } from "./Timeline.types";
+import type { TimelineAlign, TimelineConnector, TimelineOrientation, TimelineProps, TimelineSize, TimelineTimePlacement, TimelineTone, TimelineVariant } from "./Timeline.types";
 
 // `Timeline.Item` gets its own Properties table via a hidden docs-only stories file
 // (guidelines/adr/0013), where its argTypes are auto-resolved from real docgen.
@@ -16,11 +18,20 @@ interface PlaygroundArgs {
   size: TimelineSize;
   variant: TimelineVariant;
   tone: TimelineTone;
+  orientation: TimelineOrientation;
+  align: TimelineAlign;
   connector: TimelineConnector;
+  colorfulConnector: boolean;
   timePlacement: TimelineTimePlacement;
   maxVisible: number | "All";
   defaultExpanded: boolean;
   "aria-label": string;
+  loading: boolean;
+  loadingCount: number;
+  onLoadMore: TimelineProps["onLoadMore"];
+  hasMore: boolean;
+  empty: TimelineProps["empty"];
+  announce: boolean;
   expanded: boolean;
   onExpandedChange: TimelineProps["onExpandedChange"];
   formatNumber: TimelineProps["formatNumber"];
@@ -42,7 +53,10 @@ const noControls = {
   size: off,
   variant: off,
   tone: off,
+  orientation: off,
+  align: off,
   connector: off,
+  colorfulConnector: off,
   timePlacement: off,
   maxVisible: off,
   defaultExpanded: off,
@@ -73,13 +87,44 @@ const meta: Meta<PlaygroundArgs> = {
       control: "select",
       options: allTones,
       description: "The colour of the markers, for every event that does not set its own tone.",
-      table: { defaultValue: { summary: "neutral" } },
+      table: { defaultValue: { summary: "brand" } },
+    },
+    orientation: {
+      control: "select",
+      options: ["vertical", "horizontal"],
+      description: "Which way the events run. Takes a breakpoint map. A horizontal timeline scrolls sideways when its events do not fit, and ignores align and timePlacement.",
+      table: { defaultValue: { summary: "vertical" } },
+    },
+    align: {
+      control: "select",
+      options: ["start", "alternate"],
+      description: "Where a vertical timeline puts its content relative to the line: all on one side, or alternating from the md breakpoint up (below it, every event is on one side).",
+      table: { defaultValue: { summary: "start" } },
+    },
+    loading: {
+      control: false,
+      description: "Shows that events are being fetched: placeholder events at the end, aria-busy on the list and a busy load-more button.",
+      table: { defaultValue: { summary: "false" } },
+    },
+    loadingCount: { control: false, description: "How many placeholder events loading draws.", table: { defaultValue: { summary: "3" } } },
+    onLoadMore: { control: false, description: "Called when the person presses the load-more button, drawn after the last event whenever this is set and hasMore is not false." },
+    hasMore: { control: false, description: "Whether there are more events to load. Hides the load-more button when false.", table: { defaultValue: { summary: "true" } } },
+    empty: { control: false, description: "What to draw when there are no events and it is not loading, in place of the words in labels.empty. false draws nothing." },
+    announce: {
+      control: false,
+      description: "Says how many new events there are in a polite live region when events are added to a timeline that is showing, never on its first render.",
+      table: { defaultValue: { summary: "false" } },
     },
     connector: {
       control: "select",
       options: ["solid", "dashed", "none"],
       description: "The line between events. The line leaving a pending event is always dashed.",
       table: { defaultValue: { summary: "solid" } },
+    },
+    colorfulConnector: {
+      control: "boolean",
+      description: "Draws the line leaving each event in its tone's soft colour (the tone's subtle border), instead of the neutral grey every line has by default.",
+      table: { defaultValue: { summary: "false" } },
     },
     timePlacement: {
       control: "select",
@@ -118,8 +163,11 @@ const meta: Meta<PlaygroundArgs> = {
   args: {
     size: "md",
     variant: "filled",
-    tone: "neutral",
+    tone: "brand",
+    orientation: "vertical",
+    align: "start",
     connector: "solid",
+    colorfulConnector: false,
     timePlacement: "top",
     maxVisible: "All",
     defaultExpanded: false,
@@ -133,7 +181,10 @@ const meta: Meta<PlaygroundArgs> = {
       size={args.size}
       variant={args.variant}
       tone={args.tone}
+      orientation={args.orientation}
+      align={args.align}
       connector={args.connector}
+      colorfulConnector={args.colorfulConnector}
       timePlacement={args.timePlacement}
       maxVisible={typeof args.maxVisible === "number" ? args.maxVisible : undefined}
       defaultExpanded={typeof args.maxVisible === "number" ? args.defaultExpanded : undefined}
@@ -249,6 +300,192 @@ export const Connectors: Story = {
     </div>
   ),
   parameters: { docs: { source: { code: timelineSnippets.connectors } } },
+};
+
+export const ColorfulConnectors: Story = {
+  name: "Connectors in the tone's colour",
+  argTypes: { ...except("size", "variant") },
+  render: (args) => (
+    <Timeline aria-label="Deployment" size={args.size} variant={args.variant} colorfulConnector>
+      <Timeline.Item title="Rolled back" tone="danger" statusText="Failed" time="10:42" />
+      <Timeline.Item title="Deployed" tone="success" statusText="Succeeded" time="10:31" />
+      <Timeline.Item title="Build started" tone="info" time="10:24" />
+      <Timeline.Item title="Queued" tone="warning" time="10:20" />
+    </Timeline>
+  ),
+  parameters: { docs: { source: { code: timelineSnippets.colorfulConnector } } },
+};
+
+export const Groups: Story = {
+  name: "Headings for runs of events",
+  argTypes: { ...except("size") },
+  render: (args) => (
+    <Timeline aria-label="Activity" size={args.size}>
+      <Timeline.Group>Today</Timeline.Group>
+      <Timeline.Item title="Deployed" time="10:31" tone="success" statusText="Done" />
+      <Timeline.Item title="Build started" time="10:24" />
+      <Timeline.Group>Yesterday</Timeline.Group>
+      <Timeline.Item title="Merged" time="17:02" />
+      <Timeline.Item title="Review requested" time="15:48" />
+    </Timeline>
+  ),
+  parameters: { docs: { source: { code: timelineSnippets.groups } } },
+};
+
+export const EndCap: Story = {
+  name: "An end",
+  argTypes: { ...except("size") },
+  render: (args) => (
+    <Timeline aria-label="Order history" size={args.size}>
+      <Timeline.Item title="Delivered" time="14 Mar" tone="success" statusText="Done" />
+      <Timeline.Item title="Order placed" time="12 Mar" />
+      <Timeline.End>Order closed</Timeline.End>
+    </Timeline>
+  ),
+  parameters: { docs: { source: { code: timelineSnippets.end } } },
+};
+
+export const Linked: Story = {
+  name: "Events that are links and buttons",
+  argTypes: { ...noControls },
+  render: () => (
+    <Timeline aria-label="Activity">
+      <Timeline.Item title="Plan updated" time="Yesterday" href="/plans/q3" description="Open the plan" />
+      <Timeline.Item title="Comment added" time="Monday" onPress={() => {}}>
+        <Link href="/people/mina">Mina</Link>
+      </Timeline.Item>
+      <Timeline.Item title="Created" time="Last week" />
+    </Timeline>
+  ),
+  parameters: { docs: { source: { code: timelineSnippets.linked } } },
+};
+
+export const WithDetail: Story = {
+  name: "Detail behind a button",
+  argTypes: { ...except("size") },
+  render: (args) => (
+    <Timeline aria-label="Deployment" size={args.size}>
+      <Timeline.Item
+        title="Deploy failed"
+        tone="danger"
+        statusText="Failed"
+        time="10:42"
+        detail="Step 3 of 5 exited with code 1: the database was not reachable."
+      />
+      <Timeline.Item title="Build passed" time="10:31" detail="42 tests, 0 failures." defaultOpen />
+    </Timeline>
+  ),
+  parameters: { docs: { source: { code: timelineSnippets.detail } } },
+};
+
+export const ConnectorOverride: Story = {
+  name: "A line of its own",
+  argTypes: { ...noControls },
+  render: () => (
+    <Timeline aria-label="Account">
+      <Timeline.Item title="Reopened" time="Today" />
+      <Timeline.Item title="Closed" time="2 years ago" connector="dashed" />
+      <Timeline.Item title="Opened" time="3 years ago" />
+    </Timeline>
+  ),
+  parameters: { docs: { source: { code: timelineSnippets.connectorOverride } } },
+};
+
+export const AlternateLayout: Story = {
+  name: "Alternating sides",
+  argTypes: { ...except("size", "timePlacement") },
+  render: (args) => <Demo align="alternate" size={args.size} timePlacement={args.timePlacement} count={5} descriptions />,
+  parameters: {
+    docs: {
+      description: { story: "From the md breakpoint (768px) up. On a narrower screen every event is on one side." },
+      source: { code: timelineSnippets.alternate },
+    },
+  },
+};
+
+export const HorizontalLayout: Story = {
+  name: "Horizontal",
+  argTypes: { ...except("size", "variant") },
+  render: (args) => <Demo orientation="horizontal" size={args.size} variant={args.variant} count={5} descriptions />,
+  parameters: { docs: { source: { code: timelineSnippets.horizontal } } },
+};
+
+export const LoadingMore: Story = {
+  name: "Load more",
+  argTypes: { ...noControls },
+  render: function Render() {
+    const [count, setCount] = useState(2);
+    const [loading, setLoading] = useState(false);
+    return (
+      <Timeline
+        aria-label="Order history"
+        loading={loading}
+        hasMore={count < demoEvents.length}
+        onLoadMore={() => {
+          setLoading(true);
+          setTimeout(() => {
+            setCount((n) => Math.min(demoEvents.length, n + 2));
+            setLoading(false);
+          }, 900);
+        }}
+        announce
+      >
+        {demoEvents.slice(0, count).map(([title, time, dateTime]) => (
+          <Timeline.Item key={title} title={title} time={time} dateTime={dateTime} />
+        ))}
+      </Timeline>
+    );
+  },
+  parameters: { docs: { source: { code: timelineSnippets.loadMore } } },
+};
+
+export const LoadingState: Story = {
+  name: "Loading",
+  argTypes: { ...noControls },
+  render: () => (
+    <Timeline aria-label="Activity" loading loadingCount={4}>
+      {[]}
+    </Timeline>
+  ),
+  parameters: { docs: { source: { code: timelineSnippets.loading } } },
+};
+
+export const EmptyTimeline: Story = {
+  name: "Empty",
+  argTypes: { ...noControls },
+  render: () => (
+    <div style={{ display: "grid", gap: "var(--dbm-space-6)" }}>
+      <Timeline aria-label="Activity">{[]}</Timeline>
+      <Timeline
+        aria-label="Activity with a message"
+        empty={
+          <EmptyState size="sm">
+            <EmptyState.Title>Nothing has happened yet</EmptyState.Title>
+          </EmptyState>
+        }
+      >
+        {[]}
+      </Timeline>
+    </div>
+  ),
+  parameters: { docs: { source: { code: timelineSnippets.empty } } },
+};
+
+export const RelativeTimes: Story = {
+  name: "Relative times",
+  argTypes: { ...noControls },
+  render: () => {
+    const now = Date.now();
+    const ago = (hours: number) => new Date(now - hours * 3_600_000);
+    return (
+      <Timeline aria-label="Activity">
+        <Timeline.Item title="Deployed" time={formatRelativeTime(ago(2))} dateTime={ago(2).toISOString()} />
+        <Timeline.Item title="Merged" time={formatRelativeTime(ago(30), { locale: "fr" })} dateTime={ago(30).toISOString()} />
+        <Timeline.Item title="Opened" time={formatRelativeTime(ago(24 * 9))} dateTime={ago(24 * 9).toISOString()} />
+      </Timeline>
+    );
+  },
+  parameters: { docs: { source: { code: timelineSnippets.relativeTime } } },
 };
 
 export const WithBody: Story = {

@@ -3,7 +3,7 @@ import userEvent from "@testing-library/user-event";
 import { axe } from "jest-axe";
 import { createRef, StrictMode, useState } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { HouseIcon } from "@dbm-system/icons";
+import { HouseIcon, TruckIcon } from "@dbm-system/icons";
 import { Avatar } from "../../atoms/Avatar";
 import { Timeline } from "./Timeline";
 import type { TimelineProps } from "./Timeline.types";
@@ -346,6 +346,13 @@ describe("Timeline — looks", () => {
     expect(container.querySelector("ol")).toHaveAttribute("data-time-placement", "top");
   });
 
+  it("takes the line's tone colour only when colorfulConnector is set", () => {
+    const { container, rerender } = render(<Basic />);
+    expect(container.querySelector("ol")?.className).not.toContain("colorfulConnector");
+    rerender(<Basic colorfulConnector />);
+    expect(container.querySelector("ol")?.className).toContain("colorfulConnector");
+  });
+
   it("nests inside itself without leaking settings", () => {
     render(
       <Basic tone="danger">
@@ -358,5 +365,373 @@ describe("Timeline — looks", () => {
     );
     expect(screen.getAllByRole("list")).toHaveLength(2);
     expect(item("Inside")).toBeInTheDocument();
+  });
+});
+
+describe("Timeline — groups and the end", () => {
+  it("draws a heading before a run of events, announced at the level given", () => {
+    render(
+      <Basic>
+        <Timeline.Group>Today</Timeline.Group>
+        <Timeline.Item title="A" />
+        <Timeline.Group level={4}>Yesterday</Timeline.Group>
+        <Timeline.Item title="B" />
+      </Basic>,
+    );
+    expect(screen.getByRole("heading", { name: "Today", level: 3 })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Yesterday", level: 4 })).toBeInTheDocument();
+  });
+
+  it("draws a heading only while an event after it is", () => {
+    render(
+      <Basic maxVisible={1}>
+        <Timeline.Group>Today</Timeline.Group>
+        <Timeline.Item title="A" />
+        <Timeline.Group>Yesterday</Timeline.Group>
+        <Timeline.Item title="B" />
+      </Basic>,
+    );
+    expect(screen.getByRole("heading", { name: "Today" })).toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: "Yesterday" })).toBeNull();
+  });
+
+  it("draws a heading over the events it leads when a later one is the first shown", () => {
+    render(
+      <Basic maxVisible={1}>
+        <Timeline.Group>Empty run</Timeline.Group>
+        <Timeline.Group>Today</Timeline.Group>
+        <Timeline.Item title="A" />
+      </Basic>,
+    );
+    expect(screen.queryByRole("heading", { name: "Empty run" })).toBeNull();
+    expect(screen.getByRole("heading", { name: "Today" })).toBeInTheDocument();
+  });
+
+  it("draws the end after the last event, and only once every event is shown", async () => {
+    const user = userEvent.setup();
+    render(
+      <Basic maxVisible={1}>
+        <Timeline.Item title="A" />
+        <Timeline.Item title="B" />
+        <Timeline.End>Order closed</Timeline.End>
+      </Basic>,
+    );
+    expect(screen.queryByText("Order closed")).toBeNull();
+    await user.click(screen.getByRole("button", { name: "Show 1 more event" }));
+    expect(screen.getByText("Order closed")).toBeInTheDocument();
+  });
+
+  it("draws an end with an icon, or with no words", () => {
+    const { container } = render(
+      <Basic>
+        <Timeline.Item title="A" />
+        <Timeline.End icon={HouseIcon}>Home</Timeline.End>
+        <Timeline.End />
+      </Basic>,
+    );
+    expect(screen.getByText("Home").closest("li")?.querySelector("svg")).not.toBeNull();
+    expect(container.querySelectorAll("li")).toHaveLength(3);
+  });
+
+  it("gives the end and the group the same list roles, refs and props", () => {
+    const groupRef = createRef<HTMLLIElement>();
+    const endRef = createRef<HTMLLIElement>();
+    render(
+      <Basic>
+        <Timeline.Group ref={groupRef} id="g" data-testid="grp">
+          Today
+        </Timeline.Group>
+        <Timeline.Item title="A" />
+        <Timeline.End ref={endRef} id="e" data-testid="end" />
+      </Basic>,
+    );
+    expect(groupRef.current).toBe(screen.getByTestId("grp"));
+    expect(endRef.current).toBe(screen.getByTestId("end"));
+    expect(groupRef.current).toHaveAttribute("role", "listitem");
+    expect(endRef.current).toHaveAttribute("id", "e");
+  });
+});
+
+describe("Timeline — an event that is a link, a button or has a detail", () => {
+  it("makes the title a link stretched over the event when href is set", () => {
+    render(
+      <Basic>
+        <Timeline.Item title="Order shipped" href="/orders/1" statusText="Done" />
+      </Basic>,
+    );
+    expect(screen.getByRole("link", { name: "Order shipped, Done" })).toHaveAttribute("href", "/orders/1");
+  });
+
+  it("makes the title a button when onPress is set, and calls it", async () => {
+    const user = userEvent.setup();
+    const onPress = vi.fn();
+    render(
+      <Basic>
+        <Timeline.Item title="Order shipped" onPress={onPress} />
+      </Basic>,
+    );
+    await user.click(screen.getByRole("button", { name: "Order shipped" }));
+    expect(onPress).toHaveBeenCalledTimes(1);
+  });
+
+  it("prefers href when both are set", () => {
+    render(
+      <Basic>
+        <Timeline.Item title="A" href="/a" onPress={() => {}} />
+      </Basic>,
+    );
+    expect(screen.getByRole("link", { name: "A" })).toBeInTheDocument();
+    expect(screen.queryByRole("button")).toBeNull();
+  });
+
+  it("warns when href or onPress has no title to be the control", () => {
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+    render(
+      <Basic>
+        <Timeline.Item description="x" href="/a" />
+      </Basic>,
+    );
+    expect(warn).toHaveBeenCalledWith(expect.stringContaining("need a `title`"));
+  });
+
+  it("keeps a link inside the body clickable beside a linked title", () => {
+    render(
+      <Basic>
+        <Timeline.Item title="A" href="/a">
+          <a href="/b">Track</a>
+        </Timeline.Item>
+      </Basic>,
+    );
+    expect(screen.getAllByRole("link")).toHaveLength(2);
+  });
+
+  it("keeps the detail behind a disclosure button that opens and closes it", async () => {
+    const user = userEvent.setup();
+    render(
+      <Basic>
+        <Timeline.Item title="A" detail="More about it" />
+      </Basic>,
+    );
+    const toggle = screen.getByRole("button", { name: "Details" });
+    expect(toggle).toHaveAttribute("aria-expanded", "false");
+    expect(screen.getByText("More about it")).not.toBeVisible();
+    await user.click(toggle);
+    expect(toggle).toHaveAttribute("aria-expanded", "true");
+    expect(screen.getByText("More about it")).toBeVisible();
+    expect(toggle).toHaveAttribute("aria-controls", screen.getByText("More about it").id);
+    await user.click(toggle);
+    expect(screen.getByText("More about it")).not.toBeVisible();
+    expect(toggle).toHaveFocus();
+  });
+
+  it("opens the detail at first with defaultOpen, and asks through onOpenChange when controlled", async () => {
+    const user = userEvent.setup();
+    const onOpenChange = vi.fn();
+    const { rerender } = render(
+      <Basic>
+        <Timeline.Item title="A" detail="Detail" defaultOpen />
+      </Basic>,
+    );
+    expect(screen.getByText("Detail")).toBeVisible();
+    rerender(
+      <Basic>
+        <Timeline.Item title="A" detail="Detail" open={false} onOpenChange={onOpenChange} />
+      </Basic>,
+    );
+    // Switching a mounted item between uncontrolled and controlled warns; the point here is what the button does.
+    vi.spyOn(console, "warn").mockImplementation(() => {});
+    await user.click(screen.getByRole("button", { name: "Details" }));
+    expect(onOpenChange).toHaveBeenCalledWith(true);
+    expect(screen.getByText("Detail")).not.toBeVisible();
+  });
+
+  it("translates the detail button through labels", () => {
+    render(
+      <Basic labels={{ details: "Détails" }}>
+        <Timeline.Item title="A" detail="x" />
+      </Basic>,
+    );
+    expect(screen.getByRole("button", { name: "Détails" })).toBeInTheDocument();
+  });
+
+  it("lets one event override the line leaving it", () => {
+    const { container } = render(
+      <Basic>
+        <Timeline.Item title="A" connector="dashed" />
+        <Timeline.Item title="B" connector="none" />
+        <Timeline.Item title="C" />
+      </Basic>,
+    );
+    const items = container.querySelectorAll("li");
+    expect(items[0]).toHaveAttribute("data-connector", "dashed");
+    expect(items[1]!.querySelector("[class*='_connector_']")).toBeNull();
+    expect(items[0]!.querySelector("[class*='_connector_']")).not.toBeNull();
+  });
+
+  it("has no accessibility violations with links, buttons, details, groups and an end", async () => {
+    const { container } = render(
+      <Basic>
+        <Timeline.Group>Today</Timeline.Group>
+        <Timeline.Item title="Linked" href="/a" icon={TruckIcon} />
+        <Timeline.Item title="Pressed" onPress={() => {}} detail="Detail" />
+        <Timeline.End>Closed</Timeline.End>
+      </Basic>,
+    );
+    expect(await axe(container)).toHaveNoViolations();
+  });
+});
+
+describe("Timeline — loading more, loading and empty", () => {
+  it("draws no load-more button unless onLoadMore is set, and hides it with hasMore false", () => {
+    const { rerender } = render(<Basic />);
+    expect(screen.queryByRole("button", { name: "Load more" })).toBeNull();
+    rerender(<Basic onLoadMore={() => {}} />);
+    expect(screen.getByRole("button", { name: "Load more" })).toBeInTheDocument();
+    rerender(<Basic onLoadMore={() => {}} hasMore={false} />);
+    expect(screen.queryByRole("button", { name: "Load more" })).toBeNull();
+  });
+
+  it("calls onLoadMore, and says it is busy while loading", async () => {
+    const user = userEvent.setup();
+    const onLoadMore = vi.fn();
+    const { rerender, container } = render(<Basic onLoadMore={onLoadMore} />);
+    await user.click(screen.getByRole("button", { name: "Load more" }));
+    expect(onLoadMore).toHaveBeenCalledTimes(1);
+    rerender(<Basic onLoadMore={onLoadMore} loading />);
+    expect(screen.getByRole("button", { name: "Loading…" })).toBeDisabled();
+    expect(container.querySelector("ol")).toHaveAttribute("aria-busy", "true");
+  });
+
+  it("holds the load-more button back while the cap still hides events", async () => {
+    const user = userEvent.setup();
+    render(<Basic maxVisible={2} onLoadMore={() => {}} />);
+    expect(screen.queryByRole("button", { name: "Load more" })).toBeNull();
+    await user.click(screen.getByRole("button", { name: "Show 3 more events" }));
+    expect(screen.getByRole("button", { name: "Load more" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Show fewer events" })).toBeInTheDocument();
+  });
+
+  it("gives focus back to the button when loading ends and focus was lost", async () => {
+    const user = userEvent.setup();
+    const { rerender } = render(<Basic onLoadMore={() => {}} />);
+    await user.click(screen.getByRole("button", { name: "Load more" }));
+    rerender(<Basic onLoadMore={() => {}} loading />);
+    (document.activeElement as HTMLElement | null)?.blur();
+    rerender(<Basic onLoadMore={() => {}} />);
+    expect(screen.getByRole("button", { name: "Load more" })).toHaveFocus();
+  });
+
+  it("draws placeholder events while loading, hidden from assistive technology, the count given", () => {
+    const { container, rerender } = render(<Basic loading />);
+    expect(container.querySelectorAll("li[aria-hidden='true']")).toHaveLength(3);
+    rerender(<Basic loading loadingCount={5} />);
+    expect(container.querySelectorAll("li[aria-hidden='true']")).toHaveLength(5);
+  });
+
+  it("stands the placeholders in for the list when there are no events yet, with no empty message", () => {
+    render(<Timeline aria-label="x" loading>{[]}</Timeline>);
+    expect(screen.queryByText("No events yet")).toBeNull();
+  });
+
+  it("says no events yet, or what empty says, or nothing for false", () => {
+    const { rerender } = render(<Timeline aria-label="x">{[]}</Timeline>);
+    expect(screen.getByText("No events yet")).toBeInTheDocument();
+    rerender(
+      <Timeline aria-label="x" empty={<p>Nothing to show</p>}>
+        {[]}
+      </Timeline>,
+    );
+    expect(screen.getByText("Nothing to show")).toBeInTheDocument();
+    rerender(
+      <Timeline aria-label="x" empty={false}>
+        {[]}
+      </Timeline>,
+    );
+    expect(screen.queryByRole("listitem")).toBeNull();
+  });
+
+  it("translates the new texts through labels", () => {
+    render(
+      <Timeline aria-label="x" onLoadMore={() => {}} labels={{ empty: "Rien", loadMore: "Plus" }}>
+        {[]}
+      </Timeline>,
+    );
+    expect(screen.getByText("Rien")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Plus" })).toBeInTheDocument();
+  });
+});
+
+describe("Timeline — announcing new events", () => {
+  it("says how many events were added when announce is on, never on first render or for the first events", async () => {
+    vi.useFakeTimers();
+    const { rerender } = render(<Basic announce>{[]}</Basic>);
+    rerender(
+      <Basic announce>
+        <Timeline.Item title="A" />
+        <Timeline.Item title="B" />
+      </Basic>,
+    );
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(300);
+    });
+    expect(screen.getByRole("status")).toHaveTextContent("");
+    rerender(
+      <Basic announce>
+        <Timeline.Item title="A" />
+        <Timeline.Item title="B" />
+        <Timeline.Item title="C" />
+        <Timeline.Item title="D" />
+        <Timeline.Item title="E" />
+      </Basic>,
+    );
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(300);
+    });
+    expect(screen.getByRole("status")).toHaveTextContent("3 new events");
+  });
+
+  it("says nothing when announce is off, and no status region exists unless one is needed", async () => {
+    vi.useFakeTimers();
+    const { rerender } = render(<Basic />);
+    expect(screen.queryByRole("status")).toBeNull();
+    rerender(
+      <Basic>
+        <Timeline.Item title="A" />
+      </Basic>,
+    );
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(300);
+    });
+    expect(screen.queryByRole("status")).toBeNull();
+  });
+});
+
+describe("Timeline — orientation, alternate and the position of each event", () => {
+  it("sets the orientation on the list, and resolves a breakpoint map", () => {
+    const { container, rerender } = render(<Basic orientation="horizontal" />);
+    expect(container.querySelector("ol")).toHaveAttribute("data-orientation", "horizontal");
+    rerender(<Basic orientation={{ base: "vertical", md: "horizontal" }} />);
+    expect(container.querySelector("ol")).toHaveAttribute("data-orientation", "vertical");
+  });
+
+  it("alternates the side events are on, counting events and the end but not headings", () => {
+    render(
+      <Basic align="alternate">
+        <Timeline.Group>Today</Timeline.Group>
+        <Timeline.Item title="A" />
+        <Timeline.Item title="B" />
+        <Timeline.Group>Earlier</Timeline.Group>
+        <Timeline.Item title="C" />
+        <Timeline.End>End</Timeline.End>
+      </Basic>,
+    );
+    const side = (text: string) => screen.getByText(text).closest("li")!.getAttribute("data-side");
+    expect([side("A"), side("B"), side("C"), side("End")]).toEqual(["end", "start", "end", "start"]);
+  });
+
+  it("is a tab stop only while a horizontal row scrolls", () => {
+    const { container } = render(<Basic orientation="horizontal" />);
+    // jsdom lays nothing out, so nothing overflows.
+    expect(container.querySelector("ol")).not.toHaveAttribute("tabindex");
   });
 });

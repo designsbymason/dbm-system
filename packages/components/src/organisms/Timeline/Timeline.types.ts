@@ -1,6 +1,6 @@
 import type { Icon as PhosphorIcon } from "@dbm-system/icons";
 import type { Responsive } from "@dbm-system/utils";
-import type { ComponentPropsWithoutRef, CSSProperties, ReactNode } from "react";
+import type { ComponentPropsWithoutRef, CSSProperties, MouseEvent, ReactNode } from "react";
 
 /**
  * The size of the markers, text and gaps, on the standard 5-step scale
@@ -32,6 +32,20 @@ export type TimelineConnector = "solid" | "dashed" | "none";
  */
 export type TimelineTimePlacement = "top" | "side";
 
+/** Which way the events run: `"vertical"` (the default), one under another, or `"horizontal"`, side by side. */
+export type TimelineOrientation = "vertical" | "horizontal";
+
+/**
+ * Where a vertical timeline puts its events' content, relative to the line.
+ *
+ * - `"start"` (the default) — all on the same side, after the line.
+ * - `"alternate"` — one event after the line and the next before it, from the `md` breakpoint up (a wide screen only: on a
+ *   narrower one every event is on one side, so what is read stays in one column).
+ *
+ * A horizontal timeline ignores it.
+ */
+export type TimelineAlign = "start" | "alternate";
+
 /**
  * The text `Timeline` supplies itself, translatable through the `labels` prop (`ADR-0021`). A label that needs
  * numbers is a function of the plain numbers.
@@ -51,12 +65,26 @@ export interface TimelineLabels {
   revealed: (count: number) => string;
   /** Said after the title of an event that is `pending`, unless it sets its own `statusText`. @default 'In progress' */
   pending: string;
+  /** The text of the button that opens an event's `detail`. @default 'Details' */
+  details: string;
+  /** The button that asks the page for more events (`onLoadMore`). @default 'Load more' */
+  loadMore: string;
+  /** What the "load more" button says while `loading`. @default 'Loading…' */
+  loadingMore: string;
+  /** What a timeline with no events says, unless `empty` replaces it. @default 'No events yet' */
+  empty: string;
+  /**
+   * What a screen reader hears when events are added to a timeline that is showing (`announce`), given how many.
+   * @default (count) => `${count} new events` (the number through `formatNumber`; `1 new event` for one)
+   */
+  added: (count: number) => string;
 }
 
 export interface TimelineProps extends Omit<ComponentPropsWithoutRef<"ol">, "children" | "className" | "style" | "id"> {
   /**
-   * The events, in the order to read them: one `Timeline.Item` each. Only `Timeline.Item` elements are drawn — a
-   * fragment or plain text among them is ignored (with a warning in development). Timeline does not sort them.
+   * The events, in the order to read them: one `Timeline.Item` each, with an optional `Timeline.Group` before a run of them
+   * and a `Timeline.End` after the last. Only those parts are drawn — a fragment or plain text among them is ignored (with a
+   * warning in development). Timeline does not sort them.
    */
   children: ReactNode;
   /**
@@ -71,7 +99,7 @@ export interface TimelineProps extends Omit<ComponentPropsWithoutRef<"ol">, "chi
   variant?: TimelineVariant;
   /**
    * The colour of the markers, for every event that does not set its own `tone`.
-   * @default 'neutral'
+   * @default 'brand'
    */
   tone?: TimelineTone;
   /**
@@ -80,6 +108,25 @@ export interface TimelineProps extends Omit<ComponentPropsWithoutRef<"ol">, "chi
    * @default 'solid'
    */
   connector?: TimelineConnector;
+  /**
+   * Draws the line leaving each event in its tone's soft colour (the tone's subtle border), instead of the neutral grey
+   * every line has by default. A `pending` event's line stays dashed either way.
+   * @default false
+   */
+  colorfulConnector?: boolean;
+  /**
+   * Which way the events run — see {@link TimelineOrientation}. Takes a mobile-first map by breakpoint (`{ base:
+   * "vertical", md: "horizontal" }`); it is worked out in the browser, so a server render and the first client render
+   * draw the `base` value. A horizontal timeline scrolls sideways when its events do not fit, with each event at least
+   * as wide as the `timeline.item-min-width` token; it ignores `align` and `timePlacement` (the time sits above the title).
+   * @default 'vertical'
+   */
+  orientation?: Responsive<TimelineOrientation>;
+  /**
+   * Where a vertical timeline puts its content — see {@link TimelineAlign}.
+   * @default 'start'
+   */
+  align?: TimelineAlign;
   /**
    * Where each event's time goes — see {@link TimelineTimePlacement}. Takes a mobile-first map by breakpoint; it is worked
    * out in the browser, so a server render and the first client render draw the `base` value.
@@ -103,6 +150,38 @@ export interface TimelineProps extends Omit<ComponentPropsWithoutRef<"ol">, "chi
   defaultExpanded?: boolean;
   /** Called with the value the person asked for when they press the button that shows or hides the events past `maxVisible`. */
   onExpandedChange?: (expanded: boolean) => void;
+  /**
+   * Shows that events are being fetched: placeholder events at the end (`loadingCount` of them), `aria-busy` on the list
+   * and a busy "load more" button. With no events yet, the placeholders stand in for the list.
+   * @default false
+   */
+  loading?: boolean;
+  /**
+   * How many placeholder events `loading` draws.
+   * @default 3
+   */
+  loadingCount?: number;
+  /**
+   * Called when the person presses the "load more" button, which is drawn after the last event whenever this is set and
+   * `hasMore` is not `false`. Add the next page's events yourself; the timeline fetches nothing.
+   */
+  onLoadMore?: () => void;
+  /**
+   * Whether there are more events to load. Hides the "load more" button when `false`.
+   * @default true
+   */
+  hasMore?: boolean;
+  /**
+   * What to draw when there are no events and it is not `loading`, in place of `labels.empty`: any content (an
+   * `EmptyState`). `false` draws nothing.
+   */
+  empty?: ReactNode;
+  /**
+   * Says "N new events" in a polite live region when events are added to a timeline that is already showing, never on its
+   * first render and never for events a "show more" reveals. Off by default, since most pages should not interrupt a reader.
+   * @default false
+   */
+  announce?: boolean;
   /** Writes a digit for a number the component shows or says. Callbacks keep plain numbers. @default String */
   formatNumber?: (value: number) => string;
   /** Text the component writes itself, such as the "show more" button. Any entry left out keeps its English default. */
@@ -153,9 +232,79 @@ export interface TimelineItemProps extends Omit<ComponentPropsWithoutRef<"li">, 
    * @default false
    */
   pending?: boolean;
+  /**
+   * The line leaving this event, in place of the timeline's `connector`: `"solid"`, `"dashed"` or `"none"` (a gap in time,
+   * or the end of a thread). A `pending` event's line is dashed unless this says otherwise.
+   */
+  connector?: TimelineConnector;
+  /**
+   * Makes the event a link: its title becomes an anchor to this address, stretched over the whole event so any press on it
+   * follows the link (links and buttons inside the body still work). Use `onPress` instead for a button.
+   */
+  href?: string;
+  /**
+   * Makes the event a button: its title becomes a `<button>` stretched over the whole event, and this is called when it is
+   * pressed. Ignored when `href` is set.
+   */
+  onPress?: (event: MouseEvent<HTMLButtonElement>) => void;
+  /**
+   * More about the event, kept behind a button (`labels.details`) that opens and closes it, for a body too long to show
+   * every time. The button is a disclosure: `aria-expanded`, pointing at the content.
+   */
+  detail?: ReactNode;
+  /** Whether the `detail` is open. Makes it controlled: the button asks through `onOpenChange`. */
+  open?: boolean;
+  /**
+   * Whether the `detail` is open at first, when `open` is not set.
+   * @default false
+   */
+  defaultOpen?: boolean;
+  /** Called with the value the person asked for when they press the button that opens or closes the `detail`. */
+  onOpenChange?: (open: boolean) => void;
   /** Anything further the event needs, drawn under the description (a link, a code block, a button). */
   children?: ReactNode;
   /** Standard DOM id, on the list item. */
+  id?: string;
+  /** Additional CSS classes for customization. */
+  className?: string;
+  /** Inline styles, merged onto the component's own internal styles. */
+  style?: CSSProperties;
+  /**
+   * Test identifier for automated testing (e.g. Testing Library's `getByTestId`). Rendered as the DOM `data-testid`
+   * attribute; has no visual or behavioral effect.
+   */
+  "data-testid"?: string;
+}
+
+export interface TimelineGroupProps extends Omit<ComponentPropsWithoutRef<"li">, "children" | "className" | "style" | "id"> {
+  /** The name of the run of events that follows it ("Today", "12 March"). */
+  children: ReactNode;
+  /**
+   * The heading level it announces, from 2 to 6, so it fits the page's own outline.
+   * @default 3
+   */
+  level?: 2 | 3 | 4 | 5 | 6;
+  /** Standard DOM id, on the list entry. */
+  id?: string;
+  /** Additional CSS classes for customization. */
+  className?: string;
+  /** Inline styles, merged onto the component's own internal styles. */
+  style?: CSSProperties;
+  /**
+   * Test identifier for automated testing (e.g. Testing Library's `getByTestId`). Rendered as the DOM `data-testid`
+   * attribute; has no visual or behavioral effect.
+   */
+  "data-testid"?: string;
+}
+
+export interface TimelineEndProps extends Omit<ComponentPropsWithoutRef<"li">, "children" | "className" | "style" | "id"> {
+  /** What the end says ("Order closed"). Optional: a bar across the line alone also marks the end. */
+  children?: ReactNode;
+  /** An icon to draw in a disc in place of the bar — a component reference, not a string name. */
+  icon?: PhosphorIcon;
+  /** The colour of the end's marker, in place of the timeline's `tone`. */
+  tone?: TimelineTone;
+  /** Standard DOM id, on the list entry. */
   id?: string;
   /** Additional CSS classes for customization. */
   className?: string;

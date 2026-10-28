@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { expect, userEvent, waitFor, within } from "storybook/test";
 import { TruckIcon } from "@dbm-system/icons";
+import { Link } from "../../atoms/Link";
 import { send } from "../../molecules/CodeBlock/browserProtocol";
 import { Timeline } from "./Timeline";
 import { allSizes, Demo } from "./TimelineStoryKit";
@@ -192,6 +193,202 @@ export const ShowMoreKeepsFocusAndPlace: Story = {
     await waitFor(() => expect(canvas.getAllByRole("listitem")).toHaveLength(3));
     await expect(button).toHaveFocus();
     // Close it down again so nothing is left focused for the next story.
+    (document.activeElement as HTMLElement | null)?.blur();
+  },
+};
+
+export const ConnectorColour: Story = {
+  name: "The line is grey by default and takes its event's tone, per event, with colorfulConnector",
+  render: () => (
+    <div style={{ display: "grid", gap: "var(--dbm-space-8)" }}>
+      {[false, true].map((colourful) => (
+        <div key={String(colourful)} data-testid={`colourful-${colourful}`}>
+          <Timeline aria-label={`colourful ${colourful}`} colorfulConnector={colourful}>
+            <Timeline.Item title="Failed" tone="danger" statusText="Failed" />
+            <Timeline.Item title="Done" tone="success" statusText="Done" />
+            <Timeline.Item title="Last" />
+          </Timeline>
+        </div>
+      ))}
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    const line = (id: string, index: number) =>
+      getComputedStyle(part(within(within(canvasElement).getByTestId(id)).getAllByRole("listitem")[index]!, "connector")).borderInlineStartColor;
+    const token = (name: string) => {
+      const probe = document.createElement("span");
+      probe.style.color = `var(${name})`;
+      canvasElement.appendChild(probe);
+      const resolved = getComputedStyle(probe).color;
+      probe.remove();
+      return resolved;
+    };
+    await expect(line("colourful-false", 0)).toBe(token("--dbm-border-default"));
+    await expect(line("colourful-false", 1)).toBe(token("--dbm-border-default"));
+    await expect(line("colourful-true", 0)).toBe(token("--dbm-border-danger-subtle"));
+    await expect(line("colourful-true", 1)).toBe(token("--dbm-border-success-subtle"));
+  },
+};
+
+export const AlternateOnAWideScreen: Story = {
+  name: "Alternate puts the events' content on both sides of one centred line",
+  render: () => <Demo align="alternate" count={4} descriptions aria-label="alternate" />,
+  play: async ({ canvasElement }) => {
+    await expect(window.innerWidth).toBeGreaterThanOrEqual(768);
+    const items = within(canvasElement).getAllByRole("listitem");
+    const marker = (i: number) => box(part(items[i]!, "marker"));
+    const title = (i: number) => box(part(items[i]!, "title"));
+    // One column of markers and lines down the middle.
+    await expect(Math.abs(centreX(marker(0)) - centreX(marker(1)))).toBeLessThanOrEqual(1);
+    await expect(Math.abs(centreX(box(part(items[0]!, "connector"))) - centreX(marker(0)))).toBeLessThanOrEqual(1);
+    // The first event's content after the line, the next before it, the third after it again.
+    await expect(title(0).left).toBeGreaterThanOrEqual(marker(0).right);
+    await expect(title(1).right).toBeLessThanOrEqual(marker(1).left);
+    await expect(title(2).left).toBeGreaterThanOrEqual(marker(2).right);
+    // Text before the line is aligned towards it.
+    await expect(getComputedStyle(part(items[1]!, "body")).textAlign).toMatch(/end|right/);
+  },
+};
+
+export const AlternateOnAPhone: Story = {
+  name: "Alternate puts every event on one side on a phone",
+  globals: { viewport: { value: "mobile1", isRotated: false } },
+  render: () => <Demo align="alternate" count={4} aria-label="alternate" />,
+  play: async ({ canvasElement }) => {
+    // The story really is at a phone's width (fails loudly if the viewport didn't apply).
+    await expect(window.innerWidth).toBeLessThan(768);
+    const items = within(canvasElement).getAllByRole("listitem");
+    const lefts = items.map((item) => box(part(item, "title")).left);
+    await expect(Math.max(...lefts) - Math.min(...lefts)).toBeLessThanOrEqual(1);
+    await expect(box(part(items[0]!, "marker")).left).toBeLessThan(box(part(items[0]!, "title")).left);
+  },
+};
+
+export const AlternateRightToLeft: Story = {
+  name: "Alternate mirrors right to left: the first event's content is before the line",
+  render: () => <Demo align="alternate" dir="rtl" count={3} aria-label="alternate rtl" />,
+  play: async ({ canvasElement }) => {
+    const items = within(canvasElement).getAllByRole("listitem");
+    await expect(box(part(items[0]!, "title")).right).toBeLessThanOrEqual(box(part(items[0]!, "marker")).left);
+    await expect(box(part(items[1]!, "title")).left).toBeGreaterThanOrEqual(box(part(items[1]!, "marker")).right);
+  },
+};
+
+export const HorizontalRow: Story = {
+  name: "Horizontal draws the markers in one row, the line between them, and the text under each",
+  render: () => <Demo orientation="horizontal" count={4} descriptions aria-label="horizontal" />,
+  play: async ({ canvasElement }) => {
+    const items = within(canvasElement).getAllByRole("listitem");
+    const markers = items.map((item) => box(part(item, "marker")));
+    for (const marker of markers) await expect(Math.abs(centreY(marker) - centreY(markers[0]!))).toBeLessThanOrEqual(1);
+    for (let i = 1; i < markers.length; i += 1) await expect(markers[i]!.left).toBeGreaterThan(markers[i - 1]!.right);
+    // The line is a horizontal rule through the middle of the markers, reaching towards the next one.
+    const line = box(part(items[0]!, "connector"));
+    await expect(line.height).toBeLessThanOrEqual(2);
+    await expect(Math.abs(centreY(line) - centreY(markers[0]!))).toBeLessThanOrEqual(2);
+    await expect(line.left).toBeGreaterThanOrEqual(markers[0]!.right);
+    await expect(markers[1]!.left - line.right).toBeLessThanOrEqual(8);
+    // The text is under its marker.
+    await expect(box(part(items[0]!, "title")).top).toBeGreaterThanOrEqual(markers[0]!.bottom);
+    // Nothing scrolls, so the row is not a tab stop.
+    await expect(canvasElement.querySelector("ol")).not.toHaveAttribute("tabindex");
+  },
+};
+
+export const HorizontalScrollsAndIsReachable: Story = {
+  name: "A horizontal row too narrow for its events scrolls and is a tab stop with a ring inside it",
+  render: () => (
+    <div style={{ inlineSize: 320 }}>
+      <Demo orientation="horizontal" count={5} aria-label="scrolling" />
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    const list = canvasElement.querySelector("ol")!;
+    await waitFor(() => expect(list.scrollWidth).toBeGreaterThan(list.clientWidth));
+    await waitFor(() => expect(list).toHaveAttribute("tabindex", "0"));
+    await userEvent.tab();
+    await expect(list).toHaveFocus();
+    await expect(parseFloat(getComputedStyle(list).outlineWidth)).toBeGreaterThanOrEqual(2);
+    // The ring is inside the box, so the scroll cannot clip it.
+    await expect(parseFloat(getComputedStyle(list).outlineOffset)).toBeLessThan(0);
+    (document.activeElement as HTMLElement | null)?.blur();
+  },
+};
+
+export const StretchedLink: Story = {
+  name: "A linked event takes a press anywhere on it, a link inside it still takes its own, and the ring goes round the event",
+  render: () => (
+    <Timeline aria-label="linked">
+      <Timeline.Item title="Plan updated" time="Yesterday" href="#plan" description="Open the plan">
+        <Link href="#inner">Inner link</Link>
+      </Timeline.Item>
+      <Timeline.Item title="Created" time="Last week" />
+    </Timeline>
+  ),
+  play: async ({ canvasElement }) => {
+    const first = within(canvasElement).getAllByRole("listitem")[0]!;
+    const rect = box(first);
+    const link = within(first).getByRole("link", { name: "Plan updated" });
+    // A point in the event's empty corner, and one on its description, both land on the title's link.
+    await expect(document.elementFromPoint(rect.left + 2, rect.top + 2)).toBe(link);
+    await expect(document.elementFromPoint(rect.right - 4, rect.bottom - 4)).toBe(link);
+    // The link inside the body is on top of the stretched one.
+    const inner = within(first).getByRole("link", { name: "Inner link" });
+    const innerRect = box(inner);
+    await expect(document.elementFromPoint(centreX(innerRect), centreY(innerRect))).toBe(inner);
+    // Keyboard focus draws one ring around the whole event, inside its box.
+    await userEvent.tab();
+    await expect(link).toHaveFocus();
+    await expect(parseFloat(getComputedStyle(first).outlineWidth)).toBeGreaterThanOrEqual(2);
+    await expect(getComputedStyle(link).outlineStyle).toBe("none");
+    (document.activeElement as HTMLElement | null)?.blur();
+  },
+};
+
+export const GroupAndEndAlign: Story = {
+  name: "A heading lines up with the titles, and the end's bar sits on the line",
+  render: () => (
+    <Timeline aria-label="grouped">
+      <Timeline.Group>Today</Timeline.Group>
+      <Timeline.Item title="Deployed" time="10:31" />
+      <Timeline.Item title="Merged" time="10:00" />
+      <Timeline.End>Closed</Timeline.End>
+    </Timeline>
+  ),
+  play: async ({ canvasElement }) => {
+    const items = within(canvasElement).getAllByRole("listitem");
+    const [group, first, second, end] = items as [HTMLElement, HTMLElement, HTMLElement, HTMLElement];
+    await expect(Math.abs(box(part(group, "groupLabel")).left - box(part(first, "title")).left)).toBeLessThanOrEqual(1);
+    // The line passes the heading, and reaches the end's bar, which is centred on it.
+    await expect(Math.abs(centreX(box(part(group, "connector"))) - centreX(box(part(first, "marker"))))).toBeLessThanOrEqual(1);
+    await expect(Math.abs(centreX(box(part(end, "marker"))) - centreX(box(part(second, "marker"))))).toBeLessThanOrEqual(1);
+    await expect(box(part(end, "marker")).width).toBeGreaterThan(box(part(end, "marker")).height);
+    // The end draws no line of its own.
+    await expect(end.querySelector("[class*='_connector_']")).toBeNull();
+  },
+};
+
+export const DetailByKeyboard: Story = {
+  name: "The detail opens and closes from the keyboard, and what is closed is not drawn or read",
+  render: () => (
+    <Timeline aria-label="detail">
+      <Timeline.Item title="Deploy failed" detail="The database was not reachable." time="10:42" />
+      <Timeline.Item title="Built" time="10:31" />
+    </Timeline>
+  ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const detail = canvas.getByText("The database was not reachable.");
+    await expect(getComputedStyle(detail).display).toBe("none");
+    await userEvent.tab();
+    const toggle = canvas.getByRole("button", { name: "Details" });
+    await expect(toggle).toHaveFocus();
+    await userEvent.keyboard("{Enter}");
+    await expect(toggle).toHaveAttribute("aria-expanded", "true");
+    await expect(getComputedStyle(detail).display).not.toBe("none");
+    await expect(toggle).toHaveFocus();
+    await userEvent.keyboard(" ");
+    await expect(getComputedStyle(detail).display).toBe("none");
     (document.activeElement as HTMLElement | null)?.blur();
   },
 };

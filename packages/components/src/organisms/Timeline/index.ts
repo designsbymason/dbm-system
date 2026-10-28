@@ -1,8 +1,12 @@
 export { Timeline } from "./Timeline";
 export type {
+  TimelineAlign,
   TimelineConnector,
+  TimelineEndProps,
+  TimelineGroupProps,
   TimelineItemProps,
   TimelineLabels,
+  TimelineOrientation,
   TimelineProps,
   TimelineSize,
   TimelineTimePlacement,

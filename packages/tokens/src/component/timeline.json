@@ -23,6 +23,11 @@
         "$value": "48px"
       }
     },
+    "item-min-width": {
+      "$type": "dimension",
+      "$value": "12rem",
+      "$description": "New token (2026-10-28), added for a horizontal Timeline: the narrowest an event's column gets before the row scrolls. No home on any existing primitive scale (the spacing scale tops out at 8rem)."
+    },
     "time-width": {
       "$type": "dimension",
       "$value": "9rem",

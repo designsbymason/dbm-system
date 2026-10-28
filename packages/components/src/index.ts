@@ -117,7 +117,8 @@ export * from "./organisms/Toast";
 //
 // Hooks: pair `usePersistentDismiss` with `Alert`'s controlled `open` to remember a dismissal across visits, and
 // `useRecentCommands` with `CommandPalette`'s `recent` to remember the commands a person ran.
-export { usePersistentDismiss, useRecentCommands } from "@dbm-system/utils";
+export { formatRelativeTime, usePersistentDismiss, useRecentCommands } from "@dbm-system/utils";
+export type { RelativeTimeOptions } from "@dbm-system/utils";
 export type { PersistentDismiss, PersistentDismissStorage, RecentCommands, UsePersistentDismissOptions, UseRecentCommandsOptions } from "@dbm-system/utils";
 // The types in thirteen components' public props (`Stack`'s `gap`, `Tabs`' `orientation`, `Grid`'s `columns`…), for a
 // consumer writing a typed wrapper around one.

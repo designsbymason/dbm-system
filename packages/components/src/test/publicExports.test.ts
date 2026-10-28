@@ -10,6 +10,10 @@ describe("the components package's entry", () => {
     expect(library.useRecentCommands).toBe(utils.useRecentCommands);
   });
 
+  it("re-exports formatRelativeTime, the same function the utils package defines", () => {
+    expect(library.formatRelativeTime).toBe(utils.formatRelativeTime);
+  });
+
   it("re-exports usePersistentDismiss, the same function the utils package defines", () => {
     expect(library.usePersistentDismiss).toBe(utils.usePersistentDismiss);
   });

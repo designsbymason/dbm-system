@@ -1,4 +1,3 @@
-import { useAnnouncement } from "@dbm-system/utils";
 import { useEffect, useRef, useState } from "react";
 
 interface TimelineExpandedOptions {
@@ -9,15 +8,17 @@ interface TimelineExpandedOptions {
   hidden: number;
   /** The text said when they are shown, given how many appeared. */
   write: (count: number) => string;
+  /** Says text in the timeline's live region. */
+  say: (text: string) => void;
 }
 
 /**
  * Whether the events past the cap are shown. Controlled when `expanded` is given: a request then only asks through
- * `onExpandedChange`, and the events appear when the prop changes. Also returns the live-region text for events being
+ * `onExpandedChange`, and the events appear when the prop changes. It also says how many events appeared when they are
  * shown: said when the value changes between two states that were both on screen, never on the first appearance
  * (`06` §9, live regions).
  */
-export function useTimelineExpanded({ expanded: expandedProp, defaultExpanded, onExpandedChange, hidden, write }: TimelineExpandedOptions) {
+export function useTimelineExpanded({ expanded: expandedProp, defaultExpanded, onExpandedChange, hidden, write, say }: TimelineExpandedOptions) {
   const controlled = expandedProp !== undefined;
   const wasControlled = useRef(controlled);
   useEffect(() => {
@@ -38,13 +39,12 @@ export function useTimelineExpanded({ expanded: expandedProp, defaultExpanded, o
     onExpandedChange?.(next);
   };
 
-  const { message, announce } = useAnnouncement();
   const previous = useRef(expanded);
   useEffect(() => {
     const before = previous.current;
     previous.current = expanded;
-    if (!before && expanded && hidden > 0) announce(write(hidden));
-  }, [announce, expanded, hidden, write]);
+    if (!before && expanded && hidden > 0) say(write(hidden));
+  }, [expanded, hidden, say, write]);
 
-  return { expanded, request, message };
+  return { expanded, request };
 }

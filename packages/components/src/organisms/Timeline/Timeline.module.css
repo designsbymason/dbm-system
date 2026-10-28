@@ -1,7 +1,8 @@
 /* The timeline. Every value is a token. The custom properties below are set per size and per tone:
    `--timeline-marker` the marker's diameter, `--timeline-font` the title's size, `--timeline-gap` the room between the
    marker and the text, `--timeline-space` the room between events, and `--timeline-solid`, `--timeline-on`,
-   `--timeline-ring`, `--timeline-icon` the tone's fill, the icon on it, its ring and its icon colour on the page. */
+   `--timeline-ring`, `--timeline-icon`, `--timeline-connector` the tone's fill, the icon on it, its ring, its icon colour on
+   the page and the line leaving the event (the tone's subtle border). */
 .root {
   --timeline-marker: var(--dbm-timeline-marker-size-md);
   --timeline-font: var(--dbm-font-size-base);
@@ -9,13 +10,16 @@
   --timeline-gap: var(--dbm-space-3);
   --timeline-space: var(--dbm-space-6);
   --timeline-line: var(--dbm-border-width-2);
+  --timeline-line-color: var(--dbm-border-default);
+  --timeline-line-style: solid;
   --timeline-lh: calc(var(--timeline-font) * var(--dbm-line-height-normal));
   --timeline-offset: calc((var(--timeline-marker) - var(--timeline-lh)) / 2);
 
-  --timeline-solid: var(--dbm-bg-neutral);
-  --timeline-on: var(--dbm-icon-on-neutral);
-  --timeline-ring: var(--dbm-border-neutral-strong);
-  --timeline-icon: var(--dbm-icon-default);
+  --timeline-solid: var(--dbm-bg-brand);
+  --timeline-on: var(--dbm-icon-on-brand);
+  --timeline-ring: var(--dbm-border-brand);
+  --timeline-icon: var(--dbm-icon-brand);
+  --timeline-connector: var(--dbm-border-brand-subtle);
 
   color: var(--dbm-text-primary);
   font-family: var(--dbm-font-family-primary);
@@ -25,6 +29,19 @@
   margin: 0;
   min-inline-size: 0;
   padding: 0;
+}
+
+/* Horizontal: the events side by side, the row scrolling when they do not fit. A row that scrolls is a tab stop (set in
+   the component), with its ring drawn inside the box, where the scroll cannot clip it. */
+.horizontal {
+  display: flex;
+  overflow-x: auto;
+}
+
+.horizontal:focus-visible {
+  border-radius: var(--dbm-radius-sm);
+  outline: var(--dbm-border-width-2) solid var(--dbm-border-focus);
+  outline-offset: calc(-1 * var(--dbm-border-width-2));
 }
 
 .sizeXs {
@@ -72,6 +89,7 @@
   --timeline-on: var(--dbm-icon-on-brand);
   --timeline-ring: var(--dbm-border-brand);
   --timeline-icon: var(--dbm-icon-brand);
+  --timeline-connector: var(--dbm-border-brand-subtle);
 }
 
 .toneInfo {
@@ -79,6 +97,7 @@
   --timeline-on: var(--dbm-icon-on-info);
   --timeline-ring: var(--dbm-border-info);
   --timeline-icon: var(--dbm-icon-info);
+  --timeline-connector: var(--dbm-border-info-subtle);
 }
 
 .toneSuccess {
@@ -86,6 +105,7 @@
   --timeline-on: var(--dbm-icon-on-success);
   --timeline-ring: var(--dbm-border-success);
   --timeline-icon: var(--dbm-icon-success);
+  --timeline-connector: var(--dbm-border-success-subtle);
 }
 
 .toneWarning {
@@ -93,6 +113,7 @@
   --timeline-on: var(--dbm-icon-on-warning);
   --timeline-ring: var(--dbm-border-warning);
   --timeline-icon: var(--dbm-icon-warning);
+  --timeline-connector: var(--dbm-border-warning-subtle);
 }
 
 .toneDanger {
@@ -100,6 +121,7 @@
   --timeline-on: var(--dbm-icon-on-danger);
   --timeline-ring: var(--dbm-border-danger);
   --timeline-icon: var(--dbm-icon-danger);
+  --timeline-connector: var(--dbm-border-danger-subtle);
 }
 
 .toneHighlight {
@@ -107,6 +129,7 @@
   --timeline-on: var(--dbm-icon-on-highlight);
   --timeline-ring: var(--dbm-border-highlight);
   --timeline-icon: var(--dbm-icon-highlight);
+  --timeline-connector: var(--dbm-border-highlight-subtle);
 }
 
 /* Neutral: grey markers. `border.neutral` is under 3:1 on the surface in light mode, so the ring is `border.neutral-strong`. */
@@ -115,6 +138,7 @@
   --timeline-on: var(--dbm-icon-on-neutral);
   --timeline-ring: var(--dbm-border-neutral-strong);
   --timeline-icon: var(--dbm-icon-default);
+  --timeline-connector: var(--dbm-border-neutral-subtle);
 }
 
 /* --- An event: the marker's column, then the text. --- */
@@ -125,6 +149,26 @@
   grid-template-columns: var(--timeline-marker) minmax(0, 1fr);
   list-style: none;
   min-block-size: var(--timeline-marker);
+  position: relative;
+}
+
+/* The line leaving an event is dashed for the timeline's `connector="dashed"`, an event that is pending, or an event
+   that says so itself, and solid when an event says that. `colorfulConnector` colours it with the event's tone. */
+.connectorDashed .item,
+.pending {
+  --timeline-line-style: dashed;
+}
+
+.item[data-connector="dashed"] {
+  --timeline-line-style: dashed;
+}
+
+.item[data-connector="solid"] {
+  --timeline-line-style: solid;
+}
+
+.colorfulConnector .item {
+  --timeline-line-color: var(--timeline-connector);
 }
 
 /* The marker and the line: a column as tall as the event, so the line runs on down to the next marker. */
@@ -172,6 +216,15 @@
   overflow: hidden;
 }
 
+/* The end: a short bar across the line. Its border is the whole bar, so forced colours (which erases a background) keeps it. */
+.markerEnd {
+  background-color: var(--timeline-solid);
+  block-size: var(--dbm-border-width-4);
+  border-color: var(--timeline-solid);
+  inline-size: calc(var(--timeline-marker) / 2);
+  margin-block-start: calc((var(--timeline-marker) - var(--dbm-border-width-4)) / 2);
+}
+
 .variantOutlined .markerDot {
   background-color: transparent;
   border-color: var(--timeline-ring);
@@ -185,15 +238,10 @@
 
 /* The line: a border, so forced colours (which erase a background) keeps it. It leaves a little room at both ends. */
 .connector {
-  border-inline-start: var(--timeline-line) solid var(--dbm-border-default);
+  border-inline-start: var(--timeline-line) var(--timeline-line-style) var(--timeline-line-color);
   flex: 1 1 auto;
   margin-block: var(--dbm-space-1);
   min-block-size: var(--dbm-space-2);
-}
-
-.connectorDashed .connector,
-.pending .connector {
-  border-inline-start-style: dashed;
 }
 
 .item:last-child .connector {
@@ -243,25 +291,173 @@
   overflow-wrap: anywhere;
 }
 
-.content {
+.content,
+.detailRow,
+.detail {
   font-size: var(--timeline-small-font);
   margin-block-start: var(--dbm-space-2);
   min-inline-size: 0;
+  /* Above a stretched link, so what is inside still takes the press. */
+  position: relative;
+  z-index: 1;
 }
 
-/* --- The button for the events past `maxVisible`, in the text column. --- */
+.detailRow {
+  align-self: flex-start;
+}
+
+/* --- An event that is a link or a button: its title is stretched over the whole event. --- */
+
+.titleLink,
+.titleButton {
+  font: inherit;
+}
+
+.titleLink::after,
+.titleButton::after {
+  content: "";
+  inset: 0;
+  position: absolute;
+}
+
+.titleButton {
+  appearance: none;
+  background: none;
+  border: 0;
+  color: var(--dbm-text-primary);
+  cursor: pointer;
+  margin: 0;
+  padding: 0;
+  text-align: inherit;
+}
+
+.titleButton:hover {
+  text-decoration: underline;
+}
+
+/* The ring goes around the whole event, inside it, not around the title alone. */
+.titleLink:focus-visible,
+.titleButton:focus-visible {
+  outline: none;
+}
+
+.item:has(.titleLink:focus-visible),
+.item:has(.titleButton:focus-visible) {
+  border-radius: var(--dbm-radius-sm);
+  outline: var(--dbm-border-width-2) solid var(--dbm-border-focus);
+  outline-offset: calc(-1 * var(--dbm-border-width-2));
+}
+
+/* --- A heading for a run of events, and the end. --- */
+
+.group {
+  min-block-size: 0;
+}
+
+.group .main {
+  padding-block-end: var(--dbm-space-3);
+}
+
+.groupLabel {
+  color: var(--dbm-text-secondary);
+  font-size: var(--timeline-small-font);
+  font-weight: var(--dbm-font-weight-semibold);
+  line-height: var(--timeline-lh);
+}
+
+.endLabel {
+  color: var(--dbm-text-secondary);
+  font-size: var(--timeline-small-font);
+  line-height: var(--timeline-lh);
+}
+
+.empty {
+  color: var(--dbm-text-secondary);
+  list-style: none;
+  padding-block: var(--dbm-space-2);
+}
+
+/* --- The buttons for the events past `maxVisible` and for the next page, in the text column. --- */
 
 .more {
+  column-gap: var(--timeline-gap);
   display: grid;
   grid-template-columns: var(--timeline-marker) minmax(0, 1fr);
-  column-gap: var(--timeline-gap);
   list-style: none;
   margin-block-start: var(--dbm-space-2);
 }
 
-.more > button {
+.moreActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--dbm-space-2);
   grid-column: 2;
   justify-self: start;
+}
+
+/* --- Horizontal: the marker and line in a row, the text under them. --- */
+
+.horizontal .item {
+  flex: 1 0 var(--dbm-timeline-item-min-width);
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: auto 1fr;
+  min-block-size: 0;
+  row-gap: var(--timeline-gap);
+}
+
+.horizontal .rail {
+  flex-direction: row;
+  grid-column: 1;
+  grid-row: 1;
+  min-block-size: var(--timeline-marker);
+}
+
+.horizontal .connector {
+  border-block-start: var(--timeline-line) var(--timeline-line-style) var(--timeline-line-color);
+  border-inline-start: 0;
+  margin-block: 0;
+  margin-inline: var(--dbm-space-1);
+  min-block-size: 0;
+  min-inline-size: var(--dbm-space-2);
+}
+
+.horizontal .markerDot {
+  margin-block-start: 0;
+}
+
+.horizontal .markerEnd {
+  block-size: calc(var(--timeline-marker) / 2);
+  inline-size: var(--dbm-border-width-4);
+  margin-block-start: 0;
+}
+
+.horizontal .body {
+  grid-column: 1;
+  grid-row: 2;
+  padding-block-start: 0;
+}
+
+.horizontal .main,
+.horizontal .item:last-child .main {
+  padding-block-end: 0;
+  padding-inline-end: var(--timeline-gap);
+}
+
+.horizontal .group,
+.horizontal .more,
+.horizontal .empty {
+  flex: 0 0 auto;
+}
+
+.horizontal .group .main {
+  padding-block-end: 0;
+}
+
+.horizontal .more {
+  align-items: flex-start;
+  display: flex;
+  margin-block-start: 0;
+  padding-inline-start: var(--timeline-gap);
 }
 
 /* --- The time in a column beside the marker, from the `sm` breakpoint up (a media query cannot read a custom
@@ -294,8 +490,66 @@
     padding-block-start: var(--timeline-offset);
   }
 
-  .timeSide .more > button {
+  .timeSide .moreActions {
     grid-column: 3;
+  }
+}
+
+/* --- Alternate, from the `md` breakpoint up (768px, the literal value of the primitive): the content of one event after
+   the line, the next before it. Below it every event is on one side, as without `align`. Columns are the inline start and
+   end, so right to left mirrors. --- */
+
+@media (min-width: 768px) {
+  .alternate .item,
+  .alternate .more {
+    grid-template-columns: minmax(0, 1fr) var(--timeline-marker) minmax(0, 1fr);
+  }
+
+  .alternate .rail {
+    grid-column: 2;
+  }
+
+  .alternate .body {
+    grid-column: 3;
+  }
+
+  .alternate .moreActions {
+    grid-column: 3;
+  }
+
+  .alternate .item[data-side="start"] .body {
+    grid-column: 1;
+    text-align: end;
+  }
+
+  .alternate .item[data-side="start"] .main {
+    align-items: flex-end;
+  }
+
+  .alternate .item[data-side="start"] .content,
+  .alternate .item[data-side="start"] .detail {
+    align-self: stretch;
+    text-align: start;
+  }
+
+  .alternate .item[data-side="start"] .detailRow {
+    align-self: flex-end;
+  }
+
+  /* With the time beside the marker, it sits on the side the content is not on. */
+  .alternate.timeSide .item[data-side="end"] .time {
+    grid-column: 1;
+    text-align: end;
+  }
+
+  .alternate.timeSide .item[data-side="start"] .time {
+    grid-column: 3;
+    text-align: start;
+  }
+
+  .alternate.timeSide .item[data-side="start"] .main {
+    grid-column: 1;
+    text-align: end;
   }
 }
 
@@ -307,15 +561,17 @@
     color: CanvasText;
   }
 
-  .markerDot {
+  .markerDot,
+  .markerEnd {
     background-color: CanvasText;
+    border-color: CanvasText;
   }
 
   .pending .markerIcon {
     border-color: Highlight;
   }
 
-  .connector {
-    border-inline-start-color: GrayText;
+  .root .connector {
+    border-color: GrayText;
   }
 }

@@ -6,18 +6,29 @@ import { DescriptionList } from "../../molecules/DescriptionList";
 import { Stepper } from "../Stepper";
 import * as TimelineStories from "./Timeline.stories";
 import * as TimelineItemStories from "./TimelineItem.stories";
+import * as TimelineGroupStories from "./TimelineGroup.stories";
+import * as TimelineEndStories from "./TimelineEnd.stories";
 
 export const rootPropOrder = [
   "children",
   "size",
   "variant",
   "tone",
+  "orientation",
+  "align",
   "connector",
+  "colorfulConnector",
   "timePlacement",
   "maxVisible",
   "expanded",
   "defaultExpanded",
   "onExpandedChange",
+  "loading",
+  "loadingCount",
+  "onLoadMore",
+  "hasMore",
+  "empty",
+  "announce",
   "formatNumber",
   "labels",
   "aria-label",
@@ -37,12 +48,22 @@ export const itemPropOrder = [
   "tone",
   "statusText",
   "pending",
+  "connector",
+  "href",
+  "onPress",
+  "detail",
+  "open",
+  "defaultOpen",
+  "onOpenChange",
   "children",
   "id",
   "className",
   "style",
   "data-testid",
 ];
+
+export const groupPropOrder = ["children", "level", "id", "className", "style", "data-testid"];
+export const endPropOrder = ["children", "icon", "tone", "id", "className", "style", "data-testid"];
 
 <Meta of={TimelineStories} />
 
@@ -62,8 +83,16 @@ or format dates: the order is the order of its children, and a time is the text 
 way is `pending`, and a long history can be capped with `maxVisible`, with a button for the rest.
 
 Choose how big it is with `size`, how the markers look with `variant`, their colour with `tone` (and on an item
-for one event), the line with `connector`, and where the time goes with `timePlacement`. A colour says nothing to a
-screen reader, so say what it means in words with an item's `statusText`.
+for one event), the line with `connector` (and `colorfulConnector`, to draw it in each event's tone), which way it
+runs with `orientation`, whether the content sits on one side of the line or alternates with `align`, and where the time
+goes with `timePlacement`. A colour says nothing to a screen reader, so say what it means in words with an item's
+`statusText`.
+
+Around the events: `Timeline.Group` puts a heading before a run of them ("Today"), `Timeline.End` marks where it
+stopped, an item's `href` or `onPress` makes the whole event a link or a button, and its `detail` keeps more of it behind
+a button. For a history you page yourself, `onLoadMore` draws a "load more" button, `loading` draws placeholders, and
+`empty` says what an empty one shows. `announce` says when events are added, and `formatRelativeTime` writes "2 hours
+ago" for a time.
 
 ### Import
 
@@ -78,21 +107,28 @@ import { Timeline } from "@dbm-system/components";
 <Canvas of={TimelineStories.Playground} />
 
 </div>
-<PlaygroundControls of={TimelineStories.Playground} order={rootPropOrder} exclude={["children", "expanded", "onExpandedChange", "formatNumber", "labels", "aria-labelledby", "id", "className", "style", "data-testid"]} />
+<PlaygroundControls of={TimelineStories.Playground} order={rootPropOrder} exclude={["children", "expanded", "onExpandedChange", "loading", "loadingCount", "onLoadMore", "hasMore", "empty", "announce", "formatNumber", "labels", "aria-labelledby", "id", "className", "style", "data-testid"]} />
 
 ## Properties
 
 Every event reads `size`, `variant`, `tone`, `connector` and `timePlacement` from `Timeline`, so they are set once,
-on the root (an item may set its own `tone`). `ref` forwards to the `<ol>`. Also accepts any other native `<ol>` attribute
+on the root (an item may set its own `tone` and `connector`). `ref` forwards to the `<ol>`. Also accepts any other native `<ol>` attribute
 beyond what's listed here (e.g. `dir`, `title`) — passed straight through to the root element.
 
 <PropertiesTable of={TimelineStories} order={rootPropOrder} />
 
-Only `Timeline.Item` elements are drawn: a fragment, or plain text, placed among the children is ignored (with a
-warning in development), so build the list from items directly. Give list items a stable `key` when you map over
-data. `maxVisible` draws only that many events, and a button for the rest; events past it are not rendered at all.
+Only `Timeline.Item`, `Timeline.Group` and `Timeline.End` elements are drawn: a fragment, or plain text, placed among
+the children is ignored (with a warning in development), so build the list from those directly. Give them a stable `key`
+when you map over data. `maxVisible` draws only that many events, and a button for the rest; events past it are not rendered at all.
 There is no windowing, because events have different heights: a history of hundreds is better paged by your own code
 (load the next page, then add its items).
+
+`align="alternate"` works from the `md` breakpoint (768px) up; on a narrower screen every event is on one side, so what is
+read stays in one column. A horizontal timeline ignores `align` and `timePlacement` (the time sits above the title) and
+scrolls sideways when its events are narrower than the `timeline.item-min-width` token allows; while it scrolls the row is
+a tab stop, so a keyboard can scroll it. `loading` with no events stands placeholders in for the list; with events it adds
+them after the last one and busies the "load more" button. `announce` says "N new events" when events are added to a
+timeline that is showing, never on its first render, and never for events a "show more" reveals.
 
 ### Timeline.Item properties
 
@@ -100,6 +136,27 @@ One event — the `<li>`. Its marker and line are hidden from assistive technolo
 attribute beyond what's listed here (e.g. `onClick`) — passed straight through to the underlying element.
 
 <PropertiesTable of={TimelineItemStories} order={itemPropOrder} />
+
+With `href` the title is a link and with `onPress` a button, stretched over the whole event so a press anywhere on it
+counts; a link or button you put in `children` or `detail` sits above it and still takes its own press. `href` wins when
+both are set, and either needs a `title`. A keyboard ring is drawn once, around the whole event.
+
+### Timeline.Group properties
+
+A heading for the run of events after it, drawn in the text column with the line passing by. It is a list entry that
+announces itself as a heading, not a container: the events are the entries after it, up to the next heading. It is drawn
+only while an event after it is, so `maxVisible` never leaves a heading over nothing. Also accepts any other native `<li>`
+attribute beyond what's listed here (e.g. `onClick`) — passed straight through to the underlying element.
+
+<PropertiesTable of={TimelineGroupStories} order={groupPropOrder} />
+
+### Timeline.End properties
+
+Where the timeline stopped: a bar across the line (or an icon in a disc) and the words you give it. The line stops there.
+It is drawn only once every event is shown. Also accepts any other native `<li>` attribute beyond what's listed here (e.g.
+`onClick`) — passed straight through to the underlying element.
+
+<PropertiesTable of={TimelineEndStories} order={endPropOrder} />
 
 ## Variants
 
@@ -131,6 +188,54 @@ attribute beyond what's listed here (e.g. `onClick`) — passed straight through
 
 <Canvas of={TimelineStories.Connectors} />
 
+### Connectors in the tone's colour
+
+<Canvas of={TimelineStories.ColorfulConnectors} />
+
+### Headings for runs of events
+
+<Canvas of={TimelineStories.Groups} />
+
+### An end
+
+<Canvas of={TimelineStories.EndCap} />
+
+### Events that are links and buttons
+
+<Canvas of={TimelineStories.Linked} />
+
+### Detail behind a button
+
+<Canvas of={TimelineStories.WithDetail} />
+
+### A line of its own
+
+<Canvas of={TimelineStories.ConnectorOverride} />
+
+### Alternating sides
+
+<Canvas of={TimelineStories.AlternateLayout} />
+
+### Horizontal
+
+<Canvas of={TimelineStories.HorizontalLayout} />
+
+### Relative times
+
+<Canvas of={TimelineStories.RelativeTimes} />
+
+### Load more
+
+<Canvas of={TimelineStories.LoadingMore} />
+
+### Loading
+
+<Canvas of={TimelineStories.LoadingState} />
+
+### Empty
+
+<Canvas of={TimelineStories.EmptyTimeline} />
+
 ### With a description and a body
 
 <Canvas of={TimelineStories.WithBody} />
@@ -161,6 +266,8 @@ attribute beyond what's listed here (e.g. `onClick`) — passed straight through
 - Say what a tone means with `statusText` ("Failed", "Approved"), since the colour reaches only the eye.
 - Mark the event still under way as `pending`, and put it first when newest is first.
 - Give the list a name with `aria-label` or `aria-labelledby` when a page has more than one.
+- Group a long feed with `Timeline.Group` ("Today", "Yesterday") rather than repeating the date in every time.
+- Use `align="alternate"` for a short, wide, presentation-style history; it is a wide-screen layout only.
 
 </Callout>
 <Callout tone="danger" title="Don't">
@@ -170,6 +277,8 @@ attribute beyond what's listed here (e.g. `onClick`) — passed straight through
 - Don't use a tone as the only sign that something failed or succeeded.
 - Don't put controls in the markers; the markers are hidden from assistive technology.
 - Don't expect it to sort: pass the events in the order to read them.
+- Don't put a long body in every event when `detail` would keep it out of the way until it is asked for.
+- Don't use `orientation="horizontal"` for more than a handful of events: it scrolls, and a vertical list reads better.
 
 </Callout>
 </div>
@@ -182,7 +291,10 @@ attribute beyond what's listed here (e.g. `onClick`) — passed straight through
 - A person reading from the top finds the newest event first in most feeds; an order's history often reads oldest first. Either is fine, as long as the line, which always runs down, reads the same way as the order of the children.
 - Put a link in an event's body for "open the order"; don't make the whole event a link.
 - A `pending` event reads "In progress" after its title; give it its own `statusText` when another word is better ("Waiting for the courier").
-- Events added while the page is open are not announced; if that matters in your product, announce them yourself in a live region.
+- Events added while the page is open are not announced unless you set `announce`, which says "N new events" in a polite live region. Leave it off where a reader should not be interrupted.
+- For a history you page yourself, hold the events in your own state: `onLoadMore` asks for the next page, `loading` shows placeholders while it comes, and `hasMore={false}` hides the button once everything is in. Add the new events to the end of the list.
+- `formatRelativeTime(date)` writes "2 hours ago" once, in the language you name (`{ locale: "fr" }`); it does not tick, and a server render and the browser can differ by the time between them, so use it where that does not matter. Keep the exact value in `dateTime`.
+- Use `Timeline.End` when how it ended is worth saying ("Order closed"); an end on a timeline that is still going would mislead.
 
 ## Accessibility
 
@@ -202,10 +314,14 @@ changes from "Show 3 more events" to "Show fewer events", and a polite live regi
 never the first render). If you collapse a timeline from your own code while focus is in an event that disappears, move the focus
 yourself.
 
+A `Timeline.Group` announces itself as a heading at the level you give it (3 by default), so it fits the page's outline; it is a list entry, so a screen reader counts it among the items. `Timeline.End` is a list entry too. The placeholders `loading` draws are hidden from assistive technology and the list is `aria-busy` while they show. An event's `detail` button is a disclosure (`aria-expanded`, `aria-controls`) with a fixed name, "Details" (`labels.details`), and the closed content is not drawn or read. With `href` or `onPress` the event's title is a real link or button, stretched over the event with a pseudo-element, so there is still one focus stop per event and the accessible name is the title (and its status text); one keyboard ring goes round the whole event. `announce` says "N new events" in a polite live region, only when events are added to a timeline that is already showing. A "load more" button that is pressed and becomes disabled while it loads hands its focus back to itself when loading ends, if the browser dropped it.
+
+A horizontal timeline that scrolls is a tab stop while it scrolls, with its ring drawn inside its box, so a keyboard can scroll it with the arrow keys. `align="alternate"` changes only where the content is drawn: the markup and so the focus and reading order are the same as without it.
+
 | Key | Behaviour |
 |---|---|
-| `Tab` | Moves through the focusable things in the events' bodies, then to the show-more button when there is one |
-| `Enter` / `Space` | Presses the show-more button |
+| `Tab` | Moves through the focusable things in the events (a linked or pressable event's title, a `detail` button, links and buttons in a body), then to the show-more and load-more buttons when there are any; a scrolling horizontal row is itself a stop before them |
+| `Enter` / `Space` | Presses the focused button, or follows (Enter) the focused link |
 
 In forced-colours mode the line is drawn as a border in `GrayText`, and each marker is a `CanvasText` dot or ring (a pending one in `Highlight`), since a
 filled background is erased. Every target is the browser's own control inside an event's body; the show-more button is a `Button` at least 24 by 24 pixels at every size.
@@ -239,6 +355,25 @@ filled background is erased. Every target is the browser's own control inside an
       statusText={change.failed ? "Failed" : undefined}
     />
   ))}
+</Timeline>
+```
+
+```tsx
+{/* A feed that pages: your own state holds the events, the timeline asks for more and shows placeholders meanwhile */}
+<Timeline aria-label="Activity" loading={isFetching} hasMore={hasNextPage} onLoadMore={fetchNextPage} announce>
+  {/* Parts are direct children (a fragment is not drawn), so flatten each day into one list */}
+  {days.flatMap((day) => [
+    <Timeline.Group key={day.date}>{day.label}</Timeline.Group>,
+    ...day.events.map((event) => (
+      <Timeline.Item
+        key={event.id}
+        title={event.title}
+        time={formatRelativeTime(event.at)}
+        dateTime={event.at.toISOString()}
+        href={`/events/${event.id}`}
+      />
+    )),
+  ])}
 </Timeline>
 ```
 
@@ -293,6 +428,13 @@ filled background is erased. Every target is the browser's own control inside an
 <TokenRow token="border.danger" usage="the same, in the danger tone" />
 <TokenRow token="border.highlight" usage="the same, in the highlight tone" />
 <TokenRow token="border.default" usage="the line between events (decorative: the title and the order carry the meaning)" />
+<TokenRow token="border.neutral-subtle" usage="with colorfulConnector, the line leaving an event in the neutral tone (decorative: the title and the order carry the meaning)" />
+<TokenRow token="border.brand-subtle" usage="with colorfulConnector, the line leaving an event in the brand tone (decorative: the title and the order carry the meaning)" />
+<TokenRow token="border.info-subtle" usage="with colorfulConnector, the line leaving an event in the info tone (decorative: the title and the order carry the meaning)" />
+<TokenRow token="border.success-subtle" usage="with colorfulConnector, the line leaving an event in the success tone (decorative: the title and the order carry the meaning)" />
+<TokenRow token="border.warning-subtle" usage="with colorfulConnector, the line leaving an event in the warning tone (decorative: the title and the order carry the meaning)" />
+<TokenRow token="border.danger-subtle" usage="with colorfulConnector, the line leaving an event in the danger tone (decorative: the title and the order carry the meaning)" />
+<TokenRow token="border.highlight-subtle" usage="with colorfulConnector, the line leaving an event in the highlight tone (decorative: the title and the order carry the meaning)" />
 <TokenRow token="text.primary" usage="the title and the body" />
 <TokenRow token="text.secondary" usage="the time and the description" />
 <TokenRow token="timeline.marker-size.xs" usage="the diameter of an icon or node marker at size xs; the plain dot is a third of it" />
@@ -300,6 +442,10 @@ filled background is erased. Every target is the browser's own control inside an
 <TokenRow token="timeline.marker-size.md" usage="the same at size md" />
 <TokenRow token="timeline.marker-size.lg" usage="the same at size lg" />
 <TokenRow token="timeline.marker-size.xl" usage="the same at size xl" />
+<TokenRow token="radius.sm" usage="the ring round a linked event and round a scrolling row" />
+<TokenRow token="border.focus" usage="the ring round a linked event and round a scrolling row" />
+<TokenRow token="border-width.4" usage="the bar of an end, across the line" />
+<TokenRow token="timeline.item-min-width" usage="the narrowest an event's column gets in a horizontal timeline before the row scrolls" />
 <TokenRow token="timeline.time-width" usage="the width of the time column when the time is beside the marker" />
 <TokenRow token="font-family.primary" usage="the timeline's typography" />
 <TokenRow token="font-size.xs" usage="text at the smallest sizes" />
