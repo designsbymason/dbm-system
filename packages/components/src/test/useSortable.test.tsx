@@ -382,3 +382,76 @@ describe("useSortable", () => {
     });
   });
 });
+
+describe("useSortable — autoScroll", () => {
+  function Strip({ autoScroll }: { autoScroll: boolean }) {
+    const { containerRef, itemProps } = useSortable<HTMLDivElement>({ count: 3, autoScroll, onMove: () => {} });
+    return (
+      <div role="group" aria-label="strip" ref={containerRef}>
+        {["a", "b", "c"].map((item, index) => (
+          <button type="button" key={item} data-testid={item} {...itemProps(index)}>
+            {item}
+          </button>
+        ))}
+      </div>
+    );
+  }
+
+  const box = (left: number, right: number): DOMRect =>
+    ({ left, right, top: 0, bottom: 40, width: right - left, height: 40, x: left, y: 0, toJSON: () => ({}) }) as DOMRect;
+
+  function setup(autoScroll: boolean) {
+    const frames: FrameRequestCallback[] = [];
+    vi.stubGlobal("requestAnimationFrame", (callback: FrameRequestCallback) => frames.push(callback));
+    vi.stubGlobal("cancelAnimationFrame", () => {});
+    render(<Strip autoScroll={autoScroll} />);
+    const strip = screen.getByRole("group");
+    const scrollBy = vi.fn();
+    Object.defineProperty(strip, "scrollBy", { configurable: true, value: scrollBy });
+    strip.getBoundingClientRect = () => box(0, 300);
+    for (const [index, id] of ["a", "b", "c"].entries()) {
+      screen.getByTestId(id).getBoundingClientRect = () => box(index * 100, index * 100 + 100);
+    }
+    return { frames, scrollBy };
+  }
+
+  it("scrolls the container toward the edge the pointer is near while dragging", () => {
+    const { frames, scrollBy } = setup(true);
+    fireEvent.pointerDown(screen.getByTestId("a"), { clientX: 50, clientY: 20, pointerId: 1, isPrimary: true, pointerType: "mouse", button: 0 });
+    act(() => { fireEvent(window, new MouseEvent("pointermove", { clientX: 295, clientY: 20, bubbles: true })); });
+    act(() => frames.shift()?.(0));
+    expect(scrollBy).toHaveBeenCalled();
+    expect(scrollBy.mock.calls[0]?.[0].left).toBeGreaterThan(0);
+    act(() => { fireEvent(window, new MouseEvent("pointerup", { clientX: 295, clientY: 20, bubbles: true })); });
+    vi.unstubAllGlobals();
+  });
+
+  it("scrolls the other way near the start edge", () => {
+    const { frames, scrollBy } = setup(true);
+    fireEvent.pointerDown(screen.getByTestId("c"), { clientX: 250, clientY: 20, pointerId: 1, isPrimary: true, pointerType: "mouse", button: 0 });
+    act(() => { fireEvent(window, new MouseEvent("pointermove", { clientX: 5, clientY: 20, bubbles: true })); });
+    act(() => frames.shift()?.(0));
+    expect(scrollBy.mock.calls[0]?.[0].left).toBeLessThan(0);
+    act(() => { fireEvent(window, new MouseEvent("pointerup", { clientX: 5, clientY: 20, bubbles: true })); });
+    vi.unstubAllGlobals();
+  });
+
+  it("does nothing in the middle of the container, or when autoScroll is off", () => {
+    const middle = setup(true);
+    fireEvent.pointerDown(screen.getByTestId("a"), { clientX: 50, clientY: 20, pointerId: 1, isPrimary: true, pointerType: "mouse", button: 0 });
+    act(() => { fireEvent(window, new MouseEvent("pointermove", { clientX: 150, clientY: 20, bubbles: true })); });
+    act(() => middle.frames.shift()?.(0));
+    expect(middle.scrollBy).not.toHaveBeenCalled();
+    act(() => { fireEvent(window, new MouseEvent("pointerup", { clientX: 150, clientY: 20, bubbles: true })); });
+    vi.unstubAllGlobals();
+  });
+
+  it("does not request frames when autoScroll is off", () => {
+    const off = setup(false);
+    fireEvent.pointerDown(screen.getByTestId("a"), { clientX: 50, clientY: 20, pointerId: 1, isPrimary: true, pointerType: "mouse", button: 0 });
+    act(() => { fireEvent(window, new MouseEvent("pointermove", { clientX: 295, clientY: 20, bubbles: true })); });
+    expect(off.frames).toHaveLength(0);
+    act(() => { fireEvent(window, new MouseEvent("pointerup", { clientX: 295, clientY: 20, bubbles: true })); });
+    vi.unstubAllGlobals();
+  });
+});

@@ -8,6 +8,7 @@ import styles from "./Tabs.module.css";
 import type {
   TabsAlign,
   TabsContentProps,
+  TabsItemProps,
   TabsListProps,
   TabsOrientation,
   TabsProps,
@@ -28,6 +29,9 @@ interface TabsContextValue {
 // them as a prop, so one `variant`/`size` on `Tabs` styles the whole set —
 // and a `Tabs` inside another's panel is styled by its own root, not its
 // parent's (which a descendant CSS selector could not promise).
+// Whether the trigger being drawn sits in a `Tabs.Item` that has an action, so it can leave the action room.
+const TabsItemContext = createContext(false);
+
 const TabsContext = createContext<TabsContextValue>({
   variant: "underline",
   size: "md",
@@ -365,6 +369,7 @@ TabsList.displayName = "Tabs.List";
 const TabsTrigger = forwardRef<HTMLButtonElement, TabsTriggerProps>((triggerProps, ref) => {
   const { value, icon, asChild = false, className, children, ...props } = triggerProps;
   const { variant, size, fullWidth, rounded, orientation } = useContext(TabsContext);
+  const hasAction = useContext(TabsItemContext);
 
   const hasWarnedIconRef = useRef(false);
   const hasWarnedNameRef = useRef(false);
@@ -401,6 +406,7 @@ const TabsTrigger = forwardRef<HTMLButtonElement, TabsTriggerProps>((triggerProp
         triggerSizeClass[size],
         triggerVariantClass[variant],
         fullWidth && styles.triggerFullWidth,
+        hasAction && styles.triggerWithAction,
         // The underline variant has no shape to round, so `rounded` never reaches it.
         rounded && variant !== "underline" && styles.rounded,
         className,
@@ -422,6 +428,51 @@ const TabsTrigger = forwardRef<HTMLButtonElement, TabsTriggerProps>((triggerProp
 TabsTrigger.displayName = "Tabs.Trigger";
 
 /**
+ * A tab with a control beside it. Wraps one `Tabs.Trigger` and an `action` (a close button, say), drawn at
+ * the tab's end as a sibling of the tab button, never inside it. The tab keeps all its own looks and its
+ * place in the arrow-key order; the item only reserves room for the action and positions it. Items and
+ * bare triggers can be mixed in one list.
+ *
+ * The action is a pointer shortcut and is hidden from assistive technology: a `tablist` may own only tabs,
+ * so a button inside one is an ARIA violation. Whatever it does must also be reachable another way (a key
+ * on the focused tab, or a menu).
+ *
+ * @example
+ * ```tsx
+ * <Tabs.List aria-label="Open files">
+ *   <Tabs.Item action={<button tabIndex={-1} aria-label="Close index.ts">×</button>}>
+ *     <Tabs.Trigger value="index">index.ts</Tabs.Trigger>
+ *   </Tabs.Item>
+ * </Tabs.List>
+ * ```
+ */
+const TabsItem = forwardRef<HTMLDivElement, TabsItemProps>(
+  ({ action, className, children, ...props }, ref) => {
+    const { orientation, fullWidth } = useContext(TabsContext);
+    const hasAction = action !== undefined && action !== null && action !== false;
+    return (
+      <div
+        {...props}
+        ref={ref}
+        data-orientation={orientation}
+        className={cx(styles.item, fullWidth && styles.itemFullWidth, className)}
+      >
+        <TabsItemContext.Provider value={hasAction}>{children}</TabsItemContext.Provider>
+        {hasAction && (
+          // A tab list may only own tabs, so a button inside it is a violation of the pattern: the action is
+          // hidden from assistive technology (and out of the tab order, `tabIndex={-1}`) and is a pointer shortcut.
+          // The same operation needs a key or a menu elsewhere.
+          <span aria-hidden="true" className={styles.itemAction}>
+            {action}
+          </span>
+        )}
+      </div>
+    );
+  },
+);
+TabsItem.displayName = "Tabs.Item";
+
+/**
  * The panel a tab reveals — a `tabpanel` named by its trigger, which is
  * focusable so a reader can `Tab` from the list straight into it. Unmounted
  * while its tab isn't selected, unless `forceMount` keeps it in the page.
@@ -440,12 +491,14 @@ TabsContent.displayName = "Tabs.Content";
 
 type TabsComponent = typeof TabsRoot & {
   List: typeof TabsList;
+  Item: typeof TabsItem;
   Trigger: typeof TabsTrigger;
   Content: typeof TabsContent;
 };
 
 export const Tabs: TabsComponent = Object.assign(TabsRoot, {
   List: TabsList,
+  Item: TabsItem,
   Trigger: TabsTrigger,
   Content: TabsContent,
 });

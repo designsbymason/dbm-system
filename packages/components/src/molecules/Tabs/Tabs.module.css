@@ -554,6 +554,73 @@
   border-radius: var(--dbm-radius-full);
 }
 
+/* --- An item: a trigger with a control beside it ---
+   The trigger keeps every look it has (fill, underline, border, ring); the item only gives it a
+   positioning box and room at its end for the action, which is drawn over that room. */
+
+.item {
+  display: inline-flex;
+  flex-shrink: 0;
+  position: relative;
+}
+
+.item[data-orientation="vertical"] {
+  inline-size: 100%;
+}
+
+.itemFullWidth[data-orientation="horizontal"] {
+  flex: 1 0 auto;
+}
+
+.item > .trigger {
+  flex: 1 1 auto;
+}
+
+/* Room for a 24px target (WCAG 2.5.8) and the gap on either side of it. Declared after the size
+   classes so it replaces only the end padding they set. */
+.triggerWithAction {
+  padding-inline-end: calc(var(--dbm-space-6) + var(--dbm-space-2));
+}
+
+.itemAction {
+  align-items: center;
+  display: flex;
+  inset-block: 0;
+  inset-inline-end: var(--dbm-space-1);
+  pointer-events: none;
+  position: absolute;
+}
+
+.itemAction > * {
+  pointer-events: auto;
+}
+
+/* The action sits over the trigger, so hovering it is hovering the tab: the trigger's own hover look
+   shows too. */
+.item:has(> .itemAction:hover) > .underline:not(:disabled):not([data-disabled]),
+.item:has(> .itemAction:hover) > .subtle:not(:disabled):not([data-disabled]),
+.item:has(> .itemAction:hover) > .solid:not(:disabled):not([data-disabled]),
+.item:has(> .itemAction:hover) > .outlined:not(:disabled):not([data-disabled]) {
+  background-color: var(--dbm-bg-brand-subtle);
+  color: var(--dbm-text-primary);
+}
+
+.item:has(> .itemAction:hover) > .underline[data-state="active"]:not(:disabled):not([data-disabled]),
+.item:has(> .itemAction:hover) > .subtle[data-state="active"]:not(:disabled):not([data-disabled]),
+.item:has(> .itemAction:hover) > .outlined[data-state="active"]:not(:disabled):not([data-disabled]) {
+  color: var(--dbm-text-brand);
+}
+
+.item:has(> .itemAction:hover) > .subtle[data-state="active"]:not(:disabled):not([data-disabled]),
+.item:has(> .itemAction:hover) > .outlined[data-state="active"]:not(:disabled):not([data-disabled]) {
+  background-color: var(--dbm-bg-brand-subtle-hover);
+}
+
+.item:has(> .itemAction:hover) > .solid[data-state="active"]:not(:disabled):not([data-disabled]) {
+  background-color: var(--dbm-bg-brand-hover);
+  color: var(--dbm-text-on-brand);
+}
+
 /* --- A panel --- */
 
 /* Radix hides a panel by not rendering it. With `forceMount` it renders every

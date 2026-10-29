@@ -234,6 +234,30 @@ export interface TabsTriggerProps
   "data-testid"?: string;
 }
 
+export interface TabsItemProps extends Omit<ComponentPropsWithoutRef<"div">, "children"> {
+  /** One `Tabs.Trigger`: the tab this item holds. */
+  children: ReactNode;
+  /**
+   * A control drawn at the end of the tab, beside the tab button and not inside it (a button inside a
+   * button is invalid HTML), such as a close button. It is the caller's own element: give it
+   * `tabIndex={-1}` so the tab list stays one tab stop. It is hidden from assistive technology (a
+   * `tablist` may own only tabs), so it is a pointer shortcut: give what it does a key on the focused
+   * tab or a menu as well. The tab makes room for it, so the label never runs under it.
+   */
+  action?: ReactNode;
+  /** Additional CSS classes for customization, applied to the item's wrapper. */
+  className?: string;
+  /** Inline styles, merged onto the item's wrapper. */
+  style?: CSSProperties;
+  /** Standard DOM id, on the item's wrapper. */
+  id?: string;
+  /**
+   * Test identifier for automated testing (e.g. Testing Library's `getByTestId`, Playwright/Cypress
+   * selectors). Rendered as the DOM `data-testid` attribute; has no visual or behavioral effect.
+   */
+  "data-testid"?: string;
+}
+
 export interface TabsContentProps extends Omit<ComponentPropsWithoutRef<"div">, "children"> {
   /**
    * The `value` of the `Tabs.Trigger` this panel belongs to. It shows while that

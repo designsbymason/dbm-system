@@ -1190,3 +1190,116 @@ describe("Tabs — accessibility (jest-axe)", () => {
     expect(await axe(container)).toHaveNoViolations();
   });
 });
+
+function WithItems(props: Partial<TabsProps> & { onClose?: (value: string) => void }) {
+  const { onClose, ...rest } = props;
+  return (
+    <Tabs defaultValue="a" {...rest}>
+      <Tabs.List aria-label="Open files">
+        {["a", "b", "c"].map((value) => (
+          <Tabs.Item
+            key={value}
+            data-testid={`item-${value}`}
+            action={
+              <button type="button" tabIndex={-1} aria-label={`Close ${value}`} onClick={() => onClose?.(value)}>
+                x
+              </button>
+            }
+          >
+            <Tabs.Trigger value={value}>File {value}</Tabs.Trigger>
+          </Tabs.Item>
+        ))}
+        <Tabs.Trigger value="d">Plain</Tabs.Trigger>
+      </Tabs.List>
+      <Tabs.Content value="a">A</Tabs.Content>
+      <Tabs.Content value="d">D</Tabs.Content>
+    </Tabs>
+  );
+}
+
+describe("Tabs.Item", () => {
+  it("draws the action beside the tab button, not inside it", () => {
+    render(<WithItems />);
+    const close = screen.getByRole("button", { name: "Close a", hidden: true });
+    const tab = screen.getByRole("tab", { name: "File a" });
+    expect(tab.contains(close)).toBe(false);
+    expect(screen.getByTestId("item-a")).toContainElement(close);
+    expect(screen.getByTestId("item-a")).toContainElement(tab);
+  });
+
+  it("leaves room for the action only on a trigger whose item has one", () => {
+    render(<WithItems />);
+    expect(screen.getByRole("tab", { name: "File a" })).toHaveClass(styles.triggerWithAction!);
+    expect(screen.getByRole("tab", { name: "Plain" })).not.toHaveClass(styles.triggerWithAction!);
+  });
+
+  it("keeps one tab stop and arrow-key movement across items and bare triggers", async () => {
+    const user = userEvent.setup();
+    render(<WithItems />);
+    await user.tab();
+    expect(screen.getByRole("tab", { name: "File a" })).toHaveFocus();
+    await user.keyboard("{ArrowRight}{ArrowRight}{ArrowRight}");
+    expect(screen.getByRole("tab", { name: "Plain" })).toHaveFocus();
+    await user.keyboard("{ArrowRight}");
+    expect(screen.getByRole("tab", { name: "File a" })).toHaveFocus();
+  });
+
+  it("hides the action from assistive technology and keeps it out of the tab order", () => {
+    render(<WithItems />);
+    const close = screen.getByRole("button", { name: "Close a", hidden: true });
+    expect(close.closest("[aria-hidden='true']")).not.toBeNull();
+    expect(close).toHaveAttribute("tabindex", "-1");
+    expect(screen.queryByRole("button", { name: "Close a" })).toBeNull();
+  });
+
+  it("does not select the tab when the action is pressed", async () => {
+    const user = userEvent.setup();
+    const onClose = vi.fn();
+    render(<WithItems onClose={onClose} />);
+    await user.click(screen.getByRole("button", { name: "Close b", hidden: true }));
+    expect(onClose).toHaveBeenCalledWith("b");
+    expect(screen.getByRole("tab", { name: "File a" })).toHaveAttribute("aria-selected", "true");
+  });
+
+  it("takes className, style, id and data-testid, and forwards its ref to the wrapper", () => {
+    const ref = createRef<HTMLDivElement>();
+    render(
+      <Tabs defaultValue="a">
+        <Tabs.List aria-label="Files">
+          <Tabs.Item ref={ref} className="mine" style={{ color: "red" }} id="item" data-testid="it">
+            <Tabs.Trigger value="a">A</Tabs.Trigger>
+          </Tabs.Item>
+        </Tabs.List>
+      </Tabs>,
+    );
+    const item = screen.getByTestId("it");
+    expect(ref.current).toBe(item);
+    expect(item).toHaveClass("mine");
+    expect(item).toHaveAttribute("id", "item");
+    expect(item.style.color).toBe("red");
+  });
+
+  it("reads the resolved orientation, after any consumer data-orientation", () => {
+    render(<WithItems orientation="vertical" />);
+    expect(screen.getByTestId("item-a")).toHaveAttribute("data-orientation", "vertical");
+  });
+
+  it("renders no action wrapper when there is no action", () => {
+    render(
+      <Tabs defaultValue="a">
+        <Tabs.List aria-label="Files">
+          <Tabs.Item data-testid="bare">
+            <Tabs.Trigger value="a">A</Tabs.Trigger>
+          </Tabs.Item>
+        </Tabs.List>
+      </Tabs>,
+    );
+    expect(screen.getByTestId("bare").children).toHaveLength(1);
+    expect(screen.getByRole("tab", { name: "A" })).not.toHaveClass(styles.triggerWithAction!);
+  });
+
+  it("has no axe violations with actions in the tab list", async () => {
+    const { container } = render(<WithItems />);
+    expect(await axe(container)).toHaveNoViolations();
+  });
+});

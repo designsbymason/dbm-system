@@ -3,6 +3,19 @@ import type { KeyboardEvent as ReactKeyboardEvent, PointerEvent as ReactPointerE
 
 // How far (CSS pixels) a press has to travel before it is a drag and not a click: a behaviour threshold, not a design value.
 const DRAG_THRESHOLD = 4;
+// How close (CSS pixels) to the edge of the scrolling container a drag has to be before it scrolls it, and the most it
+// scrolls in a frame, at the very edge: behaviour thresholds, not design values.
+const AUTO_SCROLL_EDGE = 40;
+const AUTO_SCROLL_MAX_STEP = 20;
+
+/** How far to scroll along one axis for a pointer at `position` in a box from `start` to `end`: 0 away from the edges. */
+function edgeStep(position: number, start: number, end: number): number {
+  const edge = Math.min(AUTO_SCROLL_EDGE, (end - start) / 3);
+  if (edge <= 0) return 0;
+  if (position < start + edge) return -AUTO_SCROLL_MAX_STEP * Math.min(1, (start + edge - position) / edge);
+  if (position > end - edge) return AUTO_SCROLL_MAX_STEP * Math.min(1, (position - (end - edge)) / edge);
+  return 0;
+}
 
 export interface SortableMove {
   /** What asked for the move: a key press, or a drag or a tap. */
@@ -35,6 +48,12 @@ export interface UseSortableOptions {
    * @default false
    */
   tapToMove?: boolean;
+  /**
+   * Scrolls the container, the element that has `containerRef`, while an item is dragged near its edge, so an item
+   * can be taken to one that is out of view. The container must be the element that scrolls.
+   * @default false
+   */
+  autoScroll?: boolean;
   /** Whether the items read right to left, which flips the horizontal arrow keys and the side a drop lands on. @default false */
   rtl?: boolean | (() => boolean);
 }
@@ -103,6 +122,7 @@ export function useSortable<Container extends HTMLElement = HTMLElement>({
   onCancel,
   rtl = false,
   tapToMove = false,
+  autoScroll = false,
 }: UseSortableOptions) {
   const container = useRef<Container | null>(null);
   // A callback ref, so the element is set without anything reading a ref while rendering.
@@ -114,9 +134,9 @@ export function useSortable<Container extends HTMLElement = HTMLElement>({
   const [drag, setDrag] = useState<SortableDrag | null>(null);
 
   // The latest options, read by the listeners below, which are added once per press.
-  const latest = useRef({ enabled, count, onMove, onLift, onDrop, onCancel, rtl, lifted, tapToMove });
+  const latest = useRef({ enabled, count, onMove, onLift, onDrop, onCancel, rtl, lifted, tapToMove, autoScroll });
   useLayoutEffect(() => {
-    latest.current = { enabled, count, onMove, onLift, onDrop, onCancel, rtl, lifted, tapToMove };
+    latest.current = { enabled, count, onMove, onLift, onDrop, onCancel, rtl, lifted, tapToMove, autoScroll };
   });
   const origin = useRef(0);
   const liftedViaRef = useRef<SortableLift | null>(null);
@@ -206,14 +226,33 @@ export function useSortable<Container extends HTMLElement = HTMLElement>({
     const startX = event.clientX;
     const startY = event.clientY;
     let dragging = false;
+    let pointer = { x: startX, y: startY };
+    let frame = 0;
+    const show = () => setDrag(target(pointer.x, pointer.y, index) ?? { from: index, to: index, over: index, position: "after" });
+    // While the pointer is near an edge of the scrolling container, scroll it a step a frame and re-aim the drop.
+    const scrollStep = () => {
+      frame = 0;
+      const scroller = container.current;
+      if (!dragging || !latest.current.autoScroll || !scroller || typeof scroller.scrollBy !== "function") return;
+      const box = scroller.getBoundingClientRect();
+      const left = edgeStep(pointer.x, box.left, box.right);
+      const top = edgeStep(pointer.y, box.top, box.bottom);
+      if (left === 0 && top === 0) return;
+      scroller.scrollBy({ left, top });
+      show();
+      frame = window.requestAnimationFrame(scrollStep);
+    };
     const move = (moved: PointerEvent) => {
       if (!dragging) {
         if (Math.hypot(moved.clientX - startX, moved.clientY - startY) < DRAG_THRESHOLD) return;
         dragging = true;
       }
-      setDrag(target(moved.clientX, moved.clientY, index) ?? { from: index, to: index, over: index, position: "after" });
+      pointer = { x: moved.clientX, y: moved.clientY };
+      show();
+      if (frame === 0 && latest.current.autoScroll) frame = window.requestAnimationFrame(scrollStep);
     };
     const end = (ended: PointerEvent) => {
+      window.cancelAnimationFrame(frame);
       const final = dragging ? target(ended.clientX, ended.clientY, index) : null;
       stopTracking();
       setDrag(null);
@@ -228,6 +267,7 @@ export function useSortable<Container extends HTMLElement = HTMLElement>({
     window.addEventListener("pointerup", end);
     window.addEventListener("pointercancel", end);
     cleanup.current = () => {
+      window.cancelAnimationFrame(frame);
       window.removeEventListener("pointermove", move);
       window.removeEventListener("pointerup", end);
       window.removeEventListener("pointercancel", end);

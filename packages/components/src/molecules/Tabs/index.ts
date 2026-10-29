@@ -3,6 +3,7 @@ export type {
   TabsActivationMode,
   TabsAlign,
   TabsContentProps,
+  TabsItemProps,
   TabsListProps,
   TabsOrientation,
   TabsProps,

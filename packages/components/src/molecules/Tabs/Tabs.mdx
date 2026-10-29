@@ -7,6 +7,7 @@ import { Pagination } from "../Pagination";
 import * as TabsStories from "./Tabs.stories";
 import * as TabsListStories from "./TabsList.stories";
 import * as TabsTriggerStories from "./TabsTrigger.stories";
+import * as TabsItemStories from "./TabsItem.stories";
 import * as TabsContentStories from "./TabsContent.stories";
 
 export const rootPropOrder = [
@@ -38,6 +39,7 @@ export const listPropOrder = [
   "style",
   "data-testid",
 ];
+export const itemPropOrder = ["children", "action", "id", "className", "style", "data-testid"];
 export const triggerPropOrder = [
   "value",
   "children",
@@ -123,6 +125,12 @@ One tab — a real `<button>`. Also accepts any other native `<button>` attribut
 listed here (e.g. `onFocus`, `title`) — passed straight through.
 
 <PropertiesTable of={TabsTriggerStories} order={triggerPropOrder} />
+
+### Tabs.Item properties
+
+A tab with a control beside it, such as a close button: it wraps one `Tabs.Trigger` and an `action` drawn at the tab's end as a sibling of the tab button, never inside it. The trigger keeps every look it has and its place in the arrow-key order; the item only makes room for the action and positions it. The action is hidden from assistive technology, because a tab list may only own tabs, so it is a pointer shortcut and what it does needs a key or a menu as well. `EditorTabs` is built on it. Also accepts any other native `<div>` attribute beyond what's listed here (e.g. `title`) — passed straight through to the wrapper.
+
+<PropertiesTable of={TabsItemStories} order={itemPropOrder} />
 
 ### Tabs.Content properties
 
@@ -405,9 +413,9 @@ function Example() {
 <TokenRow token="font-weight.medium" usage="tab label weight" />
 <TokenRow token="line-height.tight" usage="tab label line height" />
 <TokenRow token="icon-button.size.xs–icon-button.size.xl" usage="a tab's minimum height, matching a Button of the same size" />
-<TokenRow token="space.1" usage="the gap between tabs in the subtle, outlined and solid variants; a scroll button's own padding (inline on a horizontal list, block on a vertical one)" />
+<TokenRow token="space.1" usage="the gap between tabs in the subtle, outlined and solid variants; a scroll button's own padding (inline on a horizontal list, block on a vertical one); the gap at the end of a `Tabs.Item`'s action" />
 <TokenRow token="space.2–space.3" usage="the gap between a tab's icon and its label" />
-<TokenRow token="space.3–space.6" usage="a tab's inline padding across the five size steps" />
+<TokenRow token="space.3–space.6" usage="a tab's inline padding across the five size steps; the room an item's action takes at the tab's end is `space.6` and `space.2`" />
 <TokenRow token="space.3–space.8" usage="the space between the list and its panel across the five size steps" />
 <TokenRow token="space.10" usage="the size of an edge fade — its width on a horizontal list, its height on a vertical one" />
 <TokenRow token="motion.duration.fast" usage="colour changes on hover; a panel fading in" />
