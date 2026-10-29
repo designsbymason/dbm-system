@@ -1,6 +1,6 @@
 # 0141 — `Timeline` is a read-only ordered list of items configured by props, in the caller's order, with a hand-rolled cap and no windowing, over sub-parts, a data array, a `reverse` prop or virtualizing
 
-**Status:** Accepted · **Date:** 2026-10-28
+**Status:** Accepted · **Date:** 2026-10-28 · **Amended 2026-10-28** — three details were overtaken by [ADR-0142](./0142-timeline-takes-a-feed-surface-of-headings-an-end-links-detail-paging-and-two-more-layouts-over-leaving-them-to-the-caller-or-separate-components.md) (the alternate layout, the size, announcing additions); the decision itself is unchanged
 
 ## Context
 A timeline records events that happened. It looks like `Stepper` and shares its vocabulary (a marker, a line, a title), but it has no current position and nothing to enter. Three choices decide its API and its semantics: how an event is described, who owns the order, and what happens when the history is long.
@@ -16,12 +16,12 @@ A timeline records events that happened. It looks like `Stepper` and shares its 
 - **A data-driven `items` array.** Rejected: an event's body is often rich content (a link, a quote, a button), which a data prop can only take as a node, and `Stepper` set the precedent for composing steps.
 - **A `reverse` prop or visual reordering.** Rejected: it puts the visual order and the reading order apart, which is exactly what a list of events must not do. The caller passes the order it wants read.
 - **Virtualizing the list, or measuring rows.** Rejected for v1: the cost (a measuring layer, scroll restoration, a hook) is not justified for the lengths a read-out holds, and a feed that grows without end is paged anyway.
-- **An `alternate` left-and-right layout.** Deferred: it puts the content of neighbouring events on opposite sides, which on a phone reflows into one column and cannot keep a single reading order; the side time column covers the common need.
+- **An `alternate` left-and-right layout.** Deferred *(Amended 2026-10-28: built in [ADR-0142](./0142-timeline-takes-a-feed-surface-of-headings-an-end-links-detail-paging-and-two-more-layouts-over-leaving-them-to-the-caller-or-separate-components.md), switched by a media query so that below `md` every event is on one side)*: it puts the content of neighbouring events on opposite sides, which on a phone reflows into one column and cannot keep a single reading order; the side time column covers the common need.
 
 ## Consequences
-- A timeline is small (about 3KB of JS) and has no dependency.
+- A timeline is small (about 3KB of JS) and has no dependency. *(Amended 2026-10-28: about 6KB with the later parts.)*
 - Anything that grows without end is the caller's to page; the Docs page says so.
-- Events added while the page is open are not announced; a caller that needs it announces them in its own live region (`06-engineering-standards.md` §9 sets the first-appearance rule, and the guidelines do not yet cover a feed that receives events).
+- Events added while the page is open are not announced *(Amended 2026-10-28: unless `announce` is set, [ADR-0142](./0142-timeline-takes-a-feed-surface-of-headings-an-end-links-detail-paging-and-two-more-layouts-over-leaving-them-to-the-caller-or-separate-components.md))*; a caller that needs it announces them in its own live region (`06-engineering-standards.md` §9 sets the first-appearance rule, and the guidelines do not yet cover a feed that receives events).
 
 ## Related
 `05-component-api-conventions.md` §3, §6; `04-component-inventory.md` (Timeline); `component-reviews/Timeline.md`; [ADR-0136](./0136-stepper-is-a-nav-and-ordered-list-with-aria-current-step-and-real-buttons-only-where-a-step-can-be-entered-over-a-tablist-with-roving-focus.md).
