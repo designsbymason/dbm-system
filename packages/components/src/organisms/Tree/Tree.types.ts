@@ -33,6 +33,12 @@ export interface TreeNode {
   hasChildren?: boolean;
   /** Stops the row being selected, checked or expanded by a person. It stays in the arrow-key order. */
   disabled?: boolean;
+  /**
+   * Whether a person can select the row. `false` is for a row that only holds others (a folder in a picker of files): a click, Space,
+   * a Shift range and Ctrl+A skip it, and it has no `aria-selected`, but it can still be opened, checked and focused.
+   * @default true
+   */
+  selectable?: boolean;
   /** Content drawn at the end of the row. Not interactive: a button here would be a second focus stop inside a tree item. */
   trailing?: ReactNode;
 }
@@ -55,6 +61,8 @@ export interface TreeRowState {
  * function of the plain numbers.
  */
 export interface TreeLabels {
+  /** What a screen reader hears after the selection changes in `"multiple"` mode, given how many rows are selected. @default (count) => `${count} selected` (the number through `formatNumber`; `None selected` for none) */
+  selectedCount: (count: number) => string;
   /** What a tree with no rows says, unless `empty` replaces it. @default 'No items' */
   empty: string;
   /**
@@ -131,6 +139,18 @@ export interface TreeProps extends Omit<ComponentPropsWithoutRef<"div">, "childr
    * @default 'none'
    */
   selectionMode?: TreeSelectionMode;
+  /**
+   * A plain click on a row that has rows under it also opens or closes it, as in a navigation pane (a click with Ctrl, ⌘, Shift
+   * or Alt held only selects). A double click then does not toggle it a second time. Keys are unchanged.
+   * @default false
+   */
+  expandOnClick?: boolean;
+  /**
+   * In `"single"` mode, moving focus with the keys (arrows, Home, End, Page Up and Down, a typed letter) selects the row it lands on,
+   * as in a navigation pane. A row that cannot be selected keeps the old selection. Ignored in the other modes.
+   * @default false
+   */
+  selectOnFocus?: boolean;
   /** The ids of the selected rows (at most one in `"single"`). Makes the selection controlled: it changes only when this does. */
   value?: string[];
   /** The ids selected to begin with, when `value` is not given. @default [] */

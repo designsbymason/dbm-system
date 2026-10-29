@@ -456,6 +456,217 @@ describe("Tree — selection", () => {
   });
 });
 
+describe("Tree — rows that cannot be selected", () => {
+  const picker: TreeNode[] = [
+    { id: "dir", label: "dir", selectable: false, children: [{ id: "a", label: "a.ts" }, { id: "b", label: "b.ts" }] },
+    { id: "c", label: "c.ts" },
+  ];
+
+  it("has no aria-selected on a row with selectable false, and has it on the rest", () => {
+    render(<Tree aria-label="Files" nodes={picker} selectionMode="multiple" defaultExpandAll />);
+    expect(item("dir")).not.toHaveAttribute("aria-selected");
+    expect(item("a.ts")).toHaveAttribute("aria-selected", "false");
+  });
+
+  it("is not selected by a click, Space, a Shift range or Ctrl+A, but stays in the order and is skipped by a range", async () => {
+    const user = userEvent.setup();
+    const onValueChange = vi.fn();
+    render(<Tree aria-label="Files" nodes={picker} selectionMode="multiple" defaultExpandAll onValueChange={onValueChange} />);
+    await user.click(screen.getByText("dir"));
+    expect(onValueChange).not.toHaveBeenCalled();
+    item("dir").focus();
+    await user.keyboard(" ");
+    expect(onValueChange).not.toHaveBeenCalled();
+    await user.keyboard("{ArrowDown}");
+    expect(item("a.ts")).toHaveFocus();
+    await user.keyboard("{Control>}a{/Control}");
+    expect(onValueChange).toHaveBeenLastCalledWith(["a", "b", "c"]);
+    await user.click(screen.getByText("c.ts"));
+    expect(onValueChange).toHaveBeenLastCalledWith(["c"]);
+    await user.keyboard("{Shift>}{ArrowUp}{ArrowUp}{ArrowUp}{/Shift}");
+    expect(item("dir")).toHaveFocus();
+    // the range ran up to the folder, which it passed over
+    expect(onValueChange).toHaveBeenLastCalledWith(["a", "b", "c"]);
+  });
+
+  it("can still be opened, checked and focused", async () => {
+    const user = userEvent.setup();
+    const onCheckedChange = vi.fn();
+    render(<Tree aria-label="Files" nodes={picker} selectionMode="single" checkable onCheckedChange={onCheckedChange} />);
+    item("dir").focus();
+    await user.keyboard("{ArrowRight}");
+    expect(item("dir")).toHaveAttribute("aria-expanded", "true");
+    await user.click(item("dir").querySelector("[data-tree-part=check]") as HTMLElement);
+    expect(onCheckedChange).toHaveBeenLastCalledWith(["a", "b"]);
+  });
+});
+
+describe("Tree — selection that opens and follows", () => {
+  const nested: TreeNode[] = [
+    { id: "a", label: "alpha", children: [{ id: "a1", label: "apple" }, { id: "a2", label: "avocado" }] },
+    { id: "b", label: "beta", selectable: false },
+    { id: "c", label: "gamma" },
+  ];
+
+  it("opens and closes a row with a plain click when expandOnClick is on, and selects it too", async () => {
+    const user = userEvent.setup();
+    const onValueChange = vi.fn();
+    render(<Tree aria-label="T" nodes={nested} selectionMode="single" expandOnClick onValueChange={onValueChange} />);
+    await user.click(screen.getByText("alpha"));
+    expect(item("alpha")).toHaveAttribute("aria-expanded", "true");
+    expect(onValueChange).toHaveBeenCalledWith(["a"]);
+    await user.click(screen.getByText("alpha"));
+    expect(item("alpha")).toHaveAttribute("aria-expanded", "false");
+  });
+
+  it("does not open it for a click with a modifier held, a disabled row, or a row with nothing under it, and it works on a row that cannot be selected", async () => {
+    const user = userEvent.setup();
+    render(
+      <Tree
+        aria-label="T"
+        nodes={[...nested, { id: "d", label: "delta", disabled: true, children: [{ id: "d1", label: "d1" }] }, { id: "e", label: "folder", selectable: false, children: [{ id: "e1", label: "e1" }] }]}
+        selectionMode="single"
+        expandOnClick
+      />,
+    );
+    await user.keyboard("{Control>}");
+    await user.click(screen.getByText("alpha"));
+    await user.keyboard("{/Control}");
+    expect(item("alpha")).toHaveAttribute("aria-expanded", "false");
+    await user.click(screen.getByText("delta"));
+    expect(item("delta")).toHaveAttribute("aria-expanded", "false");
+    await user.click(screen.getByText("gamma"));
+    expect(item("gamma")).not.toHaveAttribute("aria-expanded");
+    await user.click(screen.getByText("folder"));
+    expect(item("folder")).toHaveAttribute("aria-expanded", "true");
+  });
+
+  it("does not open it by a click when expandOnClick is off, and a double click does not undo the two clicks when it is on", async () => {
+    const user = userEvent.setup();
+    const { unmount } = render(<Tree aria-label="T" nodes={nested} selectionMode="single" />);
+    await user.click(screen.getByText("alpha"));
+    expect(item("alpha")).toHaveAttribute("aria-expanded", "false");
+    unmount();
+    render(<Tree aria-label="T" nodes={nested} selectionMode="single" expandOnClick />);
+    await user.dblClick(screen.getByText("alpha"));
+    expect(item("alpha")).toHaveAttribute("aria-expanded", "false");
+  });
+
+  it("selects the row focus lands on with selectOnFocus in single mode: arrows, Home, End, parent, child and a typed letter", async () => {
+    const user = userEvent.setup();
+    const onValueChange = vi.fn();
+    render(<Tree aria-label="T" nodes={nested} selectionMode="single" selectOnFocus defaultExpandAll onValueChange={onValueChange} />);
+    item("alpha").focus();
+    expect(onValueChange).not.toHaveBeenCalled();
+    await user.keyboard("{ArrowDown}");
+    expect(onValueChange).toHaveBeenLastCalledWith(["a1"]);
+    await user.keyboard("{End}");
+    expect(onValueChange).toHaveBeenLastCalledWith(["c"]);
+    await user.keyboard("{Home}");
+    expect(onValueChange).toHaveBeenLastCalledWith(["a"]);
+    await user.keyboard("{ArrowRight}");
+    expect(onValueChange).toHaveBeenLastCalledWith(["a1"]);
+    await user.keyboard("{ArrowLeft}");
+    expect(onValueChange).toHaveBeenLastCalledWith(["a"]);
+    await user.keyboard("g");
+    expect(onValueChange).toHaveBeenLastCalledWith(["c"]);
+  });
+
+  it("keeps the selection when focus lands on a row that cannot be selected, and ignores selectOnFocus outside single mode", async () => {
+    const user = userEvent.setup();
+    const onValueChange = vi.fn();
+    const { unmount } = render(<Tree aria-label="T" nodes={nested} selectionMode="single" selectOnFocus defaultValue={["a"]} onValueChange={onValueChange} />);
+    item("alpha").focus();
+    await user.keyboard("{ArrowDown}");
+    expect(item("beta")).toHaveFocus();
+    expect(onValueChange).not.toHaveBeenCalled();
+    unmount();
+    render(<Tree aria-label="T" nodes={nested} selectionMode="multiple" selectOnFocus onValueChange={onValueChange} />);
+    item("alpha").focus();
+    await user.keyboard("{ArrowDown}");
+    expect(onValueChange).not.toHaveBeenCalled();
+  });
+});
+
+describe("Tree — more keys and a count", () => {
+  const many: TreeNode[] = Array.from({ length: 30 }, (_, position) => ({ id: `n${position}`, label: `Row ${position}` }));
+
+  it("moves a page at a time with Page Up and Page Down, from the rows that fit, and stops at the ends", async () => {
+    const user = userEvent.setup();
+    vi.spyOn(HTMLElement.prototype, "clientHeight", "get").mockImplementation(function (this: HTMLElement) {
+      return this.className.includes("frame") ? 36 * 6 : 0;
+    });
+    render(<Tree aria-label="Many" nodes={many} />);
+    item("Row 0").focus();
+    await user.keyboard("{PageDown}");
+    expect(item("Row 5")).toHaveFocus();
+    await user.keyboard("{PageDown}{PageDown}{PageDown}{PageDown}{PageDown}");
+    expect(item("Row 29")).toHaveFocus();
+    await user.keyboard("{PageUp}");
+    expect(item("Row 24")).toHaveFocus();
+  });
+
+  it("moves ten rows when the tree has no measured height", async () => {
+    const user = userEvent.setup();
+    render(<Tree aria-label="Many" nodes={many} />);
+    item("Row 0").focus();
+    await user.keyboard("{PageDown}");
+    expect(item("Row 10")).toHaveFocus();
+  });
+
+  it("extends a selection a page with Shift and Page Down in multiple mode", async () => {
+    const user = userEvent.setup();
+    const onValueChange = vi.fn();
+    render(<Tree aria-label="Many" nodes={many} selectionMode="multiple" onValueChange={onValueChange} />);
+    await user.click(screen.getByText("Row 0"));
+    await user.keyboard("{Shift>}{PageDown}{/Shift}");
+    expect(onValueChange).toHaveBeenLastCalledWith(many.slice(0, 11).map((node) => node.id));
+  });
+
+  it("says how many rows are selected after a change in multiple mode, and not in single mode", async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    const { unmount } = render(<Tree aria-label="Many" nodes={many} selectionMode="multiple" />);
+    item("Row 0").focus();
+    await user.keyboard("{Control>}a{/Control}");
+    act(() => {
+      vi.advanceTimersByTime(150);
+    });
+    expect(screen.getByRole("status")).toHaveTextContent("30 selected");
+    await user.keyboard("{Control>}a{/Control}");
+    unmount();
+    render(<Tree aria-label="Many" nodes={many} selectionMode="single" />);
+    await user.click(screen.getByText("Row 1"));
+    act(() => {
+      vi.advanceTimersByTime(150);
+    });
+    expect(screen.getByRole("status")).toBeEmptyDOMElement();
+    vi.useRealTimers();
+  });
+
+  it("says None selected when the last row is cleared, and says it in labels.selectedCount's words", async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    render(<Tree aria-label="Many" nodes={many} selectionMode="multiple" defaultValue={["n0"]} labels={{ selectedCount: (count) => `${count} choisis` }} />);
+    item("Row 0").focus();
+    await user.keyboard(" ");
+    act(() => {
+      vi.advanceTimersByTime(150);
+    });
+    expect(screen.getByRole("status")).toHaveTextContent("0 choisis");
+    vi.useRealTimers();
+  });
+
+  it("ignores a key that is part of an input method's composition", () => {
+    render(<Tree aria-label="Many" nodes={[{ id: "a", label: "apple" }, { id: "b", label: "banana" }]} />);
+    item("apple").focus();
+    fireEvent.keyDown(item("apple"), { key: "b", isComposing: true });
+    expect(item("apple")).toHaveFocus();
+    fireEvent.keyDown(item("apple"), { key: "b" });
+    expect(item("banana")).toHaveFocus();
+  });
+});
+
 describe("Tree — checking", () => {
   it("gives every row a check state, and works a parent's out from the leaves under it", () => {
     render(<Basic checkable defaultExpandAll defaultCheckedIds={["app", "util"]} />);

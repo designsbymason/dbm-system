@@ -17,6 +17,8 @@ import type { TreeController, TreeNode, TreeProps, TreeSelectionMode, TreeSize }
 interface PlaygroundArgs {
   size: TreeSize;
   selectionMode: TreeSelectionMode;
+  expandOnClick: boolean;
+  selectOnFocus: boolean;
   checkable: boolean;
   defaultExpandAll: boolean;
   windowed: "auto" | "on" | "off";
@@ -62,6 +64,8 @@ const off = { control: false } as const;
 const noControls = {
   size: off,
   selectionMode: off,
+  expandOnClick: off,
+  selectOnFocus: off,
   checkable: off,
   defaultExpandAll: off,
   windowed: off,
@@ -92,6 +96,16 @@ const meta: Meta<PlaygroundArgs> = {
       options: ["none", "single", "multiple"],
       description: "Whether rows can be selected: none, one at a time, or several (Ctrl or ⌘ with a click adds a row, Shift extends).",
       table: { defaultValue: { summary: "none" } },
+    },
+    expandOnClick: {
+      control: "boolean",
+      description: "A plain click on a row that has rows under it also opens or closes it, as in a navigation pane. A click with Ctrl, ⌘, Shift or Alt held only selects.",
+      table: { defaultValue: { summary: "false" } },
+    },
+    selectOnFocus: {
+      control: "boolean",
+      description: "In single mode, moving focus with the keys selects the row it lands on, as in a navigation pane. Ignored in the other modes.",
+      table: { defaultValue: { summary: "false" } },
     },
     value: { control: false, description: "The ids of the selected rows. Makes the selection controlled: it changes only when this does." },
     defaultValue: { control: false, description: "The ids selected to begin with, when value is not given." },
@@ -155,6 +169,8 @@ const meta: Meta<PlaygroundArgs> = {
   args: {
     size: "md",
     selectionMode: "none",
+    expandOnClick: false,
+    selectOnFocus: false,
     checkable: false,
     defaultExpandAll: false,
     windowed: "auto",
@@ -166,11 +182,13 @@ const meta: Meta<PlaygroundArgs> = {
   render: (args) => (
     <Tree
       // Keyed by the settings that only set how it begins, so changing one restarts the (uncontrolled) tree.
-      key={`${args.defaultExpandAll}-${args.selectionMode}-${args.checkable}`}
+      key={`${args.defaultExpandAll}-${args.selectionMode}-${args.checkable}-${args.expandOnClick}`}
       aria-label={args["aria-label"]}
       nodes={projectFiles}
       size={args.size}
       selectionMode={args.selectionMode}
+      expandOnClick={args.expandOnClick}
+      selectOnFocus={args.selectOnFocus}
       checkable={args.checkable}
       defaultExpandAll={args.defaultExpandAll}
       windowed={windowedProp(args.windowed)}
@@ -253,6 +271,43 @@ export const MultipleSelection: Story = {
   argTypes: { ...except("size") },
   render: (args) => <Demo size={args.size} selectionMode="multiple" defaultValue={["app", "index"]} defaultExpandAll />,
   parameters: { docs: { source: { code: treeSnippets.multiple } } },
+};
+
+export const Picker: Story = {
+  name: "A picker: folders open, files are chosen",
+  argTypes: { ...except("size") },
+  render: (args) => {
+    const Choosing = () => {
+      const [selected, setSelected] = useState<string[]>([]);
+      const folders = projectFiles.map((node) => (node.children ? { ...node, selectable: false, children: node.children.map((child) => (child.children ? { ...child, selectable: false } : child)) } : node));
+      return (
+        <div style={{ display: "grid", gap: "var(--dbm-space-3)" }}>
+          <Text size="sm">Chosen: {selected.join(", ") || "none"}</Text>
+          <Demo size={args.size} nodes={folders} selectionMode="multiple" expandOnClick value={selected} onValueChange={setSelected} />
+        </div>
+      );
+    };
+    return <Choosing />;
+  },
+  parameters: { docs: { source: { code: treeSnippets.picker } } },
+};
+
+export const SelectionFollowsFocus: Story = {
+  name: "Selection that follows the arrow keys",
+  argTypes: { ...except("size") },
+  render: (args) => {
+    const Navigating = () => {
+      const [selected, setSelected] = useState<string[]>(["app"]);
+      return (
+        <div style={{ display: "grid", gap: "var(--dbm-space-3)" }}>
+          <Text size="sm">Open: {selected.join(", ") || "none"}</Text>
+          <Demo size={args.size} selectionMode="single" selectOnFocus expandOnClick value={selected} onValueChange={setSelected} defaultExpandedIds={["src"]} />
+        </div>
+      );
+    };
+    return <Navigating />;
+  },
+  parameters: { docs: { source: { code: treeSnippets.followFocus } } },
 };
 
 export const Checkable: Story = {

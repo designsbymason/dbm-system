@@ -52,6 +52,8 @@ const FALLBACK_ROW_PX = 36;
 const TYPEAHEAD_MS = 600;
 // How long after the key that asks for a menu a `contextmenu` event from the same press is taken as that press.
 const MENU_KEY_ECHO_MS = 500;
+// How many rows Page Up and Page Down move when the box that scrolls has no measured height (a tree that does not scroll).
+const PAGE_FALLBACK_ROWS = 10;
 
 // The shape of the placeholder rows `loading` draws: a few levels and a few widths, repeated, so it reads as a small tree.
 const PLACEHOLDER_LEVELS = [1, 2, 2, 1] as const;
@@ -69,6 +71,7 @@ const defaultLabels = (formatNumber: (value: number) => string): TreeLabels => (
   empty: "No items",
   childrenLoaded: (count) => `${formatNumber(count)} ${count === 1 ? "item" : "items"} loaded`,
   loading: "Loading",
+  selectedCount: (count) => (count === 0 ? "None selected" : `${formatNumber(count)} selected`),
   rename: (label) => `Rename ${label}`,
   nameRequired: "Enter a name",
   emptyFolder: "Empty",
@@ -109,6 +112,8 @@ export const Tree = forwardRef<HTMLDivElement, TreeProps>(
       nodes,
       size = "md",
       selectionMode = "none",
+      expandOnClick = false,
+      selectOnFocus = false,
       value: valueProp,
       defaultValue,
       onValueChange,
@@ -319,21 +324,28 @@ export const Tree = forwardRef<HTMLDivElement, TreeProps>(
     };
 
     const anchor = useRef<string | undefined>(undefined);
+    // A person can select a row that is not disabled and has not said otherwise.
+    const canSelect = (node: TreeNode | undefined): node is TreeNode => node !== undefined && !node.disabled && node.selectable !== false;
+    // A change of selection a person asked for; in `"multiple"` a screen reader is told how many are selected now.
+    const askSelected = (next: string[]) => {
+      requestSelected(next);
+      if (selectionMode === "multiple") announce(labels.selectedCount(next.length));
+    };
     const selectRange = (from: string, to: string) => {
       const a = rowIndexById.get(from);
       const b = rowIndexById.get(to);
       if (a === undefined || b === undefined) return;
       const [low, high] = a < b ? [a, b] : [b, a];
-      requestSelected(rows.slice(low, high + 1).filter((row) => !row.node.disabled).map((row) => row.node.id));
+      askSelected(rows.slice(low, high + 1).filter((row) => canSelect(row.node)).map((row) => row.node.id));
     };
     const select = (target: string, how: "replace" | "toggle") => {
       const node = index.byId.get(target);
-      if (!node || node.disabled || selectionMode === "none") return;
+      if (!canSelect(node) || selectionMode === "none") return;
       anchor.current = target;
       if (how === "toggle") {
-        requestSelected(selectedSet.has(target) ? selected.filter((entry) => entry !== target) : selectionMode === "multiple" ? [...selected, target] : [target]);
+        askSelected(selectedSet.has(target) ? selected.filter((entry) => entry !== target) : selectionMode === "multiple" ? [...selected, target] : [target]);
       } else if (!(selected.length === 1 && selected[0] === target)) {
-        requestSelected([target]);
+        askSelected([target]);
       }
     };
     const toggleCheck = (node: TreeNode) => {
@@ -437,6 +449,17 @@ export const Tree = forwardRef<HTMLDivElement, TreeProps>(
     );
     useImperativeHandle(controllerRef, () => controller, [controller]);
 
+    // Moving focus with a key: in `"single"` with `selectOnFocus`, the row it lands on is selected too.
+    const focusByKey = (target: string) => {
+      focusRow(target);
+      if (selectOnFocus && selectionMode === "single") select(target, "replace");
+    };
+    // How far Page Up and Page Down go: the rows that fit in the box that scrolls, less one so the last stays in sight.
+    const pageRows = () => {
+      const height = frameRef.current?.clientHeight ?? 0;
+      return height > 0 ? Math.max(1, Math.floor(height / (rowPx ?? FALLBACK_ROW_PX)) - 1) : PAGE_FALLBACK_ROWS;
+    };
+
     // --- the keyboard ------------------------------------------------------------------------------------------------------
     const typed = useRef({ text: "", timer: 0 });
     useEffect(() => {
@@ -447,8 +470,8 @@ export const Tree = forwardRef<HTMLDivElement, TreeProps>(
     const handleKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
       onKeyDown?.(event);
       if (event.defaultPrevented) return;
-      // Keys typed into a row's rename field are the field's.
-      if ((event.target as HTMLElement).closest("input, textarea")) return;
+      // Keys typed into a row's rename field are the field's, and a key that is part of an input method's composition is nobody's.
+      if ((event.target as HTMLElement).closest("input, textarea") || event.nativeEvent.isComposing) return;
       const element = (event.target as HTMLElement).closest<HTMLElement>("[data-tree-id]");
       if (!element || event.currentTarget !== element.closest('[role="tree"]')) return;
       const currentId = element.dataset.treeId as string;
@@ -463,7 +486,7 @@ export const Tree = forwardRef<HTMLDivElement, TreeProps>(
           anchor.current ??= currentId;
           selectRange(anchor.current, target.node.id);
         }
-        focusRow(target.node.id);
+        focusByKey(target.node.id);
       };
 
       const forward = rtl ? "ArrowLeft" : "ArrowRight";
@@ -482,7 +505,7 @@ export const Tree = forwardRef<HTMLDivElement, TreeProps>(
 
       if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "a" && selectionMode === "multiple") {
         event.preventDefault();
-        requestSelected(rows.filter((entry) => !entry.node.disabled).map((entry) => entry.node.id));
+        askSelected(rows.filter((entry) => canSelect(entry.node)).map((entry) => entry.node.id));
         return;
       }
       if (modified) return;
@@ -496,6 +519,12 @@ export const Tree = forwardRef<HTMLDivElement, TreeProps>(
         case "ArrowUp":
           move(position - 1, event.shiftKey);
           return;
+        case "PageDown":
+          move(position + pageRows(), event.shiftKey);
+          return;
+        case "PageUp":
+          move(position - pageRows(), event.shiftKey);
+          return;
         case "Home":
           move(0);
           return;
@@ -507,13 +536,13 @@ export const Tree = forwardRef<HTMLDivElement, TreeProps>(
           if (!canExpand(row.node)) return;
           if (!expandedSet.has(currentId)) {
             if (!row.node.disabled) setOpen(currentId, true);
-          } else if (rows[position + 1]?.parentId === currentId) focusRow(rows[position + 1]!.node.id);
+          } else if (rows[position + 1]?.parentId === currentId) focusByKey(rows[position + 1]!.node.id);
           else if (!row.node.disabled) openOrRetry(currentId);
           return;
         case backward:
           event.preventDefault();
           if (canExpand(row.node) && expandedSet.has(currentId) && !row.node.disabled) setOpen(currentId, false);
-          else if (row.parentId !== undefined) focusRow(row.parentId);
+          else if (row.parentId !== undefined) focusByKey(row.parentId);
           return;
         case "Enter":
           event.preventDefault();
@@ -552,7 +581,7 @@ export const Tree = forwardRef<HTMLDivElement, TreeProps>(
           const candidate = rows[(from + step) % rows.length] as TreeRow;
           if (candidate.node.label.toLowerCase().startsWith(needle)) {
             event.preventDefault();
-            focusRow(candidate.node.id);
+            focusByKey(candidate.node.id);
             return;
           }
         }
@@ -602,13 +631,15 @@ export const Tree = forwardRef<HTMLDivElement, TreeProps>(
       if (node.disabled) return;
       if (selectionMode === "none") {
         if (checkable) toggleCheck(node);
-        return;
+      } else if (node.selectable !== false) {
+        if (selectionMode === "multiple" && event.shiftKey) {
+          selectRange(anchor.current ?? activeId ?? node.id, node.id);
+        } else if (selectionMode === "multiple" && (event.ctrlKey || event.metaKey)) select(node.id, "toggle");
+        else if (selectionMode === "single" && (event.ctrlKey || event.metaKey) && selectedSet.has(node.id)) select(node.id, "toggle");
+        else select(node.id, "replace");
       }
-      if (selectionMode === "multiple" && event.shiftKey) {
-        selectRange(anchor.current ?? activeId ?? node.id, node.id);
-      } else if (selectionMode === "multiple" && (event.ctrlKey || event.metaKey)) select(node.id, "toggle");
-      else if (selectionMode === "single" && (event.ctrlKey || event.metaKey) && selectedSet.has(node.id)) select(node.id, "toggle");
-      else select(node.id, "replace");
+      // A plain click on a row with rows under it also opens or closes it; one with a modifier held only selects.
+      if (expandOnClick && !event.shiftKey && !event.ctrlKey && !event.metaKey && !event.altKey) setOpen(node.id, !expandedSet.has(node.id));
     };
 
     // --- drawing -----------------------------------------------------------------------------------------------------------
@@ -640,7 +671,10 @@ export const Tree = forwardRef<HTMLDivElement, TreeProps>(
         register={registerRow}
         onFocusRow={setFocusId}
         onClickRow={handleClick}
-        onDoubleClickRow={activate}
+        onDoubleClickRow={(rowId) => {
+          // With `expandOnClick` the two clicks have already opened and closed it.
+          if (!(expandOnClick && !onItemActivate)) activate(rowId);
+        }}
       />
     ));
 
@@ -808,7 +842,7 @@ function TreeRowView({
       aria-setsize={setsize}
       aria-posinset={posinset}
       aria-expanded={hasChildren ? expanded : undefined}
-      aria-selected={selectionMode === "none" ? undefined : selected}
+      aria-selected={selectionMode === "none" || node.selectable === false ? undefined : selected}
       aria-checked={checkable ? checked === "indeterminate" ? "mixed" : checked : undefined}
       aria-disabled={node.disabled || undefined}
       aria-busy={loading || undefined}

@@ -436,3 +436,47 @@ export const LoadingRowsKeepTheRowHeight: Story = {
     }
   },
 };
+
+export const PageKeysMoveByWhatFits: Story = {
+  name: "Page Down and Page Up move by the rows that fit in the box that scrolls, through the window of a long tree",
+  render: () => <Tree aria-label="Paged" nodes={manyNodes(300, 0).map((node) => ({ ...node, children: undefined }))} maxHeight="12rem" windowed />,
+  play: async () => {
+    const tree = body.getByRole("tree", { name: "Paged" });
+    const frame = tree.parentElement as HTMLElement;
+    await waitFor(() => expect(within(tree).getAllByRole("treeitem").length).toBeGreaterThan(3));
+    const rowPx = tokenPx("--dbm-tree-row-height-md");
+    const page = Math.max(1, Math.floor(frame.clientHeight / rowPx) - 1);
+    await userEvent.tab();
+    await userEvent.keyboard("{PageDown}");
+    await waitFor(() => expect(within(tree).getByRole("treeitem", { name: `Folder ${page + 1}` })).toHaveFocus());
+    await userEvent.keyboard("{PageDown}");
+    await waitFor(() => expect(within(tree).getByRole("treeitem", { name: `Folder ${2 * page + 1}` })).toHaveFocus());
+    await userEvent.keyboard("{PageUp}");
+    await waitFor(() => expect(within(tree).getByRole("treeitem", { name: `Folder ${page + 1}` })).toHaveFocus());
+  },
+};
+
+export const PickerOpensFoldersAndChoosesFiles: Story = {
+  name: "In a picker a click opens a folder without selecting it, and a click on a file selects it",
+  render: () => (
+    <Tree
+      aria-label="Picker"
+      selectionMode="multiple"
+      expandOnClick
+      nodes={[
+        { id: "dir", label: "dir", selectable: false, children: [{ id: "a", label: "a.ts" }, { id: "b", label: "b.ts" }] },
+        { id: "c", label: "c.ts" },
+      ]}
+    />
+  ),
+  play: async () => {
+    await userEvent.click(body.getByText("dir"));
+    await expect(rowOf("dir")).toHaveAttribute("aria-expanded", "true");
+    await expect(rowOf("dir")).not.toHaveAttribute("aria-selected");
+    await userEvent.click(body.getByText("a.ts"));
+    await expect(rowOf("a.ts")).toHaveAttribute("aria-selected", "true");
+    await userEvent.click(body.getByText("dir"));
+    await expect(rowOf("dir")).toHaveAttribute("aria-expanded", "false");
+    await expect(rowOf("c.ts")).toHaveAttribute("aria-selected", "false");
+  },
+};

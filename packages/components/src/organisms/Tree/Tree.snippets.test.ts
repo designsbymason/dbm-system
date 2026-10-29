@@ -11,6 +11,8 @@ describe("the Playground's snippet", () => {
     const snippet = treePlaygroundSnippet({
       size: "lg",
       selectionMode: "multiple",
+      expandOnClick: true,
+      selectOnFocus: true,
       checkable: true,
       defaultExpandAll: true,
       windowed: true,
@@ -18,7 +20,7 @@ describe("the Playground's snippet", () => {
       highlightQuery: "app",
       dir: "rtl",
     });
-    for (const part of ['size="lg"', 'selectionMode="multiple"', "checkable", "defaultExpandAll", "windowed", "maxHeight={240}", 'highlightQuery="app"', 'dir="rtl"']) {
+    for (const part of ['size="lg"', 'selectionMode="multiple"', "checkable", "expandOnClick", "selectOnFocus", "defaultExpandAll", "windowed", "maxHeight={240}", 'highlightQuery="app"', 'dir="rtl"']) {
       expect(snippet).toContain(part);
     }
   });

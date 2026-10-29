@@ -10,6 +10,8 @@ export const propOrder = [
   "nodes",
   "size",
   "selectionMode",
+  "expandOnClick",
+  "selectOnFocus",
   "value",
   "defaultValue",
   "onValueChange",
@@ -55,6 +57,7 @@ export const nodeFields = [
   { name: "description", description: "Quieter text after the label on the same line." },
   { name: "children", description: "The rows under this one, drawn when it is open." },
   { name: "hasChildren", description: "Marks a row whose children you do not have yet. It can be opened; you fetch the children and put them in `children`, or `children: []` when there are none (the open row then shows an \"Empty\" row).", defaultValue: "false" },
+  { name: "selectable", description: "Whether a person can select the row. `false` is for a row that only holds others (a folder in a picker): a click, Space, a Shift range and Ctrl+A skip it and it has no `aria-selected`, but it can still be opened, checked and focused.", defaultValue: "true" },
   { name: "disabled", description: "A person cannot select, check or open it. It stays in the arrow-key order.", defaultValue: "false" },
   { name: "trailing", description: "Content at the end of the row. Not interactive: a button in a row would be a second focus stop inside the tree." },
 ];
@@ -157,6 +160,12 @@ selected. Enter commits, Escape cancels, and leaving the field commits, unless t
 asks with the trimmed text, and the new label appears when you change `nodes` (leave it alone and the old one stays). While the field is open the
 tree's keys (arrows, Space, letters) are the field's, and the row cannot be selected, opened or activated by a click in it.
 
+**A picker, and a navigation pane.** `selectable: false` on a node makes a row that only holds others, so a tree of files lets a person open
+folders but choose files. `expandOnClick` makes a plain click on a row with rows under it open or close it (a click with Ctrl, ⌘, Shift or Alt only
+selects, and a double click does not undo it). `selectOnFocus`, in `"single"` mode, selects the row that focus lands on from the keys, so moving
+through the tree changes the current item the way a navigation pane does; a row that cannot be selected leaves the selection alone. After a change
+of selection in `"multiple"` a screen reader hears how many rows are selected (`labels.selectedCount`).
+
 ### TreeController
 
 `controllerRef` hands code outside the tree these controls. Each asks for a change the way a key press does and returns whether
@@ -181,6 +190,14 @@ there was anything to do. The object is the same for the tree's life.
 ### Selecting several rows
 
 <Canvas of={TreeStories.MultipleSelection} />
+
+### A picker: folders open, files are chosen
+
+<Canvas of={TreeStories.Picker} />
+
+### Selection that follows the arrow keys
+
+<Canvas of={TreeStories.SelectionFollowsFocus} />
 
 ### Check boxes with a mixed parent
 
@@ -268,6 +285,7 @@ there was anything to do. The object is the same for the tree's life.
 - Hold `expandedIds` yourself when other parts of the page need to know (a breadcrumb, a saved layout), and leave it to the tree when they do not.
 - For a very large tree, fetch a folder's children when it is opened (`hasChildren`) instead of sending everything, and keep the row's id the same when its children arrive.
 - A label is one line and is cut with an ellipsis; put a long path in `description`, which is cut too, or give the tree room.
+- Use `selectable: false` for a row that only holds others, so a picker offers files and not folders; add `expandOnClick` so a click opens it.
 - A row's `renderLabel` replaces only the text. It is told the row's level and state so it can draw a count or a badge, but it must not hold a control.
 - Use `loading` for the first fetch of the rows themselves, and `loadingIds` for one folder's children.
 - Use `filterTree` for a search rather than filtering by hand: it keeps the rows above a match and tells you which to open.
@@ -299,6 +317,7 @@ that holds the stop is outside the drawn window of a long tree, the tree itself 
 | `ArrowRight` | Opens a closed row; on an open row, moves to its first child, or asks to try again when it failed to load. (`ArrowLeft` in `dir="rtl"`.) |
 | `ArrowLeft` | Closes an open row; otherwise moves to the row's parent. (`ArrowRight` in `dir="rtl"`.) |
 | `Home` / `End` | Moves to the first or last visible row. |
+| `PageDown` / `PageUp` | Moves down or up by the rows that fit in the box that scrolls, less one (ten when the tree does not scroll). With `Shift` in `"multiple"`, extends the selection. |
 | `Enter` | Activates the row (`onItemActivate`), or opens or closes it when there is no handler. On an open row that failed to load, asks to try again (`onRetry`). |
 | `Space` | Checks the row when `checkable`, otherwise selects it (adds or removes it in `"multiple"`). |
 | `Shift` + `ArrowDown` / `ArrowUp` | In `"multiple"`, extends the selection from where it began. |

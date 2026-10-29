@@ -42,6 +42,31 @@ ${tree('selectionMode="single"\n  value={selected}\n  onValueChange={setSelected
   multiple: `{/* Ctrl or ⌘ with a click adds or removes a row, Shift with a click or an arrow key extends it, Ctrl+A selects all */}
 ${tree('selectionMode="multiple"\n  defaultValue={["app"]}\n  onValueChange={(ids) => save(ids)}\n  defaultExpandAll')}`,
 
+  picker: `{/* selectable: false on a node that only holds others: a click, Space, a Shift range and Ctrl+A skip it (it has no aria-selected),
+    and it can still be opened and checked. expandOnClick makes a plain click on a folder open or close it. */}
+<Tree
+  aria-label="Choose files"
+  selectionMode="multiple"
+  expandOnClick
+  nodes={[
+    {
+      id: "src",
+      label: "src",
+      selectable: false,
+      children: [
+        { id: "app", label: "App.tsx" },
+        { id: "index", label: "index.ts" },
+      ],
+    },
+    { id: "readme", label: "NOTES.txt" },
+  ]}
+/>`,
+
+  followFocus: `{/* selectOnFocus (single mode): moving focus with the arrow keys, Home, End, Page Up and Down or a typed letter selects the row it
+    lands on, as in a navigation pane. A row that cannot be selected keeps the old selection. With expandOnClick a click also opens it. */}
+{/* const [current, setCurrent] = useState(["app"]) */}
+<Tree aria-label="Project files" nodes={files} selectionMode="single" selectOnFocus expandOnClick value={current} onValueChange={setCurrent} />`,
+
   checkable: `{/* const [checked, setChecked] = useState(["app"]) — checkedIds holds the leaves; a parent shows what is under it
     ("indeterminate" when only some are checked), and checking a parent checks the leaves under it */}
 ${tree("checkable\n  checkedIds={checked}\n  onCheckedChange={setChecked}\n  defaultExpandAll")}`,
@@ -162,6 +187,8 @@ ${tree('dir="rtl"\n  defaultExpandAll')}`,
 export interface TreePlaygroundSnippetArgs {
   size?: TreeSize;
   selectionMode?: TreeSelectionMode;
+  expandOnClick?: boolean;
+  selectOnFocus?: boolean;
   checkable?: boolean;
   defaultExpandAll?: boolean;
   windowed?: "auto" | boolean;
@@ -176,6 +203,8 @@ export function treePlaygroundSnippet(args: TreePlaygroundSnippetArgs): string {
   const attributes: string[] = [];
   if (args.size && args.size !== "md") attributes.push(`size="${args.size}"`);
   if (args.selectionMode && args.selectionMode !== "none") attributes.push(`selectionMode="${args.selectionMode}"`);
+  if (args.expandOnClick) attributes.push("expandOnClick");
+  if (args.selectOnFocus) attributes.push("selectOnFocus");
   if (args.checkable) attributes.push("checkable");
   if (args.defaultExpandAll) attributes.push("defaultExpandAll");
   if (args.windowed === true) attributes.push("windowed");
