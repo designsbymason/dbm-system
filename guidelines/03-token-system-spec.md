@@ -307,3 +307,4 @@ packages/tokens/src/
 
 - **Fonts:** how a consumer loads `Nunito` and `Lora` is undecided (see Fonts above).
 - **Component tokens:** none pending; the layer grows only as a component's review finds a gap (see its rules above).
+- **`Checkbox`'s box outline:** it is drawn with `border.neutral`, which is 2.3:1 on `bg.surface` in the two light themes, under the 3:1 a control's own edge needs (the note above treats `border.neutral` as a decorative accent, which an edge that identifies a control is not). `Tree`'s check box uses `border.neutral-strong` (4.5:1 or more on the surface, in all four themes). Whether `Checkbox` follows is undecided; it is Finalized, so it needs your go-ahead.

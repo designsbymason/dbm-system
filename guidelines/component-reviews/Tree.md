@@ -1,6 +1,6 @@
 # Tree — review
 
-**Status:** Built and documented; the §9 review pass and Finalization are the maintainer's to declare. Not verified: the items under "Not verified" (a real device, touch and a screen reader, and the look of the Docs page and stories across the four themes).
+**Status:** Finalized 2026-10-29, after the full `06-engineering-standards.md` §9 review pass and the rounds below, declared by the maintainer. Not verified: the items under "Not verified" in the rounds below (a screen reader and a real touch device, a phone's on-screen keyboard, 768px wide, and the render cost of a large tree that is not windowed).
 
 ## What exists
 `Tree`: an expandable hierarchy of rows given as a `nodes` array, a flat `role="tree"` of `role="treeitem"` rows with roving focus. Decision: [ADR-0143](../adr/0143-tree-is-a-flat-roving-focus-wai-aria-tree-over-a-nodes-array-with-leaf-based-checks-and-a-window-of-fixed-height-rows-over-composed-item-parts-aria-activedescendant-or-nested-groups.md).

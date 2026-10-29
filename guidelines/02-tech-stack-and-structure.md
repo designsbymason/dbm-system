@@ -74,7 +74,7 @@ dbm-system/
 | Hook | What it does | Used by |
 |---|---|---|
 | `useResolvedResponsiveValue` | Resolves a breakpoint map in JS (`matchMedia`), for a responsive value CSS can't drive | `Divider`, `Popover`, `Tabs`, `Toolbar`, `ToggleGroup` and others |
-| `useAnnouncement` | The timing half of a screen-reader announcement: put text into an already-present live region a moment later, then clear it | `Pagination`, `EmptyState`, `Calendar`, `Stat`, `CodeBlock`, `TableToolbar` |
+| `useAnnouncement` | The timing half of a screen-reader announcement: put text into an already-present live region a moment later, then clear it | `Pagination`, `EmptyState`, `Calendar`, `Stat`, `CodeBlock`, `TableToolbar`, `TagsInput`, `Combobox`, `MultiSelect`, `CommandPalette`, `ConfirmDialog`, `DataTable`, `DatePicker`, `DateRangePicker`, `FileUpload`, `Form`, `Stepper`, `Timeline`, `Tree` |
 | `usePersistentDismiss` | Remembers a dismissal across visits ([ADR-0023](adr/0023-one-alert-with-banner-and-sticky-options-and-a-separate-persistence-hook.md)) | `Alert`; also meant for consumers to call |
 | `useRecentCommands` | Remembers the values of the commands last run, newest first and capped, for `CommandPalette`'s `recent`; shares its storage helpers (memory fallback, other tabs kept in step) with `usePersistentDismiss` | `CommandPalette`; also meant for consumers to call |
 | `useIsScrollable` | Whether a scroll container overflows along an axis, so it is a keyboard-reachable region only while it scrolls (ADR-0019, ADR-0028) | `ScrollArea`, `Table`, `Splitter.Pane`, `Timeline` (a horizontal row) |

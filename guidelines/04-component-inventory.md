@@ -210,7 +210,7 @@ This puts v1 alone in "real, comprehensive design system" territory (not a 15-co
 
 ## Sequencing recommendation for actual build order
 
-Not alphabetical, not category-by-category: build in **dependency order**, since many components above are built on top of others. The atom tier (steps 1–3) is complete, and so is the molecule tier; the organism tier has begun with `Dialog`.
+Not alphabetical, not category-by-category: build in **dependency order**, since many components above are built on top of others. The atom tier (steps 1–3) is complete, and so is the molecule tier; the organism tier is built in the order below.
 
 1. Utility primitives (ThemeProvider, Portal, VisuallyHidden, FocusTrap, ClientOnly) + Layout primitives (Box, Stack, Container, Divider, Spacer, AspectRatio, Center, Bleed, Affix)
 2. Typography (Text, Heading, Link, Code, Blockquote, Kbd, Highlight, ListItem)
@@ -258,7 +258,7 @@ Dependency order, then priority (🟢 before 🟡 before ⚪). `Grid`, `List` an
 
 ### Organism-tier build order
 
-Dependency order, then priority (🟢 before 🟡 before ⚪). Build one at a time, each with the full `06-engineering-standards.md` §9 pass; note any deviation here. `Dialog`, `AlertDialog`, `ConfirmDialog`, `Drawer`, `Menu`, `Toast`, `Form`, `Combobox`, `DatePicker`, `DataTable`, `Navbar`, `Sidebar` and `FileUpload`, `ContextMenu`, `MultiSelect`, `DateRangePicker`, `CommandPalette`, `Stepper` and `Timeline` are built and Finalized, `Tree` is built and awaiting its review pass, and the rest are not started.
+Dependency order, then priority (🟢 before 🟡 before ⚪). Build one at a time, each with the full `06-engineering-standards.md` §9 pass; note any deviation here. `Dialog`, `AlertDialog`, `ConfirmDialog`, `Drawer`, `Menu`, `Toast`, `Form`, `Combobox`, `DatePicker`, `DataTable`, `Navbar`, `Sidebar` and `FileUpload`, `ContextMenu`, `MultiSelect`, `DateRangePicker`, `CommandPalette`, `Stepper`, `Timeline` and `Tree` are built and Finalized, and the rest are not started.
 
 **🟢 core**
 1. Dialog — foundation for every modal (Radix Dialog, `Backdrop`, `CloseButton`, `ScrollArea`); built, review in [Dialog.md](component-reviews/Dialog.md)
@@ -274,12 +274,12 @@ Dependency order, then priority (🟢 before 🟡 before ⚪). Build one at a ti
 13. FileUpload — built and Finalized, review in [FileUpload.md](component-reviews/FileUpload.md)
 
 **🟡 v1.5**
-14. ContextMenu (on Menu; built and Finalized, review in [ContextMenu.md](component-reviews/ContextMenu.md)), 15. MultiSelect (on Combobox and TagsInput; built and Finalized, review in [MultiSelect.md](component-reviews/MultiSelect.md)), 16. DateRangePicker (on Calendar and DatePicker; built and Finalized, review in [DateRangePicker.md](component-reviews/DateRangePicker.md)), 17. CommandPalette (Dialog plus Combobox-style search; built and Finalized, review in [CommandPalette.md](component-reviews/CommandPalette.md)), 18. NavigationMenu (`Navbar` covers a bar of links; this is for mega-menu panels), 19. Stepper (built and Finalized, review in [Stepper.md](component-reviews/Stepper.md)), 20. Timeline (built and Finalized, review in [Timeline.md](component-reviews/Timeline.md)), 21. Tree (built, review in [Tree.md](component-reviews/Tree.md); not yet Finalized)
+14. ContextMenu (on Menu; built and Finalized, review in [ContextMenu.md](component-reviews/ContextMenu.md)), 15. MultiSelect (on Combobox and TagsInput; built and Finalized, review in [MultiSelect.md](component-reviews/MultiSelect.md)), 16. DateRangePicker (on Calendar and DatePicker; built and Finalized, review in [DateRangePicker.md](component-reviews/DateRangePicker.md)), 17. CommandPalette (Dialog plus Combobox-style search; built and Finalized, review in [CommandPalette.md](component-reviews/CommandPalette.md)), 18. NavigationMenu (`Navbar` covers a bar of links; this is for mega-menu panels), 19. Stepper (built and Finalized, review in [Stepper.md](component-reviews/Stepper.md)), 20. Timeline (built and Finalized, review in [Timeline.md](component-reviews/Timeline.md)), 21. Tree (built and Finalized, review in [Tree.md](component-reviews/Tree.md))
 
 **⚪ deferred**
 22. Menubar (after Menu), 23. EditorTabs (wraps `Tabs`; reordering needs the drag-and-drop decision), 24. Carousel, 25. ImageViewer / Lightbox (Dialog, optionally Carousel), 26. ColorPicker (Popover plus Slider), 27. Tour (Popover-style cards and a spotlight)
 
-**Reordering** (`EditorTabs`, `Tree`, `DataTable` column reordering): one hand-rolled sortable hook in `utils`, single list, pointer/touch/tap/keyboard, internal for now — [ADR-0043](adr/0043-reordering-is-a-hand-rolled-sortable-hook-in-primitives-for-a-single-list-over-a-drag-and-drop-dependency.md). The hook is `useSortable` in `utils`, built with `MultiSelect`'s `reorderable` chips, which widened it to a row that wraps ([ADR-0126](adr/0126-multiselect-chips-move-by-a-hand-rolled-sortable-hook-that-finds-the-nearest-chip-so-a-wrapping-row-works-and-space-picks-up-with-alt-arrows-for-one-place-over-an-axis-bound-hook-or-a-drag-handle.md)); still internal.
+**Reordering** (`EditorTabs`, `DataTable` column reordering): one hand-rolled sortable hook in `utils`, single list, pointer/touch/tap/keyboard, internal for now — [ADR-0043](adr/0043-reordering-is-a-hand-rolled-sortable-hook-in-primitives-for-a-single-list-over-a-drag-and-drop-dependency.md). The hook is `useSortable` in `utils`, built with `MultiSelect`'s `reorderable` chips, which widened it to a row that wraps ([ADR-0126](adr/0126-multiselect-chips-move-by-a-hand-rolled-sortable-hook-that-finds-the-nearest-chip-so-a-wrapping-row-works-and-space-picks-up-with-alt-arrows-for-one-place-over-an-axis-bound-hook-or-a-drag-handle.md)); still internal. `Tree` is built without reordering or reparenting ([ADR-0143](adr/0143-tree-is-a-flat-roving-focus-wai-aria-tree-over-a-nodes-array-with-leaf-based-checks-and-a-window-of-fixed-height-rows-over-composed-item-parts-aria-activedescendant-or-nested-groups.md), [ADR-0144](adr/0144-tree-takes-loading-placeholders-a-filter-helper-a-row-menu-callback-and-inline-rename-over-a-built-in-menu-a-search-prop-editabletext-in-the-row-or-a-loading-flag-per-row.md)): moving a row between parents needs nesting rules `useSortable` does not have, and is its own decision when an app needs it.
 
 ## Related documents
 - `01-vision-and-goals.md` — why comprehensiveness and agent-legibility are core goals
