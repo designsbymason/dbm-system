@@ -21,10 +21,16 @@ export const propOrder = [
   "defaultExpandedIds",
   "defaultExpandAll",
   "onExpandedChange",
+  "loading",
+  "loadingCount",
   "loadingIds",
   "errorIds",
   "onRetry",
   "onItemActivate",
+  "onItemContextMenu",
+  "renamable",
+  "onRename",
+  "validateRename",
   "renderLabel",
   "highlightQuery",
   "windowed",
@@ -54,6 +60,7 @@ export const nodeFields = [
 ];
 
 export const controllerMethods = [
+  { name: "rename(id)", description: "Opens the rows above a row and turns its label into a field, as F2 does. Returns `false` when there is no such row, it is disabled or `renamable` does not allow it." },
   { name: "expandAll()", description: "Opens every row that has children. Returns whether anything changed." },
   { name: "collapseAll()", description: "Closes every row. Returns whether anything changed." },
   { name: "expand(id)", description: "Opens one row. Returns `false` when it is missing, has nothing under it or is already open." },
@@ -130,6 +137,26 @@ so it does not look broken. If the fetch fails, put the id in `errorIds`: the ar
 row again, from the mark, with Right or with Enter, calls `onRetry(id)`; take the id out of `errorIds` and into `loadingIds` as you
 try again. A closed row that failed opens the ordinary way, through `onExpandedChange`.
 
+**Loading the rows.** `loading` draws placeholder rows and marks the tree `aria-busy`. With no rows yet the placeholders stand in for the
+tree (and for the empty message) and a screen reader hears `labels.loading`; with rows they follow the last one (in a long tree, the last
+window). `loadingCount` (default 3) is held between 0 and 20. This is the tree's own first load: `loadingIds` is for one row's children.
+
+**Searching.** The tree never filters. `filterTree(nodes, { query })` keeps the rows that match and the rows above them, and says which rows
+to open (`expandedIds`) so a match is not hidden under a closed folder; pass its `nodes` as `nodes`, its `expandedIds` into `expandedIds`, and
+the query as `highlightQuery`. With `keepDescendants` (the default) a folder that matches still shows what is in it. `match` takes a function
+in place of the query. It never changes the nodes it is given, and a row whose children are all kept is the same object.
+
+**A row's menu.** `onItemContextMenu` says which row a right-click, the context-menu key or Shift+F10 was for, and where (`point`, `element`,
+`via`). The tree draws no menu and holds back nothing of the browser's: put it inside a `ContextMenu` (a `ContextMenu.Trigger asChild` round a `div`,
+so a right-click and a long press open it natively), build the items from the `id`, and turn a key into a menu with the controller's
+`openAt(point)`. Focus goes back to the row when the menu closes. A disabled row and the Empty row ask for nothing.
+
+**Renaming.** With `renamable`, F2 on a row (or `controllerRef`'s `rename(id)`, for a "Rename" menu item) turns its label into a field with the text
+selected. Enter commits, Escape cancels, and leaving the field commits, unless the text is refused, when it is dropped. An empty name and anything
+`validateRename` returns a message for stay in the field with the message shown and `aria-invalid` set. The tree changes no label itself: `onRename(id, label)`
+asks with the trimmed text, and the new label appears when you change `nodes` (leave it alone and the old one stays). While the field is open the
+tree's keys (arrows, Space, letters) are the field's, and the row cannot be selected, opened or activated by a click in it.
+
 ### TreeController
 
 `controllerRef` hands code outside the tree these controls. Each asks for a change the way a key press does and returns whether
@@ -163,6 +190,10 @@ there was anything to do. The object is the same for the tree's life.
 
 <Canvas of={TreeStories.Lazy} />
 
+### Loading the rows
+
+<Canvas of={TreeStories.Loading} />
+
 ### Thousands of rows
 
 <Canvas of={TreeStories.LongTree} />
@@ -175,9 +206,17 @@ there was anything to do. The object is the same for the tree's life.
 
 <Canvas of={TreeStories.Trailing} />
 
-### Marking a search
+### Filtering and marking a search
 
 <Canvas of={TreeStories.Highlight} />
+
+### A menu for a row
+
+<Canvas of={TreeStories.RowMenu} />
+
+### Renaming a row
+
+<Canvas of={TreeStories.Rename} />
 
 ### Your own label
 
@@ -230,6 +269,9 @@ there was anything to do. The object is the same for the tree's life.
 - For a very large tree, fetch a folder's children when it is opened (`hasChildren`) instead of sending everything, and keep the row's id the same when its children arrive.
 - A label is one line and is cut with an ellipsis; put a long path in `description`, which is cut too, or give the tree room.
 - A row's `renderLabel` replaces only the text. It is told the row's level and state so it can draw a count or a badge, but it must not hold a control.
+- Use `loading` for the first fetch of the rows themselves, and `loadingIds` for one folder's children.
+- Use `filterTree` for a search rather than filtering by hand: it keeps the rows above a match and tells you which to open.
+- Give a row a menu with a `ContextMenu` of your own and `onItemContextMenu`, so a menu stays a menu (a button in a row is a second focus stop).
 - Use `controllerRef` for an "Expand all" button or to reveal a row found by a search (`scrollToNode`).
 - Activation (`onItemActivate`, from Enter or a double click) is for opening the thing a row stands for; selection is for choosing it.
 
@@ -261,6 +303,8 @@ that holds the stop is outside the drawn window of a long tree, the tree itself 
 | `Space` | Checks the row when `checkable`, otherwise selects it (adds or removes it in `"multiple"`). |
 | `Shift` + `ArrowDown` / `ArrowUp` | In `"multiple"`, extends the selection from where it began. |
 | `Ctrl` or `⌘` + `A` | In `"multiple"`, selects every row that is not disabled. |
+| `F2` | With `renamable`, turns the focused row's label into a field. In the field: `Enter` commits, `Escape` cancels. |
+| Context-menu key, `Shift` + `F10` | Asks for the focused row's menu (`onItemContextMenu`). |
 | `*` | Opens every closed row beside the focused one. |
 | A letter | Moves to the next visible row whose label starts with the letters typed within a moment; a repeated letter cycles through the rows that start with it. |
 
@@ -330,16 +374,16 @@ const tree = useRef<TreeController>(null);
 
 ## Design tokens used
 
-<TokenRow token="text.primary" usage="a row's label" />
+<TokenRow token="text.primary" usage="a row's label, and the text in the rename field" />
 <TokenRow token="text.secondary" usage="a row's description, its trailing content, the empty message and the Empty row" />
 <TokenRow token="text.danger" usage="the words on a row whose children could not be loaded" />
 <TokenRow token="bg.neutral-subtle" usage="the fill of a row under the pointer" />
 <TokenRow token="bg.brand-subtle" usage="the fill of a selected row" />
 <TokenRow token="border.brand" usage="the bar at the start of a selected row" />
 <TokenRow token="border-width.4" usage="the width of that bar, reserved on every row so a selection does not move the text" />
-<TokenRow token="bg.surface" usage="an unchecked check box" />
+<TokenRow token="bg.surface" usage="an unchecked check box, and the rename field" />
 <TokenRow token="bg.brand" usage="a checked or mixed check box" />
-<TokenRow token="border.neutral-strong" usage="the outline of an unchecked check box (<code>border.neutral</code> is under 3:1 on the surface in light mode)" />
+<TokenRow token="border.neutral-strong" usage="the outline of an unchecked check box, and of the rename field (<code>border.neutral</code> is under 3:1 on the surface in light mode)" />
 <TokenRow token="border-width.1" usage="the outline of a check box" />
 <TokenRow token="radius.xs" usage="the corners of a check box" />
 <TokenRow token="icon.default" usage="the arrow that opens a row, and a row's own icon" />
@@ -352,9 +396,10 @@ const tree = useRef<TreeController>(null);
 <TokenRow token="tree.row-height.md" usage="the same at size md" />
 <TokenRow token="tree.row-height.lg" usage="the same at size lg" />
 <TokenRow token="tree.row-height.xl" usage="the same at size xl" />
-<TokenRow token="border.focus" usage="the ring inside a focused row, and inside the tree when it holds the tab stop" />
+<TokenRow token="border.focus" usage="the ring inside a focused row, inside the tree when it holds the tab stop, and round the field a row is renamed in" />
+<TokenRow token="border.danger" usage="the edge of the rename field while its text is refused" />
 <TokenRow token="border-width.2" usage="the focus ring" />
-<TokenRow token="radius.sm" usage="the corners of the focus ring" />
+<TokenRow token="radius.sm" usage="the corners of the focus ring, and of the rename field" />
 <TokenRow token="opacity.40" usage="a disabled row" />
 <TokenRow token="font-family.primary" usage="the tree's typography" />
 <TokenRow token="font-size.xs" usage="the text at size xs, and the description at sizes xs and sm" />

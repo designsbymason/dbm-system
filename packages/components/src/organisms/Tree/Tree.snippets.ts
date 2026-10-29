@@ -85,8 +85,63 @@ ${tree("checkable\n  checkedIds={checked}\n  onCheckedChange={setChecked}\n  def
   ]}
 />`,
 
-  highlight: `{/* highlightQuery marks the match in every label. It does not hide rows: filter nodes yourself. */}
-${tree('highlightQuery="tsx"\n  defaultExpandAll')}`,
+  highlight: `{/* filterTree(nodes, { query }) keeps the matching rows and the rows above them, and says which rows to open
+    ("expandedIds"); highlightQuery marks the match in every label. The tree itself never filters.
+    const [query, setQuery] = useState("tsx")
+    const [open, setOpen] = useState<string[]>([])
+    const result = filterTree(nodes, { query })
+    onChange of the search field: setQuery(value); setOpen(filterTree(nodes, { query: value }).expandedIds) */}
+<Tree
+  aria-label="Project files"
+  nodes={result.nodes}
+  expandedIds={open}
+  onExpandedChange={setOpen}
+  highlightQuery={query}
+  empty={<Text color="secondary">Nothing matched.</Text>}
+/>`,
+
+  loading: `{/* loading: placeholder rows. With no rows yet they stand in for the tree and the empty message; with rows they are
+    added after the last one. The tree is aria-busy meanwhile. loadingCount (default 3) is held between 0 and 20. */}
+<Tree aria-label="Project files" nodes={[]} loading />
+<Tree aria-label="Project files" nodes={files} loading loadingCount={2} />`,
+
+  rowMenu: `{/* onItemContextMenu: the tree says which row a right-click, the context-menu key or Shift+F10 was for, and where; it
+    draws no menu. Wrap it in a ContextMenu (the trigger is a div round the tree, so a right-click and a long press open it) and
+    build the items from the id. A key has no pointer, so turn it into a menu at the point it gives.
+    const menu = useRef<ContextMenuController>(null)
+    const [target, setTarget] = useState<string>() */}
+<ContextMenu controllerRef={menu}>
+  <ContextMenu.Trigger asChild>
+    <div>
+      <Tree
+        aria-label="Project files"
+        nodes={files}
+        onItemContextMenu={({ id, via, point }) => {
+          setTarget(id);
+          if (via === "keyboard") menu.current?.openAt(point);
+        }}
+      />
+    </div>
+  </ContextMenu.Trigger>
+  <ContextMenu.Content>
+    <ContextMenu.Item onSelect={() => copyPath(target)}>Copy path</ContextMenu.Item>
+    <ContextMenu.Separator />
+    <ContextMenu.Item tone="danger" onSelect={() => remove(target)}>Delete</ContextMenu.Item>
+  </ContextMenu.Content>
+</ContextMenu>`,
+
+  rename: `{/* renamable: F2 on a row turns its label into a field (the text selected). Enter commits, Escape cancels, leaving
+    commits unless the text is refused. The tree changes no label itself: onRename asks, and the new text appears when you change
+    nodes. validateRename returns a message to refuse a name; an empty name is always refused.
+    controllerRef.current?.rename(id) does the same from code, such as a "Rename" menu item.
+    const [files, setFiles] = useState(initialFiles) */}
+<Tree
+  aria-label="Project files"
+  nodes={files}
+  renamable
+  onRename={(id, label) => setFiles((current) => renameNode(current, id, label))}
+  validateRename={(id, label) => (nameTaken(label) ? "A file with that name already exists" : undefined)}
+/>`,
 
   customLabel: `{/* renderLabel replaces the text of a row; the arrow, check box and icon stay. It is told the row's state. */}
 ${tree('selectionMode="single"\n  defaultExpandAll\n  renderLabel={(node, { selected }) => <em>{selected ? `${node.label} (open)` : node.label}</em>}')}`,

@@ -4,6 +4,7 @@ import {
   forwardRef,
   useCallback,
   useEffect,
+  useId,
   useImperativeHandle,
   useMemo,
   useRef,
@@ -13,11 +14,13 @@ import {
 import type { CSSProperties, KeyboardEvent, MouseEvent } from "react";
 import { Highlight } from "../../atoms/Highlight";
 import { Icon } from "../../atoms/Icon";
+import { Skeleton } from "../../atoms/Skeleton";
 import { Spinner } from "../../atoms/Spinner";
 import { VisuallyHidden } from "../../atoms/VisuallyHidden";
 import styles from "./Tree.module.css";
 import { readLengthToken } from "./Tree.length";
 import type {
+  TreeContextMenuRequest,
   TreeController,
   TreeLabels,
   TreeNode,
@@ -47,6 +50,17 @@ const OVERSCAN = 8;
 const FALLBACK_ROW_PX = 36;
 // How long a typed letter keeps counting towards the word being typed.
 const TYPEAHEAD_MS = 600;
+// How long after the key that asks for a menu a `contextmenu` event from the same press is taken as that press.
+const MENU_KEY_ECHO_MS = 500;
+
+// The shape of the placeholder rows `loading` draws: a few levels and a few widths, repeated, so it reads as a small tree.
+const PLACEHOLDER_LEVELS = [1, 2, 2, 1] as const;
+const PLACEHOLDER_WIDTHS = ["55%", "40%", "65%", "50%"] as const;
+const MAX_PLACEHOLDERS = 20;
+const DEFAULT_PLACEHOLDERS = 3;
+
+const normalizeLoadingCount = (count: number): number =>
+  Number.isFinite(count) ? Math.min(Math.max(Math.trunc(count), 0), MAX_PLACEHOLDERS) : DEFAULT_PLACEHOLDERS;
 
 const noSubscription = () => () => undefined;
 const noSnapshot = (): undefined => undefined;
@@ -54,6 +68,9 @@ const noSnapshot = (): undefined => undefined;
 const defaultLabels = (formatNumber: (value: number) => string): TreeLabels => ({
   empty: "No items",
   childrenLoaded: (count) => `${formatNumber(count)} ${count === 1 ? "item" : "items"} loaded`,
+  loading: "Loading",
+  rename: (label) => `Rename ${label}`,
+  nameRequired: "Enter a name",
   emptyFolder: "Empty",
   loadFailed: "Couldn't load. Press Enter to try again.",
 });
@@ -103,10 +120,16 @@ export const Tree = forwardRef<HTMLDivElement, TreeProps>(
       defaultExpandedIds,
       defaultExpandAll = false,
       onExpandedChange,
+      loading = false,
+      loadingCount = DEFAULT_PLACEHOLDERS,
       loadingIds,
       errorIds,
       onRetry,
       onItemActivate,
+      onItemContextMenu,
+      renamable = false,
+      onRename,
+      validateRename,
       renderLabel,
       highlightQuery,
       windowed = "auto",
@@ -121,6 +144,7 @@ export const Tree = forwardRef<HTMLDivElement, TreeProps>(
       id,
       "data-testid": dataTestId,
       onKeyDown,
+      onContextMenu,
       ...props
     },
     ref,
@@ -324,8 +348,37 @@ export const Tree = forwardRef<HTMLDivElement, TreeProps>(
       else setOpen(target, !expandedSet.has(target));
     };
 
+    // --- renaming ---------------------------------------------------------------------------------------------------------
+    const [editingId, setEditingId] = useState<string | undefined>(undefined);
+    const canRename = (node: TreeNode | undefined): node is TreeNode =>
+      node !== undefined && !node.disabled && (typeof renamable === "function" ? renamable(node) : renamable);
+    const startRename = (target: string): boolean => {
+      const node = index.byId.get(target);
+      if (!canRename(node)) return false;
+      setEditingId(target);
+      return true;
+    };
+    const checkName = (target: string, text: string): string | undefined => {
+      const trimmed = text.trim();
+      if (trimmed === "") return labels.nameRequired;
+      return validateRename?.(target, trimmed);
+    };
+    const endRename = (target: string, text: string | undefined, restoreFocus: boolean) => {
+      setEditingId(undefined);
+      const node = index.byId.get(target);
+      if (text !== undefined && node && text.trim() !== node.label) onRename?.(target, text.trim());
+      if (restoreFocus) focusRow(target);
+    };
+    // A row that is no longer a row at all (a closed ancestor) takes its field with it: the state is reset while rendering, which
+    // React allows for state that follows what is shown. A row only out of the window keeps its field for when it is back.
+    if (editingId !== undefined && !rowIndexById.has(editingId)) setEditingId(undefined);
+
     // --- the controller ----------------------------------------------------------------------------------------------------
     const controllerState = useRef({ index, requestExpanded, readExpanded });
+    const renameState = useRef({ canRename, start: startRename });
+    useEffect(() => {
+      renameState.current = { canRename, start: startRename };
+    });
     useEffect(() => {
       controllerState.current = { index, requestExpanded, readExpanded };
     });
@@ -336,6 +389,18 @@ export const Tree = forwardRef<HTMLDivElement, TreeProps>(
           const open = new Set(read());
           if (current.expandable.every((entry) => open.has(entry))) return false;
           ask([...new Set([...read(), ...current.expandable])]);
+          return true;
+        },
+        rename: (target) => {
+          const { index: current, requestExpanded: ask, readExpanded: read } = controllerState.current;
+          const node = current.byId.get(target);
+          if (!renameState.current.canRename(node)) return false;
+          const open = new Set(read());
+          const closed = ancestorsOf(target, current.parentOf).filter((ancestor) => !open.has(ancestor));
+          if (closed.length > 0) ask([...read(), ...closed]);
+          pendingScroll.current = target;
+          setFocusId(target);
+          renameState.current.start(target);
           return true;
         },
         collapseAll: () => {
@@ -382,6 +447,8 @@ export const Tree = forwardRef<HTMLDivElement, TreeProps>(
     const handleKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
       onKeyDown?.(event);
       if (event.defaultPrevented) return;
+      // Keys typed into a row's rename field are the field's.
+      if ((event.target as HTMLElement).closest("input, textarea")) return;
       const element = (event.target as HTMLElement).closest<HTMLElement>("[data-tree-id]");
       if (!element || event.currentTarget !== element.closest('[role="tree"]')) return;
       const currentId = element.dataset.treeId as string;
@@ -402,6 +469,16 @@ export const Tree = forwardRef<HTMLDivElement, TreeProps>(
       const forward = rtl ? "ArrowLeft" : "ArrowRight";
       const backward = rtl ? "ArrowRight" : "ArrowLeft";
       const modified = event.ctrlKey || event.metaKey || event.altKey;
+
+      // The key that asks for a menu: handled before the modifier check, since Shift is part of it.
+      if (event.key === "ContextMenu" || (event.key === "F10" && event.shiftKey)) {
+        if (onItemContextMenu && !row.node.disabled) {
+          event.preventDefault();
+          keyedMenuAt.current = event.timeStamp;
+          askForMenu(element, row.node.id, "keyboard", event.nativeEvent);
+        }
+        return;
+      }
 
       if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "a" && selectionMode === "multiple") {
         event.preventDefault();
@@ -442,6 +519,9 @@ export const Tree = forwardRef<HTMLDivElement, TreeProps>(
           event.preventDefault();
           activate(currentId);
           return;
+        case "F2":
+          if (startRename(currentId)) event.preventDefault();
+          return;
         case " ":
           event.preventDefault();
           if (checkable) toggleCheck(row.node);
@@ -479,8 +559,33 @@ export const Tree = forwardRef<HTMLDivElement, TreeProps>(
       }
     };
 
+    // --- a row's menu ----------------------------------------------------------------------------------------------------
+    // A key can also make the browser fire a `contextmenu` of its own (Windows and Linux): the key has already asked.
+    const keyedMenuAt = useRef(Number.NEGATIVE_INFINITY);
+    const askForMenu = (element: HTMLElement, rowId: string, via: TreeContextMenuRequest["via"], event: Event, pointer?: { x: number; y: number }) => {
+      if (!onItemContextMenu) return;
+      let point = pointer;
+      if (!point) {
+        // From a key: under the start of the row's label, where a person's eyes are.
+        const label = element.querySelector<HTMLElement>('[data-tree-part="label"]')?.getBoundingClientRect() ?? element.getBoundingClientRect();
+        point = { x: rtl ? label.right : label.left, y: element.getBoundingClientRect().bottom };
+      }
+      onItemContextMenu({ id: rowId, element, via, point, event });
+    };
+
+    const handleContextMenu = (event: MouseEvent<HTMLDivElement>) => {
+      onContextMenu?.(event);
+      if (event.defaultPrevented || !onItemContextMenu) return;
+      const element = (event.target as HTMLElement).closest<HTMLElement>("[data-tree-id]");
+      const node = element ? index.byId.get(element.dataset.treeId as string) : undefined;
+      if (!element || !node || node.disabled || event.timeStamp - keyedMenuAt.current < MENU_KEY_ECHO_MS) return;
+      focusRow(node.id);
+      askForMenu(element, node.id, "pointer", event.nativeEvent, { x: event.clientX, y: event.clientY });
+    };
+
     // --- the pointer -------------------------------------------------------------------------------------------------------
     const handleClick = (event: MouseEvent<HTMLDivElement>, node: TreeNode) => {
+      if ((event.target as HTMLElement).closest("input")) return;
       const part = (event.target as HTMLElement).closest<HTMLElement>("[data-tree-part]")?.dataset.treePart;
       if (part === "chevron") {
         if (!node.disabled) setOpen(node.id, !expandedSet.has(node.id));
@@ -526,6 +631,9 @@ export const Tree = forwardRef<HTMLDivElement, TreeProps>(
         checked={checkMap?.get(row.node.id) ?? false}
         loading={loadingSet.has(row.node.id)}
         error={errorSet.has(row.node.id) && !loadingSet.has(row.node.id)}
+        editing={editingId === row.node.id}
+        checkName={checkName}
+        endRename={endRename}
         labels={labels}
         highlightQuery={highlightQuery}
         renderLabel={renderLabel}
@@ -536,6 +644,23 @@ export const Tree = forwardRef<HTMLDivElement, TreeProps>(
       />
     ));
 
+    const placeholders = loading ? normalizeLoadingCount(loadingCount) : 0;
+    // Placeholders follow the last row, so they are drawn with the last window of a long tree.
+    const placeholderRows =
+      placeholders > 0 && end >= rows.length
+        ? Array.from({ length: placeholders }, (_, position) => (
+            <div
+              key={`loading-${position}`}
+              aria-hidden="true"
+              className={cx(styles.row, styles.skeletonRow)}
+              style={{ "--tree-level": PLACEHOLDER_LEVELS[position % PLACEHOLDER_LEVELS.length] } as CSSProperties}
+            >
+              <span className={styles.chevron} />
+              <Skeleton variant="circular" width="var(--tree-check)" height="var(--tree-check)" />
+              <Skeleton variant="text" width={PLACEHOLDER_WIDTHS[position % PLACEHOLDER_WIDTHS.length]} />
+            </div>
+          ))
+        : null;
     const showEmpty = rows.length === 0;
 
     return (
@@ -547,9 +672,17 @@ export const Tree = forwardRef<HTMLDivElement, TreeProps>(
             id={id}
             data-testid={dataTestId}
             role="group"
-            className={cx(styles.root, styles.emptyRoot)}
+            aria-busy={loading || undefined}
+            className={cx(styles.root, loading ? undefined : styles.emptyRoot)}
           >
-            {empty === false ? null : (empty ?? <span className={styles.empty}>{labels.empty}</span>)}
+            {loading ? (
+              <>
+                {placeholderRows}
+                <VisuallyHidden>{labels.loading}</VisuallyHidden>
+              </>
+            ) : empty === false ? null : (
+              (empty ?? <span className={styles.empty}>{labels.empty}</span>)
+            )}
           </div>
         ) : (
           <div
@@ -559,10 +692,12 @@ export const Tree = forwardRef<HTMLDivElement, TreeProps>(
             data-testid={dataTestId}
             role="tree"
             aria-multiselectable={multiselectable || undefined}
+            aria-busy={loading || undefined}
             tabIndex={activeDrawn ? -1 : 0}
             className={styles.root}
             style={treeStyle}
             onKeyDown={handleKeyDown}
+            onContextMenu={handleContextMenu}
             onFocus={(event) => {
               props.onFocus?.(event);
               // The row that holds the stop is outside the window: bring it in and hand it the focus.
@@ -570,6 +705,7 @@ export const Tree = forwardRef<HTMLDivElement, TreeProps>(
             }}
           >
             {body}
+            {placeholderRows}
           </div>
         )}
         <VisuallyHidden role="status">{message}</VisuallyHidden>
@@ -592,6 +728,9 @@ interface TreeRowViewProps {
   checked: boolean | "indeterminate";
   loading: boolean;
   error: boolean;
+  editing: boolean;
+  checkName: (id: string, text: string) => string | undefined;
+  endRename: (id: string, text: string | undefined, restoreFocus: boolean) => void;
   labels: TreeLabels;
   highlightQuery: string | undefined;
   renderLabel: TreeProps["renderLabel"];
@@ -613,6 +752,9 @@ function TreeRowView({
   checked,
   loading,
   error,
+  editing,
+  checkName,
+  endRename,
   labels,
   highlightQuery,
   renderLabel,
@@ -675,7 +817,9 @@ function TreeRowView({
       style={{ "--tree-level": level } as CSSProperties}
       onFocus={() => onFocusRow(node.id)}
       onClick={(event) => onClickRow(event, node)}
-      onDoubleClick={() => onDoubleClickRow(node.id)}
+      onDoubleClick={() => {
+        if (!editing) onDoubleClickRow(node.id);
+      }}
     >
       <span className={styles.chevron} data-tree-part={error ? "retry" : hasChildren ? "chevron" : undefined} aria-hidden="true">
         {loading ? (
@@ -692,11 +836,95 @@ function TreeRowView({
         </span>
       ) : null}
       {node.icon ? <Icon icon={node.icon} size={iconSize} tone="default" className={styles.nodeIcon} /> : null}
-      <span className={styles.label}>
-        {renderLabel ? renderLabel(node, state) : query ? <Highlight query={query}>{node.label}</Highlight> : node.label}
-      </span>
+      {editing ? (
+        <TreeRenameField
+          initial={node.label}
+          name={labels.rename(node.label)}
+          check={(text) => checkName(node.id, text)}
+          onCommit={(text, restoreFocus) => endRename(node.id, text, restoreFocus)}
+          onCancel={(restoreFocus) => endRename(node.id, undefined, restoreFocus)}
+        />
+      ) : (
+        <span className={styles.label} data-tree-part="label">
+          {renderLabel ? renderLabel(node, state) : query ? <Highlight query={query}>{node.label}</Highlight> : node.label}
+        </span>
+      )}
       {error ? <span className={styles.failure}>{labels.loadFailed}</span> : node.description ? <span className={styles.description}>{node.description}</span> : null}
       {node.trailing ? <span className={styles.trailing}>{node.trailing}</span> : null}
     </div>
+  );
+}
+
+interface TreeRenameFieldProps {
+  initial: string;
+  name: string;
+  check: (text: string) => string | undefined;
+  onCommit: (text: string, restoreFocus: boolean) => void;
+  onCancel: (restoreFocus: boolean) => void;
+}
+
+/** The field a row's label turns into: Enter commits, Escape cancels, leaving commits unless the text is refused. */
+function TreeRenameField({ initial, name, check, onCommit, onCancel }: TreeRenameFieldProps) {
+  const [text, setText] = useState(initial);
+  const [error, setError] = useState<string | undefined>(undefined);
+  const field = useRef<HTMLInputElement | null>(null);
+  const errorId = useId();
+  // An Enter or Escape ends it; the blur that follows the field going away is not a second ending.
+  const ended = useRef(false);
+
+  useEffect(() => {
+    field.current?.focus();
+    field.current?.select();
+  }, []);
+
+  return (
+    <>
+      <input
+        ref={field}
+        className={styles.rename}
+        type="text"
+        value={text}
+        aria-label={name}
+        aria-invalid={error ? true : undefined}
+        aria-describedby={error ? errorId : undefined}
+        autoComplete="off"
+        spellCheck={false}
+        data-tree-part="rename"
+        onChange={(event) => {
+          setText(event.target.value);
+          setError(undefined);
+        }}
+        onKeyDown={(event) => {
+          if (event.nativeEvent.isComposing) return;
+          if (event.key === "Enter") {
+            event.preventDefault();
+            event.stopPropagation();
+            const message = check(text);
+            if (message) setError(message);
+            else {
+              ended.current = true;
+              onCommit(text, true);
+            }
+          } else if (event.key === "Escape") {
+            event.preventDefault();
+            event.stopPropagation();
+            ended.current = true;
+            onCancel(true);
+          }
+        }}
+        onBlur={() => {
+          if (ended.current) return;
+          ended.current = true;
+          // Leaving keeps a good name and drops a refused one, rather than holding a person in a field they have left.
+          if (check(text)) onCancel(false);
+          else onCommit(text, false);
+        }}
+      />
+      {error ? (
+        <span id={errorId} role="alert" className={styles.failure}>
+          {error}
+        </span>
+      ) : null}
+    </>
   );
 }

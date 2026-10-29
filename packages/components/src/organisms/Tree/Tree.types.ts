@@ -62,6 +62,12 @@ export interface TreeLabels {
    * @default (count) => `${count} items loaded` (the number through `formatNumber`; `1 item loaded` for one)
    */
   childrenLoaded: (count: number) => string;
+  /** What a screen reader hears while a tree with no rows yet is loading (`loading`). @default 'Loading' */
+  loading: string;
+  /** The name of the field a row's label turns into while it is renamed, given the row's current label. @default (label) => `Rename ${label}` */
+  rename: (label: string) => string;
+  /** What the field says when it is committed empty. @default 'Enter a name' */
+  nameRequired: string;
   /** The words under an open row that was fetched and has nothing in it (`children: []`). @default 'Empty' */
   emptyFolder: string;
   /**
@@ -72,6 +78,23 @@ export interface TreeLabels {
 }
 
 /**
+ * What `onItemContextMenu` is told when a row's menu is asked for. It carries where to put the menu and which element it is for,
+ * so a `ContextMenu` of your own can be opened with its controller's `openAt(point)` or `openFrom(element)`.
+ */
+export interface TreeContextMenuRequest {
+  /** The `id` of the row. */
+  id: string;
+  /** The row's element. */
+  element: HTMLElement;
+  /** Where the menu belongs, in viewport pixels: the pointer for a right-click, the start of the row's label (at its lower edge) for a key. */
+  point: { x: number; y: number };
+  /** The browser's event, for a caller that opens a menu of its own and has to hold the browser's back with `preventDefault()` (a `ContextMenu` does that itself). */
+  event: Event;
+  /** `"pointer"` for a right-click (or a press the browser reports as one), `"keyboard"` for the context-menu key or Shift+F10. */
+  via: "pointer" | "keyboard";
+}
+
+/**
  * The controls `controllerRef` hands to code outside the tree, such as an "Expand all" button. Each asks for a change the way
  * a key press does (through `onExpandedChange` when the expansion is controlled, by moving itself when it is not) and
  * says whether there was anything to do. The object is the same for the tree's life, and its methods read the latest state.
@@ -79,6 +102,11 @@ export interface TreeLabels {
 export interface TreeController {
   /** Asks for every row that has children to be open. */
   expandAll: () => boolean;
+  /**
+   * Opens the rows above a row and turns its label into a field, as F2 does. `false` when there is no such row, it is
+   * disabled, or `renamable` does not allow it.
+   */
+  rename: (id: string) => boolean;
   /** Asks for every row to be closed. */
   collapseAll: () => boolean;
   /** Asks for this row to be open. `false` when it is missing, has nothing under it or is already open. */
@@ -136,6 +164,14 @@ export interface TreeProps extends Omit<ComponentPropsWithoutRef<"div">, "childr
   /** The ids of rows whose children are being fetched: a spinner in place of the arrow, and `aria-busy` on the row. */
   loadingIds?: string[];
   /**
+   * Shows that the rows themselves are being fetched: placeholder rows, and `aria-busy` on the tree. With no rows yet the
+   * placeholders stand in for the tree (and for the empty message); with rows they are added after the last one.
+   * @default false
+   */
+  loading?: boolean;
+  /** How many placeholder rows `loading` draws, held between 0 and 20 (the default for a value that is not finite). @default 3 */
+  loadingCount?: number;
+  /**
    * The ids of rows whose children could not be loaded: the arrow gives way to a warning mark, the row says `labels.loadFailed`
    * and a screen reader is told. Open such a row again (the mark, Right or Enter) and `onRetry` is called, if it is still open;
    * a closed one opens as usual, so `onExpandedChange` is where the first attempt is made. Take the id out when you try again.
@@ -148,6 +184,28 @@ export interface TreeProps extends Omit<ComponentPropsWithoutRef<"div">, "childr
    * closed by Enter instead.
    */
   onItemActivate?: (id: string) => void;
+  /**
+   * Lets a row be renamed: F2 on it (or `controllerRef`'s `rename(id)`) turns its label into a field with the text selected.
+   * Enter commits, Escape cancels, and leaving the field commits unless the text is refused. `true` allows every row that is not
+   * disabled; a function chooses by node. The tree never changes a label itself: `onRename` asks, and the new text appears
+   * when you change `nodes`.
+   * @default false
+   */
+  renamable?: boolean | ((node: TreeNode) => boolean);
+  /** Called with the row's `id` and the new text (trimmed) when a person commits a name that differs from the label. */
+  onRename?: (id: string, label: string) => void;
+  /**
+   * Checks a name before it is committed, given the row's `id` and the trimmed text. Return a message to refuse it: the field
+   * stays open, shows the message and is `aria-invalid`. An empty name is always refused (`labels.nameRequired`).
+   */
+  validateRename?: (id: string, label: string) => string | undefined;
+  /**
+   * Called when a row's menu is asked for: a right-click on it, the context-menu key or Shift+F10 on the focused row. Not
+   * called for a disabled row. The browser's own menu is not held back by the tree: a `ContextMenu` does that, and `request.event` is there for a menu that does not. Wrap the tree in a
+   * `ContextMenu` (`ContextMenu.Trigger asChild` round a `div`), build its items from the `id` and open it with the controller
+   * for a key. The tree draws no menu itself.
+   */
+  onItemContextMenu?: (request: TreeContextMenuRequest) => void;
   /** Draws a row's label in place of its text, given the row and its state. The icon, arrow, check box and trailing content stay. */
   renderLabel?: (node: TreeNode, state: TreeRowState) => ReactNode;
   /** Text to find in each label and mark, case-insensitively. Marks the match only; it does not hide rows (filter `nodes` yourself). */

@@ -23,6 +23,20 @@ const longTree = (
   />
 );
 
+const featureTree = (
+  <Tree
+    aria-label="Letters"
+    nodes={nodes}
+    defaultExpandAll
+    loading
+    renamable
+    onRename={() => undefined}
+    validateRename={() => undefined}
+    onItemContextMenu={() => undefined}
+    errorIds={["b"]}
+  />
+);
+
 afterEach(() => {
   vi.unstubAllGlobals();
   document.body.innerHTML = "";
@@ -65,6 +79,26 @@ describe("Tree — server render and hydration", () => {
     const errors: unknown[] = [];
     await act(async () => {
       hydrateRoot(host, longTree, { onRecoverableError: (error) => errors.push(error) });
+    });
+    expect(errors).toEqual([]);
+  });
+
+  it("renders loading placeholders, a failed row and the renaming props to a string with no window or document", () => {
+    vi.stubGlobal("window", undefined);
+    vi.stubGlobal("document", undefined);
+    const html = renderToString(featureTree);
+    expect(html).toContain('aria-busy="true"');
+    expect(html).toContain("Couldn&#x27;t load");
+    expect(renderToString(<Tree aria-label="None" nodes={[]} loading />)).toContain("Loading");
+  });
+
+  it("hydrates that tree with no recoverable error", async () => {
+    const host = document.createElement("div");
+    host.innerHTML = renderToString(featureTree);
+    document.body.appendChild(host);
+    const errors: unknown[] = [];
+    await act(async () => {
+      hydrateRoot(host, featureTree, { onRecoverableError: (error) => errors.push(error) });
     });
     expect(errors).toEqual([]);
   });

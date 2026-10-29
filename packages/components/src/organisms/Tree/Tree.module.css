@@ -111,7 +111,7 @@
   cursor: pointer;
 }
 
-.row:hover:not(.disabled, .placeholder) {
+.row:hover:not(.disabled, .placeholder, .skeletonRow) {
   background-color: var(--dbm-bg-neutral-subtle);
 }
 
@@ -207,6 +207,40 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+/* The field a row's label turns into while it is renamed. It is the height of the row less a little room, so the row never grows, and
+   its ring is drawn inside it, where the scrolling box cannot clip it. */
+.rename {
+  background-color: var(--dbm-bg-surface);
+  border: var(--dbm-border-width-1) solid var(--dbm-border-neutral-strong);
+  border-radius: var(--dbm-radius-sm);
+  box-sizing: border-box;
+  color: var(--dbm-text-primary);
+  flex: 1 1 auto;
+  font: inherit;
+  margin: 0;
+  min-block-size: var(--dbm-space-6);
+  min-inline-size: 0;
+  padding-block: 0;
+  padding-inline: var(--dbm-space-2);
+  block-size: calc(var(--tree-row-height) - var(--dbm-space-2));
+}
+
+.rename:focus-visible {
+  border-color: var(--dbm-border-focus);
+  outline: var(--dbm-border-width-2) solid var(--dbm-border-focus);
+  outline-offset: calc(-1 * var(--dbm-border-width-2));
+}
+
+.rename[aria-invalid="true"] {
+  border-color: var(--dbm-border-danger);
+}
+
+/* A placeholder row while the rows load: the layout of a row, with nothing to point at. */
+.skeletonRow {
+  cursor: default;
+  pointer-events: none;
 }
 
 /* A row that could not load its children says so in the danger colour, in words as well (the mark is not the only sign). */

@@ -18,6 +18,10 @@ describe("the components package's entry", () => {
     expect(library.usePersistentDismiss).toBe(utils.usePersistentDismiss);
   });
 
+  it("exports Tree's filterTree helper", () => {
+    expect(typeof library.filterTree).toBe("function");
+  });
+
   // Checked by the typechecker (`tsc`), not at runtime: the entry names the very types `utils` defines.
   it("re-exports the helper types that components' public props use", () => {
     expectTypeOf<Breakpoint>().toEqualTypeOf<utilTypes.Breakpoint>();

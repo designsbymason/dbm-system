@@ -1,11 +1,14 @@
 import type { Meta, StoryContext, StoryObj } from "@storybook/react-vite";
 import { FolderIcon } from "@dbm-system/icons";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type { CSSProperties } from "react";
 import { Badge } from "../../atoms/Badge";
 import { Button } from "../../atoms/Button";
 import { Text } from "../../atoms/Text";
+import { ContextMenu } from "../ContextMenu";
+import type { ContextMenuController } from "../ContextMenu";
 import { Tree } from "./Tree";
+import { filterTree } from "./filterTree";
 import { allSizes, Demo, manyNodes, projectFiles } from "./TreeStoryKit";
 import { treePlaygroundSnippet, treeSnippets } from "./Tree.snippets";
 import type { TreeController, TreeNode, TreeProps, TreeSelectionMode, TreeSize } from "./Tree.types";
@@ -31,10 +34,16 @@ interface PlaygroundArgs {
   expandedIds: TreeProps["expandedIds"];
   defaultExpandedIds: TreeProps["defaultExpandedIds"];
   onExpandedChange: TreeProps["onExpandedChange"];
+  loading: boolean;
+  loadingCount: number;
   loadingIds: TreeProps["loadingIds"];
   errorIds: TreeProps["errorIds"];
   onRetry: TreeProps["onRetry"];
   onItemActivate: TreeProps["onItemActivate"];
+  onItemContextMenu: TreeProps["onItemContextMenu"];
+  renamable: TreeProps["renamable"];
+  onRename: TreeProps["onRename"];
+  validateRename: TreeProps["validateRename"];
   renderLabel: TreeProps["renderLabel"];
   empty: TreeProps["empty"];
   formatNumber: TreeProps["formatNumber"];
@@ -104,6 +113,12 @@ const meta: Meta<PlaygroundArgs> = {
     },
     onExpandedChange: { control: false, description: "Called with the ids that should be open when a person opens or closes a row." },
     loadingIds: { control: false, description: "The ids of rows whose children are being fetched: a spinner in place of the arrow, and aria-busy on the row." },
+    loading: { control: false, description: "Shows that the rows are being fetched: placeholder rows, and aria-busy on the tree. With no rows they stand in for the tree; with rows they follow the last one.", table: { defaultValue: { summary: "false" } } },
+    loadingCount: { control: false, description: "How many placeholder rows loading draws, held between 0 and 20.", table: { defaultValue: { summary: "3" } } },
+    onItemContextMenu: { control: false, description: "Called when a row's menu is asked for: a right-click on it, the context-menu key or Shift+F10 on the focused row. It says which row and where; the tree draws no menu, so open a ContextMenu of your own." },
+    renamable: { control: false, description: "Lets a row be renamed: F2 turns its label into a field. true allows every row that is not disabled; a function chooses by node.", table: { defaultValue: { summary: "false" } } },
+    onRename: { control: false, description: "Called with the row's id and the new text (trimmed) when a person commits a name that differs from the label. The tree changes nothing itself: change nodes." },
+    validateRename: { control: false, description: "Checks a name before it is committed: return a message to refuse it, and the field stays open and shows it." },
     errorIds: { control: false, description: "The ids of rows whose children could not be loaded: a warning mark and words on the row, and a screen reader is told. Opening such a row again calls onRetry." },
     onRetry: { control: false, description: "Called with the id of an open row listed in errorIds when a person asks to try again: its mark, Right or Enter." },
     onItemActivate: { control: false, description: "Called when a row is activated: Enter on it or a double click. A row with children and no handler is opened or closed instead." },
@@ -316,6 +331,117 @@ export const LongTree: Story = {
   parameters: { docs: { source: { code: treeSnippets.long } } },
 };
 
+export const Loading: Story = {
+  name: "Loading the rows",
+  argTypes: { ...except("size") },
+  render: (args) => (
+    <div style={{ display: "grid", gap: "var(--dbm-space-6)", gridTemplateColumns: "repeat(auto-fit, minmax(16rem, 1fr))" }}>
+      <Tree aria-label="First load" size={args.size} nodes={[]} loading />
+      <Demo aria-label="More on the way" size={args.size} defaultExpandedIds={["docs"]} loading loadingCount={2} />
+    </div>
+  ),
+  parameters: { docs: { source: { code: treeSnippets.loading } } },
+};
+
+export const RowMenu: Story = {
+  name: "A menu for a row",
+  argTypes: { ...except("size") },
+  render: (args) => {
+    const WithMenu = () => {
+      const menu = useRef<ContextMenuController>(null);
+      const [target, setTarget] = useState<{ id: string; label: string } | undefined>();
+      const [last, setLast] = useState("Nothing chosen yet");
+      const find = (id: string): string => {
+        const search = (list: TreeNode[]): string | undefined => {
+          for (const node of list) {
+            if (node.id === id) return node.label;
+            const inside = node.children && search(node.children);
+            if (inside) return inside;
+          }
+          return undefined;
+        };
+        return search(projectFiles) ?? id;
+      };
+      return (
+        <div style={{ display: "grid", gap: "var(--dbm-space-3)" }}>
+          <Text size="sm" data-testid="chosen">
+            {last}
+          </Text>
+          <ContextMenu controllerRef={menu}>
+            <ContextMenu.Trigger asChild>
+              <div>
+                <Demo
+                  size={args.size}
+                  defaultExpandedIds={["src"]}
+                  onItemContextMenu={({ id, via, point }) => {
+                    setTarget({ id, label: find(id) });
+                    // A right-click is the trigger's own; a key has to be turned into a menu at a point.
+                    if (via === "keyboard") menu.current?.openAt(point);
+                  }}
+                />
+              </div>
+            </ContextMenu.Trigger>
+            <ContextMenu.Content>
+              <ContextMenu.Label>{target?.label}</ContextMenu.Label>
+              <ContextMenu.Item onSelect={() => setLast(`Copied the path of ${target?.label}`)}>Copy path</ContextMenu.Item>
+              <ContextMenu.Item onSelect={() => setLast(`Renamed ${target?.label}`)}>Rename</ContextMenu.Item>
+              <ContextMenu.Separator />
+              <ContextMenu.Item tone="danger" onSelect={() => setLast(`Deleted ${target?.label}`)}>
+                Delete
+              </ContextMenu.Item>
+            </ContextMenu.Content>
+          </ContextMenu>
+        </div>
+      );
+    };
+    return <WithMenu />;
+  },
+  parameters: { docs: { source: { code: treeSnippets.rowMenu } } },
+};
+
+export const Rename: Story = {
+  name: "Renaming a row",
+  argTypes: { ...except("size") },
+  render: (args) => {
+    const Renaming = () => {
+      const [nodes, setNodes] = useState<TreeNode[]>(projectFiles);
+      const [renamed, setRenamed] = useState("Press F2 on a row");
+      const controller = useRef<TreeController>(null);
+      const rename = (list: TreeNode[], id: string, label: string): TreeNode[] =>
+        list.map((node) => (node.id === id ? { ...node, label } : node.children ? { ...node, children: rename(node.children, id, label) } : node));
+      const taken = new Set<string>();
+      const collect = (list: TreeNode[]) => list.forEach((node) => (taken.add(node.label), node.children && collect(node.children)));
+      collect(nodes);
+      return (
+        <div style={{ display: "grid", gap: "var(--dbm-space-3)" }}>
+          <div style={{ display: "flex", gap: "var(--dbm-space-3)", alignItems: "center" }}>
+            <Button size="sm" variant="secondary" onClick={() => controller.current?.rename("card")}>
+              Rename Card.tsx
+            </Button>
+            <Text size="sm" data-testid="renamed">
+              {renamed}
+            </Text>
+          </div>
+          <Demo
+            size={args.size}
+            nodes={nodes}
+            controllerRef={controller}
+            defaultExpandedIds={["src", "components"]}
+            renamable
+            onRename={(id, label) => {
+              setNodes((current) => rename(current, id, label));
+              setRenamed(`Renamed to ${label}`);
+            }}
+            validateRename={(_id, label) => (taken.has(label) ? "A file with that name already exists" : undefined)}
+          />
+        </div>
+      );
+    };
+    return <Renaming />;
+  },
+  parameters: { docs: { source: { code: treeSnippets.rename } } },
+};
+
 export const Disabled: Story = {
   name: "A disabled row",
   argTypes: { ...except("size") },
@@ -352,15 +478,26 @@ export const Trailing: Story = {
 };
 
 export const Highlight: Story = {
-  name: "Marking a search",
+  name: "Filtering and marking a search",
   argTypes: { ...except("size") },
   render: (args) => {
     const Searching = () => {
       const [query, setQuery] = useState("tsx");
+      const [open, setOpen] = useState<string[]>(() => filterTree(projectFiles, { query: "tsx" }).expandedIds);
+      const result = useMemo(() => filterTree(projectFiles, { query }), [query]);
       return (
         <div style={{ display: "grid", gap: "var(--dbm-space-3)", maxInlineSize: "24rem" }}>
-          <input aria-label="Search the files" value={query} onChange={(event) => setQuery(event.target.value)} style={{ font: "inherit", padding: "var(--dbm-space-2)" }} />
-          <Demo size={args.size} highlightQuery={query} defaultExpandAll />
+          <input
+            aria-label="Search the files"
+            value={query}
+            onChange={(event) => {
+              setQuery(event.target.value);
+              // Show every match: open the rows above them. With nothing typed, close everything again.
+              setOpen(filterTree(projectFiles, { query: event.target.value }).expandedIds);
+            }}
+            style={{ font: "inherit", padding: "var(--dbm-space-2)" }}
+          />
+          <Demo size={args.size} nodes={result.nodes} expandedIds={open} onExpandedChange={setOpen} highlightQuery={query} empty={<Text color="secondary">Nothing matched.</Text>} />
         </div>
       );
     };

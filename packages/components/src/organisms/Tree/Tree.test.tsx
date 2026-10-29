@@ -1,4 +1,4 @@
-import { act, render, screen, within } from "@testing-library/react";
+import { act, fireEvent, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { axe } from "jest-axe";
 import { createRef, useState } from "react";
@@ -809,6 +809,369 @@ describe("Tree — a long tree", () => {
     });
     expect(screen.queryByRole("treeitem", { name: "Row 900" })).toBeNull();
     expect(screen.getByRole("tree")).toHaveAttribute("tabindex", "0");
+  });
+});
+
+describe("Tree — renaming", () => {
+  const field = () => screen.getByRole("textbox");
+
+  it("turns the label into a field with the text selected on F2, when the tree is renamable", async () => {
+    const user = userEvent.setup();
+    render(<Basic renamable />);
+    item("docs").focus();
+    await user.keyboard("{F2}");
+    expect(field()).toHaveValue("docs");
+    expect(field()).toHaveFocus();
+    expect(field()).toHaveAccessibleName("Rename docs");
+    expect((field() as HTMLInputElement).selectionStart).toBe(0);
+    expect((field() as HTMLInputElement).selectionEnd).toBe(4);
+  });
+
+  it("does nothing on F2 without renamable, on a disabled row, or for a row the function refuses", async () => {
+    const user = userEvent.setup();
+    const { unmount } = render(<Basic />);
+    item("docs").focus();
+    await user.keyboard("{F2}");
+    expect(screen.queryByRole("textbox")).toBeNull();
+    unmount();
+    render(<Basic renamable={(node) => node.id !== "docs"} defaultExpandedIds={["src", "lib"]} />);
+    item("docs").focus();
+    await user.keyboard("{F2}");
+    expect(screen.queryByRole("textbox")).toBeNull();
+    item("math.ts").focus();
+    await user.keyboard("{F2}");
+    expect(screen.queryByRole("textbox")).toBeNull();
+    item("src").focus();
+    await user.keyboard("{F2}");
+    expect(field()).toHaveValue("src");
+  });
+
+  it("asks with the trimmed text on Enter and gives the focus back to the row, leaving the label for the caller to change", async () => {
+    const user = userEvent.setup();
+    const onRename = vi.fn();
+    render(<Basic renamable onRename={onRename} />);
+    item("docs").focus();
+    await user.keyboard("{F2}");
+    await user.keyboard("{Control>}a{/Control}  manuals  {Enter}");
+    expect(onRename).toHaveBeenCalledWith("docs", "manuals");
+    expect(screen.queryByRole("textbox")).toBeNull();
+    expect(item("docs")).toHaveFocus();
+    expect(item("docs")).toHaveTextContent("docs");
+  });
+
+  it("does not ask when the text is the same, or only differs in the spaces round it", async () => {
+    const user = userEvent.setup();
+    const onRename = vi.fn();
+    render(<Basic renamable onRename={onRename} />);
+    item("docs").focus();
+    await user.keyboard("{F2}{End} {Enter}");
+    expect(onRename).not.toHaveBeenCalled();
+    expect(screen.queryByRole("textbox")).toBeNull();
+  });
+
+  it("cancels on Escape, with the focus back on the row", async () => {
+    const user = userEvent.setup();
+    const onRename = vi.fn();
+    render(<Basic renamable onRename={onRename} />);
+    item("docs").focus();
+    await user.keyboard("{F2}changed{Escape}");
+    expect(onRename).not.toHaveBeenCalled();
+    expect(screen.queryByRole("textbox")).toBeNull();
+    expect(item("docs")).toHaveFocus();
+  });
+
+  it("commits when the field is left, and drops a refused name instead of holding the person in it", async () => {
+    const user = userEvent.setup();
+    const onRename = vi.fn();
+    render(
+      <>
+        <Basic renamable onRename={onRename} />
+        <button type="button">elsewhere</button>
+      </>,
+    );
+    item("docs").focus();
+    await user.keyboard("{F2}{Control>}a{/Control}manuals");
+    await user.click(screen.getByRole("button", { name: "elsewhere" }));
+    expect(onRename).toHaveBeenCalledWith("docs", "manuals");
+    expect(screen.getByRole("button", { name: "elsewhere" })).toHaveFocus();
+    item("src").focus();
+    await user.keyboard("{F2}{Control>}a{/Control}{Backspace}");
+    await user.click(screen.getByRole("button", { name: "elsewhere" }));
+    expect(onRename).toHaveBeenCalledTimes(1);
+    expect(screen.queryByRole("textbox")).toBeNull();
+  });
+
+  it("refuses an empty name, and a name validateRename refuses, keeping the field open with the message", async () => {
+    const user = userEvent.setup();
+    const onRename = vi.fn();
+    const validateRename = vi.fn((_id: string, label: string) => (label === "readme" ? "That name is taken" : undefined));
+    render(<Basic renamable onRename={onRename} validateRename={validateRename} />);
+    item("docs").focus();
+    await user.keyboard("{F2}{Control>}a{/Control}{Backspace}{Enter}");
+    expect(screen.getByRole("alert")).toHaveTextContent("Enter a name");
+    expect(field()).toHaveAttribute("aria-invalid", "true");
+    expect(field()).toHaveAccessibleDescription("Enter a name");
+    await user.keyboard("readme{Enter}");
+    expect(validateRename).toHaveBeenCalledWith("docs", "readme");
+    expect(screen.getByRole("alert")).toHaveTextContent("That name is taken");
+    expect(onRename).not.toHaveBeenCalled();
+    await user.keyboard("{Backspace}{Enter}");
+    expect(onRename).toHaveBeenCalledWith("docs", "readm");
+    expect(screen.queryByRole("textbox")).toBeNull();
+  });
+
+  it("clears the message as soon as the text changes, and says labels.nameRequired in the caller's words", async () => {
+    const user = userEvent.setup();
+    render(<Basic renamable labels={{ nameRequired: "Un nom", rename: (label) => `Renommer ${label}` }} />);
+    item("docs").focus();
+    await user.keyboard("{F2}{Backspace}{Backspace}{Backspace}{Backspace}{Enter}");
+    expect(screen.getByRole("alert")).toHaveTextContent("Un nom");
+    expect(field()).toHaveAccessibleName("Renommer docs");
+    await user.keyboard("x");
+    expect(screen.queryByRole("alert")).toBeNull();
+  });
+
+  it("keeps the keys typed in the field away from the tree: arrows, Space, letters and F2 itself", async () => {
+    const user = userEvent.setup();
+    const onValueChange = vi.fn();
+    render(<Basic renamable selectionMode="single" onValueChange={onValueChange} defaultExpandedIds={["docs"]} />);
+    item("docs").focus();
+    await user.keyboard("{F2}{End}{ArrowDown} a{ArrowLeft}{ArrowRight}{Home}{End}{F2}");
+    expect(field()).toHaveValue("docs a");
+    expect(onValueChange).not.toHaveBeenCalled();
+    expect(screen.getAllByRole("treeitem")[1]).toHaveAttribute("aria-expanded", "true");
+  });
+
+  it("does not select, open or activate the row on a click or a double click in the field", async () => {
+    const user = userEvent.setup();
+    const onValueChange = vi.fn();
+    const onItemActivate = vi.fn();
+    render(<Basic renamable selectionMode="single" onValueChange={onValueChange} onItemActivate={onItemActivate} />);
+    item("docs").focus();
+    await user.keyboard("{F2}");
+    await user.click(field());
+    await user.dblClick(field());
+    expect(onValueChange).not.toHaveBeenCalled();
+    expect(onItemActivate).not.toHaveBeenCalled();
+    expect(field()).toBeInTheDocument();
+  });
+
+  it("is started from the controller, which opens the rows above the row and reports whether it could", () => {
+    const controllerRef = createRef<TreeController>();
+    render(<Basic renamable={(node) => node.id !== "docs"} controllerRef={controllerRef} />);
+    act(() => {
+      expect(controllerRef.current?.rename("util")).toBe(true);
+      expect(controllerRef.current?.rename("docs")).toBe(false);
+      expect(controllerRef.current?.rename("missing")).toBe(false);
+    });
+    expect(field()).toHaveValue("util.ts");
+    expect(screen.getByRole("treeitem", { name: "src" })).toHaveAttribute("aria-expanded", "true");
+  });
+
+  it("does not rename from the controller when the tree is not renamable", () => {
+    const controllerRef = createRef<TreeController>();
+    render(<Basic controllerRef={controllerRef} />);
+    act(() => {
+      expect(controllerRef.current?.rename("src")).toBe(false);
+    });
+    expect(screen.queryByRole("textbox")).toBeNull();
+  });
+
+  it("drops the field when the row it is in closes under it", async () => {
+    const user = userEvent.setup();
+    const controllerRef = createRef<TreeController>();
+    render(<Basic renamable controllerRef={controllerRef} defaultExpandedIds={["src"]} />);
+    item("App.tsx").focus();
+    await user.keyboard("{F2}");
+    expect(field()).toBeInTheDocument();
+    act(() => {
+      controllerRef.current?.collapse("src");
+    });
+    expect(screen.queryByRole("textbox")).toBeNull();
+  });
+
+  it("does not end twice: Enter and the blur it causes are one commit", async () => {
+    const user = userEvent.setup();
+    const onRename = vi.fn();
+    render(<Basic renamable onRename={onRename} />);
+    item("docs").focus();
+    await user.keyboard("{F2}x{Enter}");
+    expect(onRename).toHaveBeenCalledTimes(1);
+  });
+
+  it("has no axe violations while a row is being renamed, with and without a message", async () => {
+    const user = userEvent.setup();
+    const { container } = render(<Basic renamable />);
+    item("docs").focus();
+    await user.keyboard("{F2}");
+    expect(await axe(container)).toHaveNoViolations();
+    await user.keyboard("{Backspace}{Backspace}{Backspace}{Backspace}{Enter}");
+    expect(await axe(container)).toHaveNoViolations();
+  });
+});
+
+describe("Tree — a row's menu", () => {
+  it("tells the caller which row a right-click was on and where, leaving the browser's menu to whoever opens one", () => {
+    const onItemContextMenu = vi.fn();
+    render(<Basic onItemContextMenu={onItemContextMenu} defaultExpandedIds={["src"]} />);
+    const row = item("App.tsx");
+    const notPrevented = fireEvent.contextMenu(screen.getByText("App.tsx"), { clientX: 41, clientY: 52 });
+    expect(notPrevented).toBe(true);
+    expect(onItemContextMenu).toHaveBeenCalledTimes(1);
+    expect(onItemContextMenu).toHaveBeenCalledWith({ id: "app", element: row, via: "pointer", point: { x: 41, y: 52 }, event: expect.any(Event) });
+    expect(row).toHaveFocus();
+  });
+
+  it("counts a contextmenu event that follows its own key press as that press, and not as a second request", async () => {
+    const user = userEvent.setup();
+    const onItemContextMenu = vi.fn();
+    render(<Basic onItemContextMenu={onItemContextMenu} />);
+    item("docs").focus();
+    await user.keyboard("{ContextMenu}");
+    fireEvent.contextMenu(screen.getByText("docs"));
+    expect(onItemContextMenu).toHaveBeenCalledTimes(1);
+  });
+
+  it("leaves the browser's own menu alone when there is no handler", () => {
+    render(<Basic />);
+    expect(fireEvent.contextMenu(screen.getByText("src"))).toBe(true);
+  });
+
+  it("does not ask for a disabled row, the Empty row or the tree's own padding", () => {
+    const onItemContextMenu = vi.fn();
+    render(
+      <Tree
+        aria-label="Files"
+        onItemContextMenu={onItemContextMenu}
+        defaultExpandedIds={["dir"]}
+        nodes={[{ id: "dir", label: "dir", hasChildren: true, children: [] }, { id: "off", label: "off", disabled: true }]}
+      />,
+    );
+    expect(fireEvent.contextMenu(screen.getByText("off"))).toBe(true);
+    expect(fireEvent.contextMenu(screen.getByText("Empty"))).toBe(true);
+    expect(fireEvent.contextMenu(screen.getByRole("tree"))).toBe(true);
+    expect(onItemContextMenu).not.toHaveBeenCalled();
+  });
+
+  it("asks from the context-menu key and from Shift+F10, for the focused row, with the row's element", async () => {
+    const user = userEvent.setup();
+    const onItemContextMenu = vi.fn();
+    render(<Basic onItemContextMenu={onItemContextMenu} />);
+    item("docs").focus();
+    await user.keyboard("{ContextMenu}");
+    expect(onItemContextMenu).toHaveBeenLastCalledWith(expect.objectContaining({ id: "docs", via: "keyboard", element: item("docs") }));
+    expect(onItemContextMenu.mock.calls[0]?.[0].point).toEqual({ x: expect.any(Number), y: expect.any(Number) });
+    await user.keyboard("{Shift>}{F10}{/Shift}");
+    expect(onItemContextMenu).toHaveBeenCalledTimes(2);
+    await user.keyboard("{F10}");
+    expect(onItemContextMenu).toHaveBeenCalledTimes(2);
+  });
+
+  it("does not ask for a disabled row from the keyboard, or without a handler", async () => {
+    const user = userEvent.setup();
+    const onItemContextMenu = vi.fn();
+    const { unmount } = render(<Basic onItemContextMenu={onItemContextMenu} defaultExpandedIds={["src", "lib"]} />);
+    item("math.ts").focus();
+    await user.keyboard("{ContextMenu}");
+    expect(onItemContextMenu).not.toHaveBeenCalled();
+    unmount();
+    render(<Basic />);
+    item("src").focus();
+    await user.keyboard("{ContextMenu}");
+    expect(item("src")).toHaveFocus();
+  });
+
+  it("still runs the caller's own onContextMenu, and respects one that prevents the default", () => {
+    const own = vi.fn((event: { preventDefault: () => void }) => event.preventDefault());
+    const onItemContextMenu = vi.fn();
+    render(<Basic onItemContextMenu={onItemContextMenu} onContextMenu={own} />);
+    fireEvent.contextMenu(screen.getByText("src"));
+    expect(own).toHaveBeenCalledTimes(1);
+    expect(onItemContextMenu).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    ["ltr", 10],
+    ["rtl", 90],
+  ] as const)("puts the key's point under the start of the label in a %s tree", async (dir, x) => {
+    const user = userEvent.setup();
+    const onItemContextMenu = vi.fn();
+    vi.spyOn(Element.prototype, "getBoundingClientRect").mockImplementation(function (this: Element) {
+      const label = (this as HTMLElement).dataset.treePart === "label";
+      const rect = label ? { left: 10, right: 90, top: 4, bottom: 24 } : { left: 0, right: 100, top: 0, bottom: 30 };
+      return { ...rect, width: rect.right - rect.left, height: rect.bottom - rect.top, x: rect.left, y: rect.top, toJSON: () => ({}) } as DOMRect;
+    });
+    render(<Basic dir={dir} onItemContextMenu={onItemContextMenu} />);
+    item("src").focus();
+    await user.keyboard("{ContextMenu}");
+    expect(onItemContextMenu.mock.calls[0]?.[0].point).toEqual({ x, y: 30 });
+  });
+});
+
+describe("Tree — loading the rows", () => {
+  const placeholders = (container: HTMLElement) => container.querySelectorAll('[aria-hidden="true"][class*="skeletonRow"]');
+
+  it("stands placeholder rows in for a tree with no rows yet, in a busy group that says it is loading, with no empty message", () => {
+    const { container } = render(<Tree aria-label="Files" nodes={[]} loading />);
+    const group = screen.getByRole("group");
+    expect(group).toHaveAttribute("aria-busy", "true");
+    expect(screen.queryByRole("tree")).toBeNull();
+    expect(group).toHaveTextContent("Loading");
+    expect(group).not.toHaveTextContent("No items");
+    expect(placeholders(container)).toHaveLength(3);
+  });
+
+  it("adds the placeholders after the last row of a tree that has rows, and marks the tree busy", () => {
+    const { container } = render(<Basic loading loadingCount={2} />);
+    expect(screen.getByRole("tree")).toHaveAttribute("aria-busy", "true");
+    expect(screen.getAllByRole("treeitem")).toHaveLength(3);
+    expect(placeholders(container)).toHaveLength(2);
+    const last = screen.getAllByRole("treeitem").at(-1) as HTMLElement;
+    expect(last.compareDocumentPosition(placeholders(container)[0] as Element) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  });
+
+  it("draws none, and is not busy, when it is not loading", () => {
+    const { container } = render(<Basic />);
+    expect(placeholders(container)).toHaveLength(0);
+    expect(screen.getByRole("tree")).not.toHaveAttribute("aria-busy");
+  });
+
+  it.each([
+    [0, 0],
+    [-4, 0],
+    [2.9, 2],
+    [99, 20],
+    [Number.POSITIVE_INFINITY, 3],
+    [Number.NaN, 3],
+  ])("holds loadingCount=%s to %s placeholders", (count, expected) => {
+    const { container } = render(<Basic loading loadingCount={count} />);
+    expect(placeholders(container)).toHaveLength(expected);
+  });
+
+  it("says what labels.loading says, and leaves the placeholders out of the tree's focus order and names", () => {
+    const { container } = render(<Tree aria-label="Files" nodes={[]} loading labels={{ loading: "Chargement" }} />);
+    expect(screen.getByRole("group")).toHaveTextContent("Chargement");
+    expect(container.querySelectorAll("[tabindex]")).toHaveLength(0);
+    expect(screen.queryAllByRole("treeitem")).toHaveLength(0);
+  });
+
+  it("draws the placeholders only with the last window of a long tree", () => {
+    const many: TreeNode[] = Array.from({ length: 1000 }, (_, position) => ({ id: `n${position}`, label: `Row ${position}` }));
+    const controllerRef = createRef<TreeController>();
+    const { container } = render(<Tree aria-label="Many" nodes={many} windowed maxHeight={300} loading controllerRef={controllerRef} />);
+    expect(placeholders(container)).toHaveLength(0);
+    act(() => {
+      controllerRef.current?.scrollToNode("n999");
+    });
+    expect(screen.getByRole("treeitem", { name: "Row 999" })).toBeInTheDocument();
+    expect(placeholders(container)).toHaveLength(3);
+  });
+
+  it("has no axe violations, with and without rows", async () => {
+    const { container, rerender } = render(<Tree aria-label="Files" nodes={[]} loading />);
+    expect(await axe(container)).toHaveNoViolations();
+    rerender(<Basic loading defaultExpandAll />);
+    expect(await axe(container)).toHaveNoViolations();
   });
 });
 

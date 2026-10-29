@@ -3,7 +3,7 @@ import { useState } from "react";
 import { expect, userEvent, waitFor, within } from "storybook/test";
 import { send } from "../../molecules/CodeBlock/browserProtocol";
 import { Tree } from "./Tree";
-import { allSizes, Demo, manyNodes } from "./TreeStoryKit";
+import { allSizes, Demo, manyNodes, RenameDemo, RowMenuDemo } from "./TreeStoryKit";
 
 // Hidden, real-browser checks (`!dev` on the whole group, ADR-0013's way of keeping a second stories file out of the
 // sidebar and the Docs page): what jsdom can't evaluate — real layout, text direction, forced colours, focus rings,
@@ -39,6 +39,16 @@ const tokenPx = (name: string): number => {
   probe.remove();
   return height;
 };
+async function realRightClick(element: Element) {
+  const rect = element.getBoundingClientRect();
+  const frame = window.frameElement?.getBoundingClientRect();
+  const scale = frame ? frame.width / window.innerWidth : 1;
+  const x = (frame?.left ?? 0) + (rect.left + rect.width / 2) * scale;
+  const y = (frame?.top ?? 0) + (rect.top + rect.height / 2) * scale;
+  await send("Input.dispatchMouseEvent", { type: "mouseMoved", x, y });
+  await send("Input.dispatchMouseEvent", { type: "mousePressed", x, y, button: "right", clickCount: 1 });
+  await send("Input.dispatchMouseEvent", { type: "mouseReleased", x, y, button: "right", clickCount: 1 });
+}
 const rowOf = (name: string | RegExp) => body.getByRole("treeitem", { name });
 const part = (row: HTMLElement, name: string) => row.querySelector<HTMLElement>(`[data-tree-part="${name}"]`) as HTMLElement;
 
@@ -329,5 +339,100 @@ export const RetryMarkIsATarget: Story = {
     row.focus();
     await userEvent.keyboard("{Enter}");
     await expect(body.getByTestId("tries")).toHaveTextContent("2");
+  },
+};
+
+export const RowMenuOpensFromAClickAndAKey: Story = {
+  name: "A real right-click and the context-menu key each open the menu for the row, and Escape gives the focus back to it",
+  render: () => <RowMenuDemo />,
+  play: async () => {
+    const row = rowOf(/App\.tsx/);
+    row.scrollIntoView({ block: "center" });
+    await realRightClick(row);
+    const menu = await body.findByRole("menu");
+    await expect(within(menu).getByText("App.tsx")).toBeInTheDocument();
+    await userEvent.keyboard("{Escape}");
+    await waitFor(() => expect(body.queryByRole("menu")).toBeNull());
+    await waitFor(() => expect(rowOf(/App\.tsx/)).toHaveFocus());
+    const other = rowOf(/index\.ts/);
+    other.focus();
+    await userEvent.keyboard("{ContextMenu}");
+    const second = await body.findByRole("menu");
+    await expect(within(second).getByText("index.ts")).toBeInTheDocument();
+    await userEvent.keyboard("{Escape}");
+    await waitFor(() => expect(body.queryByRole("menu")).toBeNull());
+    await waitFor(() => expect(rowOf(/index\.ts/)).toHaveFocus());
+  },
+};
+
+export const RenameFieldFitsTheRow: Story = {
+  name: "While a row is renamed it keeps its height at every size, the field fits inside it and its ring is drawn inside the field",
+  render: () => (
+    <div style={{ display: "grid", gap: "var(--dbm-space-4)" }}>
+      {allSizes.map((size) => (
+        <Demo key={size} size={size} aria-label={`Rename ${size}`} renamable />
+      ))}
+    </div>
+  ),
+  play: async () => {
+    for (const size of allSizes) {
+      const tree = body.getByRole("tree", { name: `Rename ${size}` });
+      const row = within(tree).getByRole("treeitem", { name: "README.md" });
+      row.scrollIntoView({ block: "center" });
+      row.focus();
+      await userEvent.keyboard("{F2}");
+      const field = within(tree).getByRole("textbox");
+      await expect(field).toHaveFocus();
+      const expected = tokenPx(`--dbm-tree-row-height-${size}`);
+      await expect(Math.abs(box(row).height - expected)).toBeLessThan(0.5);
+      await expect(box(field).height).toBeLessThanOrEqual(expected + 0.5);
+      await expect(box(field).height).toBeGreaterThanOrEqual(24);
+      await expect(box(field).top).toBeGreaterThanOrEqual(box(row).top);
+      await expect(box(field).bottom).toBeLessThanOrEqual(box(row).bottom);
+      const style = getComputedStyle(field);
+      await expect(style.outlineStyle).toBe("solid");
+      await expect(Number.parseFloat(style.outlineOffset)).toBeLessThan(0);
+      await userEvent.keyboard("{Escape}");
+    }
+  },
+};
+
+export const RenameFlowInTheStory: Story = {
+  name: "Renaming from F2 and from a button changes the label, and a taken name stays in the field with its message",
+  render: () => <RenameDemo />,
+  play: async () => {
+    const row = rowOf(/Button\.tsx/);
+    row.focus();
+    await userEvent.keyboard("{F2}{Control>}a{/Control}Card.tsx{Enter}");
+    await expect(body.getByRole("alert")).toHaveTextContent("already exists");
+    await userEvent.keyboard("{Control>}a{/Control}Chip.tsx{Enter}");
+    await expect(body.getByTestId("renamed")).toHaveTextContent("Renamed to Chip.tsx");
+    await expect(rowOf(/Chip\.tsx/)).toHaveFocus();
+    await userEvent.click(body.getByRole("button", { name: "Rename Card.tsx" }));
+    await expect(body.getByRole("textbox")).toHaveValue("Card.tsx");
+    await expect(body.getByRole("textbox")).toHaveFocus();
+  },
+};
+
+export const LoadingRowsKeepTheRowHeight: Story = {
+  name: "Placeholder rows are the height of a row at every size and cannot be pointed at",
+  render: () => (
+    <div style={{ display: "grid", gap: "var(--dbm-space-4)" }}>
+      {allSizes.map((size) => (
+        <Tree key={size} aria-label={`Loading ${size}`} size={size} nodes={[]} loading />
+      ))}
+    </div>
+  ),
+  play: async () => {
+    for (const size of allSizes) {
+      const group = body.getByRole("group", { name: `Loading ${size}` });
+      const placeholders = [...group.querySelectorAll<HTMLElement>('[aria-hidden="true"][class*="skeletonRow"]')];
+      await expect(placeholders.length).toBe(3);
+      const expected = tokenPx(`--dbm-tree-row-height-${size}`);
+      for (const placeholder of placeholders) {
+        await expect(Math.abs(box(placeholder).height - expected)).toBeLessThan(0.5);
+        await expect(getComputedStyle(placeholder).pointerEvents).toBe("none");
+      }
+    }
   },
 };
