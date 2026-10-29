@@ -29,7 +29,7 @@ import type {
   TreeSelectionMode,
   TreeSize,
 } from "./Tree.types";
-import { ancestorsOf, canExpand, checkStates, indexTree, toggleChecked, visibleRows } from "./treeModel";
+import { ancestorsOf, canExpand, checkStates, indexTree, sanitizeNodes, toggleChecked, visibleRows } from "./treeModel";
 import type { TreeRow } from "./treeModel";
 import { useTreeList } from "./useTreeList";
 
@@ -109,7 +109,7 @@ const defaultLabels = (formatNumber: (value: number) => string): TreeLabels => (
 export const Tree = forwardRef<HTMLDivElement, TreeProps>(
   (
     {
-      nodes,
+      nodes: nodesProp,
       size = "md",
       selectionMode = "none",
       expandOnClick = false,
@@ -155,8 +155,21 @@ export const Tree = forwardRef<HTMLDivElement, TreeProps>(
     ref,
   ) => {
     const labels = mergeDefined(defaultLabels(formatNumber), labelsProp);
+    // `nodes` is data on its way as often as not: what is not sound is left out, and development says so (once per kind).
+    const clean = useMemo(() => sanitizeNodes(nodesProp), [nodesProp]);
+    const nodes = clean.nodes;
     const index = useMemo(() => indexTree(nodes), [nodes]);
     const rtl = dir === "rtl";
+    const problems = clean.problems.join("; ");
+    const duplicates = index.duplicates.join('", "');
+    useEffect(() => {
+      if (process.env.NODE_ENV !== "production" && problems) console.warn(`Tree: ${problems}. The tree draws what it can.`);
+    }, [problems]);
+    useEffect(() => {
+      if (process.env.NODE_ENV !== "production" && duplicates) {
+        console.warn(`Tree: the id "${duplicates}" is used by more than one node. Ids must be unique across the whole tree.`);
+      }
+    }, [duplicates]);
 
     const named = Boolean(props["aria-label"] || props["aria-labelledby"]);
     const hasRows = nodes.length > 0;
@@ -169,14 +182,21 @@ export const Tree = forwardRef<HTMLDivElement, TreeProps>(
     const [expanded, requestExpanded, readExpanded] = useTreeList(
       "expandedIds",
       expandedProp,
-      () => defaultExpandedIds ?? (defaultExpandAll ? index.expandable : []),
+      () => defaultExpandedIds ?? (defaultExpandAll ? index.openable : []),
       onExpandedChange,
     );
     const [selected, requestSelected] = useTreeList("value", valueProp, defaultValue ?? [], onValueChange);
     const [checkedLeaves, requestChecked] = useTreeList("checkedIds", checkedProp, defaultCheckedIds ?? [], onCheckedChange);
 
     const expandedSet = useMemo(() => new Set(expanded), [expanded]);
-    const selectedSet = useMemo(() => new Set(selected), [selected]);
+    // In "single" at most one row is selected: a `value` with more says so in development and the first is the one that shows.
+    const selectedSet = useMemo(() => new Set(selectionMode === "single" ? selected.slice(0, 1) : selected), [selected, selectionMode]);
+    const surplusSelection = selectionMode === "single" && selected.length > 1;
+    useEffect(() => {
+      if (process.env.NODE_ENV !== "production" && surplusSelection) {
+        console.warn("Tree: `value` holds more than one id with selectionMode=\"single\". Only the first is shown as selected.");
+      }
+    }, [surplusSelection]);
     const checkedSet = useMemo(() => new Set(checkedLeaves), [checkedLeaves]);
     const loadingSet = useMemo(() => new Set(loadingIds), [loadingIds]);
     const errorSet = useMemo(() => new Set(errorIds), [errorIds]);
@@ -399,8 +419,8 @@ export const Tree = forwardRef<HTMLDivElement, TreeProps>(
         expandAll: () => {
           const { index: current, requestExpanded: ask, readExpanded: read } = controllerState.current;
           const open = new Set(read());
-          if (current.expandable.every((entry) => open.has(entry))) return false;
-          ask([...new Set([...read(), ...current.expandable])]);
+          if (current.openable.every((entry) => open.has(entry))) return false;
+          ask([...new Set([...read(), ...current.openable])]);
           return true;
         },
         rename: (target) => {
@@ -553,7 +573,8 @@ export const Tree = forwardRef<HTMLDivElement, TreeProps>(
           return;
         case " ":
           event.preventDefault();
-          if (checkable) toggleCheck(row.node);
+          // With check boxes Space checks; with Shift it selects, so a tree that can do both can be driven by keys alone.
+          if (checkable && !(event.shiftKey && selectionMode !== "none")) toggleCheck(row.node);
           else select(currentId, selectionMode === "multiple" ? "toggle" : "replace");
           return;
         case "*": {
@@ -614,6 +635,9 @@ export const Tree = forwardRef<HTMLDivElement, TreeProps>(
 
     // --- the pointer -------------------------------------------------------------------------------------------------------
     const handleClick = (event: MouseEvent<HTMLDivElement>, node: TreeNode) => {
+      // A press inside something a row draws through a portal (a tooltip, a popover) reaches the row's handler through React, not
+      // through the page: it is not a press on the row.
+      if (!event.currentTarget.contains(event.target as Node)) return;
       if ((event.target as HTMLElement).closest("input")) return;
       const part = (event.target as HTMLElement).closest<HTMLElement>("[data-tree-part]")?.dataset.treePart;
       if (part === "chevron") {
@@ -849,10 +873,12 @@ function TreeRowView({
       data-selected={selected || undefined}
       className={cx(styles.row, selected && styles.selected, node.disabled && styles.disabled, error && styles.errored, selectionMode !== "none" || checkable ? styles.pickable : undefined)}
       style={{ "--tree-level": level } as CSSProperties}
-      onFocus={() => onFocusRow(node.id)}
+      onFocus={(event) => {
+        if (event.currentTarget.contains(event.target)) onFocusRow(node.id);
+      }}
       onClick={(event) => onClickRow(event, node)}
-      onDoubleClick={() => {
-        if (!editing) onDoubleClickRow(node.id);
+      onDoubleClick={(event) => {
+        if (!editing && event.currentTarget.contains(event.target as Node)) onDoubleClickRow(node.id);
       }}
     >
       <span className={styles.chevron} data-tree-part={error ? "retry" : hasChildren ? "chevron" : undefined} aria-hidden="true">

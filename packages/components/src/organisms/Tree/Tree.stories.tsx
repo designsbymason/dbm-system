@@ -43,7 +43,7 @@ interface PlaygroundArgs {
   onRetry: TreeProps["onRetry"];
   onItemActivate: TreeProps["onItemActivate"];
   onItemContextMenu: TreeProps["onItemContextMenu"];
-  renamable: TreeProps["renamable"];
+  renamable: boolean;
   onRename: TreeProps["onRename"];
   validateRename: TreeProps["validateRename"];
   renderLabel: TreeProps["renderLabel"];
@@ -78,13 +78,23 @@ const noControls = {
 const except = (...keys: Array<keyof typeof noControls>) =>
   Object.fromEntries(Object.entries(noControls).filter(([key]) => !keys.includes(key as keyof typeof noControls)));
 
+/** The Playground's height control is text: a bare number is pixels (as the prop says), anything else is a CSS length. */
+const maxHeightProp = (value: PlaygroundArgs["maxHeight"]): TreeProps["maxHeight"] => {
+  if (value === "" || value === undefined) return undefined;
+  return typeof value === "string" && /^\d+(\.\d+)?$/.test(value.trim()) ? Number(value) : value;
+};
+
 const windowedProp = (value: PlaygroundArgs["windowed"]): TreeProps["windowed"] => (value === "on" ? true : value === "off" ? false : "auto");
 
 const meta: Meta<PlaygroundArgs> = {
   title: "Organisms/Data Display/Tree",
   parameters: { layout: "padded" },
   argTypes: {
-    nodes: { control: false, description: "The top-level rows, each with an id, a label and optionally children. Required; an empty list draws the empty message." },
+    nodes: {
+      control: false,
+      description: "The top-level rows, each with an id, a label and optionally children. Required; an empty list draws the empty message.",
+      type: { name: "other", value: "TreeNode[]", required: true },
+    },
     size: {
       control: "select",
       options: ["xs", "sm", "md", "lg", "xl"],
@@ -108,7 +118,7 @@ const meta: Meta<PlaygroundArgs> = {
       table: { defaultValue: { summary: "false" } },
     },
     value: { control: false, description: "The ids of the selected rows. Makes the selection controlled: it changes only when this does." },
-    defaultValue: { control: false, description: "The ids selected to begin with, when value is not given." },
+    defaultValue: { control: false, description: "The ids selected to begin with, when value is not given.", table: { defaultValue: { summary: "[]" } } },
     onValueChange: { control: false, description: "Called with the ids the person wants selected." },
     checkable: {
       control: "boolean",
@@ -116,10 +126,10 @@ const meta: Meta<PlaygroundArgs> = {
       table: { defaultValue: { summary: "false" } },
     },
     checkedIds: { control: false, description: "The ids of the checked leaves; a parent is worked out from them. Makes the checks controlled." },
-    defaultCheckedIds: { control: false, description: "The leaves checked to begin with, when checkedIds is not given." },
+    defaultCheckedIds: { control: false, description: "The leaves checked to begin with, when checkedIds is not given.", table: { defaultValue: { summary: "[]" } } },
     onCheckedChange: { control: false, description: "Called with the leaves the person wants checked." },
     expandedIds: { control: false, description: "The ids of the open rows. Makes the expansion controlled: it changes only when this does." },
-    defaultExpandedIds: { control: false, description: "The ids open to begin with, when expandedIds is not given." },
+    defaultExpandedIds: { control: false, description: "The ids open to begin with, when expandedIds is not given.", table: { defaultValue: { summary: "[]" } } },
     defaultExpandAll: {
       control: "boolean",
       description: "Starts with every row that has children open, when expandedIds and defaultExpandedIds are not given.",
@@ -127,10 +137,22 @@ const meta: Meta<PlaygroundArgs> = {
     },
     onExpandedChange: { control: false, description: "Called with the ids that should be open when a person opens or closes a row." },
     loadingIds: { control: false, description: "The ids of rows whose children are being fetched: a spinner in place of the arrow, and aria-busy on the row." },
-    loading: { control: false, description: "Shows that the rows are being fetched: placeholder rows, and aria-busy on the tree. With no rows they stand in for the tree; with rows they follow the last one.", table: { defaultValue: { summary: "false" } } },
-    loadingCount: { control: false, description: "How many placeholder rows loading draws, held between 0 and 20.", table: { defaultValue: { summary: "3" } } },
+    loading: {
+      control: "boolean",
+      description: "Shows that the rows are being fetched: placeholder rows, and aria-busy on the tree. With no rows they stand in for the tree; with rows they follow the last one.",
+      table: { defaultValue: { summary: "false" } },
+    },
+    loadingCount: {
+      control: { type: "number", min: 0, max: 20 },
+      description: "How many placeholder rows loading draws, held between 0 and 20.",
+      table: { defaultValue: { summary: "3" } },
+    },
     onItemContextMenu: { control: false, description: "Called when a row's menu is asked for: a right-click on it, the context-menu key or Shift+F10 on the focused row. It says which row and where; the tree draws no menu, so open a ContextMenu of your own." },
-    renamable: { control: false, description: "Lets a row be renamed: F2 turns its label into a field. true allows every row that is not disabled; a function chooses by node.", table: { defaultValue: { summary: "false" } } },
+    renamable: {
+      control: "boolean",
+      description: "Lets a row be renamed: F2 turns its label into a field. true allows every row that is not disabled; a function chooses by node.",
+      table: { defaultValue: { summary: "false" } },
+    },
     onRename: { control: false, description: "Called with the row's id and the new text (trimmed) when a person commits a name that differs from the label. The tree changes nothing itself: change nodes." },
     validateRename: { control: false, description: "Checks a name before it is committed: return a message to refuse it, and the field stays open and shows it." },
     errorIds: { control: false, description: "The ids of rows whose children could not be loaded: a warning mark and words on the row, and a screen reader is told. Opening such a row again calls onRetry." },
@@ -144,7 +166,7 @@ const meta: Meta<PlaygroundArgs> = {
       description: "Draws only the rows in view of a long tree. auto does it from 200 visible rows, and only when maxHeight is set (true and false are on and off here).",
       table: { defaultValue: { summary: "auto" } },
     },
-    maxHeight: { control: "text", description: "The most height the tree takes before it scrolls: a number is pixels, a string any CSS length." },
+    maxHeight: { control: "text", description: "The most height the tree takes before it scrolls: a number is pixels (type 200 in the control), a string any CSS length (20rem)." },
     empty: { control: false, description: "What to draw when there are no rows, in place of the words in labels.empty. false draws nothing." },
     dir: {
       control: "select",
@@ -177,14 +199,29 @@ const meta: Meta<PlaygroundArgs> = {
     maxHeight: "",
     highlightQuery: "",
     dir: "ltr",
+    loading: false,
+    loadingCount: 3,
+    renamable: false,
     "aria-label": "Project files",
   },
-  render: (args) => (
+  render: (args) => <PlaygroundTree {...args} />,
+};
+
+/** The Playground's tree: it keeps its own copy of the rows, so a rename (F2) is applied the way a caller would apply it. */
+function PlaygroundTree(args: PlaygroundArgs) {
+  const [nodes, setNodes] = useState<TreeNode[]>(projectFiles);
+  const rename = (list: TreeNode[], id: string, label: string): TreeNode[] =>
+    list.map((node) => (node.id === id ? { ...node, label } : node.children ? { ...node, children: rename(node.children, id, label) } : node));
+  return (
     <Tree
       // Keyed by the settings that only set how it begins, so changing one restarts the (uncontrolled) tree.
       key={`${args.defaultExpandAll}-${args.selectionMode}-${args.checkable}-${args.expandOnClick}`}
       aria-label={args["aria-label"]}
-      nodes={projectFiles}
+      nodes={nodes}
+      loading={args.loading}
+      loadingCount={args.loadingCount}
+      renamable={args.renamable}
+      onRename={(id, label) => setNodes((current) => rename(current, id, label))}
       size={args.size}
       selectionMode={args.selectionMode}
       expandOnClick={args.expandOnClick}
@@ -192,12 +229,12 @@ const meta: Meta<PlaygroundArgs> = {
       checkable={args.checkable}
       defaultExpandAll={args.defaultExpandAll}
       windowed={windowedProp(args.windowed)}
-      maxHeight={args.maxHeight === "" ? undefined : args.maxHeight}
+      maxHeight={maxHeightProp(args.maxHeight)}
       highlightQuery={args.highlightQuery || undefined}
       dir={args.dir}
     />
-  ),
-};
+  );
+}
 
 export default meta;
 
@@ -210,7 +247,7 @@ export const Playground: Story = {
       source: {
         type: "dynamic",
         transform: (_code: string, context: StoryContext<PlaygroundArgs>) =>
-          treePlaygroundSnippet({ ...context.args, windowed: windowedProp(context.args.windowed), maxHeight: context.args.maxHeight === "" ? undefined : context.args.maxHeight }),
+          treePlaygroundSnippet({ ...context.args, windowed: windowedProp(context.args.windowed), maxHeight: maxHeightProp(context.args.maxHeight) }),
       },
     },
   },

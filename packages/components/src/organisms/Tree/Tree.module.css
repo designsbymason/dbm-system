@@ -199,9 +199,10 @@
   white-space: nowrap;
 }
 
+/* The description gives up room before the label does: beside a long label it is the label that has to stay readable. */
 .description {
   color: var(--dbm-text-secondary);
-  flex: 0 1 auto;
+  flex: 0 3 auto;
   font-size: var(--tree-small-font);
   min-inline-size: 0;
   overflow: hidden;

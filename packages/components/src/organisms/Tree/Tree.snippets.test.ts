@@ -19,10 +19,19 @@ describe("the Playground's snippet", () => {
       maxHeight: 240,
       highlightQuery: "app",
       dir: "rtl",
+      loading: true,
+      loadingCount: 5,
+      renamable: true,
     });
-    for (const part of ['size="lg"', 'selectionMode="multiple"', "checkable", "expandOnClick", "selectOnFocus", "defaultExpandAll", "windowed", "maxHeight={240}", 'highlightQuery="app"', 'dir="rtl"']) {
+    for (const part of ['size="lg"', 'selectionMode="multiple"', "checkable", "expandOnClick", "selectOnFocus", "defaultExpandAll", "windowed", "maxHeight={240}", 'highlightQuery="app"', 'dir="rtl"', "loading", "loadingCount={5}", "renamable"]) {
       expect(snippet).toContain(part);
     }
+  });
+
+  it("writes loadingCount only for a loading tree that differs from the default, and nothing for a tree that is not loading", () => {
+    expect(treePlaygroundSnippet({ loading: true, loadingCount: 3 })).not.toContain("loadingCount");
+    expect(treePlaygroundSnippet({ loading: false, loadingCount: 5 })).not.toContain("loading");
+    expect(treePlaygroundSnippet({ renamable: false })).not.toContain("renamable");
   });
 
   it("writes windowed={false} and a text height", () => {

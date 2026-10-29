@@ -83,8 +83,9 @@ it; a row can have an icon, a quieter description and content at its end.
 
 A tree can do more than show: `selectionMode` lets a person select one row or several, `checkable` gives every row a check box
 (a row above others shows "indeterminate" when only some of the rows beneath it are checked), `hasChildren` marks a row whose
-children you fetch when it is opened, and a long tree is drawn a window at a time so thousands of rows stay quick. It is one
-tab stop, moved around with the arrow keys, the way a file browser is.
+children you fetch when it is opened, and a long tree is drawn a window at a time (only the rows in view are on the page, so thousands
+stay quick). It is one tab stop, the way a file browser is: `Tab` moves focus into the tree once and out of it again, and the arrow
+keys move between the rows.
 
 `Tree` is a read-out and a picker for data, not a navigation: a page's own links are `Sidebar`, whose groups are not a tree.
 It does not sort, filter, fetch or reorder. The rows are drawn in the order you give them, and everything the person
@@ -126,7 +127,7 @@ changes what a screen reader announces.
 
 **Controlled and uncontrolled.** `expandedIds`, `value` and `checkedIds` each make that part controlled: a person's action
 calls the matching `on…Change` and the tree changes only when the prop does. Without them the tree holds its own, from
-`defaultExpandedIds` (or `defaultExpandAll`), `defaultValue` and `defaultCheckedIds`. Switching one between the two warns in development.
+`defaultExpandedIds` (or `defaultExpandAll`, which opens the rows that have rows to show and leaves a row still to be fetched closed), `defaultValue` and `defaultCheckedIds`. Switching one between the two warns in development. In `"single"` a `value` with more than one id warns, and only the first shows as selected.
 
 **Checking.** `checkedIds` lists only the leaves (rows with nothing under them); a row with children is worked out from them, so
 its own id is ignored. Checking a row checks every leaf under it that is not disabled, and checking it again clears them. A row waiting for its
@@ -279,6 +280,7 @@ there was anything to do. The object is the same for the tree's life.
 
 ## Best practices
 
+- `nodes` is often data on its way: a value that is not a list draws as an empty tree, a node that is not an object with a string `id` is left out, a `label` that is not text is written as text, and `children` that are not a list are ignored, each with one warning in development, never a crash.
 - `Tree` owns no data. Hold the hierarchy in your own state, give it as `nodes`, and change the array to add, remove or rename rows; the open rows, the selection and the checks are separate lists of ids, so they survive.
 - Use `selectionMode` to choose what a click does and `checkable` for a decision that applies to many rows at once (which folders to export). Both can be on: a click on the label selects, and a click on the box checks.
 - `checkedIds` holds leaves only. To know which folders are fully checked, work them out from the leaves in your own code, or read each row's state in `renderLabel`.
@@ -320,6 +322,7 @@ that holds the stop is outside the drawn window of a long tree, the tree itself 
 | `PageDown` / `PageUp` | Moves down or up by the rows that fit in the box that scrolls, less one (ten when the tree does not scroll). With `Shift` in `"multiple"`, extends the selection. |
 | `Enter` | Activates the row (`onItemActivate`), or opens or closes it when there is no handler. On an open row that failed to load, asks to try again (`onRetry`). |
 | `Space` | Checks the row when `checkable`, otherwise selects it (adds or removes it in `"multiple"`). |
+| `Shift` + `Space` | When the tree is `checkable` and has a `selectionMode`, selects the row (adds or removes it in `"multiple"`), so a tree that does both can be driven by the keyboard alone. |
 | `Shift` + `ArrowDown` / `ArrowUp` | In `"multiple"`, extends the selection from where it began. |
 | `Ctrl` or `⌘` + `A` | In `"multiple"`, selects every row that is not disabled. |
 | `F2` | With `renamable`, turns the focused row's label into a field. In the field: `Enter` commits, `Escape` cancels. |
@@ -340,7 +343,8 @@ The arrow turns with a short transition that is removed when the person prefers 
 ## Code examples
 
 ```tsx
-{/* A file browser: open a file on activation, remember what is open */}
+{/* A file browser: open a file on activation, remember what is open. onFocus is a native <div> attribute, passed straight
+    through to the element with role="tree"; so is title */}
 <Tree
   aria-label="Project files"
   nodes={files}
@@ -348,12 +352,15 @@ The arrow turns with a short transition that is removed when the person prefers 
   value={[currentFile]}
   onValueChange={([id]) => id && setCurrentFile(id)}
   onItemActivate={(id) => openInEditor(id)}
+  onFocus={() => setBrowserFocused(true)}
+  title="Project files"
   maxHeight={480}
 />
 ```
 
 ```tsx
-{/* A picker for what to export: only the leaves are stored, and a folder shows what is under it */}
+{/* A picker for what to export: only the leaves are stored, and a folder shows what is under it.
+    Space checks a row, Shift+Space selects it. */}
 <Tree
   aria-label="Choose what to export"
   nodes={folders}
@@ -365,18 +372,81 @@ The arrow turns with a short transition that is removed when the person prefers 
 ```
 
 ```tsx
-{/* Fetch a folder when it is opened */}
+{/* A picker of files: a folder is opened by a click and never chosen */}
 <Tree
-  aria-label="Cloud files"
-  nodes={folders}
-  loadingIds={loading}
-  onExpandedChange={(open) => fetchMissingChildren(open)}
+  aria-label="Choose files"
+  selectionMode="multiple"
+  expandOnClick
+  nodes={[{ id: "src", label: "src", selectable: false, children: [{ id: "app", label: "App.tsx" }] }]}
 />
 ```
 
 ```tsx
-{/* Reveal a search result from outside the tree */}
-const tree = useRef<TreeController>(null);
+{/* Fetch a folder when it is opened: its row has hasChildren, and is opened with onExpandedChange.
+    loading holds its id while you fetch, failed holds it if the fetch fails (opening it again calls onRetry) */}
+<Tree
+  aria-label="Cloud files"
+  nodes={folders}
+  loadingIds={loading}
+  errorIds={failed}
+  onExpandedChange={(open) => fetchMissingChildren(open)}
+  onRetry={(id) => fetchChildren(id)}
+/>
+```
+
+```tsx
+{/* A search: filterTree keeps the matches and the rows above them, and says which rows to open */}
+const result = filterTree(files, { query });
+<Tree
+  aria-label="Project files"
+  nodes={result.nodes}
+  expandedIds={query ? result.expandedIds : open}
+  onExpandedChange={setOpen}
+  highlightQuery={query}
+/>
+```
+
+```tsx
+{/* Rename a row with F2: the tree asks, you change nodes */}
+<Tree
+  aria-label="Project files"
+  nodes={files}
+  renamable
+  onRename={(id, label) => setFiles((current) => renameNode(current, id, label))}
+  validateRename={(id, label) => (nameTaken(label) ? "That name is taken" : undefined)}
+/>
+```
+
+```tsx
+{/* A menu for a row: wrap the tree in a ContextMenu and open it for the row the tree names.
+    const menu = useRef<ContextMenuController>(null) */}
+<ContextMenu controllerRef={menu}>
+  <ContextMenu.Trigger asChild>
+    <div>
+      <Tree
+        aria-label="Project files"
+        nodes={files}
+        onItemContextMenu={({ id, via, point }) => {
+          setTarget(id);
+          if (via === "keyboard") menu.current?.openAt(point);
+        }}
+      />
+    </div>
+  </ContextMenu.Trigger>
+  <ContextMenu.Content>
+    <ContextMenu.Item onSelect={() => removeFile(target)} tone="danger">Delete</ContextMenu.Item>
+  </ContextMenu.Content>
+</ContextMenu>
+```
+
+```tsx
+{/* The first fetch of the rows: placeholders until they arrive */}
+<Tree aria-label="Project files" nodes={files} loading={isLoading} />
+```
+
+```tsx
+{/* Reveal a search result from outside the tree.
+    const tree = useRef<TreeController>(null) */}
 <Button onClick={() => tree.current?.scrollToNode("src/components/Button.tsx")}>Show in tree</Button>
 <Tree aria-label="Project files" nodes={files} controllerRef={tree} maxHeight={480} />
 ```
@@ -387,7 +457,16 @@ const tree = useRef<TreeController>(null);
   aria-label="Fichiers"
   nodes={files}
   formatNumber={(n) => new Intl.NumberFormat("fr").format(n)}
-  labels={{ empty: "Aucun élément", childrenLoaded: (count) => `${count} éléments chargés` }}
+  labels={{
+    empty: "Aucun élément",
+    emptyFolder: "Vide",
+    loading: "Chargement",
+    nameRequired: "Saisissez un nom",
+    loadFailed: "Échec du chargement. Appuyez sur Entrée pour réessayer.",
+    childrenLoaded: (count) => `${count} éléments chargés`,
+    selectedCount: (count) => `${count} sélectionnés`,
+    rename: (label) => `Renommer ${label}`,
+  }}
 />
 ```
 

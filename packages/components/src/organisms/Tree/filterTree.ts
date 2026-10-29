@@ -36,10 +36,12 @@ export interface FilteredTree {
  * <Tree aria-label="Files" nodes={shown} expandedIds={query ? expandedIds : open} highlightQuery={query} />
  * ```
  */
-export function filterTree(nodes: readonly TreeNode[], { query = "", match, keepDescendants = true }: FilterTreeOptions = {}): FilteredTree {
+export function filterTree(nodes: readonly TreeNode[] | undefined | null, { query = "", match, keepDescendants = true }: FilterTreeOptions = {}): FilteredTree {
+  const list = Array.isArray(nodes) ? nodes : [];
   const needle = query.trim().toLowerCase();
-  if (!match && needle === "") return { nodes: nodes as TreeNode[], matchIds: [], expandedIds: [] };
-  const matches = match ?? ((node: TreeNode) => node.label.toLowerCase().includes(needle));
+  if (!match && needle === "") return { nodes: list, matchIds: [], expandedIds: [] };
+  // A label that is not text (data on its way) matches nothing rather than throwing.
+  const matches = match ?? ((node: TreeNode) => typeof node.label === "string" && node.label.toLowerCase().includes(needle));
 
   const matchIds: string[] = [];
   const expandedIds: string[] = [];
@@ -49,7 +51,7 @@ export function filterTree(nodes: readonly TreeNode[], { query = "", match, keep
     const itself = matches(node);
     if (itself) matchIds.push(node.id);
     const keepAll = keepDescendants && (itself || underMatch);
-    const children = node.children;
+    const children = Array.isArray(node.children) ? node.children : undefined;
     if (!children?.length) return itself || keepAll ? node : undefined;
 
     const kept: TreeNode[] = [];
@@ -68,7 +70,8 @@ export function filterTree(nodes: readonly TreeNode[], { query = "", match, keep
   };
 
   const kept: TreeNode[] = [];
-  for (const node of nodes) {
+  for (const node of list) {
+    if (typeof node !== "object" || node === null) continue;
     const result = visit(node, false);
     if (result) kept.push(result);
   }

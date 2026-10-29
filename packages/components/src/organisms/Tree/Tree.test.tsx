@@ -1,7 +1,8 @@
 import { act, fireEvent, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { axe } from "jest-axe";
-import { createRef, useState } from "react";
+import { createRef, StrictMode, useState } from "react";
+import { createPortal } from "react-dom";
 import { FileIcon, FolderIcon } from "@dbm-system/icons";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { Tree } from "./Tree";
@@ -1383,6 +1384,259 @@ describe("Tree — loading the rows", () => {
     expect(await axe(container)).toHaveNoViolations();
     rerender(<Basic loading defaultExpandAll />);
     expect(await axe(container)).toHaveNoViolations();
+  });
+});
+
+describe("Tree — keys when a tree can select and check", () => {
+  it("selects with Shift+Space and checks with Space when both are on", async () => {
+    const user = userEvent.setup();
+    const onValueChange = vi.fn();
+    const onCheckedChange = vi.fn();
+    render(<Basic checkable selectionMode="single" onValueChange={onValueChange} onCheckedChange={onCheckedChange} />);
+    item(/README/).focus();
+    await user.keyboard(" ");
+    expect(onCheckedChange).toHaveBeenCalledWith(["readme"]);
+    expect(onValueChange).not.toHaveBeenCalled();
+    await user.keyboard("{Shift>} {/Shift}");
+    expect(onValueChange).toHaveBeenCalledWith(["readme"]);
+    expect(onCheckedChange).toHaveBeenCalledTimes(1);
+  });
+
+  it("adds and removes rows with Shift+Space in multiple mode, and still checks with Shift+Space when nothing can be selected", async () => {
+    const user = userEvent.setup();
+    const onValueChange = vi.fn();
+    const onCheckedChange = vi.fn();
+    const { unmount } = render(<Basic checkable selectionMode="multiple" defaultValue={["docs"]} onValueChange={onValueChange} />);
+    item(/README/).focus();
+    await user.keyboard("{Shift>} {/Shift}");
+    expect(onValueChange).toHaveBeenLastCalledWith(["docs", "readme"]);
+    await user.keyboard("{Shift>} {/Shift}");
+    expect(onValueChange).toHaveBeenLastCalledWith(["docs"]);
+    unmount();
+    render(<Basic checkable onCheckedChange={onCheckedChange} />);
+    item(/README/).focus();
+    await user.keyboard("{Shift>} {/Shift}");
+    expect(onCheckedChange).toHaveBeenCalledWith(["readme"]);
+  });
+});
+
+describe("Tree — data that is not what the type says", () => {
+  it.each([undefined, null, "text", 5, {}])("draws %s as an empty tree and says so once, however often it re-renders", (bad) => {
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
+    const { rerender } = render(<Tree aria-label="T" nodes={bad as unknown as TreeNode[]} />);
+    rerender(<Tree aria-label="T" nodes={bad as unknown as TreeNode[]} />);
+    expect(screen.getByRole("group")).toHaveTextContent("No items");
+    const said = warn.mock.calls.filter(([text]) => String(text).includes("draws what it can"));
+    expect(said).toHaveLength(1);
+  });
+
+  it("drops a node with no string id, draws a label that is not text, and ignores children that are not a list", () => {
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
+    render(<Tree aria-label="T" nodes={[{ id: "a", label: "alpha" }, null, { label: "no id" }, { id: "n", label: 7 }, { id: "c", label: "kids", children: "oops" }] as unknown as TreeNode[]} />);
+    expect(names()).toEqual(["alpha", "7", "kids"]);
+    expect(item("kids")).not.toHaveAttribute("aria-expanded");
+    expect(warn.mock.calls.some(([text]) => String(text).includes("not an object with a string `id`"))).toBe(true);
+  });
+
+  it("types ahead and selects past a node whose label is missing", async () => {
+    const user = userEvent.setup();
+    vi.spyOn(console, "warn").mockImplementation(() => undefined);
+    render(<Tree aria-label="T" nodes={[{ id: "x" } as unknown as TreeNode, { id: "y", label: "yes" }]} />);
+    item("yes").focus();
+    await user.keyboard("{Home}y");
+    expect(item("yes")).toHaveFocus();
+  });
+});
+
+describe("Tree — one warning for one problem", () => {
+  it("warns about a repeated id once across renders with a fresh array each time, and again for a different one", () => {
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
+    const dup = (id: string) => [{ id, label: "1" }, { id, label: "2" }];
+    const { rerender } = render(<Tree aria-label="T" nodes={dup("d")} />);
+    for (let pass = 0; pass < 4; pass += 1) rerender(<Tree aria-label="T" nodes={dup("d")} />);
+    const said = () => warn.mock.calls.filter(([text]) => String(text).includes("more than one node"));
+    expect(said()).toHaveLength(1);
+    expect(String(said()[0]?.[0])).toContain('"d"');
+    rerender(<Tree aria-label="T" nodes={dup("e")} />);
+    expect(said()).toHaveLength(2);
+  });
+
+  it("warns once when a single-mode value holds more than one id, and shows only the first selected", () => {
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
+    const { rerender } = render(<Basic selectionMode="single" value={["src", "docs"]} />);
+    rerender(<Basic selectionMode="single" value={["src", "docs"]} />);
+    expect(screen.getAllByRole("treeitem").map((row) => row.getAttribute("aria-selected"))).toEqual(["true", "false", "false"]);
+    expect(warn.mock.calls.filter(([text]) => String(text).includes('selectionMode="single"'))).toHaveLength(1);
+  });
+});
+
+describe("Tree — expand all and rows still to be fetched", () => {
+  const mixed: TreeNode[] = [{ id: "loaded", label: "loaded", children: [{ id: "l1", label: "l1" }] }, { id: "later", label: "later", hasChildren: true }];
+
+  it("opens the rows that have rows to show and leaves a row still to be fetched closed, asking for nothing", () => {
+    const onExpandedChange = vi.fn();
+    render(<Tree aria-label="T" nodes={mixed} defaultExpandAll onExpandedChange={onExpandedChange} />);
+    expect(item("loaded")).toHaveAttribute("aria-expanded", "true");
+    expect(item("later")).toHaveAttribute("aria-expanded", "false");
+    expect(onExpandedChange).not.toHaveBeenCalled();
+  });
+
+  it("has expandAll() do the same, and report nothing to do when only a row still to be fetched is left", () => {
+    const controllerRef = createRef<TreeController>();
+    render(<Tree aria-label="T" nodes={mixed} controllerRef={controllerRef} />);
+    act(() => {
+      expect(controllerRef.current?.expandAll()).toBe(true);
+      expect(controllerRef.current?.expandAll()).toBe(false);
+    });
+    expect(item("later")).toHaveAttribute("aria-expanded", "false");
+    act(() => {
+      expect(controllerRef.current?.expand("later")).toBe(true);
+    });
+    expect(item("later")).toHaveAttribute("aria-expanded", "true");
+  });
+});
+
+describe("Tree — a press inside a portal a row draws", () => {
+  it("is not a press on the row: no selection, no opening, no activation, no change of the tab stop", () => {
+    const target = document.createElement("div");
+    document.body.appendChild(target);
+    const onValueChange = vi.fn();
+    const onItemActivate = vi.fn();
+    const onExpandedChange = vi.fn();
+    render(
+      <Tree
+        aria-label="T"
+        selectionMode="single"
+        expandOnClick
+        onValueChange={onValueChange}
+        onItemActivate={onItemActivate}
+        onExpandedChange={onExpandedChange}
+        nodes={[{ id: "p", label: "pal", children: [{ id: "q", label: "q" }], trailing: createPortal(<button type="button">in a portal</button>, target) }, { id: "z", label: "zed" }]}
+      />,
+    );
+    const inside = screen.getByRole("button", { name: "in a portal" });
+    fireEvent.click(inside);
+    fireEvent.doubleClick(inside);
+    fireEvent.focus(inside);
+    expect(onValueChange).not.toHaveBeenCalled();
+    expect(onItemActivate).not.toHaveBeenCalled();
+    expect(onExpandedChange).not.toHaveBeenCalled();
+    expect(item(/pal/)).toHaveAttribute("tabindex", "0");
+    fireEvent.click(screen.getByText("pal"));
+    expect(onValueChange).toHaveBeenCalledWith(["p"]);
+    target.remove();
+  });
+});
+
+describe("Tree — under StrictMode", () => {
+  it("announces loaded children, and a failed fetch, once each", () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    const { rerender } = render(
+      <StrictMode>
+        <Tree aria-label="T" nodes={[{ id: "r", label: "remote", hasChildren: true }]} defaultExpandedIds={["r"]} loadingIds={["r"]} />
+      </StrictMode>,
+    );
+    rerender(
+      <StrictMode>
+        <Tree aria-label="T" nodes={[{ id: "r", label: "remote", children: [{ id: "c", label: "c" }] }]} defaultExpandedIds={["r"]} loadingIds={[]} />
+      </StrictMode>,
+    );
+    act(() => {
+      vi.advanceTimersByTime(150);
+    });
+    expect(screen.getByRole("status")).toHaveTextContent("1 item loaded");
+    rerender(
+      <StrictMode>
+        <Tree aria-label="T" nodes={[{ id: "r", label: "remote", hasChildren: true }]} defaultExpandedIds={["r"]} errorIds={["r"]} />
+      </StrictMode>,
+    );
+    act(() => {
+      vi.advanceTimersByTime(150);
+    });
+    expect(screen.getByRole("status")).toHaveTextContent("remote. Couldn't load");
+    vi.useRealTimers();
+  });
+
+  it("does not announce a failure that is there from the first render", () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    render(
+      <StrictMode>
+        <Tree aria-label="T" nodes={[{ id: "r", label: "remote", hasChildren: true }]} defaultExpandedIds={["r"]} errorIds={["r"]} />
+      </StrictMode>,
+    );
+    act(() => {
+      vi.advanceTimersByTime(1500);
+    });
+    expect(screen.getByRole("status")).toBeEmptyDOMElement();
+    vi.useRealTimers();
+  });
+
+  it("puts the focus and the selection in the rename field, and commits once", async () => {
+    const user = userEvent.setup();
+    const onRename = vi.fn();
+    render(
+      <StrictMode>
+        <Basic renamable onRename={onRename} />
+      </StrictMode>,
+    );
+    item("docs").focus();
+    await user.keyboard("{F2}");
+    expect(screen.getByRole("textbox")).toHaveFocus();
+    expect((screen.getByRole("textbox") as HTMLInputElement).selectionEnd).toBe(4);
+    await user.keyboard("x{Enter}");
+    expect(onRename).toHaveBeenCalledTimes(1);
+  });
+
+  it("keeps typeahead working, and clears the word after a pause", async () => {
+    const user = userEvent.setup();
+    render(
+      <StrictMode>
+        <Tree aria-label="T" nodes={[{ id: "a", label: "apple" }, { id: "b", label: "banana" }, { id: "c", label: "blueberry" }]} />
+      </StrictMode>,
+    );
+    item("apple").focus();
+    await user.keyboard("bl");
+    expect(item("blueberry")).toHaveFocus();
+    await new Promise((resolve) => setTimeout(resolve, 650));
+    await user.keyboard("a");
+    expect(item("apple")).toHaveFocus();
+  });
+
+  it("says how many are selected in multiple mode", async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    render(
+      <StrictMode>
+        <Basic selectionMode="multiple" />
+      </StrictMode>,
+    );
+    item("src").focus();
+    await user.keyboard("{Control>}a{/Control}");
+    act(() => {
+      vi.advanceTimersByTime(150);
+    });
+    expect(screen.getByRole("status")).toHaveTextContent("3 selected");
+    vi.useRealTimers();
+  });
+});
+
+describe("Tree — text the caller supplies", () => {
+  it("keeps the English default for a label whose override is undefined", () => {
+    const { rerender } = render(<Tree aria-label="T" nodes={[]} labels={{ empty: undefined }} />);
+    expect(screen.getByRole("group")).toHaveTextContent("No items");
+    rerender(<Tree aria-label="T" nodes={[{ id: "r", label: "remote", hasChildren: true }]} defaultExpandedIds={["r"]} errorIds={["r"]} labels={{ loadFailed: undefined, emptyFolder: undefined, loading: undefined, rename: undefined, nameRequired: undefined, selectedCount: undefined, childrenLoaded: undefined }} />);
+    expect(item(/remote/)).toHaveTextContent("Couldn't load. Press Enter to try again.");
+  });
+
+  it("takes text that arrives in one input event, as a phone or a paste sends it, in the rename field", async () => {
+    const user = userEvent.setup();
+    const onRename = vi.fn();
+    render(<Basic renamable onRename={onRename} />);
+    item("docs").focus();
+    await user.keyboard("{F2}");
+    fireEvent.change(screen.getByRole("textbox"), { target: { value: "manuals and guides" } });
+    await user.keyboard("{Enter}");
+    expect(onRename).toHaveBeenCalledWith("docs", "manuals and guides");
   });
 });
 

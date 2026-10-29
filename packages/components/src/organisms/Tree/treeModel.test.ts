@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import type { TreeNode } from "./Tree.types";
-import { ancestorsOf, checkStateOf, checkStates, emptyRowId, indexTree, isLoadedEmpty, leavesOf, toggleChecked, visibleRows } from "./treeModel";
+import { ancestorsOf, checkStateOf, checkStates, emptyRowId, indexTree, isLoadedEmpty, leavesOf, sanitizeNodes, toggleChecked, visibleRows } from "./treeModel";
 
 const nodes: TreeNode[] = [
   {
@@ -22,14 +22,53 @@ describe("indexTree", () => {
     expect(index.parentOf.get("a2x")).toBe("a2");
     expect(index.parentOf.has("a")).toBe(false);
     expect(index.expandable).toEqual(["a", "a2", "b"]);
+    expect(index.openable).toEqual(["a", "a2"]);
+    expect(index.duplicates).toEqual([]);
   });
 
-  it("warns once per repeated id", () => {
+  it("lists a repeated id once, however many times it is repeated, and does not warn itself", () => {
     const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
-    indexTree([{ id: "x", label: "One" }, { id: "x", label: "Two" }]);
-    expect(warn).toHaveBeenCalledTimes(1);
-    expect(warn.mock.calls[0]?.[0]).toContain('"x"');
+    const index = indexTree([{ id: "x", label: "One" }, { id: "x", label: "Two" }, { id: "x", label: "Three" }, { id: "y", label: "Y" }]);
+    expect(index.duplicates).toEqual(["x"]);
+    expect(warn).not.toHaveBeenCalled();
     warn.mockRestore();
+  });
+});
+
+describe("sanitizeNodes", () => {
+  it("returns the very array it was given when every node is sound, so memoised work is kept", () => {
+    const result = sanitizeNodes(nodes);
+    expect(result.nodes).toBe(nodes);
+    expect(result.problems).toEqual([]);
+  });
+
+  it.each([[undefined, "missing"], [null, "missing"], ["text", "not an array"], [5, "not an array"], [{}, "not an array"]])("draws %s as an empty tree and says why", (input, why) => {
+    const result = sanitizeNodes(input);
+    expect(result.nodes).toEqual([]);
+    expect(result.problems.join()).toContain(why);
+  });
+
+  it("drops a node that is not an object with a string id, and keeps the rest", () => {
+    const result = sanitizeNodes([{ id: "a", label: "A" }, null, "b", { label: "no id" }, { id: 4, label: "number id" }]);
+    expect(result.nodes.map((node) => node.id)).toEqual(["a"]);
+    expect(result.problems).toHaveLength(1);
+  });
+
+  it("turns a label that is not text into text, empty for null and undefined, without changing the node it was given", () => {
+    const given = [{ id: "a" }, { id: "b", label: null }, { id: "c", label: 7 }] as unknown as TreeNode[];
+    const result = sanitizeNodes(given);
+    expect(result.nodes.map((node) => node.label)).toEqual(["", "", "7"]);
+    expect(given[0]).not.toHaveProperty("label");
+    expect(result.problems.join()).toContain("label");
+  });
+
+  it("ignores children that are not an array, and cleans the ones that are, in place of copying what is sound", () => {
+    const sound: TreeNode = { id: "s", label: "S", children: [{ id: "s1", label: "S1" }] };
+    const given = [sound, { id: "t", label: "T", children: "oops" }, { id: "u", label: "U", children: [{ id: "u1" }] }] as unknown as TreeNode[];
+    const result = sanitizeNodes(given);
+    expect(result.nodes[0]).toBe(sound);
+    expect(result.nodes[1]?.children).toBeUndefined();
+    expect(result.nodes[2]?.children?.[0]?.label).toBe("");
   });
 });
 

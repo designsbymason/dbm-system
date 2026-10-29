@@ -195,6 +195,9 @@ export interface TreePlaygroundSnippetArgs {
   maxHeight?: number | string;
   highlightQuery?: string;
   dir?: "ltr" | "rtl";
+  loading?: boolean;
+  loadingCount?: number;
+  renamable?: boolean;
   "aria-label"?: string;
 }
 
@@ -212,5 +215,8 @@ export function treePlaygroundSnippet(args: TreePlaygroundSnippetArgs): string {
   if (args.maxHeight !== undefined && args.maxHeight !== "") attributes.push(typeof args.maxHeight === "number" ? `maxHeight={${args.maxHeight}}` : `maxHeight=${quote(args.maxHeight)}`);
   if (args.highlightQuery) attributes.push(`highlightQuery=${quote(args.highlightQuery)}`);
   if (args.dir === "rtl") attributes.push('dir="rtl"');
+  if (args.loading) attributes.push("loading");
+  if (args.loading && args.loadingCount !== undefined && args.loadingCount !== 3) attributes.push(`loadingCount={${args.loadingCount}}`);
+  if (args.renamable) attributes.push("renamable");
   return `${icons}\n<Tree aria-label=${quote(args["aria-label"] || "Project files")} nodes={${rows}}${attributes.length ? ` ${attributes.join(" ")}` : ""} />`;
 }

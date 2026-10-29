@@ -21,6 +21,10 @@ export interface TreeIndex {
   parentOf: Map<string, string>;
   /** Ids of the nodes that can be expanded (children, or `hasChildren`), in tree order. */
   expandable: string[];
+  /** Ids of the nodes that have rows to show when open (loaded children), in tree order: what "expand all" opens. */
+  openable: string[];
+  /** Ids used by more than one node, each once. */
+  duplicates: string[];
 }
 
 export const canExpand = (node: TreeNode): boolean => Boolean(node.children?.length) || Boolean(node.hasChildren);
@@ -31,25 +35,70 @@ export const isLoadedEmpty = (node: TreeNode): boolean => Boolean(node.hasChildr
 /** The id of the row that stands in for the missing children of an empty, open row. It cannot clash with a caller's id. */
 export const emptyRowId = (parentId: string): string => `${parentId}\u0000empty`;
 
+/**
+ * What `nodes` becomes before anything reads it: the array itself when every node is sound, so memoised work is kept, and
+ * otherwise a copy that draws what it can. A value that is not an array is an empty tree; a node that is not an object with a
+ * string `id` is dropped; a `label` that is not a string becomes text (empty for `null` and `undefined`); `children` that is
+ * not an array is ignored. What was wrong is listed, for a development warning.
+ */
+export function sanitizeNodes(input: unknown): { nodes: TreeNode[]; problems: string[] } {
+  const problems = new Set<string>();
+  if (!Array.isArray(input)) {
+    problems.add(input === undefined || input === null ? "`nodes` is missing" : "`nodes` is not an array");
+    return { nodes: [], problems: [...problems] };
+  }
+  const clean = (list: readonly unknown[]): TreeNode[] => {
+    let changed = false;
+    const result: TreeNode[] = [];
+    for (const item of list) {
+      if (typeof item !== "object" || item === null || typeof (item as TreeNode).id !== "string") {
+        problems.add("a node is not an object with a string `id`, so it is not drawn");
+        changed = true;
+        continue;
+      }
+      const node = item as TreeNode;
+      let next = node;
+      if (typeof node.label !== "string") {
+        problems.add("a node has no string `label`");
+        next = { ...next, label: node.label === undefined || node.label === null ? "" : String(node.label) };
+      }
+      if (node.children !== undefined) {
+        if (!Array.isArray(node.children)) {
+          problems.add("a node's `children` is not an array");
+          next = { ...next, children: undefined };
+        } else {
+          const kids = clean(node.children);
+          if (kids !== node.children) next = { ...next, children: kids };
+        }
+      }
+      if (next !== node) changed = true;
+      result.push(next);
+    }
+    return changed ? result : (list as TreeNode[]);
+  };
+  return { nodes: clean(input), problems: [...problems] };
+}
+
 /** Looks every node up once, so the rest of the work is map reads. */
 export function indexTree(nodes: readonly TreeNode[]): TreeIndex {
   const byId = new Map<string, TreeNode>();
   const parentOf = new Map<string, string>();
   const expandable: string[] = [];
+  const openable: string[] = [];
+  const duplicates = new Set<string>();
   const visit = (list: readonly TreeNode[], parent: string | undefined) => {
     for (const node of list) {
-      if (process.env.NODE_ENV !== "production" && byId.has(node.id)) {
-        console.warn(`Tree: the id "${node.id}" is used by more than one node. Ids must be unique across the whole tree.`);
-      }
+      if (byId.has(node.id)) duplicates.add(node.id);
       byId.set(node.id, node);
       if (parent !== undefined) parentOf.set(node.id, parent);
       if (canExpand(node)) expandable.push(node.id);
+      if (node.children?.length) openable.push(node.id);
       if (isLoadedEmpty(node)) parentOf.set(emptyRowId(node.id), node.id);
       if (node.children) visit(node.children, node.id);
     }
   };
   visit(nodes, undefined);
-  return { byId, parentOf, expandable };
+  return { byId, parentOf, expandable, openable, duplicates: [...duplicates] };
 }
 
 /**

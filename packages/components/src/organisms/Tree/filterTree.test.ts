@@ -90,4 +90,17 @@ describe("filterTree", () => {
   it("keeps the order of the rows it keeps", () => {
     expect(filterTree(nodes, { query: ".md" }).matchIds).toEqual(["guide", "readme"]);
   });
+
+  it("takes a missing list as nothing to search, and a label that is not text as no match", () => {
+    expect(filterTree(undefined, { query: "a" }).nodes).toEqual([]);
+    expect(filterTree(null, { query: "a" }).nodes).toEqual([]);
+    const messy = [{ id: "x" }, { id: "y", label: 5 }, { id: "z", label: "az" }] as unknown as TreeNode[];
+    expect(filterTree(messy, { query: "a" }).matchIds).toEqual(["z"]);
+  });
+
+  it("does not walk the characters of children that are text, and skips a node that is not an object", () => {
+    const messy = [null, { id: "p", label: "p", children: "ab" }, { id: "q", label: "q" }] as unknown as TreeNode[];
+    const result = filterTree(messy, { query: "q" });
+    expect(ids(result.nodes)).toEqual(["q"]);
+  });
 });

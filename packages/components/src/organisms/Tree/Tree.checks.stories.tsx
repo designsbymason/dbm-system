@@ -294,6 +294,8 @@ export const FailedAndEmptyRowsKeepTheRowHeight: Story = {
     await expect(getComputedStyle(failed.querySelector("[class*=failure]") as Element).color).toBe(colour("var(--dbm-text-danger)"));
     const empty = within(tree).getByRole("treeitem", { name: "Empty" });
     await expect(getComputedStyle(empty).color).toBe(colour("var(--dbm-text-secondary)"));
+    // The pointer an earlier check left over the page could be over one of these rows: park it somewhere neutral first.
+    await send("Input.dispatchMouseEvent", { type: "mouseMoved", x: 1, y: 1 });
     // a real pointer over the Empty row does not fill it as it does a row (the synthetic hover of the test library sets no :hover)
     const pointOver = async (element: Element) => {
       element.scrollIntoView({ block: "center" });
@@ -478,5 +480,41 @@ export const PickerOpensFoldersAndChoosesFiles: Story = {
     await userEvent.click(body.getByText("dir"));
     await expect(rowOf("dir")).toHaveAttribute("aria-expanded", "false");
     await expect(rowOf("c.ts")).toHaveAttribute("aria-selected", "false");
+  },
+};
+
+export const RenameFieldTakesTextInOneEvent: Story = {
+  name: "The rename field takes text that arrives in one input event, as a phone, an autofill or a paste sends it",
+  render: () => <RenameDemo />,
+  play: async () => {
+    const row = rowOf(/Button\.tsx/);
+    row.focus();
+    await userEvent.keyboard("{F2}");
+    const field = body.getByRole("textbox");
+    await expect(field).toHaveFocus();
+    // The browser's own text insertion, with no key events: the selected text is replaced by the whole string at once.
+    await send("Input.insertText", { text: "Chip with a long name.tsx" });
+    await expect(field).toHaveValue("Chip with a long name.tsx");
+    await userEvent.keyboard("{Enter}");
+    await expect(body.getByTestId("renamed")).toHaveTextContent("Renamed to Chip with a long name.tsx");
+    await expect(rowOf(/Chip with a long name/)).toHaveFocus();
+  },
+};
+
+export const ShiftSpaceSelectsWhenCheckable: Story = {
+  name: "With check boxes and a selection mode Space checks the focused row and Shift+Space selects it, from the keyboard alone",
+  render: () => <Demo aria-label="Both" checkable selectionMode="single" defaultExpandedIds={["src"]} />,
+  play: async () => {
+    const user = userEvent.setup();
+    await user.tab();
+    await user.keyboard("{ArrowDown}");
+    const row = within(body.getByRole("tree", { name: "Both" })).getAllByRole("treeitem")[1] as HTMLElement;
+    await expect(row).toHaveFocus();
+    await user.keyboard(" ");
+    await expect(row).toHaveAttribute("aria-checked", "true");
+    await expect(row).toHaveAttribute("aria-selected", "false");
+    await user.keyboard("{Shift>} {/Shift}");
+    await expect(row).toHaveAttribute("aria-selected", "true");
+    await expect(row).toHaveAttribute("aria-checked", "true");
   },
 };

@@ -14,13 +14,13 @@
 ## Alternatives considered
 - **A built-in `ContextMenu` (a `renderMenu` prop).** Rejected: +7KB for everyone, over the default budget, for a menu most trees would not use; the callback is eleven lines in the caller and leaves the items entirely theirs.
 - **A `filter` or `query` prop that hides rows.** Rejected: the tree would own the data's shape, and a caller who wants "match the path" or "match a tag" would have to fight it. A function that returns `nodes` composes with everything else.
-- **`EditableText` in the row.** Rejected: it draws a button that swaps for a field, which is a second focus stop inside a tree item, and it brings its own controls and 6KB.
+- **`EditableText` in the row, or the `Input` atom.** Rejected: `EditableText` draws a button that swaps for a field, which is a second focus stop inside a tree item, and brings its own controls and 6KB; `Input` is taller than a row at every size (30, 39, 42, 55 and 60px against 24, 32, 36, 44 and 52px), so a row would grow when it was renamed. The field is a plain input drawn from the same tokens (the neutral-strong edge, the surface fill, the focus ring inside it).
 - **Rename on a slow second click or a double click.** Rejected: a double click is activation and a click is selection; F2 is the pattern's key, and a "Rename" menu item reaches the controller.
 - **A `loading` flag on every node for the first load.** Rejected: the first load has no nodes to hold a flag; placeholders are the tree's, not a row's.
 - **Preventing the browser's menu in the tree.** Rejected, as above: it silently disabled a `ContextMenu` wrapped round the tree.
 
 ## Consequences
-- The tree stays about 8KB of JavaScript; a search, a menu and a rename cost the caller what they use.
+- The tree stays under 9KB of JavaScript; a search, a menu and a rename cost the caller what they use.
 - A rename the caller does not apply simply leaves the old label, which is the controlled-component rule, and the Docs page says so.
 - Drag to reorder and reparent is still not built; it is its own decision when an app needs it.
 
