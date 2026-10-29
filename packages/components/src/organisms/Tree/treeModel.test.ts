@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import type { TreeNode } from "./Tree.types";
-import { ancestorsOf, checkStateOf, indexTree, leavesOf, toggleChecked, visibleRows } from "./treeModel";
+import { ancestorsOf, checkStateOf, checkStates, emptyRowId, indexTree, isLoadedEmpty, leavesOf, toggleChecked, visibleRows } from "./treeModel";
 
 const nodes: TreeNode[] = [
   {
@@ -99,5 +99,60 @@ describe("ancestorsOf", () => {
   it("lists the rows above a node, nearest first", () => {
     expect(ancestorsOf("a2x", indexTree(nodes).parentOf)).toEqual(["a2", "a"]);
     expect(ancestorsOf("c", indexTree(nodes).parentOf)).toEqual([]);
+  });
+});
+
+describe("checkStates", () => {
+  const every = (list: readonly TreeNode[]): TreeNode[] => list.flatMap((node) => [node, ...every(node.children ?? [])]);
+
+  it("gives the same answer as checkStateOf for every node, for several sets of checked leaves", () => {
+    const all = every(nodes);
+    for (const checked of [[], ["a1"], ["a1", "a2x"], ["a2y"], ["a1", "a2x", "a2y", "b", "c"], ["b"], ["c"]]) {
+      const set = new Set(checked);
+      const states = checkStates(nodes, set);
+      for (const node of all) expect(states.get(node.id), `${node.id} with ${checked.join(",")}`).toBe(checkStateOf(node, set));
+    }
+  });
+
+  it("counts a node whose leaves are all disabled by all of them", () => {
+    const only: TreeNode[] = [{ id: "d", label: "D", children: [{ id: "d1", label: "D1", disabled: true }, { id: "d2", label: "D2", disabled: true }] }];
+    expect(checkStates(only, new Set(["d1"])).get("d")).toBe("indeterminate");
+    expect(checkStates(only, new Set(["d1", "d2"])).get("d")).toBe(true);
+    expect(checkStates(only, new Set()).get("d")).toBe(false);
+  });
+
+  it("is one pass over the nodes however many leaves sit under one of them", () => {
+    const leaves: TreeNode[] = Array.from({ length: 100_000 }, (_, position) => ({ id: `l${position}`, label: "x" }));
+    const big: TreeNode[] = [{ id: "root", label: "Root", children: leaves }];
+    const started = performance.now();
+    const states = checkStates(big, new Set(leaves.slice(0, 50_000).map((leaf) => leaf.id)));
+    expect(states.get("root")).toBe("indeterminate");
+    expect(performance.now() - started).toBeLessThan(1000);
+  });
+});
+
+describe("a row that was fetched and came back empty", () => {
+  const fetched: TreeNode[] = [{ id: "f", label: "F", hasChildren: true, children: [] }, { id: "g", label: "G", hasChildren: true }];
+
+  it("is told apart from one that has not been fetched", () => {
+    expect(isLoadedEmpty(fetched[0] as TreeNode)).toBe(true);
+    expect(isLoadedEmpty(fetched[1] as TreeNode)).toBe(false);
+    expect(isLoadedEmpty({ id: "h", label: "H", children: [] })).toBe(false);
+  });
+
+  it("gets one placeholder row under it when it is open, which is disabled, one level down and the only child", () => {
+    const rows = visibleRows(fetched, new Set(["f", "g"]));
+    expect(rows.map((row) => row.node.id)).toEqual(["f", emptyRowId("f"), "g"]);
+    expect(rows[1]).toMatchObject({ placeholder: "empty", level: 2, posinset: 1, setsize: 1, parentId: "f" });
+    expect(rows[1]?.node.disabled).toBe(true);
+  });
+
+  it("gets none while closed or while it is loading again", () => {
+    expect(visibleRows(fetched, new Set()).map((row) => row.node.id)).toEqual(["f", "g"]);
+    expect(visibleRows(fetched, new Set(["f"]), new Set(["f"])).map((row) => row.node.id)).toEqual(["f", "g"]);
+  });
+
+  it("puts the placeholder under its row in the index, so a focus on it can fall back to that row", () => {
+    expect(ancestorsOf(emptyRowId("f"), indexTree(fetched).parentOf)).toEqual(["f"]);
   });
 });

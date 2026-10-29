@@ -111,7 +111,7 @@
   cursor: pointer;
 }
 
-.row:hover:not(.disabled) {
+.row:hover:not(.disabled, .placeholder) {
   background-color: var(--dbm-bg-neutral-subtle);
 }
 
@@ -170,7 +170,8 @@
 .check {
   align-items: center;
   background-color: var(--dbm-bg-surface);
-  border: var(--dbm-border-width-1) solid var(--dbm-border-neutral);
+  /* border.neutral-strong, not border.neutral: the box is a control's edge and has to be 3:1 (border.neutral is 2.3:1 on the surface in light mode). */
+  border: var(--dbm-border-width-1) solid var(--dbm-border-neutral-strong);
   border-radius: var(--dbm-radius-xs);
   box-sizing: border-box;
   display: inline-flex;
@@ -206,6 +207,23 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+/* A row that could not load its children says so in the danger colour, in words as well (the mark is not the only sign). */
+.failure {
+  color: var(--dbm-text-danger);
+  flex: 0 1 auto;
+  font-size: var(--tree-small-font);
+  min-inline-size: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* The line under an open row that loaded nothing: quieter than a row, and not something to point at. */
+.placeholder {
+  color: var(--dbm-text-secondary);
+  cursor: default;
 }
 
 .trailing {

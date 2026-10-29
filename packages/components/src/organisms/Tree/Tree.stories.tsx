@@ -32,6 +32,8 @@ interface PlaygroundArgs {
   defaultExpandedIds: TreeProps["defaultExpandedIds"];
   onExpandedChange: TreeProps["onExpandedChange"];
   loadingIds: TreeProps["loadingIds"];
+  errorIds: TreeProps["errorIds"];
+  onRetry: TreeProps["onRetry"];
   onItemActivate: TreeProps["onItemActivate"];
   renderLabel: TreeProps["renderLabel"];
   empty: TreeProps["empty"];
@@ -102,6 +104,8 @@ const meta: Meta<PlaygroundArgs> = {
     },
     onExpandedChange: { control: false, description: "Called with the ids that should be open when a person opens or closes a row." },
     loadingIds: { control: false, description: "The ids of rows whose children are being fetched: a spinner in place of the arrow, and aria-busy on the row." },
+    errorIds: { control: false, description: "The ids of rows whose children could not be loaded: a warning mark and words on the row, and a screen reader is told. Opening such a row again calls onRetry." },
+    onRetry: { control: false, description: "Called with the id of an open row listed in errorIds when a person asks to try again: its mark, Right or Enter." },
     onItemActivate: { control: false, description: "Called when a row is activated: Enter on it or a double click. A row with children and no handler is opened or closed instead." },
     renderLabel: { control: false, description: "Draws a row's label in place of its text, given the row and its state." },
     highlightQuery: { control: "text", description: "Text to find in each label and mark. It marks the match only; filter nodes yourself to hide rows." },
@@ -261,27 +265,41 @@ export const Lazy: Story = {
     const Fetching = () => {
       const [nodes, setNodes] = useState<TreeNode[]>([
         { id: "remote", label: "remote", icon: FolderIcon, hasChildren: true },
-        { id: "local", label: "local", icon: FolderIcon, children: [{ id: "note", label: "note.txt" }] },
+        { id: "flaky", label: "flaky (fails the first time)", icon: FolderIcon, hasChildren: true },
+        { id: "bare", label: "empty folder", icon: FolderIcon, hasChildren: true },
       ]);
       const [loading, setLoading] = useState<string[]>([]);
+      const [failed, setFailed] = useState<string[]>([]);
+      const attempts = useRef<Record<string, number>>({});
       const timer = useRef(0);
       useEffect(() => () => window.clearTimeout(timer.current), []);
+      const load = (id: string) => {
+        attempts.current[id] = (attempts.current[id] ?? 0) + 1;
+        setFailed((current) => current.filter((entry) => entry !== id));
+        setLoading((current) => [...current, id]);
+        timer.current = window.setTimeout(() => {
+          setLoading((current) => current.filter((entry) => entry !== id));
+          if (id === "flaky" && attempts.current[id] === 1) {
+            setFailed((current) => [...current, id]);
+            return;
+          }
+          const children: TreeNode[] = id === "bare" ? [] : [{ id: `${id}-1`, label: "report.csv" }, { id: `${id}-2`, label: "photo.jpg" }];
+          setNodes((current) => current.map((node) => (node.id === id ? { ...node, children } : node)));
+        }, 900);
+      };
       return (
         <Tree
           aria-label="Remote files"
           size={args.size}
           nodes={nodes}
           loadingIds={loading}
+          errorIds={failed}
+          onRetry={load}
           onExpandedChange={(open) => {
-            if (!open.includes("remote") || nodes[0]?.children) return;
-            setLoading(["remote"]);
-            timer.current = window.setTimeout(() => {
-              setNodes((current) => [
-                { id: "remote", label: "remote", icon: FolderIcon, children: [{ id: "r1", label: "report.csv" }, { id: "r2", label: "photo.jpg" }] },
-                ...current.slice(1),
-              ]);
-              setLoading([]);
-            }, 1200);
+            for (const id of open) {
+              const node = nodes.find((entry) => entry.id === id);
+              if (node && !node.children && !loading.includes(id) && !failed.includes(id)) load(id);
+            }
           }}
         />
       );

@@ -27,7 +27,8 @@ export interface TreeNode {
   children?: TreeNode[];
   /**
    * Marks a row that has children you have not given yet (a folder you fetch when it is opened). It can be expanded:
-   * `onExpandedChange` fires, you fetch, and you put the result in `children`. Ignored once `children` is set.
+   * `onExpandedChange` fires, you fetch, and you put the result in `children`. Once `children` has rows this is ignored; if
+   * the fetch found nothing, give `children: []` and the open row shows an "Empty" row under it (`labels.emptyFolder`).
    */
   hasChildren?: boolean;
   /** Stops the row being selected, checked or expanded by a person. It stays in the arrow-key order. */
@@ -61,6 +62,13 @@ export interface TreeLabels {
    * @default (count) => `${count} items loaded` (the number through `formatNumber`; `1 item loaded` for one)
    */
   childrenLoaded: (count: number) => string;
+  /** The words under an open row that was fetched and has nothing in it (`children: []`). @default 'Empty' */
+  emptyFolder: string;
+  /**
+   * Said on a row listed in `errorIds`, and heard when it is added: its children could not be loaded. It is part of the row's
+   * name, so it should say what to do. @default "Couldn't load. Press Enter to try again."
+   */
+  loadFailed: string;
 }
 
 /**
@@ -127,6 +135,14 @@ export interface TreeProps extends Omit<ComponentPropsWithoutRef<"div">, "childr
   onExpandedChange?: (expandedIds: string[]) => void;
   /** The ids of rows whose children are being fetched: a spinner in place of the arrow, and `aria-busy` on the row. */
   loadingIds?: string[];
+  /**
+   * The ids of rows whose children could not be loaded: the arrow gives way to a warning mark, the row says `labels.loadFailed`
+   * and a screen reader is told. Open such a row again (the mark, Right or Enter) and `onRetry` is called, if it is still open;
+   * a closed one opens as usual, so `onExpandedChange` is where the first attempt is made. Take the id out when you try again.
+   */
+  errorIds?: string[];
+  /** Called with the id of an open row listed in `errorIds` when a person asks to try again: its mark, Right or Enter. */
+  onRetry?: (id: string) => void;
   /**
    * Called when a row is activated: Enter on it or a double click. A row that has children and no handler is opened or
    * closed by Enter instead.

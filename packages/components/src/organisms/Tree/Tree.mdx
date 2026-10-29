@@ -22,6 +22,8 @@ export const propOrder = [
   "defaultExpandAll",
   "onExpandedChange",
   "loadingIds",
+  "errorIds",
+  "onRetry",
   "onItemActivate",
   "renderLabel",
   "highlightQuery",
@@ -46,7 +48,7 @@ export const nodeFields = [
   { name: "icon", description: "An icon component from `@dbm-system/icons`, drawn before the label." },
   { name: "description", description: "Quieter text after the label on the same line." },
   { name: "children", description: "The rows under this one, drawn when it is open." },
-  { name: "hasChildren", description: "Marks a row whose children you do not have yet. It can be opened; you fetch the children and put them in `children`.", defaultValue: "false" },
+  { name: "hasChildren", description: "Marks a row whose children you do not have yet. It can be opened; you fetch the children and put them in `children`, or `children: []` when there are none (the open row then shows an \"Empty\" row).", defaultValue: "false" },
   { name: "disabled", description: "A person cannot select, check or open it. It stays in the arrow-key order.", defaultValue: "false" },
   { name: "trailing", description: "Content at the end of the row. Not interactive: a button in a row would be a second focus stop inside the tree." },
 ];
@@ -122,6 +124,11 @@ children (`hasChildren`) counts as a leaf until they arrive.
 
 **Lazy children.** Opening a `hasChildren` row calls `onExpandedChange`. Put its id in `loadingIds` while you fetch (a spinner
 replaces the arrow and the row is `aria-busy`), then put the result in the row's `children`; the tree says how many arrived.
+If the fetch finds nothing, give `children: []` and the open row shows a quiet, disabled "Empty" row under it (`labels.emptyFolder`),
+so it does not look broken. If the fetch fails, put the id in `errorIds`: the arrow gives way to a warning mark, the row says
+"Couldn't load. Press Enter to try again." (`labels.loadFailed`, part of its name) and a screen reader is told. Asking to open the
+row again, from the mark, with Right or with Enter, calls `onRetry(id)`; take the id out of `errorIds` and into `loadingIds` as you
+try again. A closed row that failed opens the ordinary way, through `onExpandedChange`.
 
 ### TreeController
 
@@ -234,7 +241,7 @@ The tree is an element with `role="tree"` holding a flat list of `role="treeitem
 `aria-posinset` and `aria-setsize`, so a screen reader announces "level 2, 3 of 5" however many rows are drawn. A row with children
 has `aria-expanded`. With a `selectionMode` every row has `aria-selected`, and the tree is `aria-multiselectable` in `"multiple"`.
 With `checkable` every row has `aria-checked` (`"mixed"` for a row some of whose leaves are checked). A disabled row has
-`aria-disabled` and stays focusable and in the arrow-key order. A row whose children are loading is `aria-busy`. The arrow and the
+`aria-disabled` and stays focusable and in the arrow-key order. A row whose children are loading is `aria-busy`. An open row that loaded nothing has one disabled "Empty" row under it, which is in the arrow-key order and is not selectable or checkable. The arrow and the
 check box are decorative and hidden from assistive technology; the row's label is its name, and a description or trailing text is read after it.
 
 Name the tree with `aria-label` or `aria-labelledby` (a warning in development when neither is given). When the children of a
@@ -247,10 +254,10 @@ that holds the stop is outside the drawn window of a long tree, the tree itself 
 |---|---|
 | `Tab` | Moves focus into the tree (to the row that holds the stop), and out of it. |
 | `ArrowDown` / `ArrowUp` | Moves to the next or previous visible row. |
-| `ArrowRight` | Opens a closed row; on an open row, moves to its first child. (`ArrowLeft` in `dir="rtl"`.) |
+| `ArrowRight` | Opens a closed row; on an open row, moves to its first child, or asks to try again when it failed to load. (`ArrowLeft` in `dir="rtl"`.) |
 | `ArrowLeft` | Closes an open row; otherwise moves to the row's parent. (`ArrowRight` in `dir="rtl"`.) |
 | `Home` / `End` | Moves to the first or last visible row. |
-| `Enter` | Activates the row (`onItemActivate`), or opens or closes it when there is no handler. |
+| `Enter` | Activates the row (`onItemActivate`), or opens or closes it when there is no handler. On an open row that failed to load, asks to try again (`onRetry`). |
 | `Space` | Checks the row when `checkable`, otherwise selects it (adds or removes it in `"multiple"`). |
 | `Shift` + `ArrowDown` / `ArrowUp` | In `"multiple"`, extends the selection from where it began. |
 | `Ctrl` or `⌘` + `A` | In `"multiple"`, selects every row that is not disabled. |
@@ -324,14 +331,15 @@ const tree = useRef<TreeController>(null);
 ## Design tokens used
 
 <TokenRow token="text.primary" usage="a row's label" />
-<TokenRow token="text.secondary" usage="a row's description, its trailing content and the empty message" />
+<TokenRow token="text.secondary" usage="a row's description, its trailing content, the empty message and the Empty row" />
+<TokenRow token="text.danger" usage="the words on a row whose children could not be loaded" />
 <TokenRow token="bg.neutral-subtle" usage="the fill of a row under the pointer" />
 <TokenRow token="bg.brand-subtle" usage="the fill of a selected row" />
 <TokenRow token="border.brand" usage="the bar at the start of a selected row" />
 <TokenRow token="border-width.4" usage="the width of that bar, reserved on every row so a selection does not move the text" />
 <TokenRow token="bg.surface" usage="an unchecked check box" />
 <TokenRow token="bg.brand" usage="a checked or mixed check box" />
-<TokenRow token="border.neutral" usage="the outline of an unchecked check box" />
+<TokenRow token="border.neutral-strong" usage="the outline of an unchecked check box (<code>border.neutral</code> is under 3:1 on the surface in light mode)" />
 <TokenRow token="border-width.1" usage="the outline of a check box" />
 <TokenRow token="radius.xs" usage="the corners of a check box" />
 <TokenRow token="icon.default" usage="the arrow that opens a row, and a row's own icon" />

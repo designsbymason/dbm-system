@@ -47,13 +47,18 @@ ${tree('selectionMode="multiple"\n  defaultValue={["app"]}\n  onValueChange={(id
 ${tree("checkable\n  checkedIds={checked}\n  onCheckedChange={setChecked}\n  defaultExpandAll")}`,
 
   lazy: `{/* hasChildren marks a row whose children you have not got. Opening it calls onExpandedChange: fetch them, list the
-    id in loadingIds meanwhile, then put the result in the row's children.
-    const [loading, setLoading] = useState<string[]>([]) */}
+    id in loadingIds meanwhile, then put the result in the row's children. If the fetch fails, list the id in errorIds: the row
+    says so, and opening it again (its mark, Right or Enter) calls onRetry. A fetch that finds nothing is children: [], and the
+    open row shows an "Empty" row under it.
+    const [loading, setLoading] = useState<string[]>([])
+    const [failed, setFailed] = useState<string[]>([]) */}
 <Tree
   aria-label="Remote files"
   nodes={[{ id: "remote", label: "remote", hasChildren: true }]}
   loadingIds={loading}
+  errorIds={failed}
   onExpandedChange={(open) => fetchChildrenOf(open)}
+  onRetry={(id) => fetchChildrenOf([id])}
 />`,
 
   long: `{/* A long tree: with maxHeight set, the default windowed="auto" draws only the rows in view from 200 visible rows

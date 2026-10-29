@@ -1,4 +1,4 @@
-import { CaretLeftIcon, CaretRightIcon, CheckIcon, MinusIcon } from "@dbm-system/icons";
+import { CaretLeftIcon, CaretRightIcon, CheckIcon, MinusIcon, WarningIcon } from "@dbm-system/icons";
 import { cx, mergeDefined, useAnnouncement, useWindowedList } from "@dbm-system/utils";
 import {
   forwardRef,
@@ -26,7 +26,7 @@ import type {
   TreeSelectionMode,
   TreeSize,
 } from "./Tree.types";
-import { ancestorsOf, canExpand, checkStateOf, indexTree, toggleChecked, visibleRows } from "./treeModel";
+import { ancestorsOf, canExpand, checkStates, indexTree, toggleChecked, visibleRows } from "./treeModel";
 import type { TreeRow } from "./treeModel";
 import { useTreeList } from "./useTreeList";
 
@@ -54,6 +54,8 @@ const noSnapshot = (): undefined => undefined;
 const defaultLabels = (formatNumber: (value: number) => string): TreeLabels => ({
   empty: "No items",
   childrenLoaded: (count) => `${formatNumber(count)} ${count === 1 ? "item" : "items"} loaded`,
+  emptyFolder: "Empty",
+  loadFailed: "Couldn't load. Press Enter to try again.",
 });
 
 /**
@@ -102,6 +104,8 @@ export const Tree = forwardRef<HTMLDivElement, TreeProps>(
       defaultExpandAll = false,
       onExpandedChange,
       loadingIds,
+      errorIds,
+      onRetry,
       onItemActivate,
       renderLabel,
       highlightQuery,
@@ -146,7 +150,10 @@ export const Tree = forwardRef<HTMLDivElement, TreeProps>(
     const selectedSet = useMemo(() => new Set(selected), [selected]);
     const checkedSet = useMemo(() => new Set(checkedLeaves), [checkedLeaves]);
     const loadingSet = useMemo(() => new Set(loadingIds), [loadingIds]);
-    const rows = useMemo(() => visibleRows(nodes, expandedSet), [nodes, expandedSet]);
+    const errorSet = useMemo(() => new Set(errorIds), [errorIds]);
+    const rows = useMemo(() => visibleRows(nodes, expandedSet, loadingSet), [nodes, expandedSet, loadingSet]);
+    // Every row's check state, worked out once for the whole tree rather than by walking the leaves under each drawn row.
+    const checkMap = useMemo(() => (checkable ? checkStates(nodes, checkedSet) : undefined), [checkable, nodes, checkedSet]);
     const rowIndexById = useMemo(() => new Map(rows.map((row, position) => [row.node.id, position])), [rows]);
 
     // --- windowing -------------------------------------------------------------------------------------------------------
@@ -181,6 +188,7 @@ export const Tree = forwardRef<HTMLDivElement, TreeProps>(
     const elements = useRef(new Map<string, HTMLElement>());
     const pendingFocus = useRef<string | undefined>(undefined);
     const pendingScroll = useRef<string | undefined>(undefined);
+    const warnedScroll = useRef(false);
     const frameRef = useRef<HTMLDivElement | null>(null);
     const setFrame = useCallback(
       (element: HTMLDivElement | null) => {
@@ -224,6 +232,12 @@ export const Tree = forwardRef<HTMLDivElement, TreeProps>(
         if (position === undefined) {
           // Not drawn: either it is still under a closed row (a controlled tree that has not opened it yet) or gone.
           if (!index.byId.has(wantsScroll)) pendingScroll.current = undefined;
+          else if (process.env.NODE_ENV !== "production" && expandedProp !== undefined && !warnedScroll.current) {
+            warnedScroll.current = true;
+            console.warn(
+              `Tree: scrollToNode("${wantsScroll}") asked for the rows above it to be opened, but \`expandedIds\` is controlled and has not opened them. Apply the ids \`onExpandedChange\` is called with, and the row is scrolled into view when they appear.`,
+            );
+          }
         } else if (windowedOn) {
           windowedList.scrollToIndex(position);
           pendingScroll.current = undefined;
@@ -250,6 +264,16 @@ export const Tree = forwardRef<HTMLDivElement, TreeProps>(
       previousLoading.current = loadingSet;
     }, [loadingSet, index, announce]);
 
+    const previousErrors = useRef(errorSet);
+    useEffect(() => {
+      for (const failedId of errorSet) {
+        if (previousErrors.current.has(failedId)) continue;
+        const failed = index.byId.get(failedId);
+        if (failed) announce(`${failed.label}. ${latestLabels.current.loadFailed}`);
+      }
+      previousErrors.current = errorSet;
+    }, [errorSet, index, announce]);
+
     // --- changes a person asks for -----------------------------------------------------------------------------------------
     const setOpen = (target: string, open: boolean): boolean => {
       const node = index.byId.get(target);
@@ -259,6 +283,15 @@ export const Tree = forwardRef<HTMLDivElement, TreeProps>(
       if (isOpen === open) return false;
       requestExpanded(open ? [...current, target] : current.filter((entry) => entry !== target));
       return true;
+    };
+
+    // A row that failed to load is open and empty: asking to open it again is asking to try again.
+    const openOrRetry = (target: string): boolean => {
+      if (errorSet.has(target) && expandedSet.has(target)) {
+        onRetry?.(target);
+        return true;
+      }
+      return setOpen(target, true);
     };
 
     const anchor = useRef<string | undefined>(undefined);
@@ -286,7 +319,8 @@ export const Tree = forwardRef<HTMLDivElement, TreeProps>(
     const activate = (target: string) => {
       const node = index.byId.get(target);
       if (!node || node.disabled) return;
-      if (onItemActivate) onItemActivate(target);
+      if (errorSet.has(target) && expandedSet.has(target)) onRetry?.(target);
+      else if (onItemActivate) onItemActivate(target);
       else setOpen(target, !expandedSet.has(target));
     };
 
@@ -397,6 +431,7 @@ export const Tree = forwardRef<HTMLDivElement, TreeProps>(
           if (!expandedSet.has(currentId)) {
             if (!row.node.disabled) setOpen(currentId, true);
           } else if (rows[position + 1]?.parentId === currentId) focusRow(rows[position + 1]!.node.id);
+          else if (!row.node.disabled) openOrRetry(currentId);
           return;
         case backward:
           event.preventDefault();
@@ -451,6 +486,10 @@ export const Tree = forwardRef<HTMLDivElement, TreeProps>(
         if (!node.disabled) setOpen(node.id, !expandedSet.has(node.id));
         return;
       }
+      if (part === "retry") {
+        if (!node.disabled) openOrRetry(node.id);
+        return;
+      }
       if (part === "check") {
         toggleCheck(node);
         return;
@@ -484,8 +523,10 @@ export const Tree = forwardRef<HTMLDivElement, TreeProps>(
         selected={selectedSet.has(row.node.id)}
         selectionMode={selectionMode}
         checkable={checkable}
-        checked={checkable ? checkStateOf(row.node, checkedSet) : false}
+        checked={checkMap?.get(row.node.id) ?? false}
         loading={loadingSet.has(row.node.id)}
+        error={errorSet.has(row.node.id) && !loadingSet.has(row.node.id)}
+        labels={labels}
         highlightQuery={highlightQuery}
         renderLabel={renderLabel}
         register={registerRow}
@@ -550,6 +591,8 @@ interface TreeRowViewProps {
   checkable: boolean;
   checked: boolean | "indeterminate";
   loading: boolean;
+  error: boolean;
+  labels: TreeLabels;
   highlightQuery: string | undefined;
   renderLabel: TreeProps["renderLabel"];
   register: (id: string, element: HTMLElement | null) => void;
@@ -569,6 +612,8 @@ function TreeRowView({
   checkable,
   checked,
   loading,
+  error,
+  labels,
   highlightQuery,
   renderLabel,
   register,
@@ -584,6 +629,30 @@ function TreeRowView({
     [register, node.id],
   );
   const query = highlightQuery?.trim();
+  const placeholder = row.placeholder !== undefined;
+
+  // The row that stands in for what an empty, open row did not have: a disabled, unselectable line saying so.
+  if (placeholder) {
+    return (
+      <div
+        ref={setElement}
+        role="treeitem"
+        data-tree-id={node.id}
+        tabIndex={tabbable ? 0 : -1}
+        aria-level={level}
+        aria-setsize={setsize}
+        aria-posinset={posinset}
+        aria-selected={selectionMode === "none" ? undefined : false}
+        aria-disabled="true"
+        className={cx(styles.row, styles.placeholder)}
+        style={{ "--tree-level": level } as CSSProperties}
+        onFocus={() => onFocusRow(node.id)}
+      >
+        <span className={styles.chevron} aria-hidden="true" />
+        <span className={styles.label}>{labels.emptyFolder}</span>
+      </div>
+    );
+  }
 
   return (
     // The tree owns the keyboard (one handler for every row, since the arrow keys move between them), so a row has none of its own.
@@ -602,15 +671,17 @@ function TreeRowView({
       aria-disabled={node.disabled || undefined}
       aria-busy={loading || undefined}
       data-selected={selected || undefined}
-      className={cx(styles.row, selected && styles.selected, node.disabled && styles.disabled, selectionMode !== "none" || checkable ? styles.pickable : undefined)}
+      className={cx(styles.row, selected && styles.selected, node.disabled && styles.disabled, error && styles.errored, selectionMode !== "none" || checkable ? styles.pickable : undefined)}
       style={{ "--tree-level": level } as CSSProperties}
       onFocus={() => onFocusRow(node.id)}
       onClick={(event) => onClickRow(event, node)}
       onDoubleClick={() => onDoubleClickRow(node.id)}
     >
-      <span className={styles.chevron} data-tree-part={hasChildren ? "chevron" : undefined} aria-hidden="true">
+      <span className={styles.chevron} data-tree-part={error ? "retry" : hasChildren ? "chevron" : undefined} aria-hidden="true">
         {loading ? (
           <Spinner size="xs" />
+        ) : error ? (
+          <Icon icon={WarningIcon} size="xs" tone="danger" />
         ) : hasChildren ? (
           <Icon icon={rtl ? CaretLeftIcon : CaretRightIcon} size="xs" className={cx(styles.arrow, expanded && styles.arrowOpen)} />
         ) : null}
@@ -624,7 +695,7 @@ function TreeRowView({
       <span className={styles.label}>
         {renderLabel ? renderLabel(node, state) : query ? <Highlight query={query}>{node.label}</Highlight> : node.label}
       </span>
-      {node.description ? <span className={styles.description}>{node.description}</span> : null}
+      {error ? <span className={styles.failure}>{labels.loadFailed}</span> : node.description ? <span className={styles.description}>{node.description}</span> : null}
       {node.trailing ? <span className={styles.trailing}>{node.trailing}</span> : null}
     </div>
   );

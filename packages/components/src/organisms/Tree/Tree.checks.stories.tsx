@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
+import { useState } from "react";
 import { expect, userEvent, waitFor, within } from "storybook/test";
 import { send } from "../../molecules/CodeBlock/browserProtocol";
 import { Tree } from "./Tree";
@@ -249,5 +250,84 @@ export const DisabledRowStaysInTheArrowOrder: Story = {
     rowOf(/Card/).focus();
     await userEvent.keyboard("{ArrowDown}");
     await expect(disabled).toHaveFocus();
+  },
+};
+
+export const FailedAndEmptyRowsKeepTheRowHeight: Story = {
+  name: "A row that failed to load and the Empty row are the height of their token, with the words in danger and quiet colours",
+  render: () => (
+    <div style={{ display: "grid", gap: "var(--dbm-space-4)" }}>
+      {allSizes.map((size) => (
+        <Tree
+          key={size}
+          aria-label={`Lazy ${size}`}
+          size={size}
+          defaultExpandedIds={["bad", "none"]}
+          errorIds={["bad"]}
+          nodes={[
+            { id: "bad", label: "bad", hasChildren: true },
+            { id: "none", label: "none", hasChildren: true, children: [] },
+          ]}
+        />
+      ))}
+    </div>
+  ),
+  play: async () => {
+    for (const size of allSizes) {
+      const expected = tokenPx(`--dbm-tree-row-height-${size}`);
+      const rows = within(body.getByRole("tree", { name: `Lazy ${size}` })).getAllByRole("treeitem");
+      await expect(rows.length).toBe(3);
+      for (const row of rows) await expect(Math.abs(box(row).height - expected)).toBeLessThan(0.5);
+    }
+    const tree = body.getByRole("tree", { name: "Lazy md" });
+    const failed = within(tree).getByRole("treeitem", { name: /bad/ });
+    await expect(getComputedStyle(failed.querySelector("[class*=failure]") as Element).color).toBe(colour("var(--dbm-text-danger)"));
+    const empty = within(tree).getByRole("treeitem", { name: "Empty" });
+    await expect(getComputedStyle(empty).color).toBe(colour("var(--dbm-text-secondary)"));
+    // a real pointer over the Empty row does not fill it as it does a row (the synthetic hover of the test library sets no :hover)
+    const pointOver = async (element: Element) => {
+      element.scrollIntoView({ block: "center" });
+      const rect = box(element);
+      // The pointer is placed in the page that holds the test iframe, so the frame's own offset and scale are added.
+      const frame = window.frameElement?.getBoundingClientRect();
+      const scale = frame ? frame.width / window.innerWidth : 1;
+      await send("Input.dispatchMouseEvent", { type: "mouseMoved", x: (frame?.left ?? 0) + (rect.left + rect.width / 2) * scale, y: (frame?.top ?? 0) + (rect.top + rect.height / 2) * scale });
+    };
+    await pointOver(failed);
+    await waitFor(() => expect(getComputedStyle(failed).backgroundColor).not.toBe("rgba(0, 0, 0, 0)"));
+    await pointOver(empty);
+    await expect(getComputedStyle(empty).backgroundColor).toBe("rgba(0, 0, 0, 0)");
+  },
+};
+
+export const RetryMarkIsATarget: Story = {
+  name: "The mark on a row that failed to load is hit on a box at least 24 pixels tall, and a click on it asks to try again",
+  render: () => {
+    const Retrying = () => {
+      const [tries, setTries] = useState(0);
+      return (
+        <div>
+          <p data-testid="tries">{tries}</p>
+          <Tree aria-label="Retry" defaultExpandedIds={["bad"]} errorIds={["bad"]} onRetry={() => setTries((count) => count + 1)} nodes={[{ id: "bad", label: "bad", hasChildren: true }]} />
+        </div>
+      );
+    };
+    return <Retrying />;
+  },
+  play: async () => {
+    const row = rowOf(/bad/);
+    const mark = part(row, "retry");
+    const rect = box(mark);
+    const cx = rect.left + rect.width / 2;
+    const cy = rect.top + rect.height / 2;
+    for (const dy of [-11, 11]) {
+      const hit = document.elementFromPoint(cx, cy + dy);
+      await expect(hit === mark || mark.contains(hit)).toBe(true);
+    }
+    await userEvent.click(mark);
+    await expect(body.getByTestId("tries")).toHaveTextContent("1");
+    row.focus();
+    await userEvent.keyboard("{Enter}");
+    await expect(body.getByTestId("tries")).toHaveTextContent("2");
   },
 };

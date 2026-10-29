@@ -530,6 +530,144 @@ describe("Tree — checking", () => {
   });
 });
 
+describe("Tree — a row whose children failed to load", () => {
+  const remote: TreeNode[] = [{ id: "remote", label: "remote", hasChildren: true }, { id: "other", label: "other" }];
+
+  it("shows a warning mark and the words, in place of the arrow and the description", () => {
+    render(<Tree aria-label="Files" nodes={remote} defaultExpandedIds={["remote"]} errorIds={["remote"]} />);
+    const row = item(/remote/);
+    expect(row).toHaveTextContent("remoteCouldn't load. Press Enter to try again.");
+    expect(row.querySelector("[data-tree-part=retry]")).not.toBeNull();
+    expect(row.querySelector("[data-tree-part=chevron]")).toBeNull();
+    expect(screen.getAllByRole("treeitem")).toHaveLength(2);
+  });
+
+  it("says it with the words of labels.loadFailed, and tells a screen reader when it is added", () => {
+    vi.useFakeTimers();
+    const { rerender } = render(<Tree aria-label="Files" nodes={remote} defaultExpandedIds={["remote"]} labels={{ loadFailed: "Échec" }} />);
+    rerender(<Tree aria-label="Files" nodes={remote} defaultExpandedIds={["remote"]} labels={{ loadFailed: "Échec" }} errorIds={["remote"]} />);
+    act(() => {
+      vi.advanceTimersByTime(100);
+    });
+    expect(screen.getByRole("status")).toHaveTextContent("remote. Échec");
+    vi.useRealTimers();
+    expect(item(/remote/)).toHaveTextContent("Échec");
+  });
+
+  it("asks to try again from the mark, Right and Enter when the row is open, and not when it is closed", async () => {
+    const user = userEvent.setup();
+    const onRetry = vi.fn();
+    const onExpandedChange = vi.fn();
+    render(<Tree aria-label="Files" nodes={remote} defaultExpandedIds={["remote"]} errorIds={["remote"]} onRetry={onRetry} onExpandedChange={onExpandedChange} />);
+    await user.click(item(/remote/).querySelector("[data-tree-part=retry]") as HTMLElement);
+    expect(onRetry).toHaveBeenCalledTimes(1);
+    item(/remote/).focus();
+    await user.keyboard("{ArrowRight}");
+    expect(onRetry).toHaveBeenCalledTimes(2);
+    await user.keyboard("{Enter}");
+    expect(onRetry).toHaveBeenCalledTimes(3);
+    expect(onRetry).toHaveBeenCalledWith("remote");
+    expect(onExpandedChange).not.toHaveBeenCalled();
+    // Left closes it as for any row, and opening it again is an ordinary opening, whose fetch the caller makes
+    await user.keyboard("{ArrowLeft}");
+    expect(onExpandedChange).toHaveBeenLastCalledWith([]);
+  });
+
+  it("opens a closed row that failed the ordinary way, calling onExpandedChange and not onRetry", async () => {
+    const user = userEvent.setup();
+    const onRetry = vi.fn();
+    const onExpandedChange = vi.fn();
+    render(<Tree aria-label="Files" nodes={remote} errorIds={["remote"]} onRetry={onRetry} onExpandedChange={onExpandedChange} />);
+    await user.click(item(/remote/).querySelector("[data-tree-part=retry]") as HTMLElement);
+    expect(onExpandedChange).toHaveBeenCalledWith(["remote"]);
+    expect(onRetry).not.toHaveBeenCalled();
+  });
+
+  it("shows the spinner, not the mark, while it loads again", () => {
+    render(<Tree aria-label="Files" nodes={remote} defaultExpandedIds={["remote"]} errorIds={["remote"]} loadingIds={["remote"]} />);
+    expect(item(/remote/).querySelector("[data-tree-part=retry]")).toBeNull();
+    expect(item(/remote/)).not.toHaveTextContent("Couldn't load");
+    expect(item(/remote/)).toHaveAttribute("aria-busy", "true");
+  });
+
+  it("has no axe violations", async () => {
+    const { container } = render(<Tree aria-label="Files" nodes={remote} defaultExpandedIds={["remote"]} errorIds={["remote"]} />);
+    expect(await axe(container)).toHaveNoViolations();
+  });
+});
+
+describe("Tree — an open row that loaded nothing", () => {
+  const fetched: TreeNode[] = [{ id: "dir", label: "dir", hasChildren: true, children: [] }, { id: "after", label: "after" }];
+
+  it("draws an Empty row under it, one level down, disabled and with no selection or check state", () => {
+    render(<Tree aria-label="Files" nodes={fetched} selectionMode="multiple" checkable defaultExpandedIds={["dir"]} />);
+    const empty = item("Empty");
+    expect(empty).toHaveAttribute("aria-level", "2");
+    expect(empty).toHaveAttribute("aria-setsize", "1");
+    expect(empty).toHaveAttribute("aria-disabled", "true");
+    // it can never be selected, which a selectable tree says by marking it not selected; it has no check state at all
+    expect(empty).toHaveAttribute("aria-selected", "false");
+    expect(empty).not.toHaveAttribute("aria-checked");
+    expect(empty.querySelector("[data-tree-part]")).toBeNull();
+    expect(names()).toEqual(["dir", "Empty", "after"]);
+  });
+
+  it("draws nothing while the row is closed", () => {
+    render(<Tree aria-label="Files" nodes={fetched} />);
+    expect(screen.queryByRole("treeitem", { name: "Empty" })).toBeNull();
+  });
+
+  it("draws nothing while the row is loading again", () => {
+    render(<Tree aria-label="Files" nodes={fetched} defaultExpandedIds={["dir"]} loadingIds={["dir"]} />);
+    expect(screen.queryByRole("treeitem", { name: "Empty" })).toBeNull();
+    expect(names()).toEqual(["dir", "after"]);
+  });
+
+  it("says what labels.emptyFolder says", () => {
+    render(<Tree aria-label="Files" nodes={fetched} defaultExpandedIds={["dir"]} labels={{ emptyFolder: "Vide" }} />);
+    expect(item("Vide")).toBeInTheDocument();
+  });
+
+  it("is in the arrow-key order, cannot be selected or checked, and hands the tab stop back when its row closes", async () => {
+    const user = userEvent.setup();
+    const onValueChange = vi.fn();
+    const onCheckedChange = vi.fn();
+    render(<Tree aria-label="Files" nodes={fetched} selectionMode="single" checkable defaultExpandedIds={["dir"]} onValueChange={onValueChange} onCheckedChange={onCheckedChange} />);
+    item("dir").focus();
+    await user.keyboard("{ArrowDown}");
+    expect(item("Empty")).toHaveFocus();
+    await user.keyboard(" ");
+    await user.click(screen.getByText("Empty"));
+    await user.dblClick(screen.getByText("Empty"));
+    expect(onValueChange).not.toHaveBeenCalled();
+    expect(onCheckedChange).not.toHaveBeenCalled();
+    await user.keyboard("{ArrowLeft}");
+    expect(item("dir")).toHaveFocus();
+    await user.keyboard("{ArrowLeft}");
+    expect(screen.queryByRole("treeitem", { name: "Empty" })).toBeNull();
+    expect(item("dir")).toHaveAttribute("tabindex", "0");
+  });
+
+  it("is not drawn for a row with an empty children list that was never lazy", () => {
+    render(<Tree aria-label="Files" nodes={[{ id: "x", label: "x", children: [] }]} defaultExpandedIds={["x"]} />);
+    expect(names()).toEqual(["x"]);
+  });
+
+  it("is not counted among the leaves a parent's check state comes from", async () => {
+    const user = userEvent.setup();
+    const onCheckedChange = vi.fn();
+    render(<Tree aria-label="Files" nodes={[{ id: "p", label: "p", children: [{ id: "q", label: "q", hasChildren: true, children: [] }, { id: "r", label: "r" }] }]} checkable defaultExpandAll onCheckedChange={onCheckedChange} />);
+    await user.click(item("p").querySelector("[data-tree-part=check]") as HTMLElement);
+    expect(onCheckedChange).toHaveBeenLastCalledWith(["q", "r"]);
+    expect(item("p")).toHaveAttribute("aria-checked", "true");
+  });
+
+  it("has no axe violations", async () => {
+    const { container } = render(<Tree aria-label="Files" nodes={fetched} defaultExpandedIds={["dir"]} selectionMode="multiple" checkable />);
+    expect(await axe(container)).toHaveNoViolations();
+  });
+});
+
 describe("Tree — the controller", () => {
   it("expands and collapses from outside, saying whether it did anything", () => {
     const controllerRef = createRef<TreeController>();
@@ -575,6 +713,36 @@ describe("Tree — the controller", () => {
     });
     expect(item("util.ts")).toHaveAttribute("tabindex", "0");
     expect(item("util.ts")).not.toHaveFocus();
+  });
+
+  it("warns once when a controlled tree does not open the rows above the row it was asked to show", () => {
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
+    const controllerRef = createRef<TreeController>();
+    render(<Basic controllerRef={controllerRef} expandedIds={[]} onExpandedChange={() => undefined} />);
+    act(() => {
+      controllerRef.current?.scrollToNode("util");
+    });
+    act(() => {
+      controllerRef.current?.scrollToNode("app");
+    });
+    const warnings = warn.mock.calls.filter(([text]) => String(text).includes("scrollToNode"));
+    expect(warnings).toHaveLength(1);
+    expect(String(warnings[0]?.[0])).toContain("expandedIds");
+  });
+
+  it("does not warn when the owner of a controlled tree opens them", () => {
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
+    const controllerRef = createRef<TreeController>();
+    function Wired() {
+      const [open, setOpen] = useState<string[]>([]);
+      return <Basic controllerRef={controllerRef} expandedIds={open} onExpandedChange={setOpen} />;
+    }
+    render(<Wired />);
+    act(() => {
+      controllerRef.current?.scrollToNode("util");
+    });
+    expect(screen.getByRole("treeitem", { name: "util.ts" })).toBeInTheDocument();
+    expect(warn.mock.calls.filter(([text]) => String(text).includes("scrollToNode"))).toHaveLength(0);
   });
 
   it("asks a controlled tree rather than changing it", () => {
