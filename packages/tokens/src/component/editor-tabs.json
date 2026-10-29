@@ -1,0 +1,14 @@
+{
+  "editor-tabs": {
+    "tab-min-width": {
+      "$type": "dimension",
+      "$value": "6rem",
+      "$description": "The narrowest a tab gets, so a short name such as \"a.ts\" still has room for its icon and the close button beside it instead of shrinking to the label alone."
+    },
+    "tab-max-width": {
+      "$type": "dimension",
+      "$value": "16rem",
+      "$description": "The widest a tab grows. A longer name is cut with an ellipsis rather than letting one tab take the strip; the full name is on the tab's title and in the tab list menu."
+    }
+  }
+}

@@ -101,6 +101,7 @@ export * from "./organisms/DatePicker";
 export * from "./organisms/DateRangePicker";
 export * from "./organisms/Dialog";
 export * from "./organisms/Drawer";
+export * from "./organisms/EditorTabs";
 export * from "./organisms/FileUpload";
 export * from "./organisms/Form";
 export * from "./organisms/ContextMenu";

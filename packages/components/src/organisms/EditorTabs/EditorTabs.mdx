@@ -1,0 +1,291 @@
+import { Canvas, Meta } from "@storybook/addon-docs/blocks";
+import { Callout, ComponentHeader, PlaygroundControls, PropertiesTable, RelatedCard, TokenRow } from "../../../.storybook/blocks";
+import { Tabs } from "../../molecules/Tabs";
+import { Tag } from "../../atoms/Tag";
+import { VisuallyHidden } from "../../atoms/VisuallyHidden";
+import { Menu } from "../Menu";
+import { Button } from "../../atoms/Button";
+import * as EditorTabsStories from "./EditorTabs.stories";
+import * as EditorTabsPanelStories from "./EditorTabsPanel.stories";
+
+export const rootPropOrder = [
+  "tabs",
+  "value",
+  "defaultValue",
+  "onValueChange",
+  "onClose",
+  "onAdd",
+  "onReorder",
+  "closeSelects",
+  "tabContextMenu",
+  "overflow",
+  "variant",
+  "size",
+  "rounded",
+  "children",
+  "controllerRef",
+  "labels",
+  "formatNumber",
+  "dir",
+  "aria-label",
+  "aria-labelledby",
+  "id",
+  "className",
+  "style",
+  "data-testid",
+];
+export const panelPropOrder = ["value", "children", "forceMount", "id", "className", "style", "data-testid"];
+
+<Meta of={EditorTabsStories} />
+
+<VisuallyHidden asChild><h2>Intro</h2></VisuallyHidden>
+
+<ComponentHeader title="EditorTabs" tier="Organism" />
+
+A tab strip for tabs a person opens, closes and arranges themselves: the files open in an editor, the records open in a
+workspace, the views someone has saved. It is given as data (`tabs`, an array of `{ id, label, … }`) rather than written
+as one element per tab, because the set of tabs is part of the person's own working state and changes while they work.
+It is built on `Tabs`, so it keeps that component's looks (`variant`, `size`, `rounded`), its single tab stop with
+arrow-key movement, and its scrolling with a fade and buttons when the tabs outgrow the width.
+
+`EditorTabs` owns no list. `tabs` is the order and the contents, and `onClose`, `onAdd` and `onReorder` *ask* for a change:
+the strip shows whichever array it is given next, so your state stays the single source of truth. A tab can be closed with
+its close button, the Delete key, or a middle-click; added with the add button; moved by dragging it (with a mouse or pen)
+or with the keyboard; and acted on with a single press through `tabContextMenu`. A tab can be marked `dirty` (unsaved
+changes) or `pinned` (kept at the start). Panels are optional: draw the content yourself from the selection, or put
+`EditorTabs.Panel` elements inside the strip.
+
+### Import
+
+```tsx
+import { EditorTabs } from "@dbm-system/components";
+```
+
+## Playground
+
+<div className="dbm-playground-canvas">
+
+<Canvas of={EditorTabsStories.Playground} />
+
+</div>
+<PlaygroundControls of={EditorTabsStories.Playground} order={rootPropOrder} exclude={["tabs", "value", "defaultValue", "onValueChange", "onClose", "onAdd", "onReorder", "tabContextMenu", "children", "controllerRef", "labels", "formatNumber", "aria-labelledby", "id", "className", "style", "data-testid"]} />
+
+## Properties
+
+`ref` forwards to the root `<div>`, and `className`, `style`, `id` and `data-testid` land there too. Also accepts any other native `<div>` attribute beyond what's
+listed here (e.g. `onFocus`, `title`) — passed straight through to the root element.
+
+<PropertiesTable of={EditorTabsStories} order={rootPropOrder} />
+
+Each item of `tabs` takes `id` (unique and stable), `label` (what is shown; a string or number also names the tab for a screen reader),
+`icon`, `title` (the full name, as a browser tooltip), `dirty`, `pinned`, `closable`, `disabled` and `aria-label`. Any field you add comes back
+in every callback. A tab is closable when `onClose` is given, unless it is pinned; set `closable` to override either way.
+
+`onReorder(from, to, via)` gives positions in `tabs` as it is now, so `move(tabs, from, to)` applies it. `controllerRef` receives
+`{ select(id), close(id), add(), move(id, to), focus(id) }`: one object for the strip's life, whose methods ask the way a press does
+and return whether there was something to do.
+
+### EditorTabs.Panel properties
+
+A panel is `Tabs.Content`: it shows while the tab with the same `id` is selected. Also accepts any other native `<div>` attribute beyond what's listed here (e.g. `title`) — passed straight through to the underlying element.
+
+<PropertiesTable of={EditorTabsPanelStories} order={panelPropOrder} />
+
+## Variants
+
+### Close, add and reorder
+
+<Canvas of={EditorTabsStories.Basic} />
+
+### Variants
+
+<Canvas of={EditorTabsStories.Variants} />
+
+### All sizes
+
+<Canvas of={EditorTabsStories.Sizes} />
+
+### Unsaved and pinned tabs
+
+<Canvas of={EditorTabsStories.DirtyAndPinned} />
+
+### What closing selects
+
+<Canvas of={EditorTabsStories.CloseSelection} />
+
+### A long strip with a tab menu
+
+<Canvas of={EditorTabsStories.Overflow} />
+
+### A menu on each tab
+
+Right-click a tab, press the context-menu key on it, or long-press it on a touch screen.
+
+<Canvas of={EditorTabsStories.TabMenu} />
+
+### With panels
+
+<Canvas of={EditorTabsStories.WithPanels} />
+
+### Right to left
+
+<Canvas of={EditorTabsStories.RightToLeft} />
+
+## Usage guidelines
+
+**Do**
+
+- Use it where the tab set belongs to the person: open files, open records, saved views, comparison workflows. Use `Tabs` for a fixed set of views the page defines.
+- Apply `onClose`, `onAdd` and `onReorder` to your own array; the strip changes only when `tabs` does.
+- Give every tab a stable, unique `id` (a file path, a record id), not its position.
+- Mark a tab `dirty` while it holds unsaved changes, and ask the person before `onClose` removes it.
+- Put pinned tabs first in `tabs`.
+- Offer `tabContextMenu` with "Move left" and "Move right" wherever `onReorder` is given, so a person who can't drag can still move a tab.
+
+**Don't**
+
+- Don't use it for navigation between the pages of a site: that is `Navbar` or `Sidebar`.
+- Don't put the close button's operation only on the pointer. It is hidden from assistive technology on purpose; the Delete key and `tabContextMenu` are the other ways.
+- Don't expect a tab to jump between strips, nest, or be dragged across the pinned boundary.
+- Don't use more than a handful of pinned tabs: they stay at the start and take its room.
+
+## Best practices
+
+- **Closing is your decision.** `onClose` is a request. Remove the tab from `tabs` when it is fine to go; leave it when a dialog is asking about unsaved changes. The selection moves to a neighbour only once the tab has actually gone.
+- **Say what you select afterwards.** The default (`closeSelects="neighbor"`) selects the next tab, or the one before it when the last closed. Set `"none"` when the app has its own rule, such as returning to the tab opened before.
+- **Keep content mounted when it is costly to rebuild.** `forceMount` on a panel keeps an editor's undo history and scroll position while another tab is shown; leave it off for a panel that is cheap to draw.
+- **Name tabs by text.** A string label is announced as the tab's name; a label that is not text needs an `aria-label` or a `title`.
+- **Use `overflow="menu"` for many tabs.** Scrolling alone makes a far tab slow to reach; the menu lists them all.
+
+## Accessibility
+
+`EditorTabs` is a WAI-ARIA tabs pattern: a `tablist` of `tab`s, each pointing at its panel when one is drawn. The close and add buttons sit beside the tabs, and the close button is not part of the tab list for assistive technology.
+
+| Key | Action |
+|---|---|
+| `Tab` | Enters the strip on the selected tab (one tab stop), and leaves it |
+| `←` `→` | Move focus between tabs (flipped right to left); `↑` `↓` also work for a vertical flow |
+| `Home` `End` | First and last tab |
+| `Enter` `Space` | Select the focused tab (when the tabs are not selected on focus) |
+| `Delete` | Close the focused tab, if it can be closed |
+| `Alt` + `←` `→` | Move the focused tab one place |
+| `Space` on a tab | Pick the tab up to move it; `←` `→` `Home` `End` move it, `Space` or `Enter` drops it, `Escape` puts it back |
+| Context-menu key, `Shift` + `F10` | Open the tab's menu, when `tabContextMenu` is given |
+
+- A pick-up, move, drop and cancel are announced through a polite live region, as is a closed tab, with text from `labels` and numbers from `formatNumber`.
+- A tab that holds unsaved changes or is pinned says so in its name ("App.tsx (unsaved changes)"), so the state is never carried by the dot or the pin alone.
+- The close button is a pointer shortcut: it is out of the tab order and hidden from assistive technology, because a tab list may only hold tabs. The same operation is the Delete key and the tab menu. A tab that can be closed has `aria-keyshortcuts="Delete"`.
+- A press on a touch screen scrolls the strip, so dragging is for a mouse or pen. A person on a touch screen moves a tab through `tabContextMenu`, opened by a long press.
+- Every close and add button is at least 24 × 24 px. Disabled tabs are skipped by the arrow keys.
+- The selected tab and the drop marker keep their meaning in forced-colours mode.
+
+## Code examples
+
+### A strip that closes, adds and reorders
+
+```tsx
+const [tabs, setTabs] = useState([
+  { id: "index", label: "index.ts" },
+  { id: "app", label: "App.tsx", dirty: true },
+]);
+const [open, setOpen] = useState("index");
+
+<EditorTabs
+  aria-label="Open files"
+  tabs={tabs}
+  value={open}
+  onValueChange={setOpen}
+  onClose={(tab) => setTabs(tabs.filter((t) => t.id !== tab.id))}
+  onReorder={(from, to) => setTabs(move(tabs, from, to))}
+  onAdd={() => setTabs([...tabs, { id: crypto.randomUUID(), label: "untitled.ts" }])}
+/>;
+```
+
+### Refusing to close a tab with unsaved changes
+
+```tsx
+<EditorTabs
+  tabs={tabs}
+  value={open}
+  onValueChange={setOpen}
+  onClose={(tab) => {
+    // Leave the tab in `tabs` until the person has answered.
+    if (tab.dirty) askToSave(tab).then((ok) => ok && setTabs(tabs.filter((t) => t.id !== tab.id)));
+    else setTabs(tabs.filter((t) => t.id !== tab.id));
+  }}
+/>
+```
+
+### Native attributes on the root
+
+```tsx
+<EditorTabs tabs={tabs} value={open} title="Open files" onFocus={() => log("strip focused")} />
+```
+
+## Design tokens used
+
+<TokenRow token="editor-tabs.tab-min-width" usage="the narrowest a tab gets, so a short name keeps room for its icon and close button" />
+<TokenRow token="editor-tabs.tab-max-width" usage="the widest a tab grows before its name is cut with an ellipsis" />
+<TokenRow token="bg.brand-subtle" usage="a tab picked up with the keyboard" />
+<TokenRow token="bg.neutral-subtle" usage="the close button's hover background" />
+<TokenRow token="bg.brand-hover" usage="the close button's hover background on the selected tab of the solid variant" />
+<TokenRow token="border.focus" usage="the drop marker beside a dragged tab" />
+<TokenRow token="border-width.2" usage="the drop marker's width" />
+<TokenRow token="icon.default" usage="the close button's cross" />
+<TokenRow token="icon.brand" usage="the unsaved dot" />
+<TokenRow token="icon.on-brand" usage="the cross and the unsaved dot on the selected tab of the solid variant" />
+<TokenRow token="opacity.60" usage="the tab being dragged" />
+<TokenRow token="radius.sm" usage="the close button's corners" />
+<TokenRow token="radius.full" usage="the unsaved dot" />
+<TokenRow token="space.1" usage="the gap between the strip and its buttons; the drop marker's inset" />
+<TokenRow token="space.2" usage="the unsaved dot's size" />
+<TokenRow token="space.6" usage="the smallest size of the close button's target" />
+<TokenRow token="motion.duration.fast" usage="the close button's hover" />
+<TokenRow token="motion.easing.standard" usage="the same transition" />
+
+The tabs themselves, their scroll buttons and the add button take their tokens from `Tabs` and `IconButton`.
+
+## Related components
+
+<div className="dbm-card-grid">
+<RelatedCard
+  name="Tabs"
+  description="A fixed set of views the page defines, switched in place. EditorTabs is built on it for tabs a person opens and closes"
+  href="/?path=/docs/molecules-navigation-tabs--docs"
+>
+  <Tabs defaultValue="a">
+    <Tabs.List aria-label="Example">
+      <Tabs.Trigger value="a">One</Tabs.Trigger>
+      <Tabs.Trigger value="b">Two</Tabs.Trigger>
+    </Tabs.List>
+  </Tabs>
+</RelatedCard>
+<RelatedCard
+  name="ContextMenu"
+  description="The menu behind tabContextMenu: items for a tab, opened by a right-click, a long press or the context-menu key"
+  href="/?path=/docs/organisms-overlay-contextmenu--docs"
+>
+  <Button variant="secondary" size="sm">Right-click me</Button>
+</RelatedCard>
+<RelatedCard
+  name="Menu"
+  description="The list of every tab that overflow=&quot;menu&quot; opens, and the model for a menu of actions from a button"
+  href="/?path=/docs/organisms-navigation-menu--docs"
+>
+  <Menu>
+    <Menu.Trigger asChild>
+      <Button variant="secondary" size="sm">Open menu</Button>
+    </Menu.Trigger>
+    <Menu.Content>
+      <Menu.Item>Item</Menu.Item>
+    </Menu.Content>
+  </Menu>
+</RelatedCard>
+<RelatedCard
+  name="Tag"
+  description="A removable chip, for a small set of values rather than a working set of documents"
+  href="/?path=/docs/atoms-data-display-tag--docs"
+>
+  <Tag onRemove={() => {}}>Draft</Tag>
+</RelatedCard>
+</div>

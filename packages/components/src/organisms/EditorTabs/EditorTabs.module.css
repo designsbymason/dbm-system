@@ -1,0 +1,155 @@
+/* The whole strip, and the panels under it. `Tabs` supplies the column layout and the font. */
+.root {
+  min-inline-size: 0;
+}
+
+/* The tab list with the buttons that belong to the strip beside it. The list's own wrapper (the first child) takes the
+   room left, so the buttons stay put at the end while the tabs scroll. */
+.bar {
+  align-items: center;
+  display: flex;
+  gap: var(--dbm-space-1);
+  min-inline-size: 0;
+}
+
+.bar > :first-child {
+  flex: 1 1 auto;
+  min-inline-size: 0;
+}
+
+.list {
+  min-inline-size: 0;
+}
+
+/* --- A tab --- */
+
+.item {
+  max-inline-size: var(--dbm-editor-tabs-tab-max-width);
+  min-inline-size: var(--dbm-editor-tabs-tab-min-width);
+}
+
+/* Cut a long name with an ellipsis instead of letting it widen the tab past its largest size. */
+.item > .tab {
+  min-inline-size: 0;
+}
+
+.label {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* The drop marker: a line on the side of the tab a dragged tab would land beside, in reading order. It is drawn inside
+   the tab, because the strip scrolls and clips whatever is drawn outside it. */
+.tab[data-drop]::before {
+  background-color: var(--dbm-border-focus);
+  content: "";
+  inline-size: var(--dbm-border-width-2);
+  inset-block: var(--dbm-space-1);
+  pointer-events: none;
+  position: absolute;
+}
+
+.tab[data-drop="before"]::before {
+  inset-inline-start: 0;
+}
+
+.tab[data-drop="after"]::before {
+  inset-inline-end: 0;
+}
+
+.tab[data-dragging] {
+  opacity: var(--dbm-opacity-60);
+}
+
+/* A tab picked up with the keyboard: the same line of emphasis a focused tab has, kept while focus moves with it. */
+.tab[data-lifted] {
+  background-color: var(--dbm-bg-brand-subtle);
+}
+
+/* --- The close button and the unsaved dot --- */
+
+.close {
+  align-items: center;
+  background-color: transparent;
+  border: none;
+  border-radius: var(--dbm-radius-sm);
+  color: var(--dbm-icon-default);
+  cursor: pointer;
+  display: inline-flex;
+  justify-content: center;
+  min-block-size: var(--dbm-space-6);
+  min-inline-size: var(--dbm-space-6);
+  padding: 0;
+  transition:
+    background-color var(--dbm-motion-duration-fast) var(--dbm-motion-easing-standard),
+    color var(--dbm-motion-duration-fast) var(--dbm-motion-easing-standard);
+}
+
+.close:hover {
+  background-color: var(--dbm-bg-neutral-subtle);
+  color: var(--dbm-icon-default);
+}
+
+.dirtyDot {
+  background-color: var(--dbm-icon-brand);
+  block-size: var(--dbm-space-2);
+  border-radius: var(--dbm-radius-full);
+  inline-size: var(--dbm-space-2);
+}
+
+/* On the brand fill of the solid variant's selected tab, the cross and the dot take the on-brand colour. */
+.item[data-on-brand] .close {
+  color: var(--dbm-icon-on-brand);
+}
+
+.item[data-on-brand] .close:hover {
+  background-color: var(--dbm-bg-brand-hover);
+}
+
+.item[data-on-brand] .dirtyDot,
+.item[data-on-brand] .dirtyStatic .dirtyDot {
+  background-color: var(--dbm-icon-on-brand);
+}
+
+/* An unsaved tab shows the dot until the tab is hovered or the close button is the thing in use, then the cross. */
+.close[data-dirty] .closeIcon {
+  display: none;
+}
+
+.item:hover .close[data-dirty] .closeIcon,
+.close[data-dirty]:hover .closeIcon {
+  display: inline-flex;
+}
+
+.item:hover .close[data-dirty] .dirtyDot,
+.close[data-dirty]:hover .dirtyDot {
+  display: none;
+}
+
+/* A tab with the unsaved dot and no close button. */
+.dirtyStatic {
+  align-items: center;
+  display: inline-flex;
+  justify-content: center;
+  min-block-size: var(--dbm-space-6);
+  min-inline-size: var(--dbm-space-6);
+}
+
+/* Forced colours replaces a fill with the page's, so the dot and the drop line take system colours. */
+@media (forced-colors: active) {
+  .dirtyDot {
+    background-color: Highlight;
+    forced-color-adjust: none;
+  }
+
+  .tab[data-drop]::before {
+    background-color: Highlight;
+    forced-color-adjust: none;
+  }
+
+  .close {
+    color: ButtonText;
+  }
+}
