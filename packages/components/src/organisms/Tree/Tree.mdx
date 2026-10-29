@@ -1,0 +1,385 @@
+import { Canvas, Meta } from "@storybook/addon-docs/blocks";
+import { Callout, ComponentHeader, PlaygroundControls, PropertiesTable, RelatedCard, TokenRow } from "../../../.storybook/blocks";
+import { Badge } from "../../atoms/Badge";
+import { VisuallyHidden } from "../../atoms/VisuallyHidden";
+import { Tree } from "./Tree";
+import * as TreeStories from "./Tree.stories";
+
+export const propOrder = [
+  "nodes",
+  "size",
+  "selectionMode",
+  "value",
+  "defaultValue",
+  "onValueChange",
+  "checkable",
+  "checkedIds",
+  "defaultCheckedIds",
+  "onCheckedChange",
+  "expandedIds",
+  "defaultExpandedIds",
+  "defaultExpandAll",
+  "onExpandedChange",
+  "loadingIds",
+  "onItemActivate",
+  "renderLabel",
+  "highlightQuery",
+  "windowed",
+  "maxHeight",
+  "empty",
+  "dir",
+  "formatNumber",
+  "labels",
+  "controllerRef",
+  "aria-label",
+  "aria-labelledby",
+  "id",
+  "className",
+  "style",
+  "data-testid",
+];
+
+<Meta of={TreeStories} />
+
+<VisuallyHidden asChild><h2>Intro</h2></VisuallyHidden>
+
+<ComponentHeader title="Tree" tier="Organism" />
+
+A tree shows a hierarchy as rows that open and close: a project's files, a set of categories, a permissions list. Give it
+`nodes`, each with an `id`, a `label` and, when it has rows under it, `children`. A row with children has an arrow that opens
+it; a row can have an icon, a quieter description and content at its end.
+
+A tree can do more than show: `selectionMode` lets a person select one row or several, `checkable` gives every row a check box
+(a row above others shows "indeterminate" when only some of the rows beneath it are checked), `hasChildren` marks a row whose
+children you fetch when it is opened, and a long tree is drawn a window at a time so thousands of rows stay quick. It is one
+tab stop, moved around with the arrow keys, the way a file browser is.
+
+`Tree` is a read-out and a picker for data, not a navigation: a page's own links are `Sidebar`, whose groups are not a tree.
+It does not sort, filter, fetch or reorder. The rows are drawn in the order you give them, and everything the person
+changes (the open rows, the selection, the checks) is a list of ids that you may hold yourself. A chart of boxes and connectors
+(an organisation chart) is a different kind of component.
+
+### Import
+
+```tsx
+import { Tree } from "@dbm-system/components";
+```
+
+## Playground
+
+<div className="dbm-playground-canvas">
+
+<Canvas of={TreeStories.Playground} />
+
+</div>
+<PlaygroundControls of={TreeStories.Playground} order={propOrder} exclude={["nodes", "value", "defaultValue", "onValueChange", "checkedIds", "defaultCheckedIds", "onCheckedChange", "expandedIds", "defaultExpandedIds", "onExpandedChange", "loadingIds", "onItemActivate", "renderLabel", "empty", "formatNumber", "labels", "controllerRef", "aria-labelledby", "id", "className", "style", "data-testid"]} />
+
+## Properties
+
+`ref` forwards to the element with `role="tree"`, with `id`, `data-testid` and the `aria-*` props. `className` and `style` go on the
+outer box, the one that scrolls, so a margin or a width you set lands outside the tree in every mode. Also accepts any other native
+`<div>` attribute beyond what's listed here (e.g. `onFocus`, `title`) — passed straight through to the `role="tree"` element.
+
+<PropertiesTable of={TreeStories} order={propOrder} />
+
+A node is `{ id, label, icon?, description?, children?, hasChildren?, disabled?, trailing? }`:
+
+| Field | What it does |
+|---|---|
+| `id` | Names the row. Unique across the whole tree, since the open rows, the selection and the checks are all lists of ids (a repeated id warns in development). |
+| `label` | The row's text, a plain string: typeahead matches it, `highlightQuery` finds in it and it is cut with an ellipsis when it does not fit. |
+| `icon` | An icon component from `@dbm-system/icons`, drawn before the label. |
+| `description` | Quieter text after the label on the same line. |
+| `children` | The rows under this one. |
+| `hasChildren` | Marks a row whose children you do not have yet. It can be opened; you fetch the children and put them in `children`. |
+| `disabled` | A person cannot select, check or open it. It stays in the arrow-key order. |
+| `trailing` | Content at the end of the row. Not interactive: a button in a row would be a second focus stop inside the tree. |
+
+Row heights are fixed by `size` (`tree.row-height`), because a long tree is drawn a window at a time and so needs every row's
+height without measuring it; a label that does not fit is cut with an ellipsis. `windowed="auto"` draws only the rows in
+view from 200 visible rows, and only when `maxHeight` is set, since a window needs a box to scroll; `windowed` forces it on and
+`windowed={false}` draws every row. Each row says its `aria-level`, `aria-posinset` and `aria-setsize`, so a window never
+changes what a screen reader announces.
+
+**Controlled and uncontrolled.** `expandedIds`, `value` and `checkedIds` each make that part controlled: a person's action
+calls the matching `on…Change` and the tree changes only when the prop does. Without them the tree holds its own, from
+`defaultExpandedIds` (or `defaultExpandAll`), `defaultValue` and `defaultCheckedIds`. Switching one between the two warns in development.
+
+**Checking.** `checkedIds` lists only the leaves (rows with nothing under them); a row with children is worked out from them, so
+its own id is ignored. Checking a row checks every leaf under it that is not disabled, and checking it again clears them. A row waiting for its
+children (`hasChildren`) counts as a leaf until they arrive.
+
+**Lazy children.** Opening a `hasChildren` row calls `onExpandedChange`. Put its id in `loadingIds` while you fetch (a spinner
+replaces the arrow and the row is `aria-busy`), then put the result in the row's `children`; the tree says how many arrived.
+
+### TreeController
+
+`controllerRef` hands code outside the tree these controls. Each asks for a change the way a key press does and returns whether
+there was anything to do. The object is the same for the tree's life.
+
+| Method | Does |
+|---|---|
+| `expandAll()` | Opens every row that has children. |
+| `collapseAll()` | Closes every row. |
+| `expand(id)` / `collapse(id)` | Opens or closes one row. |
+| `scrollToNode(id)` | Opens the rows above a row and scrolls it into view, without taking focus. |
+
+## Variants
+
+### All sizes
+
+<Canvas of={TreeStories.Sizes} />
+
+### Open and closed rows, held by you
+
+<Canvas of={TreeStories.Expansion} />
+
+### Selecting one row
+
+<Canvas of={TreeStories.SingleSelection} />
+
+### Selecting several rows
+
+<Canvas of={TreeStories.MultipleSelection} />
+
+### Check boxes with a mixed parent
+
+<Canvas of={TreeStories.Checkable} />
+
+### Children fetched when a row is opened
+
+<Canvas of={TreeStories.Lazy} />
+
+### Thousands of rows
+
+<Canvas of={TreeStories.LongTree} />
+
+### A disabled row
+
+<Canvas of={TreeStories.Disabled} />
+
+### Description and trailing content
+
+<Canvas of={TreeStories.Trailing} />
+
+### Marking a search
+
+<Canvas of={TreeStories.Highlight} />
+
+### Your own label
+
+<Canvas of={TreeStories.CustomLabel} />
+
+### Expand all and collapse all from outside
+
+<Canvas of={TreeStories.Controller} />
+
+### Right to left
+
+<Canvas of={TreeStories.RightToLeft} />
+
+### No rows
+
+<Canvas of={TreeStories.Empty} />
+
+## Usage guidelines
+
+<div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(16rem, 1fr))", gap: "var(--dbm-space-4)" }}>
+<Callout tone="success" title="Do">
+
+- Use it for data that is genuinely nested and that a person browses or picks from: files, categories, permissions.
+- Give every node a stable, unique `id` from your data, not its position.
+- Name the tree with `aria-label` or `aria-labelledby`.
+- Set `maxHeight` for a long tree, so it scrolls inside its own box and can be drawn a window at a time.
+- Use `hasChildren` and `loadingIds` for a hierarchy too large to send at once.
+- Filter `nodes` yourself for a search, and add `highlightQuery` to show why a row matched.
+- Say with a node's `description` or `trailing` what a colour or an icon alone would say.
+
+</Callout>
+<Callout tone="danger" title="Don't">
+
+- Don't use it for a page's navigation links — that is `Sidebar`, whose groups are links and ordinary tab stops.
+- Don't put a button, link or field in `trailing`: a tree item is one focus stop, and a control inside it is a second.
+- Don't use it for a table with expandable rows — that is `DataTable`.
+- Don't nest more levels than a person can follow; deep trees are better searched than browsed.
+- Don't repeat an `id`: selection, checks and the open rows are all lists of ids.
+- Don't expect it to reorder rows or move them between parents; it asks nothing of the order you give it.
+
+</Callout>
+</div>
+
+## Best practices
+
+- `Tree` owns no data. Hold the hierarchy in your own state, give it as `nodes`, and change the array to add, remove or rename rows; the open rows, the selection and the checks are separate lists of ids, so they survive.
+- Use `selectionMode` to choose what a click does and `checkable` for a decision that applies to many rows at once (which folders to export). Both can be on: a click on the label selects, and a click on the box checks.
+- `checkedIds` holds leaves only. To know which folders are fully checked, work them out from the leaves in your own code, or read each row's state in `renderLabel`.
+- Hold `expandedIds` yourself when other parts of the page need to know (a breadcrumb, a saved layout), and leave it to the tree when they do not.
+- For a very large tree, fetch a folder's children when it is opened (`hasChildren`) instead of sending everything, and keep the row's id the same when its children arrive.
+- A label is one line and is cut with an ellipsis; put a long path in `description`, which is cut too, or give the tree room.
+- A row's `renderLabel` replaces only the text. It is told the row's level and state so it can draw a count or a badge, but it must not hold a control.
+- Use `controllerRef` for an "Expand all" button or to reveal a row found by a search (`scrollToNode`).
+- Activation (`onItemActivate`, from Enter or a double click) is for opening the thing a row stands for; selection is for choosing it.
+
+## Accessibility
+
+<Callout tone="info" title="The WAI-ARIA tree pattern: one tab stop, then arrow keys">
+
+The tree is an element with `role="tree"` holding a flat list of `role="treeitem"` rows, each saying its `aria-level`,
+`aria-posinset` and `aria-setsize`, so a screen reader announces "level 2, 3 of 5" however many rows are drawn. A row with children
+has `aria-expanded`. With a `selectionMode` every row has `aria-selected`, and the tree is `aria-multiselectable` in `"multiple"`.
+With `checkable` every row has `aria-checked` (`"mixed"` for a row some of whose leaves are checked). A disabled row has
+`aria-disabled` and stays focusable and in the arrow-key order. A row whose children are loading is `aria-busy`. The arrow and the
+check box are decorative and hidden from assistive technology; the row's label is its name, and a description or trailing text is read after it.
+
+Name the tree with `aria-label` or `aria-labelledby` (a warning in development when neither is given). When the children of a
+row you were loading arrive, a polite live region says how many.
+
+The tree is one tab stop, on the selected row (or the first). The arrow keys move focus, and the tab stop moves with it. When the row
+that holds the stop is outside the drawn window of a long tree, the tree itself is the stop and hands focus to that row.
+
+| Key | Behaviour |
+|---|---|
+| `Tab` | Moves focus into the tree (to the row that holds the stop), and out of it. |
+| `ArrowDown` / `ArrowUp` | Moves to the next or previous visible row. |
+| `ArrowRight` | Opens a closed row; on an open row, moves to its first child. (`ArrowLeft` in `dir="rtl"`.) |
+| `ArrowLeft` | Closes an open row; otherwise moves to the row's parent. (`ArrowRight` in `dir="rtl"`.) |
+| `Home` / `End` | Moves to the first or last visible row. |
+| `Enter` | Activates the row (`onItemActivate`), or opens or closes it when there is no handler. |
+| `Space` | Checks the row when `checkable`, otherwise selects it (adds or removes it in `"multiple"`). |
+| `Shift` + `ArrowDown` / `ArrowUp` | In `"multiple"`, extends the selection from where it began. |
+| `Ctrl` or `⌘` + `A` | In `"multiple"`, selects every row that is not disabled. |
+| `*` | Opens every closed row beside the focused one. |
+| A letter | Moves to the next visible row whose label starts with the letters typed within a moment; a repeated letter cycles through the rows that start with it. |
+
+With the pointer, a click on the arrow opens or closes the row, a click on the check box checks it, a click on the row selects
+it (with `Ctrl` or `⌘` to add or remove, `Shift` to extend), and a double click activates it. The arrow and the check box are hit on a box at least 24 pixels tall
+at every size, reaching sideways halfway to their neighbour. The focus ring is drawn inside the row so the box that scrolls cannot clip it.
+
+A selected row is told apart by a coloured bar at its start and a bolder label as well as its fill, so it survives forced colours,
+where the bar is drawn in `Highlight` and a check box in `Highlight`. The arrow is mirrored, and turns the other way, when `dir="rtl"`.
+The arrow turns with a short transition that is removed when the person prefers reduced motion.
+
+</Callout>
+
+## Code examples
+
+```tsx
+{/* A file browser: open a file on activation, remember what is open */}
+<Tree
+  aria-label="Project files"
+  nodes={files}
+  selectionMode="single"
+  value={[currentFile]}
+  onValueChange={([id]) => id && setCurrentFile(id)}
+  onItemActivate={(id) => openInEditor(id)}
+  maxHeight={480}
+/>
+```
+
+```tsx
+{/* A picker for what to export: only the leaves are stored, and a folder shows what is under it */}
+<Tree
+  aria-label="Choose what to export"
+  nodes={folders}
+  checkable
+  checkedIds={exportIds}
+  onCheckedChange={setExportIds}
+  defaultExpandAll
+/>
+```
+
+```tsx
+{/* Fetch a folder when it is opened */}
+<Tree
+  aria-label="Cloud files"
+  nodes={folders}
+  loadingIds={loading}
+  onExpandedChange={(open) => fetchMissingChildren(open)}
+/>
+```
+
+```tsx
+{/* Reveal a search result from outside the tree */}
+const tree = useRef<TreeController>(null);
+<Button onClick={() => tree.current?.scrollToNode("src/components/Button.tsx")}>Show in tree</Button>
+<Tree aria-label="Project files" nodes={files} controllerRef={tree} maxHeight={480} />
+```
+
+```tsx
+{/* Text the tree writes, in your language, with your own digits */}
+<Tree
+  aria-label="Fichiers"
+  nodes={files}
+  formatNumber={(n) => new Intl.NumberFormat("fr").format(n)}
+  labels={{ empty: "Aucun élément", childrenLoaded: (count) => `${count} éléments chargés` }}
+/>
+```
+
+## Design tokens used
+
+<TokenRow token="text.primary" usage="a row's label" />
+<TokenRow token="text.secondary" usage="a row's description, its trailing content and the empty message" />
+<TokenRow token="bg.neutral-subtle" usage="the fill of a row under the pointer" />
+<TokenRow token="bg.brand-subtle" usage="the fill of a selected row" />
+<TokenRow token="border.brand" usage="the bar at the start of a selected row" />
+<TokenRow token="border-width.4" usage="the width of that bar, reserved on every row so a selection does not move the text" />
+<TokenRow token="bg.surface" usage="an unchecked check box" />
+<TokenRow token="bg.brand" usage="a checked or mixed check box" />
+<TokenRow token="border.neutral" usage="the outline of an unchecked check box" />
+<TokenRow token="border-width.1" usage="the outline of a check box" />
+<TokenRow token="radius.xs" usage="the corners of a check box" />
+<TokenRow token="icon.default" usage="the arrow that opens a row" />
+<TokenRow token="icon-size.xs" usage="the check box at size xs, and the smaller icons" />
+<TokenRow token="icon-size.sm" usage="the check box at sizes sm and md, and the arrow and indent at size xs" />
+<TokenRow token="icon-size.md" usage="the arrow and indent at sizes sm and md" />
+<TokenRow token="icon-size.lg" usage="the arrow and indent at sizes lg and xl" />
+<TokenRow token="tree.row-height.xs" usage="the fixed height of a row at size xs" />
+<TokenRow token="tree.row-height.sm" usage="the same at size sm" />
+<TokenRow token="tree.row-height.md" usage="the same at size md" />
+<TokenRow token="tree.row-height.lg" usage="the same at size lg" />
+<TokenRow token="tree.row-height.xl" usage="the same at size xl" />
+<TokenRow token="border.focus" usage="the ring inside a focused row, and inside the tree when it holds the tab stop" />
+<TokenRow token="border-width.2" usage="the focus ring" />
+<TokenRow token="radius.sm" usage="the corners of the focus ring" />
+<TokenRow token="opacity.40" usage="a disabled row" />
+<TokenRow token="font-family.primary" usage="the tree's typography" />
+<TokenRow token="font-size.xs" usage="the text at size xs, and the description at sizes xs and sm" />
+<TokenRow token="font-size.sm" usage="the text at size sm, and the description at sizes md and lg" />
+<TokenRow token="font-size.base" usage="the text at size md, and the description at size xl" />
+<TokenRow token="font-size.lg" usage="the text at size lg" />
+<TokenRow token="font-size.xl" usage="the text at size xl" />
+<TokenRow token="font-weight.semibold" usage="the label of a selected row" />
+<TokenRow token="line-height.normal" usage="the tree's line height" />
+<TokenRow token="space.1" usage="the room before a row's first part, and the gap at size xs" />
+<TokenRow token="space.2" usage="the room after a row's last part, and the gap between its parts at the smaller sizes" />
+<TokenRow token="space.3" usage="the gap between a row's parts at sizes lg and xl" />
+<TokenRow token="space.4" usage="the room round the empty message" />
+<TokenRow token="space.6" usage="the minimum target size an arrow or check box is hit on (24px)" />
+<TokenRow token="motion-duration.fast" usage="the arrow turning" />
+<TokenRow token="motion-easing.standard" usage="the arrow turning" />
+
+## Related components
+
+<div className="dbm-card-grid">
+<RelatedCard
+  name="Sidebar"
+  description="A page's navigation: groups of links that open, with ordinary tab stops, not a tree of data"
+  href="/?path=/docs/organisms-navigation-sidebar--docs"
+>
+  <Badge tone="neutral">Navigation</Badge>
+</RelatedCard>
+<RelatedCard
+  name="DataTable"
+  description="Rows and columns of data, where a tree is one column of nested names"
+  href="/?path=/docs/organisms-data-display-datatable--docs"
+>
+  <Badge tone="neutral">Table</Badge>
+</RelatedCard>
+<RelatedCard
+  name="Accordion"
+  description="A few sections that open and close, with no nesting and no selection"
+  href="/?path=/docs/molecules-overlay-accordion--docs"
+>
+  <Badge tone="neutral">Disclosure</Badge>
+</RelatedCard>
+</div>

@@ -1,0 +1,31 @@
+{
+  "tree": {
+    "row-height": {
+      "xs": {
+        "$type": "dimension",
+        "$value": "1.5rem",
+        "$description": "The fixed height of a tree row at this size step. A long tree is drawn a window at a time, which needs every row's height known without measuring it, so the height is a token rather than the sum of padding and line height; a label is one line and cut with an ellipsis. Each is taller than the row's tallest part (the check box or the node icon at the same size step) and never below 1.5rem (WCAG 2.5.8)."
+      },
+      "sm": {
+        "$type": "dimension",
+        "$value": "2rem",
+        "$description": "The fixed height of a tree row at this size step. A long tree is drawn a window at a time, which needs every row's height known without measuring it, so the height is a token rather than the sum of padding and line height; a label is one line and cut with an ellipsis. Each is taller than the row's tallest part (the check box or the node icon at the same size step) and never below 1.5rem (WCAG 2.5.8)."
+      },
+      "md": {
+        "$type": "dimension",
+        "$value": "2.25rem",
+        "$description": "The fixed height of a tree row at this size step. A long tree is drawn a window at a time, which needs every row's height known without measuring it, so the height is a token rather than the sum of padding and line height; a label is one line and cut with an ellipsis. Each is taller than the row's tallest part (the check box or the node icon at the same size step) and never below 1.5rem (WCAG 2.5.8)."
+      },
+      "lg": {
+        "$type": "dimension",
+        "$value": "2.75rem",
+        "$description": "The fixed height of a tree row at this size step. A long tree is drawn a window at a time, which needs every row's height known without measuring it, so the height is a token rather than the sum of padding and line height; a label is one line and cut with an ellipsis. Each is taller than the row's tallest part (the check box or the node icon at the same size step) and never below 1.5rem (WCAG 2.5.8)."
+      },
+      "xl": {
+        "$type": "dimension",
+        "$value": "3.25rem",
+        "$description": "The fixed height of a tree row at this size step. A long tree is drawn a window at a time, which needs every row's height known without measuring it, so the height is a token rather than the sum of padding and line height; a label is one line and cut with an ellipsis. Each is taller than the row's tallest part (the check box or the node icon at the same size step) and never below 1.5rem (WCAG 2.5.8)."
+      }
+    }
+  }
+}

@@ -1,0 +1,34 @@
+# 0143 — `Tree` is a flat, roving-focus WAI-ARIA tree over a `nodes` array, with leaf-based checks and a window of fixed-height rows, over composed item parts, `aria-activedescendant` or nested groups
+
+**Status:** Accepted · **Date:** 2026-10-28
+
+## Context
+`Tree` was the one organism whose scope no guideline had decided. It needs a data model, a selection and check model, a focus model that survives drawing only some of the rows, and a stance on the hierarchy features other components deferred to it ([ADR-0043](./0043-reordering-is-a-hand-rolled-sortable-hook-in-primitives-for-a-single-list-over-a-drag-and-drop-dependency.md) left reparenting to it, [ADR-0090](./0090-datatable-opens-a-rows-detail-in-a-row-of-its-own-under-it-with-an-expand-column-and-no-windowing-over-a-nested-table-or-a-side-panel.md) left a sub-row tree model to it, and [ADR-0106](./0106-sidebar-collapses-to-a-rail-where-an-icon-stays-put-its-text-is-a-tooltip-and-a-group-is-a-menu-and-expanded-groups-open-with-collapse-to-three-levels-over-hiding-the-column-or-a-tree.md) rejected a tree for navigation).
+
+## Decision
+- **The data is a `nodes` array** (`{ id, label, icon?, description?, children?, hasChildren?, disabled?, trailing? }`), not composed `Tree.Item` parts. The tree has to know the whole hierarchy to match typeahead against labels, work a parent's check state out from its leaves, find the rows above a row to reveal it, and draw a window of the visible rows; composed children give it none of that without reading React elements. Open rows, the selection and the checks are three separate lists of ids, each controlled or not (`expandedIds`, `value`, `checkedIds`).
+- **The structure is flat and the focus roves.** The root is `role="tree"` holding `role="treeitem"` rows directly, each stating `aria-level`, `aria-posinset` and `aria-setsize`, with no nested `role="group"`. That is what lets a window draw any slice of the visible rows and still announce each one truthfully. One row holds `tabindex="0"` and takes real DOM focus as the arrow keys move; the row that holds the stop is found again when its ancestor closes (the nearest visible ancestor takes it). When the stop is outside the window the tree itself is the stop and hands focus to that row.
+- **Checks are stored as leaves.** `checkedIds` lists the checked rows that have nothing under them; a parent's state is derived (`true`, `false`, `"indeterminate"`), and checking a parent checks the leaves under it that a person can change. A disabled leaf is left out of the derivation, so a parent whose changeable leaves are all checked reads as checked and can be cleared. A row waiting for its children counts as a leaf until they arrive. The check box is drawn (not a `Checkbox`), since a button inside a tree item would be a second focus stop.
+- **Selection is separate from checking** (`selectionMode`: `none`, `single`, `multiple`), and `value` is always a list of ids (at most one in `single`), so the type does not change with the mode. A click on the label selects (or checks, when nothing can be selected), a click on the box checks, Space does whichever the tree is for.
+- **Long trees are windowed** by `useWindowedList` ([ADR-0080](./0080-long-option-lists-are-drawn-a-window-at-a-time-by-a-hand-rolled-hook-with-fixed-row-heights-from-tokens-over-a-virtualization-dependency-or-measured-rows.md)) from 200 visible rows, only when `maxHeight` gives it a box to scroll, with a fixed row height per size from `tree.row-height.*`. A label is one line, cut with an ellipsis, a `description` shares that line, and `trailing` is not interactive.
+- **Children are fetched by the caller.** `hasChildren` makes a row openable before its children exist; `onExpandedChange` fires, the caller lists the id in `loadingIds` and puts the result in `children`, and the tree announces how many arrived.
+- **Reordering and reparenting are out of the first version.** The tree asks for nothing about order; adding it later is additive (`useSortable` would need nesting rules) and is a new record when it is built.
+- **No animation of the height.** Opening is an arrow turning on `transform` (removed for reduced motion), because animating the height of rows fights a window of fixed-height rows.
+
+## Alternatives considered
+- **Composed `Tree.Item` parts.** Rejected for the reasons above; it is also the shape that cannot be windowed.
+- **Nested `role="group"` markup.** Rejected: a window cannot draw half of a group, and the flat form with explicit levels is valid and announces the same.
+- **`aria-activedescendant` with focus staying on the tree.** Rejected: the active row can be outside the window and so not exist, and real focus on the row scrolls it into view natively. Roving focus is also the form the pattern's examples use.
+- **A `Checkbox` atom in each row.** Rejected: it is a button, so each row would hold two focus stops and the arrow-key model would have to skip one.
+- **Storing every checked id, parents included.** Rejected: a parent's id and its leaves would have to be kept in step by the caller, and a lazy folder has no leaves to check.
+- **A `value` that is a string in `single` and a list in `multiple`.** Rejected: the type changes with a prop, which a Playground, a manifest and a caller switching modes all handle badly.
+- **Built-in filtering.** Rejected for v1: a search is the caller's data problem (`nodes` already filters), and `highlightQuery` shows why a row matched.
+
+## Consequences
+- A tree of thousands of rows costs the same as one of dozens, and every row says where it is whatever is drawn.
+- A caller holds ids, not tree state, so a saved layout, a breadcrumb and a controller all work from the same lists.
+- Row height is fixed by `size`; content that needs more room (two lines) is not a `Tree` row.
+- No guideline covered how a data component tells a selected row in forced colours; this one draws a bar at the row's start (reserved on every row, `Canvas` or `Highlight` there) as well as the fill and a bolder label.
+
+## Related
+`04-component-inventory.md` (Tree); `05-component-api-conventions.md` §3, §6; `component-reviews/Tree.md`; [ADR-0043](./0043-reordering-is-a-hand-rolled-sortable-hook-in-primitives-for-a-single-list-over-a-drag-and-drop-dependency.md); [ADR-0080](./0080-long-option-lists-are-drawn-a-window-at-a-time-by-a-hand-rolled-hook-with-fixed-row-heights-from-tokens-over-a-virtualization-dependency-or-measured-rows.md); [ADR-0139](./0139-stepper-hands-next-back-and-go-to-to-code-outside-it-through-a-controller-ref-and-no-hook-over-a-hook-or-a-context-for-its-steps.md).

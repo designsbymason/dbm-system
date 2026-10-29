@@ -1,0 +1,631 @@
+import { CaretLeftIcon, CaretRightIcon, CheckIcon, MinusIcon } from "@dbm-system/icons";
+import { cx, mergeDefined, useAnnouncement, useWindowedList } from "@dbm-system/utils";
+import {
+  forwardRef,
+  useCallback,
+  useEffect,
+  useImperativeHandle,
+  useMemo,
+  useRef,
+  useState,
+  useSyncExternalStore,
+} from "react";
+import type { CSSProperties, KeyboardEvent, MouseEvent } from "react";
+import { Highlight } from "../../atoms/Highlight";
+import { Icon } from "../../atoms/Icon";
+import { Spinner } from "../../atoms/Spinner";
+import { VisuallyHidden } from "../../atoms/VisuallyHidden";
+import styles from "./Tree.module.css";
+import { readLengthToken } from "./Tree.length";
+import type {
+  TreeController,
+  TreeLabels,
+  TreeNode,
+  TreeProps,
+  TreeRowState,
+  TreeSelectionMode,
+  TreeSize,
+} from "./Tree.types";
+import { ancestorsOf, canExpand, checkStateOf, indexTree, toggleChecked, visibleRows } from "./treeModel";
+import type { TreeRow } from "./treeModel";
+import { useTreeList } from "./useTreeList";
+
+const sizeClass: Record<TreeSize, string | undefined> = {
+  xs: styles.sizeXs,
+  sm: styles.sizeSm,
+  md: styles.sizeMd,
+  lg: styles.sizeLg,
+  xl: styles.sizeXl,
+};
+
+const iconSizeFor: Record<TreeSize, "xs" | "sm" | "md" | "lg"> = { xs: "xs", sm: "sm", md: "md", lg: "lg", xl: "lg" };
+
+/** Visible rows from which `windowed="auto"` draws only the ones in view. */
+const WINDOW_THRESHOLD = 200;
+const OVERSCAN = 8;
+// Used until the row's token has been read, and where nothing is laid out (a server render): not a design value.
+const FALLBACK_ROW_PX = 36;
+// How long a typed letter keeps counting towards the word being typed.
+const TYPEAHEAD_MS = 600;
+
+const noSubscription = () => () => undefined;
+const noSnapshot = (): undefined => undefined;
+
+const defaultLabels = (formatNumber: (value: number) => string): TreeLabels => ({
+  empty: "No items",
+  childrenLoaded: (count) => `${formatNumber(count)} ${count === 1 ? "item" : "items"} loaded`,
+});
+
+/**
+ * An expandable hierarchy of rows: a file tree, a category picker, a permissions list. The rows are the `nodes` you give,
+ * each with an `id`, a `label` and optionally `children`; a row with children opens and closes. Optionally rows can be selected
+ * (`selectionMode`), given a check box (`checkable`; a row above others shows "indeterminate" when only some beneath it are
+ * checked), fetched when opened (`hasChildren` and `loadingIds`), and drawn a window at a time when there are thousands
+ * (`windowed`).
+ *
+ * It follows the WAI-ARIA tree pattern: one tab stop, then arrow keys. Up and Down move between the visible rows, Right opens a
+ * row or steps into it, Left closes a row or steps out to its parent (swapped in `dir="rtl"`), Home and End jump, Enter
+ * activates, Space selects or checks, `*` opens the row's siblings and typing a word jumps to the row that starts with it.
+ *
+ * It does not sort, filter, fetch or reorder: `nodes` is drawn in the order you give it, and everything the person changes
+ * (the open rows, the selection, the checks) is a list of ids you may hold yourself. An org chart, with its boxes and
+ * connectors, is a different component; a navigation of links is `Sidebar`.
+ *
+ * @example
+ * ```tsx
+ * <Tree
+ *   aria-label="Project files"
+ *   nodes={[
+ *     { id: "src", label: "src", icon: FolderIcon, children: [{ id: "app", label: "App.tsx", icon: FileIcon }] },
+ *     { id: "readme", label: "README.md", icon: FileIcon },
+ *   ]}
+ *   selectionMode="single"
+ *   onValueChange={([id]) => open(id)}
+ * />
+ * ```
+ */
+export const Tree = forwardRef<HTMLDivElement, TreeProps>(
+  (
+    {
+      nodes,
+      size = "md",
+      selectionMode = "none",
+      value: valueProp,
+      defaultValue,
+      onValueChange,
+      checkable = false,
+      checkedIds: checkedProp,
+      defaultCheckedIds,
+      onCheckedChange,
+      expandedIds: expandedProp,
+      defaultExpandedIds,
+      defaultExpandAll = false,
+      onExpandedChange,
+      loadingIds,
+      onItemActivate,
+      renderLabel,
+      highlightQuery,
+      windowed = "auto",
+      maxHeight,
+      empty,
+      dir = "ltr",
+      formatNumber = String,
+      labels: labelsProp,
+      controllerRef,
+      className,
+      style,
+      id,
+      "data-testid": dataTestId,
+      onKeyDown,
+      ...props
+    },
+    ref,
+  ) => {
+    const labels = mergeDefined(defaultLabels(formatNumber), labelsProp);
+    const index = useMemo(() => indexTree(nodes), [nodes]);
+    const rtl = dir === "rtl";
+
+    const named = Boolean(props["aria-label"] || props["aria-labelledby"]);
+    const hasRows = nodes.length > 0;
+    useEffect(() => {
+      if (process.env.NODE_ENV !== "production" && hasRows && !named) {
+        console.warn("Tree: no accessible name. Pass `aria-label` or `aria-labelledby` so a screen reader can say what the tree holds.");
+      }
+    }, [hasRows, named]);
+
+    const [expanded, requestExpanded, readExpanded] = useTreeList(
+      "expandedIds",
+      expandedProp,
+      () => defaultExpandedIds ?? (defaultExpandAll ? index.expandable : []),
+      onExpandedChange,
+    );
+    const [selected, requestSelected] = useTreeList("value", valueProp, defaultValue ?? [], onValueChange);
+    const [checkedLeaves, requestChecked] = useTreeList("checkedIds", checkedProp, defaultCheckedIds ?? [], onCheckedChange);
+
+    const expandedSet = useMemo(() => new Set(expanded), [expanded]);
+    const selectedSet = useMemo(() => new Set(selected), [selected]);
+    const checkedSet = useMemo(() => new Set(checkedLeaves), [checkedLeaves]);
+    const loadingSet = useMemo(() => new Set(loadingIds), [loadingIds]);
+    const rows = useMemo(() => visibleRows(nodes, expandedSet), [nodes, expandedSet]);
+    const rowIndexById = useMemo(() => new Map(rows.map((row, position) => [row.node.id, position])), [rows]);
+
+    // --- windowing -------------------------------------------------------------------------------------------------------
+    const windowedOn = rows.length > 0 && (windowed === true || (windowed === "auto" && maxHeight !== undefined && rows.length > WINDOW_THRESHOLD));
+    // The row's height in pixels, read from its token once the page is in the browser. A server (and a hydrating render)
+    // gets `undefined`, so the first render is the same on both and the real height arrives right after.
+    const rowPx = useSyncExternalStore(
+      noSubscription,
+      useCallback(() => readLengthToken(`--dbm-tree-row-height-${size}`), [size]),
+      noSnapshot,
+    );
+    const getItemSize = useCallback(() => rowPx ?? FALLBACK_ROW_PX, [rowPx]);
+    const windowedList = useWindowedList({ count: rows.length, getItemSize, enabled: windowedOn, overscan: OVERSCAN });
+    const start = windowedOn ? windowedList.start : 0;
+    const end = windowedOn ? windowedList.end : rows.length;
+
+    // --- the row that holds the tab stop -----------------------------------------------------------------------------------
+    const [focusId, setFocusId] = useState<string | undefined>(undefined);
+    const activeId = useMemo(() => {
+      if (focusId !== undefined) {
+        if (rowIndexById.has(focusId)) return focusId;
+        // Its ancestor is closed over it: the nearest row that is still there takes the stop.
+        const above = ancestorsOf(focusId, index.parentOf).find((ancestor) => rowIndexById.has(ancestor));
+        if (above !== undefined) return above;
+      }
+      const chosen = rows.find((row) => selectedSet.has(row.node.id));
+      return (chosen ?? rows[0])?.node.id;
+    }, [focusId, rowIndexById, index.parentOf, rows, selectedSet]);
+    const activeIndex = activeId === undefined ? -1 : (rowIndexById.get(activeId) ?? -1);
+    const activeDrawn = activeIndex >= start && activeIndex < end;
+
+    const elements = useRef(new Map<string, HTMLElement>());
+    const pendingFocus = useRef<string | undefined>(undefined);
+    const pendingScroll = useRef<string | undefined>(undefined);
+    const frameRef = useRef<HTMLDivElement | null>(null);
+    const setFrame = useCallback(
+      (element: HTMLDivElement | null) => {
+        frameRef.current = element;
+        windowedList.containerRef(element);
+      },
+      // `containerRef` is stable for the hook's life
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+      [],
+    );
+
+    const registerRow = useCallback((rowId: string, element: HTMLElement | null) => {
+      if (element) elements.current.set(rowId, element);
+      else elements.current.delete(rowId);
+    }, []);
+
+    const focusRow = (target: string) => {
+      setFocusId(target);
+      const element = elements.current.get(target);
+      if (element) element.focus();
+      else {
+        // It is outside the window: scroll it into one, and the effect below focuses it once it is drawn.
+        pendingFocus.current = target;
+        const position = rowIndexById.get(target);
+        if (position !== undefined) windowedList.scrollToIndex(position);
+      }
+    };
+
+    useEffect(() => {
+      const wantsFocus = pendingFocus.current;
+      if (wantsFocus !== undefined) {
+        const element = elements.current.get(wantsFocus);
+        if (element) {
+          pendingFocus.current = undefined;
+          element.focus();
+        }
+      }
+      const wantsScroll = pendingScroll.current;
+      if (wantsScroll !== undefined) {
+        const position = rowIndexById.get(wantsScroll);
+        if (position === undefined) {
+          // Not drawn: either it is still under a closed row (a controlled tree that has not opened it yet) or gone.
+          if (!index.byId.has(wantsScroll)) pendingScroll.current = undefined;
+        } else if (windowedOn) {
+          windowedList.scrollToIndex(position);
+          pendingScroll.current = undefined;
+        } else {
+          pendingScroll.current = undefined;
+          elements.current.get(wantsScroll)?.scrollIntoView?.({ block: "nearest" });
+        }
+      }
+    });
+
+    // --- announcements -----------------------------------------------------------------------------------------------------
+    const { message, announce } = useAnnouncement();
+    const previousLoading = useRef(loadingSet);
+    const latestLabels = useRef(labels);
+    useEffect(() => {
+      latestLabels.current = labels;
+    });
+    useEffect(() => {
+      for (const loadedId of previousLoading.current) {
+        if (loadingSet.has(loadedId)) continue;
+        const count = index.byId.get(loadedId)?.children?.length ?? 0;
+        if (count > 0) announce(latestLabels.current.childrenLoaded(count));
+      }
+      previousLoading.current = loadingSet;
+    }, [loadingSet, index, announce]);
+
+    // --- changes a person asks for -----------------------------------------------------------------------------------------
+    const setOpen = (target: string, open: boolean): boolean => {
+      const node = index.byId.get(target);
+      if (!node || !canExpand(node)) return false;
+      const current = readExpanded();
+      const isOpen = current.includes(target);
+      if (isOpen === open) return false;
+      requestExpanded(open ? [...current, target] : current.filter((entry) => entry !== target));
+      return true;
+    };
+
+    const anchor = useRef<string | undefined>(undefined);
+    const selectRange = (from: string, to: string) => {
+      const a = rowIndexById.get(from);
+      const b = rowIndexById.get(to);
+      if (a === undefined || b === undefined) return;
+      const [low, high] = a < b ? [a, b] : [b, a];
+      requestSelected(rows.slice(low, high + 1).filter((row) => !row.node.disabled).map((row) => row.node.id));
+    };
+    const select = (target: string, how: "replace" | "toggle") => {
+      const node = index.byId.get(target);
+      if (!node || node.disabled || selectionMode === "none") return;
+      anchor.current = target;
+      if (how === "toggle") {
+        requestSelected(selectedSet.has(target) ? selected.filter((entry) => entry !== target) : selectionMode === "multiple" ? [...selected, target] : [target]);
+      } else if (!(selected.length === 1 && selected[0] === target)) {
+        requestSelected([target]);
+      }
+    };
+    const toggleCheck = (node: TreeNode) => {
+      if (node.disabled) return;
+      requestChecked(toggleChecked(node, checkedLeaves));
+    };
+    const activate = (target: string) => {
+      const node = index.byId.get(target);
+      if (!node || node.disabled) return;
+      if (onItemActivate) onItemActivate(target);
+      else setOpen(target, !expandedSet.has(target));
+    };
+
+    // --- the controller ----------------------------------------------------------------------------------------------------
+    const controllerState = useRef({ index, requestExpanded, readExpanded });
+    useEffect(() => {
+      controllerState.current = { index, requestExpanded, readExpanded };
+    });
+    const controller = useMemo<TreeController>(
+      () => ({
+        expandAll: () => {
+          const { index: current, requestExpanded: ask, readExpanded: read } = controllerState.current;
+          const open = new Set(read());
+          if (current.expandable.every((entry) => open.has(entry))) return false;
+          ask([...new Set([...read(), ...current.expandable])]);
+          return true;
+        },
+        collapseAll: () => {
+          const { requestExpanded: ask, readExpanded: read } = controllerState.current;
+          if (read().length === 0) return false;
+          ask([]);
+          return true;
+        },
+        expand: (target) => {
+          const { index: current, requestExpanded: ask, readExpanded: read } = controllerState.current;
+          const node = current.byId.get(target);
+          if (!node || !canExpand(node) || read().includes(target)) return false;
+          ask([...read(), target]);
+          return true;
+        },
+        collapse: (target) => {
+          const { requestExpanded: ask, readExpanded: read } = controllerState.current;
+          if (!read().includes(target)) return false;
+          ask(read().filter((entry) => entry !== target));
+          return true;
+        },
+        scrollToNode: (target) => {
+          const { index: current, requestExpanded: ask, readExpanded: read } = controllerState.current;
+          if (!current.byId.has(target)) return false;
+          const open = new Set(read());
+          const closed = ancestorsOf(target, current.parentOf).filter((ancestor) => !open.has(ancestor));
+          if (closed.length > 0) ask([...read(), ...closed]);
+          pendingScroll.current = target;
+          setFocusId(target);
+          return true;
+        },
+      }),
+      [],
+    );
+    useImperativeHandle(controllerRef, () => controller, [controller]);
+
+    // --- the keyboard ------------------------------------------------------------------------------------------------------
+    const typed = useRef({ text: "", timer: 0 });
+    useEffect(() => {
+      const state = typed.current;
+      return () => window.clearTimeout(state.timer);
+    }, []);
+
+    const handleKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
+      onKeyDown?.(event);
+      if (event.defaultPrevented) return;
+      const element = (event.target as HTMLElement).closest<HTMLElement>("[data-tree-id]");
+      if (!element || event.currentTarget !== element.closest('[role="tree"]')) return;
+      const currentId = element.dataset.treeId as string;
+      const position = rowIndexById.get(currentId);
+      const row = position === undefined ? undefined : rows[position];
+      if (position === undefined || !row) return;
+      const move = (to: number, extend = false) => {
+        const target = rows[Math.max(0, Math.min(rows.length - 1, to))];
+        if (!target) return;
+        event.preventDefault();
+        if (extend && selectionMode === "multiple") {
+          anchor.current ??= currentId;
+          selectRange(anchor.current, target.node.id);
+        }
+        focusRow(target.node.id);
+      };
+
+      const forward = rtl ? "ArrowLeft" : "ArrowRight";
+      const backward = rtl ? "ArrowRight" : "ArrowLeft";
+      const modified = event.ctrlKey || event.metaKey || event.altKey;
+
+      if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "a" && selectionMode === "multiple") {
+        event.preventDefault();
+        requestSelected(rows.filter((entry) => !entry.node.disabled).map((entry) => entry.node.id));
+        return;
+      }
+      if (modified) return;
+      // Any key but a letter ends the word being typed.
+      if (event.key.length !== 1) typed.current.text = "";
+
+      switch (event.key) {
+        case "ArrowDown":
+          move(position + 1, event.shiftKey);
+          return;
+        case "ArrowUp":
+          move(position - 1, event.shiftKey);
+          return;
+        case "Home":
+          move(0);
+          return;
+        case "End":
+          move(rows.length - 1);
+          return;
+        case forward:
+          event.preventDefault();
+          if (!canExpand(row.node)) return;
+          if (!expandedSet.has(currentId)) {
+            if (!row.node.disabled) setOpen(currentId, true);
+          } else if (rows[position + 1]?.parentId === currentId) focusRow(rows[position + 1]!.node.id);
+          return;
+        case backward:
+          event.preventDefault();
+          if (canExpand(row.node) && expandedSet.has(currentId) && !row.node.disabled) setOpen(currentId, false);
+          else if (row.parentId !== undefined) focusRow(row.parentId);
+          return;
+        case "Enter":
+          event.preventDefault();
+          activate(currentId);
+          return;
+        case " ":
+          event.preventDefault();
+          if (checkable) toggleCheck(row.node);
+          else select(currentId, selectionMode === "multiple" ? "toggle" : "replace");
+          return;
+        case "*": {
+          event.preventDefault();
+          const open = readExpanded();
+          const siblings = rows.filter((entry) => entry.parentId === row.parentId && canExpand(entry.node) && !entry.node.disabled && !open.includes(entry.node.id));
+          if (siblings.length > 0) requestExpanded([...open, ...siblings.map((entry) => entry.node.id)]);
+          return;
+        }
+        default:
+      }
+
+      if (event.key.length === 1 && event.key !== " ") {
+        // Typeahead: the letters typed within a moment of each other make a word, and the row that starts with it takes focus.
+        window.clearTimeout(typed.current.timer);
+        typed.current.text += event.key.toLowerCase();
+        typed.current.timer = window.setTimeout(() => {
+          typed.current.text = "";
+        }, TYPEAHEAD_MS);
+        const text = typed.current.text;
+        const repeated = text.split("").every((character) => character === text[0]);
+        const needle = repeated ? (text[0] as string) : text;
+        const from = repeated && text.length > 1 ? position + (text.length - 1) : repeated ? position + 1 : position;
+        for (let step = 0; step < rows.length; step += 1) {
+          const candidate = rows[(from + step) % rows.length] as TreeRow;
+          if (candidate.node.label.toLowerCase().startsWith(needle)) {
+            event.preventDefault();
+            focusRow(candidate.node.id);
+            return;
+          }
+        }
+      }
+    };
+
+    // --- the pointer -------------------------------------------------------------------------------------------------------
+    const handleClick = (event: MouseEvent<HTMLDivElement>, node: TreeNode) => {
+      const part = (event.target as HTMLElement).closest<HTMLElement>("[data-tree-part]")?.dataset.treePart;
+      if (part === "chevron") {
+        if (!node.disabled) setOpen(node.id, !expandedSet.has(node.id));
+        return;
+      }
+      if (part === "check") {
+        toggleCheck(node);
+        return;
+      }
+      if (node.disabled) return;
+      if (selectionMode === "none") {
+        if (checkable) toggleCheck(node);
+        return;
+      }
+      if (selectionMode === "multiple" && event.shiftKey) {
+        selectRange(anchor.current ?? activeId ?? node.id, node.id);
+      } else if (selectionMode === "multiple" && (event.ctrlKey || event.metaKey)) select(node.id, "toggle");
+      else if (selectionMode === "single" && (event.ctrlKey || event.metaKey) && selectedSet.has(node.id)) select(node.id, "toggle");
+      else select(node.id, "replace");
+    };
+
+    // --- drawing -----------------------------------------------------------------------------------------------------------
+    const drawn = rows.slice(start, end);
+    const treeStyle: CSSProperties | undefined = windowedOn ? { paddingBlockStart: windowedList.before, paddingBlockEnd: windowedList.after } : undefined;
+    const frameStyle: CSSProperties = { ...style, ...(maxHeight === undefined ? null : { maxBlockSize: maxHeight }) };
+    const multiselectable = selectionMode === "multiple";
+
+    const body = drawn.map((row) => (
+      <TreeRowView
+        key={row.node.id}
+        row={row}
+        iconSize={iconSizeFor[size]}
+        rtl={rtl}
+        tabbable={row.node.id === activeId}
+        expanded={expandedSet.has(row.node.id)}
+        selected={selectedSet.has(row.node.id)}
+        selectionMode={selectionMode}
+        checkable={checkable}
+        checked={checkable ? checkStateOf(row.node, checkedSet) : false}
+        loading={loadingSet.has(row.node.id)}
+        highlightQuery={highlightQuery}
+        renderLabel={renderLabel}
+        register={registerRow}
+        onFocusRow={setFocusId}
+        onClickRow={handleClick}
+        onDoubleClickRow={activate}
+      />
+    ));
+
+    const showEmpty = rows.length === 0;
+
+    return (
+      <div ref={setFrame} className={cx(styles.frame, sizeClass[size], className)} style={frameStyle} dir={dir}>
+        {showEmpty ? (
+          <div
+            ref={ref}
+            {...props}
+            id={id}
+            data-testid={dataTestId}
+            role="group"
+            className={cx(styles.root, styles.emptyRoot)}
+          >
+            {empty === false ? null : (empty ?? <span className={styles.empty}>{labels.empty}</span>)}
+          </div>
+        ) : (
+          <div
+            ref={ref}
+            {...props}
+            id={id}
+            data-testid={dataTestId}
+            role="tree"
+            aria-multiselectable={multiselectable || undefined}
+            tabIndex={activeDrawn ? -1 : 0}
+            className={styles.root}
+            style={treeStyle}
+            onKeyDown={handleKeyDown}
+            onFocus={(event) => {
+              props.onFocus?.(event);
+              // The row that holds the stop is outside the window: bring it in and hand it the focus.
+              if (event.target === event.currentTarget && activeId !== undefined) focusRow(activeId);
+            }}
+          >
+            {body}
+          </div>
+        )}
+        <VisuallyHidden role="status">{message}</VisuallyHidden>
+      </div>
+    );
+  },
+);
+
+Tree.displayName = "Tree";
+
+interface TreeRowViewProps {
+  row: TreeRow;
+  iconSize: "xs" | "sm" | "md" | "lg";
+  rtl: boolean;
+  tabbable: boolean;
+  expanded: boolean;
+  selected: boolean;
+  selectionMode: TreeSelectionMode;
+  checkable: boolean;
+  checked: boolean | "indeterminate";
+  loading: boolean;
+  highlightQuery: string | undefined;
+  renderLabel: TreeProps["renderLabel"];
+  register: (id: string, element: HTMLElement | null) => void;
+  onFocusRow: (id: string) => void;
+  onClickRow: (event: MouseEvent<HTMLDivElement>, node: TreeNode) => void;
+  onDoubleClickRow: (id: string) => void;
+}
+
+function TreeRowView({
+  row,
+  iconSize,
+  rtl,
+  tabbable,
+  expanded,
+  selected,
+  selectionMode,
+  checkable,
+  checked,
+  loading,
+  highlightQuery,
+  renderLabel,
+  register,
+  onFocusRow,
+  onClickRow,
+  onDoubleClickRow,
+}: TreeRowViewProps) {
+  const { node, level, posinset, setsize } = row;
+  const hasChildren = canExpand(node);
+  const state: TreeRowState = { level, expanded: hasChildren && expanded, selected, checked, disabled: Boolean(node.disabled), hasChildren };
+  const setElement = useCallback(
+    (element: HTMLDivElement | null) => register(node.id, element),
+    [register, node.id],
+  );
+  const query = highlightQuery?.trim();
+
+  return (
+    // The tree owns the keyboard (one handler for every row, since the arrow keys move between them), so a row has none of its own.
+    // eslint-disable-next-line jsx-a11y/click-events-have-key-events
+    <div
+      ref={setElement}
+      role="treeitem"
+      data-tree-id={node.id}
+      tabIndex={tabbable ? 0 : -1}
+      aria-level={level}
+      aria-setsize={setsize}
+      aria-posinset={posinset}
+      aria-expanded={hasChildren ? expanded : undefined}
+      aria-selected={selectionMode === "none" ? undefined : selected}
+      aria-checked={checkable ? checked === "indeterminate" ? "mixed" : checked : undefined}
+      aria-disabled={node.disabled || undefined}
+      aria-busy={loading || undefined}
+      data-selected={selected || undefined}
+      className={cx(styles.row, selected && styles.selected, node.disabled && styles.disabled, selectionMode !== "none" || checkable ? styles.pickable : undefined)}
+      style={{ "--tree-level": level } as CSSProperties}
+      onFocus={() => onFocusRow(node.id)}
+      onClick={(event) => onClickRow(event, node)}
+      onDoubleClick={() => onDoubleClickRow(node.id)}
+    >
+      <span className={styles.chevron} data-tree-part={hasChildren ? "chevron" : undefined} aria-hidden="true">
+        {loading ? (
+          <Spinner size="xs" />
+        ) : hasChildren ? (
+          <Icon icon={rtl ? CaretLeftIcon : CaretRightIcon} size="xs" className={cx(styles.arrow, expanded && styles.arrowOpen)} />
+        ) : null}
+      </span>
+      {checkable ? (
+        <span className={styles.check} data-tree-part="check" data-state={checked === "indeterminate" ? "indeterminate" : checked ? "checked" : "unchecked"} aria-hidden="true">
+          {checked === true ? <Icon icon={CheckIcon} size="xs" tone="on-brand" /> : checked === "indeterminate" ? <Icon icon={MinusIcon} size="xs" tone="on-brand" /> : null}
+        </span>
+      ) : null}
+      {node.icon ? <Icon icon={node.icon} size={iconSize} tone="secondary" className={styles.nodeIcon} /> : null}
+      <span className={styles.label}>
+        {renderLabel ? renderLabel(node, state) : query ? <Highlight query={query}>{node.label}</Highlight> : node.label}
+      </span>
+      {node.description ? <span className={styles.description}>{node.description}</span> : null}
+      {node.trailing ? <span className={styles.trailing}>{node.trailing}</span> : null}
+    </div>
+  );
+}

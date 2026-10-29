@@ -1,0 +1,254 @@
+/* The tree. Every value is a token. The custom properties below are set per size:
+   `--tree-row-height` the fixed row height (rows are drawn a window at a time, so it is known, not measured), `--tree-font`
+   the text size, `--tree-icon` the width of the arrow, check box and node icon slots, `--tree-gap` the room between
+   the parts of a row, and `--tree-indent` how far each level steps in. */
+.frame {
+  --tree-row-height: var(--dbm-tree-row-height-md);
+  --tree-font: var(--dbm-font-size-base);
+  --tree-small-font: var(--dbm-font-size-sm);
+  --tree-icon: var(--dbm-icon-size-md);
+  --tree-check: var(--dbm-icon-size-sm);
+  --tree-gap: var(--dbm-space-2);
+  --tree-indent: var(--dbm-icon-size-md);
+
+  box-sizing: border-box;
+  color: var(--dbm-text-primary);
+  font-family: var(--dbm-font-family-primary);
+  font-size: var(--tree-font);
+  line-height: var(--dbm-line-height-normal);
+  min-inline-size: 0;
+  overflow: auto;
+}
+
+.sizeXs {
+  --tree-row-height: var(--dbm-tree-row-height-xs);
+  --tree-font: var(--dbm-font-size-xs);
+  --tree-small-font: var(--dbm-font-size-xs);
+  --tree-icon: var(--dbm-icon-size-sm);
+  --tree-check: var(--dbm-icon-size-xs);
+  --tree-gap: var(--dbm-space-1);
+  --tree-indent: var(--dbm-icon-size-sm);
+}
+
+.sizeSm {
+  --tree-row-height: var(--dbm-tree-row-height-sm);
+  --tree-font: var(--dbm-font-size-sm);
+  --tree-small-font: var(--dbm-font-size-xs);
+  --tree-icon: var(--dbm-icon-size-md);
+  --tree-check: var(--dbm-icon-size-sm);
+  --tree-gap: var(--dbm-space-2);
+  --tree-indent: var(--dbm-icon-size-md);
+}
+
+.sizeMd {
+  --tree-row-height: var(--dbm-tree-row-height-md);
+  --tree-font: var(--dbm-font-size-base);
+  --tree-small-font: var(--dbm-font-size-sm);
+  --tree-icon: var(--dbm-icon-size-md);
+  --tree-check: var(--dbm-icon-size-sm);
+  --tree-gap: var(--dbm-space-2);
+  --tree-indent: var(--dbm-icon-size-md);
+}
+
+.sizeLg {
+  --tree-row-height: var(--dbm-tree-row-height-lg);
+  --tree-font: var(--dbm-font-size-lg);
+  --tree-small-font: var(--dbm-font-size-sm);
+  --tree-icon: var(--dbm-icon-size-lg);
+  --tree-check: var(--dbm-icon-size-md);
+  --tree-gap: var(--dbm-space-3);
+  --tree-indent: var(--dbm-icon-size-lg);
+}
+
+.sizeXl {
+  --tree-row-height: var(--dbm-tree-row-height-xl);
+  --tree-font: var(--dbm-font-size-xl);
+  --tree-small-font: var(--dbm-font-size-base);
+  --tree-icon: var(--dbm-icon-size-lg);
+  --tree-check: var(--dbm-icon-size-lg);
+  --tree-gap: var(--dbm-space-3);
+  --tree-indent: var(--dbm-icon-size-lg);
+}
+
+.root {
+  display: block;
+  margin: 0;
+  min-inline-size: 0;
+  padding: 0;
+}
+
+/* The tree itself is a tab stop only while the row that holds the stop is outside the window; its ring is drawn inside
+   the scrolling box, where the scroll cannot clip it. */
+.root:focus-visible {
+  border-radius: var(--dbm-radius-sm);
+  outline: var(--dbm-border-width-2) solid var(--dbm-border-focus);
+  outline-offset: calc(-1 * var(--dbm-border-width-2));
+}
+
+.emptyRoot {
+  padding: var(--dbm-space-4);
+}
+
+.empty {
+  color: var(--dbm-text-secondary);
+}
+
+.row {
+  align-items: center;
+  block-size: var(--tree-row-height);
+  /* A reserved edge that a selected row colours. A transparent border is drawn in forced colours, so it is set to Canvas there. */
+  border-inline-start: var(--dbm-border-width-4) solid transparent;
+  box-sizing: border-box;
+  cursor: default;
+  display: flex;
+  gap: var(--tree-gap);
+  padding-inline-end: var(--dbm-space-2);
+  padding-inline-start: calc((var(--tree-level) - 1) * var(--tree-indent) + var(--dbm-space-1));
+  user-select: none;
+}
+
+.pickable {
+  cursor: pointer;
+}
+
+.row:hover:not(.disabled) {
+  background-color: var(--dbm-bg-neutral-subtle);
+}
+
+/* The ring is drawn inside the row, since the tree sits in a box that scrolls and clips whatever is drawn outside it. */
+.row:focus-visible {
+  border-radius: var(--dbm-radius-sm);
+  outline: var(--dbm-border-width-2) solid var(--dbm-border-focus);
+  outline-offset: calc(-1 * var(--dbm-border-width-2));
+}
+
+.selected,
+.selected:hover:not(.disabled) {
+  background-color: var(--dbm-bg-brand-subtle);
+  border-inline-start-color: var(--dbm-border-brand);
+  font-weight: var(--dbm-font-weight-semibold);
+}
+
+.disabled {
+  cursor: not-allowed;
+  opacity: var(--dbm-opacity-40);
+}
+
+.chevron {
+  align-items: center;
+  color: var(--dbm-icon-default);
+  display: inline-flex;
+  flex-shrink: 0;
+  inline-size: var(--tree-icon);
+  justify-content: center;
+}
+
+/* The arrow and the check box are drawn smaller than the minimum target size (24px, WCAG 2.5.8) at the smaller sizes, so each
+   is hit on a box that is at least that tall, centred on it (`min()` keeps one that is already tall enough as it was), and
+   reaches sideways halfway to its neighbour, so the two never overlap. */
+.chevron,
+.check {
+  position: relative;
+}
+
+.chevron::after,
+.check::after {
+  content: "";
+  inset-block: min(0px, calc((100% - var(--dbm-space-6)) / 2));
+  inset-inline: calc(var(--tree-gap) / -2);
+  position: absolute;
+}
+
+.arrow {
+  transition: transform var(--dbm-motion-duration-fast) var(--dbm-motion-easing-standard);
+}
+
+.arrowOpen {
+  transform: rotate(90deg);
+}
+
+.check {
+  align-items: center;
+  background-color: var(--dbm-bg-surface);
+  border: var(--dbm-border-width-1) solid var(--dbm-border-neutral);
+  border-radius: var(--dbm-radius-xs);
+  box-sizing: border-box;
+  display: inline-flex;
+  flex-shrink: 0;
+  block-size: var(--tree-check);
+  inline-size: var(--tree-check);
+  justify-content: center;
+}
+
+.check[data-state="checked"],
+.check[data-state="indeterminate"] {
+  background-color: var(--dbm-bg-brand);
+  border-color: var(--dbm-bg-brand);
+}
+
+.nodeIcon {
+  flex-shrink: 0;
+}
+
+.label {
+  flex: 0 1 auto;
+  min-inline-size: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.description {
+  color: var(--dbm-text-secondary);
+  flex: 0 1 auto;
+  font-size: var(--tree-small-font);
+  min-inline-size: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.trailing {
+  align-items: center;
+  color: var(--dbm-text-secondary);
+  display: inline-flex;
+  flex-shrink: 0;
+  margin-inline-start: auto;
+}
+
+/* The mirrored arrow points the other way, so opening turns it the other way too. */
+[dir="rtl"] .arrowOpen {
+  transform: rotate(-90deg);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .arrow {
+    transition: none;
+  }
+}
+
+@media (forced-colors: active) {
+  .row {
+    border-inline-start-color: Canvas;
+  }
+
+  .selected,
+  .selected:hover:not(.disabled) {
+    border-inline-start-color: Highlight;
+  }
+
+  .check {
+    border-color: ButtonText;
+  }
+
+  .check[data-state="checked"],
+  .check[data-state="indeterminate"] {
+    background-color: Highlight;
+    border-color: Highlight;
+  }
+
+  .root:focus-visible,
+  .row:focus-visible {
+    outline-color: Highlight;
+  }
+}
