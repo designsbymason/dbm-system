@@ -30,3 +30,12 @@ Props worth knowing: `size`, `variant` (`filled`, `outlined`), `tone` (seven, pe
 - The placeholders' look in the four themes and a real device; `announce` and the disclosure were checked by tests and markup, not by listening.
 - The full §9 review pass and the maintainer's declaration of Finalized.
 - No guideline covers a feed that receives events while open; `announce` follows the first-appearance rule (nothing on the first render or when data first arrives), which is the component's own reading of it.
+
+## Final review round
+Found by the §9 pass and fixed:
+- **Defect:** `loadingCount={Infinity}` threw a RangeError while rendering placeholders. It is now held between 0 and 20, with the default for a value that is not finite; a unit test covers each.
+- **Defect:** focus fell to the page when the last page arrived and the "load more" button went away. It now goes to the "show fewer" button when there is one, else to the list (made focusable for the moment); unit tests and a real-browser check cover both ways, and a unit test that it is left alone when focus had moved on.
+- **Defect:** a `tabIndex` the caller gave the list was silently overridden. It is kept except while a horizontal row scrolls.
+- **Fragile:** the announcement effects depended on label functions that are new on every render. They now read the latest writer without depending on it; a test proves a re-render with the same events says nothing more.
+- **Security:** an event's `href` now drops any scheme but `http`, `https`, `mailto` and `tel` (after removing the control characters a browser ignores inside a scheme), with a development warning ([ADR-0142](../adr/0142-timeline-takes-a-feed-surface-of-headings-an-end-links-detail-paging-and-two-more-layouts-over-leaving-them-to-the-caller-or-separate-components.md), amended). The `Link` atom itself checks nothing; it was left alone.
+- **Checks added:** the detail, show-more and load-more buttons at 24 by 24 pixels at the smallest sizes (busy too), horizontal right to left, forced colours for the end bar and a horizontal line, and a server render and hydration of a horizontal timeline with loading, a link, a detail and an end. Two of them were broken on purpose and failed.

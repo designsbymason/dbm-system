@@ -10,7 +10,7 @@ import type { TimelineContextValue } from "./TimelineContext";
 import { TimelineEnd } from "./TimelineEnd";
 import { TimelineGroup } from "./TimelineGroup";
 import { TimelineItem } from "./TimelineItem";
-import { buttonSizeForSize, defaultLabelsFor, normalizeMaxVisible, selectEntries, visibleCount } from "./timelineHelpers";
+import { buttonSizeForSize, defaultLabelsFor, normalizeLoadingCount, normalizeMaxVisible, selectEntries, visibleCount } from "./timelineHelpers";
 import type { TimelineEntry } from "./timelineHelpers";
 import { useTimelineAdditions } from "./useTimelineAdditions";
 import { useTimelineExpanded } from "./useTimelineExpanded";
@@ -109,6 +109,7 @@ const TimelineRoot = forwardRef<HTMLOListElement, TimelineProps>(
       formatNumber = String,
       labels: labelsProp,
       className,
+      tabIndex: tabIndexProp,
       ...props
     },
     ref,
@@ -129,7 +130,8 @@ const TimelineRoot = forwardRef<HTMLOListElement, TimelineProps>(
     const listRef = useRef<HTMLOListElement>(null);
     // A row that outgrows its width scrolls on its own, so it is a keyboard-reachable region while it does.
     const scrolls = useIsScrollable(listRef, "x");
-    const scrollerTabIndex = horizontal && scrolls ? 0 : undefined;
+    // The row's own tab stop while it scrolls; otherwise whatever the caller asked for.
+    const scrollerTabIndex = horizontal && scrolls ? 0 : tabIndexProp;
 
     const rawChildren = Children.toArray(children);
     const entries: Array<TimelineEntry<Part>> = [];
@@ -164,16 +166,32 @@ const TimelineRoot = forwardRef<HTMLOListElement, TimelineProps>(
     const showToggle = hidden > 0;
     const showLoadMore = Boolean(onLoadMore) && hasMore !== false && allShown;
 
-    // The "load more" button is disabled while loading, which in some browsers drops its focus: hold on to the fact that
-    // it was pressed and give focus back when loading ends if it was lost.
+    // The "load more" button is disabled while loading, which in some browsers drops its focus, and it goes away after the
+    // last page: hold on to the fact that it was pressed and, once loading ends, give focus back if it was lost: to the
+    // button if it is still there, else to the "show fewer" button, else to the list itself (made focusable for the
+    // moment, so a reader hears where they are).
     const loadMoreRef = useRef<HTMLButtonElement>(null);
+    const toggleRef = useRef<HTMLButtonElement>(null);
     const loadMorePressed = useRef(false);
     useEffect(() => {
       if (loading || !loadMorePressed.current) return;
-      loadMorePressed.current = false;
       const active = document.activeElement;
-      if (!active || active === document.body) loadMoreRef.current?.focus();
-    }, [loading]);
+      if (active && active !== document.body) {
+        loadMorePressed.current = false;
+        return;
+      }
+      loadMorePressed.current = false;
+      const target = loadMoreRef.current ?? toggleRef.current;
+      if (target) {
+        target.focus();
+        return;
+      }
+      const list = listRef.current;
+      if (!list) return;
+      list.setAttribute("tabindex", "-1");
+      list.addEventListener("blur", () => list.removeAttribute("tabindex"), { once: true });
+      list.focus({ preventScroll: true });
+    }, [loading, showLoadMore]);
 
     // The side of the line each event's content is on in an `alternate` timeline: events and the end alternate, headings don't count.
     let position = 0;
@@ -188,7 +206,7 @@ const TimelineRoot = forwardRef<HTMLOListElement, TimelineProps>(
 
     const showEmpty = eventCount === 0 && !loading && empty !== false;
     const context: TimelineContextValue = { size, variant, tone, connector, timePlacement, labels };
-    const placeholders = loading ? Math.max(0, Math.floor(loadingCount)) : 0;
+    const placeholders = loading ? normalizeLoadingCount(loadingCount) : 0;
     const buttonSize = buttonSizeForSize[size];
 
     return (
@@ -243,7 +261,7 @@ const TimelineRoot = forwardRef<HTMLOListElement, TimelineProps>(
             <li role="listitem" className={styles.more}>
               <div className={styles.moreActions}>
                 {showToggle && (
-                  <Button type="button" variant="tertiary" size={buttonSize} onClick={() => request(!expanded)}>
+                  <Button ref={toggleRef} type="button" variant="tertiary" size={buttonSize} onClick={() => request(!expanded)}>
                     {expanded ? labels.showLess : labels.showMore(hidden)}
                   </Button>
                 )}

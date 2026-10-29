@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { expect, userEvent, waitFor, within } from "storybook/test";
 import { TruckIcon } from "@dbm-system/icons";
+import { useState } from "react";
 import { Link } from "../../atoms/Link";
 import { send } from "../../molecules/CodeBlock/browserProtocol";
 import { Timeline } from "./Timeline";
@@ -484,14 +485,124 @@ export const PlaceholderRowsAreClose: Story = {
   },
 };
 
-export const ForcedColours: Story = {
-  name: "Forced colours keep the line, the dot and the icon marker in system colours",
+export const ButtonTargetsAtTheSmallestSize: Story = {
+  name: "The detail, show-more and load-more buttons are at least 24 by 24 pixels at the smallest sizes",
   render: () => (
-    <Timeline aria-label="forced">
-      <Timeline.Item title="Dot" time="1" />
-      <Timeline.Item title="Icon" time="2" icon={TruckIcon} />
-      <Timeline.Item title="Pending" time="3" pending />
-    </Timeline>
+    <div style={{ display: "grid", gap: "var(--dbm-space-6)" }}>
+      {(["xs", "sm"] as const).map((size) => (
+        <Timeline key={size} aria-label={`size ${size}`} size={size} maxVisible={1} onLoadMore={() => {}}>
+          <Timeline.Item title="A" detail="More" />
+          <Timeline.Item title="B" />
+        </Timeline>
+      ))}
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    const buttons = within(canvasElement).getAllByRole("button");
+    // A detail toggle and a show-more button per timeline (load-more waits for the rest to show).
+    await expect(buttons.length).toBe(4);
+    for (const button of buttons) {
+      await expect(box(button).width).toBeGreaterThanOrEqual(24);
+      await expect(box(button).height).toBeGreaterThanOrEqual(24);
+    }
+  },
+};
+
+export const LoadMoreButtonTarget: Story = {
+  name: "The load-more button is at least 24 by 24 pixels at the smallest sizes, busy or not",
+  render: () => (
+    <div style={{ display: "grid", gap: "var(--dbm-space-6)" }}>
+      <Timeline aria-label="idle" size="xs" onLoadMore={() => {}}>
+        <Timeline.Item title="A" />
+      </Timeline>
+      <Timeline aria-label="busy" size="xs" onLoadMore={() => {}} loading>
+        <Timeline.Item title="A" />
+      </Timeline>
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    const buttons = within(canvasElement).getAllByRole("button");
+    await expect(buttons.length).toBe(2);
+    for (const button of buttons) {
+      await expect(box(button).width).toBeGreaterThanOrEqual(24);
+      await expect(box(button).height).toBeGreaterThanOrEqual(24);
+    }
+  },
+};
+
+export const HorizontalRightToLeft: Story = {
+  name: "Horizontal right to left runs the events from the right, with the line running between them",
+  render: () => <Demo orientation="horizontal" dir="rtl" count={3} descriptions aria-label="horizontal rtl" />,
+  play: async ({ canvasElement }) => {
+    const items = within(canvasElement).getAllByRole("listitem");
+    const markers = items.map((item) => box(part(item, "marker")));
+    // The first event is at the right, each next one to its left, all on one row.
+    await expect(markers[0]!.left).toBeGreaterThan(markers[1]!.left);
+    await expect(markers[1]!.left).toBeGreaterThan(markers[2]!.left);
+    await expect(Math.abs(centreY(markers[1]!) - centreY(markers[0]!))).toBeLessThanOrEqual(1);
+    // The line leaves the marker towards the next event (to its left) and the text is under the marker.
+    const line = box(part(items[0]!, "connector"));
+    await expect(line.right).toBeLessThanOrEqual(markers[0]!.left);
+    await expect(markers[1]!.right).toBeLessThanOrEqual(line.left + 8);
+    await expect(box(part(items[0]!, "title")).top).toBeGreaterThanOrEqual(markers[0]!.bottom);
+  },
+};
+
+export const FocusAfterTheLastPage: Story = {
+  name: "Pressing load more keeps focus in the timeline when the last page arrives and the button goes away",
+  render: function Render() {
+    const [count, setCount] = useState(2);
+    const [loading, setLoading] = useState(false);
+    return (
+      <div>
+        <Timeline
+          aria-label="paged"
+          loading={loading}
+          hasMore={count < 4}
+          onLoadMore={() => {
+            setLoading(true);
+            setTimeout(() => {
+              setCount(4);
+              setLoading(false);
+            }, 300);
+          }}
+        >
+          {Array.from({ length: count }, (_, index) => (
+            <Timeline.Item key={index} title={`Event ${index + 1}`} />
+          ))}
+        </Timeline>
+      </div>
+    );
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await userEvent.tab();
+    await expect(canvas.getByRole("button", { name: "Load more" })).toHaveFocus();
+    await userEvent.keyboard("{Enter}");
+    await waitFor(() => expect(canvas.getAllByRole("listitem")).toHaveLength(4));
+    await waitFor(() => expect(canvas.queryByRole("button", { name: /Load/ })).toBeNull());
+    // Focus did not fall to the page: it is on the list, which announces itself by its name.
+    await expect(document.activeElement).toBe(canvas.getByRole("list", { name: "paged" }));
+    (document.activeElement as HTMLElement | null)?.blur();
+    await expect(canvas.getByRole("list", { name: "paged" })).not.toHaveAttribute("tabindex");
+  },
+};
+
+export const ForcedColours: Story = {
+  name: "Forced colours keep the line, the dot, the icon marker, the end bar and a horizontal line in system colours",
+  render: () => (
+    <div style={{ display: "grid", gap: "var(--dbm-space-6)" }}>
+      <Timeline aria-label="forced">
+        <Timeline.Item title="Dot" time="1" />
+        <Timeline.Item title="Icon" time="2" icon={TruckIcon} />
+        <Timeline.Item title="Pending" time="3" pending />
+        <Timeline.End>Closed</Timeline.End>
+      </Timeline>
+      <Timeline aria-label="forced horizontal" orientation="horizontal" colorfulConnector>
+        <Timeline.Item title="One" tone="danger" />
+        <Timeline.Item title="Two" />
+      </Timeline>
+    </div>
   ),
   play: async ({ canvasElement }) => {
     const emulate = (value: "active" | "none") => send("Emulation.setEmulatedMedia", { features: [{ name: "forced-colors", value }] });
@@ -499,12 +610,21 @@ export const ForcedColours: Story = {
     try {
       await settle(400);
       await expect(window.matchMedia("(forced-colors: active)").matches).toBe(true);
-      const items = within(canvasElement).getAllByRole("listitem");
+      const lists = canvasElement.querySelectorAll("ol");
+      const items = within(lists[0] as HTMLElement).getAllByRole("listitem");
       await expect(getComputedStyle(part(items[0]!, "connector")).borderInlineStartColor).toBe(colour("GrayText"));
       await expect(parseFloat(getComputedStyle(part(items[0]!, "connector")).borderInlineStartWidth)).toBeGreaterThan(0);
       await expect(getComputedStyle(part(items[0]!, "marker")).backgroundColor).toBe(colour("CanvasText"));
       await expect(getComputedStyle(part(items[1]!, "marker")).borderTopColor).toBe(colour("CanvasText"));
       await expect(getComputedStyle(part(items[2]!, "marker")).borderTopColor).toBe(colour("Highlight"));
+      // The end's bar is a solid system-coloured box, not a background that forced colours erases.
+      await expect(getComputedStyle(part(items[3]!, "marker")).backgroundColor).toBe(colour("CanvasText"));
+      await expect(box(part(items[3]!, "marker")).width).toBeGreaterThan(0);
+      // The horizontal line is a top border in a system colour, and the tone's colour is not used.
+      const horizontal = within(lists[1] as HTMLElement).getAllByRole("listitem");
+      const line = getComputedStyle(part(horizontal[0]!, "connector"));
+      await expect(line.borderTopColor).toBe(colour("GrayText"));
+      await expect(parseFloat(line.borderTopWidth)).toBeGreaterThan(0);
     } finally {
       await emulate("none");
     }

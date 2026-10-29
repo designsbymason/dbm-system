@@ -165,7 +165,8 @@ export interface TimelineProps extends Omit<ComponentPropsWithoutRef<"ol">, "chi
    */
   loading?: boolean;
   /**
-   * How many placeholder events `loading` draws.
+   * How many placeholder events `loading` draws, from 0 to 20 (more is drawn as 20, and a value that is not a finite
+   * number as the default).
    * @default 3
    */
   loadingCount?: number;
@@ -247,7 +248,9 @@ export interface TimelineItemProps extends Omit<ComponentPropsWithoutRef<"li">, 
   connector?: TimelineConnector;
   /**
    * Makes the event a link: its title becomes an anchor to this address, stretched over the whole event so any press on it
-   * follows the link (links and buttons inside the body still work). Use `onPress` instead for a button.
+   * follows the link (links and buttons inside the body still work). Only `http`, `https`, `mailto` and `tel` addresses, and
+   * ones with no scheme (a path, `#`, `?`), are drawn as links: any other scheme (`javascript:`, `data:`) is dropped, with a
+   * warning in development, since an address often comes from data. Use `onPress` instead for a button.
    */
   href?: string;
   /**

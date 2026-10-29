@@ -759,3 +759,168 @@ describe("Timeline — orientation, alternate and the position of each event", (
     expect(container.querySelector("ol")).not.toHaveAttribute("tabindex");
   });
 });
+
+describe("Timeline — the review's fixes", () => {
+  it("clamps loadingCount: a finite count to 0–20, and Infinity or NaN to the default", () => {
+    const { container, rerender } = render(<Basic loading loadingCount={Number.POSITIVE_INFINITY} />);
+    expect(container.querySelectorAll("li[aria-hidden='true']")).toHaveLength(3);
+    rerender(<Basic loading loadingCount={Number.NaN} />);
+    expect(container.querySelectorAll("li[aria-hidden='true']")).toHaveLength(3);
+    rerender(<Basic loading loadingCount={1000} />);
+    expect(container.querySelectorAll("li[aria-hidden='true']")).toHaveLength(20);
+    rerender(<Basic loading loadingCount={-4} />);
+    expect(container.querySelectorAll("li[aria-hidden='true']")).toHaveLength(0);
+    rerender(<Basic loading loadingCount={2.9} />);
+    expect(container.querySelectorAll("li[aria-hidden='true']")).toHaveLength(2);
+  });
+
+  it("hands focus to the list when the last page loads and the button goes away", async () => {
+    const user = userEvent.setup();
+    const { rerender } = render(
+      <Timeline aria-label="x" onLoadMore={() => {}}>
+        <Timeline.Item title="A" />
+      </Timeline>,
+    );
+    await user.click(screen.getByRole("button", { name: "Load more" }));
+    rerender(
+      <Timeline aria-label="x" onLoadMore={() => {}} loading>
+        <Timeline.Item title="A" />
+      </Timeline>,
+    );
+    (document.activeElement as HTMLElement | null)?.blur();
+    rerender(
+      <Timeline aria-label="x" onLoadMore={() => {}} hasMore={false}>
+        <Timeline.Item title="A" />
+        <Timeline.Item title="B" />
+      </Timeline>,
+    );
+    expect(screen.getByRole("list", { name: "x" })).toHaveFocus();
+    expect(screen.getByRole("list", { name: "x" })).toHaveAttribute("tabindex", "-1");
+  });
+
+  it("hands focus to the show-fewer button when there is one", async () => {
+    const user = userEvent.setup();
+    const items = (n: number) => Array.from({ length: n }, (_, i) => <Timeline.Item key={i} title={`E${i}`} />);
+    const { rerender } = render(
+      <Timeline aria-label="x" maxVisible={1} defaultExpanded onLoadMore={() => {}}>
+        {items(3)}
+      </Timeline>,
+    );
+    await user.click(screen.getByRole("button", { name: "Load more" }));
+    rerender(
+      <Timeline aria-label="x" maxVisible={1} defaultExpanded onLoadMore={() => {}} loading>
+        {items(3)}
+      </Timeline>,
+    );
+    (document.activeElement as HTMLElement | null)?.blur();
+    rerender(
+      <Timeline aria-label="x" maxVisible={1} defaultExpanded onLoadMore={() => {}} hasMore={false}>
+        {items(5)}
+      </Timeline>,
+    );
+    expect(screen.getByRole("button", { name: "Show fewer events" })).toHaveFocus();
+  });
+
+  it("leaves focus alone when it moved on to something else before loading ended", async () => {
+    const user = userEvent.setup();
+    const { rerender } = render(
+      <>
+        <button type="button">elsewhere</button>
+        <Timeline aria-label="x" onLoadMore={() => {}}>
+          <Timeline.Item title="A" />
+        </Timeline>
+      </>,
+    );
+    await user.click(screen.getByRole("button", { name: "Load more" }));
+    rerender(
+      <>
+        <button type="button">elsewhere</button>
+        <Timeline aria-label="x" onLoadMore={() => {}} loading>
+          <Timeline.Item title="A" />
+        </Timeline>
+      </>,
+    );
+    screen.getByRole("button", { name: "elsewhere" }).focus();
+    rerender(
+      <>
+        <button type="button">elsewhere</button>
+        <Timeline aria-label="x" onLoadMore={() => {}} hasMore={false}>
+          <Timeline.Item title="A" />
+        </Timeline>
+      </>,
+    );
+    expect(screen.getByRole("button", { name: "elsewhere" })).toHaveFocus();
+  });
+
+  it("keeps a tabIndex the caller gives the list, and takes it over only while a horizontal row scrolls", () => {
+    const { container } = render(
+      <Basic tabIndex={-1}>
+        <Timeline.Item title="A" />
+      </Basic>,
+    );
+    expect(container.querySelector("ol")).toHaveAttribute("tabindex", "-1");
+  });
+
+  it("does not announce again when it re-renders with the same events", async () => {
+    vi.useFakeTimers();
+    const events = (n: number) => Array.from({ length: n }, (_, i) => <Timeline.Item key={i} title={`E${i}`} />);
+    const { rerender } = render(<Basic announce>{events(2)}</Basic>);
+    rerender(<Basic announce>{events(3)}</Basic>);
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(300);
+    });
+    expect(screen.getByRole("status")).toHaveTextContent("1 new event");
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(1500);
+    });
+    rerender(<Basic announce>{events(3)}</Basic>);
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(300);
+    });
+    expect(screen.getByRole("status")).toHaveTextContent("");
+  });
+
+  it.each([
+    ["javascript:alert(1)"],
+    ["JaVaScRiPt:alert(1)"],
+    ["java\tscript:alert(1)"],
+    ["  javascript:alert(1)"],
+    ["data:text/html,<b>x</b>"],
+    ["vbscript:msgbox(1)"],
+  ])("does not draw %j as a link, and falls back to the button when there is one", (href) => {
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+    render(
+      <Basic>
+        <Timeline.Item title="A" href={href} onPress={() => {}} />
+      </Basic>,
+    );
+    expect(screen.queryByRole("link")).toBeNull();
+    expect(screen.getByRole("button", { name: "A" })).toBeInTheDocument();
+    expect(warn).toHaveBeenCalledWith(expect.stringContaining("is not drawn as a link"));
+  });
+
+  it.each([["/orders/1"], ["#top"], ["?page=2"], ["//example.com/a"], ["https://example.com/a"], ["http://example.com"], ["mailto:a@example.com"], ["tel:+15551234"], ["orders/1"]])(
+    "draws %j as a link",
+    (href) => {
+      render(
+        <Basic>
+          <Timeline.Item title="A" href={href} />
+        </Basic>,
+      );
+      // An external address adds the link atom's own "opens in a new tab" words to the name.
+      expect(screen.getByRole("link", { name: /^A/ })).toHaveAttribute("href", href);
+    },
+  );
+
+  it("draws an unsafe href as plain text when there is no button either", () => {
+    vi.spyOn(console, "warn").mockImplementation(() => {});
+    render(
+      <Basic>
+        <Timeline.Item title="A" href="javascript:alert(1)" />
+      </Basic>,
+    );
+    expect(screen.queryByRole("link")).toBeNull();
+    expect(screen.queryByRole("button")).toBeNull();
+    expect(screen.getByText("A")).toBeInTheDocument();
+  });
+});

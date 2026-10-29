@@ -130,8 +130,9 @@ reads `"top"` and `"side"`, and a horizontal one `"same"` (on the same side of t
 and `"opposite"` (on the other side of the dot, with `align="alternate"` alternating along with the content); a value for
 the other orientation is read as the default. A horizontal timeline scrolls sideways when its events are narrower than
 the `timeline.item-min-width` token allows; while it scrolls the row is
-a tab stop, so a keyboard can scroll it. `loading` with no events stands placeholders in for the list; with events it adds
-them after the last one and busies the "load more" button. `announce` says "N new events" when events are added to a
+a tab stop, so a keyboard can scroll it (a `tabIndex` you pass is kept the rest of the time). `loading` with no events
+stands placeholders in for the list; with events it adds them after the last one and busies the "load more" button;
+`loadingCount` is held between 0 and 20. `announce` says "N new events" when events are added to a
 timeline that is showing, never on its first render, and never for events a "show more" reveals.
 
 ### Timeline.Item properties
@@ -143,7 +144,7 @@ attribute beyond what's listed here (e.g. `onClick`) — passed straight through
 
 With `href` the title is a link and with `onPress` a button, stretched over the whole event so a press anywhere on it
 counts; a link or button you put in `children` or `detail` sits above it and still takes its own press. `href` wins when
-both are set, and either needs a `title`. A keyboard ring is drawn once, around the whole event.
+both are set, and either needs a `title`. A keyboard ring is drawn once, around the whole event. Only `http`, `https`, `mailto` and `tel` addresses, and ones with no scheme (a path, `#`, `?`), are drawn as links: any other scheme (`javascript:`, `data:`) is dropped, with a warning in development, since an address often comes from data (the title is then the `onPress` button if there is one, and plain text if not). The `Link` atom on its own does not check an address.
 
 ### Timeline.Group properties
 
@@ -322,7 +323,7 @@ changes from "Show 3 more events" to "Show fewer events", and a polite live regi
 never the first render). If you collapse a timeline from your own code while focus is in an event that disappears, move the focus
 yourself.
 
-A `Timeline.Group` announces itself as a heading at the level you give it (3 by default), so it fits the page's outline; it is a list entry, so a screen reader counts it among the items. `Timeline.End` is a list entry too. The placeholders `loading` draws are hidden from assistive technology and the list is `aria-busy` while they show. An event's `detail` button is a disclosure (`aria-expanded`, `aria-controls`) with a fixed name, "Details" (`labels.details`), and the closed content is not drawn or read. With `href` or `onPress` the event's title is a real link or button, stretched over the event with a pseudo-element, so there is still one focus stop per event and the accessible name is the title (and its status text); one keyboard ring goes round the whole event. `announce` says "N new events" in a polite live region, only when events are added to a timeline that is already showing. A "load more" button that is pressed and becomes disabled while it loads hands its focus back to itself when loading ends, if the browser dropped it.
+A `Timeline.Group` announces itself as a heading at the level you give it (3 by default), so it fits the page's outline; it is a list entry, so a screen reader counts it among the items. `Timeline.End` is a list entry too. The placeholders `loading` draws are hidden from assistive technology and the list is `aria-busy` while they show. An event's `detail` button is a disclosure (`aria-expanded`, `aria-controls`) with a fixed name, "Details" (`labels.details`), and the closed content is not drawn or read. With `href` or `onPress` the event's title is a real link or button, stretched over the event with a pseudo-element, so there is still one focus stop per event and the accessible name is the title (and its status text); one keyboard ring goes round the whole event. `announce` says "N new events" in a polite live region, only when events are added to a timeline that is already showing. A "load more" button that is pressed and becomes disabled while it loads gets its focus back when loading ends, if the browser dropped it; if the button is gone by then (the last page arrived), focus goes to the "show fewer" button when there is one, and otherwise to the list itself (made focusable for the moment, so a screen reader says where it is), never to the top of the page.
 
 A horizontal timeline that scrolls is a tab stop while it scrolls, with its ring drawn inside its box, so a keyboard can scroll it with the arrow keys. `align="alternate"` changes only where the content is drawn: the markup and so the focus and reading order are the same as without it.
 

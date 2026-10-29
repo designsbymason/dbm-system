@@ -39,12 +39,18 @@ export function useTimelineExpanded({ expanded: expandedProp, defaultExpanded, o
     onExpandedChange?.(next);
   };
 
+  // The latest text writer, read by the effect below without being one of its dependencies: a default label is a new
+  // function on every render, and the announcement should depend on what changed, not on that.
+  const latestWrite = useRef(write);
+  useEffect(() => {
+    latestWrite.current = write;
+  });
   const previous = useRef(expanded);
   useEffect(() => {
     const before = previous.current;
     previous.current = expanded;
-    if (!before && expanded && hidden > 0) say(write(hidden));
-  }, [expanded, hidden, say, write]);
+    if (!before && expanded && hidden > 0) say(latestWrite.current(hidden));
+  }, [expanded, hidden, say]);
 
   return { expanded, request };
 }

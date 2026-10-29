@@ -13,6 +13,15 @@ const tree = (
   </Timeline>
 );
 
+const richTree = (
+  <Timeline aria-label="History" orientation={{ base: "horizontal", md: "vertical" }} align="alternate" timePlacement="opposite" loading onLoadMore={() => {}} announce>
+    <Timeline.Group>Today</Timeline.Group>
+    <Timeline.Item title="One" href="/one" detail="More" time="Now" />
+    <Timeline.Item title="Two" onPress={() => {}} />
+    <Timeline.End>Closed</Timeline.End>
+  </Timeline>
+);
+
 afterEach(() => {
   vi.unstubAllGlobals();
   document.body.innerHTML = "";
@@ -38,5 +47,24 @@ describe("Timeline — server render and hydration", () => {
     });
     expect(errors).toEqual([]);
     expect(host.querySelector("ol")).not.toBeNull();
+  });
+
+  it("renders a horizontal timeline with loading, links, detail and an end to a string with no window or document", () => {
+    vi.stubGlobal("window", undefined);
+    vi.stubGlobal("document", undefined);
+    const html = renderToString(richTree);
+    expect(html).toContain('data-orientation="horizontal"');
+    expect(html).toContain("Closed");
+  });
+
+  it("hydrates that timeline with no recoverable error", async () => {
+    const host = document.createElement("div");
+    host.innerHTML = renderToString(richTree);
+    document.body.appendChild(host);
+    const errors: unknown[] = [];
+    await act(async () => {
+      hydrateRoot(host, richTree, { onRecoverableError: (error) => errors.push(error) });
+    });
+    expect(errors).toEqual([]);
   });
 });

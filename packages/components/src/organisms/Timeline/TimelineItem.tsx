@@ -7,7 +7,7 @@ import { Link } from "../../atoms/Link";
 import { Spinner } from "../../atoms/Spinner";
 import type { SpinnerSize } from "../../atoms/Spinner";
 import { VisuallyHidden } from "../../atoms/VisuallyHidden";
-import { buttonSizeForSize, iconSizeForSize } from "./timelineHelpers";
+import { buttonSizeForSize, iconSizeForSize, isSafeHref } from "./timelineHelpers";
 import { toneClass } from "./timelineClasses";
 import { TimelinePositionContext, useTimelineContext } from "./TimelineContext";
 import styles from "./Timeline.module.css";
@@ -79,6 +79,14 @@ export const TimelineItem = forwardRef<HTMLLIElement, TimelineItemProps>(
         console.warn("Timeline.Item: it has no `title`, `description` or `children`, so it says nothing.");
       }
     }, [empty]);
+    // An address with a scheme other than http, https, mailto or tel (`javascript:`) is not drawn as a link.
+    const safeHref = href !== undefined && isSafeHref(href) ? href : undefined;
+    const unsafeHref = href !== undefined && safeHref === undefined;
+    useEffect(() => {
+      if (process.env.NODE_ENV !== "production" && unsafeHref) {
+        console.warn(`Timeline.Item: \`href\` "${href}" uses a scheme other than http, https, mailto or tel, so it is not drawn as a link.`);
+      }
+    }, [unsafeHref, href]);
     useEffect(() => {
       if (process.env.NODE_ENV !== "production" && (href !== undefined || onPress) && !hasTitle) {
         console.warn("Timeline.Item: `href` and `onPress` make the title the link or button, so they need a `title`.");
@@ -116,11 +124,11 @@ export const TimelineItem = forwardRef<HTMLLIElement, TimelineItemProps>(
 
     const status = statusText ?? (pending ? labels.pending : undefined);
     const statusWords = status && <VisuallyHidden>{hasTitle ? `, ${status}` : status}</VisuallyHidden>;
-    const linked = hasTitle && (href !== undefined || Boolean(onPress));
+    const linked = hasTitle && (safeHref !== undefined || Boolean(onPress));
 
     // With `href` or `onPress` the title is the control, stretched over the event by the stylesheet.
-    const titleContent = href !== undefined && hasTitle ? (
-      <Link href={href} underline="hover" className={styles.titleLink}>
+    const titleContent = safeHref !== undefined && hasTitle ? (
+      <Link href={safeHref} underline="hover" className={styles.titleLink}>
         {title}
         {statusWords}
       </Link>

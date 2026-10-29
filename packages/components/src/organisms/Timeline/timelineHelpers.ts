@@ -27,6 +27,31 @@ export const normalizeMaxVisible = (maxVisible: number | undefined): number | un
   return Math.max(0, Math.floor(maxVisible));
 };
 
+/** The most placeholder events `loading` draws, and how many it draws when the count is not a finite number. */
+export const MAX_LOADING_COUNT = 20;
+export const DEFAULT_LOADING_COUNT = 3;
+
+/** The number of placeholder events to draw: a whole number from 0 to {@link MAX_LOADING_COUNT}, or the default for a value that is not finite. */
+export const normalizeLoadingCount = (count: number): number => {
+  if (!Number.isFinite(count)) return DEFAULT_LOADING_COUNT;
+  return Math.min(MAX_LOADING_COUNT, Math.max(0, Math.floor(count)));
+};
+
+/** The schemes an event's `href` may use; an address with no scheme (a path, `#`, `?`) is always fine. */
+const SAFE_SCHEMES = new Set(["http", "https", "mailto", "tel"]);
+
+/**
+ * Whether an address is safe to put in a link. Browsers ignore tabs, newlines and other control characters inside a
+ * scheme (`java\tscript:`), so they are removed before the scheme is read; only `http`, `https`, `mailto` and `tel`, or no
+ * scheme at all, pass (`javascript:`, `data:` and `vbscript:` do not).
+ */
+export const isSafeHref = (href: string): boolean => {
+  // eslint-disable-next-line no-control-regex -- deliberate: control characters are what an attacker hides a scheme with.
+  const cleaned = href.replace(/[\u0000-\u0020\u007f-\u009f]/g, "");
+  const scheme = /^([a-z][a-z0-9+.-]*):/i.exec(cleaned);
+  return !scheme || SAFE_SCHEMES.has(scheme[1]!.toLowerCase());
+};
+
 /** How many events to draw: all of them, or the first `cap` unless the rest are shown. */
 export const visibleCount = (total: number, cap: number | undefined, expanded: boolean): number => {
   if (cap === undefined || expanded) return total;
