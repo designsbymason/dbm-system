@@ -402,7 +402,7 @@ Left out deliberately; each can be added without breaking the current API:
 - **Auto-selecting the first tab** when nothing is selected, instead of the current no-selection-plus-warning (see Decisions). Recommended against
   when asked (2026-09-22) — it would be the first component in this system to guess an initial selection rather than require one, and needs every
   trigger to register with the root and a re-render before paint, with a server render that would then differ from the first client render.
-- **Closable, reorderable or addable tabs** (dynamic tabs, as in an editor). A separate, larger interaction model — scoped out as its own organism, `EditorTabs`; see the section below rather than this one-line note.
+- **Closable, reorderable or addable tabs** (dynamic tabs, as in an editor). A separate, larger interaction model — built as its own organism, `EditorTabs`; see the section below rather than this one-line note.
 - **An overflow menu ("More")** listing every tab that doesn't fit, for a strip long enough that scrolling through it a page at a time is itself
   tedious. Scroll buttons and edge fades are built (2026-09-22, see the follow-up above); a menu needs a real menu component, and `Menu` isn't built
   yet (organism tier) — reach for it once `Menu` exists, rather than hand-rolling a second one here.
@@ -607,3 +607,16 @@ fade/button and keyboard-held-button stories, passes unchanged, and the hook has
 ## Post-Finalization follow-up (2026-10-10, at explicit direction) — a flaky browser check made robust
 
 `Overflow — a scroll button holds focus instead of vanishing under it` failed twice in CI (a slow runner left the button enabled when the loop ended). The check clicked "scroll to start" up to 10 times, 50ms apart, over a smooth scroll, then asserted once. It now lets the list come to rest between clicks (`scrollSettled`) and waits for `aria-disabled` rather than asserting once. Test file only: no component code, props or tokens changed, so Finalized status is unchanged.
+
+## Follow-up (2026-10-29, at explicit direction) — `Tabs.Item`, for `EditorTabs`
+
+`EditorTabs` needs a close control beside a tab, and a `Tabs.Trigger` is a `<button role="tab">`, so the control cannot go inside it. The maintainer chose to add a part to `Tabs` and build `EditorTabs` from it, over composing Radix Tabs again inside the organism ([ADR-0145](../adr/0145-editortabs-is-a-data-driven-strip-built-on-tabs-with-a-tabs-item-part-that-asks-the-owner-for-closes-adds-and-moves-over-a-compound-strip-a-list-it-owns-or-a-touch-drag.md)).
+
+**What was added:** `Tabs.Item`, a wrapper for one `Tabs.Trigger` and an optional `action`, drawn at the tab's end as a sibling of the tab button. The trigger keeps its looks, focus ring and place in the roving order; the item only makes a positioning box, reserves end padding on the trigger (`space.6` and `space.2`) and draws the action over it. A hovered action also gives the trigger its hover look. Used on its own, `Tabs` is unchanged.
+
+**Classified** (`06-engineering-standards.md` §9, the three questions): purely additive, nothing that existed renders or behaves differently, so `Tabs` stays Finalized. The new part's scoped mini-pass: JSDoc on the part and every prop, a docs-only stories file and a Properties section, 8 unit tests (the action beside the tab button and not inside it, end room only for a trigger whose item has an action, one tab stop and arrow keys across items and bare triggers, a press on the action does not select the tab, `className`/`style`/`id`/`data-testid`/`ref`, the resolved orientation, no wrapper without an action, axe), and the hover-state and focus-ring behaviour looked at in a running Storybook through `EditorTabs`, in the four variants and in dark emerald.
+
+**A finding that shapes the part:** a button inside a `tablist` fails `aria-required-children` (a tab list may own only tabs). So the action is `aria-hidden` and the caller keeps it out of the tab order; it is a pointer shortcut, and the operation needs a key or a menu too. Documented on the part's props and Docs section.
+
+**Not verified:** the part used with the `fullWidth` and vertical lists beyond a unit test of the resolved orientation; a screen reader.
+

@@ -1,0 +1,33 @@
+# EditorTabs — review
+
+**Status:** Built, with its Docs page, stories, tests and real-browser checks. The §9 review pass has not been declared done and the component is not Finalized.
+
+## What exists
+`EditorTabs`: a strip of tabs given as data (`tabs`, an array of `{ id, label, icon, title, dirty, pinned, closable, disabled }`) for tabs a person opens, closes and arranges, built on `Tabs` ([ADR-0145](../adr/0145-editortabs-is-a-data-driven-strip-built-on-tabs-with-a-tabs-item-part-that-asks-the-owner-for-closes-adds-and-moves-over-a-compound-strip-a-list-it-owns-or-a-touch-drag.md)). It owns no list: `onClose`, `onAdd` and `onReorder` ask, and the strip shows the array it is given next.
+
+Props worth knowing: `value`/`defaultValue`/`onValueChange` (a tab id or `null`), `closeSelects` (`neighbor` or `none`), `tabContextMenu` (a render prop of `ContextMenu` items told the tab, its place and `close()`, `move(to)`, `select()`), `overflow` (`scroll` or `menu`), `variant`/`size`/`rounded`, `dir`, `labels`/`formatNumber`, `controllerRef` (`select`, `close`, `add`, `move`, `focus`), and `EditorTabs.Panel` (`Tabs.Content` with `forceMount`). Also built: `Tabs.Item` (see [Tabs.md](Tabs.md)), `useSortable`'s `autoScroll` option, and the `editor-tabs` component tokens.
+
+## Verified while building
+- JSDoc on the component, every prop and every type, with a usage example.
+- 51 unit tests for the component: structure and names (the dirty and pinned words in a tab's name), selection controlled and not, one tab stop with arrow keys, panels and `forceMount`, closing (the button, Delete, a middle click; a close the owner has not applied selects nothing; the neighbour once it has; focus handed on only when it was lost; a pinned, disabled or unclosable tab has no button; the button out of the tab order and the accessibility tree; the announcement), adding, keyboard reordering (Alt with an arrow, Space to pick up, Escape, right to left, positions in the whole list with pinned tabs first, pinned tabs unmovable, the announcements and `formatNumber`), a touch press is not a drag, the overflow menu, a tab's context menu, the controller (including a pinned tab's move held inside its group and a "no" for nothing to do), `labels` with an undefined entry, the development warnings, `StrictMode`, and jest-axe in four variants and with pinned, dirty, icon, disabled, panel and right-to-left tabs. Plus 2 for a server render and hydration (`window` and `document` removed; `hydrateRoot` with no recoverable error), 3 for the snippets, 1 file for the Docs page's token table against the stylesheet, 8 for `Tabs.Item`, and 4 for `useSortable`'s `autoScroll`.
+- 7 real-browser checks, run with the story runner (which also runs axe on every story): a real mouse drag moves a tab and shows the drop marker, then removes it; the close button is at least 24 × 24px at every size, inside the tab and clear of the name; a long name is cut with an ellipsis at the widest token, and a short one keeps the narrowest; arrowing through 14 tabs in a narrow strip brings each fully into view; dragging to the strip's edge scrolls it; Delete leaves focus on the neighbour, selected; a real click on the close button closes without taking focus from where it was.
+- The Docs page rendered in a running Storybook: every template section, both Properties tables (every row with a description, the defaults filled), 10 Show-code buttons. The four variants were looked at in light purple and dark emerald, and the dirty dot turning into the close cross on hover.
+- `pnpm lint` (ESLint and both typechecks), `pnpm build`, the component bundle budget (12.21KB JS and 4.68KB CSS gzipped, so a 16KB JS override with its reason), `pnpm check-guidelines` and the whole unit suite pass; the real-browser tests for `EditorTabs`, `Tabs`, `MultiSelect` and `TagsInput` pass (the full real-browser suite was not run).
+
+## Decisions made while building
+- **The close button is `aria-hidden`.** A button inside a `tablist` fails `aria-required-children`. It is a pointer shortcut; the Delete key, a middle click and `tabContextMenu` are the other ways, and a tab that can be closed says `aria-keyshortcuts="Delete"`.
+- **Touch does not drag.** A touch press on a scrolling strip is a scroll, and `useSortable` cannot tell the two apart. `tapToMove` would make every tap pick a tab up. A touch screen moves a tab through `tabContextMenu`, which a long press opens. Changed from the plan, which had tap-to-move with a long press.
+- **Pinned tabs sit outside the sortable.** The hook is given the unpinned tabs only (indexes offset by the pinned count), so a move can never put a tab among the pinned ones, and the keyboard's "where is it now" never drifts from where it is. The cost: pinned tabs cannot be reordered by drag or keyboard.
+- **A neighbour is chosen when the tab has gone**, in the commit that removes it from `tabs`, not when the close is asked. A close the owner refuses (a dialog about unsaved changes) selects nothing and moves no focus.
+- **A tab names a panel only if one is drawn** (`aria-controls`), since the strip works without panels and an invalid reference is an axe failure.
+- **`onMove` keeps keyboard focus**: reordering moves DOM nodes, which can drop focus, so the moved tab is refocused after the commit.
+- **The close button keeps focus where it is** (`mousedown` is cancelled): the button is out of the tab order and hidden, so focus landing on it would strand a keyboard user.
+- **The per-tab menu is a copy of `DataTable`'s row menu wrapper**, small and second of its kind; extract at the third (`05` §1).
+- **Priority stays ⚪** in the inventory (the maintainer asked for the recommendations, and the count in `04` is unchanged).
+
+## Not verified
+- A screen reader, a real touch device and a long press on a phone: the roles, states, announcements and the menu are checked by markup, axe and real-browser tests, not by listening or by touch.
+- Forced colours (the dirty dot, the drop marker and the close cross take system colours in the stylesheet), a real wheel or trackpad scroll, and the vertical orientation (the strip is horizontal only, and `Tabs`' vertical list is not exposed).
+- Every story in every theme (the four variants were looked at in light purple and dark emerald), and the Docs page below the Properties tables beyond its structure.
+- The bundle budget: see the closing report.
+- A tab dragged between pinned and unpinned groups, with a controller `move`, was checked by unit test only.
