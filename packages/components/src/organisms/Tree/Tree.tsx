@@ -620,7 +620,7 @@ function TreeRowView({
           {checked === true ? <Icon icon={CheckIcon} size="xs" tone="on-brand" /> : checked === "indeterminate" ? <Icon icon={MinusIcon} size="xs" tone="on-brand" /> : null}
         </span>
       ) : null}
-      {node.icon ? <Icon icon={node.icon} size={iconSize} tone="secondary" className={styles.nodeIcon} /> : null}
+      {node.icon ? <Icon icon={node.icon} size={iconSize} tone="default" className={styles.nodeIcon} /> : null}
       <span className={styles.label}>
         {renderLabel ? renderLabel(node, state) : query ? <Highlight query={query}>{node.label}</Highlight> : node.label}
       </span>
