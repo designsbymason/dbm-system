@@ -225,7 +225,9 @@ export interface TimelineItemProps extends Omit<ComponentPropsWithoutRef<"li">, 
   icon?: PhosphorIcon;
   /**
    * Anything to draw in the marker in place of the dot and the icon (an `Avatar`). It is hidden from assistive technology,
-   * so the title must say what it shows.
+   * so the title must say what it shows. It keeps its own shape and is centred in a box the size of the marker
+   * (`timeline.marker-size`), never clipped: a node larger than that (the smallest `Avatar` is 36px, against a 32px marker
+   * at `md`) overflows the box evenly, so size it to fit, or choose a larger timeline `size`.
    */
   marker?: ReactNode;
   /** The marker's colour, in place of the timeline's `tone`. */

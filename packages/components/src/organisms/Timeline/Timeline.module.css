@@ -199,21 +199,22 @@
   margin-block-start: calc((var(--timeline-marker) - var(--timeline-marker) / 3) / 2);
 }
 
-.markerIcon,
-.markerNode {
-  block-size: var(--timeline-marker);
-  min-inline-size: var(--timeline-marker);
-}
-
 .markerIcon {
   background-color: var(--timeline-solid);
+  block-size: var(--timeline-marker);
   border-color: var(--timeline-solid);
   color: var(--timeline-on);
   inline-size: var(--timeline-marker);
 }
 
+/* A marker of the caller's own (an avatar) keeps its own shape: this box is only the marker's size to centre it in, with
+   no border, no rounding and no clipping, so a node a little larger than the marker (an avatar is at least 36px)
+   overflows it evenly instead of being cut to an oval. */
 .markerNode {
-  overflow: hidden;
+  block-size: var(--timeline-marker);
+  border: 0;
+  border-radius: 0;
+  inline-size: var(--timeline-marker);
 }
 
 /* The end: a short bar across the line. Its border is the whole bar, so forced colours (which erases a background) keeps it. */

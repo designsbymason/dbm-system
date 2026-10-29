@@ -1,6 +1,6 @@
 # Timeline — review
 
-**Status:** Built, with the checks below run. Not yet declared Finalized by the maintainer; the full `06-engineering-standards.md` §9 review pass over it (feature-completeness, design-quality and theming judgment items in particular) is still to do.
+**Status:** Finalized 2026-10-28, after the full `06-engineering-standards.md` §9 review pass and the rounds below, declared by the maintainer. Not verified: the items under "Not verified" (a real device, touch and a screen reader, and the new stories' looks in every theme).
 
 ## What exists
 `Timeline`, `Timeline.Item`, `Timeline.Group` and `Timeline.End`: a read-only record of events in an `<ol>`, each with a marker, a title, a time, an optional description, detail and body, joined by a line. Decisions: [ADR-0141](../adr/0141-timeline-is-a-read-only-ordered-list-of-items-configured-by-props-in-the-callers-order-with-a-hand-rolled-cap-and-no-windowing-over-sub-parts-a-data-array-a-reverse-prop-or-virtualizing.md) (props on the item, the caller's order, a cap and no windowing) and [ADR-0142](../adr/0142-timeline-takes-a-feed-surface-of-headings-an-end-links-detail-paging-and-two-more-layouts-over-leaving-them-to-the-caller-or-separate-components.md) (headings, an end, links and buttons, detail, paging, `alternate` and `horizontal`).
@@ -27,8 +27,7 @@ Props worth knowing: `size`, `variant` (`filled`, `outlined`), `tone` (seven, pe
 
 ## Not verified
 - A real device, touch, and a screen reader: the roles, the hidden marker and line, the status text and the live region are checked by markup, axe and real-browser tests, not by listening.
-- The placeholders' look in the four themes and a real device; `announce` and the disclosure were checked by tests and markup, not by listening.
-- The full §9 review pass and the maintainer's declaration of Finalized.
+- The loading placeholders, the linked event and the detail in all four themes, and a real device; `announce` and the disclosure were checked by tests and markup, not by listening.
 - No guideline covers a feed that receives events while open; `announce` follows the first-appearance rule (nothing on the first render or when data first arrives), which is the component's own reading of it.
 
 ## Final review round
@@ -39,3 +38,6 @@ Found by the §9 pass and fixed:
 - **Fragile:** the announcement effects depended on label functions that are new on every render. They now read the latest writer without depending on it; a test proves a re-render with the same events says nothing more.
 - **Security:** an event's `href` now drops any scheme but `http`, `https`, `mailto` and `tel` (after removing the control characters a browser ignores inside a scheme), with a development warning ([ADR-0142](../adr/0142-timeline-takes-a-feed-surface-of-headings-an-end-links-detail-paging-and-two-more-layouts-over-leaving-them-to-the-caller-or-separate-components.md), amended). The `Link` atom itself checks nothing; it was left alone.
 - **Checks added:** the detail, show-more and load-more buttons at 24 by 24 pixels at the smallest sizes (busy too), horizontal right to left, forced colours for the end bar and a horizontal line, and a server render and hydration of a horizontal timeline with loading, a link, a detail and an end. Two of them were broken on purpose and failed.
+
+## After the final round
+- **Defect:** a marker of the caller's own (an `Avatar`) was clipped to an oval. Its box was the marker's height with a rounded border and `overflow: hidden`, and the smallest avatar is 36px against a 32px marker at `md`. The box now has no border, rounding or clipping and only centres the node, so a node a little larger than the marker overflows it evenly; a real-browser check measures a true circle, centred on the line and level with the text, and fails on the old rule. The `marker` prop's JSDoc and the Docs page say to size a node to fit.

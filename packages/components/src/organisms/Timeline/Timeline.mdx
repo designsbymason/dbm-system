@@ -303,6 +303,7 @@ It is drawn only once every event is shown. Also accepts any other native `<li>`
 - Events added while the page is open are not announced unless you set `announce`, which says "N new events" in a polite live region. Leave it off where a reader should not be interrupted.
 - For a history you page yourself, hold the events in your own state: `onLoadMore` asks for the next page, `loading` shows placeholders while it comes, and `hasMore={false}` hides the button once everything is in. Add the new events to the end of the list.
 - `formatRelativeTime(date)` writes "2 hours ago" once, in the language you name (`{ locale: "fr" }`); it does not tick, and a server render and the browser can differ by the time between them, so use it where that does not matter. Keep the exact value in `dateTime`.
+- A `marker` of your own keeps its shape and is centred in a box the size of the marker: size it to fit (the smallest `Avatar`, 36px, is a little over the `md` marker's 32px and overflows it evenly), or choose a larger timeline `size`.
 - Use `Timeline.End` when how it ended is worth saying ("Order closed"); an end on a timeline that is still going would mislead.
 
 ## Accessibility

@@ -2,6 +2,7 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 import { expect, userEvent, waitFor, within } from "storybook/test";
 import { TruckIcon } from "@dbm-system/icons";
 import { useState } from "react";
+import { Avatar } from "../../atoms/Avatar";
 import { Link } from "../../atoms/Link";
 import { send } from "../../molecules/CodeBlock/browserProtocol";
 import { Timeline } from "./Timeline";
@@ -585,6 +586,31 @@ export const FocusAfterTheLastPage: Story = {
     await expect(document.activeElement).toBe(canvas.getByRole("list", { name: "paged" }));
     (document.activeElement as HTMLElement | null)?.blur();
     await expect(canvas.getByRole("list", { name: "paged" })).not.toHaveAttribute("tabindex");
+  },
+};
+
+export const NodeMarkerKeepsItsShape: Story = {
+  name: "A marker of your own keeps its own round shape, centred on the line and level with the text, never clipped",
+  render: () => (
+    <Timeline aria-label="nodes">
+      <Timeline.Item title="Dot" time="1" />
+      <Timeline.Item title="Avatar" time="2" marker={<Avatar name="Ada Lovelace" size="xs" />} />
+      <Timeline.Item title="Last" time="3" />
+    </Timeline>
+  ),
+  play: async ({ canvasElement }) => {
+    const items = within(canvasElement).getAllByRole("listitem");
+    const holder = part(items[1]!, "marker");
+    const avatar = holder.firstElementChild as HTMLElement;
+    const shape = box(avatar);
+    // The avatar is a true circle, not cut to an oval by the box it sits in.
+    await expect(Math.abs(shape.width - shape.height)).toBeLessThanOrEqual(0.5);
+    await expect(getComputedStyle(holder).overflow).toBe("visible");
+    await expect(getComputedStyle(holder).borderTopWidth).toBe("0px");
+    // It is centred on the line, as the dot of another event is, and level with its text.
+    await expect(Math.abs(centreX(shape) - centreX(box(part(items[0]!, "marker"))))).toBeLessThanOrEqual(0.5);
+    await expect(Math.abs(centreX(shape) - centreX(box(part(items[1]!, "connector"))))).toBeLessThanOrEqual(1);
+    await expect(Math.abs(centreY(shape) - centreY(firstLine(part(items[1]!, "time"))))).toBeLessThanOrEqual(2);
   },
 };
 
