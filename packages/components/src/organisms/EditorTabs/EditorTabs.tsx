@@ -1,13 +1,10 @@
-import { CaretDownIcon, PlusIcon, PushPinIcon, WarningCircleIcon, WarningIcon, XIcon } from "@dbm-system/icons";
+import { CaretDownIcon, PlusIcon } from "@dbm-system/icons";
 import { cx, mergeDefined, mergeRefs, useAnnouncement, useResolvedResponsiveValue, useSortable } from "@dbm-system/utils";
-import { Children, forwardRef, Fragment, isValidElement, useEffect, useLayoutEffect, useRef, useState } from "react";
+import { Children, forwardRef, Fragment, isValidElement, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import type { ReactElement, ReactNode, Ref, RefAttributes } from "react";
-import { Icon } from "../../atoms/Icon";
 import { IconButton } from "../../atoms/IconButton";
-import { Spinner } from "../../atoms/Spinner";
 import { VisuallyHidden } from "../../atoms/VisuallyHidden";
 import { Tabs } from "../../molecules/Tabs";
-import { tabIconSize } from "../../molecules/Tabs/tabIconSizes";
 import type { TabsOrientation } from "../../molecules/Tabs/Tabs.types";
 import { Menu } from "../Menu";
 import styles from "./EditorTabs.module.css";
@@ -19,9 +16,7 @@ import type {
   EditorTabsPanelProps,
   EditorTabsProps,
 } from "./EditorTabs.types";
-import { EditorTabsMenu } from "./EditorTabsMenu";
 import { editorTabsPresetMenu } from "./EditorTabsPresetMenu";
-import { EditorTabsTrigger } from "./EditorTabsTrigger";
 import {
   chooseAfterClose,
   clampToGroup,
@@ -32,6 +27,8 @@ import {
   recordRecent,
   tabName,
 } from "./editorTabsModel";
+import { EditorTabsRow } from "./EditorTabsRow";
+import type { EditorTabsRowActions } from "./EditorTabsRow";
 import { useEditorTabsController } from "./useEditorTabsController";
 import { useEditorTabsFlip } from "./useEditorTabsFlip";
 import { useEditorTabsHotkeys } from "./useEditorTabsHotkeys";
@@ -120,7 +117,8 @@ function EditorTabsInner<TTab extends EditorTab>(props: EditorTabsProps<TTab>, r
     ...rest
   } = props;
 
-  const labels = mergeDefined(defaultLabels(formatNumber), labelsProp);
+  // Kept the same between renders unless the words change, so the tabs (which take them) are not drawn again for nothing.
+  const labels = useMemo(() => mergeDefined(defaultLabels(formatNumber), labelsProp), [formatNumber, labelsProp]);
   const orientation = useResolvedResponsiveValue<TabsOrientation>(orientationProp, "horizontal");
   const vertical = orientation === "vertical";
   const rootRef = useRef<HTMLDivElement>(null);
@@ -142,9 +140,9 @@ function EditorTabsInner<TTab extends EditorTab>(props: EditorTabsProps<TTab>, r
   const movable = Boolean(onReorder) && tabs.length - pinned > 1;
 
   // What the handlers below read, so they are right however long ago a listener was attached.
-  const latest = useRef({ tabs, current, closeSelects, onClose, onCloseMany, onAdd, onReorder, onValueChange, isControlled });
+  const latest = useRef({ tabs, current, closeSelects, onClose, onCloseMany, onAdd, onReorder, onValueChange, isControlled, tabMenu, tabContextMenu });
   useEffect(() => {
-    latest.current = { tabs, current, closeSelects, onClose, onCloseMany, onAdd, onReorder, onValueChange, isControlled };
+    latest.current = { tabs, current, closeSelects, onClose, onCloseMany, onAdd, onReorder, onValueChange, isControlled, tabMenu, tabContextMenu };
   });
 
   // The tabs that were selected, most recent last: what `closeSelects="previous"` goes back to.
@@ -270,7 +268,7 @@ function EditorTabsInner<TTab extends EditorTab>(props: EditorTabsProps<TTab>, r
     handleKeyUp: sortKeyUp,
     release: sortRelease,
     lifted: sortLifted,
-    liftedVia: sortLiftedVia,
+    drag: sortDrag,
   } = useSortable<HTMLDivElement>({
     enabled: movable,
     count: tabs.length - pinned,
@@ -356,146 +354,64 @@ function EditorTabsInner<TTab extends EditorTab>(props: EditorTabsProps<TTab>, r
 
   // --- Drawing ---
 
-  const renderTab = (tab: TTab, index: number): ReactNode => {
-    const name = tabName(tab);
-    const closable = Boolean(onClose) && isClosable(tab);
-    const sortableIndex = index - pinned;
-    const canSort = movable && sortableIndex >= 0 && !tab.disabled;
-    const sortProps = canSort ? sortItemProps(sortableIndex) : undefined;
-
-    const statusWord = tab.status ? (tab.statusText ?? { busy: labels.statusBusy, error: labels.statusError, warning: labels.statusWarning }[tab.status]) : null;
-    const status = [tab.pinned ? labels.pinned : null, tab.dirty ? labels.dirty : null, statusWord].filter(Boolean).join(", ");
-    const triggerLabel = tab["aria-label"] && status ? `${tab["aria-label"]} (${status})` : tab["aria-label"];
-
-    const action = closable ? (
-      <button
-        type="button"
-        tabIndex={-1}
-        className={styles.close}
-        data-dirty={tab.dirty ? "" : undefined}
-        aria-label={labels.closeTab(name)}
-        // Keeps focus where it is: a press on this is not a move of focus to a control that is out of the tab order.
-        onMouseDown={(event) => event.preventDefault()}
-        onClick={() => requestClose(tab.id, "button")}
-      >
-        {tab.dirty && <span className={styles.dirtyDot} />}
-        <Icon icon={XIcon} size="xs" className={styles.closeIcon} />
-      </button>
-    ) : tab.dirty ? (
-      <span className={styles.dirtyStatic}>
-        <span className={styles.dirtyDot} />
-      </span>
-    ) : undefined;
-
-    const item = (
-      <Tabs.Item
-        key={tab.id}
-        className={styles.item}
-        data-editor-tab-item={tab.id}
-        // The selected tab of the solid variant is a brand fill, so what is drawn on it changes colour.
-        data-on-brand={variant === "solid" && current === tab.id ? "" : undefined}
-        action={action}
-      >
-        <EditorTabsTrigger
-          value={tab.id}
-          icon={tab.icon ?? (tab.pinned ? PushPinIcon : undefined)}
-          disabled={tab.disabled}
-          detail={tab.tooltip ?? tab.title}
-          fullName={name}
-          aria-label={triggerLabel}
-          aria-keyshortcuts={closable ? "Delete" : undefined}
-          className={styles.tab}
-          data-tab-id={tab.id}
-          // The tooltip around the button also sets a `data-state` (open or closed), which would replace the tab's own
-          // (active or inactive) that the styles and the scroll-into-view read, so it is set here and wins.
-          data-state={current === tab.id ? "active" : "inactive"}
-          {...(panelValues.has(tab.id) ? {} : { "aria-controls": undefined })}
-          {...sortProps}
-          onPointerDown={(event) => {
-            // A touch press is a scroll of the strip; moving a tab is by the keyboard or the tab menu there.
-            if (event.pointerType === "touch") return;
-            sortProps?.onPointerDown(event);
-          }}
-          onKeyDown={(event) => {
-            if (canSort && sortKeyDown(event, sortableIndex)) return;
-            if (event.key === "Delete" && closable && sortLifted === null) {
-              event.preventDefault();
-              requestClose(tab.id, "keyboard");
-            }
-          }}
-          onKeyUp={(event) => {
-            if (canSort) sortKeyUp(event);
-          }}
-          onBlur={() => {
-            if (canSort && sortLiftedVia === "keyboard") sortRelease("keyboard");
-          }}
-          onMouseDown={(event) => {
-            // The browser's autoscroll mode would start on a middle press.
-            if (event.button === 1 && closable) event.preventDefault();
-          }}
-          onAuxClick={(event) => {
-            if (event.button === 1 && closable) {
-              event.preventDefault();
-              requestClose(tab.id, "middle-click");
-            }
-          }}
-        >
-          <span className={styles.content}>
-            <span className={styles.label} data-editor-tab-label="">
-              {tab.label}
-            </span>
-            {tab.status && (
-              <span className={styles.status} data-status={tab.status} aria-hidden="true">
-                {tab.status === "busy" ? (
-                  <Spinner size={tabIconSize[size]} />
-                ) : (
-                  <Icon icon={tab.status === "error" ? WarningCircleIcon : WarningIcon} size={tabIconSize[size]} />
-                )}
-              </span>
-            )}
-          </span>
-          {status && <VisuallyHidden>{` (${status})`}</VisuallyHidden>}
-        </EditorTabsTrigger>
-      </Tabs.Item>
-    );
-
-    if (!tabContextMenu && !tabMenu) return item;
-    const context: EditorTabsMenuContext<TTab> = {
-      tab,
-      index,
-      count: tabs.length,
-      close: () => requestClose(tab.id, "menu"),
-      closeMany: (ids) => requestCloseMany(ids, "menu"),
-      closeOthers: () => requestCloseMany(closableOthers(tabs, tab.id).map((other) => other.id), "menu"),
-      closeAfter: () => requestCloseMany(closableAfter(tabs, tab.id).map((other) => other.id), "menu"),
-      move: (to) => moveTab(tab.id, to),
-      select: () => select(tab.id),
-    };
-    return (
-      <EditorTabsMenu
-        key={tab.id}
-        name={labels.tabMenu(name)}
-        dir={dir}
-        presentation={menuPresentation}
-        renderItems={() =>
-          tabMenu
-            ? editorTabsPresetMenu({
-                context,
-                tabs,
-                labels,
-                canClose: Boolean(onClose),
-                canCloseMany: Boolean(onCloseMany),
-                canReorder: Boolean(onReorder),
-                pinned,
-                custom: tabContextMenu?.(context),
-              })
-            : tabContextMenu!(context)
-        }
-      >
-        {item}
-      </EditorTabsMenu>
-    );
+  // What each tab row calls on the strip. The object never changes and each method reads the latest state, so a row's props are only
+  // values and a row that did not change is not drawn again (`EditorTabsRow`).
+  const impl: EditorTabsRowActions = {
+    requestClose,
+    renderMenuItems: (id) => {
+      const all = latest.current.tabs;
+      const index = all.findIndex((candidate) => candidate.id === id);
+      const tab = all[index];
+      if (!tab) return null;
+      const context: EditorTabsMenuContext<TTab> = {
+        tab,
+        index,
+        count: all.length,
+        close: () => requestClose(id, "menu"),
+        closeMany: (ids) => requestCloseMany(ids, "menu"),
+        closeOthers: () => requestCloseMany(closableOthers(all, id).map((other) => other.id), "menu"),
+        closeAfter: () => requestCloseMany(closableAfter(all, id).map((other) => other.id), "menu"),
+        move: (to) => moveTab(id, to),
+        select: () => select(id),
+      };
+      const custom = latest.current.tabContextMenu?.(context);
+      return latest.current.tabMenu
+        ? editorTabsPresetMenu({
+            context,
+            tabs: all,
+            labels,
+            canClose: Boolean(latest.current.onClose),
+            canCloseMany: Boolean(latest.current.onCloseMany),
+            canReorder: Boolean(latest.current.onReorder),
+            pinned: pinnedCount(all),
+            custom,
+          })
+        : custom;
+    },
+    sortKeyDown: (event, sortableIndex) => sortKeyDown(event, sortableIndex),
+    sortKeyUp: (event) => void sortKeyUp(event),
+    releaseKeyboardLift: () => sortRelease("keyboard"),
+    isLifted: () => sortLifted !== null,
+    pointerDown: (event, sortableIndex) => sortItemProps(sortableIndex).onPointerDown(event),
   };
+  const liveActions = useRef(impl);
+  useEffect(() => {
+    liveActions.current = impl;
+  });
+  const actions = useMemo<EditorTabsRowActions>(
+    () => ({
+      requestClose: (id, via) => liveActions.current.requestClose(id, via),
+      renderMenuItems: (id) => liveActions.current.renderMenuItems(id),
+      sortKeyDown: (event, sortableIndex) => liveActions.current.sortKeyDown(event, sortableIndex),
+      sortKeyUp: (event) => liveActions.current.sortKeyUp(event),
+      releaseKeyboardLift: () => liveActions.current.releaseKeyboardLift(),
+      isLifted: () => liveActions.current.isLifted(),
+      pointerDown: (event, sortableIndex) => liveActions.current.pointerDown(event, sortableIndex),
+    }),
+    [],
+  );
+
+  const hasMenu = tabMenu || Boolean(tabContextMenu);
 
   return (
     <Tabs
@@ -520,7 +436,30 @@ function EditorTabsInner<TTab extends EditorTab>(props: EditorTabsProps<TTab>, r
           aria-labelledby={ariaLabelledBy}
           className={styles.list}
         >
-          {tabs.map((tab, index) => renderTab(tab, index))}
+          {tabs.map((tab, index) => {
+            const sortableIndex = index - pinned;
+            const canSort = movable && sortableIndex >= 0 && !tab.disabled;
+            return (
+              <EditorTabsRow
+                key={tab.id}
+                tab={tab}
+                sortableIndex={canSort ? sortableIndex : -1}
+                size={size}
+                selected={current === tab.id}
+                onBrand={variant === "solid" && current === tab.id}
+                closable={Boolean(onClose) && isClosable(tab)}
+                linked={panelValues.has(tab.id)}
+                lifted={sortLifted === sortableIndex}
+                dragging={canSort && sortDrag?.from === sortableIndex}
+                drop={canSort && sortDrag && sortDrag.over === sortableIndex && sortDrag.to !== sortDrag.from ? sortDrag.position : undefined}
+                hasMenu={hasMenu}
+                menuPresentation={menuPresentation}
+                dir={dir}
+                labels={labels}
+                actions={actions}
+              />
+            );
+          })}
         </Tabs.List>
         {overflow === "menu" && tabs.length > 0 && (
           <Menu dir={dir}>

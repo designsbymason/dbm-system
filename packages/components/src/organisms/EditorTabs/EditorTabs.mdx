@@ -198,6 +198,7 @@ Right-click a tab, press the context-menu key on it, or long-press it on a touch
 - **Close several in one update.** `onCloseMany` is given the tabs together so one change to `tabs` removes them all and the strip chooses what to select once, not once per tab.
 - **Keep content mounted when it is costly to rebuild.** `forceMount` on a panel keeps an editor's undo history and scroll position while another tab is shown; leave it off for a panel that is cheap to draw.
 - **Name tabs by text.** A string label is announced as the tab's name; a label that is not text needs an `aria-label` or a `title`.
+- **A long strip is fine; keep what you pass stable.** Each tab is drawn only when its own fields change, so selecting a tab, dragging one and announcing a close redraw only the tabs involved, and a strip of a thousand tabs stays responsive (closing or adding a tab redraws the ones after it). A list rebuilt on every render is fine too, since tabs are compared field by field, but a `label` that is a new element every render, and a `labels` or `menuPresentation` object written inline, count as changes: define them once, or in `useMemo`.
 - **Use `overflow="menu"` for many tabs.** Scrolling alone makes a far tab slow to reach; the menu lists them all.
 
 ## Accessibility

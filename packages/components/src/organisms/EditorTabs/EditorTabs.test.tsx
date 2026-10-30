@@ -1043,3 +1043,71 @@ describe("EditorTabs — review fixes", () => {
     expect(menu).toHaveAttribute("dir", "rtl");
   });
 });
+
+describe("EditorTabs — a long strip redraws only the tabs that changed", () => {
+  // A tab's close button names itself through `labels.closeTab` every time the tab is drawn, so the calls count each tab's draws.
+  function setup() {
+    const closeTab = vi.fn((name: string) => `Close ${name}`);
+    const labels = { closeTab };
+    const tabs: EditorTab[] = ["a", "b", "c", "d", "e"].map((id) => ({ id, label: id }));
+    const draws = (id: string) => closeTab.mock.calls.filter(([name]) => name === id).length;
+    return { labels, tabs, draws };
+  }
+
+  it("draws again only the tab that was selected and the one that was, when the selection changes", async () => {
+    const user = userEvent.setup();
+    const { labels, tabs, draws } = setup();
+    function App() {
+      const [value, setValue] = useState<string | null>("a");
+      return <EditorTabs tabs={tabs} value={value} onValueChange={setValue} onClose={() => {}} labels={labels} />;
+    }
+    render(<App />);
+    const before = Object.fromEntries(tabs.map((tab) => [tab.id, draws(tab.id)]));
+    await user.click(screen.getByRole("tab", { name: "c" }));
+    expect(screen.getByRole("tab", { name: "c" })).toHaveAttribute("aria-selected", "true");
+    for (const id of ["b", "d", "e"]) expect(draws(id), `tab ${id} was drawn again`).toBe(before[id]);
+    expect(draws("c")).toBeGreaterThan(before.c!);
+    expect(draws("a")).toBeGreaterThan(before.a!);
+  });
+
+  it("draws no tab again when the page renders with a rebuilt but equal list", () => {
+    const { labels, tabs, draws } = setup();
+    function App() {
+      const [, force] = useState(0);
+      return (
+        <>
+          <button type="button" onClick={() => force((n) => n + 1)}>
+            again
+          </button>
+          <EditorTabs tabs={tabs.map((tab) => ({ ...tab }))} value="a" onClose={() => {}} labels={labels} />
+        </>
+      );
+    }
+    render(<App />);
+    const before = tabs.map((tab) => draws(tab.id));
+    fireEvent.click(screen.getByRole("button", { name: "again" }));
+    fireEvent.click(screen.getByRole("button", { name: "again" }));
+    expect(tabs.map((tab) => draws(tab.id))).toEqual(before);
+  });
+
+  it("draws a tab again when one of its fields changes", () => {
+    const { labels, tabs, draws } = setup();
+    function App() {
+      const [dirty, setDirty] = useState(false);
+      return (
+        <>
+          <button type="button" onClick={() => setDirty(true)}>
+            edit
+          </button>
+          <EditorTabs tabs={tabs.map((tab) => (tab.id === "b" ? { ...tab, dirty } : tab))} value="a" onClose={() => {}} labels={labels} />
+        </>
+      );
+    }
+    render(<App />);
+    const before = Object.fromEntries(tabs.map((tab) => [tab.id, draws(tab.id)]));
+    fireEvent.click(screen.getByRole("button", { name: "edit" }));
+    expect(draws("b")).toBeGreaterThan(before.b!);
+    for (const id of ["a", "c", "d", "e"]) expect(draws(id)).toBe(before[id]);
+    expect(screen.getByRole("tab", { name: "b (unsaved changes)" })).toBeInTheDocument();
+  });
+});

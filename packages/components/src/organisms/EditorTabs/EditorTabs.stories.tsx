@@ -108,6 +108,8 @@ const meta: Meta<PlaygroundArgs> = {
       description:
         "How the tab menu is drawn: at the pointer, or as a sheet across the bottom of the screen (a single value or a mobile-first map keyed by breakpoint, such as { base: sheet, md: menu }). Needs tabMenu or tabContextMenu.",
       table: { defaultValue: { summary: '"menu"' } },
+      // It draws the tab menu, so it does nothing until there is one.
+      if: { arg: "tabMenu" },
     },
     orientation: {
       control: "radio",

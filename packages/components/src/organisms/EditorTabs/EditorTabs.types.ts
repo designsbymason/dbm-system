@@ -253,7 +253,10 @@ export interface EditorTabsProps<TTab extends EditorTab = EditorTab>
    * @default "ltr"
    */
   dir?: "ltr" | "rtl";
-  /** The text the strip supplies itself, merged over the English defaults. */
+  /**
+   * The text the strip supplies itself, merged over the English defaults. Keep the object the same between renders (a constant, or `useMemo`):
+   * the tabs are drawn again only when it changes, so one written inline redraws every tab on every render.
+   */
   labels?: Partial<EditorTabsLabels>;
   /** Writes the numbers the strip announces. Defaults to `String`. */
   formatNumber?: (value: number) => string;

@@ -52,7 +52,7 @@ ${strip('size="lg"')}`,
     { id: "report", label: "Q3 report", dirty: true },
     { id: "notes", label: "Notes" },
   ]}
-  onClose={(tab) => remove(tab.id)}
+  onClose={(tab) => setTabs(tabs.filter((t) => t.id !== tab.id))}
 />`,
 
   closeSelection: `{/* closeSelects: "neighbor" (default) selects the next tab, or the one before it, once the selected tab is
@@ -144,7 +144,7 @@ ${strip('overflow="menu"')}`,
 />`,
 
   controller: `{/* const controller = useRef<EditorTabsController>(null) — then controller.current?.select(id), .close(id),
-    .add(), .move(id, to) and .focus(id), each returning whether there was something to do */}
+    .closeMany(ids), .add(), .move(id, to) and .focus(id), each returning whether there was something to do */}
 ${strip("controllerRef={controller}")}`,
 
   rightToLeft: `{/* dir="rtl" flips the arrow keys, the side a dragged tab lands on and the strip's scroll */}
