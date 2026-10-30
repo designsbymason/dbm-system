@@ -620,3 +620,5 @@ fade/button and keyboard-held-button stories, passes unchanged, and the hook has
 
 **Not verified:** the part used with the `fullWidth` and vertical lists beyond a unit test of the resolved orientation; a screen reader.
 
+**Docs (2026-10-30):** the Tabs Docs page gained a "A tab with a control beside it" canvas with a hand-written "Show code" snippet, so the part can be seen on its own page and not only through `EditorTabs`.
+
