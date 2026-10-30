@@ -1,6 +1,6 @@
 import { CaretDownIcon, PlusIcon, PushPinIcon, WarningCircleIcon, WarningIcon, XIcon } from "@dbm-system/icons";
 import { cx, mergeDefined, mergeRefs, useAnnouncement, useResolvedResponsiveValue, useSortable } from "@dbm-system/utils";
-import { Children, forwardRef, isValidElement, useEffect, useLayoutEffect, useRef, useState } from "react";
+import { Children, forwardRef, Fragment, isValidElement, useEffect, useLayoutEffect, useRef, useState } from "react";
 import type { ReactElement, ReactNode, Ref, RefAttributes } from "react";
 import { Icon } from "../../atoms/Icon";
 import { IconButton } from "../../atoms/IconButton";
@@ -77,6 +77,15 @@ interface PendingClose {
   hadFocus: boolean;
 }
 
+/** The `value` of every `EditorTabs.Panel` among the children, looking inside fragments (a panel wrapped in another component is not found). */
+function collectPanelValues(children: ReactNode, into: Set<string>): void {
+  Children.forEach(children, (child) => {
+    if (!isValidElement(child)) return;
+    if (child.type === Fragment) collectPanelValues((child.props as { children?: ReactNode }).children, into);
+    else if (child.type === EditorTabsPanel) into.add((child.props as EditorTabsPanelProps).value);
+  });
+}
+
 function EditorTabsInner<TTab extends EditorTab>(props: EditorTabsProps<TTab>, ref: Ref<HTMLDivElement>) {
   const {
     tabs,
@@ -90,6 +99,7 @@ function EditorTabsInner<TTab extends EditorTab>(props: EditorTabsProps<TTab>, r
     closeSelects = "neighbor",
     tabMenu = false,
     tabContextMenu,
+    menuPresentation,
     hotkeys,
     orientation: orientationProp = "horizontal",
     overflow = "scroll",
@@ -126,9 +136,7 @@ function EditorTabsInner<TTab extends EditorTab>(props: EditorTabsProps<TTab>, r
   // A tab points at its panel only when one is drawn for it: the strip works without panels, and a tab that names a
   // panel that isn't there is an invalid reference.
   const panelValues = new Set<string>();
-  Children.forEach(children, (child) => {
-    if (isValidElement<EditorTabsPanelProps>(child) && child.type === EditorTabsPanel) panelValues.add(child.props.value);
-  });
+  collectPanelValues(children, panelValues);
 
   const pinned = pinnedCount(tabs);
   const movable = Boolean(onReorder) && tabs.length - pinned > 1;
@@ -145,9 +153,13 @@ function EditorTabsInner<TTab extends EditorTab>(props: EditorTabsProps<TTab>, r
     if (current) recent.current = recordRecent(recent.current, current);
   }, [current]);
 
+  const pendingClose = useRef<PendingClose | null>(null);
+
   const select = (id: string): boolean => {
     const tab = latest.current.tabs.find((candidate) => candidate.id === id);
     if (!tab || tab.disabled) return false;
+    // A person who has chosen another tab has moved on from a close the owner has not applied: it no longer decides what is selected or focused.
+    pendingClose.current = null;
     if (!latest.current.isControlled) setInner(id);
     latest.current.onValueChange?.(id);
     return true;
@@ -162,10 +174,12 @@ function EditorTabsInner<TTab extends EditorTab>(props: EditorTabsProps<TTab>, r
 
   // --- Closing ---
 
-  const pendingClose = useRef<PendingClose | null>(null);
   const closedNames = useRef(new Map<string, string>());
+  // The tabs the strip was asked to close and the owner has not yet removed: only these are announced as closed.
+  const requestedClose = useRef(new Set<string>());
   const holdClose = (closedIds: string[]) => {
     const { tabs: all, current: selected } = latest.current;
+    for (const closing of closedIds) requestedClose.current.add(closing);
     const root = rootRef.current;
     pendingClose.current = {
       closedIds,
@@ -208,8 +222,12 @@ function EditorTabsInner<TTab extends EditorTab>(props: EditorTabsProps<TTab>, r
       const selectedGone = pending.selectedId !== null && gone.includes(pending.selectedId);
       let chosen: string | null = null;
       if (selectedGone && mode !== "none") {
-        chosen = chooseAfterClose({ order: pending.order, selectedId: pending.selectedId!, remaining, enabled, recent: recent.current, mode });
-        if (chosen) select(chosen);
+        // An owner that has already moved the selection to a tab that is still there has chosen: keep it.
+        chosen =
+          current !== null && remaining.includes(current)
+            ? current
+            : chooseAfterClose({ order: pending.order, selectedId: pending.selectedId!, remaining, enabled, recent: recent.current, mode });
+        if (chosen && chosen !== current) select(chosen);
       }
       const active = document.activeElement;
       if (pending.hadFocus && (!active || active === document.body)) {
@@ -224,16 +242,22 @@ function EditorTabsInner<TTab extends EditorTab>(props: EditorTabsProps<TTab>, r
       refocus.current = null;
       if (document.activeElement !== listRef.current?.querySelector(`[data-tab-id="${CSS.escape(target)}"]`)) focusTab(target);
     }
-    // `select` and `focusTab` read refs, so the effect depends on the tabs alone.
-  }, [tabs]);
+    // `select` and `focusTab` read refs, so the effect depends on the tabs and the selection alone.
+  }, [tabs, current]);
 
   const previousTabs = useRef(tabs);
   useEffect(() => {
-    // Tabs that have left the list are announced as closed, by the name they had.
-    const gone = previousTabs.current.filter((tab) => !tabs.some((now) => now.id === tab.id));
+    // Tabs the strip was asked to close, once they have left the list, are announced as closed, by the name they had. A list
+    // swapped for another (a different project) is not a close, so nothing is announced for tabs nobody asked to close.
+    const left = previousTabs.current.filter((tab) => !tabs.some((now) => now.id === tab.id));
     previousTabs.current = tabs;
-    if (gone.length === 1 && gone[0]) announce(labels.closed(closedNames.current.get(gone[0].id) ?? tabName(gone[0])));
-    else if (gone.length > 1) announce(labels.closedMany(gone.length));
+    const asked = left.filter((tab) => requestedClose.current.has(tab.id));
+    if (asked.length === 1 && asked[0]) announce(labels.closed(closedNames.current.get(asked[0].id) ?? tabName(asked[0])));
+    else if (asked.length > 1) announce(labels.closedMany(asked.length));
+    for (const tab of left) {
+      requestedClose.current.delete(tab.id);
+      closedNames.current.delete(tab.id);
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tabs]);
 
@@ -328,7 +352,7 @@ function EditorTabsInner<TTab extends EditorTab>(props: EditorTabsProps<TTab>, r
     focus: focusTab,
   });
 
-  useEditorTabsWarnings(tabs);
+  useEditorTabsWarnings(tabs, { reorder: Boolean(onReorder), menu: tabMenu || Boolean(tabContextMenu) });
 
   // --- Drawing ---
 
@@ -451,6 +475,8 @@ function EditorTabsInner<TTab extends EditorTab>(props: EditorTabsProps<TTab>, r
       <EditorTabsMenu
         key={tab.id}
         name={labels.tabMenu(name)}
+        dir={dir}
+        presentation={menuPresentation}
         renderItems={() =>
           tabMenu
             ? editorTabsPresetMenu({

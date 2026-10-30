@@ -904,3 +904,142 @@ describe("EditorTabs — motion", () => {
     expect(container.querySelector("[data-editor-tab-item='a']")).not.toHaveAttribute("data-entering");
   });
 });
+
+describe("EditorTabs — review fixes", () => {
+  const announced = async (action: () => void) => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    try {
+      await act(async () => {
+        action();
+      });
+      await act(async () => {
+        vi.advanceTimersByTime(200);
+      });
+      // A modal menu makes the page behind it inert, so the live region is found whether or not it is exposed.
+      return screen.getByRole("status", { hidden: true }).textContent;
+    } finally {
+      vi.useRealTimers();
+    }
+  };
+
+  it("announces nothing when the whole list is replaced, since nobody closed those tabs", async () => {
+    function Swap() {
+      const [tabs, setTabs] = useState<EditorTab[]>([{ id: "a", label: "A" }, { id: "b", label: "B" }, { id: "c", label: "C" }]);
+      return (
+        <>
+          <button type="button" onClick={() => setTabs([{ id: "x", label: "X" }])}>
+            swap
+          </button>
+          <EditorTabs tabs={tabs} value="a" />
+        </>
+      );
+    }
+    render(<Swap />);
+    expect(await announced(() => fireEvent.click(screen.getByRole("button", { name: "swap" })))).toBe("");
+  });
+
+  it("announces several tabs closed together once", async () => {
+    function Many() {
+      const [tabs, setTabs] = useState<EditorTab[]>(FILES);
+      return (
+        <EditorTabs
+          tabs={tabs}
+          value="a"
+          onClose={() => {}}
+          onCloseMany={(closing) => setTabs((all) => all.filter((tab) => !closing.some((c) => c.id === tab.id)))}
+          tabMenu
+        />
+      );
+    }
+    render(<Many />);
+    const text = await announced(() => {
+      fireEvent.contextMenu(screen.getByRole("tab", { name: /util\.ts/ }));
+    });
+    expect(text).toBe("");
+    const menu = await screen.findByRole("menu");
+    const after = await announced(() => fireEvent.click(within(menu).getByRole("menuitem", { name: "Close others" })));
+    expect(after).toContain("3 tabs closed");
+  });
+
+  it("warns once when reordering has no tab menu to fall back on, and not when there is one", () => {
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+    const { unmount } = render(<EditorTabs tabs={FILES} value="a" onReorder={() => {}} />);
+    expect(warn).toHaveBeenCalledWith(expect.stringContaining("no `tabMenu` or `tabContextMenu`"));
+    unmount();
+    warn.mockClear();
+    render(<EditorTabs tabs={FILES} value="a" onReorder={() => {}} tabMenu />);
+    render(<EditorTabs tabs={FILES} value="a" onReorder={() => {}} tabContextMenu={() => null} />);
+    render(<EditorTabs tabs={FILES} value="a" />);
+    expect(warn).not.toHaveBeenCalledWith(expect.stringContaining("no `tabMenu` or `tabContextMenu`"));
+  });
+
+  it("points a tab at a panel inside a fragment, and not at a panel wrapped in another component", () => {
+    function Wrapped() {
+      return <EditorTabs.Panel value="b">Wrapped</EditorTabs.Panel>;
+    }
+    render(
+      <EditorTabs tabs={[{ id: "a", label: "A" }, { id: "b", label: "B" }]} value="a">
+        <>
+          <EditorTabs.Panel value="a">Panel A</EditorTabs.Panel>
+        </>
+        <Wrapped />
+      </EditorTabs>,
+    );
+    expect(screen.getByRole("tab", { name: "A" })).toHaveAttribute("aria-controls");
+    expect(screen.getByRole("tab", { name: "B" })).not.toHaveAttribute("aria-controls");
+  });
+
+  it("keeps the owner's own choice of what to select after a close", async () => {
+    const user = userEvent.setup();
+    function Owner() {
+      const [tabs, setTabs] = useState<EditorTab[]>(FILES);
+      const [value, setValue] = useState<string | null>("b");
+      return (
+        <EditorTabs
+          tabs={tabs}
+          value={value}
+          onValueChange={setValue}
+          onClose={(tab) => {
+            setTabs((all) => all.filter((t) => t.id !== tab.id));
+            setValue("d");
+          }}
+        />
+      );
+    }
+    render(<Owner />);
+    await user.click(screen.getByRole("button", { name: "Close app.ts", hidden: true }));
+    await waitFor(() => expect(names()).toEqual(["index.ts", "util.ts", "readme.md"]));
+    expect(screen.getByRole("tab", { name: /readme\.md/ })).toHaveAttribute("aria-selected", "true");
+  });
+
+  it("does not choose a tab for a close the person has moved on from", async () => {
+    const user = userEvent.setup();
+    function Late() {
+      const [tabs, setTabs] = useState<EditorTab[]>(FILES);
+      const [value, setValue] = useState<string | null>("a");
+      return (
+        <>
+          <button type="button" onClick={() => setTabs((all) => all.filter((t) => t.id !== "a"))}>
+            remove later
+          </button>
+          <EditorTabs tabs={tabs} value={value} onValueChange={setValue} onClose={() => {}} />
+        </>
+      );
+    }
+    render(<Late />);
+    // A close that the owner doesn't apply...
+    await user.click(screen.getByRole("button", { name: "Close index.ts", hidden: true }));
+    // ...then the person selects another tab, and the owner removes the first for its own reasons.
+    await user.click(screen.getByRole("tab", { name: /util\.ts/ }));
+    await user.click(screen.getByRole("button", { name: "remove later" }));
+    expect(screen.getByRole("tab", { name: /util\.ts/ })).toHaveAttribute("aria-selected", "true");
+  });
+
+  it("draws the tab menu as a sheet when asked, and takes the reading direction", async () => {
+    render(<Harness tabMenu menuPresentation="sheet" dir="rtl" />);
+    fireEvent.contextMenu(screen.getByRole("tab", { name: /util\.ts/ }));
+    const menu = await screen.findByRole("menu");
+    expect(menu).toHaveAttribute("data-presentation", "sheet");
+    expect(menu).toHaveAttribute("dir", "rtl");
+  });
+});

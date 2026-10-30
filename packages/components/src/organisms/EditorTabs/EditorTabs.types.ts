@@ -1,6 +1,7 @@
 import type { Icon as PhosphorIcon } from "@dbm-system/icons";
 import type { ComponentPropsWithoutRef, CSSProperties, ReactNode, Ref } from "react";
 import type { Responsive } from "@dbm-system/utils";
+import type { MenuPresentation } from "../Menu/Menu.types";
 import type { TabsContentProps, TabsOrientation, TabsSize, TabsVariant } from "../../molecules/Tabs/Tabs.types";
 
 /** One tab in the strip: what it is called, and how it is marked. Add your own fields; they come back in every callback. */
@@ -192,7 +193,7 @@ export interface EditorTabsProps<TTab extends EditorTab = EditorTab>
   onReorder?: (from: number, to: number, via: EditorTabsReorderVia) => void;
   /**
    * What closing the selected tab selects once it is gone: the next tab (or the one before, for the last), the tab that was selected before
-   * it, or nothing.
+   * it, or nothing. If your own update has already selected a tab that is still there, the strip leaves it.
    * @default "neighbor"
    */
   closeSelects?: EditorTabsCloseSelects;
@@ -209,6 +210,12 @@ export interface EditorTabsProps<TTab extends EditorTab = EditorTab>
    * items, for actions of your own. With `tabMenu` they follow the strip's own items.
    */
   tabContextMenu?: (context: EditorTabsMenuContext<TTab>) => ReactNode;
+  /**
+   * How the tab menu (`tabMenu` and `tabContextMenu`) is drawn: at the pointer, or as a sheet across the bottom of the screen, a single value or
+   * a mobile-first map keyed by breakpoint (`{ base: "sheet", md: "menu" }` for a sheet on a phone).
+   * @default "menu"
+   */
+  menuPresentation?: Responsive<MenuPresentation>;
   /**
    * Keyboard shortcuts for selecting the next and previous tab, closing the selected one and adding one, each a combination of modifiers and
    * a key joined by `+` (`"ctrl+alt+ArrowRight"`; `mod` is ⌘ on an Apple platform and Ctrl elsewhere). None is bound by default: browsers

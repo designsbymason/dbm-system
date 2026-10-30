@@ -1,6 +1,6 @@
 # 0146 — `EditorTabs` gets its own tab menu, a close-many request, a previous-tab selection, opt-in shortcuts, a status, a tooltip through the `Tooltip` atom, a vertical strip and a CSS-eased reflow, over leaving each to the app
 
-**Status:** Accepted · **Date:** 2026-10-30 · **Amended 2026-10-30** — the hotkey helper was extracted to `internal/hotkey/` instead of being imported from `CommandPalette`'s folder; the decision itself is unchanged
+**Status:** Accepted · **Date:** 2026-10-30 · **Amended 2026-10-30** — the hotkey helper was extracted to `internal/hotkey/` instead of being imported from `CommandPalette`'s folder, and the reflow is measured by layout position, not by rectangle; the decision itself is unchanged
 
 ## Context
 [ADR-0145](./0145-editortabs-is-a-data-driven-strip-built-on-tabs-with-a-tabs-item-part-that-asks-the-owner-for-closes-adds-and-moves-over-a-compound-strip-a-list-it-owns-or-a-touch-drag.md) left `EditorTabs` with a close button that assistive technology can't reach, a menu every app had to write itself, one close at a time, and a horizontal strip with no motion. Reviewing what comparable tab strips offer turned up nine gaps, which this record settles together because they touch the same few parts (the close path, the menu and the layout).
@@ -20,7 +20,7 @@
 
 **A vertical strip (`orientation`, a breakpoint map like `Tabs`').** A column that scrolls when the root is given a height. `useSortable` gets an `orientation` option: a vertical list decides which side of a tab a drop lands on from the pointer's height against the tab's middle, and its marker is on the tab's top or bottom edge.
 
-**Motion is a CSS `translate` transition, not an animation library or the Web Animations API.** When the list changes, each tab's place is measured in the list's own scrolling coordinates before and after; a tab that moved is put back where it was with an inline `translate` and released, and the stylesheet's `transition` on `translate` (a motion token, none under `prefers-reduced-motion`) eases it. A tab added to the list fades in. A tab dragged by the pointer, which the person has already moved by hand, is not eased a second time. A closing tab leaves at once, because the owner removes it; an exit animation would have to keep it in the list.
+**Motion is a CSS `translate` transition, not an animation library or the Web Animations API.** When the list changes, each tab's place is measured before and after by its layout position (`offsetLeft` and `offsetTop`) *(Amended 2026-10-30: this originally said "in the list's own scrolling coordinates", measured from bounding rectangles, which include an easing still in progress, so a re-render during one set a wrong offset)*; a tab that moved is put back where it was with an inline `translate` and released, and the stylesheet's `transition` on `translate` (a motion token, none under `prefers-reduced-motion`) eases it. A tab added to the list fades in. A tab dragged by the pointer, which the person has already moved by hand, is not eased a second time. A closing tab leaves at once, because the owner removes it; an exit animation would have to keep it in the list.
 
 ## Alternatives considered
 - **Leave the menu to the app.** What ADR-0145 did. The accessible route was then only as good as each app's menu, and every app wrote the same items.

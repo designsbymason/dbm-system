@@ -1,7 +1,9 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { expect, userEvent, waitFor, within } from "storybook/test";
 import { send } from "../../molecules/CodeBlock/browserProtocol";
-import { Demo, manyTabs, pathTabs, statusTabs } from "./EditorTabsStoryKit";
+import { useState } from "react";
+import { Demo, manyTabs, moveItem, pathTabs, statusTabs } from "./EditorTabsStoryKit";
+import { EditorTabs } from "./EditorTabs";
 import type { EditorTab } from "./EditorTabs.types";
 
 // Real-browser checks for what jsdom can't evaluate: a drag with a real mouse, the layout of a tab and its close button, the
@@ -504,5 +506,46 @@ export const OverflowFadeIsSolidNearTheEdge: Story = {
     const button = body().getByRole("button", { name: "Scroll tabs to the end" }).getBoundingClientRect();
     const edge = wrapper.getBoundingClientRect();
     expect(edge.right - button.left).toBeLessThanOrEqual(parseFloat(fade.width) + 1);
+  },
+};
+
+/** A re-render with a new array while the tabs are easing to their places does not put any of them in the wrong place. */
+export const RerenderDuringEasing: Story = {
+  render: function Render() {
+    const [tabsList, setTabsList] = useState<EditorTab[]>(fixed);
+    const [, force] = useState(0);
+    return (
+      <Page>
+        <button type="button" onClick={() => setTabsList((all) => moveItem(all, 0, 2))}>
+          move first to third
+        </button>
+        <button type="button" onClick={() => force((n) => n + 1)}>
+          re-render
+        </button>
+        {/* A new array every render: what an inline filter or map hands over. */}
+        <EditorTabs aria-label="Files" tabs={tabsList.map((tab) => ({ ...tab }))} value="a" />
+      </Page>
+    );
+  },
+  play: async () => {
+    await ready();
+    body().getByRole("button", { name: "move first to third" }).click();
+    // While the tabs are on their way (a frame or two into the easing), render again with a new array, a few times.
+    await nextFrame();
+    await nextFrame();
+    for (let again = 0; again < 4; again += 1) {
+      body().getByRole("button", { name: "re-render" }).click();
+      await nextFrame();
+    }
+    await Promise.all(document.getAnimations().map((animation) => animation.finished.catch(() => undefined)));
+    await nextFrame();
+    await nextFrame();
+    expect(labels()).toEqual(["bravo.ts", "charlie.ts", "alpha.ts", "delta.ts"]);
+    for (const item of document.querySelectorAll<HTMLElement>("[data-editor-tab-item]")) expect(item.style.translate).toBe("");
+    const lefts = tabs().map((tab) => tab.getBoundingClientRect().left);
+    expect([...lefts].sort((a, b) => a - b)).toEqual(lefts);
+    // Each is where its width puts it: no gap or overlap between neighbours.
+    const items = [...document.querySelectorAll<HTMLElement>("[data-editor-tab-item]")].map((item) => item.getBoundingClientRect());
+    for (let index = 1; index < items.length; index += 1) expect(Math.abs(items[index]!.left - items[index - 1]!.right)).toBeLessThan(2);
   },
 };

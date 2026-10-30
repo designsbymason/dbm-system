@@ -157,6 +157,7 @@ interface PlaygroundSnippetArgs {
   rounded?: boolean;
   closeSelects?: "neighbor" | "previous" | "none";
   tabMenu?: boolean;
+  menuPresentation?: "menu" | "sheet";
   orientation?: "horizontal" | "vertical";
   overflow?: EditorTabsOverflow;
   dir?: "ltr" | "rtl";
@@ -179,6 +180,7 @@ export const editorTabsPlaygroundSnippet = (args: PlaygroundSnippetArgs): string
   if (args.overflow && args.overflow !== "scroll") attributes.push(`overflow="${args.overflow}"`);
   if (args.tabMenu) {
     attributes.push("onCloseMany={(closing) => setTabs(tabs.filter((t) => !closing.includes(t)))}", "tabMenu");
+    if (args.menuPresentation === "sheet") attributes.push('menuPresentation="sheet"');
   }
   if (args.orientation === "vertical") attributes.push('orientation="vertical"');
   if (args.dir && args.dir !== "ltr") attributes.push(`dir="${args.dir}"`);

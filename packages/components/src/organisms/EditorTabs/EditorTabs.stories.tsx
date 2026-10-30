@@ -13,6 +13,7 @@ interface PlaygroundArgs {
   rounded: boolean;
   closeSelects: EditorTabsCloseSelects;
   tabMenu: boolean;
+  menuPresentation: "menu" | "sheet";
   orientation: "horizontal" | "vertical";
   overflow: EditorTabsOverflow;
   dir: "ltr" | "rtl";
@@ -47,6 +48,7 @@ const noControls = {
   rounded: off,
   closeSelects: off,
   tabMenu: off,
+  menuPresentation: off,
   orientation: off,
   overflow: off,
   dir: off,
@@ -99,6 +101,13 @@ const meta: Meta<PlaygroundArgs> = {
       description:
         "Draws the strip's own menu on each tab, opened by a right-click, a long press or the context-menu key: Close, Close others, Close tabs after this one and Close all (with onCloseMany), and the moves (with onReorder). The way to close or move a tab for a person who can't drag, on a touch screen or with a screen reader. With tabContextMenu too, your items follow these.",
       table: { defaultValue: { summary: "false" } },
+    },
+    menuPresentation: {
+      control: "radio",
+      options: ["menu", "sheet"],
+      description:
+        "How the tab menu is drawn: at the pointer, or as a sheet across the bottom of the screen (a single value or a mobile-first map keyed by breakpoint, such as { base: sheet, md: menu }). Needs tabMenu or tabContextMenu.",
+      table: { defaultValue: { summary: '"menu"' } },
     },
     orientation: {
       control: "radio",
@@ -157,6 +166,7 @@ const meta: Meta<PlaygroundArgs> = {
     rounded: false,
     closeSelects: "neighbor",
     tabMenu: false,
+    menuPresentation: "menu",
     orientation: "horizontal",
     overflow: "scroll",
     dir: "ltr",
@@ -171,6 +181,7 @@ const meta: Meta<PlaygroundArgs> = {
       rounded={args.rounded}
       closeSelects={args.closeSelects}
       presetMenu={args.tabMenu}
+      menuPresentation={args.menuPresentation}
       orientation={args.orientation}
       style={args.orientation === "vertical" ? { blockSize: "16rem" } : undefined}
       overflow={args.overflow}
@@ -252,7 +263,8 @@ export const DirtyAndPinned: Story = {
 
 export const CloseSelection: Story = {
   name: "What closing selects",
-  argTypes: { ...except("variant", "closeSelects") },
+  // Fixed to "previous" so the story and its snippet say the same thing.
+  argTypes: { ...except("variant") },
   render: (args) => <Demo variant={args.variant} closeSelects={args.closeSelects} initialValue="app" />,
   args: { closeSelects: "previous" },
   parameters: { docs: { source: { code: editorTabsSnippets.closeSelection } } },

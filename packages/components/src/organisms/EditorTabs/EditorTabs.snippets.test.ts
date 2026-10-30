@@ -8,8 +8,8 @@ describe("the Playground's snippet", () => {
   });
 
   it("writes the options that are set", () => {
-    const snippet = editorTabsPlaygroundSnippet({ variant: "solid", size: "lg", rounded: true, closeSelects: "none", overflow: "menu", dir: "rtl", tabMenu: true, orientation: "vertical" });
-    for (const part of ['variant="solid"', 'size="lg"', "rounded", 'closeSelects="none"', 'overflow="menu"', 'dir="rtl"', "tabMenu", "onCloseMany", 'orientation="vertical"']) {
+    const snippet = editorTabsPlaygroundSnippet({ variant: "solid", size: "lg", rounded: true, closeSelects: "none", overflow: "menu", dir: "rtl", tabMenu: true, menuPresentation: "sheet", orientation: "vertical" });
+    for (const part of ['variant="solid"', 'size="lg"', "rounded", 'closeSelects="none"', 'overflow="menu"', 'dir="rtl"', "tabMenu", "onCloseMany", 'menuPresentation="sheet"', 'orientation="vertical"']) {
       expect(snippet).toContain(part);
     }
   });

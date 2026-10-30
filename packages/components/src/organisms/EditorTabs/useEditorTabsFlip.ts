@@ -9,7 +9,7 @@ interface Position {
 
 /**
  * Eases the tabs to their new places when the list changes (a tab closed or added, a tab dropped elsewhere), and fades a new tab in.
- * Each tab is measured in the list's own scrolling coordinates before and after a change; a tab that moved is put back where it was
+ * Each tab's layout position (`offsetLeft` and `offsetTop`, unaffected by scrolling or an easing in progress) is measured before and after a change; a tab that moved is put back where it was
  * with `translate` and then released, and the stylesheet's `transition` on `translate` (a motion token, and none under reduced motion)
  * does the easing. Nothing is measured on the first render, and nothing animates when the positions did not change. The tab that was
  * dragged by the pointer, which the person has already moved by hand, is left out.
@@ -21,11 +21,11 @@ export function useEditorTabsFlip(listRef: RefObject<HTMLElement | null>, tabs: 
     const list = listRef.current;
     if (!list) return;
     const items = Array.from(list.querySelectorAll<HTMLElement>("[data-editor-tab-item]"));
-    const listBox = list.getBoundingClientRect();
     const now = new Map<string, Position>();
     for (const item of items) {
-      const box = item.getBoundingClientRect();
-      now.set(item.dataset.editorTabItem!, { x: box.left - listBox.left + list.scrollLeft, y: box.top - listBox.top + list.scrollTop });
+      // The layout position, which a `translate` still easing, a transform or the list's scroll position does not change: a rectangle
+      // would include an easing in progress, and a re-render during one would measure where a tab is drawn, not where it is.
+      now.set(item.dataset.editorTabItem!, { x: item.offsetLeft, y: item.offsetTop });
     }
     const before = previous.current;
     previous.current = now;

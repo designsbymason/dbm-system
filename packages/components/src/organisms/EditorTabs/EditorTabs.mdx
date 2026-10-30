@@ -20,6 +20,7 @@ export const rootPropOrder = [
   "closeSelects",
   "tabMenu",
   "tabContextMenu",
+  "menuPresentation",
   "hotkeys",
   "orientation",
   "overflow",
@@ -98,6 +99,8 @@ tabs that were asked to close together (Close others, Close all), already limite
 and return whether there was something to do.
 
 ### EditorTabs.Panel properties
+
+Draw panels as direct children of `EditorTabs`, or inside a fragment. A panel wrapped in another component is not found, so its tab does not point at it with `aria-controls`.
 
 A panel is `Tabs.Content`: it shows while the tab with the same `id` is selected. Also accepts any other native `<div>` attribute beyond what's listed here (e.g. `title`) — passed straight through to the underlying element.
 
@@ -214,7 +217,7 @@ Right-click a tab, press the context-menu key on it, or long-press it on a touch
 | Context-menu key, `Shift` + `F10` | Open the tab's menu, when `tabMenu` or `tabContextMenu` is given |
 | Your `hotkeys` | Select the next or previous tab, close the selected tab, add a tab, from anywhere on the page |
 
-- A pick-up, move, drop and cancel are announced through a polite live region, as is a closed tab, with text from `labels` and numbers from `formatNumber`.
+- A pick-up, move, drop and cancel are announced through a polite live region, as is a tab (or several) the strip was asked to close once they have gone, with text from `labels` and numbers from `formatNumber`. Replacing the whole list is not a close and announces nothing.
 - A tab that holds unsaved changes, is pinned, or is busy or in error says so in its name ("App.tsx (unsaved changes, save failed)"), so the state is never carried by the dot, the pin, the spinner or the colour alone.
 - A tab's tooltip is the system's tooltip: it opens on hover and keyboard focus, closes on Escape, and describes the tab without being part of its name. A tab with detail of its own, or a cut-short name, gets one; a short name with nothing to add does not.
 - Tabs ease to their new places and a new tab fades in; under `prefers-reduced-motion` neither is animated.
