@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { isApplePlatform, matchesHotkey, parseHotkey } from "./commandPalette.hotkey";
-import type { ParsedHotkey } from "./commandPalette.hotkey";
+import { isApplePlatform, matchesHotkey, parseHotkey } from "./hotkey";
+import type { ParsedHotkey } from "./hotkey";
 
 const press = (init: Partial<Pick<KeyboardEvent, "key" | "code" | "ctrlKey" | "altKey" | "shiftKey" | "metaKey">>) => ({
   key: "k",

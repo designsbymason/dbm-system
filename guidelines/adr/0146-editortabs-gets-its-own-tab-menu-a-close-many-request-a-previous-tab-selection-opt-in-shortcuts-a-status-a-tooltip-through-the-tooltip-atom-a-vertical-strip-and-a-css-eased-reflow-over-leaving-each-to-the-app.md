@@ -1,6 +1,6 @@
 # 0146 — `EditorTabs` gets its own tab menu, a close-many request, a previous-tab selection, opt-in shortcuts, a status, a tooltip through the `Tooltip` atom, a vertical strip and a CSS-eased reflow, over leaving each to the app
 
-**Status:** Accepted · **Date:** 2026-10-30
+**Status:** Accepted · **Date:** 2026-10-30 · **Amended 2026-10-30** — the hotkey helper was extracted to `internal/hotkey/` instead of being imported from `CommandPalette`'s folder; the decision itself is unchanged
 
 ## Context
 [ADR-0145](./0145-editortabs-is-a-data-driven-strip-built-on-tabs-with-a-tabs-item-part-that-asks-the-owner-for-closes-adds-and-moves-over-a-compound-strip-a-list-it-owns-or-a-touch-drag.md) left `EditorTabs` with a close button that assistive technology can't reach, a menu every app had to write itself, one close at a time, and a horizontal strip with no motion. Reviewing what comparable tab strips offer turned up nine gaps, which this record settles together because they touch the same few parts (the close path, the menu and the layout).
@@ -12,7 +12,7 @@
 
 **Closing can go back to the tab used before (`closeSelects="previous"`).** The strip keeps a most-recently-used list of what was selected and, once the selected tab is gone, chooses the latest of those still there, else the neighbour. The choice is a pure function over the tab order, the remaining tabs, the enabled ones and that list, so closing one tab and closing many are one rule.
 
-**Shortcuts are opt-in and the app's choice (`hotkeys`: `next`, `previous`, `close`, `add`).** None is bound by default, since a browser keeps Ctrl+Tab and Ctrl+W for itself and an app should name combinations it can receive. It follows `05` §3's `hotkey` convention (combinations of modifiers and a key joined by `+`, `mod` by platform, a document listener, a matching press kept from the browser, a repeat and a composition ignored) and uses `CommandPalette`'s parser and matcher. Focus follows the selection only when it was already on a tab.
+**Shortcuts are opt-in and the app's choice (`hotkeys`: `next`, `previous`, `close`, `add`).** None is bound by default, since a browser keeps Ctrl+Tab and Ctrl+W for itself and an app should name combinations it can receive. It follows `05` §3's `hotkey` convention (combinations of modifiers and a key joined by `+`, `mod` by platform, a document listener, a matching press kept from the browser, a repeat and a composition ignored) and uses the parser and matcher `CommandPalette` wrote (now in `internal/hotkey/`). Focus follows the selection only when it was already on a tab.
 
 **A tab can say how it is doing (`status`: `busy`, `error`, `warning`, with `statusText`).** A spinner or an icon after the name, spoken after it too ("App.tsx (unsaved changes, save failed)"), so it is never carried by colour or shape alone. On the brand fill of the solid variant's selected tab it takes the on-brand colour, and the shape still tells error from warning.
 
@@ -33,7 +33,7 @@
 
 ## Consequences
 - The assistive-technology and touch story no longer depends on each app writing a menu; `tabContextMenu` is for what is specific to an app.
-- `EditorTabs` imports `CommandPalette`'s hotkey helper from its folder; a third consumer extracts it.
+- `EditorTabs` uses the hotkey parser and matcher that `CommandPalette` wrote. *(Amended 2026-10-30: this originally said `EditorTabs` would import it from `CommandPalette`'s folder until a third consumer; it was extracted to `internal/hotkey/` straight away, so one organism does not depend on another's private file.)*
 - `useSortable` gains `orientation` beside `autoScroll`; both are still internal.
 - A tab that closes does not animate out. A test measures that no offset is left behind after a reorder.
 - The bundle grows (the tooltip, the menu items, the spinner); its budget is raised with the reason beside it.

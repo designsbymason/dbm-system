@@ -1,3 +1,9 @@
+// Reading and matching a keyboard shortcut written as a combination such as `"mod+k"`: shared by `CommandPalette` (its hotkey and the
+// modifier keys it draws) and `EditorTabs` (its `hotkeys`), per `05-component-api-conventions.md` §3.
+//
+// A browser keeps some combinations for itself and never gives them to the page (Ctrl+Tab and Ctrl+W, and on a Mac Command and Option with
+// the arrow keys or W), so a component that binds one does nothing there. Control and Option (`ctrl+alt`) with a key work on both.
+
 /** A combination such as `"mod+k"` or `"ctrl+shift+p"`, read into the modifiers it needs and the key. */
 export interface ParsedHotkey {
   key: string;

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef } from "react";
-import { isApplePlatform, matchesHotkey, parseHotkey } from "../CommandPalette/commandPalette.hotkey";
+import { isApplePlatform, matchesHotkey, parseHotkey } from "../../internal/hotkey/hotkey";
 import type { EditorTabsHotkeys } from "./EditorTabs.types";
 
 type Action = "next" | "previous" | "close" | "add";

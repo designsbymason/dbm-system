@@ -38,7 +38,7 @@ Decision: [ADR-0146](../adr/0146-editortabs-gets-its-own-tab-menu-a-close-many-r
 - **A tab menu of its own (`tabMenu`).** Close, Close others, Close tabs after this one and Close all (with `onCloseMany`), and Move to the start, earlier, later and to the end (with `onReorder`), each disabled where there is nothing to do; the app's `tabContextMenu` items follow after a separator. It is the accessible and touch route that the first round left to each app.
 - **Closing many (`onCloseMany`, `controller.closeMany`).** Handed the closable tabs together; a selection and a focus decision once, not per tab; one announcement ("3 tabs closed").
 - **`closeSelects="previous"`.** A most-recently-used list, and a pure `chooseAfterClose` that closing one and closing many share (11 unit tests).
-- **Opt-in `hotkeys`** (`next`, `previous`, `close`, `add`), on `CommandPalette`'s parser; none bound by default; focus follows only when it was on a tab; an unknown modifier warns once.
+- **Opt-in `hotkeys`** (`next`, `previous`, `close`, `add`), on the shared hotkey parser (`internal/hotkey/`); none bound by default; focus follows only when it was on a tab; an unknown modifier warns once.
 - **`status`** (`busy`, `error`, `warning`, `statusText`): a spinner or an icon after the name, spoken after it, on the same line as the name (the first draft wrapped it beneath: a check now measures the mark against the name's own line).
 - **A tooltip through the `Tooltip` atom** (`tooltip`, then `title`; else the whole name when it is cut). **A bug found while building it:** the atom sets its own `data-state` on the element it wraps, which replaced the tab's `active` or `inactive`, so the selected tab lost its styling and the scroll-into-view stopped. The tab now states `data-state` itself, and a unit test holds it (the real-browser reveal check failed first).
 - **A vertical strip** (`orientation`; `useSortable`'s `orientation` option decides the drop side by height). The list scrolls inside the height the root is given (its wrapper is a flex column, which `Tabs` documents as the way to bound it).
@@ -48,7 +48,7 @@ Decision: [ADR-0146](../adr/0146-editortabs-gets-its-own-tab-menu-a-close-many-r
 
 **Not verified:** a screen reader (the status words and the tooltip's description), a real touch device and a long press, forced colours for the status marks, a very long strip with the easing running, and a vertical strip in the Docs page's own width. The shortcuts were tried with explicit Ctrl and Alt, not with `mod` on an Apple platform.
 
-**Decisions:** the hotkey helper is imported from `CommandPalette`'s folder (second consumer; extract at the third); the tooltip is not hoverable, so it closes the moment the pointer leaves; the tab menu is drawn only while open, as `DataTable`'s row menu.
+**Decisions:** the hotkey helper was moved to `internal/hotkey/` (`CommandPalette` imports it from there too), not imported across organisms; the tooltip is not hoverable, so it closes the moment the pointer leaves; the tab menu is drawn only while open, as `DataTable`'s row menu.
 
 ## Third round (2026-10-30)
 - **Icon sizes.** The status marks (spinner, error and warning icons) follow `Tabs`' new five-step icon size; the close cross stays `xs`. A real-browser check measures all of them at the five sizes. See [Tabs.md](Tabs.md).

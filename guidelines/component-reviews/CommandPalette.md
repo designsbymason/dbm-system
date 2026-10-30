@@ -42,3 +42,7 @@ Decided: the footer's key hints, the Enter key on the highlighted row and a row'
 - Windows high contrast is emulated only.
 - Storybook's own ⌘K shortcut and the Playground's default `mod+k` on the Docs page were not compared.
 - Contrast was measured in all four themes for the keyword hint, the footer text and the placeholder; the highlighted row's label and description pairing is shared with `Combobox` and covered by its review.
+
+## Post-Finalization: the hotkey helper moved (2026-10-30, at explicit direction)
+`commandPalette.hotkey.ts` and its test moved to `internal/hotkey/` (`hotkey.ts`, `hotkey.test.ts`), because `EditorTabs` now binds shortcuts with the same parser and matcher and should not import another organism's private file. `CommandPalette` imports it from there. **Classified** (`06` §9): no rendered or behavioural output, no props, no API changed (an import path and two filenames), so it stays Finalized with nothing to re-verify beyond the suites: its unit and real-browser tests pass unchanged.
+

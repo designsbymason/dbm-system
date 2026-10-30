@@ -16,7 +16,7 @@ import styles from "./CommandPalette.module.css";
 import type { CommandItem, CommandPaletteLabels, CommandPaletteProps } from "./CommandPalette.types";
 import { ARGUMENT_VALUE, buildEntries, buildVisible, modeFor, problemWith } from "./commandPalette.entries";
 import { keywordHints } from "./commandPalette.hints";
-import { isApplePlatform } from "./commandPalette.hotkey";
+import { isApplePlatform } from "../../internal/hotkey/hotkey";
 import { shortcutKeys } from "./commandPalette.shortcut";
 import { modeWarnings, valueWarnings } from "./commandPalette.warnings";
 import { useCommandRunner } from "./useCommandRunner";

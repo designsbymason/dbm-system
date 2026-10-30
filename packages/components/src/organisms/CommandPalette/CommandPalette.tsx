@@ -10,7 +10,7 @@ import type {
   CommandPaletteOpenChangeReason,
   CommandPaletteProps,
 } from "./CommandPalette.types";
-import { isApplePlatform, matchesHotkey, parseHotkey } from "./commandPalette.hotkey";
+import { isApplePlatform, matchesHotkey, parseHotkey } from "../../internal/hotkey/hotkey";
 
 const NO_COMMANDS: CommandItem[] = [];
 
