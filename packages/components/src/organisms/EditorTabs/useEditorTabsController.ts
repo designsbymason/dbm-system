@@ -5,6 +5,7 @@ import type { EditorTabsController } from "./EditorTabs.types";
 interface Handlers {
   select: (id: string) => boolean;
   close: (id: string) => boolean;
+  closeMany: (ids: string[]) => boolean;
   add: () => boolean;
   move: (id: string, to: number) => boolean;
   focus: (id: string) => boolean;
@@ -23,6 +24,7 @@ export function useEditorTabsController(controllerRef: Ref<EditorTabsController>
     () => ({
       select: (id) => latest.current.select(id),
       close: (id) => latest.current.close(id),
+      closeMany: (ids) => latest.current.closeMany(ids),
       add: () => latest.current.add(),
       move: (id, to) => latest.current.move(id, to),
       focus: (id) => latest.current.focus(id),

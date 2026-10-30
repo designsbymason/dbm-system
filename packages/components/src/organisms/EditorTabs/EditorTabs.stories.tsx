@@ -1,7 +1,7 @@
 import type { Meta, StoryContext, StoryObj } from "@storybook/react-vite";
 import type { CSSProperties } from "react";
 import { EditorTabs } from "./EditorTabs";
-import { Demo, demoTabs, manyTabs } from "./EditorTabsStoryKit";
+import { Demo, demoTabs, manyTabs, pathTabs, statusTabs } from "./EditorTabsStoryKit";
 import { editorTabsPlaygroundSnippet, editorTabsSnippets } from "./EditorTabs.snippets";
 import type { EditorTabsCloseSelects, EditorTabsOverflow, EditorTabsProps } from "./EditorTabs.types";
 import type { TabsSize, TabsVariant } from "../../molecules/Tabs/Tabs.types";
@@ -12,6 +12,8 @@ interface PlaygroundArgs {
   size: TabsSize;
   rounded: boolean;
   closeSelects: EditorTabsCloseSelects;
+  tabMenu: boolean;
+  orientation: "horizontal" | "vertical";
   overflow: EditorTabsOverflow;
   dir: "ltr" | "rtl";
   "aria-label": string;
@@ -20,6 +22,8 @@ interface PlaygroundArgs {
   defaultValue: EditorTabsProps["defaultValue"];
   onValueChange: EditorTabsProps["onValueChange"];
   onClose: EditorTabsProps["onClose"];
+  onCloseMany: EditorTabsProps["onCloseMany"];
+  hotkeys: EditorTabsProps["hotkeys"];
   onAdd: EditorTabsProps["onAdd"];
   onReorder: EditorTabsProps["onReorder"];
   tabContextMenu: EditorTabsProps["tabContextMenu"];
@@ -42,6 +46,8 @@ const noControls = {
   size: off,
   rounded: off,
   closeSelects: off,
+  tabMenu: off,
+  orientation: off,
   overflow: off,
   dir: off,
   "aria-label": off,
@@ -66,6 +72,16 @@ const meta: Meta<PlaygroundArgs> = {
       control: false,
       description: "Called when a tab is asked to close, with the tab and what asked (the button, the Delete key, a middle-click or the controller). Closing is off when this is left out. Remove the tab from tabs to close it.",
     },
+    onCloseMany: {
+      control: false,
+      description:
+        "Called when several tabs are asked to close at once (close others, close all, the tab menu, the controller), with the tabs that can be closed. Remove them from tabs together. Without it the tab menu offers only Close.",
+    },
+    hotkeys: {
+      control: false,
+      description:
+        "Keyboard shortcuts for selecting the next and previous tab, closing the selected one and adding one, each a combination such as mod+alt+ArrowRight (mod is ⌘ on an Apple platform and Ctrl elsewhere). None is bound by default: browsers keep Ctrl+Tab and Ctrl+W for themselves. The listener is on the document.",
+    },
     onAdd: { control: false, description: "Called when the add button is pressed. The button appears only when this is given." },
     onReorder: {
       control: false,
@@ -73,14 +89,27 @@ const meta: Meta<PlaygroundArgs> = {
     },
     closeSelects: {
       control: "radio",
-      options: ["neighbor", "none"],
-      description: "What closing the selected tab selects once it is gone: neighbor (the next tab, or the one before it when it was last) or none (you choose).",
+      options: ["neighbor", "previous", "none"],
+      description:
+        "What closing the selected tab selects once it is gone: neighbor (the next tab, or the one before it when it was last), previous (the tab that was selected before it, else its neighbour) or none (you choose).",
       table: { defaultValue: { summary: '"neighbor"' } },
+    },
+    tabMenu: {
+      control: "boolean",
+      description:
+        "Draws the strip's own menu on each tab, opened by a right-click, a long press or the context-menu key: Close, Close others, Close tabs after this one and Close all (with onCloseMany), and the moves (with onReorder). The way to close or move a tab for a person who can't drag, on a touch screen or with a screen reader. With tabContextMenu too, your items follow these.",
+      table: { defaultValue: { summary: "false" } },
+    },
+    orientation: {
+      control: "radio",
+      options: ["horizontal", "vertical"],
+      description: "Which way the strip runs. A vertical strip is a column, for a side panel of open items; it scrolls when the root is given a height.",
+      table: { defaultValue: { summary: '"horizontal"' } },
     },
     tabContextMenu: {
       control: false,
       description:
-        "The items of the menu a right-click, a long press or the context-menu key opens on a tab, as ContextMenu items. The way to close or move a tab with a single press, so a person who can't drag can still move one.",
+        "The items of the menu a right-click, a long press or the context-menu key opens on a tab, as ContextMenu items, for actions of your own. With tabMenu they follow the strip's own items.",
     },
     overflow: {
       control: "radio",
@@ -127,18 +156,23 @@ const meta: Meta<PlaygroundArgs> = {
     size: "md",
     rounded: false,
     closeSelects: "neighbor",
+    tabMenu: false,
+    orientation: "horizontal",
     overflow: "scroll",
     dir: "ltr",
     "aria-label": "Open files",
   },
   render: (args) => (
     <Demo
-      // Keyed by the direction, so changing it restarts the demo's list.
-      key={args.dir}
+      // Keyed by the direction and orientation, so changing them restarts the demo's list.
+      key={`${args.dir}-${args.orientation}`}
       variant={args.variant}
       size={args.size}
       rounded={args.rounded}
       closeSelects={args.closeSelects}
+      presetMenu={args.tabMenu}
+      orientation={args.orientation}
+      style={args.orientation === "vertical" ? { blockSize: "16rem" } : undefined}
       overflow={args.overflow}
       dir={args.dir}
       aria-label={args["aria-label"]}
@@ -218,8 +252,9 @@ export const DirtyAndPinned: Story = {
 
 export const CloseSelection: Story = {
   name: "What closing selects",
-  argTypes: { ...except("variant") },
-  render: (args) => <Demo variant={args.variant} closeSelects="none" initialValue="app" />,
+  argTypes: { ...except("variant", "closeSelects") },
+  render: (args) => <Demo variant={args.variant} closeSelects={args.closeSelects} initialValue="app" />,
+  args: { closeSelects: "previous" },
   parameters: { docs: { source: { code: editorTabsSnippets.closeSelection } } },
 };
 
@@ -232,6 +267,54 @@ export const Overflow: Story = {
     </div>
   ),
   parameters: { docs: { source: { code: editorTabsSnippets.overflowMenu } } },
+};
+
+export const PresetMenu: Story = {
+  name: "The tab menu",
+  argTypes: { ...except("variant", "size") },
+  render: (args) => <Demo variant={args.variant} size={args.size} presetMenu />,
+  parameters: { docs: { source: { code: editorTabsSnippets.presetMenu } } },
+};
+
+export const Status: Story = {
+  name: "Busy, error and warning tabs",
+  argTypes: { ...except("variant", "size") },
+  render: (args) => <Demo variant={args.variant} size={args.size} initialTabs={statusTabs} initialValue="build" addable={false} />,
+  parameters: { docs: { source: { code: editorTabsSnippets.status } } },
+};
+
+export const Tooltips: Story = {
+  name: "Tooltips on tabs",
+  argTypes: { ...except("variant", "size") },
+  render: (args) => <Demo variant={args.variant} size={args.size} initialTabs={pathTabs} initialValue="a" addable={false} />,
+  parameters: { docs: { source: { code: editorTabsSnippets.tooltips } } },
+};
+
+export const Shortcuts: Story = {
+  name: "Keyboard shortcuts",
+  argTypes: { ...except("variant", "size") },
+  render: (args) => (
+    <div style={{ display: "grid", gap: "var(--dbm-space-3)" }}>
+      <p style={{ margin: 0 }}>Press Ctrl or ⌘ with Alt and the left or right arrow to change tab, W to close it and T to add one.</p>
+      <Demo
+        variant={args.variant}
+        size={args.size}
+        hotkeys={{ next: "mod+alt+ArrowRight", previous: "mod+alt+ArrowLeft", close: "mod+alt+w", add: "mod+alt+t" }}
+      />
+    </div>
+  ),
+  parameters: { docs: { source: { code: editorTabsSnippets.shortcuts } } },
+};
+
+export const Vertical: Story = {
+  name: "Vertical",
+  argTypes: { ...except("variant", "size") },
+  render: (args) => (
+    <div style={{ maxInlineSize: "20rem" }}>
+      <Demo variant={args.variant} size={args.size} orientation="vertical" style={{ blockSize: "18rem" }} initialTabs={manyTabs.slice(0, 12)} initialValue="file-2" />
+    </div>
+  ),
+  parameters: { docs: { source: { code: editorTabsSnippets.vertical } } },
 };
 
 export const TabMenu: Story = {

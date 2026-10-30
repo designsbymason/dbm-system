@@ -21,6 +21,21 @@ export const manyTabs: EditorTab[] = Array.from({ length: 24 }, (_, index) => ({
   icon: FileCodeIcon,
 }));
 
+/** Tabs with something to say about how they are doing. */
+export const statusTabs: EditorTab[] = [
+  { id: "build", label: "build.log", icon: FileTextIcon, status: "busy", statusText: "saving" },
+  { id: "app", label: "App.tsx", icon: FileCodeIcon, status: "error", statusText: "save failed" },
+  { id: "styles", label: "styles.css", icon: FileCssIcon, status: "warning", statusText: "changed elsewhere" },
+  { id: "index", label: "index.ts", icon: FileCodeIcon },
+];
+
+/** Tabs with detail to show in a tooltip: the full path. */
+export const pathTabs: EditorTab[] = [
+  { id: "a", label: "index.ts", icon: FileCodeIcon, tooltip: "src/organisms/EditorTabs/index.ts" },
+  { id: "b", label: "App.tsx", icon: FileCodeIcon, tooltip: "src/App.tsx" },
+  { id: "c", label: "styles.css", icon: FileCssIcon, tooltip: "src/styles/styles.css" },
+];
+
 export const moveItem = <T,>(list: T[], from: number, to: number): T[] => {
   const next = [...list];
   const [item] = next.splice(from, 1);
@@ -31,14 +46,16 @@ export const moveItem = <T,>(list: T[], from: number, to: number): T[] => {
 export type DemoProps = Omit<EditorTabsProps<EditorTab>, "tabs" | "value" | "defaultValue"> & {
   initialTabs?: EditorTab[];
   initialValue?: string;
-  /** Draws a context menu on each tab. */
+  /** Draws the strip's own tab menu, with its close-several items. */
+  presetMenu?: boolean;
+  /** Draws a context menu of the story's own items on each tab. */
   withMenu?: boolean;
   /** Draws the add button. */
   addable?: boolean;
 };
 
 /** A strip whose owner applies what it asks for, the way an app would: close, add and reorder all change the array. */
-export function Demo({ initialTabs = demoTabs, initialValue = "index", withMenu = false, addable = true, ...props }: DemoProps) {
+export function Demo({ initialTabs = demoTabs, initialValue = "index", presetMenu = false, withMenu = false, addable = true, ...props }: DemoProps) {
   const [tabs, setTabs] = useState(initialTabs);
   const [value, setValue] = useState<string | null>(initialValue);
   const [count, setCount] = useState(1);
@@ -50,7 +67,9 @@ export function Demo({ initialTabs = demoTabs, initialValue = "index", withMenu 
       value={value}
       onValueChange={setValue}
       onClose={(tab) => setTabs((all) => all.filter((candidate) => candidate.id !== tab.id))}
+      onCloseMany={(closing) => setTabs((all) => all.filter((tab) => !closing.some((closed) => closed.id === tab.id)))}
       onReorder={(from, to) => setTabs((all) => moveItem(all, from, to))}
+      tabMenu={presetMenu}
       onAdd={
         addable
           ? () => {

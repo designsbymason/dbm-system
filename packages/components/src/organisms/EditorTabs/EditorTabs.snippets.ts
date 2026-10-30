@@ -56,8 +56,54 @@ ${strip('size="lg"')}`,
 />`,
 
   closeSelection: `{/* closeSelects: "neighbor" (default) selects the next tab, or the one before it, once the selected tab is
-    gone from \`tabs\`; "none" leaves the selection to you. The strip never closes anything itself. */}
-${strip('closeSelects="none"')}`,
+    gone from \`tabs\`; "previous" goes back to the tab that was selected before it; "none" leaves the selection
+    to you. The strip never closes anything itself. */}
+${strip('closeSelects="previous"')}`,
+
+  presetMenu: `{/* tabMenu draws the strip's own menu on each tab (right-click, long press or the context-menu key): Close,
+    and with onCloseMany Close others, Close tabs after this one and Close all; and with onReorder the moves. It is
+    the way to close or move a tab without the close button or a drag. onCloseMany gets the tabs to remove together. */}
+<EditorTabs
+  aria-label="Open files"
+  tabs={tabs}
+  value={open}
+  onValueChange={setOpen}
+  onClose={(tab) => setTabs(tabs.filter((t) => t.id !== tab.id))}
+  onCloseMany={(closing) => setTabs(tabs.filter((t) => !closing.includes(t)))}
+  onReorder={(from, to) => setTabs(move(tabs, from, to))}
+  tabMenu
+/>`,
+
+  shortcuts: `{/* None is bound by default: a browser keeps Ctrl+Tab and Ctrl+W for itself, so choose combinations the page
+    receives. "mod" is ⌘ on an Apple platform and Ctrl elsewhere. The listener is on the document. */}
+${strip('hotkeys={{ next: "mod+alt+ArrowRight", previous: "mod+alt+ArrowLeft", close: "mod+alt+w", add: "mod+alt+t" }}')}`,
+
+  status: `{/* status: "busy" (a spinner) | "error" | "warning", drawn after the name and spoken after it too; statusText
+    replaces the default word. */}
+<EditorTabs
+  aria-label="Open files"
+  value="build"
+  tabs={[
+    { id: "build", label: "build.log", status: "busy", statusText: "saving" },
+    { id: "app", label: "App.tsx", status: "error", statusText: "save failed" },
+    { id: "styles", label: "styles.css", status: "warning" },
+  ]}
+/>`,
+
+  tooltips: `{/* tooltip (or title) is shown in a tooltip on hover and keyboard focus. Without either, a tab shows its whole name
+    in one only when the name is cut short with an ellipsis. */}
+<EditorTabs
+  aria-label="Open files"
+  value="index"
+  tabs={[
+    { id: "index", label: "index.ts", tooltip: "src/organisms/EditorTabs/index.ts" },
+    { id: "app", label: "App.tsx", tooltip: "src/App.tsx" },
+  ]}
+/>`,
+
+  vertical: `{/* orientation="vertical" is a column, for a side panel of open items. Give the root a height and it scrolls.
+    Alt + the up and down arrow keys move a tab. */}
+${strip('orientation="vertical"\n  style={{ blockSize: "20rem" }}')}`,
 
   reorder: `{/* Drag a tab with a mouse or pen. With the keyboard: Alt + an arrow key moves the focused tab one place; Space
     picks it up, the arrow keys, Home and End move it, Space or Enter drops it and Escape puts it back. */}
@@ -107,7 +153,9 @@ interface PlaygroundSnippetArgs {
   variant?: TabsVariant;
   size?: TabsSize;
   rounded?: boolean;
-  closeSelects?: "neighbor" | "none";
+  closeSelects?: "neighbor" | "previous" | "none";
+  tabMenu?: boolean;
+  orientation?: "horizontal" | "vertical";
   overflow?: EditorTabsOverflow;
   dir?: "ltr" | "rtl";
   "aria-label"?: string;
@@ -127,6 +175,10 @@ export const editorTabsPlaygroundSnippet = (args: PlaygroundSnippetArgs): string
   if (args.rounded) attributes.push("rounded");
   if (args.closeSelects && args.closeSelects !== "neighbor") attributes.push(`closeSelects="${args.closeSelects}"`);
   if (args.overflow && args.overflow !== "scroll") attributes.push(`overflow="${args.overflow}"`);
+  if (args.tabMenu) {
+    attributes.push("onCloseMany={(closing) => setTabs(tabs.filter((t) => !closing.includes(t)))}", "tabMenu");
+  }
+  if (args.orientation === "vertical") attributes.push('orientation="vertical"');
   if (args.dir && args.dir !== "ltr") attributes.push(`dir="${args.dir}"`);
   return `${state}\n<EditorTabs\n  ${attributes.join("\n  ")}\n/>`;
 };

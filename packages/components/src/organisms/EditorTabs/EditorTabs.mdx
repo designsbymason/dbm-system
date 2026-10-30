@@ -14,10 +14,14 @@ export const rootPropOrder = [
   "defaultValue",
   "onValueChange",
   "onClose",
+  "onCloseMany",
   "onAdd",
   "onReorder",
   "closeSelects",
+  "tabMenu",
   "tabContextMenu",
+  "hotkeys",
+  "orientation",
   "overflow",
   "variant",
   "size",
@@ -51,8 +55,10 @@ arrow-key movement, and its scrolling with a fade and buttons when the tabs outg
 `EditorTabs` owns no list. `tabs` is the order and the contents, and `onClose`, `onAdd` and `onReorder` *ask* for a change:
 the strip shows whichever array it is given next, so your state stays the single source of truth. A tab can be closed with
 its close button, the Delete key, or a middle-click; added with the add button; moved by dragging it (with a mouse or pen)
-or with the keyboard; and acted on with a single press through `tabContextMenu`. A tab can be marked `dirty` (unsaved
-changes) or `pinned` (kept at the start). Panels are optional: draw the content yourself from the selection, or put
+or with the keyboard; and acted on with a single press through `tabMenu`, the strip's own menu (Close, Close others, Close
+tabs after this one, Close all, and the moves). A tab can be marked `dirty` (unsaved changes), `pinned` (kept at the
+start) or `status` (busy, error, warning), and can show a tooltip. The strip can run vertically, binds the shortcuts you
+choose, and eases tabs to their new places when the list changes. Panels are optional: draw the content yourself from the selection, or put
 `EditorTabs.Panel` elements inside the strip.
 
 ### Import
@@ -68,7 +74,10 @@ import { EditorTabs } from "@dbm-system/components";
 <Canvas of={EditorTabsStories.Playground} />
 
 </div>
-<PlaygroundControls of={EditorTabsStories.Playground} order={rootPropOrder} exclude={["tabs", "value", "defaultValue", "onValueChange", "onClose", "onAdd", "onReorder", "tabContextMenu", "children", "controllerRef", "labels", "formatNumber", "aria-labelledby", "id", "className", "style", "data-testid"]} />
+<PlaygroundControls of={EditorTabsStories.Playground} order={rootPropOrder} exclude={["tabs", "value", "defaultValue", "onValueChange", "onClose", "onCloseMany", "onAdd", "onReorder", "tabContextMenu", "hotkeys", "children", "controllerRef", "labels", "formatNumber", "aria-labelledby", "id", "className", "style", "data-testid"]} />
+
+The dot on App.tsx marks unsaved changes (`dirty`): it shows where the close button is until the tab is hovered, and a
+screen reader hears "unsaved changes" after the tab's name.
 
 ## Properties
 
@@ -78,11 +87,14 @@ listed here (e.g. `onFocus`, `title`) — passed straight through to the root el
 <PropertiesTable of={EditorTabsStories} order={rootPropOrder} />
 
 Each item of `tabs` takes `id` (unique and stable), `label` (what is shown; a string or number also names the tab for a screen reader),
-`icon`, `title` (the full name, as a browser tooltip), `dirty`, `pinned`, `closable`, `disabled` and `aria-label`. Any field you add comes back
+`icon`, `title` and `tooltip` (detail shown in a tooltip; `tooltip` wins), `dirty`, `pinned`, `closable`, `disabled`, `status`
+(`"busy"`, `"error"` or `"warning"`, with `statusText` to say it in your own words) and `aria-label`. Any field you add comes back
 in every callback. A tab is closable when `onClose` is given, unless it is pinned; set `closable` to override either way.
 
-`onReorder(from, to, via)` gives positions in `tabs` as it is now, so `move(tabs, from, to)` applies it. `controllerRef` receives
-`{ select(id), close(id), add(), move(id, to), focus(id) }`: one object for the strip's life, whose methods ask the way a press does
+`onReorder(from, to, via)` gives positions in `tabs` as it is now, so `move(tabs, from, to)` applies it. `onCloseMany(tabs, via)` gets the
+tabs that were asked to close together (Close others, Close all), already limited to those that can be closed: remove them from `tabs` in one update.
+`controllerRef` receives
+`{ select(id), close(id), closeMany(ids), add(), move(id, to), focus(id) }`: one object for the strip's life, whose methods ask the way a press does
 and return whether there was something to do.
 
 ### EditorTabs.Panel properties
@@ -111,15 +123,39 @@ A panel is `Tabs.Content`: it shows while the tab with the same `id` is selected
 
 ### What closing selects
 
+Here a close goes back to the tab that was selected before it (`closeSelects="previous"`). Select two tabs, then close the second.
+
 <Canvas of={EditorTabsStories.CloseSelection} />
+
+### Busy, error and warning tabs
+
+<Canvas of={EditorTabsStories.Status} />
+
+### Tooltips on tabs
+
+Hover a tab or move focus to it. A tab with no `tooltip` or `title` shows its whole name in a tooltip only when the name is cut short.
+
+<Canvas of={EditorTabsStories.Tooltips} />
+
+### Keyboard shortcuts
+
+<Canvas of={EditorTabsStories.Shortcuts} />
+
+### Vertical
+
+<Canvas of={EditorTabsStories.Vertical} />
+
+### The tab menu
+
+Right-click a tab, press the context-menu key on it, or long-press it on a touch screen.
+
+<Canvas of={EditorTabsStories.PresetMenu} />
 
 ### A long strip with a tab menu
 
 <Canvas of={EditorTabsStories.Overflow} />
 
-### A menu on each tab
-
-Right-click a tab, press the context-menu key on it, or long-press it on a touch screen.
+### A menu of your own on each tab
 
 <Canvas of={EditorTabsStories.TabMenu} />
 
@@ -140,19 +176,23 @@ Right-click a tab, press the context-menu key on it, or long-press it on a touch
 - Give every tab a stable, unique `id` (a file path, a record id), not its position.
 - Mark a tab `dirty` while it holds unsaved changes, and ask the person before `onClose` removes it.
 - Put pinned tabs first in `tabs`.
-- Offer `tabContextMenu` with "Move left" and "Move right" wherever `onReorder` is given, so a person who can't drag can still move a tab.
+- Turn on `tabMenu` wherever `onClose` or `onReorder` is given, and give it `onCloseMany`: it is how a person on a touch screen, or with a screen reader, closes or moves a tab.
+- Bind `hotkeys` to combinations the page can receive (`mod+alt+ArrowRight`), not the browser's own (Ctrl+Tab, Ctrl+W).
+- Say how a tab is doing with `status` while it saves or when it fails, and `dirty` while it holds changes.
 
 **Don't**
 
 - Don't use it for navigation between the pages of a site: that is `Navbar` or `Sidebar`.
-- Don't put the close button's operation only on the pointer. It is hidden from assistive technology on purpose; the Delete key and `tabContextMenu` are the other ways.
+- Don't put the close button's operation only on the pointer. It is hidden from assistive technology on purpose; the Delete key and the tab menu are the other ways.
+- Don't put a long description in `tooltip`: it is a hint, shown on hover and focus, and is not read as part of the tab's name.
 - Don't expect a tab to jump between strips, nest, or be dragged across the pinned boundary.
 - Don't use more than a handful of pinned tabs: they stay at the start and take its room.
 
 ## Best practices
 
 - **Closing is your decision.** `onClose` is a request. Remove the tab from `tabs` when it is fine to go; leave it when a dialog is asking about unsaved changes. The selection moves to a neighbour only once the tab has actually gone.
-- **Say what you select afterwards.** The default (`closeSelects="neighbor"`) selects the next tab, or the one before it when the last closed. Set `"none"` when the app has its own rule, such as returning to the tab opened before.
+- **Say what you select afterwards.** The default (`closeSelects="neighbor"`) selects the next tab, or the one before it when the last closed. `"previous"` goes back to the tab that was selected before; with nothing to go back to it falls back to a neighbour. Set `"none"` when the app has its own rule.
+- **Close several in one update.** `onCloseMany` is given the tabs together so one change to `tabs` removes them all and the strip chooses what to select once, not once per tab.
 - **Keep content mounted when it is costly to rebuild.** `forceMount` on a panel keeps an editor's undo history and scroll position while another tab is shown; leave it off for a panel that is cheap to draw.
 - **Name tabs by text.** A string label is announced as the tab's name; a label that is not text needs an `aria-label` or a `title`.
 - **Use `overflow="menu"` for many tabs.** Scrolling alone makes a far tab slow to reach; the menu lists them all.
@@ -170,12 +210,16 @@ Right-click a tab, press the context-menu key on it, or long-press it on a touch
 | `Delete` | Close the focused tab, if it can be closed |
 | `Alt` + `←` `→` | Move the focused tab one place |
 | `Space` on a tab | Pick the tab up to move it; `←` `→` `Home` `End` move it, `Space` or `Enter` drops it, `Escape` puts it back |
-| Context-menu key, `Shift` + `F10` | Open the tab's menu, when `tabContextMenu` is given |
+| `↑` `↓`, `Alt` + `↑` `↓` | The same movement and reordering in a vertical strip |
+| Context-menu key, `Shift` + `F10` | Open the tab's menu, when `tabMenu` or `tabContextMenu` is given |
+| Your `hotkeys` | Select the next or previous tab, close the selected tab, add a tab, from anywhere on the page |
 
 - A pick-up, move, drop and cancel are announced through a polite live region, as is a closed tab, with text from `labels` and numbers from `formatNumber`.
-- A tab that holds unsaved changes or is pinned says so in its name ("App.tsx (unsaved changes)"), so the state is never carried by the dot or the pin alone.
+- A tab that holds unsaved changes, is pinned, or is busy or in error says so in its name ("App.tsx (unsaved changes, save failed)"), so the state is never carried by the dot, the pin, the spinner or the colour alone.
+- A tab's tooltip is the system's tooltip: it opens on hover and keyboard focus, closes on Escape, and describes the tab without being part of its name. A tab with detail of its own, or a cut-short name, gets one; a short name with nothing to add does not.
+- Tabs ease to their new places and a new tab fades in; under `prefers-reduced-motion` neither is animated.
 - The close button is a pointer shortcut: it is out of the tab order and hidden from assistive technology, because a tab list may only hold tabs. The same operation is the Delete key and the tab menu. A tab that can be closed has `aria-keyshortcuts="Delete"`.
-- A press on a touch screen scrolls the strip, so dragging is for a mouse or pen. A person on a touch screen moves a tab through `tabContextMenu`, opened by a long press.
+- A press on a touch screen scrolls the strip, so dragging is for a mouse or pen. A person on a touch screen closes or moves a tab through the tab menu (`tabMenu`), opened by a long press.
 - Every close and add button is at least 24 × 24 px. Disabled tabs are skipped by the arrow keys.
 - The selected tab and the drop marker keep their meaning in forced-colours mode.
 
@@ -216,6 +260,30 @@ const [open, setOpen] = useState("index");
 />
 ```
 
+### Closing several tabs at once
+
+```tsx
+<EditorTabs
+  tabs={tabs}
+  value={open}
+  onValueChange={setOpen}
+  onClose={(tab) => setTabs(tabs.filter((t) => t.id !== tab.id))}
+  onCloseMany={(closing) => setTabs(tabs.filter((t) => !closing.includes(t)))}
+  tabMenu
+/>
+```
+
+### Shortcuts
+
+```tsx
+<EditorTabs
+  tabs={tabs}
+  value={open}
+  onValueChange={setOpen}
+  hotkeys={{ next: "mod+alt+ArrowRight", previous: "mod+alt+ArrowLeft", close: "mod+alt+w" }}
+/>
+```
+
 ### Native attributes on the root
 
 ```tsx
@@ -233,7 +301,9 @@ const [open, setOpen] = useState("index");
 <TokenRow token="border-width.2" usage="the drop marker's width" />
 <TokenRow token="icon.default" usage="the close button's cross" />
 <TokenRow token="icon.brand" usage="the unsaved dot" />
-<TokenRow token="icon.on-brand" usage="the cross and the unsaved dot on the selected tab of the solid variant" />
+<TokenRow token="icon.danger" usage="the mark on a tab with an error" />
+<TokenRow token="icon.warning" usage="the mark on a tab with a warning" />
+<TokenRow token="icon.on-brand" usage="the cross, the unsaved dot and the status mark on the selected tab of the solid variant" />
 <TokenRow token="opacity.60" usage="the tab being dragged" />
 <TokenRow token="radius.sm" usage="the close button's corners" />
 <TokenRow token="radius.full" usage="the unsaved dot" />
@@ -241,7 +311,9 @@ const [open, setOpen] = useState("index");
 <TokenRow token="space.2" usage="the unsaved dot's size" />
 <TokenRow token="space.6" usage="the smallest size of the close button's target" />
 <TokenRow token="motion.duration.fast" usage="the close button's hover" />
-<TokenRow token="motion.easing.standard" usage="the same transition" />
+<TokenRow token="motion.duration.base" usage="a tab easing to its new place, and a new tab fading in" />
+<TokenRow token="motion.easing.standard" usage="the close button's hover, and a tab easing to its new place" />
+<TokenRow token="motion.easing.decelerate" usage="a new tab fading in" />
 
 The tabs themselves, their scroll buttons and the add button take their tokens from `Tabs` and `IconButton`.
 

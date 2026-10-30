@@ -95,7 +95,8 @@ const PER_COMPONENT_CSS_BUDGET_KB = 5;
 const JS_BUDGET_OVERRIDES_KB = { Calendar: 12, CommandPalette: 18, DataTable: 32, DatePicker: 18, DateRangePicker: 22, EditorTabs: 16, FileUpload: 14, MultiSelect: 18, Navbar: 22, Sidebar: 22, TimeRangePicker: 12, Toolbar: 13 };
 
 // `EditorTabs`'s bundle holds `Tabs`, the `Menu` and `ContextMenu` its tab list and per-tab menus open, the `IconButton` and `Tooltip` of its
-// add button, and `useSortable`: 12.21KB measured against the 10KB default. Budget 16KB.
+// add button and tabs, the `Spinner`, and `useSortable`: 12.21KB measured first, 14.49KB with the tab menu, status, tooltips, shortcuts and the vertical strip,
+// against the 10KB default. Budget 16KB.
 //
 // The same for CSS. `DataTable`'s bundle holds the stylesheets of the `Table`, `TableToolbar`, `Pagination`, `Select`,
 // `Checkbox` and `Menu` parts it draws with (6.30KB measured against 3.45KB for `TableToolbar`, the largest of them), plus its own; 8.10KB

@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { expect, userEvent, waitFor, within } from "storybook/test";
 import { send } from "../../molecules/CodeBlock/browserProtocol";
-import { Demo, manyTabs } from "./EditorTabsStoryKit";
+import { Demo, manyTabs, pathTabs, statusTabs } from "./EditorTabsStoryKit";
 import type { EditorTab } from "./EditorTabs.types";
 
 // Real-browser checks for what jsdom can't evaluate: a drag with a real mouse, the layout of a tab and its close button, the
@@ -228,5 +228,210 @@ export const MouseCloseDoesNotTakeFocus: Story = {
     await send("Input.dispatchMouseEvent", { type: "mouseReleased", ...point, button: "left", clickCount: 1 });
     await waitFor(() => expect(labels()).toEqual(["alpha.ts", "bravo.ts", "delta.ts"]));
     expect(aside).toHaveFocus();
+  },
+};
+
+const hover = async (element: Element) => {
+  const box = element.getBoundingClientRect();
+  await send("Input.dispatchMouseEvent", { type: "mouseMoved", ...toPage(box.left + box.width / 2, box.top + box.height / 2) });
+};
+// The page's own corner: somewhere neutral for the pointer to rest between checks.
+const rest = () => send("Input.dispatchMouseEvent", { type: "mouseMoved", x: 1, y: 1 });
+
+/** A tab whose name is cut short shows the whole of it in a tooltip, and a short name shows none. */
+export const TooltipShowsACutName: Story = {
+  render: () => (
+    <Page width="30rem">
+      <Demo
+        addable={false}
+        initialValue="x"
+        initialTabs={[
+          { id: "x", label: "an-extremely-long-file-name-that-keeps-going-and-going-and-going-forever.test.tsx" },
+          { id: "y", label: "short.ts" },
+        ]}
+      />
+    </Page>
+  ),
+  play: async () => {
+    await ready();
+    await rest();
+    await hover(tabs()[1]!);
+    await new Promise((resolve) => setTimeout(resolve, 700));
+    expect(body().queryByRole("tooltip")).toBeNull();
+    await hover(tabs()[0]!);
+    const tip = await body().findByRole("tooltip");
+    expect(tip).toHaveTextContent("an-extremely-long-file-name-that-keeps-going-and-going-and-going-forever.test.tsx");
+    await rest();
+    await waitFor(() => expect(body().queryByRole("tooltip")).toBeNull());
+  },
+};
+
+/** A tab with a tooltip of its own shows it on a real hover, and keyboard focus. */
+export const TooltipDetail: Story = {
+  render: () => (
+    <Page>
+      <Demo initialTabs={pathTabs} initialValue="a" addable={false} />
+    </Page>
+  ),
+  play: async () => {
+    await ready();
+    await rest();
+    await hover(tabNamed(/App\.tsx/));
+    expect(await body().findByRole("tooltip")).toHaveTextContent("src/App.tsx");
+    await rest();
+    await waitFor(() => expect(body().queryByRole("tooltip")).toBeNull());
+    await userEvent.tab();
+    expect(await body().findByRole("tooltip")).toHaveTextContent("src/organisms/EditorTabs/index.ts");
+    await userEvent.keyboard("{Escape}");
+    await waitFor(() => expect(body().queryByRole("tooltip")).toBeNull());
+  },
+};
+
+/** The status mark sits after the name, inside the tab, clear of the close button, and never changes a tab's height. */
+export const StatusFits: Story = {
+  render: () => (
+    <Page width="50rem">
+      <div style={{ display: "grid", gap: "var(--dbm-space-4)" }}>
+        {(["xs", "md", "xl"] as const).map((size) => (
+          <Demo key={size} size={size} aria-label={`Size ${size}`} initialTabs={statusTabs} initialValue="index" addable={false} />
+        ))}
+      </div>
+    </Page>
+  ),
+  play: async () => {
+    await ready();
+    for (const list of body().getAllByRole("tablist")) {
+      const heights = [...list.querySelectorAll<HTMLElement>("[role=tab]")].map((tab) => Math.round(tab.getBoundingClientRect().height));
+      expect(new Set(heights).size).toBe(1);
+      for (const mark of list.querySelectorAll<HTMLElement>("[data-status]")) {
+        const tab = mark.closest("[role=tab]")!.getBoundingClientRect();
+        const box = mark.getBoundingClientRect();
+        const close = mark.closest("[data-editor-tab-item]")!.querySelector("button[aria-label^='Close ']")!.getBoundingClientRect();
+        expect(box.left).toBeGreaterThanOrEqual(tab.left);
+        expect(box.right).toBeLessThanOrEqual(close.left + 0.5);
+        expect(box.width).toBeGreaterThan(0);
+        // On the name's own line, not wrapped beneath it.
+        const label = mark.closest("[role=tab]")!.querySelector<HTMLElement>("[data-editor-tab-label]")!.getBoundingClientRect();
+        expect(Math.abs(box.top + box.height / 2 - (label.top + label.height / 2))).toBeLessThan(4);
+        expect(box.left).toBeGreaterThanOrEqual(label.right - 1);
+      }
+    }
+  },
+};
+
+/** A vertical strip is a column that scrolls past its height, with tabs the width of the column. */
+export const VerticalScrollsAndFills: Story = {
+  render: () => (
+    <Page width="16rem">
+      <Demo orientation="vertical" style={{ blockSize: "14rem" }} initialTabs={manyTabs.slice(0, 14)} initialValue="file-1" addable={false} />
+    </Page>
+  ),
+  play: async () => {
+    await ready();
+    const list = body().getByRole("tablist");
+    expect(list).toHaveAttribute("aria-orientation", "vertical");
+    expect(list.scrollHeight).toBeGreaterThan(list.clientHeight);
+    expect(list.getBoundingClientRect().height).toBeLessThanOrEqual(14 * parseFloat(getComputedStyle(document.documentElement).fontSize) + 1);
+    const widths = tabs().map((tab) => Math.round(tab.parentElement!.getBoundingClientRect().width));
+    expect(new Set(widths).size).toBe(1);
+    const bounds = list.getBoundingClientRect();
+    await userEvent.tab();
+    for (let index = 1; index < 14; index += 1) {
+      await userEvent.keyboard("{ArrowDown}");
+      await waitFor(() => {
+        const now = tabs()[index]!.getBoundingClientRect();
+        expect(now.top).toBeGreaterThanOrEqual(bounds.top - 1);
+        expect(now.bottom).toBeLessThanOrEqual(bounds.bottom + 1);
+      });
+    }
+  },
+};
+
+/** A mouse drag in a vertical strip moves a tab, with the marker on a tab's top or bottom edge. */
+export const VerticalDrag: Story = {
+  render: () => (
+    <Page width="16rem">
+      <Demo orientation="vertical" initialTabs={fixed} initialValue="a" addable={false} />
+    </Page>
+  ),
+  play: async () => {
+    await ready();
+    const target = tabNamed(/charlie/).getBoundingClientRect();
+    await realDrag(tabNamed(/alpha/), { x: target.left + target.width / 2, y: target.bottom - 4 }, async () => {
+      const marked = await waitFor(() => {
+        const found = document.querySelector<HTMLElement>("[data-drop]");
+        expect(found).not.toBeNull();
+        return found!;
+      });
+      const line = getComputedStyle(marked, "::before");
+      // A line along the tab's edge: wider than it is tall.
+      expect(parseFloat(line.width)).toBeGreaterThan(parseFloat(line.height));
+    });
+    await waitFor(() => expect(labels()).toEqual(["bravo.ts", "charlie.ts", "alpha.ts", "delta.ts"]));
+  },
+};
+
+/** After a reorder the tabs ease to their places and finish there, with no offset left behind. */
+export const ReorderEasesAndSettles: Story = {
+  render: () => (
+    <Page>
+      <Demo initialTabs={fixed} initialValue="a" addable={false} />
+    </Page>
+  ),
+  play: async () => {
+    await ready();
+    await userEvent.tab();
+    const before = tabNamed(/bravo/).getBoundingClientRect().left;
+    await userEvent.keyboard("{Alt>}{ArrowRight}{/Alt}");
+    await waitFor(() => expect(labels()).toEqual(["bravo.ts", "alpha.ts", "charlie.ts", "delta.ts"]));
+    // Something is easing, or has already finished: either way nothing is left offset once it is over.
+    await Promise.all(document.getAnimations().map((animation) => animation.finished.catch(() => undefined)));
+    await nextFrame();
+    for (const item of document.querySelectorAll<HTMLElement>("[data-editor-tab-item]")) expect(item.style.translate).toBe("");
+    const lefts = tabs().map((tab) => tab.getBoundingClientRect().left);
+    expect([...lefts].sort((a, b) => a - b)).toEqual(lefts);
+    expect(lefts[0]).toBeLessThan(before + 1);
+  },
+};
+
+/** A shortcut changes tab from the page with real key presses, and closing selects the tab used before. */
+export const ShortcutsAndPreviousTab: Story = {
+  render: () => (
+    <Page>
+      <Demo initialTabs={fixed} initialValue="a" addable={false} closeSelects="previous" hotkeys={{ next: "ctrl+alt+ArrowRight", previous: "ctrl+alt+ArrowLeft", close: "ctrl+alt+w" }} />
+    </Page>
+  ),
+  play: async () => {
+    await ready();
+    await userEvent.keyboard("{Control>}{Alt>}{ArrowRight}{/Alt}{/Control}");
+    await waitFor(() => expect(tabNamed(/bravo/)).toHaveAttribute("aria-selected", "true"));
+    await userEvent.keyboard("{Control>}{Alt>}{ArrowRight}{/Alt}{/Control}");
+    await waitFor(() => expect(tabNamed(/charlie/)).toHaveAttribute("aria-selected", "true"));
+    await userEvent.keyboard("{Control>}{Alt>}w{/Alt}{/Control}");
+    await waitFor(() => expect(labels()).toEqual(["alpha.ts", "bravo.ts", "delta.ts"]));
+    // The one used before charlie was bravo, which is not charlie's neighbour to the right (delta).
+    await waitFor(() => expect(tabNamed(/bravo/)).toHaveAttribute("aria-selected", "true"));
+  },
+};
+
+/** The tab menu closes the others at once with a real mouse, and what is left is selected. */
+export const PresetMenuClosesOthers: Story = {
+  render: () => (
+    <Page>
+      <Demo initialTabs={fixed} initialValue="a" addable={false} presetMenu />
+    </Page>
+  ),
+  play: async () => {
+    await ready();
+    const target = tabNamed(/charlie/).getBoundingClientRect();
+    const point = toPage(target.left + target.width / 2, target.top + target.height / 2);
+    await send("Input.dispatchMouseEvent", { type: "mouseMoved", ...point });
+    await send("Input.dispatchMouseEvent", { type: "mousePressed", ...point, button: "right", clickCount: 1 });
+    await send("Input.dispatchMouseEvent", { type: "mouseReleased", ...point, button: "right", clickCount: 1 });
+    const menu = await body().findByRole("menu");
+    await userEvent.click(within(menu).getByRole("menuitem", { name: "Close others" }));
+    await waitFor(() => expect(labels()).toEqual(["charlie.ts"]));
+    expect(tabNamed(/charlie/)).toHaveAttribute("aria-selected", "true");
+    await waitFor(() => expect(body().queryByRole("menu")).toBeNull());
   },
 };

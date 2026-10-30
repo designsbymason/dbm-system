@@ -26,6 +26,33 @@
 .item {
   max-inline-size: var(--dbm-editor-tabs-tab-max-width);
   min-inline-size: var(--dbm-editor-tabs-tab-min-width);
+  /* A tab that moved is put back where it was and released (`useEditorTabsFlip`), and this eases it to its new place. */
+  transition: translate var(--dbm-motion-duration-base) var(--dbm-motion-easing-standard);
+}
+
+/* A tab added to the list fades in, once. */
+.item[data-entering] {
+  animation: tabIn var(--dbm-motion-duration-base) var(--dbm-motion-easing-decelerate);
+}
+
+@keyframes tabIn {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .item {
+    transition: none;
+  }
+
+  .item[data-entering] {
+    animation: none;
+  }
 }
 
 /* Cut a long name with an ellipsis instead of letting it widen the tab past its largest size. */
@@ -33,8 +60,18 @@
   min-inline-size: 0;
 }
 
+/* The name and the status mark side by side: the name gives way (with an ellipsis), the mark never does. */
+.content {
+  align-items: center;
+  display: inline-flex;
+  gap: var(--dbm-space-2);
+  max-inline-size: 100%;
+  min-inline-size: 0;
+}
+
 .label {
   display: block;
+  min-inline-size: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -66,6 +103,74 @@
 /* A tab picked up with the keyboard: the same line of emphasis a focused tab has, kept while focus moves with it. */
 .tab[data-lifted] {
   background-color: var(--dbm-bg-brand-subtle);
+}
+
+/* What the tab is doing or how it went, after the name. */
+.status {
+  align-items: center;
+  display: inline-flex;
+  flex-shrink: 0;
+}
+
+.status[data-status="error"] {
+  color: var(--dbm-icon-danger);
+}
+
+.status[data-status="warning"] {
+  color: var(--dbm-icon-warning);
+}
+
+.status[data-status="busy"] {
+  color: var(--dbm-icon-default);
+}
+
+/* On the brand fill of the solid variant's selected tab the status takes the on-brand colour (its shape still tells error from warning). */
+.item[data-on-brand] .status {
+  color: var(--dbm-icon-on-brand);
+}
+
+/* --- A vertical strip ---
+   A column: the list takes the height it is given (and scrolls past it), the buttons follow it, and the drop marker is a line on the
+   tab's top or bottom edge. */
+
+.bar[data-orientation="vertical"] {
+  align-items: stretch;
+  align-self: stretch;
+  flex-direction: column;
+  min-block-size: 0;
+}
+
+.bar[data-orientation="vertical"] > :first-child {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  min-block-size: 0;
+  min-inline-size: auto;
+}
+
+/* The list takes the height the column gives it, which is what makes it scroll past it. */
+.bar[data-orientation="vertical"] .list {
+  flex: 1 1 auto;
+  min-block-size: 0;
+}
+
+.bar[data-orientation="vertical"] .item {
+  max-inline-size: none;
+}
+
+.bar[data-orientation="vertical"] .tab[data-drop]::before {
+  block-size: var(--dbm-border-width-2);
+  inline-size: auto;
+  inset-block: auto;
+  inset-inline: var(--dbm-space-1);
+}
+
+.bar[data-orientation="vertical"] .tab[data-drop="before"]::before {
+  inset-block-start: 0;
+}
+
+.bar[data-orientation="vertical"] .tab[data-drop="after"]::before {
+  inset-block-end: 0;
 }
 
 /* --- The close button and the unsaved dot --- */
