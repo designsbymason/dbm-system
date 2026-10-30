@@ -154,6 +154,12 @@
   min-block-size: 0;
 }
 
+/* The add button and the tab-list button take the column's width, the width of the tabs. */
+.bar[data-orientation="vertical"] .barButton {
+  inline-size: 100%;
+  max-inline-size: none;
+}
+
 .bar[data-orientation="vertical"] .item {
   max-inline-size: none;
 }

@@ -783,6 +783,23 @@ describe("EditorTabs — shortcuts", () => {
     expect(screen.getByRole("tab", { name: /app\.ts/ })).toHaveFocus();
   });
 
+  describe("on an Apple platform", () => {
+    it("matches mod as Command, and a letter by its key even when Option types another character", () => {
+      vi.spyOn(window.navigator, "platform", "get").mockReturnValue("MacIntel");
+      const onClose = vi.fn();
+      render(<Harness onClose={onClose} hotkeys={{ close: "mod+alt+w", next: "ctrl+alt+ArrowRight" }} />);
+      // Control, not Command, is "ctrl" there.
+      press({ key: "ArrowRight", ctrlKey: true, altKey: true });
+      expect(screen.getByRole("tab", { name: /app\.ts/ })).toHaveAttribute("aria-selected", "true");
+      // Control and Option+W is not Command and Option+W.
+      press({ key: "∑", code: "KeyW", ctrlKey: true, altKey: true });
+      expect(onClose).not.toHaveBeenCalled();
+      // Option+W types "∑" on a Mac: the letter is found from the physical key.
+      press({ key: "∑", code: "KeyW", metaKey: true, altKey: true });
+      expect(onClose).toHaveBeenCalledWith(expect.objectContaining({ id: "b" }), "hotkey");
+    });
+  });
+
   it("warns once about a combination that names no key", () => {
     const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
     render(<Harness hotkeys={{ next: "hyper+k" }} />);

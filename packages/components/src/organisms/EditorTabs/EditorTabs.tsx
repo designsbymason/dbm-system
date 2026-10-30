@@ -7,6 +7,7 @@ import { IconButton } from "../../atoms/IconButton";
 import { Spinner } from "../../atoms/Spinner";
 import { VisuallyHidden } from "../../atoms/VisuallyHidden";
 import { Tabs } from "../../molecules/Tabs";
+import { tabIconSize } from "../../molecules/Tabs/tabIconSizes";
 import type { TabsOrientation } from "../../molecules/Tabs/Tabs.types";
 import { Menu } from "../Menu";
 import styles from "./EditorTabs.module.css";
@@ -421,7 +422,11 @@ function EditorTabsInner<TTab extends EditorTab>(props: EditorTabsProps<TTab>, r
             </span>
             {tab.status && (
               <span className={styles.status} data-status={tab.status} aria-hidden="true">
-                {tab.status === "busy" ? <Spinner size="xs" /> : <Icon icon={tab.status === "error" ? WarningCircleIcon : WarningIcon} size="xs" />}
+                {tab.status === "busy" ? (
+                  <Spinner size={tabIconSize[size]} />
+                ) : (
+                  <Icon icon={tab.status === "error" ? WarningCircleIcon : WarningIcon} size={tabIconSize[size]} />
+                )}
               </span>
             )}
           </span>
@@ -494,7 +499,7 @@ function EditorTabsInner<TTab extends EditorTab>(props: EditorTabsProps<TTab>, r
         {overflow === "menu" && tabs.length > 0 && (
           <Menu dir={dir}>
             <Menu.Trigger asChild>
-              <IconButton icon={CaretDownIcon} aria-label={labels.allTabs} tooltip size={size} variant="ghost" tone="neutral" rounded={rounded} />
+              <IconButton icon={CaretDownIcon} aria-label={labels.allTabs} tooltip size={size} variant="ghost" tone="neutral" rounded={rounded} className={styles.barButton} />
             </Menu.Trigger>
             <Menu.Content align="end" size={size}>
               <Menu.RadioGroup aria-label={labels.allTabs} value={current ?? ""} onValueChange={(next) => select(next)}>
@@ -517,6 +522,7 @@ function EditorTabsInner<TTab extends EditorTab>(props: EditorTabsProps<TTab>, r
             variant="ghost"
             tone="neutral"
             rounded={rounded}
+            className={styles.barButton}
             onClick={() => onAdd()}
           />
         )}

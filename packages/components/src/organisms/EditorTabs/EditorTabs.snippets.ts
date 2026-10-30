@@ -74,9 +74,11 @@ ${strip('closeSelects="previous"')}`,
   tabMenu
 />`,
 
-  shortcuts: `{/* None is bound by default: a browser keeps Ctrl+Tab and Ctrl+W for itself, so choose combinations the page
-    receives. "mod" is ⌘ on an Apple platform and Ctrl elsewhere. The listener is on the document. */}
-${strip('hotkeys={{ next: "mod+alt+ArrowRight", previous: "mod+alt+ArrowLeft", close: "mod+alt+w", add: "mod+alt+t" }}')}`,
+  shortcuts: `{/* None is bound by default. A browser keeps some combinations for itself and never lets the page see them
+    (Ctrl+Tab and Ctrl+W, and on a Mac ⌘⌥ with the arrow keys or W), so choose ones the page receives: Control and
+    Option (Ctrl and Alt) with a key work on both. "mod" is ⌘ on an Apple platform and Ctrl elsewhere. The listener
+    is on the document. */}
+${strip('hotkeys={{ next: "ctrl+alt+ArrowRight", previous: "ctrl+alt+ArrowLeft", close: "ctrl+alt+w", add: "ctrl+alt+t" }}')}`,
 
   status: `{/* status: "busy" (a spinner) | "error" | "warning", drawn after the name and spoken after it too; statusText
     replaces the default word. */}

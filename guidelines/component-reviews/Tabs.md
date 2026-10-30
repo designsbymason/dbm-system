@@ -622,3 +622,12 @@ fade/button and keyboard-held-button stories, passes unchanged, and the hook has
 
 **Docs (2026-10-30):** the Tabs Docs page gained a "A tab with a control beside it" canvas with a hand-written "Show code" snippet, so the part can be seen on its own page and not only through `EditorTabs`.
 
+## Follow-up (2026-10-30, at explicit direction) — a five-step icon size, and a more solid overflow fade
+
+Two changes to existing output, both asked for by the maintainer after looking at `EditorTabs`.
+
+- **A tab's icon has its own five-step mapping** (`tabIconSize`, `tabIconSizes.ts`): `xs` to `xl` draw the icon at the icon scale's `xs`, `sm`, `md`, `lg` and `xl` (12, 16, 20, 24 and 32px). Before, five sizes shared three icon sizes (the `Button` mapping), so `xs` and `sm`, and `md` and `lg`, drew the same icon. The scroll buttons' carets keep the old mapping, since a 32px caret would be heavy beside the tabs. `EditorTabs`' status marks use the new one; its close cross stays `xs`.
+- **The fade at an edge with more tabs beyond it is mostly solid.** It was a 40px gradient from `bg.surface` to transparent, so a cut-off tab showed through. It is now 48px (`space.12`, in a `--tabs-fade-size` custom property), solid for the first 30% from the edge (the part under a scroll button) and thinning out over the rest, in all four directions; a first version (64px, 55% solid) read as too heavy. A scroll button now has the surface colour behind it, so the thinner fade doesn't let a cut-off tab show through the caret. The size and the solid share are two custom properties on the wrapper.
+
+**Classified** (`06` §9): both change what existing usage renders, and neither corrects a defect (a deliberate design change), with a blast radius of `Tabs`' own files plus `EditorTabs`. Partial re-finalization: **re-verified** design quality, responsiveness (all five sizes, narrow and wide, in a horizontal list), theming (light purple and dark emerald, looked at in `EditorTabs`' stories), and functional verification (the unit and real-browser suites). Not re-checked: the accessibility section (no markup changed) and the feature-completeness pass. Added a unit test that the icon is drawn at five different sizes, and two real-browser checks through `EditorTabs`: the icon, status mark and close cross measure 12, 16, 20, 24 and 32 / 12px, and the fade's solid share and width (`EditorTabs.checks.stories.tsx`). **Not looked at:** the vertical list's fade (the same rule, not seen), a `Tabs` with `fullWidth`, and every other place a `Tabs` is used in the Docs pages.
+

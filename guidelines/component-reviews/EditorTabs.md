@@ -49,3 +49,10 @@ Decision: [ADR-0146](../adr/0146-editortabs-gets-its-own-tab-menu-a-close-many-r
 **Not verified:** a screen reader (the status words and the tooltip's description), a real touch device and a long press, forced colours for the status marks, a very long strip with the easing running, and a vertical strip in the Docs page's own width. The shortcuts were tried with explicit Ctrl and Alt, not with `mod` on an Apple platform.
 
 **Decisions:** the hotkey helper is imported from `CommandPalette`'s folder (second consumer; extract at the third); the tooltip is not hoverable, so it closes the moment the pointer leaves; the tab menu is drawn only while open, as `DataTable`'s row menu.
+
+## Third round (2026-10-30)
+- **Icon sizes.** The status marks (spinner, error and warning icons) follow `Tabs`' new five-step icon size; the close cross stays `xs`. A real-browser check measures all of them at the five sizes. See [Tabs.md](Tabs.md).
+- **The overflow fade** is more solid (a `Tabs` change, see [Tabs.md](Tabs.md)); a real-browser check holds its width and solid share and that a scroll button sits inside it.
+- **Shortcuts on a Mac.** The example combinations in the story, snippets and Docs were `mod+alt+…`, which on a Mac is ⌘⌥ with the arrow keys or W: the browser uses those to change and close its own tabs and never passes them to the page, so nothing happened. The matching itself is right on an Apple platform (a unit test sends the events a Mac sends: ⌘ and Option with W typing "∑", matched by the physical key, and Control told apart from Command); it is the choice of example that was wrong. The examples are now `ctrl+alt+…` (Control and Option on a Mac, Ctrl and Alt elsewhere), and the Docs and the `hotkeys` JSDoc say which combinations a browser keeps. Not tried on a real Mac keyboard in a browser: the real key presses there were not available here.
+- **A vertical strip's add button and tab-list button take the column's width**, the width of the tabs (a real-browser check measures them against a tab).
+

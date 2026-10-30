@@ -177,7 +177,7 @@ Right-click a tab, press the context-menu key on it, or long-press it on a touch
 - Mark a tab `dirty` while it holds unsaved changes, and ask the person before `onClose` removes it.
 - Put pinned tabs first in `tabs`.
 - Turn on `tabMenu` wherever `onClose` or `onReorder` is given, and give it `onCloseMany`: it is how a person on a touch screen, or with a screen reader, closes or moves a tab.
-- Bind `hotkeys` to combinations the page can receive (`mod+alt+ArrowRight`), not the browser's own (Ctrl+Tab, Ctrl+W).
+- Bind `hotkeys` to combinations the page can receive, such as Control and Option (`ctrl+alt+ArrowRight`), not the browser's own: Ctrl+Tab and Ctrl+W, and on a Mac ⌘⌥ with the arrow keys or W, which the browser uses to change and close its own tabs and never passes on. `mod` (⌘ on a Mac, Ctrl elsewhere) is safe only with keys the browser leaves alone.
 - Say how a tab is doing with `status` while it saves or when it fails, and `dirty` while it holds changes.
 
 **Don't**
@@ -280,7 +280,7 @@ const [open, setOpen] = useState("index");
   tabs={tabs}
   value={open}
   onValueChange={setOpen}
-  hotkeys={{ next: "mod+alt+ArrowRight", previous: "mod+alt+ArrowLeft", close: "mod+alt+w" }}
+  hotkeys={{ next: "ctrl+alt+ArrowRight", previous: "ctrl+alt+ArrowLeft", close: "ctrl+alt+w" }}
 />
 ```
 

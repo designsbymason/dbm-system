@@ -80,7 +80,7 @@ const meta: Meta<PlaygroundArgs> = {
     hotkeys: {
       control: false,
       description:
-        "Keyboard shortcuts for selecting the next and previous tab, closing the selected one and adding one, each a combination such as mod+alt+ArrowRight (mod is ⌘ on an Apple platform and Ctrl elsewhere). None is bound by default: browsers keep Ctrl+Tab and Ctrl+W for themselves. The listener is on the document.",
+        "Keyboard shortcuts for selecting the next and previous tab, closing the selected one and adding one, each a combination such as ctrl+alt+ArrowRight (mod is ⌘ on an Apple platform and Ctrl elsewhere). None is bound by default: browsers keep some combinations for themselves (Ctrl+Tab, Ctrl+W, and on a Mac ⌘⌥ with the arrows or W), so choose ones the page can receive. The listener is on the document.",
     },
     onAdd: { control: false, description: "Called when the add button is pressed. The button appears only when this is given." },
     onReorder: {
@@ -295,11 +295,11 @@ export const Shortcuts: Story = {
   argTypes: { ...except("variant", "size") },
   render: (args) => (
     <div style={{ display: "grid", gap: "var(--dbm-space-3)" }}>
-      <p style={{ margin: 0 }}>Press Ctrl or ⌘ with Alt and the left or right arrow to change tab, W to close it and T to add one.</p>
+      <p style={{ margin: 0 }}>Press Control and Option (Ctrl and Alt) with the left or right arrow to change tab, W to close it and T to add one.</p>
       <Demo
         variant={args.variant}
         size={args.size}
-        hotkeys={{ next: "mod+alt+ArrowRight", previous: "mod+alt+ArrowLeft", close: "mod+alt+w", add: "mod+alt+t" }}
+        hotkeys={{ next: "ctrl+alt+ArrowRight", previous: "ctrl+alt+ArrowLeft", close: "ctrl+alt+w", add: "ctrl+alt+t" }}
       />
     </div>
   ),

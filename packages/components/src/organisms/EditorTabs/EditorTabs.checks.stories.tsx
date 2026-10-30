@@ -347,6 +347,23 @@ export const VerticalScrollsAndFills: Story = {
   },
 };
 
+/** In a vertical strip the add button, and the tab-list button, are as wide as the tabs. */
+export const VerticalButtonsMatchTheTabs: Story = {
+  render: () => (
+    <Page width="16rem">
+      <Demo orientation="vertical" overflow="menu" initialTabs={fixed} initialValue="a" />
+    </Page>
+  ),
+  play: async () => {
+    await ready();
+    const tabWidth = tabs()[0]!.parentElement!.getBoundingClientRect().width;
+    for (const name of ["New tab", "All tabs"]) {
+      const button = body().getByRole("button", { name });
+      expect(Math.abs(button.getBoundingClientRect().width - tabWidth)).toBeLessThan(1.5);
+    }
+  },
+};
+
 /** A mouse drag in a vertical strip moves a tab, with the marker on a tab's top or bottom edge. */
 export const VerticalDrag: Story = {
   render: () => (
@@ -433,5 +450,59 @@ export const PresetMenuClosesOthers: Story = {
     await waitFor(() => expect(labels()).toEqual(["charlie.ts"]));
     expect(tabNamed(/charlie/)).toHaveAttribute("aria-selected", "true");
     await waitFor(() => expect(body().queryByRole("menu")).toBeNull());
+  },
+};
+
+/** A tab's icon and status mark grow with each of the five sizes while the close cross stays small. */
+export const IconsFollowTheSize: Story = {
+  render: () => (
+    <Page width="50rem">
+      <div style={{ display: "grid", gap: "var(--dbm-space-4)" }}>
+        {(["xs", "sm", "md", "lg", "xl"] as const).map((size) => (
+          <Demo key={size} size={size} aria-label={`Size ${size}`} initialTabs={[statusTabs[1]!]} initialValue="app" addable={false} />
+        ))}
+      </div>
+    </Page>
+  ),
+  play: async () => {
+    await ready();
+    const sizes = body()
+      .getAllByRole("tablist")
+      .map((list) => {
+        const tab = list.querySelector<HTMLElement>("[role=tab]")!;
+        const icon = Math.round(tab.querySelector<SVGElement>("svg")!.getBoundingClientRect().width);
+        const status = Math.round(tab.querySelector<HTMLElement>("[data-status] svg")!.getBoundingClientRect().width);
+        const cross = Math.round(list.querySelector<SVGElement>("button[aria-label^='Close '] svg")!.getBoundingClientRect().width);
+        return { icon, status, cross };
+      });
+    expect(sizes.map((entry) => entry.icon)).toEqual([12, 16, 20, 24, 32]);
+    expect(sizes.map((entry) => entry.status)).toEqual([12, 16, 20, 24, 32]);
+    expect(sizes.map((entry) => entry.cross)).toEqual([12, 12, 12, 12, 12]);
+    // A larger icon never makes a tab taller than the others at its size: each tab is its size's token height.
+    const heights = body().getAllByRole("tablist").map((list) => Math.round(list.querySelector<HTMLElement>("[role=tab]")!.getBoundingClientRect().height));
+    expect(heights).toEqual([...heights].sort((a, b) => a - b));
+  },
+};
+
+/** The fade at an edge that has more tabs beyond it is solid next to the edge, so it covers what is cut off. */
+export const OverflowFadeIsSolidNearTheEdge: Story = {
+  render: () => (
+    <Page width="30rem">
+      <Demo initialTabs={manyTabs.slice(0, 14)} initialValue="file-1" addable={false} />
+    </Page>
+  ),
+  play: async () => {
+    await ready();
+    const wrapper = body().getByRole("tablist").parentElement!;
+    await waitFor(() => expect(wrapper).toHaveAttribute("data-overflow-end", "true"));
+    // The fade eases in: read it once it has.
+    await waitFor(() => expect(getComputedStyle(wrapper, "::after").opacity).toBe("1"));
+    const fade = getComputedStyle(wrapper, "::after");
+    expect(fade.backgroundImage).toMatch(/30%/);
+    // The fade is wide enough to hold a scroll button.
+    expect(parseFloat(fade.width)).toBeGreaterThanOrEqual(40);
+    const button = body().getByRole("button", { name: "Scroll tabs to the end" }).getBoundingClientRect();
+    const edge = wrapper.getBoundingClientRect();
+    expect(edge.right - button.left).toBeLessThanOrEqual(parseFloat(fade.width) + 1);
   },
 };

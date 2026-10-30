@@ -55,7 +55,7 @@ export type EditorTabsReorderVia = "pointer" | "keyboard" | "controller";
  */
 export type EditorTabsCloseSelects = "neighbor" | "previous" | "none";
 
-/** The shortcuts `hotkeys` can bind, each a combination such as `"mod+alt+ArrowRight"`, or `false` for none. */
+/** The shortcuts `hotkeys` can bind, each a combination such as `"ctrl+alt+ArrowRight"`, or `false` for none. */
 export interface EditorTabsHotkeys {
   /** Selects the next enabled tab, wrapping from the last to the first. */
   next?: string | false;
@@ -211,8 +211,9 @@ export interface EditorTabsProps<TTab extends EditorTab = EditorTab>
   tabContextMenu?: (context: EditorTabsMenuContext<TTab>) => ReactNode;
   /**
    * Keyboard shortcuts for selecting the next and previous tab, closing the selected one and adding one, each a combination of modifiers and
-   * a key joined by `+` (`"mod+alt+ArrowRight"`, where `mod` is ⌘ on an Apple platform and Ctrl elsewhere). None is bound by default: browsers
-   * keep Ctrl+Tab and Ctrl+W for themselves, so choose combinations the page can receive. The listener is on the document.
+   * a key joined by `+` (`"ctrl+alt+ArrowRight"`; `mod` is ⌘ on an Apple platform and Ctrl elsewhere). None is bound by default: browsers
+   * keep some combinations for themselves and never show them to the page (Ctrl+Tab and Ctrl+W, and on a Mac ⌘⌥ with the arrow keys or W), so
+   * choose ones the page can receive: Control and Option (Ctrl and Alt) with a key work on both. The listener is on the document.
    */
   hotkeys?: EditorTabsHotkeys;
   /**
