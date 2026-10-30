@@ -66,11 +66,12 @@ async function realClick(element: Element) {
 }
 
 // `ctrl+k` rather than the default, so the check is the same on a Mac and elsewhere.
-function Page({ commands = sampleCommands, ...props }: Partial<React.ComponentProps<typeof CommandPalette>>) {
+// The hints are off by default, and most checks here are about them, so the page turns them on unless a check says otherwise.
+function Page({ commands = sampleCommands, showHints = true, ...props }: Partial<React.ComponentProps<typeof CommandPalette>>) {
   return (
     <div style={{ minBlockSize: "100vh", padding: "var(--dbm-space-4)" }}>
       <Button>Outside</Button> <Input aria-label="Some field" />
-      <CommandPalette hotkey="ctrl+k" trigger={<Button>Open</Button>} commands={commands} {...props} />
+      <CommandPalette hotkey="ctrl+k" trigger={<Button>Open</Button>} commands={commands} showHints={showHints} {...props} />
     </div>
   );
 }
@@ -587,5 +588,21 @@ export const KeyHintsLeaveDevicesWithoutAMouse: Story = {
     for (const name of ["hints", "enterHint", "shortcutKey"]) await expect(text).toContain(name);
     await expect(text).toContain("display: none");
     await closeWithEscape();
+  },
+};
+
+export const ModePrefixHintsWithoutTheKeyHints: Story = {
+  name: "With showHints off the footer still hints each mode's prefix, and not the arrow, Enter and Escape keys",
+  render: () => <Page modes={sampleModes} showHints={false} />,
+  play: async () => {
+    await userEvent.click(body().getByRole("button", { name: "Open" }));
+    const dialog = await body().findByRole("dialog", { name: "Command palette" });
+    await settled(dialog);
+    const footer = dialog.querySelector<HTMLElement>("[class*=hints]");
+    expect(footer).not.toBeNull();
+    for (const mode of sampleModes) expect(within(footer!).getByText(mode.label as string)).toBeVisible();
+    expect(within(dialog).queryByText("Navigate")).toBeNull();
+    await userEvent.keyboard("{Escape}");
+    await waitFor(() => expect(body().queryByRole("dialog")).toBeNull());
   },
 };

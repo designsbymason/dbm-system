@@ -2029,7 +2029,7 @@ describe("Playground snippet for CommandPalette", () => {
     hotkey: "mod+shift+p",
     size: "xl",
     placement: "center",
-    showHints: false,
+    showHints: true,
     showCloseButton: true,
     scrimBlur: true,
     loading: true,
@@ -2042,7 +2042,7 @@ describe("Playground snippet for CommandPalette", () => {
     maxPerGroup: 4,
   } as const;
 
-  it.each([{}, everything, { hotkey: false, highlightTone: "none", dir: "ltr", size: "lg", placement: "top", showHints: true }] as const)(
+  it.each([{}, everything, { hotkey: false, highlightTone: "none", dir: "ltr", size: "lg", placement: "top", showHints: false }] as const)(
     "CommandPalette %j is a real snippet",
     (args) => {
       expect(problemsIn(commandPalettePlaygroundSnippet(args))).toEqual([]);
@@ -2050,7 +2050,7 @@ describe("Playground snippet for CommandPalette", () => {
   );
 
   it("writes only what differs from the defaults", () => {
-    const code = commandPalettePlaygroundSnippet({ hotkey: "mod+k", size: "lg", placement: "top", showHints: true, showCloseButton: false, scrimBlur: false, loading: false, error: false, dir: "ltr", highlightTone: "none" });
+    const code = commandPalettePlaygroundSnippet({ hotkey: "mod+k", size: "lg", placement: "top", showHints: false, showCloseButton: false, scrimBlur: false, loading: false, error: false, dir: "ltr", highlightTone: "none" });
     expect(code).toContain("<CommandPalette");
     for (const word of ["hotkey", "size", "placement", "showHints", "showCloseButton", "scrimBlur", "loading", "error", "dir", "highlightTone", "searchNested", "maxPerGroup"]) {
       expect(code).not.toContain(word);
@@ -2062,7 +2062,7 @@ describe("Playground snippet for CommandPalette", () => {
     expect(code).toContain('hotkey="mod+shift+p"');
     expect(code).toContain('size="xl"');
     expect(code).toContain('placement="center"');
-    expect(code).toContain("showHints={false}");
+    expect(code).toContain("showHints");
     expect(code).toContain("showCloseButton");
     expect(code).toContain("scrimBlur");
     expect(code).toContain("loading");

@@ -87,7 +87,7 @@ export function CommandPalettePanel({
   onHighlightChange,
   renderItem,
   highlightTone,
-  showHints = true,
+  showHints = false,
   footer,
   dir = "ltr",
   onFinish,
@@ -315,6 +315,16 @@ export function CommandPalettePanel({
   const emptyMessage = loading ? labels.loading : (page?.emptyContent ?? mode?.emptyContent ?? emptyContent ?? labels.noResults);
   const placeholder = argItem?.argument?.placeholder ?? page?.placeholder ?? mode?.placeholder ?? labels.placeholder;
   const backLabel = (argItem ?? page)?.label;
+  // The prefix that reaches each mode, at the top level. These tell a person what can be typed, so they are not part of `showHints`.
+  const modeHints =
+    modes && !context
+      ? modes.map((candidate) => (
+          <span key={candidate.prefix} className={styles.hint}>
+            <Kbd>{candidate.prefix}</Kbd>
+            {candidate.label}
+          </span>
+        ))
+      : null;
 
   return (
     <div className={styles.panel}>
@@ -379,31 +389,28 @@ export function CommandPalettePanel({
         />
       </div>
       {error ? <div className={listStyles.footer}>{labels.error}</div> : null}
-      {showHints || footer ? (
+      {showHints || footer || modeHints ? (
         <div className={styles.footer}>
-          {showHints ? (
+          {showHints || modeHints ? (
             <div className={styles.hints} aria-hidden="true">
-              <span className={styles.hint}>
-                <Kbd>↑</Kbd>
-                <Kbd>↓</Kbd>
-                {labels.hintNavigate}
-              </span>
-              <span className={styles.hint}>
-                <Kbd>↵</Kbd>
-                {labels.hintSelect}
-              </span>
-              <span className={styles.hint}>
-                <Kbd>Esc</Kbd>
-                {labels.hintClose}
-              </span>
-              {modes && !context
-                ? modes.map((candidate) => (
-                    <span key={candidate.prefix} className={styles.hint}>
-                      <Kbd>{candidate.prefix}</Kbd>
-                      {candidate.label}
-                    </span>
-                  ))
-                : null}
+              {showHints ? (
+                <>
+                  <span className={styles.hint}>
+                    <Kbd>↑</Kbd>
+                    <Kbd>↓</Kbd>
+                    {labels.hintNavigate}
+                  </span>
+                  <span className={styles.hint}>
+                    <Kbd>↵</Kbd>
+                    {labels.hintSelect}
+                  </span>
+                  <span className={styles.hint}>
+                    <Kbd>Esc</Kbd>
+                    {labels.hintClose}
+                  </span>
+                </>
+              ) : null}
+              {modeHints}
             </div>
           ) : null}
           {footer ? <div className={styles.footerExtra}>{footer}</div> : null}

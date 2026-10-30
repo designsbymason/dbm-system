@@ -172,8 +172,8 @@ const meta: Meta<PlaygroundArgs> = {
     },
     showHints: {
       control: "boolean",
-      description: "Shows the footer's key hints (arrows, Enter, Escape) and the Enter key on the highlighted row. They are not drawn, with a row's own shortcut keys, on a device with no mouse or trackpad.",
-      table: { defaultValue: { summary: "true" } },
+      description: "Shows the footer's key hints (arrows, Enter, Escape) and the Enter key on the highlighted row. They are not drawn, with a row's own shortcut keys, on a device with no mouse or trackpad. The hint for each mode's prefix is not part of this: it shows whenever there are modes.",
+      table: { defaultValue: { summary: "false" } },
     },
     footer: {
       control: false,
@@ -255,7 +255,7 @@ const meta: Meta<PlaygroundArgs> = {
     maxPerGroup: 0,
     loading: false,
     error: false,
-    showHints: true,
+    showHints: false,
     size: "lg",
     placement: "top",
     showCloseButton: false,

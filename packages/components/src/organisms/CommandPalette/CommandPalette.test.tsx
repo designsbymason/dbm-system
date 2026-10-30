@@ -619,13 +619,13 @@ describe("CommandPalette", () => {
       expect(screen.getAllByTestId("custom")[0]).toHaveTextContent("New file:true");
     });
 
-    it("shows or hides the key hints, and adds a footer", async () => {
+    it("leaves the key hints off, shows them with showHints, and adds a footer", async () => {
       const { rerender } = setup({ footer: <a href="/help">Help</a> });
       await screen.findByRole("dialog");
-      expect(screen.getByText("Navigate")).toBeInTheDocument();
-      expect(screen.getByRole("link", { name: "Help" })).toBeInTheDocument();
-      rerender(<CommandPalette defaultOpen commands={commands} showHints={false} />);
       expect(screen.queryByText("Navigate")).toBeNull();
+      expect(screen.getByRole("link", { name: "Help" })).toBeInTheDocument();
+      rerender(<CommandPalette defaultOpen commands={commands} showHints />);
+      expect(screen.getByText("Navigate")).toBeInTheDocument();
     });
 
     it("takes its words from labels, keeping the default for one left undefined", async () => {
@@ -902,7 +902,7 @@ describe("CommandPalette", () => {
 
     it("draws Enter at the end of the highlighted row only, hidden from assistive technology, with room kept on every row that can run", async () => {
       const user = userEvent.setup();
-      setup();
+      setup({ showHints: true });
       await screen.findByRole("dialog");
       const first = screen.getByRole("option", { name: /New file/ });
       const second = screen.getByRole("option", { name: /Open file/ });
@@ -918,13 +918,13 @@ describe("CommandPalette", () => {
       expect(hintOn(first)).not.toBeNull();
     });
 
-    it("is left off by showHints={false}, and never on a row that can't run", async () => {
+    it("is off by default, drawn by showHints, and never on a row that can't run", async () => {
       const user = userEvent.setup();
-      const { unmount } = setup({ showHints: false });
+      const { unmount } = setup();
       await screen.findByRole("dialog");
       expect(document.querySelector('[class*="enterHint"]')).toBeNull();
       unmount();
-      setup();
+      setup({ showHints: true });
       await screen.findByRole("dialog");
       await user.hover(screen.getByRole("option", { name: /Publish/ }));
       expect(hintOn(screen.getByRole("option", { name: /Publish/ }))).toBeNull();
@@ -1147,9 +1147,21 @@ describe("CommandPalette", () => {
     it("hints each prefix in the footer, and lists the top level without one", async () => {
       setup({ modes });
       await screen.findByRole("dialog");
+      // Whatever `showHints` is: the prefix hints say what can be typed, the arrow, Enter and Escape hints are the option.
+      expect(screen.queryByText("Navigate")).toBeNull();
       expect(screen.getByText("Actions")).toBeInTheDocument();
       expect(screen.getByText("People")).toBeInTheDocument();
       expect(labelsOf()).toContain("New file");
+    });
+
+    it("draws the prefix hints beside the other hints when they are on, and not inside a mode's own list", async () => {
+      const user = userEvent.setup();
+      setup({ modes, showHints: true });
+      await screen.findByRole("dialog");
+      expect(screen.getByText("Navigate")).toBeInTheDocument();
+      expect(screen.getByText("Actions")).toBeInTheDocument();
+      await user.type(input(), ">");
+      expect(screen.queryByText("People")).toBeNull();
     });
 
     it("switches to a mode's commands while the text starts with its prefix, and searches what follows", async () => {

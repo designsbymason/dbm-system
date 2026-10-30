@@ -205,7 +205,7 @@ export const commandPaletteSnippets = {
   commands={commands}
 />`,
 
-  footer: `{/* showHints draws the key hints (arrows, Enter, Escape) and footer adds content at the end. */}
+  footer: `{/* showHints draws the key hints (arrows, Enter, Escape), off by default, and footer adds content at the end. */}
 <CommandPalette
   trigger={<Button variant="secondary">Search…</Button>}
   footer={<Link href="/help">Help</Link>}
@@ -251,7 +251,7 @@ export function commandPalettePlaygroundSnippet(args: CommandPalettePlaygroundSn
   else if (args.hotkey && args.hotkey !== "mod+k") attributes.push(`hotkey=${quote(args.hotkey)}`);
   if (args.size && args.size !== "lg") attributes.push(`size="${args.size}"`);
   if (args.placement && args.placement !== "top") attributes.push(`placement="${args.placement}"`);
-  if (args.showHints === false) attributes.push("showHints={false}");
+  if (args.showHints) attributes.push("showHints");
   if (args.showCloseButton) attributes.push("showCloseButton");
   if (args.scrimBlur) attributes.push("scrimBlur");
   if (args.loading) attributes.push("loading");
