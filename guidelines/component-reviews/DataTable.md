@@ -21,7 +21,7 @@ go-ahead first.
   footer is secondary to the rows. Text is ordered with one `Intl.Collator("en")`, not the browser's locale, so a server and a browser agree
   (ADR-0021); a column that needs another language's order gives its own `compare`.
 - Left out, as agreed: column reordering (the sortable hook of [ADR-0043](../adr/0043-reordering-is-a-hand-rolled-sortable-hook-in-primitives-for-a-single-list-over-a-drag-and-drop-dependency.md)
-  waits for `EditorTabs`), expandable rows, grouping, cell editing and saved views.
+  was not built yet; `MultiSelect` and `EditorTabs` now use it, and `DataTable` still does not), expandable rows, grouping, cell editing and saved views.
 
 ## What was found while building it
 Real-browser checks caught each of these; none showed in a unit test.
