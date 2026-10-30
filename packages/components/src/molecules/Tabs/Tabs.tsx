@@ -5,6 +5,7 @@ import { createContext, forwardRef, useCallback, useContext, useEffect, useMemo,
 import { Icon } from "../../atoms/Icon";
 import type { IconSize } from "../../atoms/Icon";
 import styles from "./Tabs.module.css";
+import { tabIconSize } from "./tabIconSizes";
 import type {
   TabsAlign,
   TabsContentProps,
@@ -40,8 +41,8 @@ const TabsContext = createContext<TabsContextValue>({
   orientation: "horizontal",
 });
 
-// One step down from the trigger's own size at the small end, the mapping
-// `Button` uses, so an icon reads the same beside a label in either.
+// The scroll buttons' caret: one step down from the trigger's own size at the small end, the mapping
+// `Button` uses, so a caret reads the same beside a label in either.
 const iconSizeForTabsSize: Record<TabsSize, IconSize> = {
   xs: "xs",
   sm: "xs",
@@ -416,7 +417,7 @@ const TabsTrigger = forwardRef<HTMLButtonElement, TabsTriggerProps>((triggerProp
         children
       ) : (
         <>
-          {icon && <Icon icon={icon} size={iconSizeForTabsSize[size]} className={styles.triggerIcon} />}
+          {icon && <Icon icon={icon} size={tabIconSize[size]} className={styles.triggerIcon} />}
           {children !== undefined && children !== null && children !== false && (
             <span className={styles.triggerLabel}>{children}</span>
           )}

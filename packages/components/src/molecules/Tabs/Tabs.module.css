@@ -140,6 +140,13 @@
    there's nothing for `aria-hidden` to do that a pseudo-element (already
    outside the accessibility tree) doesn't do for free. Shared, orientation-
    agnostic properties only — size/position/background differ by axis below. */
+.listWrapper {
+  /* How far the fade reaches, and how much of it (from the edge) is solid before it thins out: the first part covers what is cut off
+     under a scroll button, the rest fades into the tabs. */
+  --tabs-fade-size: var(--dbm-space-12);
+  --tabs-fade-solid: 30%;
+}
+
 .listWrapper::before,
 .listWrapper::after {
   content: "";
@@ -153,17 +160,17 @@
 .listWrapper[data-orientation="horizontal"]::before,
 .listWrapper[data-orientation="horizontal"]::after {
   block-size: 100%;
-  inline-size: var(--dbm-space-10);
+  inline-size: var(--tabs-fade-size);
   inset-block: 0;
 }
 
 .listWrapper[data-orientation="horizontal"]::before {
-  background: linear-gradient(to right, var(--dbm-bg-surface), transparent);
+  background: linear-gradient(to right, var(--dbm-bg-surface) var(--tabs-fade-solid), transparent);
   inset-inline-start: 0;
 }
 
 .listWrapper[data-orientation="horizontal"]::after {
-  background: linear-gradient(to left, var(--dbm-bg-surface), transparent);
+  background: linear-gradient(to left, var(--dbm-bg-surface) var(--tabs-fade-solid), transparent);
   inset-inline-end: 0;
 }
 
@@ -175,29 +182,29 @@
    own; only the gradient's two colour stops need swapping. Block-axis only:
    a vertical list's top/bottom fade below is unaffected by inline direction. */
 .listWrapper[data-orientation="horizontal"]:dir(rtl)::before {
-  background: linear-gradient(to left, var(--dbm-bg-surface), transparent);
+  background: linear-gradient(to left, var(--dbm-bg-surface) var(--tabs-fade-solid), transparent);
 }
 
 .listWrapper[data-orientation="horizontal"]:dir(rtl)::after {
-  background: linear-gradient(to right, var(--dbm-bg-surface), transparent);
+  background: linear-gradient(to right, var(--dbm-bg-surface) var(--tabs-fade-solid), transparent);
 }
 
 /* Vertical's own fade band: full width, fixed height, pinned to the top/bottom
    edge instead of the left/right one — otherwise the identical idea. */
 .listWrapper[data-orientation="vertical"]::before,
 .listWrapper[data-orientation="vertical"]::after {
-  block-size: var(--dbm-space-10);
+  block-size: var(--tabs-fade-size);
   inline-size: 100%;
   inset-inline: 0;
 }
 
 .listWrapper[data-orientation="vertical"]::before {
-  background: linear-gradient(to bottom, var(--dbm-bg-surface), transparent);
+  background: linear-gradient(to bottom, var(--dbm-bg-surface) var(--tabs-fade-solid), transparent);
   inset-block-start: 0;
 }
 
 .listWrapper[data-orientation="vertical"]::after {
-  background: linear-gradient(to top, var(--dbm-bg-surface), transparent);
+  background: linear-gradient(to top, var(--dbm-bg-surface) var(--tabs-fade-solid), transparent);
   inset-block-end: 0;
 }
 
@@ -206,17 +213,16 @@
   opacity: 1;
 }
 
-/* A scroll button sits on its own fade's solid portion (nearest the edge),
-   which already covers the cut-off tab underneath — the button itself needs
-   no background of its own for that, just a higher `z-index` than the fade so
-   its icon isn't the thing painted over. Colour follows the same "neutral,
+/* A scroll button sits at the edge, on the fade, with the same surface colour of its own behind it, so
+   what is cut off underneath never shows through the caret however far the fade has thinned there; it has
+   a higher `z-index` than the fade so its icon isn't the thing painted over. Colour follows the same "neutral,
    belongs to the row" convention already used for an icon inside a form
    control's own box (`05-component-api-conventions.md` §6) — the closest
    real precedent for an auxiliary, non-brand-tinted affordance living in a
    control's own chrome, even though this isn't literally a form control. */
 .scrollButton {
   align-items: center;
-  background: none;
+  background-color: var(--dbm-bg-surface);
   border: none;
   color: var(--dbm-icon-default);
   cursor: pointer;

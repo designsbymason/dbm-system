@@ -1303,3 +1303,23 @@ describe("Tabs.Item", () => {
     expect(await axe(container)).toHaveNoViolations();
   });
 });
+
+describe("Tabs — icon sizes", () => {
+  it("draws a tab's icon one step larger with each of the five sizes", () => {
+    const seen = new Set<string>();
+    for (const size of ["xs", "sm", "md", "lg", "xl"] as const) {
+      const { container, unmount } = render(
+        <Tabs defaultValue="a" size={size}>
+          <Tabs.List aria-label="Mail">
+            <Tabs.Trigger value="a" icon={HouseIcon}>
+              Inbox
+            </Tabs.Trigger>
+          </Tabs.List>
+        </Tabs>,
+      );
+      seen.add(container.querySelector("svg")!.getAttribute("class") ?? "");
+      unmount();
+    }
+    expect(seen.size).toBe(5);
+  });
+});
