@@ -1,6 +1,6 @@
 # EditorTabs — review
 
-**Status:** Built, with its Docs page, stories, tests and real-browser checks. The §9 review pass has not been declared done and the component is not Finalized.
+**Status:** Finalized 2026-10-30, after the full `06-engineering-standards.md` §9 review pass and the rounds below, declared by the maintainer. Not verified: the items listed under "Not verified" and "Still not verified" below (a screen reader, a real touch device, forced colours for the status marks, a production build of a strip of hundreds of tabs, a real Mac keyboard for the shortcuts).
 
 ## What exists
 `EditorTabs`: a strip of tabs given as data (`tabs`, an array of `{ id, label, icon, title, dirty, pinned, closable, disabled }`) for tabs a person opens, closes and arranges, built on `Tabs` ([ADR-0145](../adr/0145-editortabs-is-a-data-driven-strip-built-on-tabs-with-a-tabs-item-part-that-asks-the-owner-for-closes-adds-and-moves-over-a-compound-strip-a-list-it-owns-or-a-touch-drag.md)). It owns no list: `onClose`, `onAdd` and `onReorder` ask, and the strip shows the array it is given next.
@@ -33,7 +33,7 @@ Props worth knowing: `value`/`defaultValue`/`onValueChange` (a tab id or `null`)
 - A tab dragged between pinned and unpinned groups, with a controller `move`, was checked by unit test only.
 
 ## Second round: nine gaps closed (2026-10-30)
-Decision: [ADR-0146](../adr/0146-editortabs-gets-its-own-tab-menu-a-close-many-request-a-previous-tab-selection-opt-in-shortcuts-a-status-a-tooltip-through-the-tooltip-atom-a-vertical-strip-and-a-css-eased-reflow-over-leaving-each-to-the-app.md). Still not Finalized.
+Decision: [ADR-0146](../adr/0146-editortabs-gets-its-own-tab-menu-a-close-many-request-a-previous-tab-selection-opt-in-shortcuts-a-status-a-tooltip-through-the-tooltip-atom-a-vertical-strip-and-a-css-eased-reflow-over-leaving-each-to-the-app.md).
 
 - **A tab menu of its own (`tabMenu`).** Close, Close others, Close tabs after this one and Close all (with `onCloseMany`), and Move to the start, earlier, later and to the end (with `onReorder`), each disabled where there is nothing to do; the app's `tabContextMenu` items follow after a separator. It is the accessible and touch route that the first round left to each app.
 - **Closing many (`onCloseMany`, `controller.closeMany`).** Handed the closable tabs together; a selection and a focus decision once, not per tab; one announcement ("3 tabs closed").
@@ -57,7 +57,7 @@ Decision: [ADR-0146](../adr/0146-editortabs-gets-its-own-tab-menu-a-close-many-r
 - **A vertical strip's add button and tab-list button take the column's width**, the width of the tabs (a real-browser check measures them against a tab).
 
 ## Final review pass (2026-10-30): eight findings, fixed
-From the `06` §9 pass before Finalizing. Not yet declared Finalized.
+From the `06` §9 pass before Finalizing.
 1. **A false "N tabs closed".** The strip announced every tab that left `tabs`, so swapping the whole list (another project) read "5 tabs closed". It now announces only tabs it was asked to close (`requestedClose`), once they have gone; a test swaps the list and expects silence, and another closes several through the menu and expects "3 tabs closed".
 2. **A re-render during the reflow put tabs in the wrong place.** The easing measured bounding rectangles, which include a `translate` still easing, so a new `tabs` array handed over mid-easing (an inline `.map()` does it every render) was compared against where a tab was drawn, not where it is. It measures layout positions (`offsetLeft`, `offsetTop`: unaffected by scroll and by the easing, checked in a browser). A real-browser check re-renders four times a frame apart during a reorder; **it failed against the old code** (the tabs ended out of order) and passes now.
 3. **A warning for reordering without a single-pointer route** (WCAG 2.5.7): `onReorder` with neither `tabMenu` nor `tabContextMenu` warns once in development. Tests for with and without.
