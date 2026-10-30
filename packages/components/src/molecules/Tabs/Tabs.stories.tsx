@@ -2,8 +2,9 @@ import type { Meta, StoryContext, StoryObj } from "@storybook/react-vite";
 import { expect, userEvent, waitFor, within } from "storybook/test";
 import { useState } from "react";
 import type { CSSProperties } from "react";
-import { ChartBarIcon, GearIcon, HouseIcon } from "@dbm-system/icons";
+import { ChartBarIcon, GearIcon, HouseIcon, XIcon } from "@dbm-system/icons";
 import { Badge } from "../../atoms/Badge";
+import { IconButton } from "../../atoms/IconButton";
 import { Input } from "../../atoms/Input";
 import { Text } from "../../atoms/Text";
 import { Tabs } from "./Tabs";
@@ -583,6 +584,34 @@ export const KeepMounted: Story = {
         </Tabs.Content>
         <Tabs.Content value="notes">
           <Text size="sm">Notes are not kept mounted.</Text>
+        </Tabs.Content>
+      </Tabs>
+    </div>
+  ),
+};
+
+export const WithAction: Story = {
+  name: "A tab with a control beside it",
+  argTypes: noControls,
+  parameters: { docs: { source: { code: tabsSnippets.withAction } } },
+  render: () => (
+    <div style={demoContainerStyle}>
+      <Tabs defaultValue="overview">
+        <Tabs.List aria-label="Project">
+          <Tabs.Item
+            action={
+              <IconButton icon={XIcon} aria-label="Close Overview" size="xs" variant="ghost" tone="neutral" tabIndex={-1} />
+            }
+          >
+            <Tabs.Trigger value="overview">Overview</Tabs.Trigger>
+          </Tabs.Item>
+          <Tabs.Trigger value="activity">Activity</Tabs.Trigger>
+        </Tabs.List>
+        <Tabs.Content value="overview">
+          <Text size="sm">A summary of the project.</Text>
+        </Tabs.Content>
+        <Tabs.Content value="activity">
+          <Text size="sm">Recent changes.</Text>
         </Tabs.Content>
       </Tabs>
     </div>

@@ -141,6 +141,26 @@ ${tabs('value={value} onValueChange={setValue}')}`,
   <Tabs.Content value="notes">Notes are not kept mounted.</Tabs.Content>
 </Tabs>`,
 
+  withAction: `{/* Tabs.Item holds one Tabs.Trigger and an action drawn at its end, beside the tab button and not
+    inside it. The action is hidden from assistive technology (a tablist may own only tabs) and kept out of
+    the tab order with tabIndex={-1}, so give what it does a key or a menu as well. */}
+<Tabs defaultValue="overview">
+  <Tabs.List aria-label="Project">
+    <Tabs.Item
+      action={
+        <button type="button" tabIndex={-1} aria-label="Close Overview" onClick={() => closeTab("overview")}>
+          ×
+        </button>
+      }
+    >
+      <Tabs.Trigger value="overview">Overview</Tabs.Trigger>
+    </Tabs.Item>
+    <Tabs.Trigger value="activity">Activity</Tabs.Trigger>
+  </Tabs.List>
+  <Tabs.Content value="overview">A summary of the project.</Tabs.Content>
+  <Tabs.Content value="activity">Recent changes.</Tabs.Content>
+</Tabs>`,
+
   asChildLink: `{/* asChild renders the tab onto your own element, keeping its look and its role="tab".
     Here each tab is a real link; the panels stay in the page, so use this only when the
     tabs switch panels rather than navigate. */}

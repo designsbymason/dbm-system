@@ -54,6 +54,12 @@ export interface UseSortableOptions {
    * @default false
    */
   autoScroll?: boolean;
+  /**
+   * Which way the items are laid out. A vertical list decides which side of an item a drop lands on from the pointer's height
+   * against the item's middle, not its width, and its drop marker is on the item's top or bottom edge.
+   * @default "horizontal"
+   */
+  orientation?: "horizontal" | "vertical";
   /** Whether the items read right to left, which flips the horizontal arrow keys and the side a drop lands on. @default false */
   rtl?: boolean | (() => boolean);
 }
@@ -123,6 +129,7 @@ export function useSortable<Container extends HTMLElement = HTMLElement>({
   rtl = false,
   tapToMove = false,
   autoScroll = false,
+  orientation = "horizontal",
 }: UseSortableOptions) {
   const container = useRef<Container | null>(null);
   // A callback ref, so the element is set without anything reading a ref while rendering.
@@ -134,9 +141,9 @@ export function useSortable<Container extends HTMLElement = HTMLElement>({
   const [drag, setDrag] = useState<SortableDrag | null>(null);
 
   // The latest options, read by the listeners below, which are added once per press.
-  const latest = useRef({ enabled, count, onMove, onLift, onDrop, onCancel, rtl, lifted, tapToMove, autoScroll });
+  const latest = useRef({ enabled, count, onMove, onLift, onDrop, onCancel, rtl, lifted, tapToMove, autoScroll, orientation });
   useLayoutEffect(() => {
-    latest.current = { enabled, count, onMove, onLift, onDrop, onCancel, rtl, lifted, tapToMove, autoScroll };
+    latest.current = { enabled, count, onMove, onLift, onDrop, onCancel, rtl, lifted, tapToMove, autoScroll, orientation };
   });
   const origin = useRef(0);
   const liftedViaRef = useRef<SortableLift | null>(null);
@@ -179,8 +186,12 @@ export function useSortable<Container extends HTMLElement = HTMLElement>({
       if (!best || distance < best.distance) best = { index, rect, distance };
     }
     if (!best) return null;
-    const centre = best.rect.left + best.rect.width / 2;
-    const before = isRtl() ? x > centre : x < centre;
+    const before =
+      latest.current.orientation === "vertical"
+        ? y < best.rect.top + best.rect.height / 2
+        : isRtl()
+          ? x > best.rect.left + best.rect.width / 2
+          : x < best.rect.left + best.rect.width / 2;
     const insertion = before ? best.index : best.index + 1;
     const to = insertion > from ? insertion - 1 : insertion;
     return { from, to, over: best.index, position: before ? "before" : "after" };

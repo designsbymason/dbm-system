@@ -227,6 +227,12 @@ Type something into the field, switch to the other tab and back.
 
 <Canvas of={TabsStories.KeepMounted} />
 
+### A tab with a control beside it
+
+`Tabs.Item` draws a control (a close button here) at the tab's end, as a sibling of the tab button. Pressing it doesn't select the tab. It is hidden from assistive technology and out of the tab order, so what it does needs a key or a menu elsewhere; `EditorTabs` is built on it.
+
+<Canvas of={TabsStories.WithAction} />
+
 ### Tabs as links (asChild)
 
 <Canvas of={TabsStories.AsLink} />

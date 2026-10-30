@@ -455,3 +455,37 @@ describe("useSortable — autoScroll", () => {
     vi.unstubAllGlobals();
   });
 });
+
+describe("useSortable — vertical", () => {
+  function Column() {
+    const { containerRef, itemProps, drag } = useSortable<HTMLDivElement>({ count: 3, orientation: "vertical", onMove: () => {} });
+    return (
+      <div role="group" aria-label="column" ref={containerRef} data-position={drag?.position ?? ""} data-over={drag?.over ?? ""}>
+        {["a", "b", "c"].map((item, index) => (
+          <button type="button" key={item} data-testid={item} {...itemProps(index)}>
+            {item}
+          </button>
+        ))}
+      </div>
+    );
+  }
+  const rect = (top: number): DOMRect => ({ left: 0, right: 100, top, bottom: top + 40, width: 100, height: 40, x: 0, y: top, toJSON: () => ({}) }) as DOMRect;
+  const move = (y: number) =>
+    act(() => {
+      fireEvent(window, new MouseEvent("pointermove", { clientX: 50, clientY: y, bubbles: true }));
+    });
+
+  it("drops before or after an item by the pointer's height, not its width", () => {
+    render(<Column />);
+    for (const [index, id] of ["a", "b", "c"].entries()) screen.getByTestId(id).getBoundingClientRect = () => rect(index * 40);
+    fireEvent.pointerDown(screen.getByTestId("a"), { clientX: 50, clientY: 20, pointerId: 1, isPrimary: true, pointerType: "mouse", button: 0 });
+    move(110);
+    expect(screen.getByRole("group")).toHaveAttribute("data-over", "2");
+    expect(screen.getByRole("group")).toHaveAttribute("data-position", "after");
+    move(82);
+    expect(screen.getByRole("group")).toHaveAttribute("data-position", "before");
+    act(() => {
+      fireEvent(window, new MouseEvent("pointerup", { clientX: 50, clientY: 82, bubbles: true }));
+    });
+  });
+});
