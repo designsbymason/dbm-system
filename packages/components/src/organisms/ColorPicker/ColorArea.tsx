@@ -26,7 +26,6 @@ const percent = (value: number) => Math.round(value * 100);
  */
 export const ColorArea = forwardRef<HTMLInputElement, ColorAreaProps>(({ hsva, labels, formatNumber, disabled, readOnly, onChange }, saturationRef) => {
   const surface = useRef<HTMLDivElement | null>(null);
-  const brightness = useRef<HTMLInputElement | null>(null);
   const dragging = useRef(false);
   const latest = useRef(hsva);
   latest.current = hsva;
@@ -139,7 +138,6 @@ export const ColorArea = forwardRef<HTMLInputElement, ColorAreaProps>(({ hsva, l
         onKeyDown={(event) => step(event, "s")}
       />
       <input
-        ref={brightness}
         type="range"
         min={0}
         max={100}

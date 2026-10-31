@@ -115,6 +115,10 @@ what a `FieldLabel`'s `htmlFor` should point at.
 
 <Canvas of={ColorPickerStories.FormatSwitch} />
 
+### Format held by the app
+
+<Canvas of={ColorPickerStories.FormatHeldByTheApp} />
+
 ### Channel number fields
 
 <Canvas of={ColorPickerStories.ChannelInputs} />
@@ -249,6 +253,8 @@ what a `FieldLabel`'s `htmlFor` should point at.
   `commitOn="commit"` the field keeps a drag until the owner's value changes.
 - The format switch reports the color in the new format through `onValueChange` and `onValueCommit` at the moment it is used (when a color is chosen), and `onFormatChange` with the format. With no color chosen only the format changes. A controlled `format` does not change until `onFormatChange` is wired to state.
 - `onFocus` and `onBlur` are for the field as a whole, panel included: they fire once on arriving and once on leaving.
+- With no color chosen the area, the hue slider and the opacity slider rest at a bright red until a color is chosen, and the field shows "No color"; choosing anything (a drag, a key, a swatch) sets the color from there.
+- The saturation and brightness area takes a finger's drag, so on a touch screen a drag that starts on it does not scroll the page (`touch-action: none`, which a two-dimensional drag needs). An inline picker in a long page leaves the page's own margin and the other controls to scroll by.
 - Typed text is read as hex (with or without `#`), a CSS color name (`rebeccapurple`, `transparent`), `rgb()`, `hsl()` or `oklch()`, and written back in `format`.
 - `controllerRef` gives code `open()`, `close()`, `focus()` and `isOpen()`; each says whether it had anything to do (`false` while disabled, read only, inline or already in that state). `Alt`+`ArrowDown` in the text entry opens the panel.
 - The saturation and brightness area never mirrors in a right-to-left page, since a color space isn't text; the
@@ -276,7 +282,7 @@ what a `FieldLabel`'s `htmlFor` should point at.
   `Page` and `Home`/`End` keys; in a right-to-left page the keys follow the direction.
 - The format switch is a named `radiogroup` of Hex, RGB, HSL and OKLCH (one tab stop, arrow keys between them), drawn with `ToggleGroup`; every button's name is its visible text.
 - With the `hex` format the panel has one field, "Hex code", for the whole code (opacity inside it with `alpha`); for the other formats the channel fields are number inputs named Red, Green, Blue (or Hue, Saturation, Lightness; Lightness, Chroma, Hue; Opacity) with a letter drawn under each as decoration, and they are detached from a surrounding form so a half-typed number never blocks a submit.
-- `Alt`+`ArrowDown` in the text entry opens the panel, as in a combobox or date field.
+- `Alt`+`ArrowDown` in the text entry opens the panel, as in a combobox or date field, and closing it returns focus to the text entry; a panel opened with the button returns focus to the button.
 - The copy button says "Color copied" (or that the browser refused) through the status region.
 - The recent row is a captioned group of the same swatch buttons (one tab stop, the same arrow keys), drawn only while it has colors; a color joins it when it is settled, not on every step of a drag. With `persistKey` it is empty on the server and the first client render, so hydration matches.
 - Swatches are buttons in a named group with `aria-pressed`, one tab stop (the optional "no color" swatch is the first), each with a tooltip of its name, moved between with the arrow keys (flipped in

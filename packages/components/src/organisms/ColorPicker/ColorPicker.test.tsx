@@ -4,6 +4,7 @@ import { axe } from "jest-axe";
 import { createRef, StrictMode, useState } from "react";
 import type { ColorPickerController } from "./ColorPicker.types";
 import { afterEach, describe, expect, it, vi } from "vitest";
+import { ButtonGroup } from "../../molecules/ButtonGroup";
 import { FormField } from "../../molecules/FormField";
 import { ColorPicker } from "./ColorPicker";
 
@@ -595,6 +596,40 @@ describe("ColorPicker color names", () => {
   });
 });
 
+describe("ColorPicker inside a ButtonGroup", () => {
+  it("is not disabled or resized by the group it sits in, panel included (the panel is portaled; a context crosses a portal)", async () => {
+    render(
+      <ButtonGroup aria-label="g" size="xl" variant="primary" disabled>
+        <ColorPicker aria-label="c" defaultOpen copyButton defaultValue="#5548a4" />
+      </ButtonGroup>,
+    );
+    await screen.findByRole("dialog");
+    expect(screen.getByRole("button", { name: "Copy color" })).toBeEnabled();
+  });
+
+  it("keeps an inline panel's buttons out of the group's settings too", () => {
+    render(
+      <ButtonGroup aria-label="g" disabled>
+        <ColorPicker aria-label="c" inline copyButton defaultValue="#5548a4" />
+      </ButtonGroup>,
+    );
+    expect(screen.getByRole("button", { name: "Copy color" })).toBeEnabled();
+  });
+});
+
+describe("ColorPicker development warnings", () => {
+  it("says each once, not on every render", async () => {
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
+    const user = userEvent.setup();
+    render(<ColorPicker swatches={["#ff0000", "nonsense"]} value="banana" onValueChange={() => undefined} />);
+    const count = () => warn.mock.calls.length;
+    const before = count();
+    expect(before).toBeGreaterThanOrEqual(3);
+    await user.type(screen.getByRole("textbox"), "abc");
+    expect(count()).toBe(before);
+  });
+});
+
 describe("ColorPicker keyboard shortcut and controller", () => {
   it("opens the panel with Alt+ArrowDown from the entry, and not with ArrowDown alone", async () => {
     const user = userEvent.setup();
@@ -605,6 +640,22 @@ describe("ColorPicker keyboard shortcut and controller", () => {
     await user.keyboard("{Alt>}{ArrowDown}{/Alt}");
     expect(await screen.findByRole("dialog", { name: "Choose a color" })).toBeInTheDocument();
     expect(saturation()).toHaveFocus();
+  });
+
+  it("gives focus back to the text entry when Alt+ArrowDown opened the panel, and to the button when the button did", async () => {
+    const user = userEvent.setup();
+    render(<ColorPicker aria-label="c" defaultValue="#5548a4" />);
+    entry().focus();
+    await user.keyboard("{Alt>}{ArrowDown}{/Alt}");
+    await screen.findByRole("dialog");
+    await user.keyboard("{Escape}");
+    await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
+    expect(entry()).toHaveFocus();
+    await user.click(openButton());
+    await screen.findByRole("dialog");
+    await user.keyboard("{Escape}");
+    await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
+    expect(openButton()).toHaveFocus();
   });
 
   it("does nothing on Alt+ArrowDown when inline or read only", async () => {
@@ -715,7 +766,11 @@ describe("ColorPicker copy button", () => {
 });
 
 describe("ColorPicker channel inputs", () => {
-  const field = (name: string) => (screen.queryByRole("spinbutton", { name }) ?? screen.getByRole("textbox", { name })) as HTMLInputElement;
+  // A channel field is named by its letter and its name ("R, Red"); `Hex code` stands as it is.
+  const field = (name: string) => {
+    const pattern = name === "Hex code" ? /^Hex code$/ : new RegExp(`, ${name}$|^${name}$`);
+    return (screen.queryByRole("spinbutton", { name: pattern }) ?? screen.getByRole("textbox", { name: pattern })) as HTMLInputElement;
+  };
 
   it("draws no fields unless asked", () => {
     render(<ColorPicker aria-label="c" inline defaultValue="#5548a4" />);
@@ -728,7 +783,7 @@ describe("ColorPicker channel inputs", () => {
     const onValueChange = vi.fn();
     render(<ColorPicker aria-label="c" inline showChannelInputs defaultValue="#5548a4" onValueChange={onValueChange} />);
     expect(screen.queryByRole("spinbutton")).not.toBeInTheDocument();
-    expect(screen.queryByRole("textbox", { name: "Red" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("textbox", { name: /Red/ })).not.toBeInTheDocument();
     expect(field("Hex code").value).toBe("#5548a4");
     // Applied as soon as it is a whole code, in any hex spelling, with or without the #.
     await user.clear(field("Hex code"));
@@ -753,7 +808,7 @@ describe("ColorPicker channel inputs", () => {
     const user = userEvent.setup();
     const { rerender } = render(<ColorPicker aria-label="c" inline showChannelInputs alpha defaultValue="#5548a480" />);
     expect(field("Hex code").value).toBe("#5548a480");
-    expect(screen.queryByRole("textbox", { name: "Opacity" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("textbox", { name: /Opacity/ })).not.toBeInTheDocument();
     await user.clear(field("Hex code"));
     await user.type(field("Hex code"), "#ff000040");
     expect(entry().value).toBe("#ff000040");
@@ -824,9 +879,9 @@ describe("ColorPicker channel inputs", () => {
 
   it("takes translated names and letters", () => {
     const { rerender } = render(<ColorPicker aria-label="c" inline showChannelInputs format="rgb" labels={{ channelName: (channel) => `K-${channel}`, channelLetter: () => "x" }} />);
-    expect(field("K-r")).toBeInTheDocument();
+    expect(screen.getByRole("spinbutton", { name: "x, K-r" })).toBeInTheDocument();
     rerender(<ColorPicker aria-label="c" inline showChannelInputs labels={{ channelName: (channel) => `K-${channel}` }} />);
-    expect(field("K-hex")).toBeInTheDocument();
+    expect(screen.getByRole("textbox", { name: "K-hex" })).toBeInTheDocument();
   });
 });
 
@@ -1090,9 +1145,34 @@ describe("ColorPicker accessibility", () => {
     expect(await axe(container)).toHaveNoViolations();
   });
 
-  it("keeps every accessible name inside what is shown (none is shown but the color itself)", () => {
-    render(<ColorPicker aria-label="c" defaultValue="#5548a4" />);
-    expect(entry().value).toBe("#5548a4");
+  it("holds the visible text of every control in its accessible name, as whole words (WCAG 2.5.3)", () => {
+    render(
+      <ColorPicker
+        aria-label="Brand color"
+        inline
+        showFormatSwitch
+        showChannelInputs
+        format="rgb"
+        alpha
+        noneSwatch
+        copyButton
+        showRecent
+        recentColors={["#ff0000"]}
+        swatches={["#00ff00"]}
+        defaultValue="#5548a4"
+      />,
+    );
+    const words = (text: string) => text.toLowerCase().split(/[^\p{L}\p{N}]+/u).filter(Boolean);
+    // A control that shows text: a format button's text is in its name; a channel field's letter, drawn under it, is a whole word of its name.
+    for (const radio of screen.getAllByRole("radio")) {
+      expect(words(radio.getAttribute("aria-label") ?? radio.textContent ?? "")).toEqual(expect.arrayContaining(words(radio.textContent ?? "")));
+    }
+    for (const field of document.querySelectorAll<HTMLInputElement>('input[form=""]')) {
+      const letter = field.parentElement?.parentElement?.querySelector("span[aria-hidden]")?.textContent ?? "";
+      const name = field.getAttribute("aria-label") ?? "";
+      expect(letter, "every channel field has a letter").not.toBe("");
+      expect(words(name), `${name} holds ${letter}`).toContain(letter.toLowerCase());
+    }
   });
 });
 

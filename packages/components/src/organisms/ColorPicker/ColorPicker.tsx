@@ -3,6 +3,7 @@ import { cx, mergeDefined, mergeRefs, useAnnouncement, useRecentCommands, useRes
 import * as PopoverPrimitive from "@radix-ui/react-popover";
 import { forwardRef, useEffect, useId, useImperativeHandle, useRef, useState } from "react";
 import type { ChangeEvent, CSSProperties, FocusEvent, KeyboardEvent, ReactNode } from "react";
+import { ButtonGroupReset } from "../../atoms/Button/buttonGroupContext";
 import { Icon } from "../../atoms/Icon";
 import { VisuallyHidden } from "../../atoms/VisuallyHidden";
 import { formatColor, hsvaToRgb, normalizeColor, parseColor } from "../../internal/color/colorValue";
@@ -215,24 +216,37 @@ export const ColorPicker = forwardRef<HTMLDivElement, ColorPickerProps>(
       }
     }
 
+    // Development warnings: each is said once, when what it is about changes, and not on every render.
+    const rejectedKey = rejected.join("\u0000");
     useEffect(() => {
       if (process.env.NODE_ENV === "production") return;
       if (value !== undefined && value !== "" && normalizeColor(value, format, alpha) === undefined) {
         console.warn(`ColorPicker: \`value\` ${JSON.stringify(value)} is not a color (use "#rrggbb", rgb(), hsl() or oklch()); treating it as empty.`);
       }
-      if (rejected.length > 0) {
-        console.warn(`ColorPicker: \`swatches\` has entries that are not colors, left out: ${rejected.map((item) => JSON.stringify(item)).join(", ")}.`);
-      }
-      if (!showRecent && (recentColors !== undefined || persistKey !== undefined || onRecentColorsChange !== undefined)) {
+    }, [value, format, alpha]);
+    useEffect(() => {
+      if (process.env.NODE_ENV === "production" || rejectedKey === "") return;
+      console.warn(`ColorPicker: \`swatches\` has entries that are not colors, left out: ${rejectedKey.split("\u0000").map((item) => JSON.stringify(item)).join(", ")}.`);
+    }, [rejectedKey]);
+    const recentPropsGiven = recentColors !== undefined || persistKey !== undefined || onRecentColorsChange !== undefined;
+    useEffect(() => {
+      if (process.env.NODE_ENV === "production") return;
+      if (!showRecent && recentPropsGiven) {
         console.warn("ColorPicker: `recentColors`, `onRecentColorsChange` and `persistKey` have no effect without `showRecent`.");
       }
+    }, [showRecent, recentPropsGiven]);
+    useEffect(() => {
+      if (process.env.NODE_ENV === "production") return;
       if (!ariaLabel && !ariaLabelledBy) {
         console.warn("ColorPicker: no accessible name — pass `aria-label`, or `aria-labelledby` pointing at a visible label (or put it in a `FormField`), so assistive tech has something to announce for the group.");
       }
+    }, [ariaLabel, ariaLabelledBy]);
+    useEffect(() => {
+      if (process.env.NODE_ENV === "production") return;
       if (!["hex", "rgb", "hsl", "oklch"].includes(format)) {
         console.warn(`ColorPicker: \`format\` must be "hex", "rgb", "hsl" or "oklch"; got ${JSON.stringify(format)}.`);
       }
-    });
+    }, [format]);
 
     // The text entry holds what is being typed until it is committed (Enter, or leaving it); `null` means "show the color".
     const [entry, setEntry] = useState<string | null>(null);
@@ -245,6 +259,8 @@ export const ColorPicker = forwardRef<HTMLDivElement, ColorPickerProps>(
     const panel = useRef<HTMLDivElement | null>(null);
     const trigger = useRef<HTMLButtonElement | null>(null);
     const interactedOutside = useRef(false);
+    // Where the panel was opened from, so closing puts focus back there: the text entry for `Alt`+`ArrowDown`, else the button.
+    const openedFrom = useRef<"entry" | "button">("button");
     const inside = useRef(false);
     const inert = disabled || readOnly;
     const invalid = hasError || invalidEntry;
@@ -267,6 +283,7 @@ export const ColorPicker = forwardRef<HTMLDivElement, ColorPickerProps>(
         open: () => {
           const now = latest.current;
           if (now.open || now.inline || now.disabled || now.readOnly) return false;
+          openedFrom.current = "button";
           now.setOpen(true);
           return true;
         },
@@ -339,6 +356,7 @@ export const ColorPicker = forwardRef<HTMLDivElement, ColorPickerProps>(
       } else if (event.key === "ArrowDown" && event.altKey && !inline && !inert) {
         // The shortcut a combobox and a date field have: Alt+ArrowDown opens what the field chooses from.
         event.preventDefault();
+        openedFrom.current = "entry";
         setOpen(true);
       } else if (event.key === "Escape" && entry !== null) {
         settle();
@@ -437,7 +455,10 @@ export const ColorPicker = forwardRef<HTMLDivElement, ColorPickerProps>(
             aria-expanded={open}
             aria-controls={open ? panelId : undefined}
             disabled={inert}
-            onClick={() => setOpen(!open)}
+            onClick={() => {
+              openedFrom.current = "button";
+              setOpen(!open);
+            }}
           >
             {chip}
           </button>
@@ -496,7 +517,10 @@ export const ColorPicker = forwardRef<HTMLDivElement, ColorPickerProps>(
       </>
     );
 
+    // The panel is drawn in a portal, and a context crosses a portal: without the reset its buttons would take the settings of a
+    // `ButtonGroup` the picker sits in (ADR-0102).
     const panelContent = (
+      <ButtonGroupReset>
       <ColorPickerPanel
         ref={areaRef}
         hsva={hsva}
@@ -522,6 +546,7 @@ export const ColorPicker = forwardRef<HTMLDivElement, ColorPickerProps>(
         onCopy={() => void copy()}
         onPickFromScreen={pickFromScreen}
       />
+      </ButtonGroupReset>
     );
 
     const groupProps = {
@@ -578,7 +603,9 @@ export const ColorPicker = forwardRef<HTMLDivElement, ColorPickerProps>(
               // Radix has no trigger of its own to hand focus back to, so it is done here, unless the panel was closed by a
               // press somewhere else, which is where the person's focus now is.
               event.preventDefault();
-              if (!interactedOutside.current) trigger.current?.focus();
+              const from = openedFrom.current;
+              openedFrom.current = "button";
+              if (!interactedOutside.current) (from === "entry" ? entryRef : trigger).current?.focus();
             }}
             onInteractOutside={(event) => {
               // The button toggles the panel itself: a press on it is not an outside press.

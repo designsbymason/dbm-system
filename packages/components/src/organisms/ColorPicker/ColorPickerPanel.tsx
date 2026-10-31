@@ -150,6 +150,13 @@ function RecentRow({ colors, isChosen, labels, dir, disabled, onPick }: RecentRo
   );
 }
 
+/**
+ * A channel field's accessible name holds the letter drawn under it as a whole word ("R, Red"): a person who says the visible
+ * text to a speech control, or reads it, finds the same word in the name. A name that already holds it ("Hex code" for "Hex") is used as is.
+ */
+const channelFieldName = (letter: string, name: string): string =>
+  name.toLowerCase().split(/[^\p{L}\p{N}]+/u).includes(letter.toLowerCase()) ? name : `${letter}, ${name}`;
+
 interface ChannelInputsProps {
   hsva: Hsva;
   space: ChannelSpace | "hex";
@@ -183,7 +190,7 @@ function ChannelInputs({ hsva, space, alpha, labels, disabled, readOnly, onChang
             spellCheck={false}
             autoComplete="off"
             autoCapitalize="off"
-            aria-label={labels.channelName("hex")}
+            aria-label={channelFieldName(labels.channelLetter("hex"), labels.channelName("hex"))}
             disabled={disabled}
             readOnly={readOnly}
             value={draft?.id === "hex" ? draft.text : written}
@@ -239,7 +246,7 @@ function ChannelInputs({ hsva, space, alpha, labels, disabled, readOnly, onChang
             size="xs"
             step={step}
             form=""
-            aria-label={labels.channelName(id)}
+            aria-label={channelFieldName(labels.channelLetter(id), labels.channelName(id))}
             disabled={disabled}
             readOnly={readOnly}
             value={draft?.id === id ? draft.text : String(value)}

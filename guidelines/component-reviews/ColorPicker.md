@@ -1,6 +1,6 @@
 # ColorPicker — review findings
 
-**Status:** Built 2026-10-31; the `06-engineering-standards.md` §9 review pass has not been run and the component is not Finalized (only the maintainer declares that).
+**Status:** Built 2026-10-31 and taken through a full `06-engineering-standards.md` §9 review pass the same day (findings and fixes below). Not Finalized: only the maintainer declares that. Open at the end of the pass: Safari, Firefox, a real touch screen, a screen reader, the real `EyeDropper` API, a second browser tab for `persistKey`, a phone with an on-screen keyboard.
 
 ## What was built
 
@@ -18,14 +18,30 @@ A color field: a swatch button that opens a panel, and a text entry that shows t
 
 - **Recent colors** (`showRecent`, `recentColors`, `persistKey`, `storage`, `controller.clearRecent()`, [ADR-0158](../adr/0158-colorpicker-keeps-its-recent-colors-in-the-picker-in-the-browser-through-use-recent-commands-or-in-the-app-over-a-fixed-storage-or-recording-every-drag-step.md)): reuses `useRecentCommands`; unit tests cover the cap, repeats, formats, the app's and the browser's lists, `sessionStorage`, clearing, the dev warning and hydration; a real-browser check presses a swatch, reads the real storage and measures the row (and it fails when the storage write is removed). Not done: the other tab's `storage` event with a real second tab, and a look at the row in the four themes.
 
-## Verified when it was built
+## Final review round
 
-- Unit: 58 tests for the component, 26 for its server render and hydration, and 30 for the color maths (round trips, refusals, hue retention, gamut clipping); jest-axe closed, open, inline, at `xs` and in right-to-left; the Docs page's token table against the stylesheet; every snippet through the shared guard.
-- Real browser (Chromium, `ColorPicker.checks.stories.tsx`, plus every story's axe run): a real mouse drag across the area with the thumb measured to the pixel and held at the edge; the thumb's two rings against black, white, mid-gray and red (one is at least 3:1 each time); text inserted all at once; a real mouse choosing a swatch inside a `Dialog` that stays open; button, swatch and thumb targets at 24 × 24px; the field's width unchanged as the text changes; right-to-left (area unmirrored, hue minimum at the right, `ArrowLeft` raises hue); the focus ring on the thumb for a real `Tab` and not for a press; forced colors (system colors on the thumbs and swatches, the area keeps its color); the panel's place and font, with `Escape` returning focus.
-- `pnpm lint` (ESLint and both typechecks), the whole unit suite (12,081 tests), the component bundle-size check (8.89KB JS, 3.30KB CSS against the default 10KB), `check-guidelines` and `check-foundations-token-coverage`.
+Eight findings, all fixed or settled:
 
-## Not done, to settle in the review pass
+- **The panel took an enclosing `ButtonGroup`'s settings.** It is portaled and a context crosses a portal; inside a disabled group its copy button came out disabled. The floating and inline panels are wrapped in `ButtonGroupReset` ([ADR-0102](../adr/0102-overlays-put-their-content-out-of-reach-of-a-button-groups-settings-over-letting-them-cross-the-portal.md)), with a test of a disabled, enlarged group around an open picker (it fails without the wrapper).
+- **Development warnings repeated on every render** (the "no accessible name" warning went from one to four while typing three characters). Each is now an effect with its own dependencies and is said once per change, with a test that typing repeats none.
+- **Closing a panel opened with `Alt`+`ArrowDown` put focus on the swatch button.** It now returns to where it was opened from: the text entry for the shortcut, the button for the button. The real-browser check asserted the old behavior and was changed.
+- **A channel field's visible letter was not a word of its accessible name** ("R" under a field named "Red"; WCAG 2.5.3, [ADR-0112](../adr/0112-an-interactive-controls-accessible-name-holds-its-visible-text-as-whole-words-in-order-over-a-name-that-only-means-the-same.md)). The name is now "R, Red" (a name that already holds the letter, such as "Hex code" under "Hex", is used as it is).
+- **A test named for label-in-name only asserted the entry's value.** It now checks that every format button's text and every channel field's letter is a whole word of its name.
+- **Dead code:** an unused `brightness` ref is gone, and the unused `formatControlled` snippet has a story ("Format held by the app").
+- **This file was out of date**; it is current.
+- **Two design questions, settled by documenting them:** with no color chosen the area and sliders rest at a bright red (the field says "No color"); and the area's `touch-action: none`, which a two-dimensional drag needs, means a finger starting on it does not scroll the page, which matters for an inline picker in a long page. Both are on the Docs page.
 
-- Safari, Firefox, a real touch screen and a screen-reader pass; the eyedropper path was tested with a stub, not the real API.
-- The Docs page itself (only the Playground was looked at in the four themes); the transparency checkerboard's two colors (`bg.track` and `bg.surface`) have not been contrast-checked as a pattern, only seen as a transparency cue.
+## Verified
+
+- Unit: 242 tests for the component, its server render and hydration, and the color maths; jest-axe closed, open, inline, at `xs`, in right-to-left and with every option on; the Docs page's token table against the stylesheet; every snippet through the shared guard. The whole unit suite is 12,169 tests.
+- Real browser (Chromium, `ColorPicker.checks.stories.tsx`, plus every story's axe run): 47 stories and checks, among them a real mouse drag with the thumb measured to the pixel, the thumb's two rings against black, white, mid-gray and red, text inserted all at once, a real mouse choosing inside a `Dialog`, target sizes, the right-to-left layout, forced colors, the panel's place and font, the format switch, the recent row against the real `sessionStorage`, the copy button's call to the real clipboard API, a phone-pinned and a desktop-pinned presentation, and every option on at once. Every one of these was proved by breaking the code it guards once and watching it fail; three first appeared to survive because the mutation was overridden or the test filter matched nothing, and were redone.
+- Live: the Docs page in purple light and emerald dark (all ten sections, 25 canvases, all 27 "Show code" blocks read after settling), and the Playground in all four themes and at 375px with the full-width presentation.
+- `pnpm lint` (ESLint and both typechecks), the component bundle-size check (14.14KB JS and 4.27KB CSS against a 15KB JS budget), `check-guidelines` and `check-foundations-token-coverage`.
+
+## Not done
+
+- Safari, Firefox, a real touch screen and a screen-reader pass; the eyedropper was tested with a stub, not the real API.
+- A real second tab for `persistKey`'s cross-tab sync.
 - The panel on a phone with an on-screen keyboard open, and a real finger dragging the area: the layout was checked at 375px in an emulated viewport only.
+- The Docs page in all four themes (two were looked at); the transparency checkerboard's two colors (`bg.track` and `bg.surface`) have not been contrast-checked as a pattern, only seen as a transparency cue.
+- The §5 sweep that drives every Controls-panel control of every story through the preview channel (the Playground's were driven).

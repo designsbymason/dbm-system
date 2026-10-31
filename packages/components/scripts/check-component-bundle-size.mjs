@@ -66,7 +66,7 @@ const PER_COMPONENT_CSS_BUDGET_KB = 5;
 //   ColorPicker (2026-10-31): a field, a trigger-less Popover layer, the hand-rolled color maths (parsing and four formats), the saturation and
 //   brightness area, two Radix sliders, the swatches and eyedropper: 8.96KB. The opt-in format switch draws with `ToggleGroup`, which the bundle then
 //   holds: 10.08KB against the default 10KB. The CSS color names (a 148-entry table), the channel number fields (`Input`), the swatch tooltips
-//   (`Tooltip`), the copy button and the controller bring it to 13.31KB; the recent colors row and `useRecentCommands` take it to 13.99KB,
+//   (`Tooltip`), the copy button and the controller bring it to 13.31KB; the recent colors row and `useRecentCommands` take it to 14.14KB,
 //   budgeted at 15KB (ADR-0156, ADR-0157, ADR-0158).
 //   DatePicker (2026-10-17): a field and a popover around `Calendar`, so its bundle holds the whole 10.55KB calendar (the
 //   month, year and week grids, the footer, the markers) plus `Popover` (1.4KB) and its own segment entry, validation and

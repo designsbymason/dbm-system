@@ -467,7 +467,7 @@ export const EverythingFitsThePanel: Story = {
     for (const button of within(panel).getAllByRole("button")) await expect(button.getBoundingClientRect().right).toBeLessThanOrEqual(box.right);
     // The oklch fields hold their longest values.
     await realClick(within(panel).getByRole("radio", { name: "OKLCH" }));
-    await waitFor(() => expect(within(panel).getByRole("spinbutton", { name: "Hue" })).toHaveValue(285.9));
+    await waitFor(() => expect(within(panel).getByRole("spinbutton", { name: /, Hue$/ })).toHaveValue(285.9));
     for (const control of channelFields()) await expect(control.scrollWidth).toBeLessThanOrEqual(control.clientWidth);
   },
 };
@@ -487,7 +487,8 @@ export const AltArrowDownOpens: Story = {
     await waitFor(() => expect(body().getByRole("slider", { name: "Saturation" })).toHaveFocus());
     await press("Escape", "Escape", 27);
     await waitFor(() => expect(body().queryByRole("dialog", { name: "Choose a color" })).not.toBeInTheDocument());
-    await expect(body().getByRole("button", { name: "Choose color" })).toHaveFocus();
+    // Opened from the text entry, so focus goes back there.
+    await expect(entry()).toHaveFocus();
   },
 };
 

@@ -6,7 +6,7 @@ import { Button } from "../../atoms/Button";
 import { Text } from "../../atoms/Text";
 import { FormField } from "../../molecules/FormField";
 import { ColorPicker } from "./ColorPicker";
-import type { ColorPickerController } from "./ColorPicker.types";
+import type { ColorPickerController, ColorPickerFormat } from "./ColorPicker.types";
 import { colorPickerPlaygroundSnippet, colorPickerSnippets } from "./ColorPicker.snippets";
 
 const swatchList = ["#5548a4", "#2e8a7d", { value: "oklch(0.7 0.15 60)", label: "Amber" }, "#d92d20", "#1f2937"];
@@ -308,6 +308,24 @@ export const FormatSwitch: Story = {
   parameters: { docs: { source: { code: colorPickerSnippets.formatSwitch } } },
   argTypes: { ...noControls },
   render: () => <ColorPicker aria-label="Brand color" showFormatSwitch defaultValue="#5548a4" />,
+};
+
+export const FormatHeldByTheApp: Story = {
+  name: "Format held by the app",
+  parameters: { docs: { source: { code: colorPickerSnippets.formatControlled } } },
+  argTypes: { ...noControls },
+  render: function FormatHeldByTheAppStory() {
+    const [format, setFormat] = useState<ColorPickerFormat>("hex");
+    const [color, setColor] = useState("#5548a4");
+    return (
+      <div style={stack}>
+        <ColorPicker aria-label="Brand color" showFormatSwitch format={format} onFormatChange={setFormat} value={color} onValueChange={setColor} />
+        <Text size="sm" color="secondary">
+          The app holds the format ({format}) and the color ({color}); the switch asks it to change them.
+        </Text>
+      </div>
+    );
+  },
 };
 
 export const ChannelInputs: Story = {
