@@ -1,6 +1,6 @@
 # ImageViewer — review findings
 
-**Status:** Built and put through the `06-engineering-standards.md` §9 review (the findings are below, all fixed). Not yet declared Finalized: only the maintainer does that.
+**Status:** Finalized 2026-10-31, declared by the maintainer after the final review round below. Open at finalization: Safari, Firefox, a real touch screen, a real full-screen call and a screen-reader pass were not run, and the counter reads "6 / 1" in a right-to-left stage (logical order, drawn from the right).
 
 ## What was built
 
