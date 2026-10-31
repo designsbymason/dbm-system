@@ -491,3 +491,15 @@ export const KeepsFocusWhenAControlTurnsOff: Story = {
     await closeWithEscape();
   },
 };
+
+export const ActionsInheritWhiteText: Story = {
+  name: "Text and a link in the toolbar's actions are white, and a link keeps that instead of the browser's colour",
+  render: () => <Harness actions={<><span data-testid="plain">Plain</span><a href="#top" data-testid="link">Link</a></>} />,
+  play: async () => {
+    const dialog = await openViewer();
+    const white = getComputedStyle(within(dialog).getByRole("button", { name: "Close" })).color;
+    await expect(getComputedStyle(within(dialog).getByTestId("plain")).color).toBe(white);
+    await expect(getComputedStyle(within(dialog).getByTestId("link")).color).toBe(white);
+    await closeWithEscape();
+  },
+};

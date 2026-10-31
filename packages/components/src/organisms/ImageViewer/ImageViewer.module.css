@@ -54,6 +54,20 @@
   justify-content: flex-end;
 }
 
+/* The consumer's own toolbar content: white text, and a link that keeps it instead of the browser's link colour. */
+.actions {
+  align-items: center;
+  color: var(--dbm-text-white);
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--dbm-space-2);
+  min-inline-size: 0;
+}
+
+.actions a {
+  color: inherit;
+}
+
 /* A control, the counter and the caption share one fill: 80% of `bg.overlay`, which over a white photo is still a
    dark grey that `icon.white` clears 12:1 against. */
 .control,

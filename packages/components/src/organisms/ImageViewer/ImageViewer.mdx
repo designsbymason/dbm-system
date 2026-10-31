@@ -115,6 +115,10 @@ warns in development.
 `formatNumber`. The zoom button shows the zoom ("150%"), and its accessible name must contain that text: a replacement
 `resetZoom` is given the text and should include it.
 
+`actions` sits in a small container that sets the text colour to white and keeps a link's colour inherited, so plain text and
+links are readable. Components that set their own colours are not recoloured: a `Button`, `IconButton` or `CloseButton` placed
+directly in `actions` logs a development warning, since in a light theme it is dark on the dark stage.
+
 ### ImageViewerButton
 
 A button drawn for the viewer's dark stage, for `actions`; the viewer's own controls are the same part. It takes `label` (required, the

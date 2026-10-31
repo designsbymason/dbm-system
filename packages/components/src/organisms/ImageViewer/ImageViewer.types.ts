@@ -246,7 +246,8 @@ export interface ImageViewerProps
   /**
    * Content placed in the toolbar beside the viewer's own buttons: a download link, a share button. Use
    * `ImageViewerButton` for a button that is readable on the dark stage in every theme (the viewer does not restyle
-   * anything else you put here), and `useImageViewerController()` inside it to know which image is in view.
+   * anything else you put here: text and a link inherit white, but a `Button` or `IconButton` takes theme colours and
+   * logs a development warning), and `useImageViewerController()` inside it to know which image is in view.
    */
   actions?: ReactNode;
   /**

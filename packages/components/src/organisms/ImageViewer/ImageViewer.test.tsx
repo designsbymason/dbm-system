@@ -495,6 +495,34 @@ describe("ImageViewer thumbnails, captions and controls", () => {
   });
 });
 
+describe("ImageViewer actions", () => {
+  it("warns in development about a Button, an IconButton or a CloseButton directly in actions", async () => {
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
+    render(<Viewer actions={<Button>Share</Button>} />);
+    await open();
+    expect(warn).toHaveBeenCalledWith(expect.stringContaining("`actions` holds a Button"));
+  });
+
+  it("does not warn for an ImageViewerButton, text or a link", async () => {
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
+    render(<Viewer actions={<><ImageViewerButton label="Share">Share</ImageViewerButton><a href="/x">Link</a>text</>} />);
+    await open();
+    expect(warn).not.toHaveBeenCalledWith(expect.stringContaining("`actions` holds"));
+  });
+
+  it("puts what it is given in one container beside the viewer's buttons, and draws none without actions", async () => {
+    const { unmount } = render(<Viewer actions={<a href="/x">Link</a>} />);
+    await open();
+    const link = screen.getByRole("link", { name: "Link" });
+    const container = link.parentElement as HTMLElement;
+    expect(container.parentElement).toContainElement(screen.getByRole("button", { name: "Close" }));
+    unmount();
+    render(<Viewer />);
+    await open();
+    expect(screen.getByRole("button", { name: "Close" }).parentElement?.querySelector("div")).toBeNull();
+  });
+});
+
 describe("ImageViewerButton", () => {
   it("is a named button in the toolbar that presses, and shows its text", async () => {
     const onClick = vi.fn();

@@ -10,8 +10,8 @@ import {
 } from "@dbm-system/icons";
 import { cx, mergeDefined, mergeRefs, useAnnouncement } from "@dbm-system/utils";
 import * as DialogPrimitive from "@radix-ui/react-dialog";
-import { createContext, forwardRef, useCallback, useContext, useEffect, useId, useImperativeHandle, useMemo, useRef, useState } from "react";
-import type { KeyboardEvent } from "react";
+import { Children, createContext, forwardRef, isValidElement, useCallback, useContext, useEffect, useId, useImperativeHandle, useMemo, useRef, useState } from "react";
+import type { KeyboardEvent, ReactNode } from "react";
 import { Backdrop } from "../../atoms/Backdrop";
 import { VisuallyHidden } from "../../atoms/VisuallyHidden";
 import { OverlayLifecycle } from "../../internal/overlay/OverlayLifecycle";
@@ -95,6 +95,19 @@ export function useImageViewerController(): ImageViewerController {
     }
   }, [controller]);
   return controller ?? inertController;
+}
+
+// Buttons whose colours follow the theme, which on a stage that is dark in every theme are dark on dark in a light theme.
+const themedButtons = new Set(["Button", "IconButton", "CloseButton"]);
+
+/** The name of the first direct child of `actions` that is a themed button, if any (read from its `displayName`, so no import). */
+function themedButtonIn(actions: ReactNode): string | null {
+  for (const child of Children.toArray(actions)) {
+    if (!isValidElement(child) || typeof child.type === "string") continue;
+    const name = (child.type as { displayName?: string }).displayName;
+    if (name && themedButtons.has(name)) return name;
+  }
+  return null;
 }
 
 function isEditable(target: EventTarget | null): boolean {
@@ -387,6 +400,15 @@ export const ImageViewer = forwardRef<HTMLDivElement, ImageViewerProps>(
       }
     }, [count, images]);
 
+    const themedButton = themedButtonIn(actions);
+    useEffect(() => {
+      if (process.env.NODE_ENV !== "production" && themedButton) {
+        console.warn(
+          `ImageViewer: \`actions\` holds a ${themedButton}, whose colours follow the theme, so in a light theme it is dark on the dark stage. Use ImageViewerButton, or style it for a dark background.`,
+        );
+      }
+    }, [themedButton]);
+
     const returnFocus = useReturnFocus();
     const captionId = useId();
     const caption = showCaptions && image?.caption ? image.caption : null;
@@ -537,7 +559,7 @@ export const ImageViewer = forwardRef<HTMLDivElement, ImageViewerProps>(
                 )}
               </>
             )}
-            {actions}
+            {actions ? <div className={styles.actions}>{actions}</div> : null}
             <ViewerButton
               label={labels.close}
               icon={XIcon}
