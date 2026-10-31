@@ -62,6 +62,108 @@
   min-block-size: 0;
   min-inline-size: 0;
   scroll-snap-align: start;
+  /* A drag past the first or last slide pulls the slides a little (the drag sets --carousel-pull, in the direction of the
+     track); the pull is limited here and eases back when the pointer lets go. */
+  translate: clamp(calc(-1 * var(--dbm-space-16)), var(--carousel-pull, 0px), var(--dbm-space-16)) 0;
+}
+
+.root[data-orientation="vertical"] .slide {
+  translate: 0 clamp(calc(-1 * var(--dbm-space-16)), var(--carousel-pull, 0px), var(--dbm-space-16));
+}
+
+.track:not([data-dragging]) .slide {
+  transition: translate var(--dbm-motion-duration-moderate) var(--dbm-motion-easing-decelerate);
+}
+
+/* A vertical carousel that takes its height from its slides: each at its own height, the track as tall as the tallest window. */
+.autoHeight[data-orientation="vertical"] .track {
+  block-size: var(--carousel-auto-size, auto);
+}
+
+.autoHeight[data-orientation="vertical"] .slide {
+  flex: 0 0 auto;
+}
+
+/* Slides dim and shrink as they scroll towards the edges of the view, with the browser's scroll-linked animation where it has
+   one. A slide at least half in view is drawn in full. */
+@keyframes carousel-fade {
+  0%,
+  100% {
+    opacity: var(--dbm-opacity-60);
+  }
+
+  30%,
+  70% {
+    opacity: 1;
+  }
+}
+
+@keyframes carousel-scale {
+  0%,
+  100% {
+    scale: var(--dbm-motion-scale-96);
+  }
+
+  30%,
+  70% {
+    scale: 1;
+  }
+}
+
+@keyframes carousel-fade-scale {
+  0%,
+  100% {
+    opacity: var(--dbm-opacity-60);
+    scale: var(--dbm-motion-scale-96);
+  }
+
+  30%,
+  70% {
+    opacity: 1;
+    scale: 1;
+  }
+}
+
+@supports (animation-timeline: view()) {
+  .effectFade .slide,
+  .effectScale .slide,
+  .effectFadeScale .slide {
+    animation-duration: 1ms;
+    animation-fill-mode: both;
+    animation-range: cover 0% cover 100%;
+    animation-timeline: view(inline);
+    animation-timing-function: linear;
+  }
+
+  .root[data-orientation="vertical"].effectFade .slide,
+  .root[data-orientation="vertical"].effectScale .slide,
+  .root[data-orientation="vertical"].effectFadeScale .slide {
+    animation-timeline: view(block);
+  }
+
+  .effectFade .slide {
+    animation-name: carousel-fade;
+  }
+
+  .effectScale .slide {
+    animation-name: carousel-scale;
+  }
+
+  .effectFadeScale .slide {
+    animation-name: carousel-fade-scale;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .effectFade .slide,
+  .effectScale .slide,
+  .effectFadeScale .slide {
+    animation: none;
+  }
+
+  .track:not([data-dragging]) .slide {
+    transition: none;
+  }
 }
 
 /* Dragging with a mouse: the grab cursor says the slides can be moved, and while it lasts snapping and text selection are off so the

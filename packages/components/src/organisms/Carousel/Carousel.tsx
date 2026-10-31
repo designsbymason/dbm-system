@@ -21,6 +21,7 @@ import { CarouselContext, CarouselSlideContext } from "./CarouselContext";
 import type { CarouselContextValue } from "./CarouselContext";
 import { CarouselAutoPlayToggle, CarouselIndicators, CarouselNext, CarouselPrevious } from "./CarouselParts";
 import { CarouselSlide } from "./CarouselSlide";
+import { useAutoHeight } from "./useAutoHeight";
 import { useAutoPlay } from "./useAutoPlay";
 import { useCarouselController } from "./useCarouselController";
 import { useCarouselDrag } from "./useCarouselDrag";
@@ -87,6 +88,10 @@ const CarouselRoot = forwardRef<HTMLDivElement, CarouselProps>(
       align = "start",
       lazy = false,
       mouseDrag = true,
+      effect = "none",
+      autoHeight = false,
+      repeatOnHold = true,
+      edgeResistance = true,
       orientation = "horizontal",
       gap = 4,
       peek = false,
@@ -227,7 +232,9 @@ const CarouselRoot = forwardRef<HTMLDivElement, CarouselProps>(
       },
       onMoving: setMoving,
     });
-    useCarouselDrag(trackRef, { axis: vertical ? "block" : "inline", enabled: mouseDrag });
+    useCarouselDrag(trackRef, { axis: vertical ? "block" : "inline", enabled: mouseDrag, resist: edgeResistance && !looping });
+    const sizedByContent = autoHeight && vertical && !center;
+    const autoSize = useAutoHeight(trackRef, { enabled: sizedByContent, perView, layoutKey: `${count}|${gap}|${looping}` });
     useCarouselController(controllerRef, { value, count, max, request, step, hold });
 
     // A video or audio element playing in a slide holds rotation. Media events don't bubble, so they are heard in the capture phase.
@@ -257,13 +264,13 @@ const CarouselRoot = forwardRef<HTMLDivElement, CarouselProps>(
     const warnedHeight = useRef(false);
     useEffect(() => {
       const track = trackRef.current;
-      if (process.env.NODE_ENV === "production" || warnedHeight.current || !vertical || !track || count <= visible) return;
+      if (process.env.NODE_ENV === "production" || warnedHeight.current || !vertical || sizedByContent || !track || count <= visible) return;
       // With a height from its container the track scrolls; with none it grows to hold every slide and there is nothing to scroll.
       if (track.clientHeight > 0 && track.scrollHeight <= track.clientHeight + 1) {
         warnedHeight.current = true;
         console.warn("Carousel: a vertical carousel needs a height from its container (a `block-size` on it or on a parent that it fills); without one every slide is shown at once.");
       }
-    }, [vertical, count, visible]);
+    }, [vertical, sizedByContent, count, visible]);
 
     const { message, announce: say } = useAnnouncement();
     const previousValue = useRef({ value, count });
@@ -330,6 +337,7 @@ const CarouselRoot = forwardRef<HTMLDivElement, CarouselProps>(
       perView,
       stops,
       stopPlace,
+      repeatOnHold,
       canPrevious,
       canNext,
       request,
@@ -380,7 +388,17 @@ const CarouselRoot = forwardRef<HTMLDivElement, CarouselProps>(
       <CarouselContext.Provider value={context}>
         <div
           ref={mergeRefs(ref, root)}
-          className={cx(styles.root, peeking && styles.peek, center && styles.centered, looping && styles.looping, className)}
+          className={cx(
+            styles.root,
+            peeking && styles.peek,
+            center && styles.centered,
+            looping && styles.looping,
+            sizedByContent && styles.autoHeight,
+            effect === "fade" && styles.effectFade,
+            effect === "scale" && styles.effectScale,
+            effect === "fade-scale" && styles.effectFadeScale,
+            className,
+          )}
           style={rootStyle}
           {...props}
           role="region"
@@ -413,6 +431,7 @@ const CarouselRoot = forwardRef<HTMLDivElement, CarouselProps>(
               // eslint-disable-next-line jsx-a11y/no-noninteractive-tabindex
               tabIndex={0}
               data-carousel-track=""
+              style={autoSize !== undefined ? ({ "--carousel-auto-size": `${autoSize}px` } as CSSProperties) : undefined}
               data-draggable={mouseDrag ? "" : undefined}
               onKeyDown={onTrackKeyDown}
             >

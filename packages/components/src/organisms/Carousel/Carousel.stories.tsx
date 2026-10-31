@@ -8,6 +8,7 @@ import { carouselPlaygroundSnippet, carouselSnippets } from "./Carousel.snippets
 import type {
   CarouselAlign,
   CarouselController,
+  CarouselEffect,
   CarouselControls,
   CarouselIndicatorsPlacement,
   CarouselOrientation,
@@ -24,6 +25,10 @@ interface PlaygroundArgs {
   align: CarouselAlign;
   lazy: boolean;
   mouseDrag: boolean;
+  edgeResistance: boolean;
+  repeatOnHold: boolean;
+  effect: CarouselEffect;
+  autoHeight: boolean;
   orientation: CarouselOrientation;
   gap: CarouselProps["gap"];
   peek: boolean;
@@ -59,6 +64,10 @@ const noControls = {
   align: off,
   lazy: off,
   mouseDrag: off,
+  edgeResistance: off,
+  repeatOnHold: off,
+  effect: off,
+  autoHeight: off,
   orientation: off,
   gap: off,
   peek: off,
@@ -125,6 +134,27 @@ const meta: Meta<PlaygroundArgs> = {
       control: "boolean",
       description: "Lets a mouse drag the slides, as a finger does. A click that ends a drag is swallowed; touch and pen always scroll natively.",
       table: { defaultValue: { summary: "true" } },
+    },
+    edgeResistance: {
+      control: "boolean",
+      description: "Gives a mouse drag past the first or last slide some resistance: the slides follow the pointer a little and ease back when it lets go.",
+      table: { defaultValue: { summary: "true" } },
+    },
+    repeatOnHold: {
+      control: "boolean",
+      description: "Keeps the previous and next buttons stepping while they are held, after a short delay.",
+      table: { defaultValue: { summary: "true" } },
+    },
+    effect: {
+      control: "select",
+      options: ["none", "fade", "scale", "fade-scale"],
+      description: "An effect drawn on the slides as they scroll towards the edges of the view, where the browser supports scroll-linked animation. Off under reduced motion.",
+      table: { defaultValue: { summary: '"none"' } },
+    },
+    autoHeight: {
+      control: "boolean",
+      description: "A vertical carousel takes its height from its slides (the tallest window of them) instead of from its container.",
+      table: { defaultValue: { summary: "false" } },
     },
     orientation: {
       control: "select",
@@ -204,6 +234,10 @@ const meta: Meta<PlaygroundArgs> = {
     align: "start",
     lazy: false,
     mouseDrag: true,
+    edgeResistance: true,
+    repeatOnHold: true,
+    effect: "none",
+    autoHeight: false,
     orientation: "horizontal",
     gap: 4,
     peek: false,
@@ -312,6 +346,29 @@ export const Lazy: Story = {
     </Carousel>
   ),
   parameters: { docs: { source: { code: carouselSnippets.lazy } } },
+};
+
+export const Effects: Story = {
+  name: "Fading and scaling at the edges",
+  argTypes: { ...except("effect", "slidesPerView") },
+  render: (args) => <Demo effect={args.effect} slidesPerView={args.slidesPerView} slides={7} aria-label="Effects" />,
+  args: { effect: "fade-scale", slidesPerView: 2.5 },
+  parameters: { docs: { source: { code: carouselSnippets.effect } } },
+};
+
+export const AutoHeight: Story = {
+  name: "Vertical, with its height from its slides",
+  argTypes: { ...except() },
+  render: () => (
+    <Carousel aria-label="Auto height" orientation="vertical" autoHeight slidesPerView={2}>
+      {[0, 1, 2, 3, 4].map((index) => (
+        <Carousel.Slide key={index}>
+          <DemoSlide.Panel index={index} height={`calc(var(--dbm-space-8) * ${2 + (index % 3)})`} />
+        </Carousel.Slide>
+      ))}
+    </Carousel>
+  ),
+  parameters: { docs: { source: { code: carouselSnippets.autoHeight } } },
 };
 
 export const Vertical: Story = {

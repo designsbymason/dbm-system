@@ -899,6 +899,114 @@ describe("Carousel — mouse drag", () => {
   });
 });
 
+describe("Carousel — holding a button", () => {
+  const press = (button: HTMLElement) => fireEvent.pointerDown(button, { button: 0, pointerType: "mouse" });
+  const release = (button: HTMLElement) => fireEvent.pointerUp(button, { button: 0, pointerType: "mouse" });
+
+  it("keeps stepping while the next button is held, and stops when it is let go", () => {
+    vi.useFakeTimers();
+    render(<Slides slides={8} />);
+    press(next());
+    act(() => {
+      vi.advanceTimersByTime(450);
+    });
+    expect(slide(1).inert).toBe(false);
+    act(() => {
+      vi.advanceTimersByTime(100);
+    });
+    expect(slide(2).inert).toBe(false);
+    act(() => {
+      vi.advanceTimersByTime(450);
+    });
+    expect(slide(3).inert).toBe(false);
+    release(next());
+    act(() => {
+      vi.advanceTimersByTime(3000);
+    });
+    expect(slide(3).inert).toBe(false);
+  });
+
+  it("swallows the click that ends a held press, but not an ordinary click", () => {
+    vi.useFakeTimers();
+    render(<Slides slides={8} />);
+    press(next());
+    act(() => {
+      vi.advanceTimersByTime(550);
+    });
+    release(next());
+    fireEvent.click(next());
+    expect(slide(2).inert).toBe(false);
+    fireEvent.click(next());
+    expect(slide(3).inert).toBe(false);
+  });
+
+  it("is an ordinary click when let go early", () => {
+    vi.useFakeTimers();
+    render(<Slides slides={8} />);
+    press(next());
+    act(() => {
+      vi.advanceTimersByTime(200);
+    });
+    release(next());
+    fireEvent.click(next());
+    act(() => {
+      vi.advanceTimersByTime(3000);
+    });
+    expect(slide(2).inert).toBe(false);
+  });
+
+  it("stops at the end, and does nothing with repeatOnHold off", () => {
+    vi.useFakeTimers();
+    const { unmount } = render(<Slides slides={3} />);
+    press(next());
+    for (let held = 0; held < 4; held += 1) {
+      act(() => {
+        vi.advanceTimersByTime(500);
+      });
+    }
+    expect(slide(3).inert).toBe(false);
+    unmount();
+    render(<Slides slides={8} repeatOnHold={false} />);
+    press(next());
+    act(() => {
+      vi.advanceTimersByTime(3000);
+    });
+    expect(slide(1).inert).toBe(false);
+  });
+});
+
+describe("Carousel — effects, height from content and edge resistance", () => {
+  it("adds the scroll-linked effect as a class on the root", () => {
+    const { rerender } = render(<Slides data-testid="c" />);
+    expect(screen.getByTestId("c").className).not.toMatch(/effect/);
+    rerender(<Slides data-testid="c" effect="fade-scale" />);
+    expect(screen.getByTestId("c").className).toMatch(/effectFadeScale/);
+    rerender(<Slides data-testid="c" effect="fade" />);
+    expect(screen.getByTestId("c").className).toMatch(/effectFade/);
+  });
+
+  it("sizes a vertical track to the tallest window of slides from their own heights", () => {
+    const heights: Record<string, number> = { "Slide 1": 100, "Slide 2": 50, "Slide 3": 120, "Slide 4": 30 };
+    vi.spyOn(HTMLElement.prototype, "getBoundingClientRect").mockImplementation(function (this: HTMLElement) {
+      return { height: heights[this.textContent ?? ""] ?? 0, width: 0, top: 0, left: 0, right: 0, bottom: 0 } as DOMRect;
+    });
+    render(<Slides slides={4} orientation="vertical" autoHeight slidesPerView={2} data-testid="c" />);
+    // Windows: 100+50, 50+120, 120+30: the tallest is 170 (no gap: jsdom reports no row gap).
+    expect(track().style.getPropertyValue("--carousel-auto-size")).toBe("170px");
+    expect(screen.getByTestId("c").className).toMatch(/autoHeight/);
+  });
+
+  it("ignores autoHeight on a horizontal carousel, and does not warn about a missing height with it", () => {
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+    vi.spyOn(HTMLElement.prototype, "clientHeight", "get").mockReturnValue(300);
+    vi.spyOn(HTMLElement.prototype, "scrollHeight", "get").mockReturnValue(300);
+    const { rerender } = render(<Slides autoHeight data-testid="c" />);
+    expect(screen.getByTestId("c").className).not.toMatch(/autoHeight/);
+    rerender(<Slides orientation="vertical" autoHeight data-testid="c" />);
+    expect(warn).not.toHaveBeenCalledWith(expect.stringContaining("needs a height"));
+  });
+});
+
 describe("Carousel — accessibility", () => {
   it("has no axe violations by default", async () => {
     const { container } = render(<Slides />);

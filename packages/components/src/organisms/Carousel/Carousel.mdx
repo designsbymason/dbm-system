@@ -24,6 +24,10 @@ export const rootPropOrder = [
   "align",
   "lazy",
   "mouseDrag",
+  "edgeResistance",
+  "repeatOnHold",
+  "effect",
+  "autoHeight",
   "orientation",
   "gap",
   "peek",
@@ -110,7 +114,11 @@ without it. There is no hook for it, since the only parts inside a carousel are 
 
 With `loop`, copies of the first and last slides sit at the ends of the track so the wrap has no seam. They are hidden from
 assistive technology and can't be pressed, but an `id` inside a slide is repeated in them, so don't point `aria-labelledby` at
-one. With `align="center"`, `value` is the slide in the middle and any slide can be it. With `lazy`, give each slide a size of
+one. With `align="center"`, `value` is the slide in the middle and any slide can be it. `effect` draws a fade, a shrink or both on the slides as they scroll towards the edges of the view, with the browser's
+scroll-linked animation (left out where a browser has none, and never under reduced motion). `autoHeight` lets a vertical
+carousel take its height from its slides instead of its container: tall enough for `slidesPerView` of them at their own heights,
+the tallest such window, so it never changes as it moves. `edgeResistance` gives a mouse drag past the first or last slide a pull
+that eases back, and `repeatOnHold` keeps the previous and next buttons stepping while they are held. With `lazy`, give each slide a size of
 its own (a height or an aspect ratio) and a `placeholder` of that size: an empty slide has none, and the track would jump as
 slides are drawn.
 
@@ -185,6 +193,14 @@ The pause and play button, drawn only while `autoPlay` is on. Its name and icon 
 
 <Canvas of={CarouselStories.Lazy} />
 
+### Fading and scaling at the edges
+
+<Canvas of={CarouselStories.Effects} />
+
+### Vertical, with its height from its slides
+
+<Canvas of={CarouselStories.AutoHeight} />
+
 ### Vertical
 
 <Canvas of={CarouselStories.Vertical} />
@@ -232,7 +248,7 @@ The pause and play button, drawn only while `autoPlay` is on. Its name and icon 
 - Use `peek` (or a fractional `slidesPerView`) when more than one slide is in view, so the cut-off edge tells a person there is more.
 - Use `lazy` for a long carousel of images, with a `placeholder` that has the slide's size.
 - Keep `autoPlay` off unless the content is truly secondary; where it is on, leave the pause button as it is.
-- Give a vertical carousel a height from its container.
+- Give a vertical carousel a height from its container, or set `autoHeight` to take it from its slides.
 
 </Callout>
 <Callout tone="danger" title="Don't">
@@ -291,8 +307,9 @@ focus to the other one.
 | `←` `→` on the indicators | Move between the indicators and go to that position |
 | `Enter` / `Space` | Presses the focused button |
 
-A mouse can also drag the slides (`mouseDrag`), which is a shortcut: every move it makes is on the buttons, the indicators and the
-keys too. The arrow keys are handled only when the track itself has focus, so they stay with a text field or slider inside a slide. In
+A mouse can also drag the slides (`mouseDrag`), and holding the previous or next button keeps stepping (`repeatOnHold`); both are
+shortcuts, since every move they make is on the buttons, the indicators and the keys too. The fade and scale effects are skipped
+under `prefers-reduced-motion`, and so is the pull at the ends of a drag. The arrow keys are handled only when the track itself has focus, so they stay with a text field or slider inside a slide. In
 forced-colours mode the track's focus ring is drawn in `Highlight`, and the buttons are the system's.
 
 </Callout>
@@ -355,6 +372,11 @@ The buttons are `IconButton`s and the indicators are `Indicators`; they draw wit
 <TokenRow token="border.focus" usage="the keyboard focus ring on the track" />
 <TokenRow token="border-width.2" usage="the width of that ring" />
 <TokenRow token="radius.sm" usage="the corners of that ring" />
+<TokenRow token="space.16" usage="how far the slides can be pulled when a drag goes past the first or last slide" />
+<TokenRow token="motion-duration.moderate" usage="how long the slides take to ease back after that pull" />
+<TokenRow token="motion-easing.decelerate" usage="the easing of that return" />
+<TokenRow token="opacity.60" usage="a slide near the edge of the view with the fade effect" />
+<TokenRow token="motion-scale.96" usage="a slide near the edge of the view with the scale effect" />
 <TokenRow token="space.3" usage="the inset of the buttons and indicators over the slides, and the space between the controls in the bar" />
 <TokenRow token="space.12" usage="how much of the next slide shows with peek" />
 <TokenRow token="font-family.primary" usage="the carousel's typography" />

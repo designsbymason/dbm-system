@@ -52,6 +52,18 @@ ${carousel('align="center" slidesPerView={2.5}', slides(7))}`,
   ))}
 </Carousel>`,
 
+  effect: `{/* effect: "none" (default) | "fade" | "scale" | "fade-scale" — slides near the edge of the view, where the browser animates on scroll */}
+${carousel('effect="fade-scale" slidesPerView={2.5}', slides(7))}`,
+
+  autoHeight: `{/* autoHeight: a vertical carousel as tall as its tallest window of slides, with no height from its container */}
+<Carousel aria-label="Featured" orientation="vertical" autoHeight slidesPerView={2}>
+  {items.map((item) => (
+    <Carousel.Slide key={item.id}>
+      <p>{item.title}</p>
+    </Carousel.Slide>
+  ))}
+</Carousel>`,
+
   vertical: `{/* orientation="vertical": the carousel needs a height from its container */}
 <div style={{ blockSize: "20rem" }}>
 ${carousel('orientation="vertical"').replace(/^/gm, "  ")}
@@ -118,6 +130,10 @@ export interface CarouselPlaygroundSnippetArgs {
   align?: "start" | "center";
   lazy?: boolean;
   mouseDrag?: boolean;
+  edgeResistance?: boolean;
+  repeatOnHold?: boolean;
+  effect?: string;
+  autoHeight?: boolean;
   orientation?: CarouselOrientation;
   gap?: number;
   peek?: boolean;
@@ -141,6 +157,10 @@ export function carouselPlaygroundSnippet(args: CarouselPlaygroundSnippetArgs): 
   if (args.align === "center") attributes.push('align="center"');
   if (args.lazy) attributes.push("lazy");
   if (args.mouseDrag === false) attributes.push("mouseDrag={false}");
+  if (args.edgeResistance === false && args.mouseDrag !== false) attributes.push("edgeResistance={false}");
+  if (args.repeatOnHold === false) attributes.push("repeatOnHold={false}");
+  if (args.effect && args.effect !== "none") attributes.push(`effect="${args.effect}"`);
+  if (args.autoHeight && args.orientation === "vertical") attributes.push("autoHeight");
   if (args.orientation && args.orientation !== "horizontal") attributes.push(`orientation="${args.orientation}"`);
   if (args.gap !== undefined && args.gap !== 4) attributes.push(`gap={${args.gap}}`);
   if (args.peek) attributes.push("peek");

@@ -6,6 +6,7 @@ export type {
   CarouselAutoPlayToggleProps,
   CarouselController,
   CarouselControls,
+  CarouselEffect,
   CarouselIndicatorsPlacement,
   CarouselIndicatorsProps,
   CarouselLabels,

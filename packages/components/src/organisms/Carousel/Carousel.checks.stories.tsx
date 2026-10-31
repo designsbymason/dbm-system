@@ -358,3 +358,103 @@ export const RefusedSwipeSnapsBack: Story = {
     await expect(inertOf(slideOf(canvasElement, 1))).toBe(false);
   },
 };
+
+export const HoldingNextKeepsStepping: Story = {
+  name: "Holding the next button with a real mouse keeps stepping, and letting go does not step once more",
+  render: () => {
+    const Held = () => {
+      const [value, setValue] = useState(0);
+      return (
+        <div>
+          <Demo slides={8} controls="bar" aria-label="Hold" onValueChange={setValue} />
+          <output data-testid="held">{value}</output>
+        </div>
+      );
+    };
+    return <Held />;
+  },
+  play: async ({ canvasElement }) => {
+    await parkPointer();
+    const button = nextButton(canvasElement);
+    const rect = box(button);
+    const x = rect.left + rect.width / 2;
+    const y = rect.top + rect.height / 2;
+    await mouse("mouseMoved", x, y);
+    await mouse("mousePressed", x, y);
+    await settle(1500);
+    const output = within(canvasElement).getByTestId("held");
+    const whileHeld = Number(output.textContent);
+    await expect(whileHeld).toBeGreaterThanOrEqual(2);
+    await mouse("mouseReleased", x, y);
+    await settle(1200);
+    await expect(Number(output.textContent)).toBe(whileHeld);
+    await parkPointer();
+  },
+};
+
+export const FadeEffectDimsSlidesNearTheEdge: Story = {
+  name: "The fade effect dims a slide that is mostly out of view and draws the one in view in full; reduced motion draws all in full",
+  render: () => <Demo effect="fade" slidesPerView={1.5} aria-label="Effect" />,
+  play: async ({ canvasElement }) => {
+    const opacity = (n: number) => parseFloat(getComputedStyle(slideOf(canvasElement, n)).opacity);
+    await settle(200);
+    await expect(opacity(1)).toBeGreaterThan(0.95);
+    await expect(opacity(3)).toBeLessThan(0.95);
+    const emulate = (value: "reduce" | "no-preference") =>
+      send("Emulation.setEmulatedMedia", { features: [{ name: "prefers-reduced-motion", value }] });
+    await emulate("reduce");
+    try {
+      await settle(300);
+      await expect(opacity(3)).toBe(1);
+    } finally {
+      await emulate("no-preference");
+    }
+  },
+};
+
+export const AutoHeightFitsTheSlides: Story = {
+  name: "A vertical carousel with autoHeight is as tall as its tallest window of slides, with no height from its container",
+  render: () => (
+    <Carousel aria-label="Auto height" orientation="vertical" autoHeight slidesPerView={2} gap={4}>
+      {[2, 6, 3, 4].map((tall, index) => (
+        <Carousel.Slide key={index}>
+          <div style={{ blockSize: `calc(var(--dbm-space-${tall}) * 4)`, background: "var(--dbm-bg-brand-subtle)" }}>Slide {index + 1}</div>
+        </Carousel.Slide>
+      ))}
+    </Carousel>
+  ),
+  play: async ({ canvasElement }) => {
+    const scroller = track(canvasElement);
+    await settle(200);
+    const heights = [1, 2, 3, 4].map((n) => box(slideOf(canvasElement, n)).height);
+    const gap = parseFloat(getComputedStyle(scroller).rowGap);
+    const tallest = Math.max(heights[0]! + heights[1]!, heights[1]! + heights[2]!, heights[2]! + heights[3]!) + gap;
+    await expect(Math.abs(box(scroller).height - tallest)).toBeLessThan(1.5);
+    await expect(scroller.scrollHeight).toBeGreaterThan(scroller.clientHeight);
+  },
+};
+
+export const EdgeResistancePullsAndEasesBack: Story = {
+  name: "Dragging past the first slide pulls the slides a little, and they ease back to rest when the mouse lets go",
+  render: () => <Demo aria-label="Resistance" />,
+  play: async ({ canvasElement }) => {
+    await parkPointer();
+    const scroller = track(canvasElement);
+    const rect = box(scroller);
+    const y = rect.top + rect.height / 2;
+    const from = rect.left + rect.width * 0.3;
+    const shift = () => parseFloat(getComputedStyle(slideOf(canvasElement, 1)).translate.split(" ")[0] ?? "0") || 0;
+    await mouse("mouseMoved", from, y);
+    await mouse("mousePressed", from, y);
+    for (let step = 1; step <= 8; step += 1) {
+      await mouse("mouseMoved", from + (rect.width * 0.4 * step) / 8, y);
+      await settle(16);
+    }
+    await expect(shift()).toBeGreaterThan(5);
+    await expect(scroller.scrollLeft).toBe(0);
+    await mouse("mouseReleased", from + rect.width * 0.4, y);
+    await waitFor(() => expect(shift()).toBe(0), { timeout: 2000 });
+    await expect(inertOf(slideOf(canvasElement, 1))).toBe(false);
+    await parkPointer();
+  },
+};

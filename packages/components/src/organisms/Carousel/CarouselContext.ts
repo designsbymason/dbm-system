@@ -28,6 +28,8 @@ export interface CarouselContextValue {
   reveal: (index: number) => void;
   /** Asks for the next (`1`) or previous (`-1`) position, from a person's press. */
   step: (direction: 1 | -1) => boolean;
+  /** Whether the previous and next buttons keep stepping while held. */
+  repeatOnHold: boolean;
   autoPlay: boolean;
   /** Whether rotation is running now (on, and not held by hover, focus, a hidden page or the person's pause). */
   playing: boolean;

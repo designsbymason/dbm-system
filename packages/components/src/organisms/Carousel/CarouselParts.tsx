@@ -4,6 +4,7 @@ import { CaretDownIcon, CaretLeftIcon, CaretRightIcon, CaretUpIcon, PauseIcon, P
 import { IconButton } from "../../atoms/IconButton";
 import { Indicators } from "../../atoms/Indicators";
 import { useCarouselContext } from "./CarouselContext";
+import { useRepeatOnHold } from "./useRepeatOnHold";
 import type { CarouselContextValue } from "./CarouselContext";
 import styles from "./Carousel.module.css";
 import type {
@@ -33,6 +34,7 @@ const placementOf = (controls: CarouselContextValue["controlsPlacement"]): "over
 export const CarouselPrevious = forwardRef<HTMLButtonElement, CarouselPreviousProps>(({ icon, className, "aria-label": ariaLabel, ...props }, ref) => {
   const carousel = useCarouselContext("Carousel.Previous");
   const vertical = carousel.orientation === "vertical";
+  const hold = useRepeatOnHold(() => carousel.step(-1), carousel.repeatOnHold);
   return (
     <IconButton
       ref={ref}
@@ -46,6 +48,7 @@ export const CarouselPrevious = forwardRef<HTMLButtonElement, CarouselPreviousPr
       rounded
       disabled={!carousel.canPrevious}
       data-carousel-control="previous"
+      {...hold}
       onClick={() => carousel.step(-1)}
     />
   );
@@ -67,6 +70,7 @@ CarouselPrevious.displayName = "Carousel.Previous";
 export const CarouselNext = forwardRef<HTMLButtonElement, CarouselNextProps>(({ icon, className, "aria-label": ariaLabel, ...props }, ref) => {
   const carousel = useCarouselContext("Carousel.Next");
   const vertical = carousel.orientation === "vertical";
+  const hold = useRepeatOnHold(() => carousel.step(1), carousel.repeatOnHold);
   return (
     <IconButton
       ref={ref}
@@ -80,6 +84,7 @@ export const CarouselNext = forwardRef<HTMLButtonElement, CarouselNextProps>(({ 
       rounded
       disabled={!carousel.canNext}
       data-carousel-control="next"
+      {...hold}
       onClick={() => carousel.step(1)}
     />
   );

@@ -12,6 +12,13 @@ export type CarouselSize = "xs" | "sm" | "md" | "lg" | "xl";
 /** Which edge of the track a slide is kept at: its start, or its middle. */
 export type CarouselAlign = "start" | "center";
 
+/**
+ * An effect drawn on the slides as they scroll towards the edges of the view: `"fade"` dims them, `"scale"` shrinks them
+ * slightly, `"fade-scale"` does both. Drawn by the browser's scroll-linked animation where it has one (and left out where it
+ * doesn't) and never under reduced motion.
+ */
+export type CarouselEffect = "none" | "fade" | "scale" | "fade-scale";
+
 /** Which way the slides run. A `"vertical"` carousel needs a height from its container; the track fills it. */
 export type CarouselOrientation = "horizontal" | "vertical";
 
@@ -151,6 +158,27 @@ export interface CarouselProps extends Omit<ComponentPropsWithoutRef<"div">, "de
    * @default false
    */
   lazy?: boolean | number;
+  /**
+   * Draws an effect on the slides as they scroll towards the edges of the view, where the browser supports scroll-linked
+   * animation. Off under reduced motion.
+   * @default "none"
+   */
+  effect?: CarouselEffect;
+  /**
+   * A vertical carousel takes its height from its slides: tall enough for `slidesPerView` of them at their own heights (the
+   * tallest such window, so it never changes as it moves), instead of from its container. Has no effect on a horizontal one or
+   * with `align="center"`.
+   * @default false
+   */
+  autoHeight?: boolean;
+  /** Keeps the previous and next buttons stepping while they are held, after a short delay. The click that ends a held press does not step once more. @default true */
+  repeatOnHold?: boolean;
+  /**
+   * Gives a mouse drag past the first or last slide some resistance: the slides follow the pointer a little and ease back when
+   * it lets go. Has no effect on a wrapping carousel, with `mouseDrag` off, or under reduced motion.
+   * @default true
+   */
+  edgeResistance?: boolean;
   /** Lets a mouse drag the slides, as a finger does (touch and pen always scroll natively). A click that ends a drag is swallowed, and a press in a form field, a media element or `[data-carousel-no-drag]` never starts one. @default true */
   mouseDrag?: boolean;
   /** Which way the slides run. @default "horizontal" */

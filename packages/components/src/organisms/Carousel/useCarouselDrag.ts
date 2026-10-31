@@ -1,5 +1,6 @@
 import { useEffect, useRef } from "react";
 import type { RefObject } from "react";
+import { prefersReducedMotion } from "./carouselHelpers";
 import type { Axis } from "./carouselHelpers";
 
 // A press that moves less than this is a click, not the start of a drag.
@@ -8,6 +9,8 @@ const DRAG_THRESHOLD_PX = 5;
 const FLICK_SPEED = 0.4;
 // How far a flick pushes the track before the snap takes it to the nearest slide, as a share of the track's own size.
 const FLICK_PUSH = 0.35;
+// How much of the distance dragged past the end the slides follow: the rest is resistance. CSS limits how far that can go.
+const PULL_SHARE = 0.35;
 // What a press on these starts, rather than a drag.
 const NO_DRAG = "input, select, textarea, [contenteditable], video, audio, [data-carousel-no-drag]";
 
@@ -16,12 +19,15 @@ const NO_DRAG = "input, select, textarea, [contenteditable], video, audio, [data
  * slide (or the next one, for a flick). Only a mouse: touch and pen scroll natively. While the drag lasts the track has
  * `data-dragging`, which switches snapping off so the scroll position can follow the pointer; letting go switches it back
  * on, and the browser snaps. A click that ends a drag is swallowed, so dragging a card that is a link does not open it.
- * Pressing in a form field, a media element or `[data-carousel-no-drag]` never starts a drag.
+ * Pressing in a form field, a media element or `[data-carousel-no-drag]` never starts a drag. With `resist`, a drag past the first
+ * or last slide pulls the slides a little way (`--carousel-pull`, which the stylesheet limits and eases back on release).
  */
-export function useCarouselDrag(trackRef: RefObject<HTMLDivElement | null>, { axis, enabled }: { axis: Axis; enabled: boolean }): void {
+export function useCarouselDrag(trackRef: RefObject<HTMLDivElement | null>, { axis, enabled, resist }: { axis: Axis; enabled: boolean; resist: boolean }): void {
   const latestAxis = useRef(axis);
+  const latestResist = useRef(resist);
   useEffect(() => {
     latestAxis.current = axis;
+    latestResist.current = resist;
   });
 
   useEffect(() => {
@@ -56,7 +62,14 @@ export function useCarouselDrag(trackRef: RefObject<HTMLDivElement | null>, { ax
           // A synthetic or already-ended pointer can't be captured; the drag still follows the window's own moves.
         }
       }
-      setScroll(press.scroll - travelled);
+      const wanted = press.scroll - travelled;
+      setScroll(wanted);
+      // What the browser refused is the drag past an end; the slides follow a share of it.
+      if (latestResist.current && !prefersReducedMotion()) {
+        const refused = wanted - scrollOf();
+        if (Math.abs(refused) > 0.5) track.style.setProperty("--carousel-pull", `${-refused * PULL_SHARE}px`);
+        else track.style.removeProperty("--carousel-pull");
+      }
       press.samples.push({ at: event.timeStamp, position: coordinate(event) });
       if (press.samples.length > 6) press.samples.shift();
     };
@@ -84,6 +97,7 @@ export function useCarouselDrag(trackRef: RefObject<HTMLDivElement | null>, { ax
         setScroll(scrollOf() - Math.sign(speed) * size * FLICK_PUSH);
       }
       delete track.dataset.dragging;
+      track.style.removeProperty("--carousel-pull");
       swallowNextClick();
     };
 
@@ -101,6 +115,7 @@ export function useCarouselDrag(trackRef: RefObject<HTMLDivElement | null>, { ax
       track.removeEventListener("pointercancel", onUp);
       track.removeEventListener("dragstart", onDragStart);
       delete track.dataset.dragging;
+      track.style.removeProperty("--carousel-pull");
     };
   }, [trackRef, enabled]);
 }

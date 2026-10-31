@@ -6,6 +6,10 @@
 
 Added after the first build: a seamless `loop` through copies of the end slides, a mouse drag, a pressable peeking slide (with focus bringing it into view), `align="center"`, a fractional `slidesPerView`, `lazy` with a slide `placeholder`, rotation held by playing media and `controller.hold()`, a deterministic put-back when a controlled owner refuses a settled swipe, and a development warning for a vertical carousel with no height. New real-browser checks cover the drag (a real mouse through the DevTools Protocol), the click that still presses, the seamless loop, the centred slide, the fractional view, the peeking press and the refused swipe; two of them were broken on purpose once and failed.
 
+## Third round (ADR-0149)
+
+Added: press-and-hold repeat on the previous and next buttons (`repeatOnHold`), scroll-linked `effect` (`fade`, `scale`, `fade-scale`), `autoHeight` for a vertical carousel, and `edgeResistance` on a mouse drag. Real-browser checks cover each (a real mouse held down, computed opacity near the edge and under reduced motion, the measured track height, and the pull and ease-back); all four were broken on purpose once and failed.
+
 ## What was built
 
 A hand-rolled organism with no new dependency ([ADR-0147](../adr/0147-carousel-scrolls-natively-with-scroll-snap-and-hides-off-screen-slides-with-inert-and-owns-an-opt-in-auto-play-with-its-pause-control-over-a-transform-track-or-leaving-auto-play-to-the-app.md)): a native scroll-snap track, `inert` slides out of view, previous and next `IconButton`s, the `Indicators` atom for position, a live-region announcement, opt-in automatic rotation with a pause button that cannot be left out, `controllerRef`, and `Carousel.Previous`/`Next`/`Indicators`/`AutoPlayToggle` parts that replace the default of their kind. No new tokens: the buttons are neutral `IconButton`s and the spacing, focus and radius tokens already existed.
