@@ -727,6 +727,20 @@ describe("ImageViewer taken out of the page while open, with closeOnHistoryBack"
     window.history.replaceState(null, "", "/");
   });
 
+  it("does not take its entry off for StrictMode's simulated unmount of a viewer that starts open", async () => {
+    const push = vi.spyOn(window.history, "pushState");
+    const back = vi.spyOn(window.history, "back").mockImplementation(() => undefined);
+    render(
+      <StrictMode>
+        <Viewer closeOnHistoryBack defaultOpen trigger={undefined} />
+      </StrictMode>,
+    );
+    await screen.findByRole("dialog");
+    await new Promise((resolve) => setTimeout(resolve, 20));
+    expect(push).toHaveBeenCalledTimes(1);
+    expect(back).not.toHaveBeenCalled();
+  });
+
   it("takes its own history entry off when its owner stops drawing it", async () => {
     const back = vi.spyOn(window.history, "back").mockImplementation(() => undefined);
     const { unmount } = render(<Viewer closeOnHistoryBack />);
