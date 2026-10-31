@@ -27,7 +27,7 @@ Scope: fit, wheel, pinch and double-tap zoom about a point, drag to pan, rotate,
 
 ## Open findings
 
-- **The stage's text uses `icon.white`**, since there is no `text.white` token. It is the same value and does not flip, but the token family is wrong by `05` §6. A `text.white` is a change to all four themes; it is the follow-up if a second component needs fixed-white text.
+- **`text.white` and `border.white` were added** (semantic, `neutral.white` in all four themes, like `icon.white`) for the stage's text and focus ring, in place of `icon.white`. They are only for a surface that is dark in every theme.
 - **No Docs-page review yet in a running Storybook** beyond the stories: the Docs page, every "Show code" and the four themes need the §9 pass.
 - **Not checked:** Safari and Firefox, a real touch screen, and a real full screen (the button is covered by a mocked `requestFullscreen` in jsdom only). The offset is clamped with no edge resistance, and a flick does not coast.
 - **The counter reads "6 / 1" in a right-to-left stage** (the first image's "1 / 6" in logical order, drawn from the right). That is the order a right-to-left paragraph gives two numbers and a slash, and it matches the thumbnail strip and the toolbar mirroring; it is listed for the review to confirm rather than isolate the numbers.

@@ -1,14 +1,14 @@
 /*
  * ImageViewer: a full-viewport stage drawn inside the scrim (`Backdrop`, a fixed flex box). The stage is dark whatever
- * the theme, so everything on it is drawn in colours that do not change with the theme: `icon.white` for glyphs and
- * text, over a fill mixed from `bg.overlay` (black in every theme) that stays readable over any photo. The panel is a
+ * the theme, so everything on it is drawn in colours that do not change with the theme: `icon.white` for glyphs,
+ * `text.white` for text and `border.white` for rings and borders, over a fill mixed from `bg.overlay` (black in every theme) that stays readable over any photo. The panel is a
  * three-row grid: the toolbar, the stage that takes what is left, and a footer for the caption and the thumbnails.
  */
 .panel {
   align-items: stretch;
   block-size: 100%;
   box-sizing: border-box;
-  color: var(--dbm-icon-white);
+  color: var(--dbm-text-white);
   display: grid;
   font-family: var(--dbm-font-family-primary);
   grid-template-rows: auto minmax(0, 1fr) auto;
@@ -60,7 +60,7 @@
 .counter,
 .caption {
   background-color: color-mix(in srgb, var(--dbm-bg-overlay) calc(var(--dbm-opacity-80) * 100%), transparent);
-  color: var(--dbm-icon-white);
+  color: var(--dbm-text-white);
 }
 
 .control {
@@ -89,7 +89,7 @@
    outside it would be lost on a light one. */
 .control:focus-visible,
 .thumbnail:focus-visible {
-  outline: var(--dbm-border-width-2) solid var(--dbm-icon-white);
+  outline: var(--dbm-border-width-2) solid var(--dbm-border-white);
   outline-offset: calc(-1 * var(--dbm-border-width-2));
 }
 
@@ -263,7 +263,7 @@
 }
 
 .thumbnail[aria-current="true"] {
-  border-color: var(--dbm-icon-white);
+  border-color: var(--dbm-border-white);
   opacity: var(--dbm-opacity-100);
 }
 

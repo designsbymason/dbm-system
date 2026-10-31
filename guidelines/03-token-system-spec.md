@@ -152,6 +152,7 @@ Dark mode's representative background, `bg.surface`, and several dependent token
 | `syntax-comment` | `gray.700` | `gray.300` | the lower of `bg.code-block` and `bg.code-highlight`: 6.1:1 / 5.9:1 | AA |
 | `syntax-inserted` | `green.800` | `green.300` | the lower of `bg.code-block` and `bg.code-highlight`: 8.4:1 / 6.0:1 | AA |
 | `syntax-deleted` | `red.700` | `red.300` | the lower of `bg.code-block` and `bg.code-highlight`: 6.5:1 / 5.7:1 | AA |
+| `white` | `neutral.white` | `neutral.white` (deliberately doesn't flip, see own `$description`) | vs `bg.overlay` at `opacity.80` over the whitest content: 12.6:1 | Exempt, like `icon.white`: for text on a surface that is dark in every theme (the `ImageViewer` stage) |
 
 `text.danger`/`text.on-danger`'s full AA-vs-AAA numbers (the policy this whole methodology is built around) are in `guidelines/adr/0002`, not restated here.
 
@@ -184,6 +185,7 @@ Dark mode's representative background, `bg.surface`, and several dependent token
 | `highlight-subtle` | `yellow.100` | `yellow.900` | ~1.12:1 / 1.40:1 vs `bg.surface`; 1.08:1 vs light `bg.highlight-subtle` | Deliberate exception — decorative accent, around `bg.highlight-subtle` |
 | `on-highlight` | `neutral.white` | `yellow.900` | vs `bg.highlight`: 4.67:1 / 6.42:1 | AA (non-text floor). The outline of a control drawn on a solid `bg.highlight` surface, its own token so a component never uses a text token as a border |
 | `code` | `blue.100` | `gray.700` (deliberately not matching `bg.code`'s `gray.800`) | ~1.09:1 light / 1.46:1 dark | Deliberate exception — decorative, not state-identifying. Adopted by the `Code` atom alongside `bg.code`; `gray.700` is a deliberate visible border, not the flat look the two tokens would share if matched. Under the 3:1 WCAG 1.4.11 floor either way, no compliance concern |
+| `white` | `neutral.white` | `neutral.white` (deliberately doesn't flip, see own `$description`) | a focus ring or border on a surface that is dark in every theme, over `bg.overlay` at `opacity.80`: 12.6:1 | Exempt, like `icon.white` (the `ImageViewer` stage's focus ring and current thumbnail) |
 
 See [ADR-0011](adr/0011-darker-dark-mode-representative-background.md) for the decision behind the dark-mode figures above.
 
@@ -215,7 +217,7 @@ See [ADR-0011](adr/0011-darker-dark-mode-representative-background.md) for the d
 
 - **`bg.track`** — 1.35:1 light / 2.05:1 dark, fails the 3:1 non-text floor (consumers are in its row above, [ADR-0016](adr/0016-track-vs-track-strong-scoped-to-decorative-need-not-interactivity.md)). Accepted deliberately, scoped by whether the track itself must convey the control's boundary or state (here the thumb or fill already does), not by whether the control is interactive; comparable production libraries' progress and slider tracks are similarly faint. `bg.track-strong` (1.72:1 / ~3.00:1) is no longer a reliably compliant alternative either (see its row), so `gray.500`/`gray.400` (3.25:1 / 6.08:1, `track-strong`'s former value) is the last-known-compliant pairing if a future component's track genuinely is the boundary-carrying element.
 - **Disabled-state pairings** (any `*.disabled` token, or a component's own disabled styling) — exempt from 1.4.3/1.4.11 under WCAG 2.1, not a failure to flag.
-- **`bg.overlay`, `bg.scrim`, `icon.white`** — no fixed pairing is possible or expected; all three composite over (or sit on top of a fill compositing over) arbitrary, unpredictable content by design. `icon.white` is also a deliberate naming exception — named for its value rather than its role like every other token here, since it's white in all 4 themes/brands and isn't expected to change (see its own `$description`).
+- **`bg.overlay`, `bg.scrim`, `icon.white`, `text.white`, `border.white`** — no fixed pairing is possible or expected; all five composite over (or sit on top of a fill compositing over) arbitrary, unpredictable content by design. `icon.white` is also a deliberate naming exception — named for its value rather than its role like every other token here, since it's white in all 4 themes/brands and isn't expected to change (see its own `$description`).
 - **`border.neutral`, `border.default`, `border.neutral-subtle`, `border.code`, and every `*-subtle` border** (`brand-subtle`, `danger-subtle`, `warning-subtle`, `success-subtle`, `info-subtle`) — decorative accents, not state-identifying boundaries, so WCAG 1.4.11 doesn't bind them even though several sit well under 3:1.
 
 ## Multi-theme structure going forward

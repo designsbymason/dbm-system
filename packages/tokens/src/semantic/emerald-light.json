@@ -358,6 +358,11 @@
       "$type": "color",
       "$value": "{color.red.700}",
       "$description": "New token (2026-09-26), for `CodeBlock`'s syntax highlighting — a removed line in a diff. red.700 in this theme, shared across both brands (code colours are not brand-tinted, like `text.link`). Measured against the two backgrounds it is drawn on, `bg.code-block` and the highlighted-line band `bg.code-highlight`, and the lower ratio is 6.5:1 — AA."
+    },
+    "white": {
+      "$type": "color",
+      "$value": "{color.neutral.white}",
+      "$description": "White in all 4 themes and both modes, for text drawn on a surface that is dark in every theme (the ImageViewer stage over bg.overlay). Shares the reasoning of icon.white: bg.overlay stays neutral.black in dark mode, so a text token that flipped dark would be invisible there. Not for text on a themed surface: use text.primary or text.on-* there. Like bg.overlay, no fixed WCAG pairing (what is behind the scrim is arbitrary); white on bg.overlay at opacity.80 over the whitest content is 12.6:1."
     }
   },
   "border": {
@@ -484,6 +489,11 @@
       "$type": "color",
       "$value": "{color.blue.100}",
       "$description": "Paired with bg.code (2026-08-08) — blue.100/blue.900, a purely decorative border, not one that identifies a component/state boundary, so WCAG 1.4.11's 3:1 floor doesn't apply — same accepted class as border.brand-subtle. Briefly paired with bg.info-subtle instead (2026-08-20, when bg.code was retired) and measured 2.63:1 dark against that fill; bg.code was restored the same day, reversing that retirement, so this token is back to pairing with bg.code and its own flat gray.700 dark value — 1.09:1 light / 1.00:1 dark (byte-identical to bg.code's own dark value, an intentional flat/borderless look in that mode), an accepted tradeoff, not an oversight. Adopted by the real Code.tsx atom alongside bg.code (2026-09-06, at explicit direction) — see that token's own description."
+    },
+    "white": {
+      "$type": "color",
+      "$value": "{color.neutral.white}",
+      "$description": "White in all 4 themes and both modes, for a border or focus ring drawn on a surface that is dark in every theme (the ImageViewer stage's focus ring and current-thumbnail border). Shares the reasoning of icon.white and text.white. Not for a border on a themed surface: use border.default, border.focus or the border.on-* family there."
     }
   },
   "icon": {

@@ -224,7 +224,7 @@ in its place.
 An arrow, zoom button or other control that cannot do anything (the first image without `loop`, the largest zoom) is
 `aria-disabled`, not `disabled`, so a press that turns it off keeps focus where it is.
 
-The buttons are native buttons at least 44px square, drawn in `icon.white` over a fill mixed from `bg.overlay`, which stays at least 12:1
+The buttons are native buttons at least 44px square, drawn in white over a fill mixed from `bg.overlay`, which stays at least 12:1
 over any photo. Their focus ring is drawn inside the button in white. In forced colours each is outlined. Zoom, turn and the fades ease
 with the motion tokens, and under `prefers-reduced-motion` they are instant; a new image fades up and does not slide.
 
@@ -287,10 +287,11 @@ function Download({ files }: { files: string[] }) {
 ## Design tokens used
 
 The buttons are `ImageViewerButton`s, drawn by the viewer itself rather than by `IconButton`, because the stage is dark in every theme and the button
-tones follow the theme. Everything on the stage is `icon.white` over a fill mixed from `bg.overlay`.
+tones follow the theme. Everything on the stage is white (`text.white` and `border.white` here, and `icon.white` through `Icon`, none of which changes with the theme) over a fill mixed from `bg.overlay`.
 
 <TokenRow token="bg.overlay" usage="the scrim, and the fill of every button, the counter and the caption (mixed at 80%)" />
-<TokenRow token="icon.white" usage="every glyph and piece of text on the stage, the focus ring, and the current thumbnail's border" />
+<TokenRow token="text.white" usage="the text on the stage: the counter, the zoom, the caption and the failed message" />
+<TokenRow token="border.white" usage="the focus ring, and the current thumbnail's border" />
 <TokenRow token="image-viewer.control-size" usage="the width and height of a button" />
 <TokenRow token="image-viewer.thumbnail-size" usage="the side of one thumbnail" />
 <TokenRow token="image-viewer.caption-max-width" usage="the widest a caption gets before it wraps" />

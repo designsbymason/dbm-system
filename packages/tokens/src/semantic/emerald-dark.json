@@ -359,6 +359,11 @@
       "$type": "color",
       "$value": "{color.red.300}",
       "$description": "New token (2026-09-26), for `CodeBlock`'s syntax highlighting — a removed line in a diff. red.300 in this theme, shared across both brands (code colours are not brand-tinted, like `text.link`). Measured against the two backgrounds it is drawn on, `bg.code-block` and the highlighted-line band `bg.code-highlight`, and the lower ratio is 5.7:1 — AA."
+    },
+    "white": {
+      "$type": "color",
+      "$value": "{color.neutral.white}",
+      "$description": "White in all 4 themes and both modes, for text drawn on a surface that is dark in every theme (the ImageViewer stage over bg.overlay). Shares the reasoning of icon.white: bg.overlay stays neutral.black in dark mode, so a text token that flipped dark would be invisible there. Not for text on a themed surface: use text.primary or text.on-* there. Like bg.overlay, no fixed WCAG pairing (what is behind the scrim is arbitrary); white on bg.overlay at opacity.80 over the whitest content is 12.6:1."
     }
   },
   "border": {
@@ -485,6 +490,11 @@
       "$type": "color",
       "$value": "{color.gray.700}",
       "$description": "Dark value moved from blue.900 to gray.700 (2026-08-09) at explicit direction, matching bg.code's own move to gray.700 in dark mode at the time — the two were byte-identical there, an explicit flat/borderless pill treatment for dark mode specifically (light mode keeps the blue.100/blue.50 pairing and its visible border, unchanged). Briefly paired with bg.info-subtle instead (2026-08-20, when bg.code was retired) and measured 2.63:1 against that fill; bg.code was restored the same day, reversing that retirement, so this token went back to its original byte-identical-with-bg.code dark treatment. Original description: paired with bg.code (2026-08-08) — blue.100/blue.900, a purely decorative border, not one that identifies a component/state boundary, so WCAG 1.4.11's 3:1 floor doesn't apply — same accepted class as border.brand-subtle. Adopted by the real Code.tsx atom alongside bg.code (2026-09-06, at explicit direction). Later the same day, bg.code moved to gray.800 (a coordinated darker-dark-mode retuning pass) while this token stayed at gray.700 — briefly broke the flat/borderless pairing (1.46:1 apart, a visible border where there wasn't one). Moved to gray.800 later the same day, at explicit direction, to restore the byte-identical flat treatment. **Moved back to gray.700 (2026-09-06, later still the same day, at explicit direction)** — deliberately re-diverges from bg.code (gray.800): the pill now has a visibly present border again (1.46:1 apart) rather than the flat/borderless look, a knowing choice this time, not a side effect. Still under the 3:1 WCAG 1.4.11 floor, still decorative/not state-identifying, so no compliance concern either way."
+    },
+    "white": {
+      "$type": "color",
+      "$value": "{color.neutral.white}",
+      "$description": "White in all 4 themes and both modes, for a border or focus ring drawn on a surface that is dark in every theme (the ImageViewer stage's focus ring and current-thumbnail border). Shares the reasoning of icon.white and text.white. Not for a border on a themed surface: use border.default, border.focus or the border.on-* family there."
     }
   },
   "icon": {
