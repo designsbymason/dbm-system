@@ -30,8 +30,8 @@ const defaultLabels: ColorPickerLabels = {
   percentText: (percent) => `${percent}%`,
   chosen: (color) => `Color chosen: ${color}`,
   cleared: "Color cleared",
-  channelName: (channel) => ({ r: "Red", g: "Green", b: "Blue", h: "Hue", s: "Saturation", l: "Lightness", c: "Chroma", a: "Opacity" })[channel],
-  channelLetter: (channel) => channel.toUpperCase(),
+  channelName: (channel) => ({ r: "Red", g: "Green", b: "Blue", h: "Hue", s: "Saturation", l: "Lightness", c: "Chroma", a: "Opacity", hex: "Hex code" })[channel],
+  channelLetter: (channel) => (channel === "hex" ? "Hex" : channel.toUpperCase()),
   copy: "Copy color",
   copied: "Color copied",
   copyFailed: "Could not copy the color",
@@ -455,7 +455,7 @@ export const ColorPicker = forwardRef<HTMLDivElement, ColorPickerProps>(
         noneSwatch={noneSwatch}
         copyButton={copyButton}
         copied={copied}
-        channelSpace={showChannelInputs ? (format === "hsl" ? "hsl" : format === "oklch" ? "oklch" : "rgb") : undefined}
+        channelSpace={showChannelInputs ? (format === "hex" ? "hex" : format === "hsl" ? "hsl" : format === "oklch" ? "oklch" : "rgb") : undefined}
         labels={labels}
         formatNumber={formatNumber}
         format={showFormatSwitch ? format : undefined}

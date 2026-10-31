@@ -7,7 +7,7 @@ import { IconButton } from "../../atoms/IconButton";
 import { Input } from "../../atoms/Input";
 import { Tooltip } from "../../atoms/Tooltip";
 import { ToggleGroup } from "../../molecules/ToggleGroup";
-import { channelSpecs, formatColor, fromChannels, hsvaToRgb, rgbToHsva, toChannels } from "../../internal/color/colorValue";
+import { channelSpecs, formatColor, fromChannels, hsvaToRgb, parseColor, rgbToHsva, toChannels } from "../../internal/color/colorValue";
 import type { ChannelSpace, Hsva, Rgba } from "../../internal/color/colorValue";
 import { subscribeToNothing } from "../../molecules/Calendar/calendarHelpers";
 import { ColorArea } from "./ColorArea";
@@ -31,8 +31,8 @@ interface ColorPickerPanelProps {
   noneSwatch: boolean;
   copyButton: boolean;
   copied: boolean;
-  /** The space the channel number fields edit; `undefined` draws none. */
-  channelSpace: ChannelSpace | undefined;
+  /** The space the channel fields edit (`"hex"` is one field for the whole code); `undefined` draws none. */
+  channelSpace: ChannelSpace | "hex" | undefined;
   labels: ColorPickerLabels;
   formatNumber: (value: number) => string;
   /** The chosen format while the switch is shown; `undefined` draws no switch. */
@@ -69,7 +69,7 @@ function colorVariables(hsva: Hsva): React.CSSProperties {
 
 interface ChannelInputsProps {
   hsva: Hsva;
-  space: ChannelSpace;
+  space: ChannelSpace | "hex";
   alpha: boolean;
   labels: ColorPickerLabels;
   formatNumber: (value: number) => string;
@@ -85,6 +85,42 @@ interface ChannelInputsProps {
  */
 function ChannelInputs({ hsva, space, alpha, labels, disabled, readOnly, onChange }: ChannelInputsProps) {
   const [draft, setDraft] = useState<{ id: ColorPickerChannel; text: string } | null>(null);
+
+  if (space === "hex") {
+    // One field for the whole code, opacity inside it (`#rrggbbaa`) with `alpha`. It takes any hex spelling (three, four, six or eight
+    // digits, with or without `#`) and applies it as soon as it is a whole one.
+    const written = formatColor(hsvaToRgb(hsva), "hex", alpha);
+    return (
+      <div className={styles.channels}>
+        <div className={styles.channel}>
+          <Input
+            type="text"
+            size="xs"
+            form=""
+            spellCheck={false}
+            autoComplete="off"
+            autoCapitalize="off"
+            aria-label={labels.channelName("hex")}
+            disabled={disabled}
+            readOnly={readOnly}
+            value={draft?.id === "hex" ? draft.text : written}
+            onChange={(event) => {
+              const text = event.target.value;
+              setDraft({ id: "hex", text });
+              if (!/^#?([0-9a-f]{3,4}|[0-9a-f]{6}|[0-9a-f]{8})$/i.test(text.trim())) return;
+              const color = parseColor(text);
+              if (color) onChange(rgbToHsva(alpha ? color : { ...color, a: 1 }, hsva.h), "commit");
+            }}
+            onBlur={() => setDraft(null)}
+          />
+          <span className={styles.channelLetter} aria-hidden="true">
+            {labels.channelLetter("hex")}
+          </span>
+        </div>
+      </div>
+    );
+  }
+
   const specs = channelSpecs[space];
   const values = toChannels(hsvaToRgb(hsva), space);
 

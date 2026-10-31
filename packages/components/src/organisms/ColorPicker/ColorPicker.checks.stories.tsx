@@ -450,7 +450,9 @@ export const EverythingFitsThePanel: Story = {
     await settled(panel);
     const box = panel.getBoundingClientRect();
     await expect(panel.scrollWidth).toBeLessThanOrEqual(panel.clientWidth);
-    for (const control of within(panel).getAllByRole("spinbutton")) {
+    const channelFields = () => Array.from(panel.querySelectorAll<HTMLInputElement>('input[form=""]'));
+    await expect(channelFields()).toHaveLength(1);
+    for (const control of channelFields()) {
       const rect = control.getBoundingClientRect();
       await expect(rect.right).toBeLessThanOrEqual(box.right);
       await expect(rect.left).toBeGreaterThanOrEqual(box.left);
@@ -464,7 +466,7 @@ export const EverythingFitsThePanel: Story = {
     // The oklch fields hold their longest values.
     await realClick(within(panel).getByRole("radio", { name: "OKLCH" }));
     await waitFor(() => expect(within(panel).getByRole("spinbutton", { name: "Hue" })).toHaveValue(285.9));
-    for (const control of within(panel).getAllByRole("spinbutton") as HTMLInputElement[]) await expect(control.scrollWidth).toBeLessThanOrEqual(control.clientWidth);
+    for (const control of channelFields()) await expect(control.scrollWidth).toBeLessThanOrEqual(control.clientWidth);
   },
 };
 
@@ -529,5 +531,45 @@ export const CopyWithTheRealClipboard: Story = {
     } finally {
       navigator.clipboard.writeText = original;
     }
+  },
+};
+
+export const FullWidthOnAPhone: Story = {
+  name: "On a phone the full-width panel spans the visible screen, and it floats from the field from sm up",
+  globals: { viewport: { value: "mobile1", isRotated: false } },
+  render: () => (
+    <Page>
+      <ColorPicker aria-label="Brand color" presentation={{ base: "full-width", sm: "anchored" }} defaultValue="#5548a4" />
+    </Page>
+  ),
+  play: async () => {
+    // Fails loudly if the viewport did not apply: the assertions mean nothing on a wide page.
+    await expect(window.innerWidth).toBeLessThan(640);
+    await userEvent.click(body().getByRole("button", { name: "Choose color" }));
+    const panel = await body().findByRole("dialog", { name: "Choose a color" });
+    await settled(panel);
+    const box = panel.getBoundingClientRect();
+    await expect(box.left).toBeGreaterThanOrEqual(0);
+    await expect(box.right).toBeLessThanOrEqual(window.innerWidth);
+    // The panel spans the screen up to the gap at each edge, wider than the anchored panel's own width.
+    await expect(Math.abs(box.width - (window.innerWidth - 16))).toBeLessThan(2);
+    await userEvent.keyboard("{Escape}");
+    await waitFor(() => expect(body().queryByRole("dialog", { name: "Choose a color" })).not.toBeInTheDocument());
+  },
+};
+
+export const AnchoredOnADesktop: Story = {
+  name: "On a wide screen the same picker's panel keeps its own width",
+  render: () => (
+    <Page>
+      <ColorPicker aria-label="Brand color" presentation={{ base: "full-width", sm: "anchored" }} defaultValue="#5548a4" />
+    </Page>
+  ),
+  play: async () => {
+    await expect(window.innerWidth).toBeGreaterThanOrEqual(640);
+    await userEvent.click(body().getByRole("button", { name: "Choose color" }));
+    const panel = await body().findByRole("dialog", { name: "Choose a color" });
+    await settled(panel);
+    await expect(panel.getBoundingClientRect().width).toBeLessThan(window.innerWidth / 2);
   },
 };

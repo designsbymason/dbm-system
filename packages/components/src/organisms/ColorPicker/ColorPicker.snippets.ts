@@ -31,7 +31,7 @@ export const colorPickerSnippets = {
   onValueChange={setColor}
 />`,
 
-  channelInputs: `{/* showChannelInputs: number fields for each channel of the format (R, G, B for hex and rgb; H, S, L for hsl;
+  channelInputs: `{/* showChannelInputs: number fields for each channel of the format (one field for the whole code for hex; R, G, B for rgb; H, S, L for hsl;
     L, C, H for oklch), and opacity with alpha. A number applies as soon as it is in range. */}
 <ColorPicker aria-label="Brand color" showChannelInputs alpha defaultValue="#5548a4" />`,
 

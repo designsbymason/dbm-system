@@ -58,7 +58,7 @@ export interface ColorPickerLabels {
   chosen: (color: string) => string;
   /** Said aloud when the color is cleared. */
   cleared: string;
-  /** Name of a channel's number field (`showChannelInputs`), given the channel: `"r"`, `"g"`, `"b"`, `"h"`, `"s"`, `"l"`, `"c"` or `"a"` (opacity). */
+  /** Name of a channel's number field (`showChannelInputs`), given the channel: `"r"`, `"g"`, `"b"`, `"h"`, `"s"`, `"l"`, `"c"`, `"a"` (opacity) or `"hex"` (the one field that holds a whole hex code). */
   channelName: (channel: ColorPickerChannel) => string;
   /** The short text drawn under a channel's number field, such as "R" or "H". It is decoration; `channelName` is the name. */
   channelLetter: (channel: ColorPickerChannel) => string;
@@ -74,8 +74,8 @@ export interface ColorPickerLabels {
   formatName: (format: ColorPickerFormat) => string;
 }
 
-/** The channels a number field can edit: red, green, blue, hue, saturation, lightness, chroma, and opacity. */
-export type ColorPickerChannel = "r" | "g" | "b" | "h" | "s" | "l" | "c" | "a";
+/** The channels a field can edit: red, green, blue, hue, saturation, lightness, chroma, opacity, and the whole hex code. */
+export type ColorPickerChannel = "r" | "g" | "b" | "h" | "s" | "l" | "c" | "a" | "hex";
 
 /**
  * What code can do to a `ColorPicker` from outside, through `controllerRef`. Each method says whether it had anything to
@@ -171,9 +171,9 @@ export interface ColorPickerProps
    */
   commitOn?: ColorPickerCommitOn;
   /**
-   * Adds number fields to the panel for each channel of the format (red, green and blue for `hex` and `rgb`; hue,
-   * saturation and lightness for `hsl`; lightness, chroma and hue for `oklch`), and opacity with `alpha`, for typing an
-   * exact value. Each commits as you type a number in range.
+   * Adds fields to the panel for each channel of the format (one field holding the whole hex code, opacity included, for `hex`; red, green and blue for `rgb`; hue,
+   * saturation and lightness for `hsl`; lightness, chroma and hue for `oklch`), and opacity with `alpha` (inside the hex code
+   * for `hex`), for typing an exact value. Each commits as you type a value in range.
    * @default false
    */
   showChannelInputs?: boolean;

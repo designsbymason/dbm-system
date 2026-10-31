@@ -715,15 +715,55 @@ describe("ColorPicker copy button", () => {
 });
 
 describe("ColorPicker channel inputs", () => {
-  const field = (name: string) => screen.getByRole("spinbutton", { name }) as HTMLInputElement;
+  const field = (name: string) => (screen.queryByRole("spinbutton", { name }) ?? screen.getByRole("textbox", { name })) as HTMLInputElement;
 
   it("draws no fields unless asked", () => {
     render(<ColorPicker aria-label="c" inline defaultValue="#5548a4" />);
     expect(screen.queryByRole("spinbutton")).not.toBeInTheDocument();
+    expect(screen.queryByRole("textbox", { name: "Red" })).not.toBeInTheDocument();
+  });
+
+  it("is one field for the whole code when the format is hex", async () => {
+    const user = userEvent.setup();
+    const onValueChange = vi.fn();
+    render(<ColorPicker aria-label="c" inline showChannelInputs defaultValue="#5548a4" onValueChange={onValueChange} />);
+    expect(screen.queryByRole("spinbutton")).not.toBeInTheDocument();
+    expect(screen.queryByRole("textbox", { name: "Red" })).not.toBeInTheDocument();
+    expect(field("Hex code").value).toBe("#5548a4");
+    // Applied as soon as it is a whole code, in any hex spelling, with or without the #.
+    await user.clear(field("Hex code"));
+    await user.type(field("Hex code"), "f0");
+    expect(entry().value).toBe("#5548a4");
+    await user.type(field("Hex code"), "0");
+    expect(entry().value).toBe("#ff0000");
+    await user.clear(field("Hex code"));
+    await user.type(field("Hex code"), "00ff00");
+    expect(entry().value).toBe("#00ff00");
+    expect(onValueChange).toHaveBeenLastCalledWith("#00ff00");
+    // Text that is not a whole code is kept while typing and changes nothing; leaving the field shows the real code again.
+    await user.clear(field("Hex code"));
+    await user.type(field("Hex code"), "zz");
+    expect(field("Hex code").value).toBe("zz");
+    expect(entry().value).toBe("#00ff00");
+    await user.tab();
+    expect(field("Hex code").value).toBe("#00ff00");
+  });
+
+  it("holds opacity inside the hex code with alpha, and drops it without", async () => {
+    const user = userEvent.setup();
+    const { rerender } = render(<ColorPicker aria-label="c" inline showChannelInputs alpha defaultValue="#5548a480" />);
+    expect(field("Hex code").value).toBe("#5548a480");
+    expect(screen.queryByRole("textbox", { name: "Opacity" })).not.toBeInTheDocument();
+    await user.clear(field("Hex code"));
+    await user.type(field("Hex code"), "#ff000040");
+    expect(entry().value).toBe("#ff000040");
+    rerender(<ColorPicker aria-label="c" key="opaque" inline showChannelInputs defaultValue="#5548a4" />);
+    await user.clear(field("Hex code"));
+    await user.type(field("Hex code"), "#ff000040");
+    expect(entry().value).toBe("#ff0000");
   });
 
   it.each([
-    ["hex", ["Red", "Green", "Blue"], ["85", "72", "164"]],
     ["rgb", ["Red", "Green", "Blue"], ["85", "72", "164"]],
     ["hsl", ["Hue", "Saturation", "Lightness"], ["248", "39", "46"]],
   ] as const)("shows the %s channels of the color", (format, names, values) => {
@@ -740,21 +780,21 @@ describe("ColorPicker channel inputs", () => {
     const user = userEvent.setup();
     const onValueChange = vi.fn();
     const onValueCommit = vi.fn();
-    render(<ColorPicker aria-label="c" inline showChannelInputs defaultValue="#000000" onValueChange={onValueChange} onValueCommit={onValueCommit} />);
+    render(<ColorPicker aria-label="c" inline showChannelInputs format="rgb" defaultValue="#000000" onValueChange={onValueChange} onValueCommit={onValueCommit} />);
     await user.clear(field("Red"));
     await user.type(field("Red"), "255");
-    expect(entry().value).toBe("#ff0000");
-    expect(onValueChange).toHaveBeenLastCalledWith("#ff0000");
-    expect(onValueCommit).toHaveBeenLastCalledWith("#ff0000");
+    expect(entry().value).toBe("rgb(255 0 0)");
+    expect(onValueChange).toHaveBeenLastCalledWith("rgb(255 0 0)");
+    expect(onValueCommit).toHaveBeenLastCalledWith("rgb(255 0 0)");
   });
 
   it("keeps what is typed while the field has focus, and clamps a number out of range", async () => {
     const user = userEvent.setup();
-    render(<ColorPicker aria-label="c" inline showChannelInputs defaultValue="#000000" />);
+    render(<ColorPicker aria-label="c" inline showChannelInputs format="rgb" defaultValue="#000000" />);
     await user.clear(field("Green"));
     expect(field("Green").value).toBe("");
     await user.type(field("Green"), "999");
-    expect(entry().value).toBe("#00ff00");
+    expect(entry().value).toBe("rgb(0 255 0)");
     expect(field("Green").value).toBe("999");
     await user.tab();
     expect(field("Green").value).toBe("255");
@@ -774,7 +814,7 @@ describe("ColorPicker channel inputs", () => {
   it("is detached from a surrounding form and does nothing when read only", () => {
     const { container } = render(
       <form>
-        <ColorPicker aria-label="c" inline showChannelInputs readOnly defaultValue="#5548a4" />
+        <ColorPicker aria-label="c" inline showChannelInputs format="rgb" readOnly defaultValue="#5548a4" />
       </form>,
     );
     expect(field("Red")).toHaveAttribute("form", "");
@@ -783,8 +823,10 @@ describe("ColorPicker channel inputs", () => {
   });
 
   it("takes translated names and letters", () => {
-    render(<ColorPicker aria-label="c" inline showChannelInputs labels={{ channelName: (channel) => `K-${channel}`, channelLetter: () => "x" }} />);
+    const { rerender } = render(<ColorPicker aria-label="c" inline showChannelInputs format="rgb" labels={{ channelName: (channel) => `K-${channel}`, channelLetter: () => "x" }} />);
     expect(field("K-r")).toBeInTheDocument();
+    rerender(<ColorPicker aria-label="c" inline showChannelInputs labels={{ channelName: (channel) => `K-${channel}` }} />);
+    expect(field("K-hex")).toBeInTheDocument();
   });
 });
 

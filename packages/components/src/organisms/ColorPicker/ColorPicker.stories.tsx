@@ -65,7 +65,7 @@ const meta: Meta<typeof ColorPicker> = {
     },
     showChannelInputs: {
       control: "boolean",
-      description: "Adds number fields to the panel for each channel of the format (R, G, B for hex and rgb; H, S, L for hsl; L, C, H for oklch), and opacity with alpha. Each commits as you type a number in range.",
+      description: "Adds number fields to the panel for each channel of the format (one field for the whole hex code for hex; R, G, B for rgb; H, S, L for hsl; L, C, H for oklch), and opacity with alpha. Each commits as you type a number in range.",
       table: { defaultValue: { summary: "false" } },
     },
     noneSwatch: {
@@ -330,7 +330,14 @@ export const ColorNames: Story = {
   name: "Color names",
   parameters: { docs: { source: { code: colorPickerSnippets.names } } },
   argTypes: { ...noControls },
-  render: () => <ColorPicker aria-label="Brand color" defaultValue="rebeccapurple" />,
+  render: () => (
+    <div style={stack}>
+      <ColorPicker aria-label="Brand color" defaultValue="rebeccapurple" />
+      <Text size="sm" color="secondary">
+        A color name is one of the CSS color keywords, such as rebeccapurple, tomato, teal or transparent. Type one into the field and press Enter: it is read, and written back in the picker&apos;s format (rebeccapurple becomes #663399).
+      </Text>
+    </div>
+  ),
 };
 
 export const WithOpacity: Story = {
@@ -372,7 +379,14 @@ export const FullWidth: Story = {
   name: "Full width",
   parameters: { docs: { source: { code: colorPickerSnippets.fullWidth } } },
   argTypes: { ...noControls },
-  render: () => <ColorPicker aria-label="Brand color" presentation={{ base: "full-width", sm: "anchored" }} defaultValue="#5548a4" />,
+  render: () => (
+    <div style={stack}>
+      <ColorPicker aria-label="Brand color" presentation={{ base: "full-width", sm: "anchored" }} defaultValue="#5548a4" />
+      <Text size="sm" color="secondary">
+        Full width applies on a phone: below the sm breakpoint (40rem) the panel spans the visible screen, and from sm up it floats from the field as usual. Narrow the Storybook viewport below 640px (the toolbar&apos;s Viewport menu) and open the picker to see it.
+      </Text>
+    </div>
+  ),
 };
 
 export const CommitTiming: Story = {

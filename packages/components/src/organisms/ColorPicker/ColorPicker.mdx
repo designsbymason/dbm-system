@@ -256,7 +256,7 @@ what a `FieldLabel`'s `htmlFor` should point at.
 - The hue slider (read in degrees) and the opacity slider (read as a percentage) are `role="slider"` with the arrow,
   `Page` and `Home`/`End` keys; in a right-to-left page the keys follow the direction.
 - The format switch is a named `radiogroup` of Hex, RGB, HSL and OKLCH (one tab stop, arrow keys between them), drawn with `ToggleGroup`; every button's name is its visible text.
-- The channel fields are number inputs named Red, Green, Blue (or Hue, Saturation, Lightness; Lightness, Chroma, Hue; Opacity) with a letter drawn under each as decoration, and they are detached from a surrounding form so a half-typed number never blocks a submit.
+- With the `hex` format the panel has one field, "Hex code", for the whole code (opacity inside it with `alpha`); for the other formats the channel fields are number inputs named Red, Green, Blue (or Hue, Saturation, Lightness; Lightness, Chroma, Hue; Opacity) with a letter drawn under each as decoration, and they are detached from a surrounding form so a half-typed number never blocks a submit.
 - `Alt`+`ArrowDown` in the text entry opens the panel, as in a combobox or date field.
 - The copy button says "Color copied" (or that the browser refused) through the status region.
 - Swatches are buttons in a named group with `aria-pressed`, one tab stop (the optional "no color" swatch is the first), each with a tooltip of its name, moved between with the arrow keys (flipped in
