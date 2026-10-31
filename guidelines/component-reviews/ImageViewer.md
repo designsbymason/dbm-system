@@ -1,12 +1,33 @@
 # ImageViewer — review findings
 
-**Status:** Built, not yet reviewed or declared Finalized. This file holds what was decided and verified while building; the full `06-engineering-standards.md` §9 pass is still to run, and only the maintainer declares it Finalized.
+**Status:** Built and put through the `06-engineering-standards.md` §9 review (the findings are below, all fixed). Not yet declared Finalized: only the maintainer does that.
 
 ## What was built
 
 A full-screen viewer for one image or a set ([ADR-0150](../adr/0150-imageviewer-is-a-prop-driven-radix-dialog-over-an-images-array-with-its-own-single-stage-and-fixed-dark-controls-over-composing-dialog-embedding-carousel-or-reusing-iconbutton.md), [ADR-0151](../adr/0151-imageviewer-zooms-with-hand-rolled-pointer-and-wheel-gestures-writing-one-transform-from-a-view-held-in-a-ref-over-native-scroll-zoom-a-pan-zoom-dependency-or-state-per-move.md)). Radix Dialog directly with `Backdrop` as the scrim, one image at a time on its own stage, no new dependency, 8.89KB JS and 2.09KB CSS gzipped against the 10KB and 5KB defaults.
 
 Scope: fit, wheel, pinch and double-tap zoom about a point, drag to pan, rotate, full screen, a counter, captions, a thumbnail strip (one tab stop), previous and next by button, key and swipe, swipe down to dismiss, preloading of the neighbours, loading and failed states, `loop`, `controls="hidden"`, an `actions` slot with `useImageViewerController()`, `controllerRef`, `labels` and `formatNumber`, and `dir`. Every gesture has a button and a key.
+
+## Final review round
+
+Fifteen findings, fourteen fixed and one withdrawn:
+
+- **Withdrawn: tap-to-hide dropping focus.** It looked like focus fell to the page when the controls were hidden under a focused button. That was seen with synthetic pointer events; a real click moves focus to the viewer (the nearest focusable ancestor), which a real-browser check now holds.
+- **A thumbnail's focus ring was inside the picture**, white over whatever it showed. It is now outside, with a band of the stage's dark between the two, and a check measures the ring against the band.
+- **A key pressed in something portaled out of the viewer** (a menu in `actions`) reached its key handler through React; the handler now acts only on keys from inside it.
+- **An inline viewer took the page's wheel and touch scrolling.** A plain wheel and a touch now scroll the page until the image is zoomed, and the control key (a trackpad pinch) zooms; the stage is marked `data-zoomed` and a stylesheet rule switches `touch-action` with it.
+- **An inline slideshow hydrated differently for a person who prefers reduced motion.** The preference is now a store with a server answer, and the server render and hydration tests cover `inline`, `autoPlay` and reduced motion.
+- **A consumer's `aria-describedby` was dropped**; it is merged with the caption's.
+- **The neighbours were requested again whenever an inline list was made again**; the preload is keyed by what it loads, and the empty-list warning is once only.
+- **A hard-coded `scale: 1.04`** is gone (the blurred placeholder is drawn a blur's width larger and the stage crops it).
+- **A test id (`image-viewer-counter`) shipped in the markup**; it is gone and the tests find the counter by its text.
+- **`ImageViewerButton` had no Properties table**; it has a hidden docs-only stories file and a table (ADR-0013), and `onKeyDown` and `aria-describedby` are redeclared and documented.
+- **Test gaps:** the controller's `actualSize`, `flip`, `rotate`, `play` and `pause` and the `isPlaying` snapshot are covered, the origin test can now fail, and origin under reduced motion is covered.
+- **Snippets:** `photos` is defined in a comment, an unused snippet is removed, the load-failure and caption stories have snippets that match them, and all 19 were typechecked against the real components (with a planted bad prop to prove the check bites) and read in a settled "Show code" panel on the Docs page.
+- **A controlled viewer that kept itself open after Back** gets a new history entry for the next Back.
+- **The 500-picture story data** is made on first use.
+
+Mutation checks (no focus ring offset, no key containment, no wheel modifier, no origin start, no describedby merge, the preload keyed by the array, the hydration answer) each failed the checks written for them.
 
 ## Second round (ADR-0152)
 

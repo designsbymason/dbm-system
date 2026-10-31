@@ -46,6 +46,8 @@ export interface ImageZoomOptions extends ZoomGestureHandlers {
   doubleClickZoom: boolean;
   /** Whether zoom, pan and swipe do anything (not while the image is loading or has failed). */
   enabled: boolean;
+  /** Whether a wheel zooms only with the control or meta key (or while already zoomed), so a page can still scroll past. */
+  wheelNeedsModifier: boolean;
   /** `-1` in a right-to-left stage, where the image after is to the left. */
   directionSign: 1 | -1;
   /** Whether a downward swipe may dismiss. */
@@ -136,6 +138,12 @@ export function useImageZoom(options: ImageZoomOptions): { fitted: Size; fit: nu
   const write = useCallback(
     (next: View, animate: boolean) => {
       view.current = next;
+      // Says when the image is larger than the stage, for a stylesheet that lets the page scroll by touch until then.
+      const area = stageRef.current;
+      if (area) {
+        if (next.scale > 1.001) area.setAttribute("data-zoomed", "");
+        else area.removeAttribute("data-zoomed");
+      }
       const box = boxRef.current;
       if (box) {
         if (animate) box.setAttribute("data-animate", "");
@@ -150,7 +158,7 @@ export function useImageZoom(options: ImageZoomOptions): { fitted: Size; fit: nu
         latest.current.onZoomChange(next.scale);
       }
     },
-    [boxRef],
+    [boxRef, stageRef],
   );
 
   const constrained = useCallback((next: View): View => {
@@ -493,8 +501,10 @@ export function useImageZoom(options: ImageZoomOptions): { fitted: Size; fit: nu
 
     const onWheel = (event: WheelEvent) => {
       if ((event.target as Element).closest("[data-viewer-ui]")) return;
-      event.preventDefault();
       const current = latest.current;
+      // In a page, a plain wheel is the page's to scroll with, until the image is zoomed or the control key says otherwise.
+      if (current.wheelNeedsModifier && !event.ctrlKey && !event.metaKey && view.current.scale <= 1.001) return;
+      event.preventDefault();
       if (!current.enabled) return;
       stopCoast();
       const factor = wheelFactor(event.deltaY, event.deltaMode, event.ctrlKey);

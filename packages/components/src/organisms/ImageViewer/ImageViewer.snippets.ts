@@ -35,7 +35,14 @@ ${viewer("  thumbnails", `  images={[
   ]}`)}`,
 
   captions: `{/* A caption is any content, shown under its image and used as the viewer's description. */}
-${viewer("", captioned)}`,
+<ImageViewer
+  trigger={<Button>View photos</Button>}
+  images={[
+    { src: "/photos/harbour.jpg", alt: "Boats in the harbour at dawn", caption: <>Harbour, <em>6:10 am</em></> },
+    { src: "/photos/market.jpg", alt: "A fruit stall at the market", caption: "Saturday market" },
+    { src: "/photos/hills.jpg", alt: "Green hills under a low cloud", caption: "The ridge walk" },
+  ]}
+/>`,
 
   singleImage: `{/* With one image there are no arrows, counter or thumbnails; zoom, pan and rotate remain. */}
 <ImageViewer
@@ -55,9 +62,6 @@ ${images}
 
   loop: `{/* loop: the arrows and keys go on from the last image to the first, and back. */}
 ${viewer("  loop")}`,
-
-  zoomLimits: `{/* maxZoom is relative to the fitted image; zoomStep is the factor a button or +/- applies. */}
-${viewer("  maxZoom={8}\n  zoomStep={2}\n  doubleClickZoom={false}")}`,
 
   controlsHidden: `{/* controls="hidden" leaves only the close button; the keys and gestures still work. */}
 ${viewer('  controls="hidden"\n  rotatable={false}')}`,
@@ -92,7 +96,8 @@ ${images}
   />
 </div>`,
 
-  many: `{/* A long set draws only the thumbnails in view and a few either side. */}
+  many: `{/* A long set draws only the thumbnails in view and a few either side.
+    photos: your list of { src, thumbnail, alt }, which can be hundreds long. */}
 <div style={{ blockSize: "28rem" }}>
   <ImageViewer inline aria-label="Photos" thumbnails images={photos} />
 </div>`,
@@ -102,6 +107,17 @@ ${images}
     and opens the viewer at its image with viewer.current?.open(index). The first image eases in from it. */}
 <ImageViewer controllerRef={viewer} getOrigin={(index) => cells.current[index]}
 ${images}
+/>`,
+
+  loadFailure: `{/* An image that cannot be loaded shows a message and a "Try again" button in its place; the others still open.
+    onImageError tells your page, with the image and its index. */}
+<ImageViewer
+  trigger={<Button>View photos</Button>}
+  onImageError={(image, index) => report("could not load", image.src, index)}
+  images={[
+    { src: "/photos/missing.jpg", alt: "A picture that cannot be loaded", caption: "This one fails to load" },
+    { src: "/photos/market.jpg", alt: "A fruit stall at the market" },
+  ]}
 />`,
 
   rightToLeft: `{/* dir mirrors the arrows and the arrow keys; it is passed in, not read from the page. */}

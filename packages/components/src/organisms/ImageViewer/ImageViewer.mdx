@@ -4,6 +4,9 @@ import { Image } from "../../atoms/Image";
 import { Indicators } from "../../atoms/Indicators";
 import { VisuallyHidden } from "../../atoms/VisuallyHidden";
 import * as ImageViewerStories from "./ImageViewer.stories";
+import * as ImageViewerButtonStories from "./ImageViewerButton.stories";
+
+export const buttonPropOrder = ["label", "icon", "children", "unavailable", "mirrored", "onClick", "id", "className", "style", "data-testid"];
 
 export const propOrder = [
   "images",
@@ -43,6 +46,7 @@ export const propOrder = [
   "scrimOpacity",
   "scrimBlur",
   "initialFocus",
+  "onKeyDown",
   "onOpenAutoFocus",
   "onCloseAutoFocus",
   "onEscapeKeyDown",
@@ -54,6 +58,7 @@ export const propOrder = [
   "controllerRef",
   "aria-label",
   "aria-labelledby",
+  "aria-describedby",
   "id",
   "className",
   "style",
@@ -98,7 +103,7 @@ import { ImageViewer } from "@dbm-system/components";
 <Canvas of={ImageViewerStories.Playground} />
 
 </div>
-<PlaygroundControls of={ImageViewerStories.Playground} order={propOrder} exclude={["images", "trigger", "open", "onOpenChange", "onOpenChangeComplete", "value", "onValueChange", "actions", "initialFocus", "onOpenAutoFocus", "onCloseAutoFocus", "onEscapeKeyDown", "onInteractOutside", "container", "labels", "formatNumber", "controllerRef", "aria-label", "aria-labelledby", "id", "className", "style", "data-testid", "defaultOpen", "defaultValue", "inline", "getOrigin", "onImageLoad", "onImageError", "onZoomChange", "onRotationChange"]} />
+<PlaygroundControls of={ImageViewerStories.Playground} order={propOrder} exclude={["images", "trigger", "open", "onOpenChange", "onOpenChangeComplete", "value", "onValueChange", "actions", "initialFocus", "onKeyDown", "onOpenAutoFocus", "onCloseAutoFocus", "onEscapeKeyDown", "onInteractOutside", "container", "labels", "formatNumber", "controllerRef", "aria-label", "aria-labelledby", "aria-describedby", "id", "className", "style", "data-testid", "defaultOpen", "defaultValue", "inline", "getOrigin", "onImageLoad", "onImageError", "onZoomChange", "onRotationChange"]} />
 
 The viewer opens inside the box above, which keeps it from covering this page. In your own page it fills the screen.
 
@@ -140,12 +145,12 @@ directly in `actions` logs a development warning, since in a light theme it is d
 
 ### ImageViewerButton
 
-A button drawn for the viewer's dark stage, for `actions`; the viewer's own controls are the same part. It takes `label` (required, the
-accessible name, which must contain any text the button shows), an `icon` (a Phosphor component, for a round icon-only button) or
-text `children` (for a pill), `unavailable` (dimmed and ignoring a press, but still focusable), `mirrored` (flips the icon in a
-right-to-left viewer), `onClick`, and `id`, `className`, `style` and `data-testid`. Any other native `<button>` attribute passes
-through. `ref` forwards to the `<button>`. It is drawn in `icon.white` over a fill mixed from `bg.overlay`, which is at least 12:1
-over any photo, in every theme.
+A button drawn for the viewer's dark stage, for `actions`; the viewer's own controls are the same part. `ref` forwards to the
+`<button>`, and any other native `<button>` attribute beyond what's listed passes through. It is drawn in white over a fill
+mixed from `bg.overlay`, which is at least 12:1 over any photo, in every theme. Give it an `icon` for a round button or text
+`children` for a pill, and a `label` that contains any text it shows.
+
+<PropertiesTable of={ImageViewerButtonStories} order={buttonPropOrder} />
 
 ## Variants
 
@@ -265,7 +270,7 @@ over any photo, in every theme.
 <Callout tone="info" title="A modal dialog with every gesture also on a button and a key, and the image named by its alt text">
 
 The panel is a modal `role="dialog"` named "Image viewer" (or by `aria-label`, `aria-labelledby` or `labels.viewer`) and described by the
-caption of the image in view. Focus moves to the panel when it opens, so the keys work at once, and returns to what opened it when it
+caption of the image in view (and by any `aria-describedby` you pass). Focus moves to the panel when it opens, so the keys work at once, and returns to what opened it when it
 closes. The page behind is inert. Tab moves through the toolbar's buttons, the arrows and the thumbnails (one tab stop, on the current
 image); the image itself is not a tab stop.
 
@@ -273,7 +278,7 @@ The browser's Back button, with `closeOnHistoryBack`, closes the viewer. A slide
 paused when the person prefers reduced motion, waits for each image to load, holds while an image is zoomed or the page is hidden, and
 is silent to a screen reader while it runs. With `tapToToggleControls`, controls that are hidden are out of the page for assistive
 technology and the tab order, and any key but Escape brings them back. An `inline` viewer is a focusable group named by `aria-label`
-that takes the same keys while it has focus; it has no focus trap, so Tab leaves it.
+that takes the same keys while it has focus; it has no focus trap, so Tab leaves it. A plain wheel and a touch scroll the page past it until the image is zoomed (a pinch, the control key with the wheel, or a zoom button), so it does not hold the page.
 
 When the image changes, a polite live region says "Image 3 of 12: its alt text" (only a change, never the first appearance). The image
 is a real `<img>` with its `alt`; while it loads a spinner is announced, and one that fails shows "This image could not be loaded."
@@ -382,6 +387,7 @@ tones follow the theme. Everything on the stage is white (`text.white` and `bord
 <TokenRow token="radius.md" usage="a thumbnail" />
 <TokenRow token="radius.none" usage="the corners of the viewer in full screen when it is drawn in the page" />
 <TokenRow token="space.0" usage="resets the native button and the stage's insets" />
+<TokenRow token="space.1" usage="the band of the stage's own dark between a focused thumbnail and its ring, and that ring's offset" />
 <TokenRow token="space.2" usage="the gap between controls, and room round the thumbnails for a focus ring" />
 <TokenRow token="space.3" usage="the toolbar's gap and a text button's padding" />
 <TokenRow token="space.4" usage="the toolbar's and footer's padding" />

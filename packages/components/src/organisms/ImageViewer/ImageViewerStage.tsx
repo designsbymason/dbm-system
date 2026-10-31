@@ -24,6 +24,8 @@ export interface ImageViewerStageProps extends ZoomGestureHandlers {
   doubleClickZoom: boolean;
   directionSign: 1 | -1;
   canDismiss: boolean;
+  /** Drawn in the page, not over it: a plain wheel and a touch scroll the page until the image is zoomed. */
+  inline: boolean;
   /** Which way the person came from, so the image eases in from that side; `null` for none. */
   enter: "next" | "previous" | null;
   /** The place on the page to ease the image in from, asked for once the image is drawn; `null` for none. */
@@ -58,6 +60,7 @@ export function ImageViewerStage({
   doubleClickZoom,
   directionSign,
   canDismiss,
+  inline,
   enter,
   getOriginRect,
   labels,
@@ -103,6 +106,7 @@ export function ImageViewerStage({
     enabled: status === "ready",
     directionSign,
     canDismiss,
+    wheelNeedsModifier: inline,
     onZoomChange,
     onSwipeNavigate,
     onSwipeDismiss,

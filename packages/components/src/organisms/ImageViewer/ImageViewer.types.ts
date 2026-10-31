@@ -1,5 +1,5 @@
 import type { Icon as PhosphorIcon } from "@dbm-system/icons";
-import type { ComponentPropsWithoutRef, CSSProperties, ReactElement, ReactNode, Ref, RefObject } from "react";
+import type { ComponentPropsWithoutRef, CSSProperties, KeyboardEvent, ReactElement, ReactNode, Ref, RefObject } from "react";
 import type { BackdropOpacity } from "../../atoms/Backdrop/Backdrop.types";
 
 /** One image in the viewer. */
@@ -172,7 +172,7 @@ export interface ImageViewerLabels {
 }
 
 export interface ImageViewerProps
-  extends Omit<ComponentPropsWithoutRef<"div">, "children" | "role" | "defaultValue" | "onChange" | "dir" | "title"> {
+  extends Omit<ComponentPropsWithoutRef<"div">, "children" | "role" | "defaultValue" | "onChange" | "onKeyDown" | "dir" | "title"> {
   /**
    * The images, in order. With one image the viewer draws no arrows, counter or thumbnails. An empty list draws
    * nothing and logs a development warning.
@@ -292,7 +292,7 @@ export interface ImageViewerProps
   /**
    * Draws the viewer in the page, in the box you give it, instead of over it: no scrim, no close button, no focus trap,
    * and Escape and a swipe down do nothing. `trigger`, `open`, `defaultOpen`, `onOpenChange`, `container`, the scrim
-   * props and `closeOnHistoryBack` are ignored. Give it a height (it fills its parent's height) and an `aria-label`.
+   * props and `closeOnHistoryBack` are ignored. Give it a height (it fills its parent's height) and an `aria-label`. A plain wheel and a touch scroll the page past it until the image is zoomed; the control key (a trackpad pinch) zooms.
    * @default false
    */
   inline?: boolean;
@@ -351,9 +351,14 @@ export interface ImageViewerProps
   /** Called when focus returns to what opened the viewer on close. Call `event.preventDefault()` to place it yourself. */
   onCloseAutoFocus?: (event: Event) => void;
   /** Called when Escape is pressed. Call `event.preventDefault()` to keep the viewer open; see also `closeOnEscape`. */
-  onEscapeKeyDown?: (event: KeyboardEvent) => void;
+  onEscapeKeyDown?: (event: globalThis.KeyboardEvent) => void;
   /** Called when something outside the viewer is pressed, such as a layer portaled out of `actions`. The viewer never closes for it. */
   onInteractOutside?: (event: Event) => void;
+  /**
+   * Called on a key pressed inside the viewer, before the viewer's own handling. Call `event.preventDefault()` to stop the
+   * viewer acting on the key (an arrow, `+`, `r`, and so on).
+   */
+  onKeyDown?: (event: KeyboardEvent<HTMLDivElement>) => void;
   /** An element to focus when the viewer opens, instead of the viewer itself (which keeps the keys working at once). */
   initialFocus?: RefObject<HTMLElement | null>;
   /** The reading direction. It mirrors the arrows and the arrow keys, and is passed to the viewer, not read from the page. @default 'ltr' */
@@ -381,6 +386,8 @@ export interface ImageViewerProps
   "aria-label"?: string;
   /** The id of an element that names the viewer, in place of `aria-label`. */
   "aria-labelledby"?: string;
+  /** The ids of elements that describe the viewer, in addition to the caption of the image in view, which is always included. */
+  "aria-describedby"?: string;
 }
 
 export interface ImageViewerButtonProps extends Omit<ComponentPropsWithoutRef<"button">, "children" | "aria-label" | "disabled" | "type"> {

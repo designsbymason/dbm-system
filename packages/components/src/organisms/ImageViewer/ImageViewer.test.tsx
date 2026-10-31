@@ -2,6 +2,7 @@ import { act, fireEvent, render, screen, waitFor, within } from "@testing-librar
 import userEvent from "@testing-library/user-event";
 import { axe } from "jest-axe";
 import { createRef, StrictMode, useState } from "react";
+import { createPortal } from "react-dom";
 import type { ComponentPropsWithRef } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { Button } from "../../atoms/Button";
@@ -35,7 +36,9 @@ function loadImage(alt: string, width = 2000, height = 1000) {
   return element;
 }
 
-const counter = () => screen.getByTestId("image-viewer-counter");
+// The place shown beside the toolbar, as "1 / 3": found by its text, since the viewer ships no test id of its own.
+const COUNTER = /^\S+ \/ \S+$/;
+const counter = () => screen.getByText(COUNTER);
 const zoomButton = () => screen.getByRole("button", { name: /Reset zoom/ });
 
 async function open(user = userEvent.setup()) {
@@ -188,7 +191,7 @@ describe("ImageViewer navigation", () => {
     render(<Viewer images={images.slice(0, 1)} thumbnails />);
     await open();
     expect(screen.queryByRole("button", { name: "Next image" })).not.toBeInTheDocument();
-    expect(screen.queryByTestId("image-viewer-counter")).not.toBeInTheDocument();
+    expect(screen.queryByText(COUNTER)).not.toBeInTheDocument();
     expect(screen.queryByRole("group", { name: "Thumbnails" })).not.toBeInTheDocument();
   });
 
@@ -199,7 +202,7 @@ describe("ImageViewer navigation", () => {
     unmount();
     render(<Viewer showCounter={false} />);
     await open();
-    expect(screen.queryByTestId("image-viewer-counter")).not.toBeInTheDocument();
+    expect(screen.queryByText(COUNTER)).not.toBeInTheDocument();
   });
 
   it("announces a change of image, and not the first appearance", async () => {
@@ -609,7 +612,7 @@ describe("ImageViewer props", () => {
     render(<Viewer images={[]} defaultOpen trigger={undefined} />);
     await screen.findByRole("dialog");
     expect(warn).toHaveBeenCalledWith(expect.stringContaining("`images` is empty"));
-    expect(screen.queryByTestId("image-viewer-counter")).not.toBeInTheDocument();
+    expect(screen.queryByText(COUNTER)).not.toBeInTheDocument();
   });
 
   it("reports when it has finished opening and closing", async () => {
@@ -856,8 +859,10 @@ describe("ImageViewer origin, slideshow, inline and long strips", () => {
     expect(getOrigin).toHaveBeenCalledTimes(1);
     expect(getOrigin).toHaveBeenCalledWith(0);
     const box = screen.getByAltText("Hinted").closest("[data-drawn]") as HTMLElement;
-    // drawn at the origin's width first: 200px of the fitted 1000px
-    expect(box.style.transform).toMatch(/scale\(0\.2\)|scale\(1\)/);
+    // drawn at the origin's width first (200px of the fitted 1000px), and then eased to its own place
+    expect(box.style.transform).toContain("scale(0.2)");
+    expect(box.style.transform).toContain("translate(100px, 50px)");
+    await waitFor(() => expect(box.style.transform).toContain("scale(1)"));
     await user.keyboard("{PageDown}{PageUp}");
     expect(getOrigin).toHaveBeenCalledTimes(1);
   });
@@ -982,5 +987,167 @@ describe("ImageViewer origin, slideshow, inline and long strips", () => {
     render(<Viewer thumbnails />);
     const { dialog } = await open();
     expect(within(within(dialog).getByRole("group", { name: "Thumbnails" })).getAllByRole("button")).toHaveLength(3);
+  });
+});
+
+describe("ImageViewer review fixes", () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+    vi.unstubAllGlobals();
+  });
+
+  it("keeps a consumer's aria-describedby, beside the caption's", async () => {
+    render(
+      <>
+        <p id="note">A note</p>
+        <Viewer aria-describedby="note" />
+      </>,
+    );
+    const { dialog } = await open();
+    expect(dialog).toHaveAccessibleDescription("A note Caption one");
+    expect(dialog.getAttribute("aria-describedby")).toMatch(/^note /);
+  });
+
+  it("describes the viewer by the consumer's aria-describedby alone when there is no caption", async () => {
+    render(
+      <>
+        <p id="note">A note</p>
+        <Viewer aria-describedby="note" showCaptions={false} />
+      </>,
+    );
+    const { dialog } = await open();
+    expect(dialog).toHaveAttribute("aria-describedby", "note");
+  });
+
+  it("ignores a key pressed in something portaled out of the viewer, and still takes one pressed inside it", async () => {
+    render(<Viewer actions={createPortal(<button type="button">Menu item</button>, document.body)} />);
+    const { dialog } = await open();
+    // found by its text: the page outside the viewer is hidden from the accessibility tree while it is open
+    fireEvent.keyDown(screen.getByText("Menu item"), { key: "ArrowRight" });
+    expect(counter()).toHaveTextContent("1 / 3");
+    fireEvent.keyDown(screen.getByRole("button", { name: "Close" }), { key: "ArrowRight" });
+    expect(counter()).toHaveTextContent("2 / 3");
+    expect(dialog).toBeInTheDocument();
+  });
+
+  it("does not ask for the neighbours again when a list written inline is made again", async () => {
+    const requested: string[] = [];
+    vi.stubGlobal(
+      "Image",
+      class {
+        set src(value: string) {
+          requested.push(value);
+        }
+
+        set srcset(_value: string) {}
+      },
+    );
+    const list = () => images.map((image) => ({ ...image }));
+    const { rerender } = render(<Viewer images={list()} />);
+    await open();
+    const first = requested.length;
+    expect(first).toBeGreaterThan(0);
+    rerender(<Viewer images={list()} />);
+    rerender(<Viewer images={list()} />);
+    expect(requested).toHaveLength(first);
+  });
+
+  it("warns about an empty list once, however often the list is made again", () => {
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
+    const { rerender } = render(<Viewer images={[]} defaultOpen trigger={undefined} />);
+    rerender(<Viewer images={[]} defaultOpen trigger={undefined} />);
+    rerender(<Viewer images={[]} defaultOpen trigger={undefined} />);
+    expect(warn.mock.calls.filter(([message]) => String(message).includes("`images` is empty"))).toHaveLength(1);
+  });
+
+  it("gives a controlled viewer a new history entry when its owner keeps it open after Back", async () => {
+    const push = vi.spyOn(window.history, "pushState");
+    vi.spyOn(window.history, "back").mockImplementation(() => undefined);
+    const onOpenChange = vi.fn();
+    render(<Viewer open closeOnHistoryBack onOpenChange={onOpenChange} />);
+    await screen.findByRole("dialog");
+    expect(push).toHaveBeenCalledTimes(1);
+    act(() => {
+      window.dispatchEvent(new PopStateEvent("popstate"));
+    });
+    expect(onOpenChange).toHaveBeenCalledWith(false, { reason: "history" });
+    await waitFor(() => expect(push).toHaveBeenCalledTimes(2));
+  });
+
+  it("leaves the wheel to the page of an inline viewer until the control key is down, and keeps it in a dialog", async () => {
+    const stageOf = () => screen.getByAltText("First picture").closest("[data-status]") as HTMLElement;
+    const { unmount } = render(<ImageViewer inline aria-label="Gallery" images={images} />);
+    loadImage("First picture");
+    await waitFor(() => expect(zoomButton()).toBeInTheDocument());
+    // `fireEvent` says whether the event was left alone
+    expect(fireEvent.wheel(stageOf(), { deltaY: -300 })).toBe(true);
+    expect(zoomButton()).toHaveTextContent("50%");
+    expect(fireEvent.wheel(stageOf(), { deltaY: -300, ctrlKey: true })).toBe(false);
+    await waitFor(() => expect(zoomButton()).not.toHaveTextContent("50%"));
+    // zoomed, a plain wheel zooms again, since the image is the thing being looked at
+    expect(fireEvent.wheel(stageOf(), { deltaY: 300 })).toBe(false);
+    unmount();
+    render(<Viewer />);
+    await open();
+    loadImage("First picture");
+    await waitFor(() => expect(zoomButton()).toBeInTheDocument());
+    expect(fireEvent.wheel(stageOf(), { deltaY: -300 })).toBe(false);
+  });
+
+  it("marks the stage while the image is larger than it, for a stylesheet that lets touch scroll the page until then", async () => {
+    render(<ImageViewer inline aria-label="Gallery" images={images} />);
+    loadImage("First picture");
+    await waitFor(() => expect(zoomButton()).toBeInTheDocument());
+    const stage = screen.getByAltText("First picture").closest("[data-status]") as HTMLElement;
+    expect(stage).not.toHaveAttribute("data-zoomed");
+    await userEvent.setup().click(screen.getByRole("button", { name: "Zoom in" }));
+    expect(stage).toHaveAttribute("data-zoomed");
+  });
+
+  it("skips the origin under reduced motion", async () => {
+    const matchMedia = window.matchMedia;
+    window.matchMedia = ((query: string) => ({ matches: query.includes("reduce"), media: query, addEventListener: () => undefined, removeEventListener: () => undefined }) as unknown as MediaQueryList) as typeof window.matchMedia;
+    try {
+      const getOrigin = vi.fn(() => document.createElement("div"));
+      render(<Viewer getOrigin={getOrigin} images={[{ src: "/a.jpg", alt: "Hinted", width: 1000, height: 500 }]} />);
+      await open();
+      expect(getOrigin).not.toHaveBeenCalled();
+    } finally {
+      window.matchMedia = matchMedia;
+    }
+  });
+
+  it("runs actual size, flip, rotate and the slideshow from the controller, and shows them to a part in actions", async () => {
+    const ref = createRef<ImageViewerController>();
+    function State() {
+      const viewer = useImageViewerController();
+      return <span data-testid="state">{`${viewer.isPlaying}|${viewer.zoom.toFixed(1)}`}</span>;
+    }
+    render(<ImageViewer images={images} controllerRef={ref} defaultOpen actions={<State />} />);
+    await screen.findByRole("dialog");
+    loadImage("First picture");
+    await waitFor(() => expect(zoomButton()).toBeInTheDocument());
+    const box = screen.getByAltText("First picture").closest("[data-drawn]") as HTMLElement;
+    act(() => {
+      expect(ref.current?.actualSize()).toBe(true);
+    });
+    expect(zoomButton()).toHaveTextContent("100%");
+    expect(screen.getByTestId("state")).toHaveTextContent("false|2.0");
+    act(() => {
+      expect(ref.current?.rotate(90)).toBe(true);
+      expect(ref.current?.rotate(0)).toBe(false);
+      expect(ref.current?.flip()).toBe(true);
+      expect(ref.current?.flip("vertical")).toBe(true);
+    });
+    expect(box.style.transform).toContain("scale(-1, -1)");
+    expect(box.style.transform).toContain("rotate(90deg)");
+    act(() => {
+      expect(ref.current?.play()).toBe(true);
+    });
+    expect(screen.getByTestId("state")).toHaveTextContent("true|");
+    act(() => {
+      expect(ref.current?.pause()).toBe(true);
+    });
+    expect(screen.getByTestId("state")).toHaveTextContent("false|");
   });
 });

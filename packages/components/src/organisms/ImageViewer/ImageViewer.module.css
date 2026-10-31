@@ -103,10 +103,17 @@
 
 /* The ring is drawn inside the chip: the chip is dark, so a white ring reads whatever photo is behind it, where one
    outside it would be lost on a light one. */
-.control:focus-visible,
-.thumbnail:focus-visible {
+.control:focus-visible {
   outline: var(--dbm-border-width-2) solid var(--dbm-border-white);
   outline-offset: calc(-1 * var(--dbm-border-width-2));
+}
+
+/* A thumbnail is a photo, so a ring inside it would be white on whatever it shows. The ring is drawn outside, with a band of
+   the stage's own dark between it and the picture (the strip has room for both). */
+.thumbnail:focus-visible {
+  box-shadow: 0 0 0 var(--dbm-space-1) var(--dbm-bg-overlay);
+  outline: var(--dbm-border-width-2) solid var(--dbm-border-white);
+  outline-offset: var(--dbm-space-1);
 }
 
 .control[aria-disabled="true"] {
@@ -210,16 +217,15 @@
   -webkit-user-drag: none;
 }
 
+/* Blurred, the edges of a picture fade to the page behind it; drawn a blur's width larger on each side, the stage crops that. */
 .placeholder {
-  block-size: 100%;
+  block-size: calc(100% + 2 * var(--dbm-space-2));
   filter: blur(var(--dbm-space-2));
-  inline-size: 100%;
-  inset: var(--dbm-space-0);
+  inline-size: calc(100% + 2 * var(--dbm-space-2));
+  inset: calc(-1 * var(--dbm-space-2));
   object-fit: contain;
   pointer-events: none;
   position: absolute;
-  /* Blurred, the edge would show a lighter fringe; scaled up a little it is cut off by the stage. */
-  scale: 1.04;
 }
 
 .failed {
@@ -273,6 +279,15 @@
 .arrow,
 .footer {
   transition: opacity var(--dbm-motion-duration-base) var(--dbm-motion-easing-standard), visibility var(--dbm-motion-duration-base) var(--dbm-motion-easing-standard);
+}
+
+/* In a page the stage lets a touch scroll the page until the image is zoomed (the hook marks it), where over the page it takes every touch. */
+.inline .stage {
+  touch-action: pan-y;
+}
+
+.inline .stage[data-zoomed] {
+  touch-action: none;
 }
 
 /* --- Drawn in the page, in the box it is given: the stage is a solid dark surface with rounded corners, and the panel itself

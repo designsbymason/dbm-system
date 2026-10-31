@@ -14,7 +14,7 @@ import {
 } from "@dbm-system/icons";
 import { cx, mergeDefined, mergeRefs, useAnnouncement } from "@dbm-system/utils";
 import * as DialogPrimitive from "@radix-ui/react-dialog";
-import { Children, createContext, forwardRef, isValidElement, useCallback, useContext, useEffect, useId, useImperativeHandle, useMemo, useRef, useState } from "react";
+import { Children, createContext, forwardRef, isValidElement, useCallback, useContext, useEffect, useId, useImperativeHandle, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import type { KeyboardEvent, ReactNode } from "react";
 import { Backdrop } from "../../atoms/Backdrop";
 import { VisuallyHidden } from "../../atoms/VisuallyHidden";
@@ -134,7 +134,24 @@ function isEditable(target: EventTarget | null): boolean {
   return target instanceof Element && target.closest("input, textarea, select, [contenteditable='true']") !== null;
 }
 
-const prefersReducedMotion = () => typeof window !== "undefined" && window.matchMedia?.("(prefers-reduced-motion: reduce)").matches === true;
+const reducedMotionQuery = "(prefers-reduced-motion: reduce)";
+const prefersReducedMotion = () => typeof window !== "undefined" && window.matchMedia?.(reducedMotionQuery).matches === true;
+
+/**
+ * Whether the person prefers reduced motion, as a store so the server render and the first client render agree (the
+ * server's answer is no, and a hydrating client is then updated to its own).
+ */
+function useReducedMotion(): boolean {
+  return useSyncExternalStore(
+    (notify) => {
+      const query = typeof window !== "undefined" ? window.matchMedia?.(reducedMotionQuery) : undefined;
+      query?.addEventListener?.("change", notify);
+      return () => query?.removeEventListener?.("change", notify);
+    },
+    prefersReducedMotion,
+    () => false,
+  );
+}
 
 /**
  * A full-screen viewer for one image or a set of them, often called a lightbox. It opens over the page on a dark
@@ -259,8 +276,11 @@ export const ImageViewer = forwardRef<HTMLDivElement, ImageViewerProps>(
 
     const autoPlayOn = autoPlay !== false && autoPlay !== undefined;
     const interval = typeof autoPlay === "object" && autoPlay.interval !== undefined ? Math.max(500, autoPlay.interval) : DEFAULT_INTERVAL;
-    const startsPlaying = () => autoPlayOn && !prefersReducedMotion();
-    const [playing, setPlaying] = useState(startsPlaying);
+    // The slideshow runs from the start when asked for, except for a person who prefers reduced motion; once they use its
+    // button, what they chose stands until the viewer is opened again.
+    const reducedMotion = useReducedMotion();
+    const [chosenPlaying, setChosenPlaying] = useState<boolean | null>(null);
+    const playing = chosenPlaying ?? (autoPlayOn && !reducedMotion);
     const [chromeHidden, setChromeHidden] = useState(false);
     const [direction, setDirection] = useState<"next" | "previous" | null>(null);
 
@@ -268,7 +288,7 @@ export const ImageViewer = forwardRef<HTMLDivElement, ImageViewerProps>(
     const [wasOpen, setWasOpen] = useState(open);
     if (open !== wasOpen) {
       setWasOpen(open);
-      setPlaying(open && startsPlaying());
+      setChosenPlaying(null);
       setChromeHidden(false);
       setDirection(null);
     }
@@ -379,14 +399,14 @@ export const ImageViewer = forwardRef<HTMLDivElement, ImageViewerProps>(
       const current = latest.current;
       if (!current.open || current.playing || current.count < 2) return false;
       current.playing = true;
-      setPlaying(true);
+      setChosenPlaying(true);
       return true;
     }, []);
     const stopPlaying = useCallback(() => {
       const current = latest.current;
       if (!current.playing) return false;
       current.playing = false;
-      setPlaying(false);
+      setChosenPlaying(false);
       return true;
     }, []);
     useEffect(() => {
@@ -444,6 +464,8 @@ export const ImageViewer = forwardRef<HTMLDivElement, ImageViewerProps>(
     // viewer, and a viewer closed any other way takes its own entry off again.
     const historyEntry = useRef(false);
     const ignoredPops = useRef(0);
+    // Counts the presses of Back, so an owner that kept a controlled viewer open gets a new entry for the next one.
+    const [backs, setBacks] = useState(0);
     useEffect(() => {
       if (!open || inline || !closeOnHistoryBack) return undefined;
       if (!historyEntry.current) {
@@ -458,11 +480,12 @@ export const ImageViewer = forwardRef<HTMLDivElement, ImageViewerProps>(
         if (historyEntry.current) {
           historyEntry.current = false;
           changeOpen(false, "history");
+          setBacks((count) => count + 1);
         }
       };
       window.addEventListener("popstate", onPop);
       return () => window.removeEventListener("popstate", onPop);
-    }, [open, inline, closeOnHistoryBack, changeOpen]);
+    }, [open, inline, closeOnHistoryBack, changeOpen, backs]);
     useEffect(() => {
       if (open || !historyEntry.current) return;
       historyEntry.current = false;
@@ -530,24 +553,31 @@ export const ImageViewer = forwardRef<HTMLDivElement, ImageViewerProps>(
       [controller, open, index, count, zoom, playing],
     );
 
-    // --- Neighbours load in the background, so a step to them shows at once.
-    useEffect(() => {
-      if (!open || count < 2) return undefined;
-      const loaded: HTMLImageElement[] = [];
-      for (const offset of [1, -1]) {
-        const target = neighbour(index, offset, count, loop);
+    // --- Neighbours load in the background, so a step to them shows at once. Keyed by what they load, not by the array, so a
+    // list written inline and made again on every render does not ask for them again.
+    const preloadKey = [1, -1]
+      .map((offset) => {
+        const target = count < 2 ? null : neighbour(index, offset, count, loop);
         const next = target === null ? undefined : images[target];
-        if (!next) continue;
+        return next ? `${next.src}\n${next.srcSet ?? ""}` : "";
+      })
+      .join("\n\n");
+    useEffect(() => {
+      if (!open || !preloadKey.replace(/\s/g, "")) return undefined;
+      const loaded: HTMLImageElement[] = [];
+      for (const entry of preloadKey.split("\n\n")) {
+        const [src, srcSet] = entry.split("\n");
+        if (!src) continue;
         const element = new window.Image();
-        if (next.srcSet) element.srcset = next.srcSet;
-        element.src = next.src;
+        if (srcSet) element.srcset = srcSet;
+        element.src = src;
         loaded.push(element);
       }
       return () => {
         // Dropping the references lets the browser release what it decoded.
         loaded.length = 0;
       };
-    }, [open, index, count, loop, images]);
+    }, [open, preloadKey]);
 
     // --- The announcement of a new image. Opening is not a change: the dialog announces itself. A running slideshow is
     // silent, so it does not read over the person.
@@ -564,12 +594,18 @@ export const ImageViewer = forwardRef<HTMLDivElement, ImageViewerProps>(
       lastIndex.current = index;
     }, [open, playing, index, image, count, labels, announce]);
 
-    // --- Development warnings.
+    // --- Development warnings, each once however often a list written inline is made again.
+    const warned = useRef(new Set<string>());
     useEffect(() => {
       if (process.env.NODE_ENV === "production") return;
-      if (count === 0) console.warn("ImageViewer: `images` is empty, so there is nothing to show.");
+      const warnOnce = (message: string) => {
+        if (warned.current.has(message)) return;
+        warned.current.add(message);
+        console.warn(message);
+      };
+      if (count === 0) warnOnce("ImageViewer: `images` is empty, so there is nothing to show.");
       else if (images.some((entry) => typeof entry.alt !== "string")) {
-        console.warn("ImageViewer: every image needs an `alt` (pass \"\" for a purely decorative one).");
+        warnOnce("ImageViewer: every image needs an `alt` (pass \"\" for a purely decorative one).");
       }
     }, [count, images]);
     useEffect(() => {
@@ -605,6 +641,9 @@ export const ImageViewer = forwardRef<HTMLDivElement, ImageViewerProps>(
 
     const handleKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
       onKeyDown?.(event);
+      // A key pressed in something portaled out of the viewer (a menu in `actions`) reaches this handler through React, not
+      // through the page, and is not the viewer's.
+      if (!event.currentTarget.contains(event.target as Node)) return;
       if (event.defaultPrevented || event.altKey || event.ctrlKey || event.metaKey || isEditable(event.target)) return;
       // Any key but Escape brings back controls a tap has hidden.
       if (chromeHidden && event.key !== "Escape") setChromeHidden(false);
@@ -680,7 +719,8 @@ export const ImageViewer = forwardRef<HTMLDivElement, ImageViewerProps>(
     };
 
     const hiddenTitle = ariaLabel ?? labels.viewer;
-    const describedBy = caption ? captionId : undefined;
+    // The caption describes the viewer, in addition to anything the consumer points at.
+    const describedBy = [props["aria-describedby"], caption ? captionId : undefined].filter(Boolean).join(" ") || undefined;
 
     // What is inside the viewer, whether it is a dialog or drawn in the page.
     const inner = (
@@ -688,7 +728,7 @@ export const ImageViewer = forwardRef<HTMLDivElement, ImageViewerProps>(
         <div className={styles.toolbar}>
           <div className={styles.toolbarStart}>
             {counterShown && count > 0 && (
-              <span className={styles.counter} data-testid="image-viewer-counter">
+              <span className={styles.counter}>
                 {labels.position(index + 1, count)}
               </span>
             )}
@@ -771,6 +811,7 @@ export const ImageViewer = forwardRef<HTMLDivElement, ImageViewerProps>(
               doubleClickZoom={doubleClickZoom}
               directionSign={directionSign}
               canDismiss={swipeToDismiss && !inline}
+              inline={inline}
               enter={direction}
               getOriginRect={getOriginRect}
               labels={labels}

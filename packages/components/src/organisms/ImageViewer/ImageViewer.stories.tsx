@@ -8,7 +8,7 @@ import { Text } from "../../atoms/Text";
 import { ImageViewer, ImageViewerButton, useImageViewerController } from "./ImageViewer";
 import { imageViewerPlaygroundSnippet, imageViewerSnippets } from "./ImageViewer.snippets";
 import type { ImageViewerController, ImageViewerProps } from "./ImageViewer.types";
-import { ViewerStage, brokenImages, manyImages, plainImages, sampleImages } from "./ImageViewerStoryKit";
+import { ViewerStage, brokenImages, getManyImages, plainImages, sampleImages } from "./ImageViewerStoryKit";
 
 type PlaygroundArgs = ImageViewerProps;
 
@@ -92,6 +92,7 @@ const meta: Meta<PlaygroundArgs> = {
       table: { defaultValue: { summary: "String" } },
     },
     controllerRef: { control: false, description: "Hands code outside the viewer its controls: open, close, next, previous, goTo, zoomIn, zoomOut, resetZoom, rotate and toggleFullscreen. The object never changes." },
+    onKeyDown: { control: false, description: "Called on a key pressed inside the viewer, before the viewer's own handling. Call event.preventDefault() to stop the viewer acting on the key (an arrow, +, r and so on)." },
     onOpenAutoFocus: { control: false, description: "Called when focus moves into the viewer on open. Call event.preventDefault() to choose the element to focus yourself." },
     onCloseAutoFocus: { control: false, description: "Called when focus returns to what opened the viewer on close. Call event.preventDefault() to place it yourself." },
     onEscapeKeyDown: { control: false, description: "Called when Escape is pressed. Call event.preventDefault() to keep the viewer open; see also closeOnEscape." },
@@ -102,6 +103,7 @@ const meta: Meta<PlaygroundArgs> = {
     "data-testid": { control: false, description: "Test identifier for automated testing. Rendered as the DOM data-testid attribute on the panel." },
     "aria-label": { control: false, description: "Overrides the accessible name, which is labels.viewer by default." },
     "aria-labelledby": { control: false, description: "The id of an element that names the viewer, in place of aria-label." },
+    "aria-describedby": { control: false, description: "The ids of elements that describe the viewer, in addition to the caption of the image in view, which is always included." },
     loop: {
       control: "boolean",
       description: "Whether the arrows and keys go on from the last image to the first and back.",
@@ -154,7 +156,7 @@ const meta: Meta<PlaygroundArgs> = {
     },
     inline: {
       control: false,
-      description: "Draws the viewer in the page, in the box you give it, instead of over it: no scrim, close button or focus trap, and Escape and a swipe down do nothing. trigger, open, defaultOpen, onOpenChange, container, the scrim props and closeOnHistoryBack are ignored.",
+      description: "Draws the viewer in the page, in the box you give it, instead of over it: no scrim, close button or focus trap, and Escape and a swipe down do nothing. A plain wheel and a touch scroll the page past it until the image is zoomed; the control key zooms. trigger, open, defaultOpen, onOpenChange, container, the scrim props and closeOnHistoryBack are ignored.",
       table: { defaultValue: { summary: "false" } },
     },
     getOrigin: {
@@ -295,7 +297,7 @@ export const WithCaptions: Story = {
         <ImageViewer
           container={container}
           trigger={openButton}
-          images={sampleImages.slice(0, 3).map((image) => ({ ...image, caption: <span>{image.caption} <em>(tap to zoom)</em></span> }))}
+          images={sampleImages.slice(0, 3).map((image, index) => ({ ...image, caption: index === 0 ? <>{image.caption} <em>(first image)</em></> : image.caption }))}
         />
       )}
     </ViewerStage>
@@ -439,7 +441,7 @@ export const RightToLeft: Story = {
 export const LoadFailure: Story = {
   name: "An image that fails to load",
   argTypes: noControls,
-  parameters: { docs: { source: { code: imageViewerSnippets.basic } } },
+  parameters: { docs: { source: { code: imageViewerSnippets.loadFailure } } },
   render: () => (
     <ViewerStage>{(container) => <ImageViewer container={container} trigger={openButton} images={brokenImages} />}</ViewerStage>
   ),
@@ -508,7 +510,7 @@ export const ManyImages: Story = {
   parameters: { docs: { source: { code: imageViewerSnippets.many } } },
   render: () => (
     <div style={{ blockSize: "28rem" }}>
-      <ImageViewer inline aria-label="Five hundred photos" images={manyImages} thumbnails defaultValue={250} />
+      <ImageViewer inline aria-label="Five hundred photos" images={getManyImages()} thumbnails defaultValue={250} />
     </div>
   ),
 };
@@ -548,11 +550,11 @@ export const KeyboardInteraction: Story = {
     await userEvent.click(canvas.getByRole("button", { name: "View photos" }));
     const dialog = await canvas.findByRole("dialog", { name: "Image viewer" });
     await waitFor(() => expect(dialog).toHaveFocus());
-    await expect(within(dialog).getByTestId("image-viewer-counter")).toHaveTextContent("1 / 6");
+    await expect(within(dialog).getByText(/^\S+ \/ \S+$/)).toHaveTextContent("1 / 6");
     await userEvent.keyboard("{ArrowRight}");
-    await waitFor(() => expect(within(dialog).getByTestId("image-viewer-counter")).toHaveTextContent("2 / 6"));
+    await waitFor(() => expect(within(dialog).getByText(/^\S+ \/ \S+$/)).toHaveTextContent("2 / 6"));
     await userEvent.keyboard("{End}");
-    await waitFor(() => expect(within(dialog).getByTestId("image-viewer-counter")).toHaveTextContent("6 / 6"));
+    await waitFor(() => expect(within(dialog).getByText(/^\S+ \/ \S+$/)).toHaveTextContent("6 / 6"));
     await userEvent.keyboard("{Escape}");
     await waitFor(() => expect(canvas.queryByRole("dialog")).toBeNull());
   },

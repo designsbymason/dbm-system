@@ -5,7 +5,7 @@ import { Button } from "../../atoms/Button";
 import { send } from "../../molecules/CodeBlock/browserProtocol";
 import { ImageViewer, ImageViewerButton } from "./ImageViewer";
 import type { ImageViewerProps } from "./ImageViewer.types";
-import { brokenImages, manyImages, sampleImages } from "./ImageViewerStoryKit";
+import { brokenImages, getManyImages, sampleImages } from "./ImageViewerStoryKit";
 
 // Real-browser checks for what jsdom can't evaluate: layout, the fit, a wheel and a drag on the real stage, the
 // touch gestures, the scroll lock, contrast from the computed styles, forced colours and reduced motion. Hidden from the
@@ -67,7 +67,7 @@ const closeWithEscape = async () => {
 
 const boxOf = (dialog: HTMLElement) => dialog.querySelector("[data-drawn]") as HTMLElement;
 const stageOf = (dialog: HTMLElement) => boxOf(dialog).parentElement as HTMLElement;
-const counterOf = (dialog: HTMLElement) => within(dialog).getByTestId("image-viewer-counter");
+const counterOf = (dialog: HTMLElement) => within(dialog).getByText(/^\S+ \/ \S+$/);
 
 // The test page scales its iframe, so a point inside the story is mapped to the page it is drawn on.
 function pagePoint(clientX: number, clientY: number) {
@@ -703,7 +703,7 @@ export const InlineSitsInThePage: Story = {
     await expect(document.activeElement).toBe(group);
     await expect(getComputedStyle(group).outlineStyle).toBe("solid");
     await userEvent.keyboard("{ArrowRight}");
-    await waitFor(() => expect(within(group).getByTestId("image-viewer-counter")).toHaveTextContent("2 / 6"));
+    await waitFor(() => expect(within(group).getByText(/^\S+ \/ \S+$/)).toHaveTextContent("2 / 6"));
     await userEvent.keyboard("{Escape}");
     await expect(group).toBeInTheDocument();
     await userEvent.tab();
@@ -717,7 +717,7 @@ export const ALongStripIsWindowed: Story = {
   name: "A 500-image strip draws a few dozen buttons, keeps its full length, and follows a scroll",
   render: () => (
     <div style={{ inlineSize: "40rem", blockSize: "26rem", padding: "var(--dbm-space-4)" }}>
-      <ImageViewer inline aria-label="Many" images={manyImages} thumbnails defaultValue={250} />
+      <ImageViewer inline aria-label="Many" images={getManyImages()} thumbnails defaultValue={250} />
     </div>
   ),
   play: async () => {
@@ -800,5 +800,90 @@ export const AStepEntersFromTheSideItCameFrom: Story = {
       await emulate("prefers-reduced-motion", "no-preference");
     }
     await closeWithEscape();
+  },
+};
+
+export const HidingTheControlsKeepsFocusInTheViewer: Story = {
+  name: "A tap that hides the controls leaves focus in the viewer, even when a toolbar button had it, and a key brings them back",
+  render: () => <Harness tapToToggleControls />,
+  play: async () => {
+    const dialog = await openViewer();
+    const rotate = within(dialog).getByRole("button", { name: "Rotate clockwise" });
+    rotate.focus();
+    await expect(document.activeElement).toBe(rotate);
+    const rect = boxOf(dialog).getBoundingClientRect();
+    await realClickAt(rect.left + rect.width / 2, rect.top + rect.height / 2);
+    await waitFor(() => expect(dialog).toHaveAttribute("data-chrome", "hidden"), { timeout: 2000 });
+    // a press on the image moves focus to the viewer (the nearest focusable ancestor), so the hidden button does not hold it; once
+    // the toolbar is really hidden the browser would otherwise have dropped focus to the page, so wait for that, then look
+    await waitFor(() => expect(getComputedStyle(rotate).visibility).toBe("hidden"));
+    await sleep(100);
+    await expect(document.activeElement).toBe(dialog);
+    await userEvent.keyboard("x");
+    await waitFor(() => expect(dialog).not.toHaveAttribute("data-chrome"));
+    await closeWithEscape();
+  },
+};
+
+export const AFocusedThumbnailHasARingOutsideThePicture: Story = {
+  name: "A focused thumbnail's ring is outside the picture, white, with a dark band between them",
+  render: () => <Harness thumbnails />,
+  play: async () => {
+    const dialog = await openViewer();
+    const strip = within(dialog).getByRole("group", { name: "Thumbnails" });
+    const thumbnail = strip.querySelector<HTMLElement>("button[aria-current]") as HTMLElement;
+    // a key first, so the browser treats the focus that follows as the keyboard's
+    await userEvent.keyboard("{Shift}");
+    thumbnail.focus({ focusVisible: true } as FocusOptions);
+    await expect(thumbnail.matches(":focus-visible")).toBe(true);
+    const style = getComputedStyle(thumbnail);
+    await expect(Number.parseFloat(style.outlineOffset)).toBeGreaterThan(0);
+    await expect(Number.parseFloat(style.outlineWidth)).toBeGreaterThanOrEqual(2);
+    const ring = parseColour(style.outlineColor);
+    await expect(ring).toMatchObject({ r: 255, g: 255, b: 255 });
+    // the band between the picture and the ring is the stage's own dark, so the ring reads whatever the picture is
+    const band = parseColour(/(rgba?\([^)]*\)|color\([^)]*\))/.exec(style.boxShadow)?.[1] ?? "");
+    await expect(contrast(luminance(ring), luminance(band))).toBeGreaterThanOrEqual(4.5);
+    // and there is room for it in the strip, which would clip it
+    const room = strip.getBoundingClientRect();
+    const own = thumbnail.getBoundingClientRect();
+    await expect(own.top - room.top).toBeGreaterThanOrEqual(6);
+    await expect(room.bottom - own.bottom).toBeGreaterThanOrEqual(6);
+    await closeWithEscape();
+  },
+};
+
+export const InlineLeavesScrollingToThePage: Story = {
+  name: "An inline viewer lets the page scroll under a plain wheel and a touch until it is zoomed, and zooms with the control key",
+  render: () => (
+    <div style={{ blockSize: "250vh", padding: "var(--dbm-space-4)" }}>
+      <div style={{ blockSize: "24rem" }}>
+        <ImageViewer inline aria-label="Photos" images={sampleImages} />
+      </div>
+    </div>
+  ),
+  play: async () => {
+    const group = await body.findByRole("group", { name: "Photos" });
+    await waitFor(() => expect(group.querySelector("[data-drawn]")).not.toBeNull(), { timeout: 5000 });
+    await settled(group);
+    const box = boxOf(group);
+    const stage = stageOf(group);
+    await expect(getComputedStyle(stage).touchAction).toBe("pan-y");
+    const area = stage.getBoundingClientRect();
+    const at = { x: area.left + area.width / 2, y: area.top + area.height / 2 };
+    const scrolled = window.scrollY;
+    await realWheel(at.x, at.y, 300);
+    await waitFor(() => expect(window.scrollY).toBeGreaterThan(scrolled));
+    await expect(scaleOf(box)).toBe(1);
+    window.scrollTo(0, 0);
+    await sleep(100);
+    const again = stage.getBoundingClientRect();
+    // the control key is a trackpad pinch, and zooms the image and leaves the page where it is
+    const top = window.scrollY;
+    await realMouse("mouseWheel", again.left + again.width / 2, again.top + again.height / 2, { deltaX: 0, deltaY: -240, modifiers: 2 });
+    await waitFor(() => expect(scaleOf(box)).toBeGreaterThan(1));
+    await expect(window.scrollY).toBe(top);
+    await expect(stage).toHaveAttribute("data-zoomed");
+    await expect(getComputedStyle(stage).touchAction).toBe("none");
   },
 };
