@@ -2,6 +2,7 @@ import { act, fireEvent, render, screen, waitFor, within } from "@testing-librar
 import userEvent from "@testing-library/user-event";
 import { axe } from "jest-axe";
 import { createRef, StrictMode, useState } from "react";
+import type { ColorPickerController } from "./ColorPicker.types";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { FormField } from "../../molecules/FormField";
 import { ColorPicker } from "./ColorPicker";
@@ -577,6 +578,216 @@ describe("ColorPicker format switch", () => {
   });
 });
 
+describe("ColorPicker color names", () => {
+  it("reads a CSS color name, in any case, and writes it back in the format", async () => {
+    const user = userEvent.setup();
+    const onValueChange = vi.fn();
+    render(<ColorPicker aria-label="c" onValueChange={onValueChange} />);
+    await user.type(entry(), "RebeccaPurple{Enter}");
+    expect(entry().value).toBe("#663399");
+    expect(onValueChange).toHaveBeenCalledWith("#663399");
+  });
+
+  it("takes a name as a value and as a swatch", () => {
+    render(<ColorPicker aria-label="c" inline defaultValue="teal" swatches={["tomato"]} />);
+    expect(entry().value).toBe("#008080");
+    expect(screen.getByRole("button", { name: "#ff6347" })).toBeInTheDocument();
+  });
+});
+
+describe("ColorPicker keyboard shortcut and controller", () => {
+  it("opens the panel with Alt+ArrowDown from the entry, and not with ArrowDown alone", async () => {
+    const user = userEvent.setup();
+    render(<ColorPicker aria-label="c" defaultValue="#5548a4" />);
+    entry().focus();
+    await user.keyboard("{ArrowDown}");
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    await user.keyboard("{Alt>}{ArrowDown}{/Alt}");
+    expect(await screen.findByRole("dialog", { name: "Choose a color" })).toBeInTheDocument();
+    expect(saturation()).toHaveFocus();
+  });
+
+  it("does nothing on Alt+ArrowDown when inline or read only", async () => {
+    const user = userEvent.setup();
+    render(<ColorPicker aria-label="c" readOnly defaultValue="#5548a4" />);
+    entry().focus();
+    await user.keyboard("{Alt>}{ArrowDown}{/Alt}");
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+  });
+
+  it("is opened, closed and focused from code, saying whether it had anything to do", async () => {
+    const ref = createRef<ColorPickerController>();
+    const { rerender } = render(<ColorPicker aria-label="c" controllerRef={ref} />);
+    const controller = ref.current as ColorPickerController;
+    expect(controller.isOpen()).toBe(false);
+    expect(controller.close()).toBe(false);
+    await act(async () => {
+      expect(controller.open()).toBe(true);
+    });
+    expect(await screen.findByRole("dialog")).toBeInTheDocument();
+    expect(controller.isOpen()).toBe(true);
+    expect(controller.open()).toBe(false);
+    await act(async () => {
+      expect(controller.close()).toBe(true);
+    });
+    await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
+    expect(controller.focus()).toBe(true);
+    expect(entry()).toHaveFocus();
+    // The same object for the picker's whole life, and a disabled picker does nothing.
+    rerender(<ColorPicker aria-label="c" controllerRef={ref} disabled />);
+    expect(ref.current).toBe(controller);
+    expect(controller.open()).toBe(false);
+    expect(controller.focus()).toBe(false);
+  });
+
+  it("reports an inline picker as having nothing to open", () => {
+    const ref = createRef<ColorPickerController>();
+    render(<ColorPicker aria-label="c" inline controllerRef={ref} />);
+    expect(ref.current?.open()).toBe(false);
+  });
+});
+
+describe("ColorPicker none swatch", () => {
+  it("is the first swatch, pressed while there is no color, and drawn without other swatches", () => {
+    render(<ColorPicker aria-label="c" inline noneSwatch />);
+    const none = screen.getByRole("button", { name: "No color" });
+    expect(none).toHaveAttribute("aria-pressed", "true");
+    expect(none.tabIndex).toBe(0);
+  });
+
+  it("clears the color, reports it and says so", async () => {
+    const user = userEvent.setup();
+    const onValueCommit = vi.fn();
+    render(<ColorPicker aria-label="c" inline noneSwatch swatches={["#ff0000"]} defaultValue="#ff0000" onValueCommit={onValueCommit} />);
+    const buttons = within(screen.getByRole("group", { name: "Swatches" })).getAllByRole("button");
+    expect(buttons.map((button) => button.getAttribute("aria-label"))).toEqual(["No color", "#ff0000"]);
+    expect(buttons[1]).toHaveAttribute("aria-pressed", "true");
+    expect(buttons[1]?.tabIndex).toBe(0);
+    await user.click(buttons[0] as HTMLElement);
+    expect(onValueCommit).toHaveBeenCalledWith("");
+    expect(entry().value).toBe("");
+    expect(await screen.findByText("Color cleared")).toBeInTheDocument();
+    expect(buttons[0]).toHaveAttribute("aria-pressed", "true");
+  });
+
+  it("is reached with the arrow keys like the others", async () => {
+    const user = userEvent.setup();
+    render(<ColorPicker aria-label="c" inline noneSwatch swatches={["#ff0000"]} />);
+    screen.getByRole("button", { name: "No color" }).focus();
+    await user.keyboard("{ArrowRight}");
+    expect(screen.getByRole("button", { name: "#ff0000" })).toHaveFocus();
+  });
+});
+
+describe("ColorPicker copy button", () => {
+  const withClipboard = (writeText: (text: string) => Promise<void>) => {
+    Object.defineProperty(navigator, "clipboard", { value: { writeText }, configurable: true });
+  };
+
+  afterEach(() => {
+    Reflect.deleteProperty(navigator, "clipboard");
+  });
+
+  it("copies the color in the format and says so", async () => {
+    const user = userEvent.setup();
+    const writeText = vi.fn().mockResolvedValue(undefined);
+    withClipboard(writeText);
+    render(<ColorPicker aria-label="c" inline copyButton format="rgb" defaultValue="#5548a4" />);
+    await user.click(screen.getByRole("button", { name: "Copy color" }));
+    expect(writeText).toHaveBeenCalledWith("rgb(85 72 164)");
+    expect(await screen.findByText("Color copied")).toBeInTheDocument();
+  });
+
+  it("says when the browser refused", async () => {
+    const user = userEvent.setup();
+    withClipboard(vi.fn().mockRejectedValue(new Error("denied")));
+    render(<ColorPicker aria-label="c" inline copyButton defaultValue="#5548a4" />);
+    await user.click(screen.getByRole("button", { name: "Copy color" }));
+    expect(await screen.findByText("Could not copy the color")).toBeInTheDocument();
+  });
+
+  it("is off while no color is chosen, and not drawn unless asked", () => {
+    const { rerender } = render(<ColorPicker aria-label="c" inline copyButton />);
+    expect(screen.getByRole("button", { name: "Copy color" })).toBeDisabled();
+    rerender(<ColorPicker aria-label="c" inline />);
+    expect(screen.queryByRole("button", { name: "Copy color" })).not.toBeInTheDocument();
+  });
+});
+
+describe("ColorPicker channel inputs", () => {
+  const field = (name: string) => screen.getByRole("spinbutton", { name }) as HTMLInputElement;
+
+  it("draws no fields unless asked", () => {
+    render(<ColorPicker aria-label="c" inline defaultValue="#5548a4" />);
+    expect(screen.queryByRole("spinbutton")).not.toBeInTheDocument();
+  });
+
+  it.each([
+    ["hex", ["Red", "Green", "Blue"], ["85", "72", "164"]],
+    ["rgb", ["Red", "Green", "Blue"], ["85", "72", "164"]],
+    ["hsl", ["Hue", "Saturation", "Lightness"], ["248", "39", "46"]],
+  ] as const)("shows the %s channels of the color", (format, names, values) => {
+    render(<ColorPicker aria-label="c" inline showChannelInputs format={format} defaultValue="#5548a4" />);
+    expect(names.map((name) => field(name).value)).toEqual(values);
+  });
+
+  it("shows lightness, chroma and hue for oklch, and opacity with alpha", () => {
+    render(<ColorPicker aria-label="c" inline showChannelInputs alpha format="oklch" defaultValue="#5548a480" />);
+    expect(["Lightness", "Chroma", "Hue", "Opacity"].map((name) => field(name).value)).toEqual(["0.464", "0.143", "285.9", "50"]);
+  });
+
+  it("applies a typed channel as soon as it is a number, and commits it", async () => {
+    const user = userEvent.setup();
+    const onValueChange = vi.fn();
+    const onValueCommit = vi.fn();
+    render(<ColorPicker aria-label="c" inline showChannelInputs defaultValue="#000000" onValueChange={onValueChange} onValueCommit={onValueCommit} />);
+    await user.clear(field("Red"));
+    await user.type(field("Red"), "255");
+    expect(entry().value).toBe("#ff0000");
+    expect(onValueChange).toHaveBeenLastCalledWith("#ff0000");
+    expect(onValueCommit).toHaveBeenLastCalledWith("#ff0000");
+  });
+
+  it("keeps what is typed while the field has focus, and clamps a number out of range", async () => {
+    const user = userEvent.setup();
+    render(<ColorPicker aria-label="c" inline showChannelInputs defaultValue="#000000" />);
+    await user.clear(field("Green"));
+    expect(field("Green").value).toBe("");
+    await user.type(field("Green"), "999");
+    expect(entry().value).toBe("#00ff00");
+    expect(field("Green").value).toBe("999");
+    await user.tab();
+    expect(field("Green").value).toBe("255");
+  });
+
+  it("edits hsl and opacity, and keeps a typed hue on a gray", async () => {
+    const user = userEvent.setup();
+    render(<ColorPicker aria-label="c" inline showChannelInputs alpha format="hsl" defaultValue="#808080" />);
+    await user.clear(field("Hue"));
+    await user.type(field("Hue"), "120");
+    expect(screen.getByRole("slider", { name: "Hue" })).toHaveAttribute("aria-valuenow", "120");
+    await user.clear(field("Opacity"));
+    await user.type(field("Opacity"), "25");
+    expect(entry().value).toBe("hsl(0 0% 50% / 0.25)");
+  });
+
+  it("is detached from a surrounding form and does nothing when read only", () => {
+    const { container } = render(
+      <form>
+        <ColorPicker aria-label="c" inline showChannelInputs readOnly defaultValue="#5548a4" />
+      </form>,
+    );
+    expect(field("Red")).toHaveAttribute("form", "");
+    expect(field("Red")).toHaveAttribute("readonly");
+    expect((container.querySelector("form") as HTMLFormElement).checkValidity()).toBe(true);
+  });
+
+  it("takes translated names and letters", () => {
+    render(<ColorPicker aria-label="c" inline showChannelInputs labels={{ channelName: (channel) => `K-${channel}`, channelLetter: () => "x" }} />);
+    expect(field("K-r")).toBeInTheDocument();
+  });
+});
+
 describe("ColorPicker eyedropper", () => {
   afterEach(() => {
     delete (window as unknown as { EyeDropper?: unknown }).EyeDropper;
@@ -680,7 +891,7 @@ describe("ColorPicker accessibility", () => {
   });
 
   it("has no axe violations inline, at another size and in right-to-left", async () => {
-    const { container } = render(<ColorPicker aria-label="Brand color" inline size="xs" dir="rtl" defaultValue="#5548a4" alpha showFormatSwitch swatches={["#ff0000"]} />);
+    const { container } = render(<ColorPicker aria-label="Brand color" inline size="xs" dir="rtl" defaultValue="#5548a4" alpha showFormatSwitch showChannelInputs noneSwatch copyButton eyeDropper swatches={["#ff0000"]} />);
     expect(await axe(container)).toHaveNoViolations();
   });
 

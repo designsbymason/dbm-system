@@ -421,3 +421,113 @@ export const SwitchTheFormatInThePanel: Story = {
     await waitFor(() => expect(entry()).toHaveValue("#5548a4"));
   },
 };
+
+const press = async (key: string, code: string, windowsVirtualKeyCode: number, modifiers = 0) => {
+  await send("Input.dispatchKeyEvent", { type: "rawKeyDown", key, code, windowsVirtualKeyCode, modifiers });
+  await send("Input.dispatchKeyEvent", { type: "keyUp", key, code, windowsVirtualKeyCode, modifiers });
+};
+
+export const EverythingFitsThePanel: Story = {
+  name: "With every option on, nothing in the panel is cut off or wider than the panel, and the number fields are usable",
+  render: () => (
+    <Page>
+      <ColorPicker
+        aria-label="Brand color"
+        defaultOpen
+        alpha
+        showFormatSwitch
+        showChannelInputs
+        noneSwatch
+        copyButton
+        eyeDropper
+        defaultValue="#5548a4"
+        swatches={["#ff0000", "#00aa00", "#0000ff", "#ffaa00", "#aa00aa", "#00aaaa", "#888888", "#222222"]}
+      />
+    </Page>
+  ),
+  play: async () => {
+    const panel = await body().findByRole("dialog", { name: "Choose a color" });
+    await settled(panel);
+    const box = panel.getBoundingClientRect();
+    await expect(panel.scrollWidth).toBeLessThanOrEqual(panel.clientWidth);
+    for (const control of within(panel).getAllByRole("spinbutton")) {
+      const rect = control.getBoundingClientRect();
+      await expect(rect.right).toBeLessThanOrEqual(box.right);
+      await expect(rect.left).toBeGreaterThanOrEqual(box.left);
+      // The target is `Input`'s wrapper, which hands a press on its padding to the field.
+      await expect((control.parentElement as HTMLElement).getBoundingClientRect().height).toBeGreaterThanOrEqual(24);
+      // The number fits its field (three digits, or the longest oklch value, with room to read).
+      await expect((control as HTMLInputElement).scrollWidth).toBeLessThanOrEqual((control as HTMLInputElement).clientWidth);
+    }
+    // Each option row is inside the panel's own padding.
+    for (const button of within(panel).getAllByRole("button")) await expect(button.getBoundingClientRect().right).toBeLessThanOrEqual(box.right);
+    // The oklch fields hold their longest values.
+    await realClick(within(panel).getByRole("radio", { name: "OKLCH" }));
+    await waitFor(() => expect(within(panel).getByRole("spinbutton", { name: "Hue" })).toHaveValue(285.9));
+    for (const control of within(panel).getAllByRole("spinbutton") as HTMLInputElement[]) await expect(control.scrollWidth).toBeLessThanOrEqual(control.clientWidth);
+  },
+};
+
+export const AltArrowDownOpens: Story = {
+  name: "A real Alt+ArrowDown from the text entry opens the panel and focuses the area",
+  render: () => (
+    <Page>
+      <ColorPicker aria-label="Brand color" defaultValue="#5548a4" />
+    </Page>
+  ),
+  play: async () => {
+    entry().focus();
+    // Alt is modifier 1 in the DevTools Protocol.
+    await press("ArrowDown", "ArrowDown", 40, 1);
+    await body().findByRole("dialog", { name: "Choose a color" });
+    await waitFor(() => expect(body().getByRole("slider", { name: "Saturation" })).toHaveFocus());
+    await press("Escape", "Escape", 27);
+    await waitFor(() => expect(body().queryByRole("dialog", { name: "Choose a color" })).not.toBeInTheDocument());
+    await expect(body().getByRole("button", { name: "Choose color" })).toHaveFocus();
+  },
+};
+
+export const SwatchTooltips: Story = {
+  name: "A swatch shows its name in a tooltip on a real hover and on keyboard focus",
+  render: () => (
+    <Page>
+      <ColorPicker aria-label="Brand color" inline swatches={[{ value: "#ff0000", label: "Signal red" }]} noneSwatch />
+    </Page>
+  ),
+  play: async () => {
+    const swatch = body().getByRole("button", { name: "Signal red" });
+    const point = toPage(centre(swatch).x, centre(swatch).y);
+    await send("Input.dispatchMouseEvent", { type: "mouseMoved", ...point });
+    await waitFor(() => expect(document.querySelector('[role="tooltip"]')?.textContent).toContain("Signal red"), { timeout: 2000 });
+    await send("Input.dispatchMouseEvent", { type: "mouseMoved", x: 1, y: 1 });
+    body().getByRole("button", { name: "No color" }).focus();
+    await press("ArrowRight", "ArrowRight", 39);
+    await waitFor(() => expect(body().getByRole("button", { name: "Signal red" })).toHaveFocus());
+  },
+};
+
+export const CopyWithTheRealClipboard: Story = {
+  name: "The copy button hands the color to the real clipboard and says how it went",
+  render: () => (
+    <Page>
+      <ColorPicker aria-label="Brand color" inline copyButton format="rgb" defaultValue="#5548a4" />
+    </Page>
+  ),
+  play: async () => {
+    // A headless test page may refuse clipboard access, so what is asserted is what the button asked the real API to write, and that
+    // it said something about the outcome (copied, or refused).
+    const asked: string[] = [];
+    const original = navigator.clipboard.writeText.bind(navigator.clipboard);
+    navigator.clipboard.writeText = (text: string) => {
+      asked.push(text);
+      return original(text);
+    };
+    try {
+      await userEvent.click(body().getByRole("button", { name: "Copy color" }));
+      await waitFor(() => expect(body().getByRole("status")).toHaveTextContent(/Color copied|Could not copy the color/), { timeout: 3000 });
+      await expect(asked).toEqual(["rgb(85 72 164)"]);
+    } finally {
+      navigator.clipboard.writeText = original;
+    }
+  },
+};

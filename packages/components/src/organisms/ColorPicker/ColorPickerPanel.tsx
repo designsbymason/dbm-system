@@ -1,15 +1,18 @@
-import { EyedropperIcon } from "@dbm-system/icons";
+import { CheckIcon, CopyIcon, EyedropperIcon } from "@dbm-system/icons";
 import { cx } from "@dbm-system/utils";
 import * as SliderPrimitive from "@radix-ui/react-slider";
-import { forwardRef, useEffect, useRef, useState } from "react";
+import { forwardRef, useRef, useState, useSyncExternalStore } from "react";
 import type { KeyboardEvent } from "react";
 import { IconButton } from "../../atoms/IconButton";
+import { Input } from "../../atoms/Input";
+import { Tooltip } from "../../atoms/Tooltip";
 import { ToggleGroup } from "../../molecules/ToggleGroup";
-import { formatColor, hsvaToRgb } from "../../internal/color/colorValue";
-import type { Hsva, Rgba } from "../../internal/color/colorValue";
+import { channelSpecs, formatColor, fromChannels, hsvaToRgb, rgbToHsva, toChannels } from "../../internal/color/colorValue";
+import type { ChannelSpace, Hsva, Rgba } from "../../internal/color/colorValue";
+import { subscribeToNothing } from "../../molecules/Calendar/calendarHelpers";
 import { ColorArea } from "./ColorArea";
 import styles from "./ColorPicker.module.css";
-import type { ColorPickerFormat, ColorPickerLabels } from "./ColorPicker.types";
+import type { ColorPickerChannel, ColorPickerFormat, ColorPickerLabels } from "./ColorPicker.types";
 import type { ChangeKind } from "./useColorPickerValue";
 
 /** A swatch that has been read: its color, how it is named and the CSS the chip is painted with. */
@@ -25,6 +28,11 @@ interface ColorPickerPanelProps {
   alpha: boolean;
   swatches: SwatchChoice[];
   eyeDropper: boolean;
+  noneSwatch: boolean;
+  copyButton: boolean;
+  copied: boolean;
+  /** The space the channel number fields edit; `undefined` draws none. */
+  channelSpace: ChannelSpace | undefined;
   labels: ColorPickerLabels;
   formatNumber: (value: number) => string;
   /** The chosen format while the switch is shown; `undefined` draws no switch. */
@@ -35,6 +43,8 @@ interface ColorPickerPanelProps {
   readOnly: boolean;
   onChange: (next: Hsva, kind: ChangeKind) => void;
   onPickSwatch: (swatch: SwatchChoice) => void;
+  onPickNone: () => void;
+  onCopy: () => void;
   onPickFromScreen: (hex: string) => void;
 }
 
@@ -57,19 +67,86 @@ function colorVariables(hsva: Hsva): React.CSSProperties {
   } as React.CSSProperties;
 }
 
+interface ChannelInputsProps {
+  hsva: Hsva;
+  space: ChannelSpace;
+  alpha: boolean;
+  labels: ColorPickerLabels;
+  formatNumber: (value: number) => string;
+  disabled: boolean;
+  readOnly: boolean;
+  onChange: (next: Hsva, kind: ChangeKind) => void;
+}
+
+/**
+ * A number field for each channel of the format, and opacity. A field shows what is being typed until it loses focus, and applies
+ * a number as soon as it is in range. The fields are detached from any surrounding `<form>` (a `form` id that matches nothing), so a
+ * half-typed number never blocks a submit; the value a form sends is the picker's own.
+ */
+function ChannelInputs({ hsva, space, alpha, labels, disabled, readOnly, onChange }: ChannelInputsProps) {
+  const [draft, setDraft] = useState<{ id: ColorPickerChannel; text: string } | null>(null);
+  const specs = channelSpecs[space];
+  const values = toChannels(hsvaToRgb(hsva), space);
+
+  const apply = (id: ColorPickerChannel, text: string) => {
+    setDraft({ id, text });
+    const number = Number(text);
+    if (text.trim() === "" || !Number.isFinite(number)) return;
+    if (id === "a") {
+      onChange({ ...hsva, a: Math.min(100, Math.max(0, number)) / 100 }, "commit");
+      return;
+    }
+    const index = specs.findIndex((spec) => spec.id === id);
+    const channels = values.slice();
+    channels[index] = number;
+    const rgb = fromChannels(space, channels, hsva.a);
+    const next = rgbToHsva(rgb, hsva.h);
+    // A hue typed into HSL is the picker's hue as well, even where the color is a gray that has none of its own.
+    if (space === "hsl" && id === "h") next.h = Math.min(360, Math.max(0, number));
+    onChange(next, "commit");
+  };
+
+  const fields: Array<{ id: ColorPickerChannel; value: number; step: number }> = [
+    ...specs.map((spec, index) => ({ id: spec.id as ColorPickerChannel, value: values[index] as number, step: spec.step })),
+    ...(alpha ? [{ id: "a" as const, value: Math.round(hsva.a * 100), step: 1 }] : []),
+  ];
+
+  return (
+    <div className={styles.channels}>
+      {fields.map(({ id, value, step }) => (
+        <div key={id} className={styles.channel}>
+          <Input
+            type="number"
+            size="xs"
+            step={step}
+            form=""
+            aria-label={labels.channelName(id)}
+            disabled={disabled}
+            readOnly={readOnly}
+            value={draft?.id === id ? draft.text : String(value)}
+            onChange={(event) => apply(id, event.target.value)}
+            onBlur={() => setDraft(null)}
+          />
+          <span className={styles.channelLetter} aria-hidden="true">
+            {labels.channelLetter(id)}
+          </span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 /**
  * What is inside the panel: the saturation and brightness area, a hue slider, an opacity slider when `alpha` is on, the list of
  * swatches and the eyedropper. The sliders are the Radix primitive drawn with this component's own track and thumb; their
  * gradients and thumb colors are colors the person chose, so they are written from the color rather than from tokens.
  */
 export const ColorPickerPanel = forwardRef<HTMLInputElement, ColorPickerPanelProps>(
-  ({ hsva, hasValue, alpha, swatches, eyeDropper, labels, formatNumber, format, onFormatChange, dir, disabled, readOnly, onChange, onPickSwatch, onPickFromScreen }, areaRef) => {
+  ({ hsva, hasValue, alpha, swatches, eyeDropper, noneSwatch, copyButton, copied, channelSpace, labels, formatNumber, format, onFormatChange, dir, disabled, readOnly, onChange, onPickSwatch, onPickNone, onCopy, onPickFromScreen }, areaRef) => {
     const inert = disabled || readOnly;
-    const [canDropper, setCanDropper] = useState(false);
-    useEffect(() => {
-      // Only known in the browser, after hydration, so a server render and the first client render agree.
-      setCanDropper(eyeDropper && hasEyeDropper());
-    }, [eyeDropper]);
+    // Only known in the browser: the server snapshot says no, so a server render and the first client render agree.
+    const supported = useSyncExternalStore(subscribeToNothing, hasEyeDropper, () => false);
+    const canDropper = eyeDropper && supported;
 
     const pickFromScreen = async () => {
       const Dropper = (window as unknown as { EyeDropper: new () => EyeDropperLike }).EyeDropper;
@@ -94,8 +171,12 @@ export const ColorPickerPanel = forwardRef<HTMLInputElement, ColorPickerPanelPro
         (!alpha || Math.abs(own.a - swatch.color.a) < 0.005)
       );
     };
-    const selectedIndex = swatches.findIndex(selected);
-    const stop = selectedIndex >= 0 ? selectedIndex : Math.min(activeSwatch, Math.max(swatches.length - 1, 0));
+    // The "no color" swatch, when drawn, is the first button; the swatches follow it.
+    const offset = noneSwatch ? 1 : 0;
+    const count = swatches.length + offset;
+    const chosen = swatches.findIndex(selected);
+    const found = !hasValue && noneSwatch ? 0 : chosen >= 0 ? chosen + offset : -1;
+    const stop = found >= 0 ? found : Math.min(activeSwatch, Math.max(count - 1, 0));
 
     // Arrow keys move between swatches by where they are drawn, so a wrapped row works: left and right to the neighbour in
     // the reading direction, up and down to the nearest swatch in the row above or below.
@@ -191,42 +272,86 @@ export const ColorPickerPanel = forwardRef<HTMLInputElement, ColorPickerPanelPro
             ))}
           </ToggleGroup>
         )}
-        {(swatches.length > 0 || canDropper) && (
+        {channelSpace !== undefined && (
+          <ChannelInputs
+            hsva={hsva}
+            space={channelSpace}
+            alpha={alpha}
+            labels={labels}
+            formatNumber={formatNumber}
+            disabled={disabled}
+            readOnly={readOnly}
+            onChange={onChange}
+          />
+        )}
+        {(count > 0 || canDropper || copyButton) && (
           <div className={styles.extras}>
-            {swatches.length > 0 && (
+            {count > 0 && (
               // The arrow keys are handled on the group, for the buttons inside it, which are the focusable parts.
               // eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions -- a roving-focus group of native buttons: the keys belong to the group, the controls are the buttons.
               <div role="group" aria-label={labels.swatches} className={styles.swatches} onKeyDown={onSwatchKeyDown}>
+                {noneSwatch && (
+                  <Tooltip content={labels.none}>
+                    <button
+                      ref={(element) => {
+                        swatchRefs.current[0] = element;
+                      }}
+                      type="button"
+                      className={cx(styles.swatch, styles.swatchNone)}
+                      aria-label={labels.none}
+                      aria-pressed={!hasValue}
+                      tabIndex={stop === 0 ? 0 : -1}
+                      disabled={inert}
+                      onFocus={() => setActiveSwatch(0)}
+                      onClick={onPickNone}
+                    />
+                  </Tooltip>
+                )}
                 {swatches.map((swatch, index) => (
-                  <button
-                    key={`${swatch.css}-${index}`}
-                    ref={(element) => {
-                      swatchRefs.current[index] = element;
-                    }}
-                    type="button"
-                    className={styles.swatch}
-                    style={{ "--color-picker-swatch": swatch.css } as React.CSSProperties}
-                    aria-label={swatch.label}
-                    aria-pressed={selected(swatch)}
-                    title={swatch.label}
-                    tabIndex={index === stop ? 0 : -1}
-                    disabled={inert}
-                    onFocus={() => setActiveSwatch(index)}
-                    onClick={() => onPickSwatch(swatch)}
-                  />
+                  <Tooltip key={`${swatch.css}-${index}`} content={swatch.label}>
+                    <button
+                      ref={(element) => {
+                        swatchRefs.current[index + offset] = element;
+                      }}
+                      type="button"
+                      className={styles.swatch}
+                      style={{ "--color-picker-swatch": swatch.css } as React.CSSProperties}
+                      aria-label={swatch.label}
+                      aria-pressed={selected(swatch)}
+                      tabIndex={index + offset === stop ? 0 : -1}
+                      disabled={inert}
+                      onFocus={() => setActiveSwatch(index + offset)}
+                      onClick={() => onPickSwatch(swatch)}
+                    />
+                  </Tooltip>
                 ))}
               </div>
             )}
-            {canDropper && (
-              <IconButton
-                icon={EyedropperIcon}
-                aria-label={labels.eyeDropper}
-                variant="ghost"
-                tone="neutral"
-                size="sm"
-                disabled={inert}
-                onClick={() => void pickFromScreen()}
-              />
+            {(canDropper || copyButton) && (
+              <div className={styles.tools}>
+                {copyButton && (
+                  <IconButton
+                    icon={copied ? CheckIcon : CopyIcon}
+                    aria-label={labels.copy}
+                    variant="ghost"
+                    tone="neutral"
+                    size="sm"
+                    disabled={disabled || !hasValue}
+                    onClick={onCopy}
+                  />
+                )}
+                {canDropper && (
+                  <IconButton
+                    icon={EyedropperIcon}
+                    aria-label={labels.eyeDropper}
+                    variant="ghost"
+                    tone="neutral"
+                    size="sm"
+                    disabled={inert}
+                    onClick={() => void pickFromScreen()}
+                  />
+                )}
+              </div>
             )}
           </div>
         )}

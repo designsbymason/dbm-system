@@ -1,11 +1,12 @@
 import type { Meta, StoryContext, StoryObj } from "@storybook/react-vite";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useArgs } from "storybook/preview-api";
 import { expect, fn, userEvent, waitFor, within } from "storybook/test";
 import { Button } from "../../atoms/Button";
 import { Text } from "../../atoms/Text";
 import { FormField } from "../../molecules/FormField";
 import { ColorPicker } from "./ColorPicker";
+import type { ColorPickerController } from "./ColorPicker.types";
 import { colorPickerPlaygroundSnippet, colorPickerSnippets } from "./ColorPicker.snippets";
 
 const swatchList = ["#5548a4", "#2e8a7d", { value: "oklch(0.7 0.15 60)", label: "Amber" }, "#d92d20", "#1f2937"];
@@ -62,6 +63,22 @@ const meta: Meta<typeof ColorPicker> = {
       description: "Adds a row of buttons to the panel (Hex, RGB, HSL, OKLCH) that changes the format. Choosing one rewrites the field and reports the color in the new format, so leave it off where the value must always be one spelling.",
       table: { defaultValue: { summary: "false" } },
     },
+    showChannelInputs: {
+      control: "boolean",
+      description: "Adds number fields to the panel for each channel of the format (R, G, B for hex and rgb; H, S, L for hsl; L, C, H for oklch), and opacity with alpha. Each commits as you type a number in range.",
+      table: { defaultValue: { summary: "false" } },
+    },
+    noneSwatch: {
+      control: "boolean",
+      description: 'Adds a swatch at the start of the list that means "no color": choosing it clears the value, and it is pressed while the value is empty.',
+      table: { defaultValue: { summary: "false" } },
+    },
+    copyButton: {
+      control: "boolean",
+      description: "Adds a button to the panel that copies the color, written in format, to the clipboard and says so aloud.",
+      table: { defaultValue: { summary: "false" } },
+    },
+    controllerRef: { control: false, description: "A ref that receives a controller (open, close, focus, isOpen) for driving the picker from code. The same object for the picker's whole life." },
     alpha: {
       control: "boolean",
       description: "Adds an opacity slider and keeps opacity in the value (#rrggbbaa, or / a in the other formats); a fully opaque color is written with none.",
@@ -161,6 +178,9 @@ const meta: Meta<typeof ColorPicker> = {
     defaultValue: "#5548a4",
     format: "hex",
     showFormatSwitch: false,
+    showChannelInputs: false,
+    noneSwatch: false,
+    copyButton: false,
     alpha: false,
     eyeDropper: false,
     commitOn: "change",
@@ -195,6 +215,10 @@ const noControls = {
   defaultFormat: { control: false },
   onFormatChange: { control: false },
   showFormatSwitch: { control: false },
+  showChannelInputs: { control: false },
+  noneSwatch: { control: false },
+  copyButton: { control: false },
+  controllerRef: { control: false },
   alpha: { control: false },
   eyeDropper: { control: false },
   commitOn: { control: false },
@@ -262,6 +286,51 @@ export const FormatSwitch: Story = {
   parameters: { docs: { source: { code: colorPickerSnippets.formatSwitch } } },
   argTypes: { ...noControls },
   render: () => <ColorPicker aria-label="Brand color" showFormatSwitch defaultValue="#5548a4" />,
+};
+
+export const ChannelInputs: Story = {
+  name: "Channel number fields",
+  parameters: { docs: { source: { code: colorPickerSnippets.channelInputs } } },
+  argTypes: { ...noControls },
+  render: () => <ColorPicker aria-label="Brand color" showChannelInputs alpha defaultValue="#5548a4" />,
+};
+
+export const NoneSwatch: Story = {
+  name: "A swatch for no color",
+  parameters: { docs: { source: { code: colorPickerSnippets.noneSwatch } } },
+  argTypes: { ...noControls },
+  render: () => <ColorPicker aria-label="Accent color" noneSwatch swatches={swatchList} />,
+};
+
+export const CopyButton: Story = {
+  name: "Copy button",
+  parameters: { docs: { source: { code: colorPickerSnippets.copyButton } } },
+  argTypes: { ...noControls },
+  render: () => <ColorPicker aria-label="Brand color" copyButton format="rgb" defaultValue="#5548a4" />,
+};
+
+export const FromCode: Story = {
+  name: "Opened from code",
+  parameters: { docs: { source: { code: colorPickerSnippets.controller } } },
+  argTypes: { ...noControls },
+  render: function FromCodeStory() {
+    const controller = useRef<ColorPickerController>(null);
+    return (
+      <div style={stack}>
+        <ColorPicker aria-label="Brand color" controllerRef={controller} defaultValue="#5548a4" />
+        <Button variant="secondary" size="sm" onClick={() => controller.current?.open()}>
+          Open the picker
+        </Button>
+      </div>
+    );
+  },
+};
+
+export const ColorNames: Story = {
+  name: "Color names",
+  parameters: { docs: { source: { code: colorPickerSnippets.names } } },
+  argTypes: { ...noControls },
+  render: () => <ColorPicker aria-label="Brand color" defaultValue="rebeccapurple" />,
 };
 
 export const WithOpacity: Story = {

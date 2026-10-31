@@ -495,6 +495,59 @@
     0 0 0 calc(2 * var(--dbm-border-width-2)) var(--dbm-border-strong);
 }
 
+.swatchNone {
+  background-image: linear-gradient(
+    to top right,
+    transparent calc(50% - var(--dbm-border-width-1)),
+    var(--dbm-icon-secondary) calc(50% - var(--dbm-border-width-1)) calc(50% + var(--dbm-border-width-1)),
+    transparent calc(50% + var(--dbm-border-width-1))
+  );
+  background-size: 100% 100%;
+}
+
+/* The copy and eyedropper buttons at the end of the row. */
+.tools {
+  align-items: center;
+  display: flex;
+  flex-shrink: 0;
+  gap: var(--dbm-space-1);
+}
+
+/* A number field for each channel, evenly, with its letter under it. */
+.channels {
+  display: grid;
+  gap: var(--dbm-space-2);
+  grid-auto-columns: minmax(0, 1fr);
+  grid-auto-flow: column;
+}
+
+.channel {
+  align-items: center;
+  display: flex;
+  flex-direction: column;
+  gap: var(--dbm-space-1);
+  min-inline-size: 0;
+}
+
+.channel input {
+  appearance: textfield;
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+}
+
+/* The arrows of a number field take a third of a narrow field; the keys (and a screen reader's own adjustment) do the same job. */
+.channel input::-webkit-inner-spin-button,
+.channel input::-webkit-outer-spin-button {
+  appearance: none;
+  margin: 0;
+}
+
+.channelLetter {
+  color: var(--dbm-text-tertiary);
+  font-size: var(--dbm-font-size-xs);
+  line-height: var(--dbm-line-height-tight);
+}
+
 .swatch:focus-visible {
   outline: var(--dbm-border-width-2) solid var(--dbm-border-focus);
   outline-offset: var(--dbm-space-1);

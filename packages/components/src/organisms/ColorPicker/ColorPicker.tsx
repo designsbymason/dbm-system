@@ -1,7 +1,7 @@
 import { XIcon } from "@dbm-system/icons";
 import { cx, mergeDefined, mergeRefs, useAnnouncement, useResolvedResponsiveValue } from "@dbm-system/utils";
 import * as PopoverPrimitive from "@radix-ui/react-popover";
-import { forwardRef, useEffect, useId, useRef, useState } from "react";
+import { forwardRef, useEffect, useId, useImperativeHandle, useRef, useState } from "react";
 import type { ChangeEvent, CSSProperties, FocusEvent, KeyboardEvent, ReactNode } from "react";
 import { Icon } from "../../atoms/Icon";
 import { VisuallyHidden } from "../../atoms/VisuallyHidden";
@@ -30,6 +30,11 @@ const defaultLabels: ColorPickerLabels = {
   percentText: (percent) => `${percent}%`,
   chosen: (color) => `Color chosen: ${color}`,
   cleared: "Color cleared",
+  channelName: (channel) => ({ r: "Red", g: "Green", b: "Blue", h: "Hue", s: "Saturation", l: "Lightness", c: "Chroma", a: "Opacity" })[channel],
+  channelLetter: (channel) => channel.toUpperCase(),
+  copy: "Copy color",
+  copied: "Color copied",
+  copyFailed: "Could not copy the color",
   formatSwitch: "Color format",
   formatName: (format) => (format === "hex" ? "Hex" : format.toUpperCase()),
 };
@@ -86,6 +91,10 @@ export const ColorPicker = forwardRef<HTMLDivElement, ColorPickerProps>(
       defaultFormat = "hex",
       onFormatChange,
       showFormatSwitch = false,
+      showChannelInputs = false,
+      noneSwatch = false,
+      copyButton = false,
+      controllerRef,
       alpha = false,
       swatches: swatchProp,
       eyeDropper = false,
@@ -202,6 +211,50 @@ export const ColorPicker = forwardRef<HTMLDivElement, ColorPickerProps>(
       proxy.current?.setCustomValidity(invalidEntry ? labels.invalid : "");
     }, [invalidEntry, labels.invalid]);
 
+    // From outside, through `controllerRef`: one object for the picker's life, whose methods read the latest state.
+    const latest = useRef({ open, inline, disabled, readOnly, setOpen });
+    latest.current = { open, inline, disabled, readOnly, setOpen };
+    useImperativeHandle(
+      controllerRef,
+      () => ({
+        open: () => {
+          const now = latest.current;
+          if (now.open || now.inline || now.disabled || now.readOnly) return false;
+          now.setOpen(true);
+          return true;
+        },
+        close: () => {
+          if (!latest.current.open) return false;
+          latest.current.setOpen(false);
+          return true;
+        },
+        focus: () => {
+          if (latest.current.disabled || !entryRef.current) return false;
+          entryRef.current.focus();
+          return true;
+        },
+        isOpen: () => latest.current.open,
+      }),
+      [],
+    );
+
+    const [copied, setCopied] = useState(false);
+    const copiedTimer = useRef<number | undefined>(undefined);
+    useEffect(() => () => window.clearTimeout(copiedTimer.current), []);
+    const copy = async () => {
+      try {
+        await navigator.clipboard.writeText(text);
+      } catch {
+        // A browser that refuses (an insecure page, no permission) is told to the person, who can still copy the text by hand.
+        announce(labels.copyFailed);
+        return;
+      }
+      setCopied(true);
+      announce(labels.copied);
+      window.clearTimeout(copiedTimer.current);
+      copiedTimer.current = window.setTimeout(() => setCopied(false), 1500);
+    };
+
     const settle = () => {
       setEntry(null);
       setInvalidEntry(false);
@@ -231,6 +284,10 @@ export const ColorPicker = forwardRef<HTMLDivElement, ColorPickerProps>(
       if (event.key === "Enter") {
         // An unreadable color keeps the form from submitting; a readable one is committed first.
         if (!commitEntry()) event.preventDefault();
+      } else if (event.key === "ArrowDown" && event.altKey && !inline && !inert) {
+        // The shortcut a combobox and a date field have: Alt+ArrowDown opens what the field chooses from.
+        event.preventDefault();
+        setOpen(true);
       } else if (event.key === "Escape" && entry !== null) {
         settle();
         event.stopPropagation();
@@ -267,6 +324,12 @@ export const ColorPicker = forwardRef<HTMLDivElement, ColorPickerProps>(
       settle();
       setText(swatch.css);
       announce(labels.chosen(swatch.label));
+    };
+
+    const pickNone = () => {
+      settle();
+      clear();
+      announce(labels.cleared);
     };
 
     const pickFromScreen = (hex: string) => {
@@ -389,6 +452,10 @@ export const ColorPicker = forwardRef<HTMLDivElement, ColorPickerProps>(
         alpha={alpha}
         swatches={swatches}
         eyeDropper={eyeDropper}
+        noneSwatch={noneSwatch}
+        copyButton={copyButton}
+        copied={copied}
+        channelSpace={showChannelInputs ? (format === "hsl" ? "hsl" : format === "oklch" ? "oklch" : "rgb") : undefined}
         labels={labels}
         formatNumber={formatNumber}
         format={showFormatSwitch ? format : undefined}
@@ -398,6 +465,8 @@ export const ColorPicker = forwardRef<HTMLDivElement, ColorPickerProps>(
         readOnly={readOnly}
         onChange={change}
         onPickSwatch={pick}
+        onPickNone={pickNone}
+        onCopy={() => void copy()}
         onPickFromScreen={pickFromScreen}
       />
     );

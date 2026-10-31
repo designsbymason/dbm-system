@@ -1,3 +1,5 @@
+import { colorNames } from "./colorNames";
+
 // Color maths for `ColorPicker`: parsing, conversion between sRGB, HSV, HSL and OKLCH, and writing a color back as text.
 // Hand-rolled and dependency-free (ADR-0153). Every function is pure, so it runs the same on a server and a client.
 
@@ -163,7 +165,12 @@ export function parseColor(input: string): Rgba | undefined {
   const text = input.trim();
   if (text === "") return undefined;
   const call = /^([a-z]+)\(([^)]*)\)$/i.exec(text);
-  if (!call) return parseHex(text);
+  if (!call) {
+    const named = text.toLowerCase();
+    if (named === "transparent") return { r: 0, g: 0, b: 0, a: 0 };
+    const hex = Object.hasOwn(colorNames, named) ? colorNames[named] : undefined;
+    return parseHex(hex ?? text);
+  }
   const name = (call[1] as string).toLowerCase();
   const parts = (call[2] as string)
     .split(/[\s,/]+/)
@@ -195,6 +202,60 @@ export function parseColor(input: string): Rgba | undefined {
     return oklchToRgb(lightness, Math.max(0, chroma), hue, alpha);
   }
   return undefined;
+}
+
+/** The spaces a color's channels can be edited in. A hex color is edited as its red, green and blue. */
+export type ChannelSpace = "rgb" | "hsl" | "oklch";
+
+/** One editable channel: what it is called, its range, and the step an arrow key or a spinner moves it by. */
+export interface ChannelSpec {
+  id: "r" | "g" | "b" | "h" | "s" | "l" | "c";
+  min: number;
+  max: number;
+  step: number;
+}
+
+export const channelSpecs: Readonly<Record<ChannelSpace, readonly ChannelSpec[]>> = {
+  rgb: [
+    { id: "r", min: 0, max: 255, step: 1 },
+    { id: "g", min: 0, max: 255, step: 1 },
+    { id: "b", min: 0, max: 255, step: 1 },
+  ],
+  hsl: [
+    { id: "h", min: 0, max: 360, step: 1 },
+    { id: "s", min: 0, max: 100, step: 1 },
+    { id: "l", min: 0, max: 100, step: 1 },
+  ],
+  oklch: [
+    { id: "l", min: 0, max: 1, step: 0.01 },
+    { id: "c", min: 0, max: 0.4, step: 0.01 },
+    { id: "h", min: 0, max: 360, step: 1 },
+  ],
+};
+
+/** The channels of `color` as the field would write them: whole numbers, and three decimals (one for hue) for OKLCH. */
+export function toChannels(color: Rgba, space: ChannelSpace): number[] {
+  const r = Math.round(clamp(color.r, 0, 255));
+  const g = Math.round(clamp(color.g, 0, 255));
+  const b = Math.round(clamp(color.b, 0, 255));
+  if (space === "hsl") {
+    const { h, s, l } = rgbToHsl({ r, g, b, a: 1 });
+    return [Math.round(h), Math.round(s * 100), Math.round(l * 100)];
+  }
+  if (space === "oklch") {
+    const { l, c, h } = rgbToOklch({ r, g, b, a: 1 });
+    return [roundTo(l, 3), roundTo(c, 3), roundTo(h, 1)];
+  }
+  return [r, g, b];
+}
+
+/** A color from channels written like `toChannels` writes them, each clamped to its range. */
+export function fromChannels(space: ChannelSpace, channels: readonly number[], alpha: number): Rgba {
+  const specs = channelSpecs[space];
+  const [first = 0, second = 0, third = 0] = channels.map((value, index) => clamp(value, (specs[index] as ChannelSpec).min, (specs[index] as ChannelSpec).max));
+  if (space === "hsl") return hslToRgb(first, second / 100, third / 100, alpha);
+  if (space === "oklch") return oklchToRgb(first, second, third, alpha);
+  return { r: first, g: second, b: third, a: alpha };
 }
 
 /** A color as text in `format`. Alpha is written only when `alpha` is on and the color is not opaque. */

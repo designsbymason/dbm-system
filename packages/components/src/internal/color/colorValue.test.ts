@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { emptyHsva, formatColor, hsvaToRgb, normalizeColor, parseColor, rgbToHsva } from "./colorValue";
+import { channelSpecs, emptyHsva, formatColor, fromChannels, toChannels, hsvaToRgb, normalizeColor, parseColor, rgbToHsva } from "./colorValue";
 
 describe("parseColor", () => {
   it.each([
@@ -35,7 +35,7 @@ describe("parseColor", () => {
     for (const channel of [wild?.r, wild?.g, wild?.b]) expect(channel).toBeLessThanOrEqual(255);
   });
 
-  it.each(["", "   ", "#12", "#12345", "#gggggg", "red", "rgb(1 2)", "rgb(a b c)", "hsl(1 2)", "lab(1 2 3)", "rgb(1 2 3 4 5)", "#"])("refuses %j", (text) => {
+  it.each(["", "   ", "#12", "#12345", "#gggggg", "redd", "rgb(1 2)", "rgb(a b c)", "hsl(1 2)", "lab(1 2 3)", "rgb(1 2 3 4 5)", "#"])("refuses %j", (text) => {
     expect(parseColor(text)).toBeUndefined();
   });
 });
@@ -98,5 +98,48 @@ describe("hsv", () => {
 
   it("starts from a bright red", () => {
     expect(hsvaToRgb(emptyHsva)).toMatchObject({ r: 255, g: 0, b: 0 });
+  });
+});
+
+describe("color names", () => {
+  it.each([
+    ["rebeccapurple", { r: 102, g: 51, b: 153, a: 1 }],
+    ["RED", { r: 255, g: 0, b: 0, a: 1 }],
+    [" Teal ", { r: 0, g: 128, b: 128, a: 1 }],
+    ["transparent", { r: 0, g: 0, b: 0, a: 0 }],
+  ])("reads %s", (text, expected) => {
+    expect(parseColor(text)).toEqual(expected);
+  });
+
+  it("refuses a word that is not a color, including names of Object's own properties", () => {
+    for (const word of ["banana", "constructor", "toString", "__proto__", "hasOwnProperty"]) expect(parseColor(word)).toBeUndefined();
+  });
+
+  it("reads each of the 148 names to its documented hex", async () => {
+    const { colorNames } = await import("./colorNames");
+    expect(Object.keys(colorNames)).toHaveLength(148);
+    for (const [name, hex] of Object.entries(colorNames)) expect(formatColor(parseColor(name)!, "hex", false), name).toBe(`#${hex}`);
+  });
+});
+
+describe("channels", () => {
+  it.each(["rgb", "hsl", "oklch"] as const)("round-trips %s to within a unit of a channel", (space) => {
+    for (const hex of ["#5548a4", "#2e8a7d", "#ffffff", "#000000", "#fedcba"]) {
+      const color = parseColor(hex)!;
+      const back = fromChannels(space, toChannels(color, space), 1);
+      const tolerance = space === "rgb" ? 0.5 : 4;
+      expect(Math.abs(back.r - color.r), `${hex} ${space}`).toBeLessThanOrEqual(tolerance);
+      expect(Math.abs(back.g - color.g)).toBeLessThanOrEqual(tolerance);
+      expect(Math.abs(back.b - color.b)).toBeLessThanOrEqual(tolerance);
+    }
+  });
+
+  it("clamps each channel to its range", () => {
+    expect(fromChannels("rgb", [999, -5, 128], 1)).toEqual({ r: 255, g: 0, b: 128, a: 1 });
+    expect(fromChannels("hsl", [0, 500, 50], 1)).toMatchObject({ r: 255, g: 0, b: 0 });
+  });
+
+  it("describes three channels per space", () => {
+    for (const specs of Object.values(channelSpecs)) expect(specs).toHaveLength(3);
   });
 });

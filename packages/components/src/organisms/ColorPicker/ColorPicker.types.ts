@@ -1,5 +1,5 @@
 import type { Responsive } from "@dbm-system/utils";
-import type { ComponentPropsWithoutRef, FocusEventHandler } from "react";
+import type { ComponentPropsWithoutRef, FocusEventHandler, Ref } from "react";
 import type { InputSize } from "../../atoms/Input";
 import type { ColorFormat } from "../../internal/color/colorValue";
 
@@ -58,10 +58,38 @@ export interface ColorPickerLabels {
   chosen: (color: string) => string;
   /** Said aloud when the color is cleared. */
   cleared: string;
+  /** Name of a channel's number field (`showChannelInputs`), given the channel: `"r"`, `"g"`, `"b"`, `"h"`, `"s"`, `"l"`, `"c"` or `"a"` (opacity). */
+  channelName: (channel: ColorPickerChannel) => string;
+  /** The short text drawn under a channel's number field, such as "R" or "H". It is decoration; `channelName` is the name. */
+  channelLetter: (channel: ColorPickerChannel) => string;
+  /** Name of the button that copies the color (`copyButton`). */
+  copy: string;
+  /** Said aloud when the color has been copied. */
+  copied: string;
+  /** Said aloud when the browser refused to copy. */
+  copyFailed: string;
   /** Name of the group of buttons that changes the format (`showFormatSwitch`). */
   formatSwitch: string;
   /** The text of a format's button in that group, given the format. */
   formatName: (format: ColorPickerFormat) => string;
+}
+
+/** The channels a number field can edit: red, green, blue, hue, saturation, lightness, chroma, and opacity. */
+export type ColorPickerChannel = "r" | "g" | "b" | "h" | "s" | "l" | "c" | "a";
+
+/**
+ * What code can do to a `ColorPicker` from outside, through `controllerRef`. Each method says whether it had anything to
+ * do (`false` while the picker is disabled, read only, drawn `inline`, or already in the state asked for) instead of throwing.
+ */
+export interface ColorPickerController {
+  /** Opens the floating panel and moves focus into it. */
+  open: () => boolean;
+  /** Closes the floating panel and gives focus back to its button. */
+  close: () => boolean;
+  /** Focuses the text entry. */
+  focus: () => boolean;
+  /** Whether the floating panel is open. */
+  isOpen: () => boolean;
 }
 
 /** When `onValueChange` is called: on every change, as the person drags, or only when they are done. */
@@ -101,7 +129,7 @@ export interface ColorPickerProps
    * The controlled format: how the color is written, as the text in the field and the string `onValueChange`,
    * `onValueCommit` and `name` carry. `"hex"` is `#rrggbb`, `"rgb"` is `rgb(r g b)`, `"hsl"` is `hsl(h s% l%)` and
    * `"oklch"` is `oklch(L C H)`. Typed text may use any of them (or a three, four or eight digit hex, with or without
-   * `#`) whatever the format is. Pair it with `onFormatChange` when `showFormatSwitch` is on, or the switch does nothing.
+   * `#`, or a CSS color name such as `rebeccapurple`) whatever the format is. Pair it with `onFormatChange` when `showFormatSwitch` is on, or the switch does nothing.
    * Omit it (and use `defaultFormat`) to let the picker hold the format.
    */
   format?: ColorPickerFormat;
@@ -142,6 +170,29 @@ export interface ColorPickerProps
    * @default 'change'
    */
   commitOn?: ColorPickerCommitOn;
+  /**
+   * Adds number fields to the panel for each channel of the format (red, green and blue for `hex` and `rgb`; hue,
+   * saturation and lightness for `hsl`; lightness, chroma and hue for `oklch`), and opacity with `alpha`, for typing an
+   * exact value. Each commits as you type a number in range.
+   * @default false
+   */
+  showChannelInputs?: boolean;
+  /**
+   * Adds a swatch at the start of the list that means "no color": choosing it clears the value, and it is pressed while
+   * the value is empty. Shown even when `swatches` is empty.
+   * @default false
+   */
+  noneSwatch?: boolean;
+  /**
+   * Adds a button to the panel that copies the color, written in `format`, to the clipboard and says so aloud.
+   * @default false
+   */
+  copyButton?: boolean;
+  /**
+   * A ref that receives a controller for opening, closing and focusing the picker from code. It is the same object for
+   * the picker's whole life.
+   */
+  controllerRef?: Ref<ColorPickerController>;
   /**
    * Shows a clear button while a color is chosen. Clearing makes the value `""`.
    * @default false

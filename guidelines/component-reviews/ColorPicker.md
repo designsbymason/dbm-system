@@ -12,6 +12,10 @@ A color field: a swatch button that opens a panel, and a text entry that shows t
 - **Changing `format` did not re-spell an uncontrolled value**, which had been stored already converted. It is held as written and re-spelled each render.
 - **Format switch in the panel** (`showFormatSwitch`, controllable `format`, [ADR-0156](../adr/0156-colorpicker-lets-the-person-change-the-format-through-an-opt-in-switch-in-the-panel-with-a-controllable-format-that-re-spells-the-value-over-a-fixed-format-or-a-display-only-switch.md)). Found while testing it: a lossy spelling (HSL) echoed back by a controlled owner replaced the exact numbers, so hex to HSL and back changed the color by a unit; the hook now keeps the numbers when the new value is what they already write to.
 
+- **Gap list items 2 to 11** ([ADR-0157](../adr/0157-colorpicker-adds-channel-number-fields-css-color-names-a-none-swatch-a-copy-button-a-controller-and-an-alt-arrowdown-shortcut-as-opt-ins-over-leaving-them-to-the-app.md)): channel number fields, CSS color names, a "no color" swatch, a copy button, `controllerRef`, `Alt`+`ArrowDown`, swatch tooltips through `Tooltip`; each checked as below. Found while building: the number fields' spin arrows clipped the longest OKLCH value in the panel's width (removed), and `Input`'s box, not the native input, is the 24px target.
+- **Mutation checks** on the real-browser checks (the code or stylesheet each guards was broken once, the check run, and the code put back): the drag, the thumb rings, the Dialog stacking, button targets, the thumb's touch target, right-to-left, the thumb's focus ring, forced colors, the panel's font, `Alt`+`ArrowDown`, the swatch tooltip, the format switch, inserted text, the panel fit with every option on and the real clipboard all fail when broken. Three first "survived" because the mutation was overridden by a later declaration or the test pattern matched nothing, and were redone.
+- **Looked at** in Storybook: dark and light, purple and emerald, with every option on, and at 375px with `presentation="full-width"`. The empty state draws the area and thumbs at the default red until a color is chosen; the format switch's chosen button is a soft tint (`ToggleGroup`'s own `subtle` look).
+
 ## Verified when it was built
 
 - Unit: 58 tests for the component, 26 for its server render and hydration, and 30 for the color maths (round trips, refusals, hue retention, gamut clipping); jest-axe closed, open, inline, at `xs` and in right-to-left; the Docs page's token table against the stylesheet; every snippet through the shared guard.
@@ -20,8 +24,6 @@ A color field: a swatch button that opens a panel, and a text entry that shows t
 
 ## Not done, to settle in the review pass
 
-- A mutation check on each real-browser check (break the thing once, see it fail); only the pointer-capture finding came from a check failing for the right reason.
 - Safari, Firefox, a real touch screen and a screen-reader pass; the eyedropper path was tested with a stub, not the real API.
-- A look at the Docs page and every story in all four themes; the transparency checkerboard's two colors (`bg.track` and `bg.surface`) have not been contrast-checked as a pattern, only seen as a transparency cue.
-- The panel's behaviour on a phone with an on-screen keyboard (`presentation="full-width"` shares `DatePicker`'s unverified assumption).
-- No `Tooltip` on the swatches: they use the native `title`.
+- The Docs page itself (only the Playground was looked at in the four themes); the transparency checkerboard's two colors (`bg.track` and `bg.surface`) have not been contrast-checked as a pattern, only seen as a transparency cue.
+- The panel on a phone with an on-screen keyboard open, and a real finger dragging the area: the layout was checked at 375px in an emulated viewport only.

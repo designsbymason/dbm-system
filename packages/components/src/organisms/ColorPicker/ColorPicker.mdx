@@ -20,11 +20,15 @@ export const propOrder = [
   "onFormatChange",
   "showFormatSwitch",
   "alpha",
+  "showChannelInputs",
+  "noneSwatch",
+  "copyButton",
   "swatches",
   "eyeDropper",
   "commitOn",
   "clearable",
   "onClear",
+  "controllerRef",
   "inline",
   "side",
   "align",
@@ -105,6 +109,26 @@ what a `FieldLabel`'s `htmlFor` should point at.
 
 <Canvas of={ColorPickerStories.FormatSwitch} />
 
+### Channel number fields
+
+<Canvas of={ColorPickerStories.ChannelInputs} />
+
+### A swatch for no color
+
+<Canvas of={ColorPickerStories.NoneSwatch} />
+
+### With a copy button
+
+<Canvas of={ColorPickerStories.CopyButton} />
+
+### Opened from code
+
+<Canvas of={ColorPickerStories.FromCode} />
+
+### Color names
+
+<Canvas of={ColorPickerStories.ColorNames} />
+
 ### With opacity
 
 <Canvas of={ColorPickerStories.WithOpacity} />
@@ -169,6 +193,7 @@ what a `FieldLabel`'s `htmlFor` should point at.
 - Pick the `format` your data uses. The field writes it, and the value, `onValueChange`, `onValueCommit` and a form's
   `name` all carry it.
 - Turn on `showFormatSwitch` for a field where people think in more than one spelling (a design tool, a theme editor); leave it off where the value must always be one format, since using it changes the string you get. Hold the format yourself with `format` and `onFormatChange` to remember it.
+- Turn on `showChannelInputs` where people need an exact number (a theme editor); `noneSwatch` where empty is a real choice; `copyButton` where the color is pasted somewhere else.
 - Turn on `alpha` only when a color's opacity is part of what you store; without it the value is always opaque.
 - Use `onValueCommit` to save or to do anything expensive: `onValueChange` fires on every step of a drag.
 - Use `inline` where the panel is the content (a settings page); keep the floating form for a field in a form.
@@ -183,7 +208,7 @@ what a `FieldLabel`'s `htmlFor` should point at.
   editable field.
 - Don't rely on the eyedropper: it exists only in some browsers and the button is left out elsewhere.
 - Don't use a color alone to carry meaning in what you build with the result; pair it with text or an icon.
-- Don't expect color names (`red`) to be read: only hex, `rgb()`, `hsl()` and `oklch()` are.
+- Don't expect `display-p3`, `lab()` or `color()` to be read: hex, a CSS color name, `rgb()`, `hsl()` and `oklch()` are, and the value is always sRGB.
 
 </Callout>
 </div>
@@ -205,6 +230,8 @@ what a `FieldLabel`'s `htmlFor` should point at.
   `commitOn="commit"` the field keeps a drag until the owner's value changes.
 - The format switch reports the color in the new format through `onValueChange` and `onValueCommit` at the moment it is used (when a color is chosen), and `onFormatChange` with the format. With no color chosen only the format changes. A controlled `format` does not change until `onFormatChange` is wired to state.
 - `onFocus` and `onBlur` are for the field as a whole, panel included: they fire once on arriving and once on leaving.
+- Typed text is read as hex (with or without `#`), a CSS color name (`rebeccapurple`, `transparent`), `rgb()`, `hsl()` or `oklch()`, and written back in `format`.
+- `controllerRef` gives code `open()`, `close()`, `focus()` and `isOpen()`; each says whether it had anything to do (`false` while disabled, read only, inline or already in that state). `Alt`+`ArrowDown` in the text entry opens the panel.
 - The saturation and brightness area never mirrors in a right-to-left page, since a color space isn't text; the
   sliders and the swatches do.
 - The colors drawn in the area, the sliders and the swatches are the chosen color itself, not the system's tokens, so
@@ -229,7 +256,10 @@ what a `FieldLabel`'s `htmlFor` should point at.
 - The hue slider (read in degrees) and the opacity slider (read as a percentage) are `role="slider"` with the arrow,
   `Page` and `Home`/`End` keys; in a right-to-left page the keys follow the direction.
 - The format switch is a named `radiogroup` of Hex, RGB, HSL and OKLCH (one tab stop, arrow keys between them), drawn with `ToggleGroup`; every button's name is its visible text.
-- Swatches are buttons in a named group with `aria-pressed`, one tab stop, moved between with the arrow keys (flipped in
+- The channel fields are number inputs named Red, Green, Blue (or Hue, Saturation, Lightness; Lightness, Chroma, Hue; Opacity) with a letter drawn under each as decoration, and they are detached from a surrounding form so a half-typed number never blocks a submit.
+- `Alt`+`ArrowDown` in the text entry opens the panel, as in a combobox or date field.
+- The copy button says "Color copied" (or that the browser refused) through the status region.
+- Swatches are buttons in a named group with `aria-pressed`, one tab stop (the optional "no color" swatch is the first), each with a tooltip of its name, moved between with the arrow keys (flipped in
   right-to-left), `Home` and `End`.
 - A color chosen from a swatch, the screen or typed text is said aloud ("Color chosen: #5548a4") through a status
   region that is in the page from the start. Dragging says nothing extra: the sliders already speak.

@@ -31,6 +31,22 @@ export const colorPickerSnippets = {
   onValueChange={setColor}
 />`,
 
+  channelInputs: `{/* showChannelInputs: number fields for each channel of the format (R, G, B for hex and rgb; H, S, L for hsl;
+    L, C, H for oklch), and opacity with alpha. A number applies as soon as it is in range. */}
+<ColorPicker aria-label="Brand color" showChannelInputs alpha defaultValue="#5548a4" />`,
+
+  noneSwatch: `{/* noneSwatch: a first swatch that means "no color": it clears the value and is pressed while the value is empty. */}
+<ColorPicker aria-label="Accent color" noneSwatch swatches={["#5548a4", "#2e8a7d"]} />`,
+
+  copyButton: `{/* copyButton: copies the color, written in format, and says so aloud. */}
+<ColorPicker aria-label="Brand color" copyButton format="rgb" defaultValue="#5548a4" />`,
+
+  controller: `{/* const controller = useRef(null);  controller.current?.open()  — open() / close() / focus() / isOpen(); each says whether it did anything */}
+<ColorPicker aria-label="Brand color" controllerRef={controller} defaultValue="#5548a4" />`,
+
+  names: `{/* Typed text may be a CSS color name: "rebeccapurple" is read, and written back in the format (#663399). */}
+<ColorPicker aria-label="Brand color" defaultValue="rebeccapurple" />`,
+
   alpha: `{/* alpha: adds an opacity slider. The value gains two digits (#rrggbbaa), or "/ a" in the other formats,
     only while the color is not fully opaque. */}
 <ColorPicker aria-label="Overlay color" alpha defaultValue="#5548a480" />`,
@@ -99,6 +115,9 @@ export interface ColorPickerPlaygroundSnippetArgs {
   defaultValue?: string;
   format?: ColorPickerFormat;
   showFormatSwitch?: boolean;
+  showChannelInputs?: boolean;
+  noneSwatch?: boolean;
+  copyButton?: boolean;
   alpha?: boolean;
   eyeDropper?: boolean;
   commitOn?: ColorPickerCommitOn;
@@ -121,6 +140,9 @@ export function colorPickerPlaygroundSnippet(args: ColorPickerPlaygroundSnippetA
   // With the switch on the Playground holds the format itself, so it is written as the format to start from.
   if (args.format && args.format !== "hex") attributes.push(`${args.showFormatSwitch ? "defaultFormat" : "format"}="${args.format}"`);
   if (args.showFormatSwitch) attributes.push("showFormatSwitch");
+  if (args.showChannelInputs) attributes.push("showChannelInputs");
+  if (args.noneSwatch) attributes.push("noneSwatch");
+  if (args.copyButton) attributes.push("copyButton");
   if (args.alpha) attributes.push("alpha");
   if (args.eyeDropper) attributes.push("eyeDropper");
   if (args.commitOn && args.commitOn !== "change") attributes.push(`commitOn="${args.commitOn}"`);
