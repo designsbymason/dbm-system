@@ -905,6 +905,9 @@ describe("ImageViewer origin, slideshow, inline and long strips", () => {
   });
 
   it("eases the first image in from the element it is given, once", async () => {
+    // The frame that eases the image to its own place is held, so the starting place can be read however slowly the test runs.
+    const frames: FrameRequestCallback[] = [];
+    vi.spyOn(window, "requestAnimationFrame").mockImplementation((callback) => frames.push(callback));
     const origin = document.createElement("div");
     vi.spyOn(origin, "getBoundingClientRect").mockReturnValue({ left: 0, top: 0, width: 200, height: 100, right: 200, bottom: 100, x: 0, y: 0, toJSON: () => ({}) });
     const getOrigin = vi.fn(() => origin);
@@ -916,7 +919,10 @@ describe("ImageViewer origin, slideshow, inline and long strips", () => {
     // drawn at the origin's width first (200px of the fitted 1000px), and then eased to its own place
     expect(box.style.transform).toContain("scale(0.2)");
     expect(box.style.transform).toContain("translate(100px, 50px)");
-    await waitFor(() => expect(box.style.transform).toContain("scale(1)"));
+    act(() => {
+      for (const frame of frames.splice(0)) frame(0);
+    });
+    expect(box.style.transform).toContain("scale(1)");
     await user.keyboard("{PageDown}{PageUp}");
     expect(getOrigin).toHaveBeenCalledTimes(1);
   });

@@ -559,7 +559,8 @@ export const TapHidesTheControlsAndAKeyShowsThem: Story = {
     await expect(within(dialog).queryByRole("button", { name: "Close" })).toBeNull();
     await userEvent.keyboard("x");
     await waitFor(() => expect(dialog).not.toHaveAttribute("data-chrome"));
-    await expect(within(dialog).getByRole("button", { name: "Close" })).toBeInTheDocument();
+    // the controls fade back in, so the button is in the accessibility tree a moment after the attribute goes
+    await expect(await within(dialog).findByRole("button", { name: "Close" })).toBeInTheDocument();
     // two quick clicks zoom and do not hide anything
     await realClickAt(centre.x, centre.y);
     await realClickAt(centre.x, centre.y);
