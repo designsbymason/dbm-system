@@ -48,7 +48,7 @@ export const rootPropOrder = [
   "style",
   "data-testid",
 ];
-export const slidePropOrder = ["children", "aria-label", "id", "className", "style", "data-testid"];
+export const slidePropOrder = ["children", "placeholder", "aria-label", "id", "className", "style", "data-testid"];
 export const buttonPropOrder = ["icon", "aria-label", "id", "className", "style", "data-testid"];
 export const indicatorsPropOrder = ["variant", "placement", "showLabel", "aria-label", "id", "className", "style", "data-testid"];
 export const togglePropOrder = ["id", "className", "style", "data-testid"];
@@ -137,25 +137,25 @@ The pause button cannot be left out while `autoPlay` is on.
 
 #### Carousel.Previous properties
 
-The button that goes to the previous position, an `IconButton`. Also accepts any other native `<button>` attribute beyond what's listed here (e.g. `title`) — passed straight through to the button.
+The button that goes to the previous position, an `IconButton`. Also accepts any other native `<button>` attribute beyond what's listed here (e.g. `title`, `onFocus`) — passed straight through to the button, except the ones it owns (`onClick`, `disabled`, `type` and the pointer handlers).
 
 <PropertiesTable of={CarouselPreviousStories} order={buttonPropOrder} />
 
 #### Carousel.Next properties
 
-The button that goes to the next position, an `IconButton`. Also accepts any other native `<button>` attribute beyond what's listed here (e.g. `title`) — passed straight through to the button.
+The button that goes to the next position, an `IconButton`. Also accepts any other native `<button>` attribute beyond what's listed here (e.g. `title`, `onFocus`) — passed straight through to the button, except the ones it owns (`onClick`, `disabled`, `type` and the pointer handlers).
 
 <PropertiesTable of={CarouselNextStories} order={buttonPropOrder} />
 
 #### Carousel.Indicators properties
 
-The position indicators, one per position. Nothing is drawn with a single position. Also accepts any other native `<div>` attribute beyond what's listed here (e.g. `title`) — passed straight through to the `Indicators` group.
+The position indicators, one per position. Nothing is drawn with a single position. Also accepts any other native `<div>` attribute beyond what's listed here (e.g. `title`, `onFocus`) — passed straight through to the `Indicators` group.
 
 <PropertiesTable of={CarouselIndicatorsStories} order={indicatorsPropOrder} />
 
 #### Carousel.AutoPlayToggle properties
 
-The pause and play button, drawn only while `autoPlay` is on. Its name and icon follow the state. Also accepts any other native `<button>` attribute beyond what's listed here (e.g. `title`) — passed straight through to the button.
+The pause and play button, drawn only while `autoPlay` is on. Its name and icon follow the state. Also accepts any other native `<button>` attribute beyond what's listed here (e.g. `title`, `onFocus`) — passed straight through to the button, except the ones it owns (`onClick`, `type` and the pointer handlers).
 
 <PropertiesTable of={CarouselAutoPlayToggleStories} order={togglePropOrder} />
 
@@ -225,6 +225,10 @@ The pause and play button, drawn only while `autoPlay` is on. Its name and icon 
 
 <Canvas of={CarouselStories.FromAController} />
 
+### Holding rotation from code
+
+<Canvas of={CarouselStories.HoldRotation} />
+
 ### Parts of your own
 
 <Canvas of={CarouselStories.PlacedParts} />
@@ -259,7 +263,7 @@ The pause and play button, drawn only while `autoPlay` is on. Its name and icon 
 - Don't hide the buttons and indicators together; without both, a person with no touch screen has only the arrow keys.
 - Don't wrap slides in a fragment: a fragment is one slide to the carousel.
 - Don't point `aria-labelledby` or `htmlFor` at an `id` inside a slide of a `loop` carousel: the copies at the ends repeat it.
-- Don't put a text field you want the mouse to select text in without `data-carousel-no-drag`: a press on a card's text starts a drag, though one in a form field does not.
+- Don't expect to select a card's text with the mouse: a press on it starts a drag. Put `data-carousel-no-drag` on an element to let a press there select text instead (a press in a form field never drags).
 
 </Callout>
 </div>
@@ -267,6 +271,7 @@ The pause and play button, drawn only while `autoPlay` is on. Its name and icon 
 ## Best practices
 
 - **Say there is more.** One slide in view needs indicators; several need `peek`. A carousel whose end is invisible hides its content.
+- **Leave room for focus rings.** The track has 8px of room around the slides so a focus ring on a control at a slide's edge is drawn whole. Along the track that room is the gap, up to 8px, so with a gap smaller than 8px a ring on a control at the very start or end of a slide is partly cut off.
 - **Keep slides the same height.** The track is as tall as its tallest slide, and slides of different heights make the controls jump as a person moves.
 - **Set `slidesPerMove="view"` for cards.** A person who moves three cards at a time then sees three new ones, and there is one indicator per view.
 - **Think twice about rotation.** It moves content out from under a person reading it. The carousel holds while the pointer is over it or focus is inside it, and stays paused once the person has paused it, but the better default is no rotation.
@@ -377,6 +382,7 @@ The buttons are `IconButton`s and the indicators are `Indicators`; they draw wit
 <TokenRow token="motion-easing.decelerate" usage="the easing of that return" />
 <TokenRow token="opacity.60" usage="a slide near the edge of the view with the fade effect" />
 <TokenRow token="motion-scale.96" usage="a slide near the edge of the view with the scale effect" />
+<TokenRow token="space.2" usage="the room around the slides inside the track, so a focus ring drawn just outside a slide's control is not clipped" />
 <TokenRow token="space.3" usage="the inset of the buttons and indicators over the slides, and the space between the controls in the bar" />
 <TokenRow token="space.12" usage="how much of the next slide shows with peek" />
 <TokenRow token="font-family.primary" usage="the carousel's typography" />

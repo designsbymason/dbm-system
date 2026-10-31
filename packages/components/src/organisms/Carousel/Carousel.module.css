@@ -27,9 +27,19 @@
 .track {
   --carousel-size: calc((100% - var(--carousel-gaps) * var(--carousel-gap) - var(--carousel-peek)) / var(--carousel-slides));
 
+  /* The track clips what is drawn outside it, and a slide's own focus ring is drawn 6px outside the control, so the track has room
+     for it: padding, with an equal negative margin so the slides still fill the viewport. Along the track the room is the gap (a
+     neighbour would show in more), across it the full ring reach. The slides snap to the padded edge. */
+  --carousel-room-across: var(--dbm-space-2);
+  --carousel-room-along: min(var(--carousel-gap), var(--dbm-space-2));
+
+  box-sizing: content-box;
   display: flex;
   gap: var(--carousel-gap);
   inline-size: 100%;
+  margin: calc(-1 * var(--carousel-room-across)) calc(-1 * var(--carousel-room-along));
+  padding: var(--carousel-room-across) var(--carousel-room-along);
+  scroll-padding: var(--carousel-room-across) var(--carousel-room-along);
   overflow-x: auto;
   overflow-y: hidden;
   overscroll-behavior: contain;
@@ -44,6 +54,9 @@
 
 .root[data-orientation="vertical"] .track {
   block-size: 100%;
+  margin: calc(-1 * var(--carousel-room-along)) calc(-1 * var(--carousel-room-across));
+  padding: var(--carousel-room-along) var(--carousel-room-across);
+  scroll-padding: var(--carousel-room-along) var(--carousel-room-across);
   flex-direction: column;
   overflow-x: hidden;
   overflow-y: auto;

@@ -1007,6 +1007,133 @@ describe("Carousel — effects, height from content and edge resistance", () => 
   });
 });
 
+describe("Carousel — every part: native props pass through and computed attributes win", () => {
+  it("passes native attributes to the buttons, and keeps the names the carousel computes", () => {
+    const onFocus = vi.fn();
+    render(
+      <Slides controls="hidden" autoPlay>
+        <Carousel.Previous title="Back" onFocus={onFocus} />
+        <Carousel.Next title="Forward" />
+        <Carousel.AutoPlayToggle title="Toggle" />
+      </Slides>,
+    );
+    const back = screen.getByRole("button", { name: "Previous slide" });
+    expect(back).toHaveAttribute("title", "Back");
+    fireEvent.focus(back);
+    expect(onFocus).toHaveBeenCalled();
+    expect(screen.getByRole("button", { name: "Next slide" })).toHaveAttribute("title", "Forward");
+    expect(screen.getByRole("button", { name: "Stop automatic slide show" })).toHaveAttribute("title", "Toggle");
+  });
+
+  it("keeps the group role and name on the indicators, and passes native attributes", () => {
+    render(
+      <Slides indicators={false}>
+        <Carousel.Indicators title="Where" {...({ role: "toolbar" } as object)} data-testid="dots" />
+      </Slides>,
+    );
+    const group = screen.getByRole("group", { name: "Slide navigation" });
+    expect(group).toHaveAttribute("title", "Where");
+  });
+
+  it("keeps a slide's role and roledescription whatever it is passed", () => {
+    render(
+      <Carousel aria-label="Stories">
+        <Carousel.Slide {...({ role: "presentation", "aria-roledescription": "card" } as object)}>One</Carousel.Slide>
+        <Carousel.Slide>Two</Carousel.Slide>
+      </Carousel>,
+    );
+    expect(screen.getByRole("group", { name: "1 of 2" })).toHaveAttribute("aria-roledescription", "slide");
+  });
+
+  it("forwards each part's ref to its element", () => {
+    const previousRef = createRef<HTMLButtonElement>();
+    const nextRef = createRef<HTMLButtonElement>();
+    const dotsRef = createRef<HTMLDivElement>();
+    const toggleRef = createRef<HTMLButtonElement>();
+    render(
+      <Slides autoPlay indicators={false}>
+        <Carousel.Previous ref={previousRef} />
+        <Carousel.Next ref={nextRef} />
+        <Carousel.Indicators ref={dotsRef} />
+        <Carousel.AutoPlayToggle ref={toggleRef} />
+      </Slides>,
+    );
+    expect(previousRef.current).toBe(screen.getByRole("button", { name: "Previous slide" }));
+    expect(nextRef.current).toBe(screen.getByRole("button", { name: "Next slide" }));
+    expect(dotsRef.current).toBe(screen.getByRole("group", { name: "Slide navigation" }));
+    expect(toggleRef.current).toBe(screen.getByRole("button", { name: "Stop automatic slide show" }));
+  });
+});
+
+describe("Carousel — nested in itself", () => {
+  it("gives each carousel its own state, names, buttons and controller", async () => {
+    const user = userEvent.setup();
+    const outerRef = createRef<CarouselController>();
+    const innerRef = createRef<CarouselController>();
+    render(
+      <Carousel aria-label="Outer" controllerRef={outerRef} labels={{ next: "Outer next" }}>
+        <Carousel.Slide>
+          <Carousel aria-label="Inner" controllerRef={innerRef} labels={{ next: "Inner next" }}>
+            <Carousel.Slide>Inner one</Carousel.Slide>
+            <Carousel.Slide>Inner two</Carousel.Slide>
+            <Carousel.Slide>Inner three</Carousel.Slide>
+          </Carousel>
+        </Carousel.Slide>
+        <Carousel.Slide>Outer two</Carousel.Slide>
+      </Carousel>,
+    );
+    expect(innerRef.current!.count).toBe(3);
+    expect(outerRef.current!.count).toBe(2);
+    await user.click(screen.getByRole("button", { name: "Inner next" }));
+    expect(innerRef.current!.value).toBe(1);
+    expect(outerRef.current!.value).toBe(0);
+    await user.click(screen.getByRole("button", { name: "Outer next" }));
+    expect(outerRef.current!.value).toBe(1);
+    expect(innerRef.current!.value).toBe(1);
+    expect(within(screen.getByRole("region", { name: "Inner" })).getAllByRole("group", { name: /^\d of 3$/ })).toHaveLength(3);
+  });
+
+  it("hands focus to its own other button, not to one inside a nested carousel", async () => {
+    const user = userEvent.setup();
+    render(
+      <Carousel aria-label="Outer" labels={{ next: "Outer next", previous: "Outer previous" }}>
+        <Carousel.Slide>
+          <Carousel aria-label="Inner" labels={{ next: "Inner next", previous: "Inner previous" }}>
+            <Carousel.Slide>Inner one</Carousel.Slide>
+            <Carousel.Slide>Inner two</Carousel.Slide>
+          </Carousel>
+        </Carousel.Slide>
+        <Carousel.Slide>Outer two</Carousel.Slide>
+      </Carousel>,
+    );
+    await user.click(screen.getByRole("button", { name: "Outer next" }));
+    expect(screen.getByRole("button", { name: "Outer previous" })).toHaveFocus();
+  });
+});
+
+describe("Carousel — a too-short auto-play interval", () => {
+  it("is raised to the floor, with a warning", () => {
+    vi.useFakeTimers();
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+    render(<Slides autoPlay={{ interval: 300 }} />);
+    expect(warn).toHaveBeenCalledWith(expect.stringContaining("raised to 1000"));
+    act(() => {
+      vi.advanceTimersByTime(900);
+    });
+    expect(slide(1).inert).toBe(false);
+    act(() => {
+      vi.advanceTimersByTime(200);
+    });
+    expect(slide(2).inert).toBe(false);
+  });
+
+  it("does not warn for a valid one", () => {
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+    render(<Slides autoPlay={{ interval: 3000 }} />);
+    expect(warn).not.toHaveBeenCalledWith(expect.stringContaining("raised to"));
+  });
+});
+
 describe("Carousel — accessibility", () => {
   it("has no axe violations by default", async () => {
     const { container } = render(<Slides />);

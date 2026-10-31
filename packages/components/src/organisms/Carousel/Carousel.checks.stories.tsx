@@ -2,6 +2,7 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 import { expect, userEvent, waitFor, within } from "storybook/test";
 import { useState } from "react";
 import { send } from "../../molecules/CodeBlock/browserProtocol";
+import { Button } from "../../atoms/Button";
 import { Carousel } from "./Carousel";
 import { Demo, DemoSlide, allSizes } from "./CarouselStoryKit";
 
@@ -20,6 +21,13 @@ type Story = StoryObj;
 
 const settle = (ms = 250) => new Promise((resolve) => setTimeout(resolve, ms));
 const box = (element: Element) => element.getBoundingClientRect();
+/** The box the slides are laid out in: the track's less its padding, which is room for slides' focus rings. */
+const inner = (element: HTMLElement) => {
+  const rect = box(element);
+  const style = getComputedStyle(element);
+  const [left, right, top, bottom] = [style.paddingLeft, style.paddingRight, style.paddingTop, style.paddingBottom].map((value) => parseFloat(value) || 0) as [number, number, number, number];
+  return { left: rect.left + left, right: rect.right - right, top: rect.top + top, bottom: rect.bottom - bottom, width: rect.width - left - right, height: rect.height - top - bottom };
+};
 const track = (root: ParentNode) => within(root as HTMLElement).getByRole("group", { name: "Slides" });
 const slideOf = (root: ParentNode, n: number) => within(root as HTMLElement).getByRole("group", { name: new RegExp(`^${n} of `) });
 const inertOf = (element: HTMLElement) => (element as HTMLElement & { inert: boolean }).inert;
@@ -67,10 +75,10 @@ export const ScrollsToTheSlide: Story = {
     const scroller = track(canvasElement);
     await userEvent.click(nextButton(canvasElement));
     await stopped(scroller);
-    await expect(Math.abs(box(slideOf(canvasElement, 2)).left - box(scroller).left)).toBeLessThan(1.5);
+    await expect(Math.abs(box(slideOf(canvasElement, 2)).left - inner(scroller).left)).toBeLessThan(1.5);
     await userEvent.click(within(canvasElement).getByRole("button", { name: "Previous slide" }));
     await stopped(scroller);
-    await expect(Math.abs(box(slideOf(canvasElement, 1)).left - box(scroller).left)).toBeLessThan(1.5);
+    await expect(Math.abs(box(slideOf(canvasElement, 1)).left - inner(scroller).left)).toBeLessThan(1.5);
   },
 };
 
@@ -89,7 +97,7 @@ export const ReportsASwipe: Story = {
   render: () => <Reporting />,
   play: async ({ canvasElement }) => {
     const scroller = track(canvasElement);
-    scroller.scrollTo({ left: scroller.scrollLeft + box(slideOf(canvasElement, 3)).left - box(scroller).left, behavior: "instant" });
+    scroller.scrollTo({ left: scroller.scrollLeft + box(slideOf(canvasElement, 3)).left - inner(scroller).left, behavior: "instant" });
     await waitFor(() => expect(within(canvasElement).getByTestId("reported")).toHaveTextContent("2"));
     await expect(inertOf(slideOf(canvasElement, 3))).toBe(false);
     await expect(inertOf(slideOf(canvasElement, 1))).toBe(true);
@@ -103,7 +111,7 @@ export const SeveralAndPeek: Story = {
     const scroller = track(canvasElement);
     const [first, second, third] = [1, 2, 3].map((n) => box(slideOf(canvasElement, n)));
     await expect(Math.abs(first!.width - second!.width)).toBeLessThan(1);
-    const edge = box(scroller).right - third!.left;
+    const edge = inner(scroller).right - third!.left;
     await expect(edge).toBeGreaterThan(8);
     await expect(edge).toBeLessThan(third!.width);
   },
@@ -118,7 +126,7 @@ export const RightToLeftOrder: Story = {
     scroller.focus();
     await userEvent.keyboard("{ArrowLeft}");
     await stopped(scroller);
-    await expect(Math.abs(box(slideOf(canvasElement, 2)).right - box(scroller).right)).toBeLessThan(1.5);
+    await expect(Math.abs(box(slideOf(canvasElement, 2)).right - inner(scroller).right)).toBeLessThan(1.5);
   },
 };
 
@@ -135,7 +143,7 @@ export const VerticalScrolls: Story = {
     await stopped(scroller);
     await expect(scroller.scrollTop).toBeGreaterThan(0);
     await expect(scroller.scrollLeft).toBe(0);
-    await expect(Math.abs(box(slideOf(canvasElement, 2)).top - box(scroller).top)).toBeLessThan(1.5);
+    await expect(Math.abs(box(slideOf(canvasElement, 2)).top - inner(scroller).top)).toBeLessThan(1.5);
   },
 };
 
@@ -178,7 +186,7 @@ export const ReducedMotionStartsAutoPlayPaused: Story = {
       const scroller = track(canvasElement);
       await userEvent.click(nextButton(canvasElement));
       await settle(60);
-      await expect(Math.abs(box(slideOf(canvasElement, 2)).left - box(scroller).left)).toBeLessThan(1.5);
+      await expect(Math.abs(box(slideOf(canvasElement, 2)).left - inner(scroller).left)).toBeLessThan(1.5);
     } finally {
       await emulate("no-preference");
     }
@@ -214,7 +222,7 @@ export const MouseDragMovesTheSlides: Story = {
   play: async ({ canvasElement }) => {
     await parkPointer();
     const scroller = track(canvasElement);
-    const rect = box(scroller);
+    const rect = inner(scroller);
     const y = rect.top + rect.height / 2;
     // From the right to well past the left: more than half a slide, so the snap takes the next one.
     const from = rect.left + rect.width * 0.8;
@@ -229,7 +237,7 @@ export const MouseDragMovesTheSlides: Story = {
     await stopped(scroller);
     await waitFor(() => expect(inertOf(slideOf(canvasElement, 2))).toBe(false));
     await expect(scroller).not.toHaveAttribute("data-dragging");
-    await expect(Math.abs(box(slideOf(canvasElement, 2)).left - box(scroller).left)).toBeLessThan(1.5);
+    await expect(Math.abs(box(slideOf(canvasElement, 2)).left - inner(scroller).left)).toBeLessThan(1.5);
     await parkPointer();
   },
 };
@@ -276,13 +284,13 @@ export const SeamlessLoop: Story = {
     await userEvent.click(within(canvasElement).getByRole("button", { name: "Previous slide" }));
     await stopped(scroller);
     await waitFor(() => expect(inertOf(slideOf(canvasElement, 5))).toBe(false));
-    await expect(Math.abs(box(slideOf(canvasElement, 5)).left - box(scroller).left)).toBeLessThan(1.5);
+    await expect(Math.abs(box(slideOf(canvasElement, 5)).left - inner(scroller).left)).toBeLessThan(1.5);
     // Forward over the seam: the copy of the first slide is the shorter way, and the track ends on the real one.
     const before = scroller.scrollLeft;
     await userEvent.click(nextButton(canvasElement));
     await stopped(scroller);
     await waitFor(() => expect(inertOf(slideOf(canvasElement, 1))).toBe(false));
-    await expect(Math.abs(box(slideOf(canvasElement, 1)).left - box(scroller).left)).toBeLessThan(1.5);
+    await expect(Math.abs(box(slideOf(canvasElement, 1)).left - inner(scroller).left)).toBeLessThan(1.5);
     // The real first slide sits after the copies in the track, so the track did not rewind to the start.
     await expect(scroller.scrollLeft).toBeGreaterThan(0);
     await expect(scroller.scrollLeft).toBeLessThan(before);
@@ -295,9 +303,9 @@ export const CentredSlide: Story = {
   play: async ({ canvasElement }) => {
     const scroller = track(canvasElement);
     const middle = (element: Element) => box(element).left + box(element).width / 2;
-    const centreOfTrack = box(scroller).left + box(scroller).width / 2;
+    const centreOfTrack = inner(scroller).left + inner(scroller).width / 2;
     await waitFor(() => expect(Math.abs(middle(slideOf(canvasElement, 1)) - centreOfTrack)).toBeLessThan(1.5));
-    await expect(box(slideOf(canvasElement, 2)).left).toBeLessThan(box(scroller).right);
+    await expect(box(slideOf(canvasElement, 2)).left).toBeLessThan(inner(scroller).right);
     await userEvent.click(nextButton(canvasElement));
     await stopped(scroller);
     await waitFor(() => expect(Math.abs(middle(slideOf(canvasElement, 2)) - centreOfTrack)).toBeLessThan(1.5));
@@ -315,8 +323,8 @@ export const FractionalView: Story = {
     const scroller = track(canvasElement);
     const [first, second] = [1, 2].map((n) => box(slideOf(canvasElement, n)));
     await expect(Math.abs(first!.width - second!.width)).toBeLessThan(1);
-    await expect(Math.abs(first!.width * 1.5 + (second!.left - first!.right) - box(scroller).width)).toBeLessThan(1.5);
-    await expect(second!.right).toBeGreaterThan(box(scroller).right);
+    await expect(Math.abs(first!.width * 1.5 + (second!.left - first!.right) - inner(scroller).width)).toBeLessThan(1.5);
+    await expect(second!.right).toBeGreaterThan(inner(scroller).right);
   },
 };
 
@@ -338,7 +346,7 @@ export const PeekingSlideIsPressable: Story = {
     const scroller = track(canvasElement);
     const peeking = within(canvasElement).getByRole("button", { name: "Button 3" });
     await expect(inertOf(slideOf(canvasElement, 3))).toBe(false);
-    await expect(box(peeking).left).toBeLessThan(box(scroller).right);
+    await expect(box(peeking).left).toBeLessThan(inner(scroller).right);
     peeking.focus();
     await waitFor(() => expect(peeking).toHaveFocus());
     await stopped(scroller);
@@ -351,10 +359,10 @@ export const RefusedSwipeSnapsBack: Story = {
   render: () => <Demo value={0} onValueChange={() => {}} aria-label="Refused" />,
   play: async ({ canvasElement }) => {
     const scroller = track(canvasElement);
-    scroller.scrollTo({ left: scroller.scrollLeft + box(slideOf(canvasElement, 3)).left - box(scroller).left, behavior: "instant" });
+    scroller.scrollTo({ left: scroller.scrollLeft + box(slideOf(canvasElement, 3)).left - inner(scroller).left, behavior: "instant" });
     await settle(300);
     await stopped(scroller);
-    await expect(Math.abs(box(slideOf(canvasElement, 1)).left - box(scroller).left)).toBeLessThan(1.5);
+    await expect(Math.abs(box(slideOf(canvasElement, 1)).left - inner(scroller).left)).toBeLessThan(1.5);
     await expect(inertOf(slideOf(canvasElement, 1))).toBe(false);
   },
 };
@@ -429,7 +437,7 @@ export const AutoHeightFitsTheSlides: Story = {
     const heights = [1, 2, 3, 4].map((n) => box(slideOf(canvasElement, n)).height);
     const gap = parseFloat(getComputedStyle(scroller).rowGap);
     const tallest = Math.max(heights[0]! + heights[1]!, heights[1]! + heights[2]!, heights[2]! + heights[3]!) + gap;
-    await expect(Math.abs(box(scroller).height - tallest)).toBeLessThan(1.5);
+    await expect(Math.abs(inner(scroller).height - tallest)).toBeLessThan(1.5);
     await expect(scroller.scrollHeight).toBeGreaterThan(scroller.clientHeight);
   },
 };
@@ -440,7 +448,7 @@ export const EdgeResistancePullsAndEasesBack: Story = {
   play: async ({ canvasElement }) => {
     await parkPointer();
     const scroller = track(canvasElement);
-    const rect = box(scroller);
+    const rect = inner(scroller);
     const y = rect.top + rect.height / 2;
     const from = rect.left + rect.width * 0.3;
     const shift = () => parseFloat(getComputedStyle(slideOf(canvasElement, 1)).translate.split(" ")[0] ?? "0") || 0;
@@ -456,5 +464,43 @@ export const EdgeResistancePullsAndEasesBack: Story = {
     await waitFor(() => expect(shift()).toBe(0), { timeout: 2000 });
     await expect(inertOf(slideOf(canvasElement, 1))).toBe(false);
     await parkPointer();
+  },
+};
+
+export const SlideFocusRingIsNotClipped: Story = {
+  name: "The focus ring of a button at the edge of a slide is drawn whole inside the track, on every side, in both orientations",
+  render: () => (
+    <div>
+      <Carousel aria-label="Ring" controls="hidden" indicators={false}>
+        <Carousel.Slide>
+          <Button variant="secondary">Edge button</Button>
+        </Carousel.Slide>
+        <Carousel.Slide>Two</Carousel.Slide>
+      </Carousel>
+      <Carousel aria-label="Ring vertical" controls="hidden" indicators={false} orientation="vertical" style={{ blockSize: "8rem" }}>
+        <Carousel.Slide>
+          <Button variant="secondary">Edge button</Button>
+        </Carousel.Slide>
+        <Carousel.Slide>Two</Carousel.Slide>
+      </Carousel>
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    for (const region of within(canvasElement).getAllByRole("region")) {
+      const scroller = within(region).getByRole("group", { name: "Slides" });
+      const button = within(region).getByRole("button", { name: "Edge button" });
+      for (let presses = 0; presses < 6 && document.activeElement !== button; presses += 1) await userEvent.tab();
+      await expect(button).toHaveFocus();
+      const style = getComputedStyle(button);
+      const reach = parseFloat(style.outlineOffset) + parseFloat(style.outlineWidth);
+      await expect(reach).toBeGreaterThan(0);
+      const ring = box(button);
+      const visible = box(scroller);
+      await expect(ring.top - reach).toBeGreaterThanOrEqual(visible.top - 0.5);
+      await expect(ring.bottom + reach).toBeLessThanOrEqual(visible.bottom + 0.5);
+      await expect(ring.left - reach).toBeGreaterThanOrEqual(visible.left - 0.5);
+      await expect(ring.right + reach).toBeLessThanOrEqual(visible.right + 0.5);
+      button.blur();
+    }
   },
 };

@@ -6,6 +6,10 @@
 
 Added after the first build: a seamless `loop` through copies of the end slides, a mouse drag, a pressable peeking slide (with focus bringing it into view), `align="center"`, a fractional `slidesPerView`, `lazy` with a slide `placeholder`, rotation held by playing media and `controller.hold()`, a deterministic put-back when a controlled owner refuses a settled swipe, and a development warning for a vertical carousel with no height. New real-browser checks cover the drag (a real mouse through the DevTools Protocol), the click that still presses, the seamless loop, the centred slide, the fractional view, the peeking press and the refused swipe; two of them were broken on purpose once and failed.
 
+## Final review round
+
+Eight findings from the pre-Finalization review, all fixed: the track now has room (padding with an equal negative margin, `space-2` across and the gap, up to `space-2`, along) so a slide's own focus ring is not clipped; `Carousel.Slide`'s `placeholder` has its Properties row; the four parts accept the native button or div attributes the Docs promised (minus those they own), with a probe test per part; a `Carousel` inside a `Carousel` is tested, which found and fixed a real bug (the focus hand-off after a press disabled the last button looked up the other button across the whole subtree and could land on a nested carousel's, whose slide then pulled the outer one back); a "Holding rotation from code" story replaces the dead snippet; the Docs wording about text selection was corrected; an `autoPlay.interval` below 1000 ms warns in development; and the root's side concerns were extracted into hooks (`useRotationHold`, `useLazySlides`, `useButtonFocusHandoff`, `useCarouselWarnings`, `useTrackKeyDown`, `splitChildren`). Every Docs-page "Show code" was opened on the live page (19 of 20; the right-to-left one by test), and every story snippet and the Docs "Code examples" were typechecked against the real components.
+
 ## Third round (ADR-0149)
 
 Added: press-and-hold repeat on the previous and next buttons (`repeatOnHold`), scroll-linked `effect` (`fade`, `scale`, `fade-scale`), `autoHeight` for a vertical carousel, and `edgeResistance` on a mouse drag. Real-browser checks cover each (a real mouse held down, computed opacity near the edge and under reduced motion, the measured track height, and the pull and ease-back); all four were broken on purpose once and failed.
@@ -24,6 +28,7 @@ A hand-rolled organism with no new dependency ([ADR-0147](../adr/0147-carousel-s
 ## Open findings
 
 - **`Indicators` (Finalized) is below the 24 × 24 px target size** at every size step (its dots are 4–12 px with no extended hit area, and the gaps do not satisfy the spacing exception to WCAG 2.5.8). Found while writing the target-size check, which therefore measures the previous, next and pause buttons only. Fixing it needs an authorized change to `Indicators` and the three-question test (`06` §9, "Whether an authorized fix reopens finalized status"); nothing was changed there.
+- **Focus-ring room along the track is the gap, up to 8px:** with a gap under 8px a ring on a control at the very start or end of a slide is partly clipped (a neighbour would show in more room). Documented.
 - **Not covered by a real-browser check:** the media hold (unit-tested only), `lazy` (unit-tested only) and the vertical-height warning (unit-tested with measured sizes).
 - **A drag starting on a card's text selects nothing and starts a drag**; `data-carousel-no-drag` opts an element out. Documented.
 

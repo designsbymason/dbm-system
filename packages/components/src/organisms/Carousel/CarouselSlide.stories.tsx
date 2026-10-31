@@ -9,6 +9,7 @@ const meta: Meta<typeof Carousel.Slide> = {
   tags: ["!dev"],
   argTypes: {
     children: { control: false, description: "What the slide shows." },
+    placeholder: { control: false, description: "What the slide draws in place of its content while it is far from the view and the carousel is lazy. Give the slide a size of its own, since a placeholder-only slide has none." },
     "aria-label": { control: "text", description: "The accessible name of the slide, in place of its place in the carousel (3 of 8)." },
     id: { control: false, description: "Standard DOM id." },
     className: { control: false, description: "Extra class name on the slide." },

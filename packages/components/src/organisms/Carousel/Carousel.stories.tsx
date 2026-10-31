@@ -439,6 +439,39 @@ export const FromAController: Story = {
   parameters: { docs: { source: { code: carouselSnippets.controller } } },
 };
 
+export const HoldRotation: Story = {
+  name: "Holding rotation from code",
+  argTypes: { ...except() },
+  render: function Render() {
+    const controller = useRef<CarouselController>(null);
+    const release = useRef<(() => void) | null>(null);
+    const [held, setHeld] = useState(false);
+    return (
+      <div style={{ display: "grid", gap: "var(--dbm-space-3)" }}>
+        <div>
+          <Button
+            variant="secondary"
+            size="sm"
+            onClick={() => {
+              if (release.current) {
+                release.current();
+                release.current = null;
+              } else {
+                release.current = controller.current?.hold() ?? null;
+              }
+              setHeld(release.current !== null);
+            }}
+          >
+            {held ? "Resume rotation" : "Hold rotation"}
+          </Button>
+        </div>
+        <Demo autoPlay={{ interval: 3000 }} controllerRef={controller} aria-label="Holding rotation" />
+      </div>
+    );
+  },
+  parameters: { docs: { source: { code: carouselSnippets.hold } } },
+};
+
 export const PlacedParts: Story = {
   name: "Parts of your own",
   argTypes: { ...except() },

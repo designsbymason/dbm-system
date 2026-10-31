@@ -4,6 +4,9 @@ import type { CarouselAlign, CarouselLabels } from "./Carousel.types";
 /** How long a slide stays when `autoPlay` gives no `interval`. A rhythm for reading, not a design value. */
 export const DEFAULT_AUTO_PLAY_INTERVAL_MS = 5000;
 
+/** The shortest a slide stays during automatic rotation: faster than this is not readable. */
+export const MIN_AUTO_PLAY_INTERVAL_MS = 1000;
+
 /** Counts a number of slides given as anything into a whole number from `min` up, so a stray `NaN` or fraction can't loop or crash. */
 export function wholeNumber(value: unknown, fallback: number, min: number): number {
   if (typeof value !== "number" || !Number.isFinite(value)) return fallback;

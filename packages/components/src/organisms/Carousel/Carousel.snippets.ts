@@ -84,9 +84,21 @@ ${carousel("autoPlay={{ interval: 4000 }}")}`,
 ${slides()}
 </Carousel>`,
 
-  hold: `{/* carousel is a ref to the controller. hold() stops rotation until the function it returns is called */}
-<Button onClick={() => { release.current = carousel.current?.hold(); }}>Hold rotation</Button>
-<Carousel aria-label="Featured" autoPlay controllerRef={carousel}>
+  hold: `{/* carousel: a ref to the controller (useRef(null), typed as CarouselController).
+    release: a ref to the function hold() returns. Holds add up, and a video or audio playing in a slide holds rotation without this. */}
+<Button
+  onClick={() => {
+    if (release.current) {
+      release.current();
+      release.current = null;
+    } else {
+      release.current = carousel.current?.hold() ?? null;
+    }
+  }}
+>
+  Hold or resume rotation
+</Button>
+<Carousel aria-label="Announcements" autoPlay={{ interval: 3000 }} controllerRef={carousel}>
 ${slides()}
 </Carousel>`,
 

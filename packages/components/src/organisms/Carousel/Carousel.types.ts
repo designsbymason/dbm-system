@@ -44,7 +44,7 @@ export type CarouselAutoPlay = boolean | CarouselAutoPlayOptions;
 
 /** The timing of automatic rotation. */
 export interface CarouselAutoPlayOptions {
-  /** How long a slide stays, in milliseconds. @default 5000 */
+  /** How long a slide stays, in milliseconds, at least 1000 (a lower value is raised to it, with a development warning). @default 5000 */
   interval?: number;
 }
 
@@ -243,21 +243,25 @@ export interface CarouselSlideProps extends ComponentPropsWithoutRef<"div"> {
   "data-testid"?: string;
 }
 
-export interface CarouselPreviousProps extends CarouselPartProps {
+/** What the carousel's own buttons own, so they are not accepted from the caller. */
+type OwnedButtonProps = "children" | "type" | "disabled" | "onClick" | "onClickCapture" | "onPointerDown" | "onPointerUp" | "onPointerLeave" | "onPointerCancel";
+type NativeButtonProps = Omit<ComponentPropsWithoutRef<"button">, OwnedButtonProps | "id" | "className" | "style" | "aria-label">;
+
+export interface CarouselPreviousProps extends CarouselPartProps, NativeButtonProps {
   /** An icon in place of the arrow. */
   icon?: PhosphorIcon;
   /** The accessible name, in place of `labels.previous`. */
   "aria-label"?: string;
 }
 
-export interface CarouselNextProps extends CarouselPartProps {
+export interface CarouselNextProps extends CarouselPartProps, NativeButtonProps {
   /** An icon in place of the arrow. */
   icon?: PhosphorIcon;
   /** The accessible name, in place of `labels.next`. */
   "aria-label"?: string;
 }
 
-export interface CarouselIndicatorsProps extends CarouselPartProps {
+export interface CarouselIndicatorsProps extends CarouselPartProps, Omit<ComponentPropsWithoutRef<"div">, "children" | "onChange" | "id" | "className" | "style" | "aria-label"> {
   /** The look of the indicators, in place of the carousel's `indicators`. */
   variant?: IndicatorsVariant;
   /** Where they are drawn, in place of the carousel's `indicatorsPlacement`. */
@@ -268,4 +272,4 @@ export interface CarouselIndicatorsProps extends CarouselPartProps {
   "aria-label"?: string;
 }
 
-export type CarouselAutoPlayToggleProps = CarouselPartProps;
+export interface CarouselAutoPlayToggleProps extends CarouselPartProps, NativeButtonProps {}

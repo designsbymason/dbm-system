@@ -32,6 +32,20 @@ interface UseCarouselScrollOptions {
   onMoving: (moving: boolean) => void;
 }
 
+/**
+ * The box the slides are laid out in: the track's own box less its padding, which is room for focus rings (the slides snap to it).
+ * Compared with the border box this is the same size as the viewport the carousel draws.
+ */
+function contentBox(track: HTMLElement): DOMRect {
+  const rect = track.getBoundingClientRect();
+  const style = getComputedStyle(track);
+  const left = rect.left + (parseFloat(style.paddingLeft) || 0);
+  const right = rect.right - (parseFloat(style.paddingRight) || 0);
+  const top = rect.top + (parseFloat(style.paddingTop) || 0);
+  const bottom = rect.bottom - (parseFloat(style.paddingBottom) || 0);
+  return { left, right, top, bottom, width: right - left, height: bottom - top, x: left, y: top, toJSON: () => ({}) } as DOMRect;
+}
+
 /** The slides of a track, in order, the copies at each end of a wrapping one included. */
 export const slidesOf = (track: HTMLElement): HTMLElement[] => [...track.querySelectorAll<HTMLElement>(":scope > [data-carousel-slide]")];
 
@@ -81,7 +95,7 @@ export function useCarouselScroll({
 
   const deltaTo = useCallback((track: HTMLElement, slide: HTMLElement): number => {
     const rtl = getComputedStyle(track).direction === "rtl";
-    return scrollDelta(track.getBoundingClientRect(), slide.getBoundingClientRect(), latest.current.axis, rtl, latest.current.align);
+    return scrollDelta(contentBox(track), slide.getBoundingClientRect(), latest.current.axis, rtl, latest.current.align);
   }, []);
 
   const scrollToIndex = useCallback(
@@ -108,7 +122,7 @@ export function useCarouselScroll({
     const track = trackRef.current;
     if (!track) return { real: latest.current.value, place: -1 };
     const { axis: direction, align: alignment, max: last, count: total, cloneCount: clones } = latest.current;
-    const box = track.getBoundingClientRect();
+    const box = contentBox(track);
     const rtl = getComputedStyle(track).direction === "rtl";
     const edges = slidesOf(track).map((slide) => edgeOf(slide.getBoundingClientRect(), direction, rtl, alignment));
     const block = direction === "block";

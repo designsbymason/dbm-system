@@ -1,12 +1,13 @@
 import { cx, mergeRefs, useAnnouncement, useResolvedResponsiveValue } from "@dbm-system/utils";
-import { Children, forwardRef, isValidElement, useCallback, useEffect, useMemo, useRef, useState } from "react";
-import type { CSSProperties, FocusEvent, KeyboardEvent, ReactElement, ReactNode } from "react";
+import { forwardRef, useEffect, useMemo, useRef, useState } from "react";
+import type { CSSProperties, FocusEvent, ReactElement } from "react";
 import { VisuallyHidden } from "../../atoms/VisuallyHidden";
 import {
   canLoop,
   clampIndex,
   computeStops,
   DEFAULT_AUTO_PLAY_INTERVAL_MS,
+  MIN_AUTO_PLAY_INTERVAL_MS,
   lastIndex,
   nearestStop,
   neighbourStop,
@@ -21,15 +22,19 @@ import { CarouselContext, CarouselSlideContext } from "./CarouselContext";
 import type { CarouselContextValue } from "./CarouselContext";
 import { CarouselAutoPlayToggle, CarouselIndicators, CarouselNext, CarouselPrevious } from "./CarouselParts";
 import { CarouselSlide } from "./CarouselSlide";
+import { splitChildren } from "./carouselChildren";
 import { useAutoHeight } from "./useAutoHeight";
+import { useButtonFocusHandoff } from "./useButtonFocusHandoff";
+import { useCarouselWarnings } from "./useCarouselWarnings";
+import { useLazySlides } from "./useLazySlides";
+import { useRotationHold } from "./useRotationHold";
+import { useTrackKeyDown } from "./useTrackKeyDown";
 import { useAutoPlay } from "./useAutoPlay";
 import { useCarouselController } from "./useCarouselController";
 import { useCarouselDrag } from "./useCarouselDrag";
 import { useCarouselScroll } from "./useCarouselScroll";
 import styles from "./Carousel.module.css";
 import type { CarouselProps, CarouselSlideProps } from "./Carousel.types";
-
-const isOfType = <P,>(child: ReactNode, type: unknown): child is ReactElement<P> => isValidElement(child) && child.type === type;
 
 /**
  * Whether a focus event is the kind that should hold automatic rotation: keyboard focus (or a text field), not a press that
@@ -119,22 +124,8 @@ const CarouselRoot = forwardRef<HTMLDivElement, CarouselProps>(
   ) => {
     const labels = resolveLabels(formatNumber, labelsProp);
 
-    const rawChildren = Children.toArray(children);
-    const isPart = (child: ReactNode) => [CarouselPrevious, CarouselNext, CarouselIndicators, CarouselAutoPlayToggle].some((type) => isOfType(child, type));
-    // Every element that is not one of the parts is a slide, so a component of your own that renders a `Carousel.Slide` can be
-    // mapped over data; text and other non-elements are not slides.
-    const slides = rawChildren.filter((child): child is ReactElement<CarouselSlideProps> => isValidElement(child) && !isPart(child));
-    const previousPart = rawChildren.find((child) => isOfType(child, CarouselPrevious));
-    const nextPart = rawChildren.find((child) => isOfType(child, CarouselNext));
-    const indicatorsPart = rawChildren.find((child): child is ReactElement<{ placement?: string }> => isOfType(child, CarouselIndicators));
-    const togglePart = rawChildren.find((child) => isOfType(child, CarouselAutoPlayToggle));
+    const { slides, previousPart, nextPart, indicatorsPart, togglePart } = splitChildren(children);
     const count = slides.length;
-
-    useEffect(() => {
-      if (process.env.NODE_ENV !== "production" && !ariaLabel && !ariaLabelledBy) {
-        console.warn("Carousel: it needs an accessible name. Pass `aria-label` or `aria-labelledby`.");
-      }
-    }, [ariaLabel, ariaLabelledBy]);
 
     const perViewRequested = useResolvedResponsiveValue<number>(slidesPerView, 1);
     const perView = Math.min(viewSize(perViewRequested, 1), Math.max(1, count));
@@ -152,12 +143,6 @@ const CarouselRoot = forwardRef<HTMLDivElement, CarouselProps>(
     const value = clampIndex(controlled ? valueProp : internalValue, max);
     const stopPlace = nearestStop(stops, value);
 
-    useEffect(() => {
-      if (process.env.NODE_ENV !== "production" && count > 0 && controlled && (valueProp < 0 || valueProp > max)) {
-        console.warn(`Carousel: \`value\` (${valueProp}) is outside 0–${max} for ${count} slides with ${perView} in view; it is held to that range.`);
-      }
-    }, [controlled, valueProp, max, count, perView]);
-
     const request = (index: number): boolean => {
       const next = clampIndex(index, max);
       if (next === value) return false;
@@ -173,8 +158,7 @@ const CarouselRoot = forwardRef<HTMLDivElement, CarouselProps>(
       request(center ? index : Math.max(0, index - visible + 1));
     };
 
-    const pressed = useRef<"previous" | "next" | null>(null);
-    const neighbour = (direction: 1 | -1, wrapEnds: boolean): number | undefined =>
+        const neighbour = (direction: 1 | -1, wrapEnds: boolean): number | undefined =>
       looping ? wrapStep(value, direction, move, count) : neighbourStop(stops, stopPlace, direction, wrapEnds);
     const step = (direction: 1 | -1): boolean => {
       const target = neighbour(direction, false);
@@ -184,27 +168,20 @@ const CarouselRoot = forwardRef<HTMLDivElement, CarouselProps>(
     };
     const canNext = neighbour(1, false) !== undefined;
     const canPrevious = neighbour(-1, false) !== undefined;
+    const root = useRef<HTMLDivElement>(null);
+    const pressed = useButtonFocusHandoff(root, { value, canNext, canPrevious });
 
     const autoPlayOn = autoPlay !== false && autoPlay !== undefined && count > 1 && stops.length > 1;
-    const intervalMs = typeof autoPlay === "object" ? wholeNumber(autoPlay.interval, DEFAULT_AUTO_PLAY_INTERVAL_MS, 1000) : DEFAULT_AUTO_PLAY_INTERVAL_MS;
+    const intervalMs = typeof autoPlay === "object" ? wholeNumber(autoPlay.interval, DEFAULT_AUTO_PLAY_INTERVAL_MS, MIN_AUTO_PLAY_INTERVAL_MS) : DEFAULT_AUTO_PLAY_INTERVAL_MS;
     const [hovered, setHovered] = useState(false);
     const [focusHeld, setFocusHeld] = useState(false);
     const [moving, setMoving] = useState(false);
-    const [holds, setHolds] = useState(0);
-    const [mediaPlaying, setMediaPlaying] = useState(false);
-    const hold = useCallback(() => {
-      let released = false;
-      setHolds((current) => current + 1);
-      return () => {
-        if (released) return;
-        released = true;
-        setHolds((current) => Math.max(0, current - 1));
-      };
-    }, []);
+    const trackRef = useRef<HTMLDivElement>(null);
+    const { held: rotationHeld, hold } = useRotationHold(trackRef, autoPlayOn);
     const rotation = useAutoPlay({
       enabled: autoPlayOn,
       intervalMs,
-      held: hovered || focusHeld || holds > 0 || mediaPlaying,
+      held: hovered || focusHeld || rotationHeld,
       moving,
       value,
       advance: () => {
@@ -214,7 +191,6 @@ const CarouselRoot = forwardRef<HTMLDivElement, CarouselProps>(
     });
 
     const vertical = orientation === "vertical";
-    const trackRef = useRef<HTMLDivElement>(null);
     const [settleTick, setSettleTick] = useState(0);
     useCarouselScroll({
       trackRef,
@@ -237,40 +213,17 @@ const CarouselRoot = forwardRef<HTMLDivElement, CarouselProps>(
     const autoSize = useAutoHeight(trackRef, { enabled: sizedByContent, perView, layoutKey: `${count}|${gap}|${looping}` });
     useCarouselController(controllerRef, { value, count, max, request, step, hold });
 
-    // A video or audio element playing in a slide holds rotation. Media events don't bubble, so they are heard in the capture phase.
-    useEffect(() => {
-      const track = trackRef.current;
-      if (!track || !autoPlayOn) return;
-      const playing = new Set<EventTarget>();
-      const onPlay = (event: Event) => {
-        playing.add(event.target as EventTarget);
-        setMediaPlaying(true);
-      };
-      const onStop = (event: Event) => {
-        playing.delete(event.target as EventTarget);
-        setMediaPlaying(playing.size > 0);
-      };
-      track.addEventListener("play", onPlay, true);
-      track.addEventListener("pause", onStop, true);
-      track.addEventListener("ended", onStop, true);
-      return () => {
-        track.removeEventListener("play", onPlay, true);
-        track.removeEventListener("pause", onStop, true);
-        track.removeEventListener("ended", onStop, true);
-        setMediaPlaying(false);
-      };
-    }, [autoPlayOn]);
-
-    const warnedHeight = useRef(false);
-    useEffect(() => {
-      const track = trackRef.current;
-      if (process.env.NODE_ENV === "production" || warnedHeight.current || !vertical || sizedByContent || !track || count <= visible) return;
-      // With a height from its container the track scrolls; with none it grows to hold every slide and there is nothing to scroll.
-      if (track.clientHeight > 0 && track.scrollHeight <= track.clientHeight + 1) {
-        warnedHeight.current = true;
-        console.warn("Carousel: a vertical carousel needs a height from its container (a `block-size` on it or on a parent that it fills); without one every slide is shown at once.");
-      }
-    }, [vertical, sizedByContent, count, visible]);
+    useCarouselWarnings({
+      name: { label: ariaLabel, labelledBy: ariaLabelledBy },
+      controlledValue: valueProp,
+      max,
+      count,
+      perView,
+      requestedInterval: typeof autoPlay === "object" ? autoPlay.interval : undefined,
+      trackRef,
+      needsHeight: vertical && !sizedByContent,
+      slidesInView: visible,
+    });
 
     const { message, announce: say } = useAnnouncement();
     const previousValue = useRef({ value, count });
@@ -289,39 +242,12 @@ const CarouselRoot = forwardRef<HTMLDivElement, CarouselProps>(
       // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [value, count]);
 
-    const root = useRef<HTMLDivElement>(null);
-    useEffect(() => {
-      const wasPressed = pressed.current;
-      pressed.current = null;
-      if (!wasPressed || !root.current) return;
-      const active = document.activeElement;
-      const lost = active === document.body || (active instanceof HTMLButtonElement && active.disabled && root.current.contains(active));
-      if (!lost) return;
-      const other = wasPressed === "next" ? "previous" : "next";
-      root.current.querySelector<HTMLButtonElement>(`[data-carousel-control="${other}"]:not(:disabled)`)?.focus();
-    }, [value, canNext, canPrevious]);
-
     // Which slides draw their content: all of them, or (with `lazy`) those near the view and those that have been near before.
     const lazyReach = lazy === false || lazy === undefined ? Infinity : lazy === true ? 1 : wholeNumber(lazy, 1, 0);
-    const [seen, setSeen] = useState<ReadonlySet<number>>(() => new Set());
     const viewState = { count, perView, loop: looping, center, value, peek: peeking };
-    const drawn = new Set<number>();
-    for (let index = 0; index < count; index += 1) {
-      if (lazyReach === Infinity || seen.has(index) || slidesOutside(index, viewState) <= lazyReach) drawn.add(index);
-    }
-    if (lazyReach !== Infinity && [...drawn].some((index) => !seen.has(index))) setSeen(drawn);
+    const drawn = useLazySlides(lazyReach, viewState);
 
-    const onTrackKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
-      if (event.target !== event.currentTarget || event.altKey || event.ctrlKey || event.metaKey) return;
-      const forward = vertical ? "ArrowDown" : dir === "rtl" ? "ArrowLeft" : "ArrowRight";
-      const back = vertical ? "ArrowUp" : dir === "rtl" ? "ArrowRight" : "ArrowLeft";
-      if (event.key === forward) step(1);
-      else if (event.key === back) step(-1);
-      else if (event.key === "Home") request(stops[0] ?? 0);
-      else if (event.key === "End") request(stops[stops.length - 1] ?? 0);
-      else return;
-      event.preventDefault();
-    };
+    const onTrackKeyDown = useTrackKeyDown({ vertical, dir, stops, step, request });
 
     const context: CarouselContextValue = {
       size,
