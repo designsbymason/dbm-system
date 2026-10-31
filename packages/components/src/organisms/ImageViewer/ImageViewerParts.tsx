@@ -104,8 +104,14 @@ export function ImageViewerThumbnails({
   useEffect(() => {
     const element = container.current;
     if (!windowed) {
-      // The strip scrolls to keep the image in view in sight, in either reading direction.
-      current.current?.scrollIntoView?.({ block: "nearest", inline: "center" });
+      // The strip scrolls to keep the image in view in sight, in either reading direction. Only the strip: `scrollIntoView` would
+      // scroll the page too, which a viewer drawn in a page must not do when it appears.
+      const thumbnail = current.current;
+      if (element && thumbnail) {
+        const strip = element.getBoundingClientRect();
+        const own = thumbnail.getBoundingClientRect();
+        element.scrollBy?.({ left: own.left + own.width / 2 - (strip.left + strip.width / 2) });
+      }
       return;
     }
     if (!element) return;

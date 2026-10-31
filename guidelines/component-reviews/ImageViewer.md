@@ -8,6 +8,10 @@ A full-screen viewer for one image or a set ([ADR-0150](../adr/0150-imageviewer-
 
 Scope: fit, wheel, pinch and double-tap zoom about a point, drag to pan, rotate, full screen, a counter, captions, a thumbnail strip (one tab stop), previous and next by button, key and swipe, swipe down to dismiss, preloading of the neighbours, loading and failed states, `loop`, `controls="hidden"`, an `actions` slot with `useImageViewerController()`, `controllerRef`, `labels` and `formatNumber`, and `dir`. Every gesture has a button and a key.
 
+## After finalization
+
+- **The Docs page opened scrolled down to "Tap to hide the controls"** (2026-10-31, fixed at the maintainer's request). A thumbnail strip of an inline viewer scrolled its current thumbnail into view with `scrollIntoView`, which scrolls the page as well, so the strip of the "Inline" story pulled the whole Docs page down to it as it mounted. The strip now scrolls only itself, by the distance from its own centre to the thumbnail's. A defect fix with no change to what the component does, so it stays Finalized; a real-browser check puts an inline viewer far down a page and asserts the page does not move when it appears or the image changes.
+
 ## Final review round
 
 Fifteen findings, fourteen fixed and one withdrawn:

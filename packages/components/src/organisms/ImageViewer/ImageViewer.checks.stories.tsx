@@ -887,3 +887,37 @@ export const InlineLeavesScrollingToThePage: Story = {
     await expect(getComputedStyle(stage).touchAction).toBe("none");
   },
 };
+
+export const AnInlineViewerDoesNotScrollThePage: Story = {
+  name: "An inline viewer with a thumbnail strip, far down a page, does not scroll the page when it appears or the image changes",
+  render: () => (
+    <div style={{ padding: "var(--dbm-space-4)" }}>
+      <div style={{ blockSize: "150vh" }}>A long page above the viewer</div>
+      <div style={{ blockSize: "24rem" }}>
+        <ImageViewer inline aria-label="Photos" images={sampleImages} thumbnails defaultValue={3} />
+      </div>
+      <div style={{ blockSize: "100vh" }} />
+    </div>
+  ),
+  play: async () => {
+    const group = await body.findByRole("group", { name: "Photos" });
+    await waitFor(() => expect(group.querySelector("[data-drawn]")).not.toBeNull(), { timeout: 5000 });
+    await sleep(500);
+    await expect(window.scrollY).toBe(0);
+    // the strip still follows the image: the current thumbnail is inside it
+    const strip = within(group).getByRole("group", { name: "Thumbnails" }).getBoundingClientRect();
+    const current = group.querySelector("button[aria-current]") as HTMLElement;
+    const own = current.getBoundingClientRect();
+    await expect(own.left).toBeGreaterThanOrEqual(strip.left - 1);
+    await expect(own.right).toBeLessThanOrEqual(strip.right + 1);
+    // stepping with the page scrolled elsewhere leaves the page where it is
+    window.scrollTo(0, 120);
+    await sleep(100);
+    // focusing scrolls to the element by itself, which is the browser's and not what is being checked
+    group.focus({ preventScroll: true });
+    await userEvent.keyboard("{ArrowRight}");
+    await waitFor(() => expect(within(group).getByText(/^\S+ \/ \S+$/)).toHaveTextContent("5 / 6"));
+    await sleep(300);
+    await expect(window.scrollY).toBe(120);
+  },
+};
