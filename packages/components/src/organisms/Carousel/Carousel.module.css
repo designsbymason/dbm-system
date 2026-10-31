@@ -1,0 +1,167 @@
+/* The slides are a native scroll container that snaps; the buttons and indicators are drawn around and over it. The root
+   sets --carousel-slides (how many are in view), --carousel-gaps (how many gaps those need) and --carousel-gap inline. */
+.root {
+  --carousel-peek: 0px;
+
+  display: flex;
+  flex-direction: column;
+  font-family: var(--dbm-font-family-primary);
+  min-inline-size: 0;
+}
+
+.root.peek {
+  --carousel-peek: var(--dbm-space-12);
+}
+
+.root[data-orientation="vertical"] {
+  flex-direction: row;
+}
+
+.viewport {
+  flex: 1;
+  min-block-size: 0;
+  min-inline-size: 0;
+  position: relative;
+}
+
+.track {
+  display: flex;
+  gap: var(--carousel-gap);
+  inline-size: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+  overscroll-behavior: contain;
+  scroll-snap-type: x mandatory;
+  /* The scroll bar is replaced by the buttons and indicators. */
+  scrollbar-width: none;
+}
+
+.track::-webkit-scrollbar {
+  display: none;
+}
+
+.root[data-orientation="vertical"] .track {
+  block-size: 100%;
+  flex-direction: column;
+  overflow-x: hidden;
+  overflow-y: auto;
+  scroll-snap-type: y mandatory;
+}
+
+/* The track is the keyboard target, so its ring is drawn inside its own edge, where the scrolling box doesn't clip it. */
+.track:focus-visible {
+  border-radius: var(--dbm-radius-sm);
+  outline: var(--dbm-border-width-2) solid var(--dbm-border-focus);
+  outline-offset: calc(-1 * var(--dbm-border-width-2));
+}
+
+.slide {
+  flex: 0 0 calc((100% - var(--carousel-gaps) * var(--carousel-gap) - var(--carousel-peek)) / var(--carousel-slides));
+  min-block-size: 0;
+  min-inline-size: 0;
+  scroll-snap-align: start;
+}
+
+/* The buttons over the slides, centred on the two edges without a transform (a translate would need a right-to-left twin). */
+.control.overlay,
+.control.auto {
+  block-size: fit-content;
+  inset-block: 0;
+  inset-inline-start: var(--dbm-space-3);
+  margin-block: auto;
+  position: absolute;
+  z-index: 1;
+}
+
+.control.overlay.next,
+.control.auto.next {
+  inset-inline: auto var(--dbm-space-3);
+}
+
+.root[data-orientation="vertical"] .control.overlay,
+.root[data-orientation="vertical"] .control.auto {
+  inline-size: fit-content;
+  inset-block: var(--dbm-space-3) auto;
+  inset-inline: 0;
+  margin-block: 0;
+  margin-inline: auto;
+}
+
+.root[data-orientation="vertical"] .control.overlay.next,
+.root[data-orientation="vertical"] .control.auto.next {
+  inset-block: auto var(--dbm-space-3);
+}
+
+/* Below the sm breakpoint a swipe and the indicators move the slides, and buttons over them would cover them. The
+   breakpoint token can't be used in a media condition, so 640px is written out (Stepper's compact form does the same). */
+@media (max-width: 639px) {
+  .control.auto {
+    display: none;
+  }
+}
+
+/* The arrows point along the reading direction, so they turn round in a right-to-left carousel. */
+.control :global(svg) {
+  scale: 1 1;
+}
+
+.root:dir(rtl) .control :global(svg) {
+  scale: -1 1;
+}
+
+.root[data-orientation="vertical"]:dir(rtl) .control :global(svg) {
+  scale: 1 1;
+}
+
+.bar {
+  align-items: center;
+  display: flex;
+  gap: var(--dbm-space-3);
+  justify-content: center;
+  margin-block-start: var(--dbm-space-3);
+}
+
+.root[data-orientation="vertical"] .bar {
+  flex-direction: column;
+  margin-block-start: 0;
+  margin-inline-start: var(--dbm-space-3);
+}
+
+.indicators {
+  display: flex;
+  justify-content: center;
+}
+
+.bar .indicators {
+  flex: 1;
+}
+
+.root[data-orientation="vertical"] .bar .indicators {
+  flex: 1;
+  align-items: center;
+}
+
+.indicatorsOverlay {
+  inset-block-end: var(--dbm-space-3);
+  inset-inline: 0;
+  pointer-events: none;
+  position: absolute;
+  z-index: 1;
+}
+
+.indicatorsOverlay > * {
+  pointer-events: auto;
+}
+
+.root[data-orientation="vertical"] .indicatorsOverlay {
+  align-items: center;
+  flex-direction: column;
+  inset-block: 0;
+  inset-inline: auto var(--dbm-space-3);
+}
+
+@media (forced-colors: active) {
+  .track:focus-visible {
+    outline-color: Highlight;
+  }
+}

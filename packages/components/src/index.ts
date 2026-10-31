@@ -93,6 +93,7 @@ export * from "./molecules/ToggleGroup";
 export * from "./molecules/Toolbar";
 
 export * from "./organisms/AlertDialog";
+export * from "./organisms/Carousel";
 export * from "./organisms/Combobox";
 export * from "./organisms/CommandPalette";
 export * from "./organisms/ConfirmDialog";

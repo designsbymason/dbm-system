@@ -1,0 +1,339 @@
+import { Canvas, Meta } from "@storybook/addon-docs/blocks";
+import { Callout, ComponentHeader, PlaygroundControls, PropertiesTable, RelatedCard, TokenRow } from "../../../.storybook/blocks";
+import { Indicators } from "../../atoms/Indicators";
+import { IconButton } from "../../atoms/IconButton";
+import { Stepper } from "../Stepper";
+import { Tabs } from "../../molecules/Tabs";
+import { VisuallyHidden } from "../../atoms/VisuallyHidden";
+import { ArrowRightIcon } from "@dbm-system/icons";
+import * as CarouselStories from "./Carousel.stories";
+import * as CarouselSlideStories from "./CarouselParts.stories";
+
+export const rootPropOrder = [
+  "children",
+  "value",
+  "defaultValue",
+  "onValueChange",
+  "slidesPerView",
+  "slidesPerMove",
+  "loop",
+  "orientation",
+  "gap",
+  "peek",
+  "size",
+  "controls",
+  "indicators",
+  "indicatorsPlacement",
+  "autoPlay",
+  "announce",
+  "formatNumber",
+  "labels",
+  "controllerRef",
+  "dir",
+  "aria-label",
+  "aria-labelledby",
+  "id",
+  "className",
+  "style",
+  "data-testid",
+];
+export const slidePropOrder = ["children", "aria-label", "id", "className", "style", "data-testid"];
+
+<Meta of={CarouselStories} />
+
+<VisuallyHidden asChild><h2>Intro</h2></VisuallyHidden>
+
+<ComponentHeader title="Carousel" tier="Organism" />
+
+A carousel shows a few slides at a time from a longer row and lets a person move through the rest: a row of featured stories,
+a set of product cards, a gallery of photos. A compound component: put one `Carousel.Slide` per slide inside `Carousel`, and
+give the whole thing a name with `aria-label`. A person moves it by swiping, with a mouse wheel or trackpad, with the
+previous and next buttons, with the position indicators, or with the arrow keys on the focused track.
+
+The slides sit in the browser's own scrolling box that snaps to each slide, so touch, momentum and inertia are the
+platform's and nothing has to be learnt. `Carousel` adds what scrolling alone does not give: buttons, indicators, a value to
+read and set, an announcement for a screen reader, and automatic rotation that can always be stopped. Use `slidesPerView` to
+show several slides at once (it takes a breakpoint map), `slidesPerMove` to move more than one at a time, `peek` to show the
+edge of the next slide, `loop` to wrap round, and `orientation="vertical"` to run the slides up and down.
+
+`Carousel` does not zoom or enlarge its slides (that is an image viewer), and it is not for peer views a person switches
+between by name (that is `Tabs`) or for steps in a flow (that is `Stepper`).
+
+### Import
+
+```tsx
+import { Carousel } from "@dbm-system/components";
+```
+
+## Playground
+
+<div className="dbm-playground-canvas">
+
+<Canvas of={CarouselStories.Playground} />
+
+</div>
+<PlaygroundControls of={CarouselStories.Playground} order={rootPropOrder} exclude={["children", "value", "onValueChange", "formatNumber", "labels", "controllerRef", "aria-labelledby", "id", "className", "style", "data-testid"]} />
+
+## Properties
+
+`ref` forwards to the root `<div>`, which carries `role="region"`, the accessible name, `className` and `style`. Also accepts
+any other native `<div>` attribute beyond what's listed here (e.g. `title`, `lang`) — passed straight through to the root element.
+
+<PropertiesTable of={CarouselStories} order={rootPropOrder} />
+
+`value` is the index of the first slide in view. A press on a button, an indicator or an arrow key asks through
+`onValueChange` and the slides move when `value` does; a swipe or scroll the browser has already done is reported once it
+settles, and a controlled carousel whose owner does not take the new value is scrolled back. Give a carousel with no
+visible heading a name with `aria-label`, or point `aria-labelledby` at the heading; a development warning appears if it has
+neither.
+
+Any element that is not one of the four button and indicator parts counts as a slide, so a component of your own that renders
+a `Carousel.Slide` can be mapped over your data. A fragment holding several slides counts as one, and text is ignored.
+
+`controllerRef` receives `{ value, count, next(), previous(), goTo(index) }`: the same object for the carousel's life, whose
+methods ask for a change the way a press on a button does (through `onValueChange` when the carousel is controlled) and
+return whether there was a place to go. There is no hook for it, since the only parts inside a carousel are its own.
+
+### Carousel.Slide properties
+
+One slide. It is a `role="group"` named by its place ("3 of 8"), and is `inert` while it is out of view. Also accepts any
+other native `<div>` attribute beyond what's listed here (e.g. `title`) — passed straight through to the underlying element.
+
+<PropertiesTable of={CarouselSlideStories} order={slidePropOrder} />
+
+### The button and indicator parts
+
+Place one of these as a direct child of `Carousel` to replace the default of its kind. Each accepts `id`, `className`,
+`style` and `data-testid`, and forwards its `ref` to its element.
+
+| Part | Extra props | What it replaces |
+|---|---|---|
+| `Carousel.Previous` | `icon` (an icon in place of the arrow), `aria-label` | The previous button |
+| `Carousel.Next` | `icon`, `aria-label` | The next button |
+| `Carousel.Indicators` | `variant`, `placement` (`"below"` or `"overlay"`), `showLabel`, `aria-label` | The position indicators |
+| `Carousel.AutoPlayToggle` | none | The pause and play button drawn while `autoPlay` is on |
+
+A button you place is drawn where `controls` puts the default, or in the row under the slides when `controls` is `"hidden"`.
+The pause button cannot be left out while `autoPlay` is on.
+
+## Variants
+
+### All sizes
+
+<Canvas of={CarouselStories.Sizes} />
+
+### Several in view
+
+<Canvas of={CarouselStories.SeveralInView} />
+
+### A whole view at a time
+
+<Canvas of={CarouselStories.SlidesPerMove} />
+
+### Peeking at the next slide
+
+<Canvas of={CarouselStories.Peek} />
+
+### Looping
+
+<Canvas of={CarouselStories.Loop} />
+
+### Vertical
+
+<Canvas of={CarouselStories.Vertical} />
+
+### Buttons in a bar
+
+<Canvas of={CarouselStories.ControlsInBar} />
+
+### Indicators over the slides
+
+<Canvas of={CarouselStories.IndicatorsOverSlides} />
+
+### Automatic rotation
+
+<Canvas of={CarouselStories.AutoPlay} />
+
+### Controlled
+
+<Canvas of={CarouselStories.Controlled} />
+
+### Moved from a controller
+
+<Canvas of={CarouselStories.FromAController} />
+
+### Parts of your own
+
+<Canvas of={CarouselStories.PlacedParts} />
+
+### Translated text
+
+<Canvas of={CarouselStories.TranslatedText} />
+
+### Right-to-left
+
+<Canvas of={CarouselStories.RightToLeft} />
+
+## Usage guidelines
+
+<div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(16rem, 1fr))", gap: "var(--dbm-space-4)" }}>
+<Callout tone="success" title="Do">
+
+- Use it for a set of similar items a person browses (cards, photos, testimonials) where showing them all would take too much room.
+- Give it a name that says what is in it — "Featured stories" — with `aria-label` or `aria-labelledby`.
+- Show several slides at once on wide screens with a breakpoint map (`slidesPerView={{ base: 1, md: 3 }}`), so the carousel is useful at every width.
+- Use `peek` when more than one slide is in view, so the cut-off edge tells a person there is more.
+- Keep `autoPlay` off unless the content is truly secondary; where it is on, leave the pause button as it is.
+- Give a vertical carousel a height from its container.
+
+</Callout>
+<Callout tone="danger" title="Don't">
+
+- Don't put content a person must see in a carousel. Slides out of view are not seen, and not read out.
+- Don't use it for peer views switched by name (that is `Tabs`) or for steps in a flow (that is `Stepper`).
+- Don't rotate by itself in a hurry: the default is five seconds a slide, and a person who is reading will want longer.
+- Don't hide the buttons and indicators together; without both, a person with no touch screen has only the arrow keys.
+- Don't wrap slides in a fragment, or put focusable controls in a peeking slide and expect them to work: a slide not yet in view is inert.
+
+</Callout>
+</div>
+
+## Best practices
+
+- **Say there is more.** One slide in view needs indicators; several need `peek`. A carousel whose end is invisible hides its content.
+- **Keep slides the same height.** The track is as tall as its tallest slide, and slides of different heights make the controls jump as a person moves.
+- **Set `slidesPerMove="view"` for cards.** A person who moves three cards at a time then sees three new ones, and there is one indicator per view.
+- **Think twice about rotation.** It moves content out from under a person reading it. The carousel holds while the pointer is over it or focus is inside it, and stays paused once the person has paused it, but the better default is no rotation.
+- **Make the first slide enough.** Many people never move past it, so it should stand alone.
+- **Report where it is when it matters.** For a gallery with a count ("3 of 12"), `Carousel.Indicators` with `showLabel` writes it, and `value` with `onValueChange` lets the page do more.
+- **Keep one position to one purpose.** `value` is a slide index, not an id: if the data changes under a controlled carousel, reset it.
+
+## Accessibility
+
+<Callout tone="info" title="A named region of slide groups, a live announcement, and a rotation that can always be stopped">
+
+The carousel is a `role="region"` named by `aria-label` or `aria-labelledby` with `aria-roledescription="carousel"`, holding a
+named group of slides ("Slides") whose own items are `role="group"` with `aria-roledescription="slide"`, each named by its place
+("3 of 8"). A slide that is out of view is `inert`, so a link or button in it is neither tabbable nor read out, and a slide
+that holds focus when it leaves the view hands it to the track instead of dropping it to the top of the page.
+
+When the person changes the slide, a polite live region says "Slide 3 of 8" (or "Slides 3 to 4 of 8" with several in view): only a change,
+never the first render, and never while automatic rotation is running. `announce={false}` turns it off where the page moves
+focus to the new slide's content.
+
+Automatic rotation follows WCAG 2.2.2: it is off unless asked for, a pause button is always drawn while it is on (and cannot be
+removed), it holds while the pointer is over the slides, while keyboard focus is inside, while the track is moving and while the
+page is hidden, it starts paused when the person prefers reduced motion, and the person's own pause stays until they undo it.
+In `prefers-reduced-motion` the track jumps to a slide instead of easing.
+
+The track is a keyboard stop: a scrolling box has to be reachable without a pointer. The buttons and indicators are real
+buttons in the tab order. A button that is pressed and then becomes disabled (the last position without `loop`) hands its
+focus to the other one.
+
+| Key | Behaviour |
+|---|---|
+| `Tab` | Moves through the previous button, the track, the slides' own controls in view, the indicators, the pause button and the next button, in reading order |
+| `→` / `←` on the track | Next and previous position (swapped in `dir="rtl"`) |
+| `↓` / `↑` on the track | Next and previous position in a vertical carousel |
+| `Home` / `End` on the track | The first and last position |
+| `←` `→` on the indicators | Move between the indicators and go to that position |
+| `Enter` / `Space` | Presses the focused button |
+
+The arrow keys are handled only when the track itself has focus, so they stay with a text field or slider inside a slide. In
+forced-colours mode the track's focus ring is drawn in `Highlight`, and the buttons are the system's.
+
+</Callout>
+
+## Code examples
+
+```tsx
+{/* Cards: three in view from a medium screen up, a view at a time, with the edge of the next showing */}
+<Carousel
+  aria-label="Featured stories"
+  slidesPerView={{ base: 1, md: 3 }}
+  slidesPerMove="view"
+  peek
+>
+  {stories.map((story) => (
+    <Carousel.Slide key={story.id}>
+      <StoryCard story={story} />
+    </Carousel.Slide>
+  ))}
+</Carousel>
+
+{/* A photo gallery: bars over the photos, buttons left out, a title and a language as native attributes */}
+<Carousel
+  aria-label="Photos from the trip"
+  title="Photos from the trip"
+  lang="fr"
+  indicators="bars"
+  indicatorsPlacement="overlay"
+  controls="hidden"
+>
+  {/* … */}
+</Carousel>
+
+{/* Controlled, so the page can show or save the position */}
+const [value, setValue] = useState(0);
+<Carousel aria-label="Featured" value={value} onValueChange={setValue}>{/* … */}</Carousel>
+
+{/* A button of your own, through the controller */}
+const carousel = useRef<CarouselController>(null);
+<Button onClick={() => carousel.current?.goTo(2)}>Jump to the third</Button>
+<Carousel aria-label="Featured" controllerRef={carousel}>{/* … */}</Carousel>
+
+{/* Rotation: off by default, with a pause button that is always drawn */}
+<Carousel aria-label="Announcements" autoPlay={{ interval: 6000 }}>{/* … */}</Carousel>
+```
+
+## Design tokens used
+
+The buttons are `IconButton`s and the indicators are `Indicators`; they draw with their own tokens.
+
+<TokenRow token="border.focus" usage="the keyboard focus ring on the track" />
+<TokenRow token="border-width.2" usage="the width of that ring" />
+<TokenRow token="radius.sm" usage="the corners of that ring" />
+<TokenRow token="space.3" usage="the inset of the buttons and indicators over the slides, and the space between the controls in the bar" />
+<TokenRow token="space.12" usage="how much of the next slide shows with peek" />
+<TokenRow token="font-family.primary" usage="the carousel's typography" />
+
+## Related components
+
+<div className="dbm-card-grid">
+<RelatedCard
+  name="Indicators"
+  description="The position dots the carousel draws, usable on their own for any sequence"
+  href="/?path=/docs/atoms-media-indicators--docs"
+>
+  <Indicators count={4} activeIndex={1} onIndexChange={() => {}} />
+</RelatedCard>
+<RelatedCard
+  name="Tabs"
+  description="Switches between peer views by name, in any order, instead of browsing a row"
+  href="/?path=/docs/molecules-navigation-tabs--docs"
+>
+  <Tabs defaultValue="a">
+    <Tabs.List aria-label="Example">
+      <Tabs.Trigger value="a">One</Tabs.Trigger>
+      <Tabs.Trigger value="b">Two</Tabs.Trigger>
+    </Tabs.List>
+  </Tabs>
+</RelatedCard>
+<RelatedCard
+  name="Stepper"
+  description="Shows where a person is in a flow with a fixed order, rather than a row of similar items"
+  href="/?path=/docs/organisms-navigation-stepper--docs"
+>
+  <Stepper defaultValue="b" size="sm" aria-label="Example">
+    <Stepper.Step value="a" title="One" />
+    <Stepper.Step value="b" title="Two" />
+  </Stepper>
+</RelatedCard>
+<RelatedCard
+  name="IconButton"
+  description="The button the carousel's previous, next and pause controls are drawn with"
+  href="/?path=/docs/atoms-inputs-iconbutton--docs"
+>
+  <IconButton icon={ArrowRightIcon} aria-label="Next" variant="secondary" rounded />
+</RelatedCard>
+</div>
