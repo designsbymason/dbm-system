@@ -412,6 +412,9 @@ export const RightToLeftMirrorsTheArrows: Story = {
 };
 
 const emulate = (feature: string, value: string) => send("Emulation.setEmulatedMedia", { features: [{ name: feature, value }] });
+// Puts the browser's own preferences back. The test browser is shared by every file in a run, so an override left behind, even one
+// that restates the default, is another check's to meet; clearing is not the same as setting the value back.
+const clearEmulation = () => send("Emulation.setEmulatedMedia", { features: [] });
 
 export const ForcedColoursOutlinesTheChips: Story = {
   name: "In forced colours a control is outlined and the current thumbnail is marked with the system highlight",
@@ -432,7 +435,7 @@ export const ForcedColoursOutlinesTheChips: Story = {
       probe.remove();
       await expect(getComputedStyle(current).borderTopColor).toBe(highlight);
     } finally {
-      await emulate("forced-colors", "none");
+      await clearEmulation();
     }
     await closeWithEscape();
   },
@@ -453,7 +456,7 @@ export const ReducedMotionIsInstant: Story = {
       await expect(getComputedStyle(box).transitionDuration).toBe("0s");
       await expect(getComputedStyle(within(dialog).getByRole("button", { name: "Close" })).transitionDuration).toBe("0s");
     } finally {
-      await emulate("prefers-reduced-motion", "no-preference");
+      await clearEmulation();
     }
     await closeWithEscape();
   },
@@ -798,7 +801,7 @@ export const AStepEntersFromTheSideItCameFrom: Story = {
       await waitFor(() => expect(boxOf(dialog)).toHaveAttribute("data-enter", "previous"));
       await expect(getComputedStyle(boxOf(dialog)).animationName).toContain("viewerImageIn");
     } finally {
-      await emulate("prefers-reduced-motion", "no-preference");
+      await clearEmulation();
     }
     await closeWithEscape();
   },
