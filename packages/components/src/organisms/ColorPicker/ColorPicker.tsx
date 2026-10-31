@@ -1,5 +1,5 @@
 import { XIcon } from "@dbm-system/icons";
-import { cx, mergeDefined, mergeRefs, useAnnouncement, useResolvedResponsiveValue } from "@dbm-system/utils";
+import { cx, mergeDefined, mergeRefs, useAnnouncement, useRecentCommands, useResolvedResponsiveValue } from "@dbm-system/utils";
 import * as PopoverPrimitive from "@radix-ui/react-popover";
 import { forwardRef, useEffect, useId, useImperativeHandle, useRef, useState } from "react";
 import type { ChangeEvent, CSSProperties, FocusEvent, KeyboardEvent, ReactNode } from "react";
@@ -32,6 +32,7 @@ const defaultLabels: ColorPickerLabels = {
   cleared: "Color cleared",
   channelName: (channel) => ({ r: "Red", g: "Green", b: "Blue", h: "Hue", s: "Saturation", l: "Lightness", c: "Chroma", a: "Opacity", hex: "Hex code" })[channel],
   channelLetter: (channel) => (channel === "hex" ? "Hex" : channel.toUpperCase()),
+  recent: "Recent",
   copy: "Copy color",
   copied: "Color copied",
   copyFailed: "Could not copy the color",
@@ -93,6 +94,12 @@ export const ColorPicker = forwardRef<HTMLDivElement, ColorPickerProps>(
       showFormatSwitch = false,
       showChannelInputs = false,
       noneSwatch = false,
+      showRecent = false,
+      recentColors,
+      onRecentColorsChange,
+      maxRecent = 5,
+      persistKey,
+      storage = "local",
       copyButton = false,
       controllerRef,
       alpha = false,
@@ -135,6 +142,32 @@ export const ColorPicker = forwardRef<HTMLDivElement, ColorPickerProps>(
     const direction = dir === "rtl" ? "rtl" : "ltr";
     const [heldFormat, setHeldFormat] = useState(defaultFormat);
     const format = formatProp ?? heldFormat;
+    // The recent colors: the app's list (`recentColors`), the browser's (`persistKey`, through `useRecentCommands`), or the picker's own.
+    // Each is held as hex (`#rrggbb`, `#rrggbbaa` when not opaque), whatever `format` is.
+    const limit = Math.max(0, Math.floor(maxRecent));
+    const persisted = useRecentCommands(`color-picker:${persistKey ?? ""}`, { storage, max: limit });
+    const [ownRecent, setOwnRecent] = useState<string[]>([]);
+    const recentList = (recentColors !== undefined ? [...recentColors] : persistKey !== undefined ? persisted.recent : ownRecent).slice(0, limit);
+    const recentRef = useRef(recentList);
+    recentRef.current = recentList;
+    const setRecent = (next: string[]) => {
+      if (recentColors === undefined) {
+        if (persistKey !== undefined) {
+          // The stored list does its own ordering: a color is put first (moving up a repeat), and emptying forgets them all.
+          if (next[0] === undefined) persisted.clear();
+          else persisted.add(next[0]);
+        } else setOwnRecent(next);
+      }
+      onRecentColorsChange?.(next);
+    };
+    const remember = (written: string) => {
+      if (!showRecent || written === "") return;
+      const color = parseColor(written);
+      if (!color) return;
+      const canonical = formatColor(color, "hex", true);
+      setRecent([canonical, ...recentRef.current.filter((item) => item !== canonical)].slice(0, limit));
+    };
+
     const { text, hsva, setHsva, setText, clear } = useColorPickerValue({
       value,
       defaultValue,
@@ -142,7 +175,10 @@ export const ColorPicker = forwardRef<HTMLDivElement, ColorPickerProps>(
       alpha,
       commitOn,
       onValueChange,
-      onValueCommit,
+      onValueCommit: (written) => {
+        remember(written);
+        onValueCommit?.(written);
+      },
     });
     const hasValue = text !== "";
 
@@ -171,6 +207,14 @@ export const ColorPicker = forwardRef<HTMLDivElement, ColorPickerProps>(
       });
     }
 
+    const recent: SwatchChoice[] = [];
+    if (showRecent) {
+      for (const item of recentList) {
+        const color = parseColor(item);
+        if (color) recent.push({ label: formatColor(color, format, alpha), color, css: formatColor(color, "rgb", true) });
+      }
+    }
+
     useEffect(() => {
       if (process.env.NODE_ENV === "production") return;
       if (value !== undefined && value !== "" && normalizeColor(value, format, alpha) === undefined) {
@@ -178,6 +222,9 @@ export const ColorPicker = forwardRef<HTMLDivElement, ColorPickerProps>(
       }
       if (rejected.length > 0) {
         console.warn(`ColorPicker: \`swatches\` has entries that are not colors, left out: ${rejected.map((item) => JSON.stringify(item)).join(", ")}.`);
+      }
+      if (!showRecent && (recentColors !== undefined || persistKey !== undefined || onRecentColorsChange !== undefined)) {
+        console.warn("ColorPicker: `recentColors`, `onRecentColorsChange` and `persistKey` have no effect without `showRecent`.");
       }
       if (!ariaLabel && !ariaLabelledBy) {
         console.warn("ColorPicker: no accessible name — pass `aria-label`, or `aria-labelledby` pointing at a visible label (or put it in a `FormField`), so assistive tech has something to announce for the group.");
@@ -212,8 +259,8 @@ export const ColorPicker = forwardRef<HTMLDivElement, ColorPickerProps>(
     }, [invalidEntry, labels.invalid]);
 
     // From outside, through `controllerRef`: one object for the picker's life, whose methods read the latest state.
-    const latest = useRef({ open, inline, disabled, readOnly, setOpen });
-    latest.current = { open, inline, disabled, readOnly, setOpen };
+    const latest = useRef({ open, inline, disabled, readOnly, setOpen, setRecent });
+    latest.current = { open, inline, disabled, readOnly, setOpen, setRecent };
     useImperativeHandle(
       controllerRef,
       () => ({
@@ -226,6 +273,11 @@ export const ColorPicker = forwardRef<HTMLDivElement, ColorPickerProps>(
         close: () => {
           if (!latest.current.open) return false;
           latest.current.setOpen(false);
+          return true;
+        },
+        clearRecent: () => {
+          if (recentRef.current.length === 0) return false;
+          latest.current.setRecent([]);
           return true;
         },
         focus: () => {
@@ -452,6 +504,7 @@ export const ColorPicker = forwardRef<HTMLDivElement, ColorPickerProps>(
         alpha={alpha}
         swatches={swatches}
         eyeDropper={eyeDropper}
+        recent={recent}
         noneSwatch={noneSwatch}
         copyButton={copyButton}
         copied={copied}

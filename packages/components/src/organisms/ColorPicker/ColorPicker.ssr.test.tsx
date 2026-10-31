@@ -31,6 +31,8 @@ const variants: Array<[string, Partial<ColorPickerProps>]> = [
   ["with a format switch", { defaultOpen: true, showFormatSwitch: true, format: "oklch", defaultValue: "#5548a4" }],
   ["a color name", { defaultValue: "rebeccapurple" }],
   ["inline with everything", { inline: true, showChannelInputs: true, showFormatSwitch: true, alpha: true, noneSwatch: true, copyButton: true, eyeDropper: true, swatches: ["#ff0000"] }],
+  ["with recent colors", { defaultOpen: true, showRecent: true, recentColors: ["#ff0000", "#00aa00"] }],
+  ["with persisted recent colors", { defaultOpen: true, showRecent: true, persistKey: "ssr" }],
   ["inline", { inline: true, defaultValue: "#5548a4", alpha: true, swatches: ["#ff0000"] }],
   ["right to left", { dir: "rtl", defaultOpen: true, alpha: true }],
   ["translated digits", { formatNumber: (n) => String.fromCodePoint(0x660 + n), defaultOpen: true }],

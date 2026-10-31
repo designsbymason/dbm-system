@@ -68,6 +68,20 @@ const meta: Meta<typeof ColorPicker> = {
       description: "Adds number fields to the panel for each channel of the format (one field for the whole hex code for hex; R, G, B for rgb; H, S, L for hsl; L, C, H for oklch), and opacity with alpha. Each commits as you type a number in range.",
       table: { defaultValue: { summary: "false" } },
     },
+    showRecent: {
+      control: "boolean",
+      description: "Draws a row of the colors most recently chosen at the end of the panel. A color joins it when it is settled (a drag released, a key step, a swatch, the eyedropper, committed text or a channel field); a repeat moves to the front, and the row holds maxRecent.",
+      table: { defaultValue: { summary: "false" } },
+    },
+    maxRecent: {
+      control: { type: "number", min: 1, max: 12 },
+      description: "The most colors the recent row holds. Adding past it drops the oldest.",
+      table: { defaultValue: { summary: "5" } },
+    },
+    recentColors: { control: false, description: "The controlled list of recent colors, newest first, each written as hex. Pair it with onRecentColorsChange to keep the list somewhere of your own. Needs showRecent." },
+    onRecentColorsChange: { control: false, description: "Called with the new list (newest first, at most maxRecent) whenever a color joins it or controller.clearRecent() empties it." },
+    persistKey: { control: false, description: "Names a list the picker keeps in the browser across page loads, shared by every picker given the same key, in other tabs too. Needs showRecent." },
+    storage: { control: false, description: 'Where persistKey keeps the list: "local" survives closing the browser, "session" lasts for this tab only.', table: { defaultValue: { summary: '"local"' } } },
     noneSwatch: {
       control: "boolean",
       description: 'Adds a swatch at the start of the list that means "no color": choosing it clears the value, and it is pressed while the value is empty.',
@@ -179,6 +193,8 @@ const meta: Meta<typeof ColorPicker> = {
     format: "hex",
     showFormatSwitch: false,
     showChannelInputs: false,
+    showRecent: false,
+    maxRecent: 5,
     noneSwatch: false,
     copyButton: false,
     alpha: false,
@@ -216,6 +232,12 @@ const noControls = {
   onFormatChange: { control: false },
   showFormatSwitch: { control: false },
   showChannelInputs: { control: false },
+  showRecent: { control: false },
+  maxRecent: { control: false },
+  recentColors: { control: false },
+  onRecentColorsChange: { control: false },
+  persistKey: { control: false },
+  storage: { control: false },
   noneSwatch: { control: false },
   copyButton: { control: false },
   controllerRef: { control: false },
@@ -293,6 +315,52 @@ export const ChannelInputs: Story = {
   parameters: { docs: { source: { code: colorPickerSnippets.channelInputs } } },
   argTypes: { ...noControls },
   render: () => <ColorPicker aria-label="Brand color" showChannelInputs alpha defaultValue="#5548a4" />,
+};
+
+export const RecentColors: Story = {
+  name: "Recent colors",
+  parameters: { docs: { source: { code: colorPickerSnippets.recent } } },
+  argTypes: { ...noControls },
+  render: () => (
+    <div style={stack}>
+      <ColorPicker aria-label="Brand color" showRecent defaultValue="#5548a4" />
+      <Text size="sm" color="secondary">
+        Open the picker and choose a few colors: a swatch, a typed code or a drag released. The last five are kept in a Recent row, newest first. This one lives in the picker; persistKey keeps it in the browser, and recentColors lets your app keep it.
+      </Text>
+    </div>
+  ),
+};
+
+export const RecentColorsKept: Story = {
+  name: "Recent colors kept in the browser",
+  parameters: { docs: { source: { code: colorPickerSnippets.recentPersisted } } },
+  argTypes: { ...noControls },
+  render: () => (
+    <div style={stack}>
+      <ColorPicker aria-label="Brand color, first" showRecent persistKey="storybook-recent-colors" defaultValue="#5548a4" />
+      <ColorPicker aria-label="Brand color, second" showRecent persistKey="storybook-recent-colors" defaultValue="#2e8a7d" />
+      <Text size="sm" color="secondary">
+        Both pickers share one list under the same persistKey, and it is still there after a reload.
+      </Text>
+    </div>
+  ),
+};
+
+export const RecentColorsControlled: Story = {
+  name: "Recent colors held by the app",
+  parameters: { docs: { source: { code: colorPickerSnippets.recentControlled } } },
+  argTypes: { ...noControls },
+  render: function RecentColorsControlledStory() {
+    const [recent, setRecent] = useState<string[]>(["#d92d20", "#2e8a7d"]);
+    return (
+      <div style={stack}>
+        <ColorPicker aria-label="Brand color" showRecent recentColors={recent} onRecentColorsChange={setRecent} defaultValue="#5548a4" />
+        <Text size="sm" color="secondary">
+          The app&apos;s list: {recent.join(", ") || "empty"}
+        </Text>
+      </div>
+    );
+  },
 };
 
 export const NoneSwatch: Story = {

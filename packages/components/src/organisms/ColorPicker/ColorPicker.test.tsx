@@ -830,6 +830,159 @@ describe("ColorPicker channel inputs", () => {
   });
 });
 
+describe("ColorPicker recent colors", () => {
+  const recentGroup = () => screen.getByRole("group", { name: "Recent" });
+  const recentButtons = () => within(recentGroup()).getAllByRole("button").map((button) => button.getAttribute("aria-label"));
+  const choose = async (user: ReturnType<typeof userEvent.setup>, text: string) => {
+    await user.clear(entry());
+    await user.type(entry(), `${text}{Enter}`);
+  };
+
+  afterEach(() => {
+    window.localStorage.clear();
+    window.sessionStorage.clear();
+  });
+
+  it("draws nothing unless asked, and nothing while the list is empty", () => {
+    const { rerender } = render(<ColorPicker aria-label="c" inline defaultValue="#5548a4" />);
+    expect(screen.queryByRole("group", { name: "Recent" })).not.toBeInTheDocument();
+    rerender(<ColorPicker aria-label="c" inline showRecent defaultValue="#5548a4" />);
+    expect(screen.queryByRole("group", { name: "Recent" })).not.toBeInTheDocument();
+  });
+
+  it("remembers settled colors, newest first, with a repeat moved to the front, and holds five", async () => {
+    const user = userEvent.setup();
+    render(<ColorPicker aria-label="c" inline showRecent />);
+    for (const color of ["#111111", "#222222", "#333333", "#444444", "#555555", "#666666", "#222222"]) await choose(user, color);
+    expect(recentButtons()).toEqual(["#222222", "#666666", "#555555", "#444444", "#333333"]);
+  });
+
+  it("writes each in the current format, whatever it was chosen in", async () => {
+    const user = userEvent.setup();
+    const { rerender } = render(<ColorPicker aria-label="c" inline showRecent />);
+    await choose(user, "#336699");
+    rerender(<ColorPicker aria-label="c" inline showRecent format="rgb" />);
+    expect(recentButtons()).toEqual(["rgb(51 102 153)"]);
+  });
+
+  it("records a drag once it is released, not on every step, and a key step, a swatch and the eyedropper", async () => {
+    const user = userEvent.setup();
+    const onRecentColorsChange = vi.fn();
+    render(<ColorPicker aria-label="c" inline showRecent swatches={["#ff0000"]} defaultValue="#336699" onRecentColorsChange={onRecentColorsChange} />);
+    const area = saturation().parentElement as HTMLElement;
+    vi.spyOn(area, "getBoundingClientRect").mockReturnValue({ left: 0, top: 0, right: 200, bottom: 100, width: 200, height: 100, x: 0, y: 0, toJSON: () => ({}) });
+    area.setPointerCapture = vi.fn();
+    fireEvent.pointerDown(area, { clientX: 20, clientY: 20, button: 0, pointerId: 1 });
+    fireEvent.pointerMove(area, { clientX: 100, clientY: 50, pointerId: 1 });
+    expect(onRecentColorsChange).not.toHaveBeenCalled();
+    fireEvent.pointerUp(area, { pointerId: 1 });
+    expect(onRecentColorsChange).toHaveBeenCalledTimes(1);
+    fireEvent.keyDown(saturation(), { key: "ArrowRight" });
+    expect(onRecentColorsChange).toHaveBeenCalledTimes(2);
+    await user.click(screen.getByRole("button", { name: "#ff0000", pressed: false }));
+    expect(onRecentColorsChange).toHaveBeenLastCalledWith(["#ff0000", expect.any(String), expect.any(String)]);
+  });
+
+  it("does not record a cleared value, a format switch or text that is not a color", async () => {
+    const user = userEvent.setup();
+    const onRecentColorsChange = vi.fn();
+    render(<ColorPicker aria-label="c" inline showRecent showFormatSwitch clearable defaultValue="#336699" onRecentColorsChange={onRecentColorsChange} />);
+    await user.click(screen.getByRole("radio", { name: "RGB" }));
+    await user.click(screen.getByRole("button", { name: "Clear color" }));
+    await choose(user, "nope");
+    expect(onRecentColorsChange).not.toHaveBeenCalled();
+  });
+
+  it("chooses a recent color on press, and marks the one that is chosen", async () => {
+    const user = userEvent.setup();
+    render(<ColorPicker aria-label="c" inline showRecent />);
+    await choose(user, "#336699");
+    await choose(user, "#cc3300");
+    expect(within(recentGroup()).getByRole("button", { name: "#cc3300" })).toHaveAttribute("aria-pressed", "true");
+    await user.click(within(recentGroup()).getByRole("button", { name: "#336699" }));
+    expect(entry().value).toBe("#336699");
+    expect(recentButtons()).toEqual(["#336699", "#cc3300"]);
+  });
+
+  it("is one tab stop moved with the arrow keys", async () => {
+    const user = userEvent.setup();
+    render(<ColorPicker aria-label="c" inline showRecent />);
+    await choose(user, "#111111");
+    await choose(user, "#222222");
+    await choose(user, "#333333");
+    const buttons = within(recentGroup()).getAllByRole("button");
+    expect(buttons.map((button) => button.tabIndex)).toEqual([0, -1, -1]);
+    buttons[0]?.focus();
+    await user.keyboard("{ArrowRight}");
+    expect(buttons[1]).toHaveFocus();
+  });
+
+  it("follows the app's list when it is controlled, and reports instead of keeping its own", async () => {
+    const user = userEvent.setup();
+    const onRecentColorsChange = vi.fn();
+    const { rerender } = render(<ColorPicker aria-label="c" inline showRecent recentColors={["#aabbcc"]} onRecentColorsChange={onRecentColorsChange} />);
+    expect(recentButtons()).toEqual(["#aabbcc"]);
+    await choose(user, "#112233");
+    expect(onRecentColorsChange).toHaveBeenCalledWith(["#112233", "#aabbcc"]);
+    expect(recentButtons()).toEqual(["#aabbcc"]);
+    rerender(<ColorPicker aria-label="c" inline showRecent recentColors={["#112233", "#aabbcc"]} onRecentColorsChange={onRecentColorsChange} />);
+    expect(recentButtons()).toEqual(["#112233", "#aabbcc"]);
+  });
+
+  it("holds maxRecent, and reads only that many of a longer controlled list", () => {
+    render(<ColorPicker aria-label="c" inline showRecent maxRecent={2} recentColors={["#111111", "#222222", "#333333"]} />);
+    expect(recentButtons()).toEqual(["#111111", "#222222"]);
+  });
+
+  it("keeps the list in the browser under persistKey, shared by pickers with the same key, and across a remount", async () => {
+    const user = userEvent.setup();
+    const { unmount } = render(<ColorPicker aria-label="a" inline showRecent persistKey="brand" />);
+    await choose(user, "#336699");
+    expect(window.localStorage.getItem("dbm-recent:color-picker:brand")).toBe(JSON.stringify(["#336699"]));
+    unmount();
+    render(<ColorPicker aria-label="b" inline showRecent persistKey="brand" />);
+    await waitFor(() => expect(recentButtons()).toEqual(["#336699"]));
+    render(<ColorPicker aria-label="other" inline showRecent persistKey="other" />);
+    expect(screen.getAllByRole("group", { name: "Recent" })).toHaveLength(1);
+  });
+
+  it("keeps it in sessionStorage with storage session", async () => {
+    const user = userEvent.setup();
+    render(<ColorPicker aria-label="c" inline showRecent persistKey="tab" storage="session" />);
+    await choose(user, "#336699");
+    expect(window.sessionStorage.getItem("dbm-recent:color-picker:tab")).not.toBeNull();
+    expect(window.localStorage.getItem("dbm-recent:color-picker:tab")).toBeNull();
+  });
+
+  it("is cleared from code, saying whether there was anything to clear", async () => {
+    const user = userEvent.setup();
+    const ref = createRef<ColorPickerController>();
+    const onRecentColorsChange = vi.fn();
+    render(<ColorPicker aria-label="c" inline showRecent persistKey="clear" controllerRef={ref} onRecentColorsChange={onRecentColorsChange} />);
+    expect(ref.current?.clearRecent()).toBe(false);
+    await choose(user, "#336699");
+    await act(async () => {
+      expect(ref.current?.clearRecent()).toBe(true);
+    });
+    expect(onRecentColorsChange).toHaveBeenLastCalledWith([]);
+    expect(screen.queryByRole("group", { name: "Recent" })).not.toBeInTheDocument();
+    expect(window.localStorage.getItem("dbm-recent:color-picker:clear")).toBeNull();
+  });
+
+  it("warns when the recent props are used without showRecent", () => {
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
+    render(<ColorPicker aria-label="c" persistKey="x" />);
+    expect(warn).toHaveBeenCalledWith(expect.stringContaining("`showRecent`"));
+  });
+
+  it("takes a translated caption", async () => {
+    const user = userEvent.setup();
+    render(<ColorPicker aria-label="c" inline showRecent labels={{ recent: "Zuletzt" }} />);
+    await choose(user, "#336699");
+    expect(screen.getByRole("group", { name: "Zuletzt" })).toBeInTheDocument();
+  });
+});
+
 describe("ColorPicker eyedropper", () => {
   afterEach(() => {
     delete (window as unknown as { EyeDropper?: unknown }).EyeDropper;
@@ -933,7 +1086,7 @@ describe("ColorPicker accessibility", () => {
   });
 
   it("has no axe violations inline, at another size and in right-to-left", async () => {
-    const { container } = render(<ColorPicker aria-label="Brand color" inline size="xs" dir="rtl" defaultValue="#5548a4" alpha showFormatSwitch showChannelInputs noneSwatch copyButton eyeDropper swatches={["#ff0000"]} />);
+    const { container } = render(<ColorPicker aria-label="Brand color" inline size="xs" dir="rtl" defaultValue="#5548a4" alpha showFormatSwitch showChannelInputs noneSwatch copyButton eyeDropper showRecent recentColors={["#ff0000"]} swatches={["#ff0000"]} />);
     expect(await axe(container)).toHaveNoViolations();
   });
 

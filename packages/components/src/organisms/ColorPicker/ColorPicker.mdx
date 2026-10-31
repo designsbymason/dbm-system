@@ -21,6 +21,12 @@ export const propOrder = [
   "showFormatSwitch",
   "alpha",
   "showChannelInputs",
+  "showRecent",
+  "maxRecent",
+  "recentColors",
+  "onRecentColorsChange",
+  "persistKey",
+  "storage",
   "noneSwatch",
   "copyButton",
   "swatches",
@@ -113,6 +119,18 @@ what a `FieldLabel`'s `htmlFor` should point at.
 
 <Canvas of={ColorPickerStories.ChannelInputs} />
 
+### Recent colors
+
+<Canvas of={ColorPickerStories.RecentColors} />
+
+### Recent colors kept in the browser
+
+<Canvas of={ColorPickerStories.RecentColorsKept} />
+
+### Recent colors held by the app
+
+<Canvas of={ColorPickerStories.RecentColorsControlled} />
+
 ### A swatch for no color
 
 <Canvas of={ColorPickerStories.NoneSwatch} />
@@ -194,6 +212,7 @@ what a `FieldLabel`'s `htmlFor` should point at.
   `name` all carry it.
 - Turn on `showFormatSwitch` for a field where people think in more than one spelling (a design tool, a theme editor); leave it off where the value must always be one format, since using it changes the string you get. Hold the format yourself with `format` and `onFormatChange` to remember it.
 - Turn on `showChannelInputs` where people need an exact number (a theme editor); `noneSwatch` where empty is a real choice; `copyButton` where the color is pasted somewhere else.
+- Turn on `showRecent` where people reuse colors. The list is the picker's own by default; `persistKey` keeps it in the browser (`storage="session"` for this tab only), and `recentColors` with `onRecentColorsChange` hands it to your app (a profile on a server). Each color is stored as hex, whatever `format` is.
 - Turn on `alpha` only when a color's opacity is part of what you store; without it the value is always opaque.
 - Use `onValueCommit` to save or to do anything expensive: `onValueChange` fires on every step of a drag.
 - Use `inline` where the panel is the content (a settings page); keep the floating form for a field in a form.
@@ -259,6 +278,7 @@ what a `FieldLabel`'s `htmlFor` should point at.
 - With the `hex` format the panel has one field, "Hex code", for the whole code (opacity inside it with `alpha`); for the other formats the channel fields are number inputs named Red, Green, Blue (or Hue, Saturation, Lightness; Lightness, Chroma, Hue; Opacity) with a letter drawn under each as decoration, and they are detached from a surrounding form so a half-typed number never blocks a submit.
 - `Alt`+`ArrowDown` in the text entry opens the panel, as in a combobox or date field.
 - The copy button says "Color copied" (or that the browser refused) through the status region.
+- The recent row is a captioned group of the same swatch buttons (one tab stop, the same arrow keys), drawn only while it has colors; a color joins it when it is settled, not on every step of a drag. With `persistKey` it is empty on the server and the first client render, so hydration matches.
 - Swatches are buttons in a named group with `aria-pressed`, one tab stop (the optional "no color" swatch is the first), each with a tooltip of its name, moved between with the arrow keys (flipped in
   right-to-left), `Home` and `End`.
 - A color chosen from a swatch, the screen or typed text is said aloud ("Color chosen: #5548a4") through a status
@@ -327,6 +347,7 @@ function Example() {
 <TokenRow token="radius.sm" usage="the text entry's, chip's and swatches' corners" />
 <TokenRow token="radius.full" usage="the buttons' corners; the thumbs and the sliders' tracks" />
 <TokenRow token="text.primary" usage="the typed color" />
+<TokenRow token="text.secondary" usage="the caption of the row of recent colors" />
 <TokenRow token="text.tertiary" usage="the placeholder while no color is chosen" />
 <TokenRow token="icon.default" usage="the clear and swatch buttons' icons" />
 <TokenRow token="icon.secondary" usage="the slash through the chip while no color is chosen" />

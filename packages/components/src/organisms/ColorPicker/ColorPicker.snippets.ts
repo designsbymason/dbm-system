@@ -44,6 +44,15 @@ export const colorPickerSnippets = {
   controller: `{/* const controller = useRef(null);  controller.current?.open()  — open() / close() / focus() / isOpen(); each says whether it did anything */}
 <ColorPicker aria-label="Brand color" controllerRef={controller} defaultValue="#5548a4" />`,
 
+  recent: `{/* showRecent: a row of the last five settled colors, newest first. By default the list lives in the picker; maxRecent changes the 5. */}
+<ColorPicker aria-label="Brand color" showRecent defaultValue="#5548a4" />`,
+
+  recentPersisted: `{/* persistKey: the picker keeps the list in the browser (storage: "local" (default) | "session"), shared by every picker with that key. */}
+<ColorPicker aria-label="Brand color" showRecent persistKey="brand-colors" storage="local" />`,
+
+  recentControlled: `{/* recentColors: the app owns the list (newest first, each as hex). const [recent, setRecent] = useState([]); */}
+<ColorPicker aria-label="Brand color" showRecent recentColors={recent} onRecentColorsChange={setRecent} />`,
+
   names: `{/* Typed text may be a CSS color name: "rebeccapurple" is read, and written back in the format (#663399). */}
 <ColorPicker aria-label="Brand color" defaultValue="rebeccapurple" />`,
 
@@ -116,6 +125,8 @@ export interface ColorPickerPlaygroundSnippetArgs {
   format?: ColorPickerFormat;
   showFormatSwitch?: boolean;
   showChannelInputs?: boolean;
+  showRecent?: boolean;
+  maxRecent?: number;
   noneSwatch?: boolean;
   copyButton?: boolean;
   alpha?: boolean;
@@ -141,6 +152,8 @@ export function colorPickerPlaygroundSnippet(args: ColorPickerPlaygroundSnippetA
   if (args.format && args.format !== "hex") attributes.push(`${args.showFormatSwitch ? "defaultFormat" : "format"}="${args.format}"`);
   if (args.showFormatSwitch) attributes.push("showFormatSwitch");
   if (args.showChannelInputs) attributes.push("showChannelInputs");
+  if (args.showRecent) attributes.push("showRecent");
+  if (args.showRecent && args.maxRecent !== undefined && args.maxRecent !== 5) attributes.push(`maxRecent={${args.maxRecent}}`);
   if (args.noneSwatch) attributes.push("noneSwatch");
   if (args.copyButton) attributes.push("copyButton");
   if (args.alpha) attributes.push("alpha");

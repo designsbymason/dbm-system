@@ -1,7 +1,7 @@
 import { CheckIcon, CopyIcon, EyedropperIcon } from "@dbm-system/icons";
 import { cx } from "@dbm-system/utils";
 import * as SliderPrimitive from "@radix-ui/react-slider";
-import { forwardRef, useRef, useState, useSyncExternalStore } from "react";
+import { forwardRef, useId, useRef, useState, useSyncExternalStore } from "react";
 import type { KeyboardEvent } from "react";
 import { IconButton } from "../../atoms/IconButton";
 import { Input } from "../../atoms/Input";
@@ -28,6 +28,7 @@ interface ColorPickerPanelProps {
   alpha: boolean;
   swatches: SwatchChoice[];
   eyeDropper: boolean;
+  recent: SwatchChoice[];
   noneSwatch: boolean;
   copyButton: boolean;
   copied: boolean;
@@ -65,6 +66,88 @@ function colorVariables(hsva: Hsva): React.CSSProperties {
     "--color-picker-rgb": `${Math.round(rgb.r)} ${Math.round(rgb.g)} ${Math.round(rgb.b)}`,
     "--color-picker-alpha": String(hsva.a),
   } as React.CSSProperties;
+}
+
+/**
+ * Arrow keys move between swatches by where they are drawn, so a wrapped row works: left and right to the neighbour in the reading
+ * direction, up and down to the nearest swatch in the row above or below.
+ */
+function moveSwatchFocus(event: KeyboardEvent<HTMLElement>, buttons: HTMLButtonElement[], dir: "ltr" | "rtl") {
+  const from = buttons.findIndex((button) => button === document.activeElement);
+  if (from < 0) return;
+  const forward = dir === "rtl" ? "ArrowLeft" : "ArrowRight";
+  const back = dir === "rtl" ? "ArrowRight" : "ArrowLeft";
+  let target: HTMLButtonElement | undefined;
+  if (event.key === forward) target = buttons[Math.min(from + 1, buttons.length - 1)];
+  else if (event.key === back) target = buttons[Math.max(from - 1, 0)];
+  else if (event.key === "Home") target = buttons[0];
+  else if (event.key === "End") target = buttons[buttons.length - 1];
+  else if (event.key === "ArrowDown" || event.key === "ArrowUp") {
+    const here = (buttons[from] as HTMLButtonElement).getBoundingClientRect();
+    const down = event.key === "ArrowDown";
+    let best: { button: HTMLButtonElement; score: number } | undefined;
+    for (const button of buttons) {
+      const box = button.getBoundingClientRect();
+      if (down ? box.top <= here.top + 1 : box.top >= here.top - 1) continue;
+      const score = Math.abs(box.top - here.top) * 1000 + Math.abs(box.left - here.left);
+      if (!best || score < best.score) best = { button, score };
+    }
+    target = best?.button;
+  } else return;
+  event.preventDefault();
+  target?.focus();
+}
+
+interface RecentRowProps {
+  colors: SwatchChoice[];
+  isChosen: (swatch: SwatchChoice) => boolean;
+  labels: ColorPickerLabels;
+  dir: "ltr" | "rtl";
+  disabled: boolean;
+  onPick: (swatch: SwatchChoice) => void;
+}
+
+/** The colors most recently chosen, newest first: a captioned group of swatch buttons, one tab stop, with the swatch row's keys. */
+function RecentRow({ colors, isChosen, labels, dir, disabled, onPick }: RecentRowProps) {
+  const captionId = useId();
+  const refs = useRef<Array<HTMLButtonElement | null>>([]);
+  const [active, setActive] = useState(0);
+  const chosen = colors.findIndex(isChosen);
+  const stop = chosen >= 0 ? chosen : Math.min(active, colors.length - 1);
+  return (
+    <div className={styles.recent}>
+      <span id={captionId} className={styles.recentCaption}>
+        {labels.recent}
+      </span>
+      {/* The keys are handled on the group, for the buttons inside it, which are the focusable parts. */}
+      {/* eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions -- a roving-focus group of native buttons: the keys belong to the group, the controls are the buttons. */}
+      <div
+        role="group"
+        aria-labelledby={captionId}
+        className={styles.swatches}
+        onKeyDown={(event) => moveSwatchFocus(event, refs.current.filter((button): button is HTMLButtonElement => button !== null), dir)}
+      >
+        {colors.map((swatch, index) => (
+          <Tooltip key={`${swatch.css}-${index}`} content={swatch.label}>
+            <button
+              ref={(element) => {
+                refs.current[index] = element;
+              }}
+              type="button"
+              className={styles.swatch}
+              style={{ "--color-picker-swatch": swatch.css } as React.CSSProperties}
+              aria-label={swatch.label}
+              aria-pressed={isChosen(swatch)}
+              tabIndex={index === stop ? 0 : -1}
+              disabled={disabled}
+              onFocus={() => setActive(index)}
+              onClick={() => onPick(swatch)}
+            />
+          </Tooltip>
+        ))}
+      </div>
+    </div>
+  );
 }
 
 interface ChannelInputsProps {
@@ -178,7 +261,7 @@ function ChannelInputs({ hsva, space, alpha, labels, disabled, readOnly, onChang
  * gradients and thumb colors are colors the person chose, so they are written from the color rather than from tokens.
  */
 export const ColorPickerPanel = forwardRef<HTMLInputElement, ColorPickerPanelProps>(
-  ({ hsva, hasValue, alpha, swatches, eyeDropper, noneSwatch, copyButton, copied, channelSpace, labels, formatNumber, format, onFormatChange, dir, disabled, readOnly, onChange, onPickSwatch, onPickNone, onCopy, onPickFromScreen }, areaRef) => {
+  ({ hsva, hasValue, alpha, swatches, recent, eyeDropper, noneSwatch, copyButton, copied, channelSpace, labels, formatNumber, format, onFormatChange, dir, disabled, readOnly, onChange, onPickSwatch, onPickNone, onCopy, onPickFromScreen }, areaRef) => {
     const inert = disabled || readOnly;
     // Only known in the browser: the server snapshot says no, so a server render and the first client render agree.
     const supported = useSyncExternalStore(subscribeToNothing, hasEyeDropper, () => false);
@@ -214,34 +297,8 @@ export const ColorPickerPanel = forwardRef<HTMLInputElement, ColorPickerPanelPro
     const found = !hasValue && noneSwatch ? 0 : chosen >= 0 ? chosen + offset : -1;
     const stop = found >= 0 ? found : Math.min(activeSwatch, Math.max(count - 1, 0));
 
-    // Arrow keys move between swatches by where they are drawn, so a wrapped row works: left and right to the neighbour in
-    // the reading direction, up and down to the nearest swatch in the row above or below.
-    const onSwatchKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
-      const buttons = swatchRefs.current.filter((button): button is HTMLButtonElement => button !== null);
-      const from = buttons.findIndex((button) => button === document.activeElement);
-      if (from < 0) return;
-      const forward = dir === "rtl" ? "ArrowLeft" : "ArrowRight";
-      const back = dir === "rtl" ? "ArrowRight" : "ArrowLeft";
-      let target: HTMLButtonElement | undefined;
-      if (event.key === forward) target = buttons[Math.min(from + 1, buttons.length - 1)];
-      else if (event.key === back) target = buttons[Math.max(from - 1, 0)];
-      else if (event.key === "Home") target = buttons[0];
-      else if (event.key === "End") target = buttons[buttons.length - 1];
-      else if (event.key === "ArrowDown" || event.key === "ArrowUp") {
-        const here = (buttons[from] as HTMLButtonElement).getBoundingClientRect();
-        const down = event.key === "ArrowDown";
-        let best: { button: HTMLButtonElement; score: number } | undefined;
-        for (const button of buttons) {
-          const box = button.getBoundingClientRect();
-          if (down ? box.top <= here.top + 1 : box.top >= here.top - 1) continue;
-          const score = Math.abs(box.top - here.top) * 1000 + Math.abs(box.left - here.left);
-          if (!best || score < best.score) best = { button, score };
-        }
-        target = best?.button;
-      } else return;
-      event.preventDefault();
-      target?.focus();
-    };
+    const onSwatchKeyDown = (event: KeyboardEvent<HTMLDivElement>) =>
+      moveSwatchFocus(event, swatchRefs.current.filter((button): button is HTMLButtonElement => button !== null), dir);
 
     const thumbLabel = (name: string, text: string) => ({ "aria-label": name, "aria-valuetext": text });
 
@@ -391,6 +448,7 @@ export const ColorPickerPanel = forwardRef<HTMLInputElement, ColorPickerPanelPro
             )}
           </div>
         )}
+        {recent.length > 0 && <RecentRow colors={recent} isChosen={selected} labels={labels} dir={dir} disabled={inert} onPick={onPickSwatch} />}
       </div>
     );
   },

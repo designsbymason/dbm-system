@@ -62,6 +62,8 @@ export interface ColorPickerLabels {
   channelName: (channel: ColorPickerChannel) => string;
   /** The short text drawn under a channel's number field, such as "R" or "H". It is decoration; `channelName` is the name. */
   channelLetter: (channel: ColorPickerChannel) => string;
+  /** The visible caption and the name of the row of recently chosen colors (`showRecent`). */
+  recent: string;
   /** Name of the button that copies the color (`copyButton`). */
   copy: string;
   /** Said aloud when the color has been copied. */
@@ -86,6 +88,8 @@ export interface ColorPickerController {
   open: () => boolean;
   /** Closes the floating panel and gives focus back to its button. */
   close: () => boolean;
+  /** Forgets the recent colors (`showRecent`), reporting an empty list through `onRecentColorsChange`; `false` when there were none. */
+  clearRecent: () => boolean;
   /** Focuses the text entry. */
   focus: () => boolean;
   /** Whether the floating panel is open. */
@@ -188,6 +192,39 @@ export interface ColorPickerProps
    * @default false
    */
   copyButton?: boolean;
+  /**
+   * Draws a row of the colors most recently chosen at the end of the panel. A color joins it when it is settled (a drag
+   * released, a key step, a swatch, the eyedropper, committed text or a channel field), not on every step of a drag; a
+   * repeat moves to the front, and the row holds `maxRecent`. By default the list lives in the picker for as long as it is
+   * mounted; `recentColors` hands it to the app, and `persistKey` has the picker keep it in the browser.
+   * @default false
+   */
+  showRecent?: boolean;
+  /**
+   * The controlled list of recent colors, newest first, each written as hex (`#rrggbb`, or `#rrggbbaa` when it is not opaque), one spelling whatever `format` is, so
+   * changing the format never leaves a mix. Pair it with `onRecentColorsChange`. Use it to keep the list somewhere of your own
+   * (a user's profile on a server). Needs `showRecent`.
+   */
+  recentColors?: ReadonlyArray<string>;
+  /** Called with the new list (newest first, at most `maxRecent`) whenever a color joins it or `controller.clearRecent()` empties it. */
+  onRecentColorsChange?: (colors: string[]) => void;
+  /**
+   * The most colors the recent row holds. Adding past it drops the oldest.
+   * @default 5
+   */
+  maxRecent?: number;
+  /**
+   * Names a list the picker keeps in the browser across page loads (`useRecentCommands`' storage, under
+   * `dbm-recent:color-picker:<key>`), so every picker given the same key shares it, in other tabs too. It is empty on the server and
+   * on the first client render, so hydration matches. Ignored when `recentColors` is given. Only colors are stored, never a
+   * name or anything typed; whether storing even that needs consent is yours to decide. Needs `showRecent`.
+   */
+  persistKey?: string;
+  /**
+   * Where `persistKey` keeps the list: `"local"` survives closing the browser, `"session"` lasts for this tab only.
+   * @default 'local'
+   */
+  storage?: "local" | "session";
   /**
    * A ref that receives a controller for opening, closing and focusing the picker from code. It is the same object for
    * the picker's whole life.

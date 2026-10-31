@@ -440,6 +440,8 @@ export const EverythingFitsThePanel: Story = {
         noneSwatch
         copyButton
         eyeDropper
+        showRecent
+        recentColors={["#ff0000", "#00aa00", "#0000ff", "#ffaa00", "#aa00aa"]}
         defaultValue="#5548a4"
         swatches={["#ff0000", "#00aa00", "#0000ff", "#ffaa00", "#aa00aa", "#00aaaa", "#888888", "#222222"]}
       />
@@ -571,5 +573,36 @@ export const AnchoredOnADesktop: Story = {
     const panel = await body().findByRole("dialog", { name: "Choose a color" });
     await settled(panel);
     await expect(panel.getBoundingClientRect().width).toBeLessThan(window.innerWidth / 2);
+  },
+};
+
+export const RecentRowAndItsStorage: Story = {
+  name: "The recent row fits under the swatches, a real press adds to it, and the real browser storage keeps it",
+  render: () => (
+    <Page>
+      <ColorPicker aria-label="Brand color" defaultOpen showRecent persistKey="checks-recent-colors" storage="session" swatches={["#ff0000", "#00aa00"]} defaultValue="#5548a4" />
+    </Page>
+  ),
+  play: async () => {
+    window.sessionStorage.removeItem("dbm-recent:color-picker:checks-recent-colors");
+    const panel = await body().findByRole("dialog", { name: "Choose a color" });
+    await settled(panel);
+    await realClick(within(panel).getByRole("button", { name: "#00aa00" }));
+    await waitFor(() => expect(within(panel).getByRole("group", { name: "Recent" })).toBeInTheDocument());
+    await expect(window.sessionStorage.getItem("dbm-recent:color-picker:checks-recent-colors")).toBe(JSON.stringify(["#00aa00"]));
+    const recent = within(panel).getByRole("group", { name: "Recent" });
+    const swatches = within(panel).getByRole("group", { name: "Swatches" });
+    // The recent row sits under the swatch row, inside the panel, with its caption above it.
+    await expect(recent.getBoundingClientRect().top).toBeGreaterThanOrEqual(swatches.getBoundingClientRect().bottom - 1);
+    await expect(recent.getBoundingClientRect().right).toBeLessThanOrEqual(panel.getBoundingClientRect().right);
+    for (const button of within(recent).getAllByRole("button")) {
+      await expect(button.getBoundingClientRect().width).toBeGreaterThanOrEqual(24);
+      await expect(button.getBoundingClientRect().height).toBeGreaterThanOrEqual(24);
+    }
+    await realClick(within(panel).getByRole("button", { name: "#ff0000" }));
+    await waitFor(() => expect(within(recent).getAllByRole("button").map((button) => button.getAttribute("aria-label"))).toEqual(["#ff0000", "#00aa00"]));
+    window.sessionStorage.removeItem("dbm-recent:color-picker:checks-recent-colors");
+    await userEvent.keyboard("{Escape}");
+    await waitFor(() => expect(body().queryByRole("dialog", { name: "Choose a color" })).not.toBeInTheDocument());
   },
 };
