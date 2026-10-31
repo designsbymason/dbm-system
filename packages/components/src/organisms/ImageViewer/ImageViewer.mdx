@@ -1,0 +1,337 @@
+import { Canvas, Meta } from "@storybook/addon-docs/blocks";
+import { Callout, ComponentHeader, PlaygroundControls, PropertiesTable, RelatedCard, TokenRow } from "../../../.storybook/blocks";
+import { Image } from "../../atoms/Image";
+import { Indicators } from "../../atoms/Indicators";
+import { VisuallyHidden } from "../../atoms/VisuallyHidden";
+import * as ImageViewerStories from "./ImageViewer.stories";
+
+export const propOrder = [
+  "images",
+  "trigger",
+  "open",
+  "defaultOpen",
+  "onOpenChange",
+  "onOpenChangeComplete",
+  "value",
+  "defaultValue",
+  "onValueChange",
+  "loop",
+  "minZoom",
+  "maxZoom",
+  "zoomStep",
+  "doubleClickZoom",
+  "rotatable",
+  "fullscreenButton",
+  "thumbnails",
+  "showCounter",
+  "showCaptions",
+  "controls",
+  "swipeToDismiss",
+  "closeOnOutsideClick",
+  "closeOnEscape",
+  "actions",
+  "scrimOpacity",
+  "scrimBlur",
+  "initialFocus",
+  "onOpenAutoFocus",
+  "onCloseAutoFocus",
+  "onEscapeKeyDown",
+  "onInteractOutside",
+  "dir",
+  "container",
+  "labels",
+  "formatNumber",
+  "controllerRef",
+  "aria-label",
+  "aria-labelledby",
+  "id",
+  "className",
+  "style",
+  "data-testid",
+];
+
+<Meta of={ImageViewerStories} />
+
+<VisuallyHidden asChild><h2>Intro</h2></VisuallyHidden>
+
+<ComponentHeader title="ImageViewer" tier="Organism" />
+
+An image viewer, often called a lightbox, shows a picture at full size over the page: a photo opened from a gallery, a product
+shot, a screenshot in documentation. It opens on a dark stage, fits the whole image in view, and lets a person look closer:
+zoom in with the mouse wheel, a pinch, a double tap, the buttons or `+` and `-`; move around a zoomed image by dragging or with
+the arrow keys; turn it; step through a set with the arrows, the arrow keys, a swipe or a strip of thumbnails; and go full
+screen. Every gesture has a button or a key, so nothing needs a touch screen or a mouse.
+
+It is driven by data: pass `images`, and open the viewer with a `trigger`, with `open` and `defaultOpen`, or from code with
+`controllerRef` (a grid of your own thumbnails can open it at the one pressed). Built on a modal dialog, it dims and locks the
+page behind it, holds focus inside, and returns focus to whatever opened it. The stage is dark whatever the theme, so a photo
+and the white controls over it read the same in light and dark mode.
+
+`ImageViewer` draws one image at a time and loads its neighbours in the background. It is not a row of slides shown in the
+page (that is `Carousel`), and not a window for any other content (that is `Dialog`). It fetches, uploads and downloads
+nothing: put a download link in `actions`.
+
+### Import
+
+```tsx
+import { ImageViewer } from "@dbm-system/components";
+```
+
+## Playground
+
+<div className="dbm-playground-canvas">
+
+<Canvas of={ImageViewerStories.Playground} />
+
+</div>
+<PlaygroundControls of={ImageViewerStories.Playground} order={propOrder} exclude={["images", "trigger", "open", "onOpenChange", "onOpenChangeComplete", "value", "onValueChange", "actions", "initialFocus", "onOpenAutoFocus", "onCloseAutoFocus", "onEscapeKeyDown", "onInteractOutside", "container", "labels", "formatNumber", "controllerRef", "aria-label", "aria-labelledby", "id", "className", "style", "data-testid", "defaultOpen", "defaultValue"]} />
+
+The viewer opens inside the box above, which keeps it from covering this page. In your own page it fills the screen.
+
+## Properties
+
+`ref` forwards to the viewer's panel, the element with `role="dialog"`, which also carries `id`, `className`, `style`,
+`data-testid` and the `aria-*` props. Also accepts any other native `<div>` attribute beyond what's listed here (e.g. `title`,
+`lang`) — passed straight through to the panel.
+
+<PropertiesTable of={ImageViewerStories} order={propOrder} />
+
+`value` is the index of the image in view. A press on an arrow, a key, a swipe or a thumbnail asks through `onValueChange`, and
+the image changes when `value` does. An index outside the list is kept inside it.
+
+Each image is `{ src, alt, id, srcSet, sizes, thumbnail, caption, width, height }`. `alt` is required: pass `""` only for an
+image that is purely decoration. Give `width` and `height` when you know them, so the image is fitted to the screen before it
+has loaded; once it loads, its real size is used. Give a small `thumbnail` for each image when the list is long, since
+without one every thumbnail loads the full image.
+
+`controllerRef` receives `{ isOpen, value, count, zoom, open(index?), close(), next(), previous(), goTo(index), zoomIn(),
+zoomOut(), resetZoom(), rotate(degrees?), toggleFullscreen() }`: the same object for the viewer's life, whose methods ask for a
+change the way the viewer's own control does (through `onOpenChange` and `onValueChange` when they are controlled) and return
+whether there was anything to do. Inside the viewer, in `actions`, `useImageViewerController()` returns the same methods with
+the state as of the last render, so a part of your own re-renders when the image changes. Outside a viewer it does nothing and
+warns in development.
+
+`labels` holds every word the viewer writes, and a label that needs numbers is a function of the plain numbers, written with
+`formatNumber`. The zoom button shows the zoom ("150%"), and its accessible name must contain that text: a replacement
+`resetZoom` is given the text and should include it.
+
+## Variants
+
+### Gallery
+
+<Canvas of={ImageViewerStories.Default} />
+
+### With thumbnails
+
+<Canvas of={ImageViewerStories.WithThumbnails} />
+
+### With captions
+
+<Canvas of={ImageViewerStories.WithCaptions} />
+
+### A single image
+
+<Canvas of={ImageViewerStories.SingleImage} />
+
+### Controlled
+
+<Canvas of={ImageViewerStories.Controlled} />
+
+### Opened from a grid
+
+<Canvas of={ImageViewerStories.OpenedFromAGrid} />
+
+### Looping
+
+<Canvas of={ImageViewerStories.Looping} />
+
+### Controls hidden
+
+<Canvas of={ImageViewerStories.ControlsHidden} />
+
+### With toolbar actions
+
+<Canvas of={ImageViewerStories.WithActions} />
+
+### Right to left
+
+<Canvas of={ImageViewerStories.RightToLeft} />
+
+### An image that fails to load
+
+<Canvas of={ImageViewerStories.LoadFailure} />
+
+### Translated labels
+
+<Canvas of={ImageViewerStories.Translated} />
+
+## Usage guidelines
+
+<div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(16rem, 1fr))", gap: "var(--dbm-space-4)" }}>
+<Callout tone="success" title="Do">
+
+- Use it to look closely at a picture: a photo gallery, a product shot, a diagram or screenshot too small to read in the page.
+- Write real `alt` text for every image, and say what the picture shows, not that it is a picture.
+- Open it from a thumbnail or a "view" button, and give that control a name that says what will open.
+- Give each image `width` and `height` when you know them, and a small `thumbnail` when the list is long.
+- Put a download or share button in `actions` and read the image in view with `useImageViewerController()`.
+- Use `thumbnails` for a set a person will want to jump around in, and the counter alone for a short one.
+
+</Callout>
+<Callout tone="danger" title="Don't">
+
+- Don't use it for content that is not an image, or for a window that needs a form or a choice (that is `Dialog`).
+- Don't use it for a row of slides shown in the page (that is `Carousel`).
+- Don't leave `alt` out: pass `""` only when the picture is purely decoration, since the viewer then announces nothing.
+- Don't turn off `closeOnEscape` or hide the close button in `controls="hidden"` without another way out.
+- Don't expect a slideshow: the viewer never changes image by itself. Drive `next()` yourself if you must, and give a person a way to stop it.
+- Don't put controls of your own in `actions` that are unreadable on a dark stage; they are not restyled.
+
+</Callout>
+</div>
+
+## Best practices
+
+- **Fit first, zoom on request.** The whole image is in view when it opens, never drawn larger than its own pixels. A small image is not blurred to fill the screen: zoom is for looking closer.
+- **Say where the person is.** More than one image shows the place ("3 / 12") and the arrows; a long set also wants `thumbnails`.
+- **Give the viewer a name that fits.** The default, "Image viewer", is fine for one gallery; with several on a page, pass `aria-label` ("Harbour photos") so a screen reader says which one opened.
+- **Keep captions short.** A caption is read as the viewer's description each time the image changes, and sits in a bar under the image.
+- **Rotate is a view, not an edit.** It turns what is on screen and resets with the next image; it changes nothing on the server.
+- **Load what is next.** The viewer already loads the images either side of the one in view, so a step shows at once. A thumbnail of the right size keeps that cheap.
+
+## Accessibility
+
+<Callout tone="info" title="A modal dialog with every gesture also on a button and a key, and the image named by its alt text">
+
+The panel is a modal `role="dialog"` named "Image viewer" (or by `aria-label`, `aria-labelledby` or `labels.viewer`) and described by the
+caption of the image in view. Focus moves to the panel when it opens, so the keys work at once, and returns to what opened it when it
+closes. The page behind is inert. Tab moves through the toolbar's buttons, the arrows and the thumbnails (one tab stop, on the current
+image); the image itself is not a tab stop.
+
+When the image changes, a polite live region says "Image 3 of 12: its alt text" (only a change, never the first appearance). The image
+is a real `<img>` with its `alt`; while it loads a spinner is announced, and one that fails shows "This image could not be loaded."
+in its place.
+
+An arrow, zoom button or other control that cannot do anything (the first image without `loop`, the largest zoom) is
+`aria-disabled`, not `disabled`, so a press that turns it off keeps focus where it is.
+
+The buttons are native buttons at least 44px square, drawn in `icon.white` over a fill mixed from `bg.overlay`, which stays at least 12:1
+over any photo. Their focus ring is drawn inside the button in white. In forced colours each is outlined. Zoom, turn and the fades ease
+with the motion tokens, and under `prefers-reduced-motion` they are instant; a new image fades up and does not slide.
+
+| Key | Action |
+|---|---|
+| <kbd>←</kbd> <kbd>→</kbd> | Previous and next image (flipped when `dir="rtl"`); pan left and right while zoomed |
+| <kbd>↑</kbd> <kbd>↓</kbd> | Pan up and down while zoomed |
+| <kbd>Page Up</kbd> <kbd>Page Down</kbd> | Previous and next image, zoomed or not |
+| <kbd>Home</kbd> <kbd>End</kbd> | First and last image |
+| <kbd>+</kbd> <kbd>-</kbd> <kbd>0</kbd> | Zoom in, zoom out, fit the image |
+| <kbd>R</kbd> | Turn the image a quarter clockwise |
+| <kbd>F</kbd> | Enter or leave full screen |
+| <kbd>Esc</kbd> | Close (leaves full screen first) |
+
+</Callout>
+
+## Code examples
+
+A set of images with a thumbnail strip and captions, opened from a button:
+
+```tsx
+<ImageViewer
+  trigger={<Button>View photos</Button>}
+  thumbnails
+  images={[
+    { src: "/photos/harbour.jpg", thumbnail: "/photos/harbour-small.jpg", alt: "Boats in the harbour at dawn", caption: "Harbour, 6:10 am" },
+    { src: "/photos/market.jpg", thumbnail: "/photos/market-small.jpg", alt: "A fruit stall at the market" },
+  ]}
+/>
+```
+
+Opened at an image from a grid of your own, with `controllerRef`:
+
+```tsx
+const viewer = useRef<ImageViewerController>(null);
+
+<ImageViewer controllerRef={viewer} images={images} />
+// a thumbnail's onClick:
+viewer.current?.open(index);
+```
+
+A native attribute on the panel, and a download link that follows the image in view:
+
+```tsx
+function Download({ files }: { files: string[] }) {
+  const viewer = useImageViewerController();
+  return <a href={files[viewer.value]} download>Download</a>;
+}
+
+<ImageViewer
+  images={images}
+  trigger={<Button>View</Button>}
+  actions={<Download files={images.map((image) => image.src)} />}
+  lang="fr"
+/>
+```
+
+## Design tokens used
+
+The buttons are drawn by the viewer itself rather than by `IconButton`, because the stage is dark in every theme and the button
+tones follow the theme. Everything on the stage is `icon.white` over a fill mixed from `bg.overlay`.
+
+<TokenRow token="bg.overlay" usage="the scrim, and the fill of every button, the counter and the caption (mixed at 80%)" />
+<TokenRow token="icon.white" usage="every glyph and piece of text on the stage, the focus ring, and the current thumbnail's border" />
+<TokenRow token="image-viewer.control-size" usage="the width and height of a button" />
+<TokenRow token="image-viewer.thumbnail-size" usage="the side of one thumbnail" />
+<TokenRow token="image-viewer.caption-max-width" usage="the widest a caption gets before it wraps" />
+<TokenRow token="border-width.0" usage="the border of a button, which forced colours then draws" />
+<TokenRow token="border-width.1" usage="the outline of a button in forced colours" />
+<TokenRow token="border-width.2" usage="the focus ring, and a thumbnail's border" />
+<TokenRow token="opacity.0" usage="the start and end of the fades" />
+<TokenRow token="opacity.40" usage="a button that cannot do anything" />
+<TokenRow token="opacity.60" usage="a thumbnail that is not the current one" />
+<TokenRow token="opacity.80" usage="the fill of a button, the counter and the caption" />
+<TokenRow token="opacity.90" usage="a thumbnail under the pointer" />
+<TokenRow token="opacity.100" usage="the end of the fades, and the current thumbnail" />
+<TokenRow token="radius.full" usage="a button and the counter" />
+<TokenRow token="radius.lg" usage="the caption" />
+<TokenRow token="radius.md" usage="a thumbnail" />
+<TokenRow token="space.0" usage="resets the native button and the stage's insets" />
+<TokenRow token="space.2" usage="the gap between controls, and room round the thumbnails for a focus ring" />
+<TokenRow token="space.3" usage="the toolbar's gap and a text button's padding" />
+<TokenRow token="space.4" usage="the toolbar's and footer's padding" />
+<TokenRow token="space.24" usage="the tallest a caption gets before it scrolls" />
+<TokenRow token="font-family.primary" usage="the viewer's typography" />
+<TokenRow token="font-size.sm" usage="the counter, the zoom, the caption and the failed message" />
+<TokenRow token="font-weight.medium" usage="the counter and the zoom" />
+<TokenRow token="line-height.snug" usage="the caption's lines" />
+<TokenRow token="motion-duration.fast" usage="a button's and a thumbnail's hover" />
+<TokenRow token="motion-duration.base" usage="the viewer fading in and out, zoom and turn easing, and a new image fading up" />
+<TokenRow token="motion-easing.standard" usage="those transitions" />
+<TokenRow token="motion-easing.decelerate" usage="a new image fading up" />
+<TokenRow token="z-index.modal" usage="the panel above the page" />
+
+## Related components
+
+<div className="dbm-card-grid">
+<RelatedCard
+  name="Carousel"
+  description="A row of slides shown in the page that a person scrolls through, instead of one image opened over it"
+  href="/?path=/docs/organisms-media-carousel--docs"
+>
+  <Indicators count={4} activeIndex={1} onIndexChange={() => {}} />
+</RelatedCard>
+<RelatedCard
+  name="Image"
+  description="The picture the viewer draws, with loading, a fallback and a fixed aspect ratio, usable on its own"
+  href="/?path=/docs/atoms-media-image--docs"
+>
+  <Image src="" alt="" width={48} height={48} radius="md" />
+</RelatedCard>
+<RelatedCard
+  name="Dialog"
+  description="A window over the page for any other content: a form, a detail view, a confirmation"
+  href="/?path=/docs/organisms-overlay-dialog--docs"
+>
+  <div style={{ border: "var(--dbm-border-width-1) solid var(--dbm-border-default)", borderRadius: "var(--dbm-radius-md)", padding: "var(--dbm-space-2)" }}>Edit profile</div>
+</RelatedCard>
+</div>

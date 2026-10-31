@@ -69,6 +69,7 @@ import { drawerPlaygroundSnippet } from "./organisms/Drawer/Drawer.snippets";
 import { navbarPlaygroundSnippet } from "./organisms/Navbar/Navbar.snippets";
 import { sidebarPlaygroundSnippet } from "./organisms/Sidebar/Sidebar.snippets";
 import { commandPalettePlaygroundSnippet } from "./organisms/CommandPalette/CommandPalette.snippets";
+import { imageViewerPlaygroundSnippet } from "./organisms/ImageViewer/ImageViewer.snippets";
 import { contextMenuPlaygroundSnippet } from "./organisms/ContextMenu/ContextMenu.snippets";
 import { fileUploadPlaygroundSnippet } from "./organisms/FileUpload/FileUpload.snippets";
 import { formPlaygroundSnippet } from "./organisms/Form/Form.snippets";
@@ -2075,5 +2076,86 @@ describe("Playground snippet for CommandPalette", () => {
     expect(code).toContain("maxPerGroup={4}");
     expect(commandPalettePlaygroundSnippet({ hotkey: false })).toContain("hotkey={false}");
     expect(commandPalettePlaygroundSnippet({ searchNested: true })).not.toContain("searchNested");
+  });
+});
+
+describe("ImageViewer's Playground snippet", () => {
+  const everything = {
+    loop: true,
+    minZoom: 1.2,
+    maxZoom: 8,
+    zoomStep: 2,
+    doubleClickZoom: false,
+    rotatable: false,
+    fullscreenButton: false,
+    thumbnails: true,
+    showCounter: true,
+    showCaptions: false,
+    controls: "hidden",
+    swipeToDismiss: false,
+    closeOnOutsideClick: false,
+    closeOnEscape: false,
+    scrimOpacity: 60,
+    scrimBlur: true,
+    dir: "rtl",
+  } as const;
+
+  it.each([{}, everything, { showCounter: false, controls: "auto", dir: "ltr" }, { showCounter: "auto" }] as const)(
+    "ImageViewer %j is a real snippet",
+    (args) => {
+      expect(problemsIn(imageViewerPlaygroundSnippet(args))).toEqual([]);
+    },
+  );
+
+  it("writes only what differs from the defaults", () => {
+    const code = imageViewerPlaygroundSnippet({
+      loop: false,
+      minZoom: 1,
+      maxZoom: 4,
+      zoomStep: 1.5,
+      doubleClickZoom: true,
+      rotatable: true,
+      fullscreenButton: true,
+      thumbnails: false,
+      showCounter: "auto",
+      showCaptions: true,
+      controls: "auto",
+      swipeToDismiss: true,
+      closeOnOutsideClick: true,
+      closeOnEscape: true,
+      scrimOpacity: 90,
+      scrimBlur: false,
+      dir: "ltr",
+    });
+    expect(code).toContain("<ImageViewer");
+    for (const word of ["loop", "Zoom", "doubleClick", "rotatable", "fullscreen", "thumbnails", "showCounter", "showCaptions", "controls", "swipe", "closeOn", "scrim", "dir"]) {
+      expect(code).not.toContain(word);
+    }
+  });
+
+  it("writes each setting that is changed", () => {
+    const code = imageViewerPlaygroundSnippet(everything);
+    for (const part of [
+      "loop",
+      "minZoom={1.2}",
+      "maxZoom={8}",
+      "zoomStep={2}",
+      "doubleClickZoom={false}",
+      "rotatable={false}",
+      "fullscreenButton={false}",
+      "thumbnails",
+      "showCounter",
+      "showCaptions={false}",
+      'controls="hidden"',
+      "swipeToDismiss={false}",
+      "closeOnOutsideClick={false}",
+      "closeOnEscape={false}",
+      "scrimOpacity={60}",
+      "scrimBlur",
+      'dir="rtl"',
+    ]) {
+      expect(code).toContain(part);
+    }
+    expect(imageViewerPlaygroundSnippet({ showCounter: false })).toContain("showCounter={false}");
   });
 });

@@ -105,6 +105,7 @@ export * from "./organisms/Drawer";
 export * from "./organisms/EditorTabs";
 export * from "./organisms/FileUpload";
 export * from "./organisms/Form";
+export * from "./organisms/ImageViewer";
 export * from "./organisms/ContextMenu";
 export * from "./organisms/Menu";
 export * from "./organisms/MultiSelect";

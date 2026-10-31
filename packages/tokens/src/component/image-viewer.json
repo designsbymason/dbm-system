@@ -1,0 +1,19 @@
+{
+  "image-viewer": {
+    "control-size": {
+      "$type": "dimension",
+      "$value": "2.75rem",
+      "$description": "New token, ImageViewer's toolbar, arrow and thumbnail-strip button diameter (44px): well above the 24px target-size floor, and a comfortable thumb target on the full-screen stage, where the buttons sit over a photo and need room to be hit."
+    },
+    "thumbnail-size": {
+      "$type": "dimension",
+      "$value": "4rem",
+      "$description": "New token, the side of one square thumbnail in ImageViewer's strip: large enough to recognise a photo, small enough that a phone shows several."
+    },
+    "caption-max-width": {
+      "$type": "dimension",
+      "$value": "40rem",
+      "$description": "New token, the width a caption may reach before it wraps, so a long caption keeps a readable line length under a wide photo."
+    }
+  }
+}

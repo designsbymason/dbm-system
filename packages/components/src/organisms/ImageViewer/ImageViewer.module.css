@@ -1,0 +1,330 @@
+/*
+ * ImageViewer: a full-viewport stage drawn inside the scrim (`Backdrop`, a fixed flex box). The stage is dark whatever
+ * the theme, so everything on it is drawn in colours that do not change with the theme: `icon.white` for glyphs and
+ * text, over a fill mixed from `bg.overlay` (black in every theme) that stays readable over any photo. The panel is a
+ * three-row grid: the toolbar, the stage that takes what is left, and a footer for the caption and the thumbnails.
+ */
+.panel {
+  align-items: stretch;
+  block-size: 100%;
+  box-sizing: border-box;
+  color: var(--dbm-icon-white);
+  display: grid;
+  font-family: var(--dbm-font-family-primary);
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  inline-size: 100%;
+  min-inline-size: 0;
+  outline: none;
+  /* The device's insets, which are zero everywhere a page doesn't ask to draw under them. */
+  padding-block-end: env(safe-area-inset-bottom, var(--dbm-space-0));
+  padding-block-start: env(safe-area-inset-top, var(--dbm-space-0));
+  padding-inline-end: env(safe-area-inset-right, var(--dbm-space-0));
+  padding-inline-start: env(safe-area-inset-left, var(--dbm-space-0));
+  position: relative;
+  z-index: var(--dbm-z-index-modal);
+}
+
+.panel[data-state="open"] {
+  animation: viewerFadeIn var(--dbm-motion-duration-base) var(--dbm-motion-easing-standard);
+}
+
+.panel[data-state="closed"] {
+  animation: viewerFadeOut var(--dbm-motion-duration-base) var(--dbm-motion-easing-standard);
+}
+
+/* --- The toolbar. --- */
+.toolbar {
+  align-items: center;
+  display: flex;
+  gap: var(--dbm-space-3);
+  justify-content: space-between;
+  padding: var(--dbm-space-3) var(--dbm-space-4);
+}
+
+.toolbarStart,
+.toolbarEnd {
+  align-items: center;
+  display: flex;
+  gap: var(--dbm-space-2);
+  min-inline-size: 0;
+}
+
+.toolbarEnd {
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+/* A control, the counter and the caption share one fill: 80% of `bg.overlay`, which over a white photo is still a
+   dark grey that `icon.white` clears 12:1 against. */
+.control,
+.counter,
+.caption {
+  background-color: color-mix(in srgb, var(--dbm-bg-overlay) calc(var(--dbm-opacity-80) * 100%), transparent);
+  color: var(--dbm-icon-white);
+}
+
+.control {
+  align-items: center;
+  appearance: none;
+  block-size: var(--dbm-image-viewer-control-size);
+  border: var(--dbm-border-width-0) solid transparent;
+  border-radius: var(--dbm-radius-full);
+  box-sizing: border-box;
+  cursor: pointer;
+  display: inline-flex;
+  flex: none;
+  font: inherit;
+  inline-size: var(--dbm-image-viewer-control-size);
+  justify-content: center;
+  margin: var(--dbm-space-0);
+  padding: var(--dbm-space-0);
+  transition: background-color var(--dbm-motion-duration-fast) var(--dbm-motion-easing-standard);
+}
+
+.control:hover {
+  background-color: var(--dbm-bg-overlay);
+}
+
+/* The ring is drawn inside the chip: the chip is dark, so a white ring reads whatever photo is behind it, where one
+   outside it would be lost on a light one. */
+.control:focus-visible,
+.thumbnail:focus-visible {
+  outline: var(--dbm-border-width-2) solid var(--dbm-icon-white);
+  outline-offset: calc(-1 * var(--dbm-border-width-2));
+}
+
+.control[aria-disabled="true"] {
+  cursor: default;
+  opacity: var(--dbm-opacity-40);
+}
+
+.control[aria-disabled="true"]:hover {
+  background-color: color-mix(in srgb, var(--dbm-bg-overlay) calc(var(--dbm-opacity-80) * 100%), transparent);
+}
+
+/* A button that shows text (the zoom) is a pill that keeps its width as the number changes. */
+.controlText {
+  font-size: var(--dbm-font-size-sm);
+  font-variant-numeric: tabular-nums;
+  font-weight: var(--dbm-font-weight-medium);
+  inline-size: auto;
+  min-inline-size: calc(var(--dbm-space-3) * 2 + 5ch);
+  padding-inline: var(--dbm-space-3);
+}
+
+/* An arrow that points toward the start or the end points the other way in a right-to-left stage. */
+.mirrored:dir(rtl) {
+  scale: -1 1;
+}
+
+.counter {
+  border-radius: var(--dbm-radius-full);
+  font-size: var(--dbm-font-size-sm);
+  font-variant-numeric: tabular-nums;
+  font-weight: var(--dbm-font-weight-medium);
+  padding: var(--dbm-space-2) var(--dbm-space-3);
+}
+
+/* --- The stage. It covers the area, takes the gestures, and the box inside it carries the zoom, pan and turn. --- */
+.stageArea {
+  min-block-size: 0;
+  min-inline-size: 0;
+  position: relative;
+}
+
+.stage {
+  align-items: center;
+  display: flex;
+  inset: var(--dbm-space-0);
+  justify-content: center;
+  overflow: hidden;
+  position: absolute;
+  /* The gestures are ours: left alone, the browser would pan and pinch the page. */
+  touch-action: none;
+  user-select: none;
+}
+
+.stage[data-gesture="pan"],
+.stage[data-gesture="pan"] * {
+  cursor: grabbing;
+}
+
+.box {
+  flex: none;
+  position: relative;
+  transform-origin: center;
+  will-change: transform;
+}
+
+.box[data-animate] {
+  transition: transform var(--dbm-motion-duration-base) var(--dbm-motion-easing-standard);
+}
+
+/* Before the image's size is known the box has none, and the image loads without being drawn. */
+.box:not([data-drawn]) {
+  block-size: var(--dbm-space-0);
+  inline-size: var(--dbm-space-0);
+  overflow: hidden;
+}
+
+.box[data-drawn] {
+  animation: viewerImageIn var(--dbm-motion-duration-base) var(--dbm-motion-easing-decelerate);
+}
+
+.image {
+  display: block;
+  -webkit-user-drag: none;
+}
+
+.stageMessage {
+  align-items: center;
+  display: flex;
+  flex-direction: column;
+  gap: var(--dbm-space-3);
+  inset: var(--dbm-space-0);
+  justify-content: center;
+  position: absolute;
+}
+
+.failedText {
+  font-size: var(--dbm-font-size-sm);
+  text-align: center;
+}
+
+/* --- The arrows beside the image. --- */
+.arrow {
+  inset-block-start: 50%;
+  position: absolute;
+  translate: 0 -50%;
+}
+
+.arrowStart {
+  inset-inline-start: var(--dbm-space-3);
+}
+
+.arrowEnd {
+  inset-inline-end: var(--dbm-space-3);
+}
+
+/* --- The caption and the thumbnails. --- */
+.footer {
+  align-items: center;
+  display: flex;
+  flex-direction: column;
+  gap: var(--dbm-space-3);
+  min-inline-size: 0;
+  padding: var(--dbm-space-2) var(--dbm-space-4) var(--dbm-space-4);
+}
+
+.caption {
+  border-radius: var(--dbm-radius-lg);
+  box-sizing: border-box;
+  font-size: var(--dbm-font-size-sm);
+  line-height: var(--dbm-line-height-snug);
+  max-block-size: var(--dbm-space-24);
+  max-inline-size: min(100%, var(--dbm-image-viewer-caption-max-width));
+  overflow-wrap: anywhere;
+  overflow-y: auto;
+  padding: var(--dbm-space-2) var(--dbm-space-4);
+  text-align: center;
+}
+
+.thumbnails {
+  box-sizing: border-box;
+  display: flex;
+  gap: var(--dbm-space-2);
+  justify-content: safe center;
+  max-inline-size: 100%;
+  overflow-x: auto;
+  /* Room for a focus ring, which a scrolling box would otherwise clip. */
+  padding: var(--dbm-space-2);
+  scrollbar-width: thin;
+}
+
+.thumbnail {
+  appearance: none;
+  background-color: var(--dbm-bg-overlay);
+  block-size: var(--dbm-image-viewer-thumbnail-size);
+  border: var(--dbm-border-width-2) solid transparent;
+  border-radius: var(--dbm-radius-md);
+  box-sizing: border-box;
+  cursor: pointer;
+  flex: none;
+  inline-size: var(--dbm-image-viewer-thumbnail-size);
+  margin: var(--dbm-space-0);
+  opacity: var(--dbm-opacity-60);
+  overflow: hidden;
+  padding: var(--dbm-space-0);
+  transition: opacity var(--dbm-motion-duration-fast) var(--dbm-motion-easing-standard);
+}
+
+.thumbnail:hover {
+  opacity: var(--dbm-opacity-90);
+}
+
+.thumbnail[aria-current="true"] {
+  border-color: var(--dbm-icon-white);
+  opacity: var(--dbm-opacity-100);
+}
+
+@keyframes viewerFadeIn {
+  from {
+    opacity: var(--dbm-opacity-0);
+  }
+
+  to {
+    opacity: var(--dbm-opacity-100);
+  }
+}
+
+@keyframes viewerFadeOut {
+  from {
+    opacity: var(--dbm-opacity-100);
+  }
+
+  to {
+    opacity: var(--dbm-opacity-0);
+  }
+}
+
+/* A new image fades up; it does not slide, so there is no motion to take away. */
+@keyframes viewerImageIn {
+  from {
+    opacity: var(--dbm-opacity-0);
+  }
+
+  to {
+    opacity: var(--dbm-opacity-100);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .box[data-animate],
+  .control,
+  .thumbnail {
+    transition: none;
+  }
+}
+
+/* Forced colours replaces every fill, so a chip is told from the page by its outline, and the current thumbnail by
+   the system highlight. */
+@media (forced-colors: active) {
+  .control,
+  .counter,
+  .caption {
+    border: var(--dbm-border-width-1) solid CanvasText;
+  }
+
+  .thumbnail {
+    border-color: CanvasText;
+  }
+
+  .thumbnail[aria-current="true"] {
+    border-color: Highlight;
+  }
+
+  .control:focus-visible,
+  .thumbnail:focus-visible {
+    outline-color: Highlight;
+  }
+}
