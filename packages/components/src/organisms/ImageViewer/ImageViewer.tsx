@@ -25,6 +25,8 @@ import type {
 } from "./ImageViewer.types";
 import { neighbour, turn } from "./imageViewerMath";
 import { ViewerButton, ImageViewerThumbnails } from "./ImageViewerParts";
+
+export { ViewerButton as ImageViewerButton } from "./ImageViewerParts";
 import { ImageViewerStage } from "./ImageViewerStage";
 import type { ImageStatus } from "./ImageViewerStage";
 import type { ImageZoomApi } from "./useImageZoom";

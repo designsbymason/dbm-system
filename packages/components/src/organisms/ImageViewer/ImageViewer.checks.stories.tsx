@@ -3,7 +3,7 @@ import { useState } from "react";
 import { expect, userEvent, waitFor, within } from "storybook/test";
 import { Button } from "../../atoms/Button";
 import { send } from "../../molecules/CodeBlock/browserProtocol";
-import { ImageViewer } from "./ImageViewer";
+import { ImageViewer, ImageViewerButton } from "./ImageViewer";
 import type { ImageViewerProps } from "./ImageViewer.types";
 import { brokenImages, sampleImages } from "./ImageViewerStoryKit";
 
@@ -357,11 +357,11 @@ const luminance = ({ r, g, b }: { r: number; g: number; b: number }) => {
 const contrast = (a: number, b: number) => (Math.max(a, b) + 0.05) / (Math.min(a, b) + 0.05);
 
 export const ControlsReadOverAnyPhoto: Story = {
-  name: "A control, the counter and the caption read at 4.5:1 or better over a white photo, in both themes",
-  render: () => <Harness />,
+  name: "A control, a button of the toolbar's actions, the counter and the caption read at 4.5:1 or better over a white photo",
+  render: () => <Harness actions={<ImageViewerButton label="Copy name">Copy name</ImageViewerButton>} />,
   play: async () => {
     const dialog = await openViewer();
-    const subjects = [within(dialog).getByRole("button", { name: "Close" }), counterOf(dialog), dialog.querySelector("[class*='caption']") as HTMLElement];
+    const subjects = [within(dialog).getByRole("button", { name: "Close" }), within(dialog).getByRole("button", { name: "Copy name" }), counterOf(dialog), dialog.querySelector("[class*='caption']") as HTMLElement];
     for (const subject of subjects) {
       const style = getComputedStyle(subject);
       const fill = parseColour(style.backgroundColor);

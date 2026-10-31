@@ -17,6 +17,7 @@ Scope: fit, wheel, pinch and double-tap zoom about a point, drag to pan, rotate,
 - **Unavailable is `aria-disabled`**, so a press that turns a button off (the last zoom step) keeps focus where it is; a real-browser check holds it.
 - **`useImageViewerController()` returns a snapshot** (the methods plus `isOpen`, `value`, `count`, `zoom` as of the last render), so a part in `actions` re-renders when the image changes; `controllerRef` hands out the one object that never changes.
 - **A controller method that changes an uncontrolled value updates the latest state at once**, so two calls in one event see each other.
+- **The stage's button is exported as `ImageViewerButton`** for the `actions` slot. The first `actions` example used a theme `Button` and failed contrast on the dark stage; a real-browser check now measures an `actions` button's contrast too.
 - **No tooltips, no `Indicators`**: both would put theme-coloured parts on a stage that is dark in every theme, and the counter and the strip say where the person is. Names are `aria-label`s.
 
 ## Verified

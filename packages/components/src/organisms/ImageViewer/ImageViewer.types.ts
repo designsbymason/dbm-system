@@ -1,3 +1,4 @@
+import type { Icon as PhosphorIcon } from "@dbm-system/icons";
 import type { ComponentPropsWithoutRef, CSSProperties, ReactElement, ReactNode, Ref, RefObject } from "react";
 import type { BackdropOpacity } from "../../atoms/Backdrop/Backdrop.types";
 
@@ -244,8 +245,8 @@ export interface ImageViewerProps
   closeOnEscape?: boolean;
   /**
    * Content placed in the toolbar beside the viewer's own buttons: a download link, a share button. Use
-   * `useImageViewerController()` inside it to know which image is in view. Its own buttons should be readable on the
-   * dark stage; the viewer does not restyle them.
+   * `ImageViewerButton` for a button that is readable on the dark stage in every theme (the viewer does not restyle
+   * anything else you put here), and `useImageViewerController()` inside it to know which image is in view.
    */
   actions?: ReactNode;
   /**
@@ -297,4 +298,31 @@ export interface ImageViewerProps
   "aria-label"?: string;
   /** The id of an element that names the viewer, in place of `aria-label`. */
   "aria-labelledby"?: string;
+}
+
+export interface ImageViewerButtonProps extends Omit<ComponentPropsWithoutRef<"button">, "children" | "aria-label" | "disabled" | "type"> {
+  /** The accessible name. When the button shows text of its own (`children`), the name must contain that text. */
+  label: string;
+  /** The Phosphor icon to draw, as a component reference. Makes a round, icon-only button; leave it out and pass `children` for a pill. */
+  icon?: PhosphorIcon;
+  /** Text shown in place of the icon. */
+  children?: ReactNode;
+  /**
+   * Dims the button and ignores a press, but leaves it focusable (`aria-disabled`), so a press that turns it off keeps
+   * the person's place.
+   * @default false
+   */
+  unavailable?: boolean;
+  /** Mirrors the icon in a right-to-left viewer, for an arrow that points toward the start or the end. @default false */
+  mirrored?: boolean;
+  /** Called when the button is pressed, unless it is `unavailable`. */
+  onClick?: ComponentPropsWithoutRef<"button">["onClick"];
+  /** Standard DOM id. */
+  id?: string;
+  /** Additional CSS classes for customization. */
+  className?: string;
+  /** Inline styles. */
+  style?: CSSProperties;
+  /** Test identifier for automated testing, rendered as the DOM `data-testid` attribute. */
+  "data-testid"?: string;
 }

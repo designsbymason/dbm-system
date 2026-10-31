@@ -1,30 +1,24 @@
 import { cx } from "@dbm-system/utils";
-import type { Icon as PhosphorIcon } from "@dbm-system/icons";
 import { forwardRef, useEffect, useRef } from "react";
-import type { ComponentPropsWithoutRef, MouseEvent, ReactNode } from "react";
+import type { MouseEvent } from "react";
 import { Icon } from "../../atoms/Icon";
 import { Image } from "../../atoms/Image";
 import styles from "./ImageViewer.module.css";
-import type { ImageViewerImage, ImageViewerLabels } from "./ImageViewer.types";
-
-interface ViewerButtonProps extends Omit<ComponentPropsWithoutRef<"button">, "children" | "aria-label" | "disabled"> {
-  /** The accessible name. When the button shows text of its own, the name must hold that text. */
-  label: string;
-  icon?: PhosphorIcon;
-  /** Text shown in place of the icon, such as the zoom. */
-  children?: ReactNode;
-  /** Dims the button and ignores a press, but leaves it focusable so a press that turns it off keeps the person's place. */
-  unavailable?: boolean;
-  /** Mirrors the icon in a right-to-left stage (arrows). */
-  mirrored?: boolean;
-}
+import type { ImageViewerButtonProps, ImageViewerImage, ImageViewerLabels } from "./ImageViewer.types";
 
 /**
- * A button of the viewer's stage. The stage is dark whatever the theme, so these are drawn in colours that do not
- * change with it, which `IconButton`'s theme-driven tones cannot promise. Unavailable is `aria-disabled`, not
- * `disabled`, so a press that turns a button off (the last zoom step) does not drop focus.
+ * A button for the viewer's dark stage, for the toolbar's `actions` (a download link, a share button) and used by the
+ * viewer's own controls. The stage is dark in every theme, so it is drawn in colours that do not change with the theme:
+ * `icon.white` over a fill mixed from `bg.overlay`, with a white focus ring inside it, which `Button` and `IconButton`
+ * cannot promise because their tones follow the theme. Give it an `icon` for a round, icon-only button, or text
+ * `children` for a pill; either way `label` is its accessible name and must contain any text it shows.
+ *
+ * @example
+ * ```tsx
+ * <ImageViewer actions={<ImageViewerButton label="Copy link" icon={LinkIcon} onClick={copy} />} images={images} />
+ * ```
  */
-export const ViewerButton = forwardRef<HTMLButtonElement, ViewerButtonProps>(
+export const ViewerButton = forwardRef<HTMLButtonElement, ImageViewerButtonProps>(
   ({ label, icon, children, unavailable = false, mirrored = false, className, onClick, ...props }, ref) => (
     <button
       ref={ref}
@@ -45,7 +39,7 @@ export const ViewerButton = forwardRef<HTMLButtonElement, ViewerButtonProps>(
     </button>
   ),
 );
-ViewerButton.displayName = "ImageViewer.Button";
+ViewerButton.displayName = "ImageViewerButton";
 
 /**
  * The strip of thumbnails: one tab stop, on the image in view, with every thumbnail a button. The arrow keys already

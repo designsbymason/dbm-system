@@ -68,10 +68,11 @@ ${viewer("  maxZoom={8}\n  zoomStep={2}\n  doubleClickZoom={false}")}`,
   controlsHidden: `{/* controls="hidden" leaves only the close button; the keys and gestures still work. */}
 ${viewer('  controls="hidden"\n  rotatable={false}')}`,
 
-  actions: `{/* Content of your own in the toolbar. useImageViewerController() inside it says which image is in view. */}
+  actions: `{/* Content of your own in the toolbar. ImageViewerButton is drawn for the dark stage in every theme (give it an
+    icon for a round button, or text); useImageViewerController() inside it says which image is in view. */}
 <ImageViewer
   trigger={<Button>View photos</Button>}
-  actions={<a href="/photos/harbour.jpg" download>Download</a>}
+  actions={<ImageViewerButton label="Copy link" onClick={copyLink}>Copy link</ImageViewerButton>}
 ${images}
 />`,
 

@@ -5,7 +5,7 @@ import { Button } from "../../atoms/Button";
 import { Image } from "../../atoms/Image";
 import { Stack } from "../../atoms/Stack";
 import { Text } from "../../atoms/Text";
-import { ImageViewer, useImageViewerController } from "./ImageViewer";
+import { ImageViewer, ImageViewerButton, useImageViewerController } from "./ImageViewer";
 import { imageViewerPlaygroundSnippet, imageViewerSnippets } from "./ImageViewer.snippets";
 import type { ImageViewerController, ImageViewerProps } from "./ImageViewer.types";
 import { ViewerStage, brokenImages, plainImages, sampleImages } from "./ImageViewerStoryKit";
@@ -77,7 +77,7 @@ const meta: Meta<PlaygroundArgs> = {
     onValueChange: { control: false, description: "Called with the index the person asked for: an arrow, a key, a swipe, a thumbnail, or code." },
     actions: {
       control: false,
-      description: "Content placed in the toolbar beside the viewer's own buttons: a download link, a share button. Use useImageViewerController() inside it to know which image is in view.",
+      description: "Content placed in the toolbar beside the viewer's own buttons: a download link, a share button. Use ImageViewerButton for a button readable on the dark stage in every theme, and useImageViewerController() inside it to know which image is in view.",
     },
     initialFocus: { control: false, description: "An element to focus when the viewer opens, instead of the viewer itself (which keeps the keys working at once)." },
     container: { control: false, description: "Renders the viewer into a different DOM node than document.body, to keep an embedded demo inside its own box." },
@@ -359,13 +359,13 @@ export const ControlsHidden: Story = {
 function CopyAddress() {
   const viewer = useImageViewerController();
   return (
-    <Button size="sm" variant="secondary" onClick={() => void navigator.clipboard?.writeText(`image-${viewer.value + 1}`)}>
+    <ImageViewerButton label="Copy name" onClick={() => void navigator.clipboard?.writeText(`image-${viewer.value + 1}`)}>
       Copy name
-    </Button>
+    </ImageViewerButton>
   );
 }
 
-/** `actions` puts content of your own in the toolbar; `useImageViewerController()` inside it says which image is in view. */
+/** `actions` puts content of your own in the toolbar. `ImageViewerButton` is readable on the dark stage in every theme, and `useImageViewerController()` inside it says which image is in view. */
 export const WithActions: Story = {
   name: "With toolbar actions",
   argTypes: noControls,

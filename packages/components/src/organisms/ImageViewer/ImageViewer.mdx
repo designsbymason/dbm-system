@@ -115,6 +115,15 @@ warns in development.
 `formatNumber`. The zoom button shows the zoom ("150%"), and its accessible name must contain that text: a replacement
 `resetZoom` is given the text and should include it.
 
+### ImageViewerButton
+
+A button drawn for the viewer's dark stage, for `actions`; the viewer's own controls are the same part. It takes `label` (required, the
+accessible name, which must contain any text the button shows), an `icon` (a Phosphor component, for a round icon-only button) or
+text `children` (for a pill), `unavailable` (dimmed and ignoring a press, but still focusable), `mirrored` (flips the icon in a
+right-to-left viewer), `onClick`, and `id`, `className`, `style` and `data-testid`. Any other native `<button>` attribute passes
+through. `ref` forwards to the `<button>`. It is drawn in `icon.white` over a fill mixed from `bg.overlay`, which is at least 12:1
+over any photo, in every theme.
+
 ## Variants
 
 ### Gallery
@@ -174,7 +183,7 @@ warns in development.
 - Write real `alt` text for every image, and say what the picture shows, not that it is a picture.
 - Open it from a thumbnail or a "view" button, and give that control a name that says what will open.
 - Give each image `width` and `height` when you know them, and a small `thumbnail` when the list is long.
-- Put a download or share button in `actions` and read the image in view with `useImageViewerController()`.
+- Put a download or share button in `actions` as an `ImageViewerButton`, and read the image in view with `useImageViewerController()`.
 - Use `thumbnails` for a set a person will want to jump around in, and the counter alone for a short one.
 
 </Callout>
@@ -185,7 +194,7 @@ warns in development.
 - Don't leave `alt` out: pass `""` only when the picture is purely decoration, since the viewer then announces nothing.
 - Don't turn off `closeOnEscape` or hide the close button in `controls="hidden"` without another way out.
 - Don't expect a slideshow: the viewer never changes image by itself. Drive `next()` yourself if you must, and give a person a way to stop it.
-- Don't put controls of your own in `actions` that are unreadable on a dark stage; they are not restyled.
+- Don't put a `Button` or `IconButton` in `actions`: their colours follow the theme, so in a light theme they are dark on the dark stage. Use `ImageViewerButton`.
 
 </Callout>
 </div>
@@ -257,12 +266,14 @@ const viewer = useRef<ImageViewerController>(null);
 viewer.current?.open(index);
 ```
 
-A native attribute on the panel, and a download link that follows the image in view:
+A native attribute on the panel, and a button in the toolbar that follows the image in view:
 
 ```tsx
 function Download({ files }: { files: string[] }) {
   const viewer = useImageViewerController();
-  return <a href={files[viewer.value]} download>Download</a>;
+  return (
+    <ImageViewerButton label="Download" icon={DownloadSimpleIcon} onClick={() => save(files[viewer.value])} />
+  );
 }
 
 <ImageViewer
@@ -275,7 +286,7 @@ function Download({ files }: { files: string[] }) {
 
 ## Design tokens used
 
-The buttons are drawn by the viewer itself rather than by `IconButton`, because the stage is dark in every theme and the button
+The buttons are `ImageViewerButton`s, drawn by the viewer itself rather than by `IconButton`, because the stage is dark in every theme and the button
 tones follow the theme. Everything on the stage is `icon.white` over a fill mixed from `bg.overlay`.
 
 <TokenRow token="bg.overlay" usage="the scrim, and the fill of every button, the counter and the caption (mixed at 80%)" />

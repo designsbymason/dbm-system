@@ -5,7 +5,7 @@ import { createRef, StrictMode, useState } from "react";
 import type { ComponentPropsWithRef } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { Button } from "../../atoms/Button";
-import { ImageViewer, useImageViewerController } from "./ImageViewer";
+import { ImageViewer, ImageViewerButton, useImageViewerController } from "./ImageViewer";
 import type { ImageViewerController, ImageViewerImage, ImageViewerProps } from "./ImageViewer.types";
 
 const images: ImageViewerImage[] = [
@@ -492,6 +492,39 @@ describe("ImageViewer thumbnails, captions and controls", () => {
       Reflect.deleteProperty(document, "fullscreenEnabled");
       Reflect.deleteProperty(HTMLElement.prototype, "requestFullscreen");
     }
+  });
+});
+
+describe("ImageViewerButton", () => {
+  it("is a named button in the toolbar that presses, and shows its text", async () => {
+    const onClick = vi.fn();
+    render(<Viewer actions={<ImageViewerButton label="Copy name" onClick={onClick}>Copy name</ImageViewerButton>} />);
+    const { user } = await open();
+    const button = screen.getByRole("button", { name: "Copy name" });
+    expect(button).toHaveTextContent("Copy name");
+    await user.click(button);
+    expect(onClick).toHaveBeenCalledTimes(1);
+  });
+
+  it("stays focusable and ignores a press while unavailable, and forwards its ref and attributes", async () => {
+    const onClick = vi.fn();
+    const ref = createRef<HTMLButtonElement>();
+    render(<Viewer actions={<ImageViewerButton ref={ref} label="Share" unavailable onClick={onClick} data-testid="share" title="Share it">Share</ImageViewerButton>} />);
+    const { user } = await open();
+    const button = screen.getByTestId("share");
+    expect(button).toBe(ref.current);
+    expect(button).toHaveAttribute("aria-disabled", "true");
+    expect(button).not.toBeDisabled();
+    expect(button).toHaveAttribute("title", "Share it");
+    await user.click(button);
+    expect(onClick).not.toHaveBeenCalled();
+  });
+
+  it("does not let a same-named prop replace its name or state", async () => {
+    render(<Viewer actions={<ImageViewerButton {...({ "aria-label": "Wrong", "aria-disabled": "false" } as object)} label="Right" unavailable>x</ImageViewerButton>} />);
+    await open();
+    const button = screen.getByRole("button", { name: "Right" });
+    expect(button).toHaveAttribute("aria-disabled", "true");
   });
 });
 
