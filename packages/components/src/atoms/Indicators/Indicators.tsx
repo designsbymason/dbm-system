@@ -28,7 +28,7 @@ const variantClass: Record<IndicatorsVariant, string | undefined> = {
 
 /**
  * A row (or column) of clickable dots showing position within a fixed-size
- * sequence — `Carousel`/`ImageViewer`'s position indicator, direct-
+ * sequence — `Carousel`'s position indicator, direct-
  * navigable. Fully controlled (`activeIndex`/`onIndexChange`); supports
  * Arrow/Home/End keys with a roving tabindex (only the active dot is in
  * tab order), moving focus to the newly active dot only if focus was
