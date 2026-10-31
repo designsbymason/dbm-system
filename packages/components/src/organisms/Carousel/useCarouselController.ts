@@ -9,6 +9,7 @@ interface ControllerState {
   max: number;
   request: (index: number) => boolean;
   step: (direction: 1 | -1) => boolean;
+  hold: () => () => void;
 }
 
 /**
@@ -30,6 +31,7 @@ export function useCarouselController(controllerRef: Ref<CarouselController> | u
       },
       next: () => latest.current.step(1),
       previous: () => latest.current.step(-1),
+      hold: () => latest.current.hold(),
       goTo: (index) => Number.isInteger(index) && index >= 0 && index <= latest.current.max && latest.current.request(index),
     }),
     [],

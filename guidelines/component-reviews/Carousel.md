@@ -2,6 +2,10 @@
 
 **Status:** built, not yet declared Finalized. The first build was verified against `06-engineering-standards.md` §9 with the checks listed below; the review pass itself and the sign-off are the maintainer's.
 
+## Second round (ADR-0148)
+
+Added after the first build: a seamless `loop` through copies of the end slides, a mouse drag, a pressable peeking slide (with focus bringing it into view), `align="center"`, a fractional `slidesPerView`, `lazy` with a slide `placeholder`, rotation held by playing media and `controller.hold()`, a deterministic put-back when a controlled owner refuses a settled swipe, and a development warning for a vertical carousel with no height. New real-browser checks cover the drag (a real mouse through the DevTools Protocol), the click that still presses, the seamless loop, the centred slide, the fractional view, the peeking press and the refused swipe; two of them were broken on purpose once and failed.
+
 ## What was built
 
 A hand-rolled organism with no new dependency ([ADR-0147](../adr/0147-carousel-scrolls-natively-with-scroll-snap-and-hides-off-screen-slides-with-inert-and-owns-an-opt-in-auto-play-with-its-pause-control-over-a-transform-track-or-leaving-auto-play-to-the-app.md)): a native scroll-snap track, `inert` slides out of view, previous and next `IconButton`s, the `Indicators` atom for position, a live-region announcement, opt-in automatic rotation with a pause button that cannot be left out, `controllerRef`, and `Carousel.Previous`/`Next`/`Indicators`/`AutoPlayToggle` parts that replace the default of their kind. No new tokens: the buttons are neutral `IconButton`s and the spacing, focus and radius tokens already existed.
@@ -16,7 +20,8 @@ A hand-rolled organism with no new dependency ([ADR-0147](../adr/0147-carousel-s
 ## Open findings
 
 - **`Indicators` (Finalized) is below the 24 × 24 px target size** at every size step (its dots are 4–12 px with no extended hit area, and the gaps do not satisfy the spacing exception to WCAG 2.5.8). Found while writing the target-size check, which therefore measures the previous, next and pause buttons only. Fixing it needs an authorized change to `Indicators` and the three-question test (`06` §9, "Whether an authorized fix reopens finalized status"); nothing was changed there.
-- **A vertical carousel needs a height from its container.** Documented on the Docs page; there is no development warning for it yet.
+- **Not covered by a real-browser check:** the media hold (unit-tested only), `lazy` (unit-tested only) and the vertical-height warning (unit-tested with measured sizes).
+- **A drag starting on a card's text selects nothing and starts a drag**; `data-carousel-no-drag` opts an element out. Documented.
 
 ## Verified
 

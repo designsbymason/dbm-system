@@ -7,7 +7,11 @@ import { Tabs } from "../../molecules/Tabs";
 import { VisuallyHidden } from "../../atoms/VisuallyHidden";
 import { ArrowRightIcon } from "@dbm-system/icons";
 import * as CarouselStories from "./Carousel.stories";
-import * as CarouselSlideStories from "./CarouselParts.stories";
+import * as CarouselSlideStories from "./CarouselSlide.stories";
+import * as CarouselPreviousStories from "./CarouselPrevious.stories";
+import * as CarouselNextStories from "./CarouselNext.stories";
+import * as CarouselIndicatorsStories from "./CarouselIndicators.stories";
+import * as CarouselAutoPlayToggleStories from "./CarouselAutoPlayToggle.stories";
 
 export const rootPropOrder = [
   "children",
@@ -17,6 +21,9 @@ export const rootPropOrder = [
   "slidesPerView",
   "slidesPerMove",
   "loop",
+  "align",
+  "lazy",
+  "mouseDrag",
   "orientation",
   "gap",
   "peek",
@@ -38,6 +45,9 @@ export const rootPropOrder = [
   "data-testid",
 ];
 export const slidePropOrder = ["children", "aria-label", "id", "className", "style", "data-testid"];
+export const buttonPropOrder = ["icon", "aria-label", "id", "className", "style", "data-testid"];
+export const indicatorsPropOrder = ["variant", "placement", "showLabel", "aria-label", "id", "className", "style", "data-testid"];
+export const togglePropOrder = ["id", "className", "style", "data-testid"];
 
 <Meta of={CarouselStories} />
 
@@ -47,14 +57,16 @@ export const slidePropOrder = ["children", "aria-label", "id", "className", "sty
 
 A carousel shows a few slides at a time from a longer row and lets a person move through the rest: a row of featured stories,
 a set of product cards, a gallery of photos. A compound component: put one `Carousel.Slide` per slide inside `Carousel`, and
-give the whole thing a name with `aria-label`. A person moves it by swiping, with a mouse wheel or trackpad, with the
-previous and next buttons, with the position indicators, or with the arrow keys on the focused track.
+give the whole thing a name with `aria-label`. A person moves it by swiping, by dragging with a mouse, with a mouse wheel or
+trackpad, with the previous and next buttons, with the position indicators, or with the arrow keys on the focused track.
 
 The slides sit in the browser's own scrolling box that snaps to each slide, so touch, momentum and inertia are the
 platform's and nothing has to be learnt. `Carousel` adds what scrolling alone does not give: buttons, indicators, a value to
 read and set, an announcement for a screen reader, and automatic rotation that can always be stopped. Use `slidesPerView` to
-show several slides at once (it takes a breakpoint map), `slidesPerMove` to move more than one at a time, `peek` to show the
-edge of the next slide, `loop` to wrap round, and `orientation="vertical"` to run the slides up and down.
+show several slides at once (it takes a breakpoint map and a fraction, so `1.5` shows a slide and half of the next),
+`slidesPerMove` to move more than one at a time, `peek` to show the edge of the next slide, `align="center"` to keep one in
+the middle, `loop` to wrap round with no seam, `lazy` to draw a slide's content only near the view, and
+`orientation="vertical"` to run the slides up and down.
 
 `Carousel` does not zoom or enlarge its slides (that is an image viewer), and it is not for peer views a person switches
 between by name (that is `Tabs`) or for steps in a flow (that is `Stepper`).
@@ -90,9 +102,17 @@ neither.
 Any element that is not one of the four button and indicator parts counts as a slide, so a component of your own that renders
 a `Carousel.Slide` can be mapped over your data. A fragment holding several slides counts as one, and text is ignored.
 
-`controllerRef` receives `{ value, count, next(), previous(), goTo(index) }`: the same object for the carousel's life, whose
-methods ask for a change the way a press on a button does (through `onValueChange` when the carousel is controlled) and
-return whether there was a place to go. There is no hook for it, since the only parts inside a carousel are its own.
+`controllerRef` receives `{ value, count, next(), previous(), goTo(index), hold() }`: the same object for the carousel's life,
+whose methods ask for a change the way a press on a button does (through `onValueChange` when the carousel is controlled) and
+return whether there was a place to go. `hold()` holds automatic rotation until the function it returns is called, for content
+the carousel can't see (a player of your own); holds add up, and a `<video>` or `<audio>` playing in a slide holds rotation
+without it. There is no hook for it, since the only parts inside a carousel are its own.
+
+With `loop`, copies of the first and last slides sit at the ends of the track so the wrap has no seam. They are hidden from
+assistive technology and can't be pressed, but an `id` inside a slide is repeated in them, so don't point `aria-labelledby` at
+one. With `align="center"`, `value` is the slide in the middle and any slide can be it. With `lazy`, give each slide a size of
+its own (a height or an aspect ratio) and a `placeholder` of that size: an empty slide has none, and the track would jump as
+slides are drawn.
 
 ### Carousel.Slide properties
 
@@ -103,18 +123,33 @@ other native `<div>` attribute beyond what's listed here (e.g. `title`) — pass
 
 ### The button and indicator parts
 
-Place one of these as a direct child of `Carousel` to replace the default of its kind. Each accepts `id`, `className`,
-`style` and `data-testid`, and forwards its `ref` to its element.
-
-| Part | Extra props | What it replaces |
-|---|---|---|
-| `Carousel.Previous` | `icon` (an icon in place of the arrow), `aria-label` | The previous button |
-| `Carousel.Next` | `icon`, `aria-label` | The next button |
-| `Carousel.Indicators` | `variant`, `placement` (`"below"` or `"overlay"`), `showLabel`, `aria-label` | The position indicators |
-| `Carousel.AutoPlayToggle` | none | The pause and play button drawn while `autoPlay` is on |
-
+Place one of these as a direct child of `Carousel` to replace the default of its kind. Each forwards its `ref` to its element.
 A button you place is drawn where `controls` puts the default, or in the row under the slides when `controls` is `"hidden"`.
 The pause button cannot be left out while `autoPlay` is on.
+
+#### Carousel.Previous properties
+
+The button that goes to the previous position, an `IconButton`. Also accepts any other native `<button>` attribute beyond what's listed here (e.g. `title`) — passed straight through to the button.
+
+<PropertiesTable of={CarouselPreviousStories} order={buttonPropOrder} />
+
+#### Carousel.Next properties
+
+The button that goes to the next position, an `IconButton`. Also accepts any other native `<button>` attribute beyond what's listed here (e.g. `title`) — passed straight through to the button.
+
+<PropertiesTable of={CarouselNextStories} order={buttonPropOrder} />
+
+#### Carousel.Indicators properties
+
+The position indicators, one per position. Nothing is drawn with a single position. Also accepts any other native `<div>` attribute beyond what's listed here (e.g. `title`) — passed straight through to the `Indicators` group.
+
+<PropertiesTable of={CarouselIndicatorsStories} order={indicatorsPropOrder} />
+
+#### Carousel.AutoPlayToggle properties
+
+The pause and play button, drawn only while `autoPlay` is on. Its name and icon follow the state. Also accepts any other native `<button>` attribute beyond what's listed here (e.g. `title`) — passed straight through to the button.
+
+<PropertiesTable of={CarouselAutoPlayToggleStories} order={togglePropOrder} />
 
 ## Variants
 
@@ -134,9 +169,21 @@ The pause button cannot be left out while `autoPlay` is on.
 
 <Canvas of={CarouselStories.Peek} />
 
-### Looping
+### Looping with no seam
 
 <Canvas of={CarouselStories.Loop} />
+
+### A slide and a half in view
+
+<Canvas of={CarouselStories.FractionalView} />
+
+### A centred slide
+
+<Canvas of={CarouselStories.Centered} />
+
+### Lazy content
+
+<Canvas of={CarouselStories.Lazy} />
 
 ### Vertical
 
@@ -182,7 +229,8 @@ The pause button cannot be left out while `autoPlay` is on.
 - Use it for a set of similar items a person browses (cards, photos, testimonials) where showing them all would take too much room.
 - Give it a name that says what is in it — "Featured stories" — with `aria-label` or `aria-labelledby`.
 - Show several slides at once on wide screens with a breakpoint map (`slidesPerView={{ base: 1, md: 3 }}`), so the carousel is useful at every width.
-- Use `peek` when more than one slide is in view, so the cut-off edge tells a person there is more.
+- Use `peek` (or a fractional `slidesPerView`) when more than one slide is in view, so the cut-off edge tells a person there is more.
+- Use `lazy` for a long carousel of images, with a `placeholder` that has the slide's size.
 - Keep `autoPlay` off unless the content is truly secondary; where it is on, leave the pause button as it is.
 - Give a vertical carousel a height from its container.
 
@@ -193,7 +241,9 @@ The pause button cannot be left out while `autoPlay` is on.
 - Don't use it for peer views switched by name (that is `Tabs`) or for steps in a flow (that is `Stepper`).
 - Don't rotate by itself in a hurry: the default is five seconds a slide, and a person who is reading will want longer.
 - Don't hide the buttons and indicators together; without both, a person with no touch screen has only the arrow keys.
-- Don't wrap slides in a fragment, or put focusable controls in a peeking slide and expect them to work: a slide not yet in view is inert.
+- Don't wrap slides in a fragment: a fragment is one slide to the carousel.
+- Don't point `aria-labelledby` or `htmlFor` at an `id` inside a slide of a `loop` carousel: the copies at the ends repeat it.
+- Don't put a text field you want the mouse to select text in without `data-carousel-no-drag`: a press on a card's text starts a drag, though one in a form field does not.
 
 </Callout>
 </div>
@@ -215,15 +265,17 @@ The pause button cannot be left out while `autoPlay` is on.
 The carousel is a `role="region"` named by `aria-label` or `aria-labelledby` with `aria-roledescription="carousel"`, holding a
 named group of slides ("Slides") whose own items are `role="group"` with `aria-roledescription="slide"`, each named by its place
 ("3 of 8"). A slide that is out of view is `inert`, so a link or button in it is neither tabbable nor read out, and a slide
-that holds focus when it leaves the view hands it to the track instead of dropping it to the top of the page.
+that holds focus when it leaves the view hands it to the track instead of dropping it to the top of the page. The slide that
+peeks beyond the view is pressable, and when something in it takes focus the carousel brings it fully into view. The copies of
+slides a `loop` carousel keeps at its ends are `aria-hidden` and `inert`.
 
 When the person changes the slide, a polite live region says "Slide 3 of 8" (or "Slides 3 to 4 of 8" with several in view): only a change,
 never the first render, and never while automatic rotation is running. `announce={false}` turns it off where the page moves
 focus to the new slide's content.
 
 Automatic rotation follows WCAG 2.2.2: it is off unless asked for, a pause button is always drawn while it is on (and cannot be
-removed), it holds while the pointer is over the slides, while keyboard focus is inside, while the track is moving and while the
-page is hidden, it starts paused when the person prefers reduced motion, and the person's own pause stays until they undo it.
+removed), it holds while the pointer is over the slides, while keyboard focus is inside, while the track is moving, while a video or
+audio in a slide is playing (or `hold()` has been called) and while the page is hidden, it starts paused when the person prefers reduced motion, and the person's own pause stays until they undo it.
 In `prefers-reduced-motion` the track jumps to a slide instead of easing.
 
 The track is a keyboard stop: a scrolling box has to be reachable without a pointer. The buttons and indicators are real
@@ -239,7 +291,8 @@ focus to the other one.
 | `←` `→` on the indicators | Move between the indicators and go to that position |
 | `Enter` / `Space` | Presses the focused button |
 
-The arrow keys are handled only when the track itself has focus, so they stay with a text field or slider inside a slide. In
+A mouse can also drag the slides (`mouseDrag`), which is a shortcut: every move it makes is on the buttons, the indicators and the
+keys too. The arrow keys are handled only when the track itself has focus, so they stay with a text field or slider inside a slide. In
 forced-colours mode the track's focus ring is drawn in `Highlight`, and the buttons are the system's.
 
 </Callout>
@@ -271,6 +324,15 @@ forced-colours mode the track's focus ring is drawn in `Highlight`, and the butt
   controls="hidden"
 >
   {/* … */}
+</Carousel>
+
+{/* A long gallery: seamless, lazy, with the images given their size so the track never jumps */}
+<Carousel aria-label="Photos" loop lazy>
+  {photos.map((photo) => (
+    <Carousel.Slide key={photo.id} placeholder={<div style={{ aspectRatio: "4 / 3" }} />}>
+      <img src={photo.src} alt={photo.alt} style={{ aspectRatio: "4 / 3" }} />
+    </Carousel.Slide>
+  ))}
 </Carousel>
 
 {/* Controlled, so the page can show or save the position */}

@@ -9,6 +9,9 @@ import type { IndicatorsVariant } from "../../atoms/Indicators/Indicators.types"
  */
 export type CarouselSize = "xs" | "sm" | "md" | "lg" | "xl";
 
+/** Which edge of the track a slide is kept at: its start, or its middle. */
+export type CarouselAlign = "start" | "center";
+
 /** Which way the slides run. A `"vertical"` carousel needs a height from its container; the track fills it. */
 export type CarouselOrientation = "horizontal" | "vertical";
 
@@ -53,8 +56,14 @@ export interface CarouselController {
   next: () => boolean;
   /** Asks for the previous position (the last again from the first, with `loop`). */
   previous: () => boolean;
-  /** Asks for the slide at this index to be the first in view, unless it is the current one or out of range. */
+  /** Asks for the slide at this index to be the one at the track's edge, unless it is the current one or out of range. */
   goTo: (index: number) => boolean;
+  /**
+   * Holds automatic rotation until the returned function is called, for content the carousel can't see (a player of your
+   * own, a form being filled in). Holds add up: rotation resumes when every one has been released. A `<video>` or `<audio>`
+   * element playing in a slide holds it without this. Calling the release twice does nothing.
+   */
+  hold: () => () => void;
 }
 
 /**
@@ -104,15 +113,15 @@ export interface CarouselProps extends Omit<ComponentPropsWithoutRef<"div">, "de
    * fragment holding several is one slide to the carousel; map over your data instead.
    */
   children?: ReactNode;
-  /** The index of the first slide in view. Makes the carousel controlled: a press asks through `onValueChange` and the slides move when this does. */
+  /** The index of the first slide in view (or the one in the middle, with `align="center"`). Makes the carousel controlled: a press asks through `onValueChange` and the slides move when this does. */
   value?: number;
   /** The index of the first slide in view at first, when `value` is not set. @default 0 */
   defaultValue?: number;
   /** Called with the index of the first slide in view when the person (or `autoPlay`, or the controller) asks for a change, and when a swipe or scroll settles on another. */
   onValueChange?: (value: number) => void;
   /**
-   * How many slides are in view at once. A breakpoint map is allowed (`{ base: 1, md: 3 }`). Clamped to the number of
-   * slides.
+   * How many slides are in view at once. A breakpoint map is allowed (`{ base: 1, md: 3 }`), and so is a fraction: `1.5` shows a
+   * slide and half of the next. Never less than 1, and clamped to the number of slides.
    * @default 1
    */
   slidesPerView?: Responsive<number>;
@@ -122,13 +131,33 @@ export interface CarouselProps extends Omit<ComponentPropsWithoutRef<"div">, "de
    * @default 1
    */
   slidesPerMove?: number | "view";
-  /** Wraps from the last position to the first, and the first to the last, in the buttons, the indicators and `next()`/`previous()`. The rewind is a scroll back, not a ring. @default false */
+  /**
+   * Wraps round with no seam: from the last slide the next one is the first, and the first's previous is the last. Copies of
+   * the slides at each end make it seamless (hidden from assistive technology and never pressable, so an `id` inside a slide
+   * is repeated in them: don't point `aria-labelledby` at one), and a carousel that already shows every slide does not wrap.
+   * @default false
+   */
   loop?: boolean;
+  /**
+   * Which edge of the track a slide is kept at: its `"start"` (the default), or its `"center"`, with the slide before and after
+   * showing at each side (give `slidesPerView` a fraction or an odd number to see them). With `"center"`, `value` is the slide in
+   * the middle, any slide can be the value, and `peek` has no effect.
+   * @default "start"
+   */
+  align?: CarouselAlign;
+  /**
+   * Draws a slide's content only when it is within this many slides of the view, and its `placeholder` before that, for a long
+   * carousel of images or heavy content. `true` is one slide either side. A slide that has been drawn stays drawn.
+   * @default false
+   */
+  lazy?: boolean | number;
+  /** Lets a mouse drag the slides, as a finger does (touch and pen always scroll natively). A click that ends a drag is swallowed, and a press in a form field, a media element or `[data-carousel-no-drag]` never starts one. @default true */
+  mouseDrag?: boolean;
   /** Which way the slides run. @default "horizontal" */
   orientation?: CarouselOrientation;
   /** The space between slides, a step of the spacing scale. @default 4 */
   gap?: SpaceValue;
-  /** Shows the edge of the slide after the last one in view, to say there is more. Those slides are not pressable until they are in view. @default false */
+  /** Shows the edge of the slide after the last one in view, to say there is more. That slide is pressable: tabbing into it scrolls it into view. @default false */
   peek?: boolean;
   /** The size of the buttons and indicators. @default "md" */
   size?: CarouselSize;
@@ -172,6 +201,8 @@ export interface CarouselProps extends Omit<ComponentPropsWithoutRef<"div">, "de
 export interface CarouselSlideProps extends ComponentPropsWithoutRef<"div"> {
   /** What the slide shows. */
   children?: ReactNode;
+  /** What the slide draws in place of its content while it is far from the view and the carousel is `lazy`. Give the slide a size of its own, since a placeholder-only slide has none. */
+  placeholder?: ReactNode;
   /** The accessible name of the slide, in place of "3 of 8". */
   "aria-label"?: string;
   /** Standard DOM id. */

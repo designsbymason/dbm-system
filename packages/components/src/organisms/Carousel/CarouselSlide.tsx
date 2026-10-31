@@ -8,6 +8,9 @@ import type { CarouselSlideProps } from "./Carousel.types";
  * One slide of a `Carousel`: a group named by its place ("3 of 8") that fills its share of the track. A slide outside the
  * view is `inert`, so a link or button in it is neither tabbable nor read out until the slide is in view.
  *
+ * With `lazy` on the carousel, a slide far from the view draws its `placeholder` instead of its content until it is near; give it
+ * a size of its own (a height, an aspect ratio), since an empty slide has none.
+ *
  * `ref` forwards to the slide's `<div>`.
  *
  * @example
@@ -19,11 +22,12 @@ import type { CarouselSlideProps } from "./Carousel.types";
  * ```
  */
 export const CarouselSlide = forwardRef<HTMLDivElement, CarouselSlideProps>(
-  ({ children, className, "aria-label": ariaLabel, ...props }, ref) => {
+  ({ children, placeholder, className, "aria-label": ariaLabel, onFocus, ...props }, ref) => {
     const carousel = useContext(CarouselContext);
     const position = useContext(CarouselSlideContext);
     const element = useRef<HTMLDivElement>(null);
     const inView = position?.inView ?? true;
+    const clone = position?.clone ?? false;
 
     // `inert` is set as a property rather than the JSX attribute: React 18 drops the attribute, and the peer range starts there.
     useEffect(() => {
@@ -41,13 +45,19 @@ export const CarouselSlide = forwardRef<HTMLDivElement, CarouselSlideProps>(
         ref={mergeRefs(ref, element)}
         className={cx(styles.slide, className)}
         {...props}
-        role="group"
-        aria-roledescription="slide"
-        aria-label={ariaLabel ?? (carousel && position ? carousel.labels.slide(position.index + 1, position.total) : undefined)}
+        role={clone ? undefined : "group"}
+        aria-roledescription={clone ? undefined : "slide"}
+        aria-label={clone ? undefined : (ariaLabel ?? (carousel && position ? carousel.labels.slide(position.index + 1, position.total) : undefined))}
+        aria-hidden={clone ? true : props["aria-hidden"]}
         data-carousel-slide=""
+        data-carousel-clone={clone ? "" : undefined}
         data-in-view={inView ? "" : undefined}
+        onFocus={(event) => {
+          onFocus?.(event);
+          if (carousel && position && !position.clone) carousel.reveal(position.index);
+        }}
       >
-        {children}
+        {position && !position.render ? placeholder : children}
       </div>
     );
   },

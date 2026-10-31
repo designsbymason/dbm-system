@@ -589,6 +589,316 @@ describe("Carousel — a swipe or scroll", () => {
   });
 });
 
+describe("Carousel — looping with no seam", () => {
+  const copies = (container: HTMLElement) => [...container.querySelectorAll<HTMLElement>("[data-carousel-clone]")];
+
+  it("draws copies of the slides at each end, hidden from assistive technology and inert", () => {
+    const { container } = render(<Slides slides={5} loop />);
+    const found = copies(container);
+    expect(found).toHaveLength(4);
+    for (const copy of found) {
+      expect(copy).toHaveAttribute("aria-hidden", "true");
+      expect(copy).not.toHaveAttribute("role");
+      expect(copy.inert).toBe(true);
+    }
+    expect(copies(container).map((copy) => copy.textContent)).toEqual(["Slide 4", "Slide 5", "Slide 1", "Slide 2"]);
+    expect(screen.getAllByRole("group", { name: /^\d of 5$/ })).toHaveLength(5);
+  });
+
+  it("draws no copies without loop, or when every slide is already in view", () => {
+    const { container, rerender } = render(<Slides slides={5} />);
+    expect(copies(container)).toHaveLength(0);
+    rerender(<Slides slides={3} slidesPerView={3} loop />);
+    expect(copies(container)).toHaveLength(0);
+    expect(screen.queryByRole("button", { name: "Next slide" })).toBeNull();
+  });
+
+  it("wraps with no end: next from the last is the first, previous from the first is the last", async () => {
+    const user = userEvent.setup();
+    render(<Slides slides={3} loop />);
+    await user.click(previous());
+    expect(slide(3).inert).toBe(false);
+    await user.click(next());
+    expect(slide(1).inert).toBe(false);
+    expect(next()).toBeEnabled();
+    expect(previous()).toBeEnabled();
+  });
+
+  it("wraps the view round the end: the first slides are in view beside the last", async () => {
+    const user = userEvent.setup();
+    render(<Slides slides={5} slidesPerView={2} loop defaultValue={4} />);
+    expect([1, 2, 3, 4, 5].map((n) => slide(n).inert)).toEqual([false, true, true, true, false]);
+    await user.click(next());
+    expect(slide(1).inert).toBe(false);
+  });
+
+  it("announces the slides across the seam", () => {
+    vi.useFakeTimers();
+    render(<Slides slides={5} slidesPerView={2} loop defaultValue={3} />);
+    fireEvent.click(next());
+    act(() => {
+      vi.advanceTimersByTime(150);
+    });
+    expect(screen.getByRole("status")).toHaveTextContent("Slides 5 to 1 of 5");
+  });
+});
+
+describe("Carousel — a peeking slide", () => {
+  it("is pressable: the slide after the view is not inert, the one after it is", () => {
+    render(<Slides slidesPerView={2} peek />);
+    expect([1, 2, 3, 4].map((n) => slide(n).inert)).toEqual([false, false, false, true]);
+  });
+});
+
+describe("Carousel — focus in a peeking slide", () => {
+  it("brings the slide into view when something in it takes focus", () => {
+    render(
+      <Carousel aria-label="Peek" slidesPerView={2} peek>
+        {[1, 2, 3, 4].map((n) => (
+          <Carousel.Slide key={n}>
+            <button type="button">Button {n}</button>
+          </Carousel.Slide>
+        ))}
+      </Carousel>,
+    );
+    act(() => {
+      screen.getByRole("button", { name: "Button 3" }).focus();
+    });
+    expect([1, 2, 3, 4].map((n) => screen.getByRole("group", { name: `${n} of 4` }).inert)).toEqual([true, false, false, false]);
+  });
+});
+
+describe("Carousel — a fractional view", () => {
+  it("counts the slide a fraction cuts as in view", () => {
+    render(<Slides slidesPerView={1.5} />);
+    expect([1, 2, 3].map((n) => slide(n).inert)).toEqual([false, false, true]);
+  });
+
+  it("sets the slide width from the fraction", () => {
+    render(<Slides slidesPerView={1.5} data-testid="c" />);
+    const style = screen.getByTestId("c").style;
+    expect(style.getPropertyValue("--carousel-slides")).toBe("1.5");
+    expect(style.getPropertyValue("--carousel-gaps")).toBe("1");
+  });
+
+  it("reaches the last slide: the last position counts the slide the view cuts", async () => {
+    const user = userEvent.setup();
+    render(<Slides slides={4} slidesPerView={1.5} />);
+    track().focus();
+    await user.keyboard("{End}");
+    expect([1, 2, 3, 4].map((n) => slide(n).inert)).toEqual([true, true, false, false]);
+  });
+});
+
+describe("Carousel — a centred slide", () => {
+  it("makes the slide at value the one in the middle, and any slide can be it", async () => {
+    const user = userEvent.setup();
+    render(<Slides slidesPerView={3} align="center" defaultValue={2} data-testid="c" />);
+    expect([1, 2, 3, 4, 5].map((n) => slide(n).inert)).toEqual([true, false, false, false, true]);
+    expect(screen.getByTestId("c").className).toMatch(/centered/);
+    track().focus();
+    await user.keyboard("{End}");
+    expect(slide(5).inert).toBe(false);
+    expect(screen.getAllByRole("button", { name: /^Go to slide/ })).toHaveLength(5);
+  });
+
+  it("announces only the slide in the middle", () => {
+    vi.useFakeTimers();
+    render(<Slides slidesPerView={3} align="center" />);
+    fireEvent.click(next());
+    act(() => {
+      vi.advanceTimersByTime(150);
+    });
+    expect(screen.getByRole("status")).toHaveTextContent("Slide 2 of 5");
+  });
+
+  it("ignores peek", () => {
+    render(<Slides slidesPerView={1} align="center" peek />);
+    expect([1, 2].map((n) => slide(n).inert)).toEqual([false, true]);
+  });
+});
+
+describe("Carousel — lazy content", () => {
+  const Lazy = (props: { lazy?: boolean | number; defaultValue?: number }) => (
+    <Carousel aria-label="Lazy" {...props}>
+      {Array.from({ length: 7 }, (_, index) => (
+        <Carousel.Slide key={index} placeholder={<span>wait {index + 1}</span>}>
+          real {index + 1}
+        </Carousel.Slide>
+      ))}
+    </Carousel>
+  );
+
+  it("draws everything by default", () => {
+    render(<Lazy />);
+    expect(screen.getByText("real 7")).toBeInTheDocument();
+  });
+
+  it("draws the view and one slide beyond it, and the placeholder for the rest", () => {
+    render(<Lazy lazy />);
+    expect(screen.getByText("real 1")).toBeInTheDocument();
+    expect(screen.getByText("real 2")).toBeInTheDocument();
+    expect(screen.getByText("wait 3")).toBeInTheDocument();
+    expect(screen.queryByText("real 3")).toBeNull();
+  });
+
+  it("takes a number of slides of reach", () => {
+    render(<Lazy lazy={3} />);
+    expect(screen.getByText("real 4")).toBeInTheDocument();
+    expect(screen.getByText("wait 5")).toBeInTheDocument();
+  });
+
+  it("draws a slide when it comes near, and keeps it drawn once it has been", async () => {
+    const user = userEvent.setup();
+    render(<Lazy lazy />);
+    await user.click(next());
+    await user.click(next());
+    expect(screen.getByText("real 4")).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Previous slide" }));
+    await user.click(screen.getByRole("button", { name: "Previous slide" }));
+    expect(screen.getByText("real 4")).toBeInTheDocument();
+  });
+
+  it("draws the slides near a starting value on the first render", () => {
+    render(<Lazy lazy defaultValue={5} />);
+    expect(screen.getByText("real 6")).toBeInTheDocument();
+    expect(screen.getByText("wait 1")).toBeInTheDocument();
+  });
+});
+
+describe("Carousel — holding rotation", () => {
+  const rotating = (ref: { current: CarouselController | null }) => (
+    <Slides autoPlay={{ interval: 2000 }} controllerRef={ref} />
+  );
+
+  it("holds from the controller until every hold is released, and ignores a second release", () => {
+    vi.useFakeTimers();
+    const ref = createRef<CarouselController>();
+    render(rotating(ref));
+    let releaseOne = () => {};
+    let releaseTwo = () => {};
+    act(() => {
+      releaseOne = ref.current!.hold();
+      releaseTwo = ref.current!.hold();
+    });
+    act(() => {
+      vi.advanceTimersByTime(6000);
+    });
+    expect(slide(1).inert).toBe(false);
+    act(() => {
+      releaseOne();
+      releaseOne();
+    });
+    act(() => {
+      vi.advanceTimersByTime(6000);
+    });
+    expect(slide(1).inert).toBe(false);
+    act(() => {
+      releaseTwo();
+    });
+    act(() => {
+      vi.advanceTimersByTime(2000);
+    });
+    expect(slide(2).inert).toBe(false);
+  });
+
+  it("holds while a video in a slide is playing, and carries on when it stops", () => {
+    vi.useFakeTimers();
+    render(
+      <Carousel aria-label="Media" autoPlay={{ interval: 2000 }}>
+        <Carousel.Slide>
+          {/* eslint-disable-next-line jsx-a11y/media-has-caption */}
+          <video data-testid="clip" />
+        </Carousel.Slide>
+        <Carousel.Slide>Two</Carousel.Slide>
+      </Carousel>,
+    );
+    const clip = screen.getByTestId("clip");
+    act(() => {
+      clip.dispatchEvent(new Event("play"));
+    });
+    act(() => {
+      vi.advanceTimersByTime(6000);
+    });
+    expect(screen.getByRole("group", { name: "1 of 2" }).inert).toBe(false);
+    act(() => {
+      clip.dispatchEvent(new Event("pause"));
+    });
+    act(() => {
+      vi.advanceTimersByTime(2000);
+    });
+    expect(screen.getByRole("group", { name: "2 of 2" }).inert).toBe(false);
+  });
+});
+
+describe("Carousel — a vertical carousel with no height", () => {
+  const sizes = (client: number, scroll: number) => {
+    vi.spyOn(HTMLElement.prototype, "clientHeight", "get").mockReturnValue(client);
+    vi.spyOn(HTMLElement.prototype, "scrollHeight", "get").mockReturnValue(scroll);
+  };
+
+  it("warns once when the track has nothing to scroll", () => {
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+    sizes(300, 300);
+    render(<Slides orientation="vertical" />);
+    expect(warn).toHaveBeenCalledWith(expect.stringContaining("needs a height"));
+  });
+
+  it("does not warn when the track scrolls", () => {
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+    sizes(300, 900);
+    render(<Slides orientation="vertical" />);
+    expect(warn).not.toHaveBeenCalledWith(expect.stringContaining("needs a height"));
+  });
+});
+
+describe("Carousel — a swipe a controlled owner does not take", () => {
+  const swipeTo = (aligned: number) => {
+    const scroller = track();
+    const scrollTo = vi.fn();
+    scroller.scrollTo = scrollTo as unknown as typeof scroller.scrollTo;
+    scroller.getBoundingClientRect = () => ({ left: 0, right: 200, top: 0, bottom: 100, width: 200, height: 100 }) as DOMRect;
+    [...scroller.querySelectorAll<HTMLElement>("[data-carousel-slide]")].forEach((element, index) => {
+      element.getBoundingClientRect = () => ({ left: (index - aligned) * 200, right: (index - aligned + 1) * 200, top: 0, bottom: 100, width: 200, height: 100 }) as DOMRect;
+    });
+    fireEvent.scroll(scroller);
+    act(() => {
+      vi.advanceTimersByTime(200);
+    });
+    return scrollTo;
+  };
+
+  it("puts the track back on the value it holds", () => {
+    vi.useFakeTimers();
+    const onValueChange = vi.fn();
+    render(<Slides value={0} onValueChange={onValueChange} />);
+    const scrollTo = swipeTo(2);
+    expect(onValueChange).toHaveBeenCalledWith(2);
+    expect(scrollTo).toHaveBeenCalledWith(expect.objectContaining({ left: -400, behavior: "smooth" }));
+  });
+
+  it("leaves it where it landed when the owner takes the value", () => {
+    vi.useFakeTimers();
+    const Owner = () => {
+      const [value, setValue] = useState(0);
+      return <Slides value={value} onValueChange={setValue} />;
+    };
+    render(<Owner />);
+    const scrollTo = swipeTo(2);
+    expect(slide(3).inert).toBe(false);
+    expect(scrollTo).not.toHaveBeenCalled();
+  });
+});
+
+describe("Carousel — mouse drag", () => {
+  it("can be turned off", () => {
+    const { rerender } = render(<Slides />);
+    expect(track()).toHaveAttribute("data-draggable");
+    rerender(<Slides mouseDrag={false} />);
+    expect(track()).not.toHaveAttribute("data-draggable");
+  });
+});
+
 describe("Carousel — accessibility", () => {
   it("has no axe violations by default", async () => {
     const { container } = render(<Slides />);

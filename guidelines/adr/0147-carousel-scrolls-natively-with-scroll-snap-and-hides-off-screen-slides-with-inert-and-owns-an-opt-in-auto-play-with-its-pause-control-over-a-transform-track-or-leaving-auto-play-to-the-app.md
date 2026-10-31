@@ -1,6 +1,6 @@
 # 0147 — `Carousel` scrolls natively with scroll-snap and hides off-screen slides with `inert`, and owns an opt-in auto-play with its pause control, over a transform track or leaving auto-play to the app
 
-**Status:** Accepted · **Date:** 2026-10-31
+**Status:** Accepted, in part superseded by [0148](./0148-carousel-loops-through-copies-of-its-slides-takes-a-mouse-drag-makes-the-peeking-slide-pressable-keeps-a-slide-centred-and-draws-far-slides-lazily-over-rewinding-a-native-only-gesture-an-inert-peek-or-mounting-every-slide.md) (the loop and peeking-slide decisions) · **Date:** 2026-10-31
 
 ## Context
 `Carousel` shows one slide, or a few, from a row of slides. Radix has no carousel primitive, so the inventory's "wraps Radix" line cannot hold, and the dependency rule ([ADR-0140](./0140-the-design-system-takes-no-animation-library-and-animates-with-css-and-the-motion-tokens-over-keeping-motion-as-an-optional-peer-dependency.md), `CLAUDE.md`) rules out a carousel library. Two things decide its shape: how a slide moves, and who owns automatic rotation. `Indicators` already hands the WCAG 2.2.2 pause, stop and hide duty for auto-advance to this component.

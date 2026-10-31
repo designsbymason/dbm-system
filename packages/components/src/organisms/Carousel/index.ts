@@ -1,5 +1,6 @@
 export { Carousel } from "./Carousel";
 export type {
+  CarouselAlign,
   CarouselAutoPlay,
   CarouselAutoPlayOptions,
   CarouselAutoPlayToggleProps,

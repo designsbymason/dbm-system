@@ -24,6 +24,8 @@ export interface CarouselContextValue {
   canNext: boolean;
   /** Asks for the slide at this index to be first in view. Says whether there was a change to ask for. */
   request: (index: number) => boolean;
+  /** Asks for a slide that has taken focus while only its edge is in view (the peeking one) to be brought fully into view. */
+  reveal: (index: number) => void;
   /** Asks for the next (`1`) or previous (`-1`) position, from a person's press. */
   step: (direction: 1 | -1) => boolean;
   autoPlay: boolean;
@@ -47,8 +49,12 @@ export interface CarouselSlidePosition {
   /** Zero-based. */
   index: number;
   total: number;
-  /** Whether the slide is among those in view (the rest are `inert`). */
+  /** Whether the slide is among those in view, or the one peeking beyond them (the rest are `inert`). */
   inView: boolean;
+  /** Whether this is a copy of a slide at an end of a wrapping carousel: hidden from assistive technology and never pressable. */
+  clone: boolean;
+  /** Whether its content is drawn, or only its placeholder (`lazy`). */
+  render: boolean;
 }
 
 export const CarouselSlideContext = createContext<CarouselSlidePosition | null>(null);

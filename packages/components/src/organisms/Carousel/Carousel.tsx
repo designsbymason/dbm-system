@@ -1,16 +1,21 @@
 import { cx, mergeRefs, useAnnouncement, useResolvedResponsiveValue } from "@dbm-system/utils";
-import { Children, forwardRef, isValidElement, useEffect, useMemo, useRef, useState } from "react";
+import { Children, forwardRef, isValidElement, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { CSSProperties, FocusEvent, KeyboardEvent, ReactElement, ReactNode } from "react";
 import { VisuallyHidden } from "../../atoms/VisuallyHidden";
 import {
+  canLoop,
   clampIndex,
   computeStops,
   DEFAULT_AUTO_PLAY_INTERVAL_MS,
-  lastStart,
-  neighbourStop,
+  lastIndex,
   nearestStop,
+  neighbourStop,
   resolveLabels,
+  slidesOutside,
+  slidesTouched,
+  viewSize,
   wholeNumber,
+  wrapStep,
 } from "./carouselHelpers";
 import { CarouselContext, CarouselSlideContext } from "./CarouselContext";
 import type { CarouselContextValue } from "./CarouselContext";
@@ -18,6 +23,7 @@ import { CarouselAutoPlayToggle, CarouselIndicators, CarouselNext, CarouselPrevi
 import { CarouselSlide } from "./CarouselSlide";
 import { useAutoPlay } from "./useAutoPlay";
 import { useCarouselController } from "./useCarouselController";
+import { useCarouselDrag } from "./useCarouselDrag";
 import { useCarouselScroll } from "./useCarouselScroll";
 import styles from "./Carousel.module.css";
 import type { CarouselProps, CarouselSlideProps } from "./Carousel.types";
@@ -43,17 +49,18 @@ function holdsRotation(target: EventTarget): boolean {
 /**
  * Slides that scroll sideways (or up and down) through a window, one position at a time, with previous and next buttons,
  * position indicators and optional automatic rotation. A compound component: put one `Carousel.Slide` per slide inside
- * `Carousel`, and name it with `aria-label`. A region the person swipes, scrolls with a wheel or trackpad, or steps with the
- * buttons, the indicators or the arrow keys on the focused track; the slides are the browser's own scroll-snapping, so
- * touch, momentum and inertia are the platform's.
+ * `Carousel`, and name it with `aria-label`. A region the person swipes, drags with a mouse, scrolls with a wheel or trackpad,
+ * or steps with the buttons, the indicators or the arrow keys on the focused track; the slides are the browser's own
+ * scroll-snapping, so touch, momentum and inertia are the platform's.
  *
- * The first slide in view is `value` (controlled with `onValueChange`, or `defaultValue`). `slidesPerView` shows several
- * at once (a breakpoint map is allowed), `slidesPerMove` sets how many a press moves, `peek` shows the edge of the next,
- * `loop` wraps from the last position to the first, and `orientation="vertical"` runs the slides up and down inside a
- * height you give the carousel. A slide outside the view is `inert`. `autoPlay` rotates the slides by itself, paused on hover,
- * focus and a hidden page, starting paused for a person who prefers reduced motion, with a pause button that is always drawn.
- * `controllerRef` hands `next()`, `previous()` and `goTo()` to a button of your own. Text the component writes itself is in
- * `labels`, and `formatNumber` writes its digits.
+ * The slide at the track's edge is `value` (controlled with `onValueChange`, or `defaultValue`). `slidesPerView` shows several
+ * at once (a breakpoint map and a fraction are allowed), `slidesPerMove` sets how many a press moves, `peek` shows the edge of
+ * the next, `align="center"` keeps a slide in the middle, `loop` wraps round with no seam, `lazy` draws a slide's content only
+ * near the view, and `orientation="vertical"` runs the slides up and down inside a height you give the carousel. A slide outside
+ * the view is `inert`. `autoPlay` rotates the slides by itself, paused on hover, focus, playing media and a hidden page, starting
+ * paused for a person who prefers reduced motion, with a pause button that is always drawn. `controllerRef` hands `next()`,
+ * `previous()`, `goTo()` and `hold()` to code of your own. Text the component writes itself is in `labels`, and `formatNumber`
+ * writes its digits.
  *
  * `ref` forwards to the root `<div>`, which carries `role="region"`, the name and `className`/`style`.
  *
@@ -77,6 +84,9 @@ const CarouselRoot = forwardRef<HTMLDivElement, CarouselProps>(
       slidesPerView = 1,
       slidesPerMove = 1,
       loop = false,
+      align = "start",
+      lazy = false,
+      mouseDrag = true,
       orientation = "horizontal",
       gap = 4,
       peek = false,
@@ -122,10 +132,15 @@ const CarouselRoot = forwardRef<HTMLDivElement, CarouselProps>(
     }, [ariaLabel, ariaLabelledBy]);
 
     const perViewRequested = useResolvedResponsiveValue<number>(slidesPerView, 1);
-    const perView = Math.min(wholeNumber(perViewRequested, 1, 1), Math.max(1, count));
-    const move = slidesPerMove === "view" ? perView : wholeNumber(slidesPerMove, 1, 1);
-    const max = lastStart(count, perView);
-    const stops = useMemo(() => computeStops(count, perView, move), [count, perView, move]);
+    const perView = Math.min(viewSize(perViewRequested, 1), Math.max(1, count));
+    const visible = slidesTouched(perView);
+    const center = align === "center";
+    const looping = canLoop(count, perView, loop);
+    const peeking = peek && !center;
+    const max = lastIndex({ count, perView, loop: looping, center });
+    const move = Math.min(slidesPerMove === "view" ? Math.max(1, Math.floor(perView)) : wholeNumber(slidesPerMove, 1, 1), looping ? Math.max(1, count - 1) : Infinity);
+    const stops = useMemo(() => computeStops({ count, perView, loop: looping, center }, move), [count, perView, looping, center, move]);
+    const cloneCount = looping ? Math.min(count, visible + 1 + (peeking ? 1 : 0)) : 0;
 
     const controlled = valueProp !== undefined;
     const [internalValue, setInternalValue] = useState(defaultValue);
@@ -146,45 +161,109 @@ const CarouselRoot = forwardRef<HTMLDivElement, CarouselProps>(
       return true;
     };
 
+    // A slide that takes focus with only its edge in view (the peeking one) is brought fully into view: the browser scrolls
+    // a partly visible element no further.
+    const reveal = (index: number) => {
+      if (count === 0 || slidesOutside(index, { count, perView, loop: looping, center, value, peek: false }) === 0) return;
+      request(center ? index : Math.max(0, index - visible + 1));
+    };
+
     const pressed = useRef<"previous" | "next" | null>(null);
+    const neighbour = (direction: 1 | -1, wrapEnds: boolean): number | undefined =>
+      looping ? wrapStep(value, direction, move, count) : neighbourStop(stops, stopPlace, direction, wrapEnds);
     const step = (direction: 1 | -1): boolean => {
-      const target = neighbourStop(stops, stopPlace, direction, loop);
+      const target = neighbour(direction, false);
       if (target === undefined) return false;
       pressed.current = direction === 1 ? "next" : "previous";
       return request(target);
     };
-    const canNext = neighbourStop(stops, stopPlace, 1, loop) !== undefined;
-    const canPrevious = neighbourStop(stops, stopPlace, -1, loop) !== undefined;
+    const canNext = neighbour(1, false) !== undefined;
+    const canPrevious = neighbour(-1, false) !== undefined;
 
     const autoPlayOn = autoPlay !== false && autoPlay !== undefined && count > 1 && stops.length > 1;
     const intervalMs = typeof autoPlay === "object" ? wholeNumber(autoPlay.interval, DEFAULT_AUTO_PLAY_INTERVAL_MS, 1000) : DEFAULT_AUTO_PLAY_INTERVAL_MS;
     const [hovered, setHovered] = useState(false);
     const [focusHeld, setFocusHeld] = useState(false);
     const [moving, setMoving] = useState(false);
+    const [holds, setHolds] = useState(0);
+    const [mediaPlaying, setMediaPlaying] = useState(false);
+    const hold = useCallback(() => {
+      let released = false;
+      setHolds((current) => current + 1);
+      return () => {
+        if (released) return;
+        released = true;
+        setHolds((current) => Math.max(0, current - 1));
+      };
+    }, []);
     const rotation = useAutoPlay({
       enabled: autoPlayOn,
       intervalMs,
-      held: hovered || focusHeld,
+      held: hovered || focusHeld || holds > 0 || mediaPlaying,
       moving,
       value,
       advance: () => {
-        const target = neighbourStop(stops, stopPlace, 1, true);
+        const target = neighbour(1, true);
         if (target !== undefined) request(target);
       },
     });
 
     const vertical = orientation === "vertical";
     const trackRef = useRef<HTMLDivElement>(null);
+    const [settleTick, setSettleTick] = useState(0);
     useCarouselScroll({
       trackRef,
       axis: vertical ? "block" : "inline",
+      align,
       value,
       max,
-      layoutKey: `${perView}|${gap}|${orientation}|${peek}|${count}|${dir}`,
-      onSettle: request,
+      count,
+      cloneCount,
+      layoutKey: `${perView}|${gap}|${orientation}|${peeking}|${count}|${dir}|${align}|${cloneCount}`,
+      realignTick: settleTick,
+      onSettle: (index) => {
+        request(index);
+        setSettleTick((tick) => tick + 1);
+      },
       onMoving: setMoving,
     });
-    useCarouselController(controllerRef, { value, count, max, request, step });
+    useCarouselDrag(trackRef, { axis: vertical ? "block" : "inline", enabled: mouseDrag });
+    useCarouselController(controllerRef, { value, count, max, request, step, hold });
+
+    // A video or audio element playing in a slide holds rotation. Media events don't bubble, so they are heard in the capture phase.
+    useEffect(() => {
+      const track = trackRef.current;
+      if (!track || !autoPlayOn) return;
+      const playing = new Set<EventTarget>();
+      const onPlay = (event: Event) => {
+        playing.add(event.target as EventTarget);
+        setMediaPlaying(true);
+      };
+      const onStop = (event: Event) => {
+        playing.delete(event.target as EventTarget);
+        setMediaPlaying(playing.size > 0);
+      };
+      track.addEventListener("play", onPlay, true);
+      track.addEventListener("pause", onStop, true);
+      track.addEventListener("ended", onStop, true);
+      return () => {
+        track.removeEventListener("play", onPlay, true);
+        track.removeEventListener("pause", onStop, true);
+        track.removeEventListener("ended", onStop, true);
+        setMediaPlaying(false);
+      };
+    }, [autoPlayOn]);
+
+    const warnedHeight = useRef(false);
+    useEffect(() => {
+      const track = trackRef.current;
+      if (process.env.NODE_ENV === "production" || warnedHeight.current || !vertical || !track || count <= visible) return;
+      // With a height from its container the track scrolls; with none it grows to hold every slide and there is nothing to scroll.
+      if (track.clientHeight > 0 && track.scrollHeight <= track.clientHeight + 1) {
+        warnedHeight.current = true;
+        console.warn("Carousel: a vertical carousel needs a height from its container (a `block-size` on it or on a parent that it fills); without one every slide is shown at once.");
+      }
+    }, [vertical, count, visible]);
 
     const { message, announce: say } = useAnnouncement();
     const previousValue = useRef({ value, count });
@@ -196,7 +275,8 @@ const CarouselRoot = forwardRef<HTMLDivElement, CarouselProps>(
       const before = previousValue.current;
       previousValue.current = { value, count };
       if (announce && count > 0 && before.count === count && before.value !== value && !playingNow.current) {
-        say(labels.announcement(value + 1, Math.min(value + perView, count), count));
+        const last = center ? value + 1 : looping ? ((value + visible - 1) % count) + 1 : Math.min(value + visible, count);
+        say(labels.announcement(value + 1, last, count));
       }
       // `labels` is rebuilt every render; the message only needs to be written when the value changes.
       // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -213,6 +293,16 @@ const CarouselRoot = forwardRef<HTMLDivElement, CarouselProps>(
       const other = wasPressed === "next" ? "previous" : "next";
       root.current.querySelector<HTMLButtonElement>(`[data-carousel-control="${other}"]:not(:disabled)`)?.focus();
     }, [value, canNext, canPrevious]);
+
+    // Which slides draw their content: all of them, or (with `lazy`) those near the view and those that have been near before.
+    const lazyReach = lazy === false || lazy === undefined ? Infinity : lazy === true ? 1 : wholeNumber(lazy, 1, 0);
+    const [seen, setSeen] = useState<ReadonlySet<number>>(() => new Set());
+    const viewState = { count, perView, loop: looping, center, value, peek: peeking };
+    const drawn = new Set<number>();
+    for (let index = 0; index < count; index += 1) {
+      if (lazyReach === Infinity || seen.has(index) || slidesOutside(index, viewState) <= lazyReach) drawn.add(index);
+    }
+    if (lazyReach !== Infinity && [...drawn].some((index) => !seen.has(index))) setSeen(drawn);
 
     const onTrackKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
       if (event.target !== event.currentTarget || event.altKey || event.ctrlKey || event.metaKey) return;
@@ -243,6 +333,7 @@ const CarouselRoot = forwardRef<HTMLDivElement, CarouselProps>(
       canPrevious,
       canNext,
       request,
+      reveal,
       step,
       autoPlay: autoPlayOn,
       playing: rotation.playing,
@@ -271,16 +362,25 @@ const CarouselRoot = forwardRef<HTMLDivElement, CarouselProps>(
 
     const rootStyle = {
       "--carousel-slides": perView,
-      "--carousel-gaps": perView - 1 + (peek ? 1 : 0),
+      "--carousel-gaps": visible - 1 + (peeking ? 1 : 0),
       "--carousel-gap": `var(--dbm-space-${gap})`,
       ...style,
     } as CSSProperties;
+
+    const slideAt = (slide: ReactElement<CarouselSlideProps>, index: number, copy: "pre" | "post" | null) => (
+      <CarouselSlideContext.Provider
+        key={copy ? `${copy}-${slide.key}` : slide.key}
+        value={{ index, total: count, inView: !copy && slidesOutside(index, viewState) === 0, clone: copy !== null, render: drawn.has(index) }}
+      >
+        {slide}
+      </CarouselSlideContext.Provider>
+    );
 
     return (
       <CarouselContext.Provider value={context}>
         <div
           ref={mergeRefs(ref, root)}
-          className={cx(styles.root, peek && styles.peek, className)}
+          className={cx(styles.root, peeking && styles.peek, center && styles.centered, looping && styles.looping, className)}
           style={rootStyle}
           {...props}
           role="region"
@@ -313,13 +413,12 @@ const CarouselRoot = forwardRef<HTMLDivElement, CarouselProps>(
               // eslint-disable-next-line jsx-a11y/no-noninteractive-tabindex
               tabIndex={0}
               data-carousel-track=""
+              data-draggable={mouseDrag ? "" : undefined}
               onKeyDown={onTrackKeyDown}
             >
-              {slides.map((slide, index) => (
-                <CarouselSlideContext.Provider key={slide.key} value={{ index, total: count, inView: index >= value && index < value + perView }}>
-                  {slide}
-                </CarouselSlideContext.Provider>
-              ))}
+              {looping && slides.slice(count - cloneCount).map((slide, offset) => slideAt(slide, count - cloneCount + offset, "pre"))}
+              {slides.map((slide, index) => slideAt(slide, index, null))}
+              {looping && slides.slice(0, cloneCount).map((slide, index) => slideAt(slide, index, "post"))}
             </div>
             {!buttonsInBar && previousElement}
             {!buttonsInBar && nextElement}

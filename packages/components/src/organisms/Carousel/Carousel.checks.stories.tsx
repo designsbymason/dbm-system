@@ -2,7 +2,8 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 import { expect, userEvent, waitFor, within } from "storybook/test";
 import { useState } from "react";
 import { send } from "../../molecules/CodeBlock/browserProtocol";
-import { Demo, allSizes } from "./CarouselStoryKit";
+import { Carousel } from "./Carousel";
+import { Demo, DemoSlide, allSizes } from "./CarouselStoryKit";
 
 // Hidden, real-browser checks (`!dev` on the whole group, ADR-0013's way of keeping a second stories file out of
 // the sidebar and the Docs page): what jsdom can't evaluate — real scroll-snap layout, text direction, focus rings,
@@ -181,5 +182,179 @@ export const ReducedMotionStartsAutoPlayPaused: Story = {
     } finally {
       await emulate("no-preference");
     }
+  },
+};
+
+// A real mouse, through the Chrome DevTools Protocol: Storybook's `userEvent` sends synthetic events, which never start a
+// drag. The test page scales its iframe, so a point inside the story is mapped to the page it is drawn on.
+const toPage = (x: number, y: number) => {
+  const frame = window.frameElement?.getBoundingClientRect();
+  const scale = frame ? frame.width / window.innerWidth : 1;
+  return { x: (frame?.left ?? 0) + x * scale, y: (frame?.top ?? 0) + y * scale };
+};
+const mouse = (type: "mouseMoved" | "mousePressed" | "mouseReleased", x: number, y: number) =>
+  send("Input.dispatchMouseEvent", { type, ...toPage(x, y), button: type === "mouseMoved" ? "none" : "left", clickCount: 1, buttons: type === "mouseReleased" ? 0 : 1 });
+const parkPointer = () => send("Input.dispatchMouseEvent", { type: "mouseMoved", ...toPage(2, 2) });
+
+export const MouseDragMovesTheSlides: Story = {
+  name: "A mouse drag scrolls the slides, snaps to the nearest and reports it; a click that ends a drag is swallowed",
+  render: () => (
+    <div>
+      <Carousel aria-label="Drag">
+        {[0, 1, 2, 3].map((index) => (
+          <Carousel.Slide key={index}>
+            <a href="#drag" data-testid={`link-${index}`} onClick={(event) => event.preventDefault()} style={{ display: "block" }}>
+              <DemoSlide.Panel index={index} />
+            </a>
+          </Carousel.Slide>
+        ))}
+      </Carousel>
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    await parkPointer();
+    const scroller = track(canvasElement);
+    const rect = box(scroller);
+    const y = rect.top + rect.height / 2;
+    // From the right to well past the left: more than half a slide, so the snap takes the next one.
+    const from = rect.left + rect.width * 0.8;
+    await mouse("mouseMoved", from, y);
+    await mouse("mousePressed", from, y);
+    for (let step = 1; step <= 10; step += 1) {
+      await mouse("mouseMoved", from - (rect.width * 0.6 * step) / 10, y);
+      await settle(16);
+    }
+    await expect(scroller).toHaveAttribute("data-dragging");
+    await mouse("mouseReleased", from - rect.width * 0.6, y);
+    await stopped(scroller);
+    await waitFor(() => expect(inertOf(slideOf(canvasElement, 2))).toBe(false));
+    await expect(scroller).not.toHaveAttribute("data-dragging");
+    await expect(Math.abs(box(slideOf(canvasElement, 2)).left - box(scroller).left)).toBeLessThan(1.5);
+    await parkPointer();
+  },
+};
+
+export const MouseClickStillPressesButtons: Story = {
+  name: "A press that does not move still clicks a button inside a slide",
+  render: () => {
+    const Presser = () => {
+      const [pressed, setPressed] = useState(0);
+      return (
+        <div>
+          <Carousel aria-label="Press" controls="hidden" indicators={false}>
+            <Carousel.Slide>
+              <button type="button" onClick={() => setPressed((count) => count + 1)}>
+                Press me
+              </button>
+            </Carousel.Slide>
+            <Carousel.Slide>Two</Carousel.Slide>
+          </Carousel>
+          <output data-testid="pressed">{pressed}</output>
+        </div>
+      );
+    };
+    return <Presser />;
+  },
+  play: async ({ canvasElement }) => {
+    await parkPointer();
+    const rect = box(within(canvasElement).getByRole("button", { name: "Press me" }));
+    const x = rect.left + rect.width / 2;
+    const y = rect.top + rect.height / 2;
+    await mouse("mouseMoved", x, y);
+    await mouse("mousePressed", x, y);
+    await mouse("mouseReleased", x, y);
+    await waitFor(() => expect(within(canvasElement).getByTestId("pressed")).toHaveTextContent("1"));
+    await parkPointer();
+  },
+};
+
+export const SeamlessLoop: Story = {
+  name: "A looping carousel goes from the last slide to the first through a copy, and rests on the real first slide",
+  render: () => <Demo loop aria-label="Loop" />,
+  play: async ({ canvasElement }) => {
+    const scroller = track(canvasElement);
+    await userEvent.click(within(canvasElement).getByRole("button", { name: "Previous slide" }));
+    await stopped(scroller);
+    await waitFor(() => expect(inertOf(slideOf(canvasElement, 5))).toBe(false));
+    await expect(Math.abs(box(slideOf(canvasElement, 5)).left - box(scroller).left)).toBeLessThan(1.5);
+    // Forward over the seam: the copy of the first slide is the shorter way, and the track ends on the real one.
+    const before = scroller.scrollLeft;
+    await userEvent.click(nextButton(canvasElement));
+    await stopped(scroller);
+    await waitFor(() => expect(inertOf(slideOf(canvasElement, 1))).toBe(false));
+    await expect(Math.abs(box(slideOf(canvasElement, 1)).left - box(scroller).left)).toBeLessThan(1.5);
+    // The real first slide sits after the copies in the track, so the track did not rewind to the start.
+    await expect(scroller.scrollLeft).toBeGreaterThan(0);
+    await expect(scroller.scrollLeft).toBeLessThan(before);
+  },
+};
+
+export const CentredSlide: Story = {
+  name: "A centred slide sits in the middle of the track, with its neighbours showing, at the first and last slide too",
+  render: () => <Demo align="center" slidesPerView={2.5} aria-label="Centred" />,
+  play: async ({ canvasElement }) => {
+    const scroller = track(canvasElement);
+    const middle = (element: Element) => box(element).left + box(element).width / 2;
+    const centreOfTrack = box(scroller).left + box(scroller).width / 2;
+    await waitFor(() => expect(Math.abs(middle(slideOf(canvasElement, 1)) - centreOfTrack)).toBeLessThan(1.5));
+    await expect(box(slideOf(canvasElement, 2)).left).toBeLessThan(box(scroller).right);
+    await userEvent.click(nextButton(canvasElement));
+    await stopped(scroller);
+    await waitFor(() => expect(Math.abs(middle(slideOf(canvasElement, 2)) - centreOfTrack)).toBeLessThan(1.5));
+    scroller.focus();
+    await userEvent.keyboard("{End}");
+    await stopped(scroller);
+    await waitFor(() => expect(Math.abs(middle(slideOf(canvasElement, 5)) - centreOfTrack)).toBeLessThan(1.5));
+  },
+};
+
+export const FractionalView: Story = {
+  name: "One and a half in view: a slide and a half of the next fill the track, with the gap between",
+  render: () => <Demo slidesPerView={1.5} aria-label="Fraction" />,
+  play: async ({ canvasElement }) => {
+    const scroller = track(canvasElement);
+    const [first, second] = [1, 2].map((n) => box(slideOf(canvasElement, n)));
+    await expect(Math.abs(first!.width - second!.width)).toBeLessThan(1);
+    await expect(Math.abs(first!.width * 1.5 + (second!.left - first!.right) - box(scroller).width)).toBeLessThan(1.5);
+    await expect(second!.right).toBeGreaterThan(box(scroller).right);
+  },
+};
+
+export const PeekingSlideIsPressable: Story = {
+  name: "A button in the peeking slide can be pressed, and the carousel brings that slide into view",
+  render: () => {
+    const Peeker = () => (
+      <Carousel aria-label="Peek press" slidesPerView={2} peek>
+        {[1, 2, 3, 4].map((n) => (
+          <Carousel.Slide key={n}>
+            <button type="button">Button {n}</button>
+          </Carousel.Slide>
+        ))}
+      </Carousel>
+    );
+    return <Peeker />;
+  },
+  play: async ({ canvasElement }) => {
+    const scroller = track(canvasElement);
+    const peeking = within(canvasElement).getByRole("button", { name: "Button 3" });
+    await expect(inertOf(slideOf(canvasElement, 3))).toBe(false);
+    await expect(box(peeking).left).toBeLessThan(box(scroller).right);
+    peeking.focus();
+    await waitFor(() => expect(peeking).toHaveFocus());
+    await stopped(scroller);
+    await waitFor(() => expect(inertOf(slideOf(canvasElement, 4))).toBe(false));
+  },
+};
+
+export const RefusedSwipeSnapsBack: Story = {
+  name: "A swipe a controlled owner does not take puts the track back on the slide it holds",
+  render: () => <Demo value={0} onValueChange={() => {}} aria-label="Refused" />,
+  play: async ({ canvasElement }) => {
+    const scroller = track(canvasElement);
+    scroller.scrollTo({ left: scroller.scrollLeft + box(slideOf(canvasElement, 3)).left - box(scroller).left, behavior: "instant" });
+    await settle(300);
+    await stopped(scroller);
+    await expect(Math.abs(box(slideOf(canvasElement, 1)).left - box(scroller).left)).toBeLessThan(1.5);
+    await expect(inertOf(slideOf(canvasElement, 1))).toBe(false);
   },
 };

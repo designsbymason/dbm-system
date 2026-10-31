@@ -3,9 +3,10 @@ import { useRef, useState } from "react";
 import type { CSSProperties } from "react";
 import { Button } from "../../atoms/Button";
 import { Carousel } from "./Carousel";
-import { allSizes, Demo, DemoSlide } from "./CarouselStoryKit";
+import { allSizes, Demo, DemoSlide, verticalBoxHeight } from "./CarouselStoryKit";
 import { carouselPlaygroundSnippet, carouselSnippets } from "./Carousel.snippets";
 import type {
+  CarouselAlign,
   CarouselController,
   CarouselControls,
   CarouselIndicatorsPlacement,
@@ -20,6 +21,9 @@ interface PlaygroundArgs {
   slidesPerView: number;
   slidesPerMove: number | "view";
   loop: boolean;
+  align: CarouselAlign;
+  lazy: boolean;
+  mouseDrag: boolean;
   orientation: CarouselOrientation;
   gap: CarouselProps["gap"];
   peek: boolean;
@@ -52,6 +56,9 @@ const noControls = {
   slidesPerView: off,
   slidesPerMove: off,
   loop: off,
+  align: off,
+  lazy: off,
+  mouseDrag: off,
   orientation: off,
   gap: off,
   peek: off,
@@ -88,8 +95,8 @@ const meta: Meta<PlaygroundArgs> = {
     },
     onValueChange: { control: false, description: "Called with the index of the first slide in view when a change is asked for, and when a swipe or scroll settles on another." },
     slidesPerView: {
-      control: { type: "number", min: 1, max: 4 },
-      description: "How many slides are in view at once. A breakpoint map is allowed.",
+      control: { type: "number", min: 1, max: 4, step: 0.5 },
+      description: "How many slides are in view at once. A breakpoint map is allowed, and so is a fraction (1.5 shows a slide and half of the next).",
       table: { defaultValue: { summary: "1" } },
     },
     slidesPerMove: {
@@ -100,8 +107,24 @@ const meta: Meta<PlaygroundArgs> = {
     },
     loop: {
       control: "boolean",
-      description: "Wraps from the last position to the first, and the first to the last, in the buttons, the indicators and the controller.",
+      description: "Wraps round with no seam: from the last slide the next is the first, and the first's previous is the last. Copies of the slides at each end make it seamless.",
       table: { defaultValue: { summary: "false" } },
+    },
+    align: {
+      control: "select",
+      options: ["start", "center"],
+      description: "Which edge of the track a slide is kept at: its start, or its middle with its neighbours showing at each side.",
+      table: { defaultValue: { summary: '"start"' } },
+    },
+    lazy: {
+      control: "boolean",
+      description: "Draws a slide's content only within one slide of the view, and its placeholder before that. A number sets how many slides of reach.",
+      table: { defaultValue: { summary: "false" } },
+    },
+    mouseDrag: {
+      control: "boolean",
+      description: "Lets a mouse drag the slides, as a finger does. A click that ends a drag is swallowed; touch and pen always scroll natively.",
+      table: { defaultValue: { summary: "true" } },
     },
     orientation: {
       control: "select",
@@ -178,6 +201,9 @@ const meta: Meta<PlaygroundArgs> = {
     slidesPerView: 1,
     slidesPerMove: 1,
     loop: false,
+    align: "start",
+    lazy: false,
+    mouseDrag: true,
     orientation: "horizontal",
     gap: 4,
     peek: false,
@@ -191,8 +217,8 @@ const meta: Meta<PlaygroundArgs> = {
     "aria-label": "Featured",
     defaultValue: 0,
   },
-  render: ({ slidesPerView, slidesPerMove, ...args }) => (
-    <div style={args.orientation === "vertical" ? { blockSize: "20rem" } : undefined}>
+  render: ({ slidesPerView, slidesPerMove, ...args }, context) => (
+    <div style={args.orientation === "vertical" ? { blockSize: verticalBoxHeight(context.viewMode) } : undefined}>
       <Demo {...args} slidesPerView={slidesPerView} slidesPerMove={slidesPerMove} />
     </div>
   ),
@@ -251,18 +277,49 @@ export const Peek: Story = {
 };
 
 export const Loop: Story = {
-  name: "Looping",
+  name: "Looping with no seam",
   argTypes: { ...except() },
   render: () => <Demo loop aria-label="Looping" />,
   parameters: { docs: { source: { code: carouselSnippets.loop } } },
 };
 
+export const FractionalView: Story = {
+  name: "A slide and a half in view",
+  argTypes: { ...except("slidesPerView") },
+  render: (args) => <Demo slidesPerView={args.slidesPerView} slides={6} aria-label="Fractional view" />,
+  args: { slidesPerView: 1.5 },
+  parameters: { docs: { source: { code: carouselSnippets.fractional } } },
+};
+
+export const Centered: Story = {
+  name: "A centred slide",
+  argTypes: { ...except("slidesPerView", "loop") },
+  render: (args) => <Demo align="center" slidesPerView={args.slidesPerView} loop={args.loop} slides={7} aria-label="Centred" />,
+  args: { slidesPerView: 2.5 },
+  parameters: { docs: { source: { code: carouselSnippets.centered } } },
+};
+
+export const Lazy: Story = {
+  name: "Lazy content",
+  argTypes: { ...except() },
+  render: () => (
+    <Carousel aria-label="Lazy" lazy>
+      {Array.from({ length: 12 }, (_, index) => (
+        <Carousel.Slide key={index} placeholder={<DemoSlide.Panel index={index} placeholderLabel="Loading…" />}>
+          <DemoSlide.Panel index={index} />
+        </Carousel.Slide>
+      ))}
+    </Carousel>
+  ),
+  parameters: { docs: { source: { code: carouselSnippets.lazy } } },
+};
+
 export const Vertical: Story = {
   name: "Vertical",
   argTypes: { ...except() },
-  render: () => (
-    <div style={{ blockSize: "20rem" }}>
-      <Demo orientation="vertical" height="var(--dbm-space-32)" aria-label="Vertical" />
+  render: (_args, context) => (
+    <div style={{ blockSize: verticalBoxHeight(context.viewMode) }}>
+      <Demo orientation="vertical" aria-label="Vertical" />
     </div>
   ),
   parameters: { docs: { source: { code: carouselSnippets.vertical } } },
