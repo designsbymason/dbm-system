@@ -1,6 +1,6 @@
 # Carousel — review findings
 
-**Status:** built, not yet declared Finalized. The first build was verified against `06-engineering-standards.md` §9 with the checks listed below; the review pass itself and the sign-off are the maintainer's.
+**Status:** Finalized 2026-10-31, declared by the maintainer after the final review round below. Open at finalization: the `Indicators` target size (a Finalized atom, no change made) and the checks not run in a real browser (Safari and Firefox, a real touch swipe, a full dark-mode and Emerald-brand pass).
 
 ## Second round (ADR-0148)
 
