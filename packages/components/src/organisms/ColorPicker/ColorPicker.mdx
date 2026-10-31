@@ -16,6 +16,9 @@ export const propOrder = [
   "onValueChange",
   "onValueCommit",
   "format",
+  "defaultFormat",
+  "onFormatChange",
+  "showFormatSwitch",
   "alpha",
   "swatches",
   "eyeDropper",
@@ -98,6 +101,10 @@ what a `FieldLabel`'s `htmlFor` should point at.
 
 <Canvas of={ColorPickerStories.Formats} />
 
+### With a format switch
+
+<Canvas of={ColorPickerStories.FormatSwitch} />
+
 ### With opacity
 
 <Canvas of={ColorPickerStories.WithOpacity} />
@@ -161,6 +168,7 @@ what a `FieldLabel`'s `htmlFor` should point at.
   between them and Enter or Space chooses one.
 - Pick the `format` your data uses. The field writes it, and the value, `onValueChange`, `onValueCommit` and a form's
   `name` all carry it.
+- Turn on `showFormatSwitch` for a field where people think in more than one spelling (a design tool, a theme editor); leave it off where the value must always be one format, since using it changes the string you get. Hold the format yourself with `format` and `onFormatChange` to remember it.
 - Turn on `alpha` only when a color's opacity is part of what you store; without it the value is always opaque.
 - Use `onValueCommit` to save or to do anything expensive: `onValueChange` fires on every step of a drag.
 - Use `inline` where the panel is the content (a settings page); keep the floating form for a field in a form.
@@ -185,6 +193,8 @@ what a `FieldLabel`'s `htmlFor` should point at.
 - The picker keeps hue, saturation, brightness and opacity itself, so a gray you drag through keeps its hue and the
   thumb doesn't wobble from rounding to eight bits. A `value` set from outside that isn't what those numbers already
   write to replaces them.
+- The field is as wide as the text it shows. While the panel is open it keeps the widest text it has shown, so dragging does not move its edge, and it narrows again when the panel closes.
+- `format` and `alpha` can change while the picker is mounted: an uncontrolled value is held as it was last written and is re-spelled in the new format (turning `alpha` off hides opacity without losing it, and turning it back on restores it).
 - Text is committed with `Enter` or by leaving the field. Text that isn't a color is kept as typed, flagged
   (`aria-invalid`, a danger border) and never replaces the value; the form's message (`labels.invalid`) refuses a
   submit until it is fixed or emptied.
@@ -193,6 +203,7 @@ what a `FieldLabel`'s `htmlFor` should point at.
   you get back is the color that is actually shown.
 - When the owner controls `value`, a change it doesn't apply is undone: the field shows what `value` says. With
   `commitOn="commit"` the field keeps a drag until the owner's value changes.
+- The format switch reports the color in the new format through `onValueChange` and `onValueCommit` at the moment it is used (when a color is chosen), and `onFormatChange` with the format. With no color chosen only the format changes. A controlled `format` does not change until `onFormatChange` is wired to state.
 - `onFocus` and `onBlur` are for the field as a whole, panel included: they fire once on arriving and once on leaving.
 - The saturation and brightness area never mirrors in a right-to-left page, since a color space isn't text; the
   sliders and the swatches do.
@@ -217,6 +228,7 @@ what a `FieldLabel`'s `htmlFor` should point at.
   to its least and greatest. A screen reader's own adjustment works too.
 - The hue slider (read in degrees) and the opacity slider (read as a percentage) are `role="slider"` with the arrow,
   `Page` and `Home`/`End` keys; in a right-to-left page the keys follow the direction.
+- The format switch is a named `radiogroup` of Hex, RGB, HSL and OKLCH (one tab stop, arrow keys between them), drawn with `ToggleGroup`; every button's name is its visible text.
 - Swatches are buttons in a named group with `aria-pressed`, one tab stop, moved between with the arrow keys (flipped in
   right-to-left), `Home` and `End`.
 - A color chosen from a swatch, the screen or typed text is said aloud ("Color chosen: #5548a4") through a status

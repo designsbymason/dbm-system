@@ -17,6 +17,20 @@ export const colorPickerSnippets = {
     Typed text may use any of them, with or without #, whatever the format is. */}
 <ColorPicker aria-label="Brand color" format="oklch" defaultValue="#5548a4" />`,
 
+  formatSwitch: `{/* showFormatSwitch: a row of buttons in the panel (Hex, RGB, HSL, OKLCH). Choosing one rewrites the field and reports the color
+    in the new format through onValueChange and onValueCommit. Use format and onFormatChange to hold the format yourself. */}
+<ColorPicker aria-label="Brand color" showFormatSwitch defaultValue="#5548a4" onFormatChange={(format) => remember(format)} />`,
+
+  formatControlled: `{/* const [format, setFormat] = useState("hex"); const [color, setColor] = useState("#5548a4"); */}
+<ColorPicker
+  aria-label="Brand color"
+  showFormatSwitch
+  format={format}
+  onFormatChange={setFormat}
+  value={color}
+  onValueChange={setColor}
+/>`,
+
   alpha: `{/* alpha: adds an opacity slider. The value gains two digits (#rrggbbaa), or "/ a" in the other formats,
     only while the color is not fully opaque. */}
 <ColorPicker aria-label="Overlay color" alpha defaultValue="#5548a480" />`,
@@ -84,6 +98,7 @@ export interface ColorPickerPlaygroundSnippetArgs {
   hasError?: boolean;
   defaultValue?: string;
   format?: ColorPickerFormat;
+  showFormatSwitch?: boolean;
   alpha?: boolean;
   eyeDropper?: boolean;
   commitOn?: ColorPickerCommitOn;
@@ -103,7 +118,9 @@ export interface ColorPickerPlaygroundSnippetArgs {
 export function colorPickerPlaygroundSnippet(args: ColorPickerPlaygroundSnippetArgs): string {
   const attributes: string[] = ['aria-label="Brand color"'];
   if (args.defaultValue) attributes.push(`defaultValue=${quote(args.defaultValue)}`);
-  if (args.format && args.format !== "hex") attributes.push(`format="${args.format}"`);
+  // With the switch on the Playground holds the format itself, so it is written as the format to start from.
+  if (args.format && args.format !== "hex") attributes.push(`${args.showFormatSwitch ? "defaultFormat" : "format"}="${args.format}"`);
+  if (args.showFormatSwitch) attributes.push("showFormatSwitch");
   if (args.alpha) attributes.push("alpha");
   if (args.eyeDropper) attributes.push("eyeDropper");
   if (args.commitOn && args.commitOn !== "change") attributes.push(`commitOn="${args.commitOn}"`);

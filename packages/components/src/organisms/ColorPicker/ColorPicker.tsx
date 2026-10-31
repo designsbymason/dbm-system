@@ -30,6 +30,8 @@ const defaultLabels: ColorPickerLabels = {
   percentText: (percent) => `${percent}%`,
   chosen: (color) => `Color chosen: ${color}`,
   cleared: "Color cleared",
+  formatSwitch: "Color format",
+  formatName: (format) => (format === "hex" ? "Hex" : format.toUpperCase()),
 };
 
 const sizeClass: Record<ColorPickerSize, string | undefined> = {
@@ -80,7 +82,10 @@ export const ColorPicker = forwardRef<HTMLDivElement, ColorPickerProps>(
       defaultValue,
       onValueChange,
       onValueCommit,
-      format = "hex",
+      format: formatProp,
+      defaultFormat = "hex",
+      onFormatChange,
+      showFormatSwitch = false,
       alpha = false,
       swatches: swatchProp,
       eyeDropper = false,
@@ -119,6 +124,8 @@ export const ColorPicker = forwardRef<HTMLDivElement, ColorPickerProps>(
   ) => {
     const labels = mergeDefined(defaultLabels, labelOverrides);
     const direction = dir === "rtl" ? "rtl" : "ltr";
+    const [heldFormat, setHeldFormat] = useState(defaultFormat);
+    const format = formatProp ?? heldFormat;
     const { text, hsva, setHsva, setText, clear } = useColorPickerValue({
       value,
       defaultValue,
@@ -230,6 +237,19 @@ export const ColorPicker = forwardRef<HTMLDivElement, ColorPickerProps>(
       }
     };
 
+    // The format switch: the text is re-spelled (an uncontrolled value is held as written and re-spelled by the hook) and
+    // the color is reported in the new format, the one moment the value's spelling changes without its color doing so.
+    const changeFormat = (next: typeof format) => {
+      if (next === format) return;
+      if (formatProp === undefined) setHeldFormat(next);
+      onFormatChange?.(next);
+      if (hasValue) {
+        const written = formatColor(hsvaToRgb(hsva), next, alpha);
+        onValueChange?.(written);
+        onValueCommit?.(written);
+      }
+    };
+
     const change = (next: typeof hsva, kind: "change" | "commit") => {
       settle();
       setHsva(next, kind);
@@ -268,6 +288,12 @@ export const ColorPicker = forwardRef<HTMLDivElement, ColorPickerProps>(
       onBlur?.(event);
     };
 
+    // The entry is as wide as its text; while the panel is open it keeps the longest text it has shown, so a drag doesn't move its edge.
+    const shown = entry ?? text;
+    const [widest, setWidest] = useState("");
+    if (open ? shown.length > widest.length : widest !== "") setWidest(open ? shown : "");
+    const sizerText = (open && widest.length > shown.length ? widest : shown) || labels.none;
+
     const panelId = useId();
     const room = useViewportRoom(group, fullWidth && open);
     const preferredTop = side === "top";
@@ -301,31 +327,33 @@ export const ColorPicker = forwardRef<HTMLDivElement, ColorPickerProps>(
             {chip}
           </button>
         )}
-        <input
-          ref={entryRef}
-          id={id}
-          type="text"
-          className={styles.entry}
-          autoComplete="off"
-          autoCapitalize="off"
-          spellCheck={false}
-          aria-label={labels.value}
-          aria-invalid={invalid || undefined}
-          aria-required={required || undefined}
-          aria-describedby={ariaDescribedBy}
-          placeholder={labels.none}
-          disabled={disabled}
-          readOnly={readOnly}
-          value={entry ?? text}
-          onChange={(event: ChangeEvent<HTMLInputElement>) => {
-            setEntry(event.target.value);
-            setInvalidEntry(false);
-          }}
-          onKeyDown={onEntryKeyDown}
-          onBlur={() => {
-            commitEntry();
-          }}
-        />
+        <span className={styles.entryBox} data-text={sizerText}>
+          <input
+            ref={entryRef}
+            id={id}
+            type="text"
+            className={styles.entry}
+            autoComplete="off"
+            autoCapitalize="off"
+            spellCheck={false}
+            aria-label={labels.value}
+            aria-invalid={invalid || undefined}
+            aria-required={required || undefined}
+            aria-describedby={ariaDescribedBy}
+            placeholder={labels.none}
+            disabled={disabled}
+            readOnly={readOnly}
+            value={shown}
+            onChange={(event: ChangeEvent<HTMLInputElement>) => {
+              setEntry(event.target.value);
+              setInvalidEntry(false);
+            }}
+            onKeyDown={onEntryKeyDown}
+            onBlur={() => {
+              commitEntry();
+            }}
+          />
+        </span>
         {clearable && hasValue && !inert && (
           <button type="button" className={cx(styles.iconButton, buttonClass[size])} aria-label={labels.clear} onClick={clearColor}>
             <Icon icon={XIcon} size={iconSizeFor[size]} tone="default" />
@@ -363,6 +391,8 @@ export const ColorPicker = forwardRef<HTMLDivElement, ColorPickerProps>(
         eyeDropper={eyeDropper}
         labels={labels}
         formatNumber={formatNumber}
+        format={showFormatSwitch ? format : undefined}
+        onFormatChange={changeFormat}
         dir={direction}
         disabled={disabled}
         readOnly={readOnly}

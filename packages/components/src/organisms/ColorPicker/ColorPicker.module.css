@@ -60,21 +60,37 @@
   opacity: var(--dbm-opacity-40);
 }
 
-/* The typed color. A real `<input>`, so a phone's keyboard, autofill and paste work. Its width is a count of digits of the
-   field's own font, enough for `#rrggbbaa`, so it neither grows nor jumps as the text changes. */
+/* The typed color. A real `<input>`, so a phone's keyboard, autofill and paste work. It is drawn over an invisible copy of its own
+   text (`.entryBox`'s `::after`, from `data-text`), so the field is as wide as what it shows and no wider. While the panel is open
+   the copy holds the longest text shown so far, so a drag that changes the number of digits does not move the field's edge. */
+.entryBox {
+  display: inline-grid;
+  flex: 0 1 auto;
+  min-inline-size: 0;
+}
+
+.entryBox::after {
+  content: attr(data-text);
+  font-variant-numeric: tabular-nums;
+  grid-area: 1 / 1;
+  visibility: hidden;
+  white-space: pre;
+}
+
 .entry {
   appearance: none;
   background: none;
   border: none;
   border-radius: var(--dbm-radius-sm);
   color: inherit;
-  flex: 1 1 auto;
   font-family: inherit;
   font-size: inherit;
   font-variant-numeric: tabular-nums;
-  inline-size: 10ch;
+  grid-area: 1 / 1;
+  /* Zero wide with a full-width minimum: an input's own default width (about twenty characters) must not size the box. */
+  inline-size: 0;
+  min-inline-size: 100%;
   line-height: inherit;
-  min-inline-size: 0;
   outline: none;
   padding: 0;
 }

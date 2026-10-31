@@ -1,6 +1,6 @@
 # 0153 — `ColorPicker` is a field and a trigger-less popover over a text value in one format, with hand-rolled color maths, over a native color input, a color object or a color library
 
-**Status:** Accepted · **Date:** 2026-10-31
+**Status:** Accepted · **Date:** 2026-10-31 · Partly superseded by [ADR-0156](./0156-colorpicker-lets-the-person-change-the-format-through-an-opt-in-switch-in-the-panel-with-a-controllable-format-that-re-spells-the-value-over-a-fixed-format-or-a-display-only-switch.md): the format may be changed by the person, through an opt-in switch
 
 ## Context
 `ColorPicker` was planned as "Popover plus Slider" with no design notes. Four things had to be decided together because each constrains the others: what the value is, what draws the colors, where the maths lives, and how the panel is attached to the field. The system takes no dependency without a reason (`02-tech-stack-and-structure.md`), the `DatePicker` family already has a field-plus-panel shape ([ADR-0083](./0083-datepicker-anchors-its-panel-to-the-whole-field-with-a-trigger-less-radix-anchor-and-offers-side-align-and-a-full-width-presentation-over-the-popover-molecule-and-its-button.md)), and the token pipeline already uses a color library, but only as a build-time dependency of `packages/tokens`, never shipped.

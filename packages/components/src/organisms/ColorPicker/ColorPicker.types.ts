@@ -58,6 +58,10 @@ export interface ColorPickerLabels {
   chosen: (color: string) => string;
   /** Said aloud when the color is cleared. */
   cleared: string;
+  /** Name of the group of buttons that changes the format (`showFormatSwitch`). */
+  formatSwitch: string;
+  /** The text of a format's button in that group, given the format. */
+  formatName: (format: ColorPickerFormat) => string;
 }
 
 /** When `onValueChange` is called: on every change, as the person drags, or only when they are done. */
@@ -94,12 +98,27 @@ export interface ColorPickerProps
    */
   onValueCommit?: (value: string) => void;
   /**
-   * How the color is written: the text in the field and the string `onValueChange`, `onValueCommit` and `name` carry.
-   * `"hex"` is `#rrggbb`, `"rgb"` is `rgb(r g b)`, `"hsl"` is `hsl(h s% l%)` and `"oklch"` is `oklch(L C H)`. Typed
-   * text may use any of them (or a three, four or eight digit hex, with or without `#`) whatever `format` is.
-   * @default 'hex'
+   * The controlled format: how the color is written, as the text in the field and the string `onValueChange`,
+   * `onValueCommit` and `name` carry. `"hex"` is `#rrggbb`, `"rgb"` is `rgb(r g b)`, `"hsl"` is `hsl(h s% l%)` and
+   * `"oklch"` is `oklch(L C H)`. Typed text may use any of them (or a three, four or eight digit hex, with or without
+   * `#`) whatever the format is. Pair it with `onFormatChange` when `showFormatSwitch` is on, or the switch does nothing.
+   * Omit it (and use `defaultFormat`) to let the picker hold the format.
    */
   format?: ColorPickerFormat;
+  /**
+   * The initial format for uncontrolled usage — ignored once `format` is provided.
+   * @default 'hex'
+   */
+  defaultFormat?: ColorPickerFormat;
+  /** Called with the new format when the format switch is used. The value is reported in the new format at the same moment. */
+  onFormatChange?: (format: ColorPickerFormat) => void;
+  /**
+   * Adds a row of buttons to the panel (Hex, RGB, HSL, OKLCH) that changes the format. Choosing one rewrites the text
+   * in the field and reports the color in the new format through `onValueChange` and `onValueCommit`, so leave it off
+   * where the value must always be one fixed spelling.
+   * @default false
+   */
+  showFormatSwitch?: boolean;
   /**
    * Adds an opacity slider and keeps opacity in the value (`#rrggbbaa`, or `/ a` in the other formats); a color that is
    * fully opaque is written with none. Off, the value is always opaque.

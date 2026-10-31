@@ -41,6 +41,27 @@ describe("ColorPicker field", () => {
     expect(entry().value).toBe(expected);
   });
 
+  it("re-spells an uncontrolled value when the format changes, and a typed one too", async () => {
+    const user = userEvent.setup();
+    const { rerender } = render(<ColorPicker aria-label="c" defaultValue="#5548a4" />);
+    rerender(<ColorPicker aria-label="c" defaultValue="#5548a4" format="rgb" />);
+    expect(entry().value).toBe("rgb(85 72 164)");
+    await user.clear(entry());
+    await user.type(entry(), "#ffffff{Enter}");
+    expect(entry().value).toBe("rgb(255 255 255)");
+    rerender(<ColorPicker aria-label="c" defaultValue="#5548a4" format="hsl" />);
+    expect(entry().value).toBe("hsl(0 0% 100%)");
+  });
+
+  it("keeps the opacity of an uncontrolled value across turning alpha off and on", () => {
+    const { rerender } = render(<ColorPicker aria-label="c" defaultValue="#5548a480" alpha />);
+    expect(entry().value).toBe("#5548a480");
+    rerender(<ColorPicker aria-label="c" defaultValue="#5548a480" />);
+    expect(entry().value).toBe("#5548a4");
+    rerender(<ColorPicker aria-label="c" defaultValue="#5548a480" alpha />);
+    expect(entry().value).toBe("#5548a480");
+  });
+
   it("treats a value that is not a color as empty, with a warning", () => {
     const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
     render(<ColorPicker aria-label="c" value="banana" />);
@@ -454,6 +475,108 @@ describe("ColorPicker swatches", () => {
   });
 });
 
+describe("ColorPicker format switch", () => {
+  const formatGroup = () => screen.getByRole("radiogroup", { name: "Color format" });
+  const formatButton = (name: string) => within(formatGroup()).getByRole("radio", { name });
+
+  it("draws no switch unless asked", () => {
+    render(<ColorPicker aria-label="c" inline defaultValue="#5548a4" />);
+    expect(screen.queryByRole("radiogroup", { name: "Color format" })).not.toBeInTheDocument();
+  });
+
+  it("offers the four formats with the current one chosen", () => {
+    render(<ColorPicker aria-label="c" inline showFormatSwitch format="hsl" onFormatChange={() => undefined} />);
+    expect(within(formatGroup()).getAllByRole("radio").map((radio) => radio.textContent)).toEqual(["Hex", "RGB", "HSL", "OKLCH"]);
+    expect(formatButton("HSL")).toBeChecked();
+  });
+
+  it("rewrites the text and reports the color in the new format", async () => {
+    const user = userEvent.setup();
+    const onFormatChange = vi.fn();
+    const onValueChange = vi.fn();
+    const onValueCommit = vi.fn();
+    render(<ColorPicker aria-label="c" inline showFormatSwitch defaultValue="#5548a4" onFormatChange={onFormatChange} onValueChange={onValueChange} onValueCommit={onValueCommit} />);
+    await user.click(formatButton("RGB"));
+    expect(entry().value).toBe("rgb(85 72 164)");
+    expect(onFormatChange).toHaveBeenCalledWith("rgb");
+    expect(onValueChange).toHaveBeenCalledWith("rgb(85 72 164)");
+    expect(onValueCommit).toHaveBeenCalledWith("rgb(85 72 164)");
+    await user.click(formatButton("OKLCH"));
+    expect(entry().value).toMatch(/^oklch\(/);
+    await user.click(formatButton("Hex"));
+    expect(entry().value).toBe("#5548a4");
+  });
+
+  it("starts from defaultFormat", () => {
+    render(<ColorPicker aria-label="c" inline showFormatSwitch defaultFormat="rgb" defaultValue="#5548a4" />);
+    expect(entry().value).toBe("rgb(85 72 164)");
+    expect(formatButton("RGB")).toBeChecked();
+  });
+
+  it("changes nothing by itself while the format is controlled, until its owner follows", async () => {
+    const user = userEvent.setup();
+    const { rerender } = render(<ColorPicker aria-label="c" inline showFormatSwitch format="hex" defaultValue="#5548a4" />);
+    await user.click(formatButton("RGB"));
+    expect(entry().value).toBe("#5548a4");
+    rerender(<ColorPicker aria-label="c" inline showFormatSwitch format="rgb" defaultValue="#5548a4" />);
+    expect(entry().value).toBe("rgb(85 72 164)");
+  });
+
+  it("works wired to state, with a controlled value", async () => {
+    const user = userEvent.setup();
+    function Wired() {
+      const [format, setFormat] = useState<"hex" | "rgb" | "hsl" | "oklch">("hex");
+      const [value, setValue] = useState("#5548a4");
+      return <ColorPicker aria-label="c" inline showFormatSwitch format={format} onFormatChange={setFormat} value={value} onValueChange={setValue} />;
+    }
+    render(<Wired />);
+    await user.click(formatButton("HSL"));
+    expect(entry().value).toBe("hsl(248 39% 46%)");
+    await user.click(formatButton("Hex"));
+    expect(entry().value).toBe("#5548a4");
+  });
+
+  it("changes only the format, reporting no value, while no color is chosen", async () => {
+    const user = userEvent.setup();
+    const onValueChange = vi.fn();
+    const onFormatChange = vi.fn();
+    render(<ColorPicker aria-label="c" inline showFormatSwitch onValueChange={onValueChange} onFormatChange={onFormatChange} />);
+    await user.click(formatButton("RGB"));
+    expect(onFormatChange).toHaveBeenCalledWith("rgb");
+    expect(onValueChange).not.toHaveBeenCalled();
+    expect(formatButton("RGB")).toBeChecked();
+  });
+
+  it("does nothing when the chosen format is pressed again", async () => {
+    const user = userEvent.setup();
+    const onFormatChange = vi.fn();
+    render(<ColorPicker aria-label="c" inline showFormatSwitch defaultValue="#5548a4" onFormatChange={onFormatChange} />);
+    await user.click(formatButton("Hex"));
+    expect(onFormatChange).not.toHaveBeenCalled();
+    expect(formatButton("Hex")).toBeChecked();
+  });
+
+  it("is switched off when disabled or read only", () => {
+    render(<ColorPicker aria-label="c" inline readOnly showFormatSwitch defaultValue="#5548a4" />);
+    for (const radio of within(formatGroup()).getAllByRole("radio")) expect(radio).toBeDisabled();
+  });
+
+  it("takes translated names", () => {
+    render(<ColorPicker aria-label="c" inline showFormatSwitch labels={{ formatSwitch: "Farbformat", formatName: (format) => `F-${format}` }} />);
+    expect(within(screen.getByRole("radiogroup", { name: "Farbformat" })).getByRole("radio", { name: "F-hex" })).toBeInTheDocument();
+  });
+
+  it("is in the open panel, which stays open while it is used", async () => {
+    const user = userEvent.setup();
+    render(<ColorPicker aria-label="c" showFormatSwitch defaultValue="#5548a4" />);
+    await user.click(openButton());
+    await screen.findByRole("dialog");
+    await user.click(formatButton("RGB"));
+    expect(screen.getByRole("dialog")).toBeInTheDocument();
+    expect(entry().value).toBe("rgb(85 72 164)");
+  });
+});
+
 describe("ColorPicker eyedropper", () => {
   afterEach(() => {
     delete (window as unknown as { EyeDropper?: unknown }).EyeDropper;
@@ -557,7 +680,7 @@ describe("ColorPicker accessibility", () => {
   });
 
   it("has no axe violations inline, at another size and in right-to-left", async () => {
-    const { container } = render(<ColorPicker aria-label="Brand color" inline size="xs" dir="rtl" defaultValue="#5548a4" alpha swatches={["#ff0000"]} />);
+    const { container } = render(<ColorPicker aria-label="Brand color" inline size="xs" dir="rtl" defaultValue="#5548a4" alpha showFormatSwitch swatches={["#ff0000"]} />);
     expect(await axe(container)).toHaveNoViolations();
   });
 

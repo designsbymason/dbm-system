@@ -1,5 +1,6 @@
 import type { Meta, StoryContext, StoryObj } from "@storybook/react-vite";
 import { useState } from "react";
+import { useArgs } from "storybook/preview-api";
 import { expect, fn, userEvent, waitFor, within } from "storybook/test";
 import { Button } from "../../atoms/Button";
 import { Text } from "../../atoms/Text";
@@ -47,8 +48,19 @@ const meta: Meta<typeof ColorPicker> = {
     format: {
       control: "select",
       options: ["hex", "rgb", "hsl", "oklch"],
-      description: "How the color is written: the text in the field and the string the callbacks and name carry. Typed text may use any of them.",
+      description: "The controlled format: how the color is written, as the text in the field and the string the callbacks and name carry. Typed text may use any of them. Pair it with onFormatChange when showFormatSwitch is on.",
       table: { defaultValue: { summary: '"hex"' } },
+    },
+    defaultFormat: {
+      control: false,
+      description: "The initial format for uncontrolled usage — ignored once format is provided.",
+      table: { defaultValue: { summary: '"hex"' } },
+    },
+    onFormatChange: { control: false, description: "Called with the new format when the format switch is used. The value is reported in the new format at the same moment." },
+    showFormatSwitch: {
+      control: "boolean",
+      description: "Adds a row of buttons to the panel (Hex, RGB, HSL, OKLCH) that changes the format. Choosing one rewrites the field and reports the color in the new format, so leave it off where the value must always be one spelling.",
+      table: { defaultValue: { summary: "false" } },
     },
     alpha: {
       control: "boolean",
@@ -148,6 +160,7 @@ const meta: Meta<typeof ColorPicker> = {
     hasError: false,
     defaultValue: "#5548a4",
     format: "hex",
+    showFormatSwitch: false,
     alpha: false,
     eyeDropper: false,
     commitOn: "change",
@@ -179,6 +192,9 @@ const noControls = {
   onValueChange: { control: false },
   onValueCommit: { control: false },
   format: { control: false },
+  defaultFormat: { control: false },
+  onFormatChange: { control: false },
+  showFormatSwitch: { control: false },
   alpha: { control: false },
   eyeDropper: { control: false },
   commitOn: { control: false },
@@ -202,7 +218,11 @@ const stack = { display: "flex", flexDirection: "column", gap: "var(--dbm-space-
 
 /** Choose a color in the panel, type one into the field, or step the sliders with the keys; drive every prop from the Controls panel. */
 export const Playground: Story = {
-  render: (args) => <ColorPicker {...args} swatches={swatchList} />,
+  // The format is a control, so the switch in the panel writes its choice back to it.
+  render: function PlaygroundStory(args) {
+    const [, updateArgs] = useArgs();
+    return <ColorPicker {...args} swatches={swatchList} onFormatChange={(format) => updateArgs({ format })} />;
+  },
   parameters: {
     docs: {
       source: {
@@ -235,6 +255,13 @@ export const Formats: Story = {
       ))}
     </div>
   ),
+};
+
+export const FormatSwitch: Story = {
+  name: "Format switch",
+  parameters: { docs: { source: { code: colorPickerSnippets.formatSwitch } } },
+  argTypes: { ...noControls },
+  render: () => <ColorPicker aria-label="Brand color" showFormatSwitch defaultValue="#5548a4" />,
 };
 
 export const WithOpacity: Story = {

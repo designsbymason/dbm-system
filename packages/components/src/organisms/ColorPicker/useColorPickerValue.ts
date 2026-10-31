@@ -37,8 +37,10 @@ const hsvaFromText = (text: string, previous: Hsva): Hsva => {
 export function useColorPickerValue({ value, defaultValue, format, alpha, commitOn, onValueChange, onValueCommit }: Options) {
   const normalize = (text: string | undefined): string => (text ? (normalizeColor(text, format, alpha) ?? "") : "");
   const controlled = value !== undefined;
-  const [held, setHeld] = useState(() => normalize(defaultValue));
-  const external = controlled ? normalize(value) : held;
+  // The uncontrolled value is held as it was last written and spelled in the current `format` and `alpha` each render, so a
+  // format changed from outside re-spells it.
+  const [held, setHeld] = useState(() => defaultValue ?? "");
+  const external = normalize(controlled ? value : held);
 
   const [stored, setModel] = useState<Model>(() => ({ source: external, text: external, hsva: hsvaFromText(external, emptyHsva) }));
   let model = stored;
@@ -46,8 +48,11 @@ export function useColorPickerValue({ value, defaultValue, format, alpha, commit
   // refused. One that reports only when done (`commitOn="commit"`) keeps its drag until the owner's value changes.
   const followsOwner = controlled && commitOn === "change";
   if (stored.source !== external || (followsOwner && stored.text !== external)) {
-    // The value changed from outside. If it is what we already write to, only note it; if not, take it.
-    model = stored.text === external ? { ...stored, source: external } : { source: external, text: external, hsva: hsvaFromText(external, stored.hsva) };
+    // The value changed from outside. If it is what the numbers we hold already write to (as it is after a format change, and when an
+    // owner echoes a change back), keep the exact numbers and only take the text; a lossy spelling (HSL rounds to whole degrees) must not
+    // replace them. If it is another color, take it.
+    const writesExternal = external !== "" && formatColor(hsvaToRgb(stored.hsva), format, alpha) === external;
+    model = stored.text === external || writesExternal ? { ...stored, source: external, text: external } : { source: external, text: external, hsva: hsvaFromText(external, stored.hsva) };
     setModel(model);
   }
 

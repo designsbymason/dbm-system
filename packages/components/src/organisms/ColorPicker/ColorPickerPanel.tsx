@@ -4,11 +4,12 @@ import * as SliderPrimitive from "@radix-ui/react-slider";
 import { forwardRef, useEffect, useRef, useState } from "react";
 import type { KeyboardEvent } from "react";
 import { IconButton } from "../../atoms/IconButton";
+import { ToggleGroup } from "../../molecules/ToggleGroup";
 import { formatColor, hsvaToRgb } from "../../internal/color/colorValue";
 import type { Hsva, Rgba } from "../../internal/color/colorValue";
 import { ColorArea } from "./ColorArea";
 import styles from "./ColorPicker.module.css";
-import type { ColorPickerLabels } from "./ColorPicker.types";
+import type { ColorPickerFormat, ColorPickerLabels } from "./ColorPicker.types";
 import type { ChangeKind } from "./useColorPickerValue";
 
 /** A swatch that has been read: its color, how it is named and the CSS the chip is painted with. */
@@ -26,6 +27,9 @@ interface ColorPickerPanelProps {
   eyeDropper: boolean;
   labels: ColorPickerLabels;
   formatNumber: (value: number) => string;
+  /** The chosen format while the switch is shown; `undefined` draws no switch. */
+  format: ColorPickerFormat | undefined;
+  onFormatChange: (format: ColorPickerFormat) => void;
   dir: "ltr" | "rtl";
   disabled: boolean;
   readOnly: boolean;
@@ -37,6 +41,8 @@ interface ColorPickerPanelProps {
 interface EyeDropperLike {
   open: (options?: { signal?: AbortSignal }) => Promise<{ sRGBHex: string }>;
 }
+
+const FORMATS: ColorPickerFormat[] = ["hex", "rgb", "hsl", "oklch"];
 
 const hasEyeDropper = () => typeof window !== "undefined" && "EyeDropper" in window;
 
@@ -57,7 +63,7 @@ function colorVariables(hsva: Hsva): React.CSSProperties {
  * gradients and thumb colors are colors the person chose, so they are written from the color rather than from tokens.
  */
 export const ColorPickerPanel = forwardRef<HTMLInputElement, ColorPickerPanelProps>(
-  ({ hsva, hasValue, alpha, swatches, eyeDropper, labels, formatNumber, dir, disabled, readOnly, onChange, onPickSwatch, onPickFromScreen }, areaRef) => {
+  ({ hsva, hasValue, alpha, swatches, eyeDropper, labels, formatNumber, format, onFormatChange, dir, disabled, readOnly, onChange, onPickSwatch, onPickFromScreen }, areaRef) => {
     const inert = disabled || readOnly;
     const [canDropper, setCanDropper] = useState(false);
     useEffect(() => {
@@ -162,6 +168,28 @@ export const ColorPickerPanel = forwardRef<HTMLInputElement, ColorPickerPanelPro
             <SliderPrimitive.Track className={cx(styles.track, styles.alphaTrack)} />
             <SliderPrimitive.Thumb className={cx(styles.sliderThumb, styles.alphaThumb)} {...thumbLabel(labels.alpha, labels.percentText(formatNumber(Math.round(hsva.a * 100))))} />
           </SliderPrimitive.Root>
+        )}
+        {format !== undefined && (
+          <ToggleGroup
+            type="single"
+            size="xs"
+            variant="subtle"
+            fullWidth
+            dir={dir}
+            aria-label={labels.formatSwitch}
+            disabled={inert}
+            value={format}
+            onValueChange={(next) => {
+              // Pressing the chosen one would clear a single group's choice; a format is always chosen.
+              if (next !== "") onFormatChange(next as ColorPickerFormat);
+            }}
+          >
+            {FORMATS.map((name) => (
+              <ToggleGroup.Item key={name} value={name}>
+                {labels.formatName(name)}
+              </ToggleGroup.Item>
+            ))}
+          </ToggleGroup>
         )}
         {(swatches.length > 0 || canDropper) && (
           <div className={styles.extras}>

@@ -219,22 +219,44 @@ export const SwatchAndThumbTargets: Story = {
   },
 };
 
-export const EntryDoesNotJump: Story = {
-  name: "The field's width does not change as the text changes",
+export const EntryHugsItsText: Story = {
+  name: "The field is as wide as its text and no wider, and does not shrink while the panel is open",
   render: () => (
     <Page>
-      <ColorPicker aria-label="Brand color" defaultValue="#5548a4" />
+      <div style={{ display: "flex", flexDirection: "column", gap: "var(--dbm-space-2)", alignItems: "flex-start" }}>
+        <ColorPicker aria-label="Brand color" format="rgb" defaultValue="#5548a4" />
+      </div>
     </Page>
   ),
   play: async () => {
-    const group = body().getByRole("group", { name: "Brand color" });
-    const before = group.getBoundingClientRect().width;
+    const box = () => entry().parentElement as HTMLElement;
+    const textWidth = () => {
+      const probe = document.createElement("span");
+      const style = getComputedStyle(entry());
+      probe.style.cssText = `position:absolute;visibility:hidden;white-space:pre;font-family:${style.fontFamily};font-size:${style.fontSize};font-weight:${style.fontWeight};letter-spacing:${style.letterSpacing};font-variant-numeric:tabular-nums`;
+      probe.textContent = entry().value;
+      document.body.appendChild(probe);
+      const width = probe.getBoundingClientRect().width;
+      probe.remove();
+      return width;
+    };
+    // No spare room after the text: the box is the text's width, give or take a pixel.
+    await expect(Math.abs(box().getBoundingClientRect().width - textWidth())).toBeLessThan(2);
+    // A longer value widens it.
     await userEvent.clear(entry());
-    await userEvent.type(entry(), "#fff{Enter}");
-    await expect(group.getBoundingClientRect().width).toBe(before);
-    await userEvent.clear(entry());
-    await userEvent.type(entry(), "oklch(0.5 0.2 300){Enter}");
-    await expect(group.getBoundingClientRect().width).toBe(before);
+    await userEvent.type(entry(), "rgb(255 255 255){Enter}");
+    await waitFor(() => expect(Math.abs(box().getBoundingClientRect().width - textWidth())).toBeLessThan(2));
+    // With the panel open, a shorter value does not shrink it.
+    await userEvent.click(body().getByRole("button", { name: "Choose color" }));
+    await body().findByRole("dialog", { name: "Choose a color" });
+    const open = box().getBoundingClientRect().width;
+    body().getByRole("slider", { name: "Brightness" }).focus();
+    await userEvent.keyboard("{Home}");
+    await waitFor(() => expect(entry()).toHaveValue("rgb(0 0 0)"));
+    await expect(box().getBoundingClientRect().width).toBe(open);
+    await userEvent.keyboard("{Escape}");
+    await waitFor(() => expect(body().queryByRole("dialog", { name: "Choose a color" })).not.toBeInTheDocument());
+    await waitFor(() => expect(box().getBoundingClientRect().width).toBeLessThan(open));
   },
 };
 
@@ -345,5 +367,57 @@ export const PanelSitsByTheField: Story = {
     await expect(body().getByRole("slider", { name: "Saturation" })).toHaveFocus();
     await userEvent.keyboard("{Escape}");
     await waitFor(() => expect(body().queryByRole("dialog", { name: "Choose a color" })).not.toBeInTheDocument());
+  },
+};
+
+export const EveryFormatFits: Story = {
+  name: "The whole value shows in every format, with and without opacity, at every size",
+  render: () => (
+    <Page>
+      <div style={{ display: "flex", flexDirection: "column", gap: "var(--dbm-space-2)", alignItems: "flex-start" }}>
+      {(["hex", "rgb", "hsl", "oklch"] as const).flatMap((format) =>
+        (["xs", "xl"] as const).flatMap((size) =>
+          [false, true].map((alpha) => (
+            <ColorPicker key={`${format}${size}${alpha}`} format={format} size={size} alpha={alpha} aria-label={`${format} ${size} ${alpha}`} defaultValue={alpha ? "#fedcba8c" : "#fedcba"} />
+          )),
+        ),
+      )}
+      </div>
+    </Page>
+  ),
+  play: async () => {
+    const rows = (body().getAllByRole("textbox", { name: "Color value" }) as HTMLInputElement[]).map((input) => `${input.value}|${input.scrollWidth}|${input.clientWidth}`);
+    if (rows.length === 0) throw new Error("no fields");
+    for (const input of body().getAllByRole("textbox", { name: "Color value" }) as HTMLInputElement[]) {
+      await expect(input.scrollWidth, input.value).toBeLessThanOrEqual(input.clientWidth);
+    }
+  },
+};
+
+export const SwitchTheFormatInThePanel: Story = {
+  name: "The format switch in the open panel rewrites the field and leaves the panel open, with a real mouse",
+  render: () => (
+    <Page>
+      <ColorPicker aria-label="Brand color" showFormatSwitch defaultValue="#5548a4" />
+    </Page>
+  ),
+  play: async () => {
+    await userEvent.click(body().getByRole("button", { name: "Choose color" }));
+    const panel = await body().findByRole("dialog", { name: "Choose a color" });
+    await settled(panel);
+    const group = within(panel).getByRole("radiogroup", { name: "Color format" });
+    // Four buttons share the panel's width, every one a large enough target and none cut off.
+    for (const radio of within(group).getAllByRole("radio")) {
+      const rect = radio.getBoundingClientRect();
+      await expect(rect.height).toBeGreaterThanOrEqual(24);
+      await expect(rect.width).toBeGreaterThanOrEqual(24);
+      await expect(radio.scrollWidth).toBeLessThanOrEqual(radio.clientWidth);
+    }
+    await expect(group.getBoundingClientRect().right).toBeLessThanOrEqual(panel.getBoundingClientRect().right);
+    await realClick(within(group).getByRole("radio", { name: "OKLCH" }));
+    await waitFor(() => expect(entry().value).toMatch(/^oklch\(/));
+    await expect(body().getByRole("dialog", { name: "Choose a color" })).toBeInTheDocument();
+    await realClick(within(group).getByRole("radio", { name: "Hex" }));
+    await waitFor(() => expect(entry()).toHaveValue("#5548a4"));
   },
 };
