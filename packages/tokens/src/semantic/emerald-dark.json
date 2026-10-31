@@ -495,6 +495,11 @@
       "$type": "color",
       "$value": "{color.neutral.white}",
       "$description": "White in all 4 themes and both modes, for a border or focus ring drawn on a surface that is dark in every theme (the ImageViewer stage's focus ring and current-thumbnail border). Shares the reasoning of icon.white and text.white. Not for a border on a themed surface: use border.default, border.focus or the border.on-* family there."
+    },
+    "black": {
+      "$type": "color",
+      "$value": "{color.neutral.black}",
+      "$description": "Black in all 4 themes and both modes, the dark half of a two-tone ring drawn on a color the system does not choose (ColorPicker's thumb: a border.white ring inside this one is separable from any fill, since one of the two has at least 3:1 against it). Shares the reasoning of border.white: it does not flip with the mode. Not for a border on a themed surface: use border.default or border.focus there. Like border.white, no fixed WCAG pairing (the fill behind it is arbitrary)."
     }
   },
   "icon": {

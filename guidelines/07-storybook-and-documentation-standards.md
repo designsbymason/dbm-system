@@ -291,6 +291,7 @@ Foundational components first (prove the template before mass-applying it), then
 | EditorTabs | Organism | Navigation | ✅ | ✅ 2026-10-30 | [EditorTabs.md](component-reviews/EditorTabs.md) |
 | Carousel | Organism | Media | ✅ | ✅ 2026-10-31 | [Carousel.md](component-reviews/Carousel.md) |
 | ImageViewer | Organism | Media | ✅ | ✅ 2026-10-31 | [ImageViewer.md](component-reviews/ImageViewer.md) |
+| ColorPicker | Organism | Inputs & Forms | ✅ | ⏳ built 2026-10-31, review pending | [ColorPicker.md](component-reviews/ColorPicker.md) |
 
 Components not yet built are listed in `04-component-inventory.md`'s build orders, and a row is added here once a component is built, and its Finalized cell is filled when its review pass is declared done. A Docs page is one deliverable inside each component's full `06-engineering-standards.md` §9 review pass, not a separate sweep; components are reviewed one at a time. Tier membership follows [ADR-0012](adr/0012-item-components-are-atom-tier-even-when-their-container-is-a-molecule.md) (`GridItem` and `ListItem` are atoms, `Grid` and `List` are molecules).
 

@@ -1,0 +1,228 @@
+import type { Responsive } from "@dbm-system/utils";
+import type { ComponentPropsWithoutRef, FocusEventHandler } from "react";
+import type { InputSize } from "../../atoms/Input";
+import type { ColorFormat } from "../../internal/color/colorValue";
+
+export type ColorPickerSize = InputSize;
+/** How a color is written as text: the field's text and the value `onValueChange` reports. */
+export type ColorPickerFormat = ColorFormat;
+/** How the panel is drawn: floating from the field, or spanning the visible screen (a phone, usually). */
+export type ColorPickerPresentation = "anchored" | "full-width";
+/** Which side of the field the panel opens on, its first choice. */
+export type ColorPickerSide = "top" | "bottom";
+/** How the panel lines up with the field along the side it opens on. */
+export type ColorPickerAlign = "start" | "center" | "end";
+
+/** A color offered in the panel's list of swatches. */
+export interface ColorPickerSwatch {
+  /** The color, in any form `value` can be written in: `"#5548a4"`, `"rgb(85 72 164)"`, `"hsl(248 39% 46%)"`, `"oklch(0.5 0.14 285)"`. */
+  value: string;
+  /** The swatch's name, said by a screen reader and shown as its tooltip. Defaults to the color written as text. */
+  label?: string;
+}
+
+/**
+ * Every piece of text `ColorPicker` writes itself. Pass a partial object to translate any of it; the rest stays English.
+ * A label that needs a number is a function of the plain number, written through `formatNumber`.
+ */
+export interface ColorPickerLabels {
+  /** Name of the text entry that shows and takes the color. */
+  value: string;
+  /** Name of the button that opens the panel. */
+  openPicker: string;
+  /** Name of the panel. */
+  pickerName: string;
+  /** Name of the button that clears the field. */
+  clear: string;
+  /** Name of the saturation control of the area. */
+  saturation: string;
+  /** Name of the brightness control of the area. */
+  brightness: string;
+  /** Name of the hue slider. */
+  hue: string;
+  /** Name of the opacity slider. */
+  alpha: string;
+  /** Name of the group of swatches. */
+  swatches: string;
+  /** Name of the button that picks a color from the screen. */
+  eyeDropper: string;
+  /** The placeholder of the text entry while no color is chosen. */
+  none: string;
+  /** The form message for text that is not a color. */
+  invalid: string;
+  /** What the hue is read as, given degrees. */
+  hueText: (degrees: string) => string;
+  /** What a saturation, brightness or opacity is read as, given the percentage. */
+  percentText: (percent: string) => string;
+  /** Said aloud when a color is chosen from a swatch, the screen or typed text, given the color written as text. */
+  chosen: (color: string) => string;
+  /** Said aloud when the color is cleared. */
+  cleared: string;
+}
+
+/** When `onValueChange` is called: on every change, as the person drags, or only when they are done. */
+export type ColorPickerCommitOn = "change" | "commit";
+
+export interface ColorPickerProps
+  extends Omit<ComponentPropsWithoutRef<"div">, "defaultValue" | "onChange" | "children" | "role" | "onFocus" | "onBlur" | "dir"> {
+  /**
+   * Overall size, on the shared scale; the field's height matches `Input` at the same step.
+   * @default 'md'
+   */
+  size?: ColorPickerSize;
+  /**
+   * Shows the error state: a danger-coloured border and `aria-invalid`. Text that is not a color shows it too, without this.
+   * @default false
+   */
+  hasError?: boolean;
+  /**
+   * The color, as text in `format` (`"#5548a4"`). `""` or omitted for no color. Any readable spelling is accepted and
+   * written back in `format`; a string that is not a color reads as empty, with a development warning.
+   */
+  value?: string;
+  /** The initial color for uncontrolled usage, written like `value` — ignored once `value` is provided. */
+  defaultValue?: string;
+  /**
+   * Called with the new color, written in `format`, whenever it changes: on every step of a drag, a key press, a swatch,
+   * the eyedropper, typed text once it is committed (Enter or leaving the field) and the clear button (`""`). Use
+   * `onValueCommit` to hear only the settled color.
+   */
+  onValueChange?: (value: string) => void;
+  /**
+   * Called once with the final color, when a drag is released, a key step completes, text is committed, or a swatch,
+   * the eyedropper or the clear button is used. The right hook for anything expensive.
+   */
+  onValueCommit?: (value: string) => void;
+  /**
+   * How the color is written: the text in the field and the string `onValueChange`, `onValueCommit` and `name` carry.
+   * `"hex"` is `#rrggbb`, `"rgb"` is `rgb(r g b)`, `"hsl"` is `hsl(h s% l%)` and `"oklch"` is `oklch(L C H)`. Typed
+   * text may use any of them (or a three, four or eight digit hex, with or without `#`) whatever `format` is.
+   * @default 'hex'
+   */
+  format?: ColorPickerFormat;
+  /**
+   * Adds an opacity slider and keeps opacity in the value (`#rrggbbaa`, or `/ a` in the other formats); a color that is
+   * fully opaque is written with none. Off, the value is always opaque.
+   * @default false
+   */
+  alpha?: boolean;
+  /**
+   * Colors to choose from in a list under the sliders, as strings or `{ value, label }`. An entry that is not a color
+   * is left out, with a development warning. Arrow keys move between them (one tab stop); Enter or Space chooses one.
+   */
+  swatches?: ReadonlyArray<string | ColorPickerSwatch>;
+  /**
+   * Adds a button that picks a color from anywhere on the screen, where the browser has the `EyeDropper` API
+   * (Chromium); the button is left out elsewhere.
+   * @default false
+   */
+  eyeDropper?: boolean;
+  /**
+   * When `onValueChange` is called: `"change"` on every change, `"commit"` only when the person is done (a drag released,
+   * a key step finished, text committed) — the same moments as `onValueCommit`.
+   * @default 'change'
+   */
+  commitOn?: ColorPickerCommitOn;
+  /**
+   * Shows a clear button while a color is chosen. Clearing makes the value `""`.
+   * @default false
+   */
+  clearable?: boolean;
+  /** Called after the clear button has cleared the color. */
+  onClear?: () => void;
+  /**
+   * The name of the form field the color is submitted under, as the string in `format`. The field is checked as a
+   * real input, so `required` and text that is not a color refuse a surrounding form's submit.
+   */
+  name?: string;
+  /** The `id` of the form the hidden input belongs to, when the field is not inside it. */
+  form?: string;
+  /**
+   * Refuses a submit while no color is chosen.
+   * @default false
+   */
+  required?: boolean;
+  /**
+   * Disables the whole field.
+   * @default false
+   */
+  disabled?: boolean;
+  /**
+   * Keeps the color visible and selectable but not editable, and the panel closed.
+   * @default false
+   */
+  readOnly?: boolean;
+  /**
+   * Draws the panel in place, under the field's text entry, instead of floating from a button: no popover, no trigger.
+   * For a settings page or a Docs page where the panel is the content.
+   * @default false
+   */
+  inline?: boolean;
+  /**
+   * The controlled open state of the floating panel. Omit (with `defaultOpen`) to let the field hold it.
+   * Ignored when `inline`.
+   */
+  open?: boolean;
+  /**
+   * The initial open state for uncontrolled usage — ignored once `open` is provided.
+   * @default false
+   */
+  defaultOpen?: boolean;
+  /** Called with the new open state whenever the panel opens or closes. */
+  onOpenChange?: (open: boolean) => void;
+  /**
+   * Which side of the field the panel opens on, its first choice; it moves to the other side if there is no room.
+   * @default 'bottom'
+   */
+  side?: ColorPickerSide;
+  /**
+   * How the panel lines up with the field along that side. Has no effect while `presentation` is `"full-width"`.
+   * @default 'start'
+   */
+  align?: ColorPickerAlign;
+  /**
+   * `"anchored"` floats the panel from the field; `"full-width"` spans the visible screen (a phone), opening on
+   * whichever side has room once an on-screen keyboard is counted. A breakpoint map is accepted.
+   * @default 'anchored'
+   */
+  presentation?: Responsive<ColorPickerPresentation>;
+  /** The element the floating panel is portaled into. Defaults to `document.body`. */
+  container?: HTMLElement | null;
+  /**
+   * Focuses the text entry on mount. React only does this for native controls, so it is done from an effect.
+   * @default false
+   */
+  autoFocus?: boolean;
+  /**
+   * Text direction. `"rtl"` mirrors the field and the panel's sliders (the arrow keys follow); the saturation and
+   * brightness area never mirrors, since a color space is not text.
+   * @default 'ltr'
+   */
+  dir?: "ltr" | "rtl";
+  /** Text the component writes itself (accessible names, form messages, announcements); pass a partial object to translate any of it. */
+  labels?: Partial<ColorPickerLabels>;
+  /**
+   * How a number the component says (a hue in degrees, a percentage) is written, for a language or region whose numerals
+   * differ. Callbacks and the value keep plain numbers and the format's own digits.
+   * @default (n) => String(n)
+   */
+  formatNumber?: (value: number) => string;
+  /** Called when focus arrives on the field as a whole (its parts and the open panel are one field). */
+  onFocus?: FocusEventHandler<HTMLDivElement>;
+  /** Called when focus leaves the field as a whole. */
+  onBlur?: FocusEventHandler<HTMLDivElement>;
+  /** The `id` of the text entry, for a label's `htmlFor`. */
+  id?: string;
+  /** Names the group of controls when there is no visible label to point `aria-labelledby` at. */
+  "aria-label"?: string;
+  /** The `id` of the element that names the group. */
+  "aria-labelledby"?: string;
+  /** The `id` of the element that describes the field (helper or error text). */
+  "aria-describedby"?: string;
+  /** Extra classes for the outermost box. */
+  className?: string;
+  /** Inline styles for the outermost box. */
+  style?: React.CSSProperties;
+  /** A plain, behavior-free hook for automated tests. */
+  "data-testid"?: string;
+}

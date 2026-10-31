@@ -1,0 +1,31 @@
+# 0153 — `ColorPicker` is a field and a trigger-less popover over a text value in one format, with hand-rolled color maths, over a native color input, a color object or a color library
+
+**Status:** Accepted · **Date:** 2026-10-31
+
+## Context
+`ColorPicker` was planned as "Popover plus Slider" with no design notes. Four things had to be decided together because each constrains the others: what the value is, what draws the colors, where the maths lives, and how the panel is attached to the field. The system takes no dependency without a reason (`02-tech-stack-and-structure.md`), the `DatePicker` family already has a field-plus-panel shape ([ADR-0083](./0083-datepicker-anchors-its-panel-to-the-whole-field-with-a-trigger-less-radix-anchor-and-offers-side-align-and-a-full-width-presentation-over-the-popover-molecule-and-its-button.md)), and the token pipeline already uses a color library, but only as a build-time dependency of `packages/tokens`, never shipped.
+
+## Decision
+- **The value is one string in one format.** `format` is `"hex"` (the default), `"rgb"`, `"hsl"` or `"oklch"`; the field's text, `value`, `onValueChange`, `onValueCommit` and a form's `name` all carry that spelling, and `""` means no color. Typed or pasted text is read in any of the four (and in three, four and eight digit hex with or without `#`) and written back in `format`, so the value is a single spelling a caller can store and compare. `alpha` is opt-in: off, the value is always opaque; on, it carries opacity only while the color is not opaque (`#rrggbbaa`, or `/ a`). Color names are not read.
+- **The picker keeps its own numbers.** It holds hue, saturation, brightness and alpha, and reports and compares text. A gray keeps the hue it had, a drag does not wobble from rounding to eight bits, and a value from outside replaces the numbers only if it is not what they already write to. A controlled picker that reports every change follows its owner at once; one with `commitOn="commit"` keeps a drag until the owner's value changes.
+- **The color maths is hand-rolled in `internal/color/`**: parsing, sRGB, HSV, HSL and OKLCH conversion, and writing. OKLCH is a text format only (the area stays in HSV); an OKLCH color outside the sRGB gamut loses chroma until it fits, keeping its lightness and hue. About 200 lines of pure functions, tested for round trips and refusals.
+- **The panel is a Radix `Popover` with an `Anchor` around the whole field and no `Trigger`**, the shape of `DatePicker`, so it gets `side`, `align`, a full-width `presentation` for a phone, the popover z-index step and inside-a-`Dialog` behaviour for free. `inline` draws the same panel in place under the field, with no button and no popover. The field is a group of a swatch button and a text entry in one box drawn to match `Input`; it is not built on the `Input` atom, because its box holds an interactive button and the atom's slots are for decoration.
+- **A color the person chose is data, not a design value.** The chosen color, the hue strip, the saturation and brightness gradients and the checkerboard behind a partly transparent color are written from the value (custom properties set on the element) and not from tokens; everything that is chrome around them is a token (`05-component-api-conventions.md` §6). Because the thumbs sit on any color, each is a `border.white` ring inside a `border.black` ring, so one of the two is at least 3:1 against any fill; `border.black` is added beside `border.white`.
+- **A user-supplied color string is read and written by the component before it is painted.** A swatch or value that is not a color is left out (with a development warning) and never reaches a stylesheet as it came.
+- **An eyedropper is opt-in (`eyeDropper`)** and drawn only where the browser has the `EyeDropper` API, checked after mount so a server render and the first client render agree.
+
+## Alternatives considered
+- **Wrapping `<input type="color">`.** Rejected: no alpha, no text entry the page controls, no styling, no panel of swatches, an operating-system dialog on some platforms, and no way to report a drag.
+- **A color object (`{ h, s, v, a }` or `{ r, g, b }`) as the value.** Rejected: a string is what a form submits, what a database column holds and what CSS takes; an object needs a serializer on every side and a second way to compare two values.
+- **A color library (`culori`, already used to generate the scales).** Rejected: it would ship to every consumer for a few hundred lines of conversion, and the system's one other use of it is a build-time tool that is deliberately not in the package.
+- **Building on the `Popover` molecule and its trigger button.** Rejected for the reason [ADR-0083](./0083-datepicker-anchors-its-panel-to-the-whole-field-with-a-trigger-less-radix-anchor-and-offers-side-align-and-a-full-width-presentation-over-the-popover-molecule-and-its-button.md) gives: a panel anchored to a button is narrower than the field it belongs to and has no part for anchoring to anything else.
+- **A token for each color the pickers draws.** Not possible: the colors are the person's.
+
+## Consequences
+- `ColorPicker` adds no dependency; its JS is within the default 10KB budget.
+- A caller that wants a color object converts the string; the library exposes no color helpers in v1.
+- `border.black` is a new semantic token in all four themes, documented in `03-token-system-spec.md` and the Foundations Color page.
+- `05-component-api-conventions.md` §6 records the data-color exception for the next component that draws one.
+
+## Related
+[ADR-0154](./0154-colorpickers-saturation-and-brightness-area-is-a-pointer-surface-over-two-native-range-inputs-over-a-single-2d-slider-role.md), [ADR-0155](./0155-colorpicker-draws-its-hue-and-opacity-sliders-on-the-radix-slider-primitive-in-an-internal-part-over-adding-a-track-slot-to-the-slider-molecule.md), [ADR-0083](./0083-datepicker-anchors-its-panel-to-the-whole-field-with-a-trigger-less-radix-anchor-and-offers-side-align-and-a-full-width-presentation-over-the-popover-molecule-and-its-button.md), [ADR-0030](./0030-timepicker-holds-its-report-with-commiton-and-validates-through-a-hidden-time-input.md); `component-reviews/ColorPicker.md`.

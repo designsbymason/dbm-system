@@ -94,6 +94,7 @@ export * from "./molecules/Toolbar";
 
 export * from "./organisms/AlertDialog";
 export * from "./organisms/Carousel";
+export * from "./organisms/ColorPicker";
 export * from "./organisms/Combobox";
 export * from "./organisms/CommandPalette";
 export * from "./organisms/ConfirmDialog";

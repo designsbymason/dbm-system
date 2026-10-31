@@ -1,0 +1,519 @@
+/* The field's box. Drawn like `DatePicker`'s and `Input`'s (the same border, radius, focus ring and height at each size), because a
+   ColorPicker sits beside them in a form; it is a group of a button and a text entry, so the box is a `div` and the ring follows
+   `:focus-within`. Each size's `padding-block` is Button's, less the border, exactly as `Input`'s is, so the field is as tall as an `Input`.
+
+   COLORS THAT ARE THE DATA. Everything in this file that paints the chosen color, a hue, a saturation or an opacity (the area, the
+   tracks, the thumbs, the chip, the swatches) is written from the picker's own numbers or the color it was given (custom properties
+   set on the element in the component), with `hsl()` and `rgb()` stops that are the color model itself. They are not design colors
+   and no token could stand for them. Everything that is chrome (surfaces, borders, rings, text) is a token as everywhere else. */
+.root {
+  align-items: center;
+  background-color: var(--dbm-bg-surface);
+  border: var(--dbm-border-width-1) solid var(--dbm-border-default);
+  border-radius: var(--dbm-radius-md);
+  color: var(--dbm-text-primary);
+  display: inline-flex;
+  font-family: var(--dbm-font-family-primary);
+  gap: var(--dbm-space-2);
+  line-height: var(--dbm-line-height-tight);
+  /* The anchor for the hidden form input (`.proxy`), so a browser's validation message points at the field. */
+  position: relative;
+  transition:
+    border-color var(--dbm-motion-duration-fast) var(--dbm-motion-easing-standard),
+    opacity var(--dbm-motion-duration-fast) var(--dbm-motion-easing-standard);
+}
+
+.proxy {
+  block-size: 0;
+  border: 0;
+  inline-size: 0;
+  inset-block-end: 0;
+  inset-inline-start: 0;
+  margin: 0;
+  opacity: 0;
+  padding: 0;
+  pointer-events: none;
+  position: absolute;
+}
+
+.root:hover:not(.disabled):not(.error) {
+  border-color: var(--dbm-border-neutral);
+}
+
+/* The ring is drawn on the field's own edge, as `Input`'s is. */
+.root:focus-within {
+  border-color: var(--dbm-border-focus);
+  outline: var(--dbm-border-width-2) solid var(--dbm-border-focus);
+  outline-offset: calc(-1 * var(--dbm-border-width-2));
+}
+
+.root.error {
+  border-color: var(--dbm-border-danger);
+}
+
+.root.error:focus-within {
+  outline-color: var(--dbm-border-danger);
+}
+
+.root.disabled {
+  cursor: not-allowed;
+  opacity: var(--dbm-opacity-40);
+}
+
+/* The typed color. A real `<input>`, so a phone's keyboard, autofill and paste work. Its width is a count of digits of the
+   field's own font, enough for `#rrggbbaa`, so it neither grows nor jumps as the text changes. */
+.entry {
+  appearance: none;
+  background: none;
+  border: none;
+  border-radius: var(--dbm-radius-sm);
+  color: inherit;
+  flex: 1 1 auto;
+  font-family: inherit;
+  font-size: inherit;
+  font-variant-numeric: tabular-nums;
+  inline-size: 10ch;
+  line-height: inherit;
+  min-inline-size: 0;
+  outline: none;
+  padding: 0;
+}
+
+.entry::placeholder {
+  color: var(--dbm-text-tertiary);
+}
+
+.entry:disabled {
+  cursor: not-allowed;
+}
+
+/* The chip: the chosen color, over a checkerboard so a partly transparent one reads as such. Its side is the icon step of the
+   field's size. With no color it is an empty box with a slash through it. */
+.chip {
+  background-color: var(--dbm-bg-surface);
+  background-image:
+    linear-gradient(var(--color-picker-chip), var(--color-picker-chip)),
+    repeating-conic-gradient(var(--dbm-bg-track) 0 25%, var(--dbm-bg-surface) 0 50%);
+  background-size:
+    100% 100%,
+    var(--dbm-space-2) var(--dbm-space-2);
+  block-size: var(--chip-size);
+  border: var(--dbm-border-width-1) solid var(--dbm-border-neutral);
+  border-radius: var(--dbm-radius-sm);
+  box-sizing: border-box;
+  display: block;
+  flex-shrink: 0;
+  forced-color-adjust: none;
+  inline-size: var(--chip-size);
+}
+
+.chipEmpty {
+  background-image: linear-gradient(
+    to top right,
+    transparent calc(50% - var(--dbm-border-width-1)),
+    var(--dbm-icon-secondary) calc(50% - var(--dbm-border-width-1)) calc(50% + var(--dbm-border-width-1)),
+    transparent calc(50% + var(--dbm-border-width-1))
+  );
+  background-size: 100% 100%;
+}
+
+.chipBox {
+  align-items: center;
+  display: inline-flex;
+}
+
+/* The two small buttons in the field (open the panel, clear): neutral, no fill at rest and `bg.neutral-subtle` on hover, as the
+   in-field controls of `Input` and `DatePicker` are. Local rather than `IconButton` for the reason `Input`'s `.clear` documents: that
+   atom's boxes are as tall as a whole `Button`, which would inflate this row. */
+.iconButton,
+.chipButton {
+  align-items: center;
+  background-color: transparent;
+  border: none;
+  border-radius: var(--dbm-radius-full);
+  color: var(--dbm-icon-default);
+  cursor: pointer;
+  display: inline-flex;
+  flex-shrink: 0;
+  justify-content: center;
+  transition: background-color var(--dbm-motion-duration-fast) var(--dbm-motion-easing-standard);
+}
+
+.iconButton:hover:not(:disabled),
+.chipButton:hover:not(:disabled) {
+  background-color: var(--dbm-bg-neutral-subtle);
+}
+
+.iconButton:focus-visible,
+.chipButton:focus-visible {
+  outline: var(--dbm-border-width-2) solid var(--dbm-border-focus);
+  outline-offset: var(--dbm-space-1);
+}
+
+.iconButton:disabled,
+.chipButton:disabled {
+  cursor: not-allowed;
+}
+
+/* Sizes — `Input`'s, step for step. The chip's side is the icon step. */
+.sizeXs {
+  --chip-size: var(--dbm-icon-size-xs);
+  font-size: var(--dbm-font-size-xs);
+  padding-block: calc(var(--dbm-space-2) - var(--dbm-border-width-1));
+  padding-inline: var(--dbm-space-2);
+}
+
+.sizeSm {
+  --chip-size: var(--dbm-icon-size-sm);
+  font-size: var(--dbm-font-size-sm);
+  padding-block: calc(var(--dbm-space-3) - var(--dbm-border-width-1));
+  padding-inline: var(--dbm-space-3);
+}
+
+.sizeMd {
+  --chip-size: var(--dbm-icon-size-md);
+  font-size: var(--dbm-font-size-base);
+  padding-block: calc(var(--dbm-space-3) - var(--dbm-border-width-1));
+  padding-inline: var(--dbm-space-3);
+}
+
+.sizeLg {
+  --chip-size: var(--dbm-icon-size-lg);
+  font-size: var(--dbm-font-size-md);
+  padding-block: calc(var(--dbm-space-4) - var(--dbm-border-width-1));
+  padding-inline: var(--dbm-space-4);
+}
+
+.sizeXl {
+  --chip-size: var(--dbm-icon-size-xl);
+  font-size: var(--dbm-font-size-lg);
+  padding-block: calc(var(--dbm-space-4) - var(--dbm-border-width-1));
+  padding-inline: var(--dbm-space-4);
+}
+
+/* At xs the chip plus its padding is under the 24px a target must be (WCAG 2.5.8), so the box is held to `space-6` and the
+   compensating margin is worked from that. It still sits inside the field's own padding. */
+.buttonXs {
+  min-block-size: var(--dbm-space-6);
+  min-inline-size: var(--dbm-space-6);
+  padding: var(--dbm-space-1);
+  margin-block: calc((var(--dbm-font-size-xs) * var(--dbm-line-height-tight) - var(--dbm-space-6)) / 2);
+}
+
+.buttonSm {
+  padding: var(--dbm-space-2);
+  margin-block: calc((var(--dbm-font-size-sm) * var(--dbm-line-height-tight) - var(--dbm-icon-size-sm) - 2 * var(--dbm-space-2)) / 2);
+}
+
+.buttonMd {
+  padding: var(--dbm-space-2);
+  margin-block: calc((var(--dbm-font-size-base) * var(--dbm-line-height-tight) - var(--dbm-icon-size-md) - 2 * var(--dbm-space-2)) / 2);
+}
+
+.buttonLg {
+  padding: var(--dbm-space-2);
+  margin-block: calc((var(--dbm-font-size-md) * var(--dbm-line-height-tight) - var(--dbm-icon-size-lg) - 2 * var(--dbm-space-2)) / 2);
+}
+
+.buttonXl {
+  padding: var(--dbm-space-2);
+  margin-block: calc((var(--dbm-font-size-lg) * var(--dbm-line-height-tight) - var(--dbm-icon-size-xl) - 2 * var(--dbm-space-2)) / 2);
+}
+
+/* The floating panel: the same elevated surface as `Popover`'s and `DatePicker`'s panels, portaled outside this component's tree, so it sets
+   its own font-family; shadows are a fixed light/dark primitive pair. On the `popover` step, so it sits above a `Dialog`'s scrim. */
+.panel {
+  background-color: var(--dbm-bg-surface);
+  border: var(--dbm-border-width-1) solid var(--dbm-border-default);
+  border-radius: var(--dbm-radius-md);
+  box-shadow: var(--dbm-shadow-light-md);
+  box-sizing: border-box;
+  color: var(--dbm-text-primary);
+  font-family: var(--dbm-font-family-primary);
+  inline-size: var(--dbm-color-picker-panel-width);
+  max-inline-size: var(--radix-popper-available-width);
+  padding: var(--dbm-space-3);
+  z-index: var(--dbm-z-index-popover);
+}
+
+[data-theme$="-dark"] .panel {
+  box-shadow: var(--dbm-shadow-dark-md);
+}
+
+.panel[data-state="open"] {
+  animation: panelIn var(--dbm-motion-duration-fast) var(--dbm-motion-easing-emphasized);
+}
+
+.panel[data-state="closed"] {
+  animation: panelOut var(--dbm-motion-duration-fast) var(--dbm-motion-easing-standard);
+}
+
+@keyframes panelIn {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes panelOut {
+  to {
+    opacity: 0;
+  }
+}
+
+/* Across the visible screen: the width is set from the visual viewport in ColorPicker.tsx. */
+.fullWidth {
+  inline-size: var(--color-picker-width, var(--dbm-color-picker-panel-width));
+  max-inline-size: none;
+}
+
+.panelBody {
+  display: flex;
+  flex-direction: column;
+  gap: var(--dbm-space-3);
+}
+
+/* Drawn in place under the field. */
+.inline {
+  display: flex;
+  flex-direction: column;
+  font-family: var(--dbm-font-family-primary);
+  gap: var(--dbm-space-2);
+  inline-size: var(--dbm-color-picker-panel-width);
+  max-inline-size: 100%;
+}
+
+.inline .root {
+  display: flex;
+}
+
+.inlinePanel {
+  inline-size: 100%;
+}
+
+/* The saturation and brightness area. Left to right always: a color space is not text, so a right-to-left page does not mirror it.
+   The three layers are the color model: brightness down to black, saturation across from white, over the full-strength hue. */
+.area {
+  background-color: hsl(var(--color-picker-hue) 100% 50%);
+  background-image:
+    linear-gradient(to top, hsl(0 0% 0%), hsl(0 0% 0% / 0)),
+    linear-gradient(to right, hsl(0 0% 100%), hsl(0 0% 100% / 0));
+  block-size: var(--dbm-color-picker-area-height);
+  border-radius: var(--dbm-radius-md);
+  cursor: crosshair;
+  direction: ltr;
+  forced-color-adjust: none;
+  inline-size: 100%;
+  position: relative;
+  touch-action: none;
+  user-select: none;
+}
+
+.areaInert {
+  cursor: default;
+}
+
+/* Two real range inputs for the keyboard and for screen readers, not drawn: the thumb below is the picture of both. */
+.areaInput {
+  block-size: 1px;
+  inline-size: 1px;
+  margin: 0;
+  opacity: 0;
+  overflow: hidden;
+  pointer-events: none;
+  position: absolute;
+}
+
+/* A white ring inside a black one, so the thumb can be told from any color under it: against whatever it sits on, one of the
+   two is at least 3:1. A thumb only exists for a fixed 20px, with the hit area being the whole surface. */
+.areaThumb {
+  background-color: var(--color-picker-opaque);
+  block-size: var(--dbm-color-picker-thumb-size);
+  border: var(--dbm-border-width-2) solid var(--dbm-border-white);
+  border-radius: var(--dbm-radius-full);
+  box-shadow: 0 0 0 var(--dbm-border-width-1) var(--dbm-border-black);
+  box-sizing: border-box;
+  inline-size: var(--dbm-color-picker-thumb-size);
+  inset-block-start: var(--color-picker-y);
+  inset-inline-start: var(--color-picker-x);
+  pointer-events: none;
+  position: absolute;
+  translate: -50% -50%;
+}
+
+.area:has(.areaInput:focus-visible) .areaThumb {
+  box-shadow:
+    0 0 0 var(--dbm-border-width-1) var(--dbm-border-black),
+    0 0 0 calc(var(--dbm-border-width-1) + var(--dbm-border-width-2)) var(--dbm-border-white),
+    0 0 0 calc(2 * var(--dbm-border-width-1) + var(--dbm-border-width-2)) var(--dbm-border-black);
+}
+
+/* The hue and opacity sliders: the Radix primitive, drawn with these tracks and thumbs. */
+.slider {
+  align-items: center;
+  block-size: var(--dbm-color-picker-thumb-size);
+  cursor: pointer;
+  display: flex;
+  inline-size: 100%;
+  position: relative;
+  touch-action: none;
+  user-select: none;
+}
+
+.slider[data-disabled] {
+  cursor: default;
+  opacity: var(--dbm-opacity-40);
+}
+
+.track {
+  block-size: var(--dbm-color-picker-slider-track-height);
+  border-radius: var(--dbm-radius-full);
+  flex-grow: 1;
+  forced-color-adjust: none;
+  position: relative;
+}
+
+.hueTrack {
+  --hue-stops:
+    hsl(0 100% 50%), hsl(60 100% 50%), hsl(120 100% 50%), hsl(180 100% 50%), hsl(240 100% 50%), hsl(300 100% 50%), hsl(360 100% 50%);
+  background-image: linear-gradient(to right, var(--hue-stops));
+}
+
+.alphaTrack {
+  background-image:
+    linear-gradient(to right, rgb(var(--color-picker-rgb) / 0), rgb(var(--color-picker-rgb))),
+    repeating-conic-gradient(var(--dbm-bg-track) 0 25%, var(--dbm-bg-surface) 0 50%);
+  background-size:
+    100% 100%,
+    var(--dbm-space-2) var(--dbm-space-2);
+}
+
+/* Radix puts the minimum on the other side in a right-to-left slider, so the gradient runs the other way. */
+.sliderRtl .hueTrack {
+  background-image: linear-gradient(to left, var(--hue-stops));
+}
+
+.sliderRtl .alphaTrack {
+  background-image:
+    linear-gradient(to left, rgb(var(--color-picker-rgb) / 0), rgb(var(--color-picker-rgb))),
+    repeating-conic-gradient(var(--dbm-bg-track) 0 25%, var(--dbm-bg-surface) 0 50%);
+}
+
+.sliderThumb {
+  block-size: var(--dbm-color-picker-thumb-size);
+  border: var(--dbm-border-width-2) solid var(--dbm-border-white);
+  border-radius: var(--dbm-radius-full);
+  box-shadow: 0 0 0 var(--dbm-border-width-1) var(--dbm-border-black);
+  box-sizing: border-box;
+  display: block;
+  forced-color-adjust: none;
+  inline-size: var(--dbm-color-picker-thumb-size);
+  outline: none;
+}
+
+/* The pointer and touch target is at least 24 x 24px (WCAG 2.5.8), however small the thumb is drawn. */
+.sliderThumb::before {
+  content: "";
+  inset: calc((var(--dbm-space-6) - var(--dbm-color-picker-thumb-size)) / -2);
+  position: absolute;
+}
+
+.hueThumb {
+  background-color: hsl(var(--color-picker-hue) 100% 50%);
+}
+
+.alphaThumb {
+  background-color: transparent;
+  background-image:
+    linear-gradient(rgb(var(--color-picker-rgb) / var(--color-picker-alpha)), rgb(var(--color-picker-rgb) / var(--color-picker-alpha))),
+    repeating-conic-gradient(var(--dbm-bg-track) 0 25%, var(--dbm-bg-surface) 0 50%);
+  background-size:
+    100% 100%,
+    var(--dbm-space-2) var(--dbm-space-2);
+}
+
+.sliderThumb:focus-visible {
+  box-shadow:
+    0 0 0 var(--dbm-border-width-1) var(--dbm-border-black),
+    0 0 0 calc(var(--dbm-border-width-1) + var(--dbm-border-width-2)) var(--dbm-border-white),
+    0 0 0 calc(2 * var(--dbm-border-width-1) + var(--dbm-border-width-2)) var(--dbm-border-black);
+}
+
+/* The swatches, wrapping, and the eyedropper at the end of the row. */
+.extras {
+  align-items: flex-start;
+  display: flex;
+  gap: var(--dbm-space-2);
+  justify-content: space-between;
+}
+
+.swatches {
+  display: flex;
+  flex: 1 1 auto;
+  flex-wrap: wrap;
+  gap: var(--dbm-space-2);
+  /* Room for the selected swatch's ring, which is drawn outside it. */
+  padding: var(--dbm-space-1);
+}
+
+.swatch {
+  background-color: var(--dbm-bg-surface);
+  background-image:
+    linear-gradient(var(--color-picker-swatch), var(--color-picker-swatch)),
+    repeating-conic-gradient(var(--dbm-bg-track) 0 25%, var(--dbm-bg-surface) 0 50%);
+  background-size:
+    100% 100%,
+    var(--dbm-space-2) var(--dbm-space-2);
+  block-size: var(--dbm-color-picker-swatch-size);
+  border: var(--dbm-border-width-1) solid var(--dbm-border-neutral);
+  border-radius: var(--dbm-radius-sm);
+  box-sizing: border-box;
+  cursor: pointer;
+  forced-color-adjust: none;
+  inline-size: var(--dbm-color-picker-swatch-size);
+  padding: 0;
+}
+
+.swatch[aria-pressed="true"] {
+  box-shadow:
+    0 0 0 var(--dbm-border-width-2) var(--dbm-bg-surface),
+    0 0 0 calc(2 * var(--dbm-border-width-2)) var(--dbm-border-strong);
+}
+
+.swatch:focus-visible {
+  outline: var(--dbm-border-width-2) solid var(--dbm-border-focus);
+  outline-offset: var(--dbm-space-1);
+}
+
+.swatch:disabled {
+  cursor: default;
+  opacity: var(--dbm-opacity-40);
+}
+
+/* Forced colors keeps outlines and system colors, not box shadows: the thumbs and the selected swatch say so with a border. */
+@media (forced-colors: active) {
+  .areaThumb,
+  .sliderThumb {
+    border-color: CanvasText;
+    box-shadow: none;
+    outline: var(--dbm-border-width-2) solid Canvas;
+  }
+
+  .area:has(.areaInput:focus-visible) .areaThumb,
+  .sliderThumb:focus-visible {
+    outline-color: Highlight;
+  }
+
+  .swatch {
+    border-color: CanvasText;
+  }
+
+  .swatch[aria-pressed="true"] {
+    box-shadow: none;
+    outline: var(--dbm-border-width-2) solid Highlight;
+    outline-offset: var(--dbm-border-width-1);
+  }
+
+  .chip {
+    border-color: CanvasText;
+  }
+}

@@ -1,0 +1,354 @@
+import { Canvas, Meta } from "@storybook/addon-docs/blocks";
+import { Callout, ComponentHeader, PlaygroundControls, PropertiesTable, RelatedCard, TokenRow } from "../../../.storybook/blocks";
+import { FieldLabel } from "../../atoms/FieldLabel";
+import { Input } from "../../atoms/Input";
+import { VisuallyHidden } from "../../atoms/VisuallyHidden";
+import { DatePicker } from "../DatePicker";
+import { Slider } from "../../molecules/Slider";
+import { ColorPicker } from "./ColorPicker";
+import * as ColorPickerStories from "./ColorPicker.stories";
+
+export const propOrder = [
+  "size",
+  "hasError",
+  "value",
+  "defaultValue",
+  "onValueChange",
+  "onValueCommit",
+  "format",
+  "alpha",
+  "swatches",
+  "eyeDropper",
+  "commitOn",
+  "clearable",
+  "onClear",
+  "inline",
+  "side",
+  "align",
+  "presentation",
+  "container",
+  "open",
+  "defaultOpen",
+  "onOpenChange",
+  "onFocus",
+  "onBlur",
+  "disabled",
+  "required",
+  "readOnly",
+  "autoFocus",
+  "name",
+  "form",
+  "dir",
+  "labels",
+  "formatNumber",
+  "aria-label",
+  "aria-labelledby",
+  "aria-describedby",
+  "id",
+  "className",
+  "style",
+  "data-testid",
+];
+export const playgroundExclude = ["onValueChange", "onValueCommit", "onClear", "onOpenChange", "onFocus", "onBlur", "name"];
+
+<Meta of={ColorPickerStories} />
+
+<VisuallyHidden asChild><h2>Intro</h2></VisuallyHidden>
+
+<ComponentHeader title="ColorPicker" tier="Organism" />
+
+A color field: a swatch button that opens a panel, and a text entry that shows the color as text and takes a typed
+or pasted one. The panel holds an area for saturation and brightness (drag in it, or use the arrow keys), a hue
+slider, an optional opacity slider, a list of swatches you provide and, in browsers that have one, an eyedropper that
+picks a color from the screen. The value is a string — `"#5548a4"` by default — written in the `format` you choose
+(`hex`, `rgb`, `hsl` or `oklch`), and an empty string when no color is chosen, so it can be stored and submitted as it
+is. Typed text is read in any of those spellings whatever the format is.
+
+### Import
+
+```tsx
+import { ColorPicker } from "@dbm-system/components";
+```
+
+## Playground
+
+<div className="dbm-playground-canvas">
+
+<Canvas of={ColorPickerStories.Playground} />
+
+</div>
+<PlaygroundControls of={ColorPickerStories.Playground} order={propOrder} exclude={playgroundExclude} />
+
+## Properties
+
+`ColorPicker` also accepts any other native `<div>` attribute beyond what's listed here (e.g. `title`,
+`onKeyDown`) — passed straight through to the group element that holds the swatch button and the text entry. `ref`
+forwards to that group, `className` and `style` go on the outermost box, and the `id` goes on the text entry, which is
+what a `FieldLabel`'s `htmlFor` should point at.
+
+<PropertiesTable of={ColorPickerStories} order={propOrder} />
+
+## Variants
+
+### Sizes
+
+<Canvas of={ColorPickerStories.Sizes} />
+
+### Written as hex, rgb, hsl or oklch
+
+<Canvas of={ColorPickerStories.Formats} />
+
+### With opacity
+
+<Canvas of={ColorPickerStories.WithOpacity} />
+
+### With swatches
+
+<Canvas of={ColorPickerStories.Swatches} />
+
+### With an eyedropper
+
+<Canvas of={ColorPickerStories.EyeDropper} />
+
+### Drawn in place
+
+<Canvas of={ColorPickerStories.Inline} />
+
+### Side and alignment
+
+<Canvas of={ColorPickerStories.Placement} />
+
+### Full width, for a phone
+
+<Canvas of={ColorPickerStories.FullWidth} />
+
+### Change and commit
+
+<Canvas of={ColorPickerStories.CommitTiming} />
+
+### Required, in a form
+
+<Canvas of={ColorPickerStories.InAForm} />
+
+### Error, disabled and read-only
+
+<Canvas of={ColorPickerStories.States} />
+
+### With a clear button
+
+<Canvas of={ColorPickerStories.Clearable} />
+
+### Controlled value
+
+<Canvas of={ColorPickerStories.Controlled} />
+
+### In a FormField
+
+<Canvas of={ColorPickerStories.InFormField} />
+
+### Translated
+
+<Canvas of={ColorPickerStories.Translated} />
+
+## Usage guidelines
+
+<div className="dbm-do-dont-grid">
+<Callout tone="success" title="Do">
+
+- Use `ColorPicker` when a person chooses any color: a brand color, a label, a chart series, a highlight. For a
+  small fixed set, a row of `swatches` with the text entry hidden by its own layout is often all they need.
+- Pass `swatches` for the colors people reach for most (the brand colors, the last few used); the arrow keys move
+  between them and Enter or Space chooses one.
+- Pick the `format` your data uses. The field writes it, and the value, `onValueChange`, `onValueCommit` and a form's
+  `name` all carry it.
+- Turn on `alpha` only when a color's opacity is part of what you store; without it the value is always opaque.
+- Use `onValueCommit` to save or to do anything expensive: `onValueChange` fires on every step of a drag.
+- Use `inline` where the panel is the content (a settings page); keep the floating form for a field in a form.
+- Use `presentation={{ base: "full-width", sm: "anchored" }}` where the field is used on a phone.
+- Put it in a `FormField` for a visible label, helper text and error text wired together.
+
+</Callout>
+<Callout tone="danger" title="Don't">
+
+- Don't compare the typed text with the value: the value is always written in `format`, whatever was typed.
+- Don't use it to show a color that cannot be changed. Draw a swatch of your own instead; there is no point in an
+  editable field.
+- Don't rely on the eyedropper: it exists only in some browsers and the button is left out elsewhere.
+- Don't use a color alone to carry meaning in what you build with the result; pair it with text or an icon.
+- Don't expect color names (`red`) to be read: only hex, `rgb()`, `hsl()` and `oklch()` are.
+
+</Callout>
+</div>
+
+## Best practices
+
+- The picker keeps hue, saturation, brightness and opacity itself, so a gray you drag through keeps its hue and the
+  thumb doesn't wobble from rounding to eight bits. A `value` set from outside that isn't what those numbers already
+  write to replaces them.
+- Text is committed with `Enter` or by leaving the field. Text that isn't a color is kept as typed, flagged
+  (`aria-invalid`, a danger border) and never replaces the value; the form's message (`labels.invalid`) refuses a
+  submit until it is fixed or emptied.
+- Emptying the text and committing it clears the color, the same as the clear button.
+- `oklch` colors outside what a screen can show lose chroma until they fit, keeping their lightness and hue; the value
+  you get back is the color that is actually shown.
+- When the owner controls `value`, a change it doesn't apply is undone: the field shows what `value` says. With
+  `commitOn="commit"` the field keeps a drag until the owner's value changes.
+- `onFocus` and `onBlur` are for the field as a whole, panel included: they fire once on arriving and once on leaving.
+- The saturation and brightness area never mirrors in a right-to-left page, since a color space isn't text; the
+  sliders and the swatches do.
+- The colors drawn in the area, the sliders and the swatches are the chosen color itself, not the system's tokens, so
+  they are the same in every theme; the chrome around them (surface, borders, focus rings) follows the theme.
+- Use `container` when the panel would be clipped or must live somewhere else (an element inside a dialog or a shadow
+  root).
+
+## Accessibility
+
+<Callout tone="info" title="A group of a button and a text entry, with a dialog holding the controls">
+
+- The field is a `role="group"` named by `aria-label` or `aria-labelledby` (a `FormField` supplies the label). The
+  text entry is a labelled text input with `aria-invalid` and `aria-required`; the group carries neither, since a group
+  can't.
+- The swatch button has `aria-haspopup="dialog"`, `aria-expanded` and, while open, `aria-controls`. Opening moves focus
+  to the area; `Escape` closes the panel and gives focus back to the button, except after a press elsewhere, which
+  leaves focus where the person put it.
+- The area is two real range inputs under the pointer surface, named Saturation and Brightness, each read as a
+  percentage. Either takes all four arrow keys: Left and Right change saturation (never mirrored), Up and Down change
+  brightness; `Shift` moves by ten, `Page Up`/`Page Down` change brightness by ten, `Home`/`End` set the focused axis
+  to its least and greatest. A screen reader's own adjustment works too.
+- The hue slider (read in degrees) and the opacity slider (read as a percentage) are `role="slider"` with the arrow,
+  `Page` and `Home`/`End` keys; in a right-to-left page the keys follow the direction.
+- Swatches are buttons in a named group with `aria-pressed`, one tab stop, moved between with the arrow keys (flipped in
+  right-to-left), `Home` and `End`.
+- A color chosen from a swatch, the screen or typed text is said aloud ("Color chosen: #5548a4") through a status
+  region that is in the page from the start. Dragging says nothing extra: the sliders already speak.
+- The thumbs are a white ring inside a black one, so one of the two is at least 3:1 against any color under it, and the
+  focused thumb gets a third ring. Every control is at least 24 × 24 pixels. In Windows high-contrast mode the thumbs and
+  the selected swatch are drawn in system colors.
+- The color itself is never the only cue: the text entry always shows it as words and digits.
+- For a form, the value lives on a hidden text input that carries `required` and the validation message; the browser's
+  message points at the field, and focus goes to the text entry.
+- A dev-mode console warning fires once per field if it has no accessible name.
+
+</Callout>
+
+## Code examples
+
+```tsx
+<ColorPicker aria-label="Brand color" defaultValue="#5548a4" />
+
+{/* Controlled, with swatches, saved when the person is done */}
+function Example() {
+  const [color, setColor] = useState("#5548a4");
+  return (
+    <ColorPicker
+      aria-label="Brand color"
+      value={color}
+      onValueChange={setColor}
+      onValueCommit={save}
+      swatches={["#5548a4", "#2e8a7d", { value: "oklch(0.7 0.15 60)", label: "Amber" }]}
+    />
+  );
+}
+
+{/* With opacity, written as oklch */}
+<ColorPicker aria-label="Overlay" format="oklch" alpha defaultValue="#5548a480" />
+
+{/* A form field with a visible label and helper text */}
+<FormField label="Brand color" helperText="Used for buttons and links.">
+  {(field) => <ColorPicker {...field} />}
+</FormField>
+
+{/* A native <div> attribute, passed straight through to the group */}
+<ColorPicker aria-label="Brand color" title="Pick the brand color" />
+
+{/* Submitted with a form, under a name, in the format */}
+<form>
+  <ColorPicker aria-label="Brand color" name="brand" required />
+</form>
+```
+
+## Design tokens used
+
+<TokenRow token="bg.surface" usage="field and panel background; the light checks of the transparency pattern" />
+<TokenRow token="bg.track" usage="the dark checks of the transparency pattern behind a partly transparent color" />
+<TokenRow token="bg.neutral-subtle" usage="hover fill of the buttons" />
+<TokenRow token="border.default" usage="field and panel border" />
+<TokenRow token="border.neutral" usage="field border on hover; the edge of the color chip and the swatches" />
+<TokenRow token="border.strong" usage="the ring of the selected swatch" />
+<TokenRow token="border.focus" usage="field border and ring while it has focus; the focus ring of the buttons and the swatches" />
+<TokenRow token="border.danger" usage="field border in the error state" />
+<TokenRow token="border.white" usage="the inner ring of every thumb" />
+<TokenRow token="border.black" usage="the outer ring of every thumb" />
+<TokenRow token="border-width.1" usage="field border width; the thumbs' outer ring" />
+<TokenRow token="border-width.2" usage="focus ring width; the thumbs' white ring" />
+<TokenRow token="radius.md" usage="field, panel and area corner radius" />
+<TokenRow token="radius.sm" usage="the text entry's, chip's and swatches' corners" />
+<TokenRow token="radius.full" usage="the buttons' corners; the thumbs and the sliders' tracks" />
+<TokenRow token="text.primary" usage="the typed color" />
+<TokenRow token="text.tertiary" usage="the placeholder while no color is chosen" />
+<TokenRow token="icon.default" usage="the clear and swatch buttons' icons" />
+<TokenRow token="icon.secondary" usage="the slash through the chip while no color is chosen" />
+<TokenRow token="font-family.primary" usage="field typography" />
+<TokenRow token="font-size.xs" usage="text size at size xs" />
+<TokenRow token="font-size.sm" usage="text size at size sm" />
+<TokenRow token="font-size.base" usage="text size at size md" />
+<TokenRow token="font-size.md" usage="text size at size lg" />
+<TokenRow token="font-size.lg" usage="text size at size xl" />
+<TokenRow token="line-height.tight" usage="line height, so each size is as tall as an Input" />
+<TokenRow token="icon-size.xs" usage="the color chip's side at size xs" />
+<TokenRow token="icon-size.sm" usage="the color chip's side and the button's compensating margin at size sm" />
+<TokenRow token="icon-size.md" usage="the color chip's side and the button's compensating margin at size md" />
+<TokenRow token="icon-size.lg" usage="the color chip's side and the button's compensating margin at size lg" />
+<TokenRow token="icon-size.xl" usage="the color chip's side and the button's compensating margin at size xl" />
+<TokenRow token="space.1" usage="padding of the buttons at xs; the focus-ring offset; room around the swatches" />
+<TokenRow token="space.2" usage="gap between the parts of the field; padding of the buttons; the gap between swatches; the size of a check in the transparency pattern" />
+<TokenRow token="space.3" usage="padding at sizes sm and md; the panel's padding and the gap between its controls" />
+<TokenRow token="space.4" usage="padding at sizes lg and xl" />
+<TokenRow token="space.6" usage="the smallest a button or a thumb's touch target gets (24px)" />
+<TokenRow token="color-picker.panel-width" usage="the width of the panel, and of an inline picker" />
+<TokenRow token="color-picker.area-height" usage="the height of the saturation and brightness area" />
+<TokenRow token="color-picker.thumb-size" usage="the diameter of the thumbs" />
+<TokenRow token="color-picker.slider-track-height" usage="the thickness of the hue and opacity tracks" />
+<TokenRow token="color-picker.swatch-size" usage="the side of a swatch (24px)" />
+<TokenRow token="shadow.light-md" usage="the panel's elevation in a light theme" />
+<TokenRow token="shadow.dark-md" usage="the panel's elevation in a dark theme" />
+<TokenRow token="z-index.popover" usage="the panel's layer, above a Dialog's scrim and panel so it works inside one" />
+<TokenRow token="opacity.40" usage="the disabled field and sliders" />
+<TokenRow token="motion.duration.fast" usage="border and fill transitions; the panel fading" />
+<TokenRow token="motion.easing.standard" usage="border and fill transitions; the panel fading out" />
+<TokenRow token="motion-easing.emphasized" usage="the panel fading in" />
+
+## Related components
+
+<div className="dbm-card-grid">
+<RelatedCard
+  name="DatePicker"
+  description="The same field-and-panel shape for a date, with segments you type into"
+  href="/?path=/docs/organisms-inputs-datepicker--docs"
+>
+  <DatePicker aria-label="Date" size="xs" defaultValue="2026-10-15" showPicker={false} />
+</RelatedCard>
+<RelatedCard
+  name="Slider"
+  description="A single-value slider for a plain number, drawn with tokens"
+  href="/?path=/docs/molecules-inputs-slider--docs"
+>
+  <div style={{ width: "var(--dbm-space-24)" }}>
+    <Slider aria-label="Example" size="xs" defaultValue={40} />
+  </div>
+</RelatedCard>
+<RelatedCard
+  name="Input"
+  description="The plain text field the ColorPicker's box is drawn to match, at every size"
+  href="/?path=/docs/atoms-inputs-input--docs"
+>
+  <Input size="xs" aria-label="Example" defaultValue="Text" />
+</RelatedCard>
+<RelatedCard
+  name="FormField"
+  description="Wraps a ColorPicker with a visible label, helper text and error text, all wired together"
+  href="/?path=/docs/molecules-inputs-formfield--docs"
+>
+  <FieldLabel htmlFor="example">Brand color</FieldLabel>
+</RelatedCard>
+</div>

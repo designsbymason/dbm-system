@@ -1,0 +1,29 @@
+{
+  "color-picker": {
+    "panel-width": {
+      "$type": "dimension",
+      "$value": "17.5rem",
+      "$description": "New token, the width of ColorPicker's panel: wide enough for a saturation and brightness area that is comfortable to aim in, the hue and alpha sliders, a row of swatches and the field of the typed value, narrow enough to sit in a phone's width beside a gap at each edge. The spacing scale stops at space.32 (8rem) and has nothing near this."
+    },
+    "area-height": {
+      "$type": "dimension",
+      "$value": "10rem",
+      "$description": "New token, the height of the saturation and brightness area. Between space.32 (8rem) and the panel's width, which gives a 7:4 area that is tall enough to separate nearby brightness steps by a few pixels each."
+    },
+    "thumb-size": {
+      "$type": "dimension",
+      "$value": "1.25rem",
+      "$description": "New token, the diameter of the thumb on the area and on the hue and alpha sliders: a white ring inside a black one around the color under it. space.5 is the same 1.25rem, but the thumb is a control's own size, not a space between things. The pointer and touch target is extended to 24 x 24px (WCAG 2.5.8) by an invisible ::before, as Slider's is."
+    },
+    "slider-track-height": {
+      "$type": "dimension",
+      "$value": "0.75rem",
+      "$description": "New token, the thickness of the hue and alpha sliders' tracks: thick enough that the gradient reads as a color, not a line. It is space.3, but a track's thickness is the slider's own measure."
+    },
+    "swatch-size": {
+      "$type": "dimension",
+      "$value": "1.5rem",
+      "$description": "New token, the side of a swatch button in the panel's list of colors: 24px, the WCAG 2.5.8 target-size floor, so every swatch is a valid target at every size step of the field."
+    }
+  }
+}
