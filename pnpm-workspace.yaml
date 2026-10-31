@@ -22,12 +22,32 @@ auditConfig:
     # guidelines/02-tech-stack-and-structure.md. Remove this entry the same day a patched release
     # ships and gets pinned via a capped override below.
     - GHSA-gcqx-w48m-w2h4
+    # minimatch's potential DoS via globparts amplification (GHSA-g3hv-75wg-m249, moderate), vulnerable `<11.0.1`, patched in
+    # 11.0.1. Every 10.x copy is pinned to the 11 line by an override below; what remains is `minimatch@3.1.5` (the last 3.x
+    # release) under `eslint-plugin-jsx-a11y@6.10.2` and `eslint-plugin-react@7.37.5`, both their latest releases, which call
+    # it as a function that 11 no longer exports, so it can neither be overridden nor removed from the tree. Dev-only linting,
+    # never shipped; the patterns it receives are static rule options in this repo's own ESLint config (the matched strings are
+    # component and prop names), so exploiting it needs write access to that config already. Assessment and exit condition:
+    # §3.1 of guidelines/02-tech-stack-and-structure.md. Remove this entry the same day either plugin drops minimatch 3 or
+    # moves to a release that takes minimatch 11.
+    - GHSA-g3hv-75wg-m249
 # pnpm's default minimum release age holds back a version that is only days old. `qs@6.16.2` is the
 # patched release for GHSA-6pq8-jhm2-2vcw (see the `qs` override below), so it is let through now,
 # 2026-10-28. Remove this entry once the release is older than the minimum age.
 minimumReleaseAgeExclude:
   - qs@6.16.2
 overrides:
+  # GHSA-3g3m-2fjr-6pw4: glob's AbortSignal cancellation bypass allows post-timeout filesystem traversal, vulnerable
+  # `>=9.0.0 <=14.0.1`, patched in 14.0.2; flagged by `pnpm audit` in CI on 2026-10-31. Reached only through
+  # `style-dictionary`'s `@bundled-es-modules/glob` and Storybook's docgen plugin (dev/build-only, never shipped). Capped at
+  # `<15.0.0` as the other overrides are. The two consumers declare `^13`, so this is a major bump: the whole pipeline was run on it.
+  glob: ">=14.0.2 <15.0.0"
+  # GHSA-g3hv-75wg-m249: minimatch's potential DoS via globparts amplification, vulnerable `<11.0.1`, patched in 11.0.1. Every 10.x copy
+  # (ESLint, `@eslint/config-array` and typescript-eslint's estree reach it) is pinned to the 11 line here (same named-export API, no callable default,
+  # which that consumer does not need); the 3.x copy under eslint-plugin-jsx-a11y and eslint-plugin-react cannot take it: it
+  # is called as a function, which 11 no longer exports, and both plugins are on their latest release. That path is an accepted
+  # advisory in `auditConfig.ignoreGhsas` above (assessment: §3.1 of guidelines/02-tech-stack-and-structure.md).
+  "minimatch@^10": ">=11.0.1 <12.0.0"
   # GHSA-g7r4-m6w7-qqqr: esbuild dev-server arbitrary file read on Windows,
   # patched in 0.28.1. Pulled in transitively via Storybook/Vite/tsup (dev-only,
   # never shipped in published packages) — pinned here since upstream hasn't
