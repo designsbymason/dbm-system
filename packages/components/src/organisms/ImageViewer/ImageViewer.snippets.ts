@@ -53,12 +53,6 @@ ${viewer("", captioned)}`,
 ${images}
 />`,
 
-  controller: `{/* const viewer = useRef<ImageViewerController>(null);
-    A thumbnail of your own opens the viewer at its image: viewer.current?.open(2) */}
-<ImageViewer controllerRef={viewer}
-${images}
-/>`,
-
   loop: `{/* loop: the arrows and keys go on from the last image to the first, and back. */}
 ${viewer("  loop")}`,
 
@@ -73,6 +67,40 @@ ${viewer('  controls="hidden"\n  rotatable={false}')}`,
 <ImageViewer
   trigger={<Button>View photos</Button>}
   actions={<ImageViewerButton label="Copy link" onClick={copyLink}>Copy link</ImageViewerButton>}
+${images}
+/>`,
+
+  tapToHide: `{/* A tap on the image hides the controls, counter, caption and thumbnails; a key other than Escape shows them. */}
+${viewer("  tapToToggleControls")}`,
+
+  flip: `{/* flippable adds a flip button (h and v from the keyboard); rotate has a button each way (r and Shift+R). */}
+${viewer("  flippable")}`,
+
+  slideshow: `{/* autoPlay: true, or { interval } in milliseconds. A pause button is always drawn while it is on. */}
+${viewer("  autoPlay={{ interval: 3000 }}\n  loop")}`,
+
+  history: `{/* The browser's Back button closes the viewer instead of leaving the page. */}
+${viewer("  closeOnHistoryBack")}`,
+
+  inline: `{/* Drawn in the page, in the box you give it: no scrim, close button or focus trap. Give it a height and a name. */}
+<div style={{ blockSize: "28rem" }}>
+  <ImageViewer
+    inline
+    aria-label="Photos"
+    thumbnails
+${images}
+  />
+</div>`,
+
+  many: `{/* A long set draws only the thumbnails in view and a few either side. */}
+<div style={{ blockSize: "28rem" }}>
+  <ImageViewer inline aria-label="Photos" thumbnails images={photos} />
+</div>`,
+
+  origin: `{/* const viewer = useRef<ImageViewerController>(null);
+    const cells = useRef<Array<HTMLElement | null>>([]); — each thumbnail of yours stores itself in cells.current[index]
+    and opens the viewer at its image with viewer.current?.open(index). The first image eases in from it. */}
+<ImageViewer controllerRef={viewer} getOrigin={(index) => cells.current[index]}
 ${images}
 />`,
 
@@ -96,7 +124,11 @@ export interface ImageViewerPlaygroundSnippetArgs {
   zoomStep?: number;
   doubleClickZoom?: boolean;
   rotatable?: boolean;
+  flippable?: boolean;
   fullscreenButton?: boolean;
+  tapToToggleControls?: boolean;
+  closeOnHistoryBack?: boolean;
+  autoPlay?: boolean | { interval?: number };
   thumbnails?: boolean;
   showCounter?: boolean | "auto";
   showCaptions?: boolean;
@@ -121,7 +153,12 @@ export function imageViewerPlaygroundSnippet(args: ImageViewerPlaygroundSnippetA
   if (args.zoomStep !== undefined && args.zoomStep !== 1.5) attributes.push(`zoomStep={${args.zoomStep}}`);
   if (args.doubleClickZoom === false) attributes.push("doubleClickZoom={false}");
   if (args.rotatable === false) attributes.push("rotatable={false}");
+  if (args.flippable) attributes.push("flippable");
   if (args.fullscreenButton === false) attributes.push("fullscreenButton={false}");
+  if (args.tapToToggleControls) attributes.push("tapToToggleControls");
+  if (args.closeOnHistoryBack) attributes.push("closeOnHistoryBack");
+  if (args.autoPlay === true) attributes.push("autoPlay");
+  else if (typeof args.autoPlay === "object" && args.autoPlay.interval !== undefined) attributes.push(`autoPlay={{ interval: ${args.autoPlay.interval} }}`);
   if (args.thumbnails) attributes.push("thumbnails");
   if (args.showCounter === true) attributes.push("showCounter");
   if (args.showCounter === false) attributes.push("showCounter={false}");

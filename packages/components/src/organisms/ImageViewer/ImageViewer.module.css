@@ -11,6 +11,8 @@
   color: var(--dbm-text-white);
   display: grid;
   font-family: var(--dbm-font-family-primary);
+  /* One column that may be narrower than its widest content: a long strip of thumbnails scrolls inside it and does not widen the viewer. */
+  grid-template-columns: minmax(0, 1fr);
   grid-template-rows: auto minmax(0, 1fr) auto;
   inline-size: 100%;
   min-inline-size: 0;
@@ -185,9 +187,46 @@
   animation: viewerImageIn var(--dbm-motion-duration-base) var(--dbm-motion-easing-decelerate);
 }
 
+/* An image reached by a step comes in from the side the person came from: it eases a short way and fades up. The move
+   is the `translate` property, which composes with the box's own `transform`, and it follows the reading direction. */
+.box[data-drawn][data-enter="next"] {
+  animation-name: viewerEnterFromEnd;
+}
+
+.box[data-drawn][data-enter="previous"] {
+  animation-name: viewerEnterFromStart;
+}
+
+.box[data-drawn][data-enter="next"]:dir(rtl) {
+  animation-name: viewerEnterFromStart;
+}
+
+.box[data-drawn][data-enter="previous"]:dir(rtl) {
+  animation-name: viewerEnterFromEnd;
+}
+
 .image {
   display: block;
   -webkit-user-drag: none;
+}
+
+.placeholder {
+  block-size: 100%;
+  filter: blur(var(--dbm-space-2));
+  inline-size: 100%;
+  inset: var(--dbm-space-0);
+  object-fit: contain;
+  pointer-events: none;
+  position: absolute;
+  /* Blurred, the edge would show a lighter fringe; scaled up a little it is cut off by the stage. */
+  scale: 1.04;
+}
+
+.failed {
+  align-items: center;
+  display: flex;
+  flex-direction: column;
+  gap: var(--dbm-space-3);
 }
 
 .stageMessage {
@@ -218,6 +257,40 @@
 
 .arrowEnd {
   inset-inline-end: var(--dbm-space-3);
+}
+
+/* --- Controls a tap has hidden: out of the page for assistive technology and the tab order as well as out of sight,
+   and brought back by a tap or any key. --- */
+.panel[data-chrome="hidden"] .toolbar,
+.panel[data-chrome="hidden"] .arrow,
+.panel[data-chrome="hidden"] .footer {
+  opacity: var(--dbm-opacity-0);
+  transition: opacity var(--dbm-motion-duration-base) var(--dbm-motion-easing-standard), visibility var(--dbm-motion-duration-base) var(--dbm-motion-easing-standard);
+  visibility: hidden;
+}
+
+.toolbar,
+.arrow,
+.footer {
+  transition: opacity var(--dbm-motion-duration-base) var(--dbm-motion-easing-standard), visibility var(--dbm-motion-duration-base) var(--dbm-motion-easing-standard);
+}
+
+/* --- Drawn in the page, in the box it is given: the stage is a solid dark surface with rounded corners, and the panel itself
+   takes focus with a ring inside it. --- */
+.inline {
+  background-color: var(--dbm-bg-overlay);
+  border-radius: var(--dbm-radius-lg);
+  overflow: hidden;
+  z-index: auto;
+}
+
+.inline:focus-visible {
+  outline: var(--dbm-border-width-2) solid var(--dbm-border-white);
+  outline-offset: calc(-1 * var(--dbm-border-width-2));
+}
+
+.inline:fullscreen {
+  border-radius: var(--dbm-radius-none);
 }
 
 /* --- The caption and the thumbnails. --- */
@@ -253,6 +326,10 @@
   /* Room for a focus ring, which a scrolling box would otherwise clip. */
   padding: var(--dbm-space-2);
   scrollbar-width: thin;
+}
+
+.thumbnailSpacer {
+  flex: none;
 }
 
 .thumbnail {
@@ -301,7 +378,31 @@
   }
 }
 
-/* A new image fades up; it does not slide, so there is no motion to take away. */
+@keyframes viewerEnterFromEnd {
+  from {
+    opacity: var(--dbm-opacity-0);
+    translate: var(--dbm-space-12) 0;
+  }
+
+  to {
+    opacity: var(--dbm-opacity-100);
+    translate: 0 0;
+  }
+}
+
+@keyframes viewerEnterFromStart {
+  from {
+    opacity: var(--dbm-opacity-0);
+    translate: calc(-1 * var(--dbm-space-12)) 0;
+  }
+
+  to {
+    opacity: var(--dbm-opacity-100);
+    translate: 0 0;
+  }
+}
+
+/* A new image fades up. */
 @keyframes viewerImageIn {
   from {
     opacity: var(--dbm-opacity-0);
@@ -313,6 +414,18 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .toolbar,
+  .arrow,
+  .footer {
+    transition: none;
+  }
+
+  /* The slide goes; the fade stays, as it is not movement. */
+  .box[data-drawn][data-enter],
+  .box[data-drawn][data-enter]:dir(rtl) {
+    animation-name: viewerImageIn;
+  }
+
   .box[data-animate],
   .control,
   .thumbnail {

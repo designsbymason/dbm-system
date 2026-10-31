@@ -43,9 +43,19 @@ export interface ImageViewerImage {
  * - `"outside"`: a press on the scrim, outside the image and its controls.
  * - `"close-button"`: the close button in the toolbar.
  * - `"swipe"`: a downward swipe on a touch screen.
+ * - `"history"`: the browser's Back button, with `closeOnHistoryBack`.
  * - `"controller"`: code, through `controllerRef` or `useImageViewerController()`.
  */
-export type ImageViewerOpenChangeReason = "trigger" | "escape" | "outside" | "close-button" | "swipe" | "controller";
+export type ImageViewerOpenChangeReason = "trigger" | "escape" | "outside" | "close-button" | "swipe" | "history" | "controller";
+
+/** Settings for a slideshow, the object form of `autoPlay`. */
+export interface ImageViewerAutoPlay {
+  /**
+   * How long each image stays, in milliseconds, once it has loaded.
+   * @default 4000
+   */
+  interval?: number;
+}
 
 /** The second argument of `onOpenChange`. */
 export interface ImageViewerOpenChangeDetails {
@@ -71,6 +81,8 @@ export interface ImageViewerController {
   readonly count: number;
   /** The zoom of the image in view relative to the fitted image (1 is all of it in view), or 1 while closed. */
   readonly zoom: number;
+  /** Whether the slideshow is running. */
+  readonly isPlaying: boolean;
   /** Opens the viewer, at `index` when given. Returns `false` when it is already open at that image. */
   open: (index?: number) => boolean;
   /** Closes the viewer. */
@@ -87,8 +99,16 @@ export interface ImageViewerController {
   zoomOut: () => boolean;
   /** Fits the whole image back in view. `false` when it already is. */
   resetZoom: () => boolean;
+  /** Zooms to one image pixel per screen pixel, or back to the fitted size when already there. `false` for an image no larger than the stage. */
+  actualSize: () => boolean;
   /** Turns the image by `degrees` (a multiple of 90, clockwise when positive; 90 by default). */
   rotate: (degrees?: number) => boolean;
+  /** Mirrors the image left to right (`"horizontal"`, the default) or top to bottom (`"vertical"`). */
+  flip: (axis?: "horizontal" | "vertical") => boolean;
+  /** Starts the slideshow. `false` when it is already running, there is nothing to step to, or no image is open. */
+  play: () => boolean;
+  /** Stops the slideshow. */
+  pause: () => boolean;
   /** Enters or leaves full screen. `false` where the browser has no full screen. */
   toggleFullscreen: () => boolean;
 }
@@ -112,11 +132,24 @@ export interface ImageViewerLabels {
   zoomOut: string;
   /**
    * The accessible name of the button that shows the zoom and fits the image back in view, given the zoom as the text
-   * it shows. It must contain that text. @default (zoom) => `Reset zoom, ${zoom}`
+   * it shows. It must contain that text. The zoom is the share of the image's own pixels drawn (100% is one image pixel
+   * per screen pixel). @default (zoom) => `Reset zoom, ${zoom}`
    */
   resetZoom: (zoom: string) => string;
+  /** The accessible name of the actual size button, which shows "1:1" and must contain it. @default 'Actual size, 1:1' */
+  actualSize: string;
   /** The accessible name of the rotate button. @default 'Rotate clockwise' */
   rotate: string;
+  /** The accessible name of the button that turns the image the other way. @default 'Rotate counterclockwise' */
+  rotateCounterclockwise: string;
+  /** The accessible name of the button that mirrors the image left to right. @default 'Flip horizontally' */
+  flipHorizontal: string;
+  /** The accessible name of the button that starts the slideshow. @default 'Start slideshow' */
+  play: string;
+  /** The accessible name of the button that stops the slideshow. @default 'Pause slideshow' */
+  pause: string;
+  /** The accessible name of the button that asks for a failed image again; it shows the same text. @default 'Try again' */
+  retry: string;
   /** The accessible name of the button that enters full screen. @default 'Enter full screen' */
   enterFullscreen: string;
   /** The accessible name of the button that leaves full screen. @default 'Exit full screen' */
@@ -198,10 +231,16 @@ export interface ImageViewerProps
    */
   doubleClickZoom?: boolean;
   /**
-   * Shows a rotate button in the toolbar. The image turns a quarter turn at a time; `r` does the same from the keyboard.
+   * Shows rotate buttons in the toolbar. The image turns a quarter turn at a time; `r` turns it clockwise and `Shift+R`
+   * the other way.
    * @default true
    */
   rotatable?: boolean;
+  /**
+   * Shows a button that mirrors the image left to right, and turns on `h` and `v` (top to bottom) from the keyboard.
+   * @default false
+   */
+  flippable?: boolean;
   /**
    * Shows a full screen button in the toolbar, where the browser supports it. `f` does the same from the keyboard.
    * @default true
@@ -228,6 +267,49 @@ export interface ImageViewerProps
    * @default 'auto'
    */
   controls?: ImageViewerControls;
+  /**
+   * Makes a single tap or click on the image hide and show the controls, the counter, the caption and the thumbnails,
+   * for an uncluttered view. A single tap is known once the wait for a second one has passed. A key (other than Escape)
+   * shows them again.
+   * @default false
+   */
+  tapToToggleControls?: boolean;
+  /**
+   * Makes the browser's Back button close the viewer instead of leaving the page, by adding a history entry while it is
+   * open (and taking it away again when the viewer closes another way). Reported as `reason: "history"`. Has no effect
+   * with `inline`.
+   * @default false
+   */
+  closeOnHistoryBack?: boolean;
+  /**
+   * Steps through the images by itself: `true` for the default interval, or `{ interval }`. A pause button is always
+   * drawn while it is on, whatever `controls` says. It starts paused under `prefers-reduced-motion`, waits for each image
+   * to load, holds while an image is zoomed or the page is hidden, stops at the last image (or goes round with `loop`),
+   * and is silent to a screen reader while it runs.
+   * @default false
+   */
+  autoPlay?: boolean | ImageViewerAutoPlay;
+  /**
+   * Draws the viewer in the page, in the box you give it, instead of over it: no scrim, no close button, no focus trap,
+   * and Escape and a swipe down do nothing. `trigger`, `open`, `defaultOpen`, `onOpenChange`, `container`, the scrim
+   * props and `closeOnHistoryBack` are ignored. Give it a height (it fills its parent's height) and an `aria-label`.
+   * @default false
+   */
+  inline?: boolean;
+  /**
+   * Called with a placed element to ease the first image in from, as the viewer opens: usually the thumbnail that was
+   * pressed. It is given the index in view and may return `null`. The image grows from that element's rectangle to its
+   * own. Not used under `prefers-reduced-motion` or with `inline`.
+   */
+  getOrigin?: (index: number) => HTMLElement | null | undefined;
+  /** Called when an image has loaded, with the image and its index. */
+  onImageLoad?: (image: ImageViewerImage, index: number) => void;
+  /** Called when an image could not be loaded, with the image and its index. The viewer shows its message and a button to try again. */
+  onImageError?: (image: ImageViewerImage, index: number) => void;
+  /** Called when the zoom of the image in view changes, relative to the fitted image (1 is all of it in view). */
+  onZoomChange?: (zoom: number, index: number) => void;
+  /** Called when the image in view is turned, with its turn in degrees (0, 90, 180 or 270). */
+  onRotationChange?: (degrees: number, index: number) => void;
   /**
    * Whether a downward swipe on a touch screen closes the viewer while the whole image is in view.
    * @default true

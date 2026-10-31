@@ -1,11 +1,15 @@
 import {
   ArrowClockwiseIcon,
+  ArrowCounterClockwiseIcon,
   CaretLeftIcon,
   CaretRightIcon,
   CornersInIcon,
   CornersOutIcon,
+  FlipHorizontalIcon,
   MagnifyingGlassMinusIcon,
   MagnifyingGlassPlusIcon,
+  PauseIcon,
+  PlayIcon,
   XIcon,
 } from "@dbm-system/icons";
 import { cx, mergeDefined, mergeRefs, useAnnouncement } from "@dbm-system/utils";
@@ -15,6 +19,7 @@ import type { KeyboardEvent, ReactNode } from "react";
 import { Backdrop } from "../../atoms/Backdrop";
 import { VisuallyHidden } from "../../atoms/VisuallyHidden";
 import { OverlayLifecycle } from "../../internal/overlay/OverlayLifecycle";
+import { useIsClient } from "../../internal/overlay/useKeepMounted";
 import { useReturnFocus } from "../../internal/overlay/useReturnFocus";
 import styles from "./ImageViewer.module.css";
 import type {
@@ -33,6 +38,10 @@ import type { ImageZoomApi } from "./useImageZoom";
 
 /** How far an arrow key moves a zoomed image, in pixels. */
 const PAN_STEP = 80;
+/** How long a slideshow image stays, in milliseconds, when no interval is given. */
+const DEFAULT_INTERVAL = 4000;
+/** How often a slideshow that is held (the image is zoomed, the page is hidden) looks again, in milliseconds. */
+const HOLD_RECHECK = 500;
 
 function buildDefaultLabels(formatNumber: (value: number) => string): ImageViewerLabels {
   return {
@@ -43,7 +52,13 @@ function buildDefaultLabels(formatNumber: (value: number) => string): ImageViewe
     zoomIn: "Zoom in",
     zoomOut: "Zoom out",
     resetZoom: (zoom) => `Reset zoom, ${zoom}`,
+    actualSize: "Actual size, 1:1",
     rotate: "Rotate clockwise",
+    rotateCounterclockwise: "Rotate counterclockwise",
+    flipHorizontal: "Flip horizontally",
+    play: "Start slideshow",
+    pause: "Pause slideshow",
+    retry: "Try again",
     enterFullscreen: "Enter full screen",
     exitFullscreen: "Exit full screen",
     thumbnails: "Thumbnails",
@@ -60,6 +75,7 @@ const inertController: ImageViewerController = {
   value: 0,
   count: 0,
   zoom: 1,
+  isPlaying: false,
   open: () => false,
   close: () => false,
   next: () => false,
@@ -68,7 +84,11 @@ const inertController: ImageViewerController = {
   zoomIn: () => false,
   zoomOut: () => false,
   resetZoom: () => false,
+  actualSize: () => false,
   rotate: () => false,
+  flip: () => false,
+  play: () => false,
+  pause: () => false,
   toggleFullscreen: () => false,
 };
 
@@ -114,21 +134,26 @@ function isEditable(target: EventTarget | null): boolean {
   return target instanceof Element && target.closest("input, textarea, select, [contenteditable='true']") !== null;
 }
 
+const prefersReducedMotion = () => typeof window !== "undefined" && window.matchMedia?.("(prefers-reduced-motion: reduce)").matches === true;
+
 /**
  * A full-screen viewer for one image or a set of them, often called a lightbox. It opens over the page on a dark
  * stage, fits the whole image in view, and lets the person zoom in (the wheel, a pinch, a double tap, the buttons or
- * `+`/`-`), move around a zoomed image by dragging or with the arrow keys, turn it, step through the set (the arrows,
- * the arrow keys, a swipe, or a strip of thumbnails) and go full screen. Every gesture has a button or a key, so
- * nothing needs a touch screen or a mouse.
+ * `+`/`-`, and actual size with `1`), move around a zoomed image by dragging or with the arrow keys, turn and flip it, step
+ * through the set (the arrows, the arrow keys, a swipe, or a strip of thumbnails) and go full screen. Every gesture has a
+ * button or a key, so nothing needs a touch screen or a mouse.
  *
  * Built on Radix Dialog, so it is **modal**: the page behind can't be scrolled or reached, focus is held inside, and
  * it returns to whatever opened the viewer. It is driven by data: pass `images`, and open it with a `trigger`, with
  * `open`/`defaultOpen`, or from code with `controllerRef`. `value` is the index of the image in view, controlled with
- * `value`/`onValueChange` or left to the viewer with `defaultValue`.
+ * `value`/`onValueChange` or left to the viewer with `defaultValue`. Optionally it can close on the browser's Back button
+ * (`closeOnHistoryBack`), ease the first image in from the thumbnail that was pressed (`getOrigin`), hide its controls on
+ * a tap (`tapToToggleControls`), and step through the images by itself with a pause button (`autoPlay`). With `inline`
+ * it is drawn in the page, in the box you give it, with no scrim, close button or focus trap.
  *
- * It draws one image at a time, with its neighbours loading in the background. For a row of slides shown in the page,
- * use `Carousel`; for any other content in a window, use `Dialog`. It does not fetch, upload or download anything:
- * put a download link in `actions`.
+ * It draws one image at a time, with its neighbours loading in the background and the thumbnail of the one loading
+ * standing in for it. For a row of slides shown in the page, use `Carousel`; for any other content in a window, use
+ * `Dialog`. It does not fetch, upload or download anything: put a button in `actions` (an `ImageViewerButton`).
  *
  * @example
  * ```tsx
@@ -160,11 +185,21 @@ export const ImageViewer = forwardRef<HTMLDivElement, ImageViewerProps>(
       zoomStep = 1.5,
       doubleClickZoom = true,
       rotatable = true,
+      flippable = false,
       fullscreenButton = true,
       thumbnails = false,
       showCounter = "auto",
       showCaptions = true,
       controls = "auto",
+      tapToToggleControls = false,
+      closeOnHistoryBack = false,
+      autoPlay = false,
+      inline = false,
+      getOrigin,
+      onImageLoad,
+      onImageError,
+      onZoomChange,
+      onRotationChange,
       swipeToDismiss = true,
       closeOnOutsideClick = true,
       closeOnEscape = true,
@@ -193,10 +228,11 @@ export const ImageViewer = forwardRef<HTMLDivElement, ImageViewerProps>(
     const labels = useMemo(() => mergeDefined(buildDefaultLabels(formatNumber), labelOverrides), [formatNumber, labelOverrides]);
     const count = images.length;
 
-    // --- Open state. The reason a change was asked for is noted just before Radix reports the change.
-    const isOpenControlled = openProp !== undefined;
+    // --- Open state. The reason a change was asked for is noted just before Radix reports the change. An inline viewer
+    // is always open.
+    const controlledOpen = !inline && openProp !== undefined ? openProp : undefined;
     const [innerOpen, setInnerOpen] = useState(defaultOpen);
-    const open = isOpenControlled ? openProp : innerOpen;
+    const open = inline || (controlledOpen ?? innerOpen);
     const reasonRef = useRef<ImageViewerOpenChangeReason | null>(null);
 
     // --- The image in view. A press asks through `onValueChange`; the image changes when the value does.
@@ -207,23 +243,52 @@ export const ImageViewer = forwardRef<HTMLDivElement, ImageViewerProps>(
     const image = images[index];
     const imageKey = image ? `${index}:${image.id ?? image.src}` : "none";
 
-    // Everything the controller and the keys read is the latest render's.
+    // What the stage reports, and the person's choices about the image in view, are kept with the image they were made
+    // for, so a new image starts fresh.
     const [zoomState, setZoomState] = useState({ key: imageKey, zoom: 1 });
     const zoom = zoomState.key === imageKey ? zoomState.zoom : 1;
+    const [fitState, setFitState] = useState({ key: imageKey, fit: 1 });
+    const fit = fitState.key === imageKey ? fitState.fit : 1;
     const [statusState, setStatusState] = useState<{ key: string; status: ImageStatus }>({ key: imageKey, status: "loading" });
     const status: ImageStatus = statusState.key === imageKey ? statusState.status : "loading";
     const [rotationState, setRotationState] = useState({ key: imageKey, degrees: 0 });
     const rotation = rotationState.key === imageKey ? rotationState.degrees : 0;
+    const [flipState, setFlipState] = useState({ key: imageKey, x: false, y: false });
+    const flipX = flipState.key === imageKey && flipState.x;
+    const flipY = flipState.key === imageKey && flipState.y;
 
-    const latest = useRef({ open, isOpenControlled, onOpenChange, index, count, isValueControlled, onValueChange, loop, imageKey, zoom, rotation, status });
+    const autoPlayOn = autoPlay !== false && autoPlay !== undefined;
+    const interval = typeof autoPlay === "object" && autoPlay.interval !== undefined ? Math.max(500, autoPlay.interval) : DEFAULT_INTERVAL;
+    const startsPlaying = () => autoPlayOn && !prefersReducedMotion();
+    const [playing, setPlaying] = useState(startsPlaying);
+    const [chromeHidden, setChromeHidden] = useState(false);
+    const [direction, setDirection] = useState<"next" | "previous" | null>(null);
+
+    // Opening starts everything afresh: the slideshow as asked for, the controls showing, no direction to come from.
+    const [wasOpen, setWasOpen] = useState(open);
+    if (open !== wasOpen) {
+      setWasOpen(open);
+      setPlaying(open && startsPlaying());
+      setChromeHidden(false);
+      setDirection(null);
+    }
+
+    // Everything the controller and the keys read is the latest render's.
+    const latest = useRef({
+      open, controlledOpen, onOpenChange, index, count, isValueControlled, onValueChange, loop, imageKey, zoom, rotation, status, playing,
+      image, getOrigin, inline, onImageLoad, onImageError, onZoomChange, onRotationChange,
+    });
     useEffect(() => {
-      latest.current = { open, isOpenControlled, onOpenChange, index, count, isValueControlled, onValueChange, loop, imageKey, zoom, rotation, status };
+      latest.current = {
+        open, controlledOpen, onOpenChange, index, count, isValueControlled, onValueChange, loop, imageKey, zoom, rotation, status, playing,
+        image, getOrigin, inline, onImageLoad, onImageError, onZoomChange, onRotationChange,
+      };
     });
 
     const changeOpen = useCallback((next: boolean, reason: ImageViewerOpenChangeReason) => {
       const current = latest.current;
-      if (next === current.open) return false;
-      if (!current.isOpenControlled) {
+      if (current.inline || next === current.open) return false;
+      if (current.controlledOpen === undefined) {
         // Held here too, so a second call before the next render sees the change the first made.
         current.open = next;
         setInnerOpen(next);
@@ -231,9 +296,10 @@ export const ImageViewer = forwardRef<HTMLDivElement, ImageViewerProps>(
       current.onOpenChange?.(next, { reason });
       return true;
     }, []);
-    const changeValue = useCallback((next: number) => {
+    const changeValue = useCallback((next: number, toward?: "next" | "previous") => {
       const current = latest.current;
       if (next === current.index || next < 0 || next >= current.count) return false;
+      setDirection(toward ?? (next > current.index ? "next" : "previous"));
       if (!current.isValueControlled) {
         current.index = next;
         setInnerValue(next);
@@ -244,7 +310,7 @@ export const ImageViewer = forwardRef<HTMLDivElement, ImageViewerProps>(
     const step = useCallback(
       (offset: number) => {
         const target = neighbour(latest.current.index, offset, latest.current.count, latest.current.loop);
-        return target === null ? false : changeValue(target);
+        return target === null ? false : changeValue(target, offset > 0 ? "next" : "previous");
       },
       [changeValue],
     );
@@ -265,9 +331,23 @@ export const ImageViewer = forwardRef<HTMLDivElement, ImageViewerProps>(
       [changeOpen],
     );
 
-    // --- What the stage reports is kept with the image it was reported for, so a new image starts fresh.
-    const handleZoomChange = useCallback((next: number) => setZoomState({ key: imageKey, zoom: next }), [imageKey]);
+    const handleZoomChange = useCallback(
+      (next: number) => {
+        setZoomState({ key: imageKey, zoom: next });
+        latest.current.onZoomChange?.(next, latest.current.index);
+      },
+      [imageKey],
+    );
     const handleStatusChange = useCallback((next: ImageStatus) => setStatusState({ key: imageKey, status: next }), [imageKey]);
+    const handleFitChange = useCallback((next: number) => setFitState({ key: imageKey, fit: next }), [imageKey]);
+    const handleLoaded = useCallback(() => {
+      const current = latest.current;
+      if (current.image) current.onImageLoad?.(current.image, current.index);
+    }, []);
+    const handleFailed = useCallback(() => {
+      const current = latest.current;
+      if (current.image) current.onImageError?.(current.image, current.index);
+    }, []);
 
     const stageApi = useRef<ImageZoomApi | null>(null);
     const panelRef = useRef<HTMLDivElement | null>(null);
@@ -278,13 +358,55 @@ export const ImageViewer = forwardRef<HTMLDivElement, ImageViewerProps>(
       if (current.status !== "ready") return false;
       const quarter = Math.round(degrees / 90) * 90;
       if (quarter === 0) return false;
-      setRotationState({ key: current.imageKey, degrees: turn(current.rotation, quarter) });
+      const next = turn(current.rotation, quarter);
+      setRotationState({ key: current.imageKey, degrees: next });
+      current.onRotationChange?.(next, current.index);
+      return true;
+    }, []);
+    const flipBy = useCallback((axis: "horizontal" | "vertical") => {
+      const current = latest.current;
+      if (current.status !== "ready") return false;
+      setFlipState((previous) => {
+        const base = previous.key === current.imageKey ? previous : { key: current.imageKey, x: false, y: false };
+        return axis === "horizontal" ? { ...base, x: !base.x } : { ...base, y: !base.y };
+      });
       return true;
     }, []);
 
-    // --- Full screen, where the browser has it.
-    // The panel is only rendered in the browser (Radix portals after mount), so reading `document` here is safe.
-    const fullscreenAvailable = typeof document !== "undefined" && document.fullscreenEnabled === true;
+    // --- The slideshow. It waits for each image to load, holds while an image is zoomed or the page is hidden, and
+    // stops at the last image unless the viewer loops.
+    const startPlaying = useCallback(() => {
+      const current = latest.current;
+      if (!current.open || current.playing || current.count < 2) return false;
+      current.playing = true;
+      setPlaying(true);
+      return true;
+    }, []);
+    const stopPlaying = useCallback(() => {
+      const current = latest.current;
+      if (!current.playing) return false;
+      current.playing = false;
+      setPlaying(false);
+      return true;
+    }, []);
+    useEffect(() => {
+      if (!playing || !open || count < 2 || status !== "ready") return undefined;
+      let timer: ReturnType<typeof setTimeout>;
+      const tick = () => {
+        if (document.hidden || latest.current.zoom > 1.001) {
+          timer = setTimeout(tick, HOLD_RECHECK);
+          return;
+        }
+        if (!step(1)) stopPlaying();
+      };
+      timer = setTimeout(tick, interval);
+      return () => clearTimeout(timer);
+    }, [playing, open, count, status, index, interval, step, stopPlaying]);
+
+    // --- Full screen, where the browser has it. The panel is only drawn in the browser until it is inline, so the first
+    // render waits for the client.
+    const client = useIsClient();
+    const fullscreenAvailable = client && document.fullscreenEnabled === true;
     const [fullscreen, setFullscreen] = useState(false);
     useEffect(() => {
       if (!open) return undefined;
@@ -318,6 +440,49 @@ export const ImageViewer = forwardRef<HTMLDivElement, ImageViewerProps>(
       return true;
     }, []);
 
+    // --- The browser's Back button. An entry is added while the viewer is open; a press on Back takes it off and closes the
+    // viewer, and a viewer closed any other way takes its own entry off again.
+    const historyEntry = useRef(false);
+    const ignoredPops = useRef(0);
+    useEffect(() => {
+      if (!open || inline || !closeOnHistoryBack) return undefined;
+      if (!historyEntry.current) {
+        window.history.pushState({ dbmImageViewer: true }, "");
+        historyEntry.current = true;
+      }
+      const onPop = () => {
+        if (ignoredPops.current > 0) {
+          ignoredPops.current -= 1;
+          return;
+        }
+        if (historyEntry.current) {
+          historyEntry.current = false;
+          changeOpen(false, "history");
+        }
+      };
+      window.addEventListener("popstate", onPop);
+      return () => window.removeEventListener("popstate", onPop);
+    }, [open, inline, closeOnHistoryBack, changeOpen]);
+    useEffect(() => {
+      if (open || !historyEntry.current) return;
+      historyEntry.current = false;
+      ignoredPops.current += 1;
+      window.history.back();
+    }, [open]);
+
+    // --- Where the first image eases in from, asked for once the image is drawn.
+    const originUsed = useRef(false);
+    useEffect(() => {
+      if (!open) originUsed.current = false;
+    }, [open]);
+    const getOriginRect = useCallback(() => {
+      const current = latest.current;
+      if (originUsed.current || current.inline || !current.getOrigin || prefersReducedMotion()) return null;
+      originUsed.current = true;
+      const element = current.getOrigin(current.index);
+      return element ? element.getBoundingClientRect() : null;
+    }, []);
+
     // --- The controller.
     const controller = useMemo<ImageViewerController>(
       () => ({
@@ -333,6 +498,9 @@ export const ImageViewer = forwardRef<HTMLDivElement, ImageViewerProps>(
         get zoom() {
           return latest.current.open ? (stageApi.current?.zoom() ?? 1) : 1;
         },
+        get isPlaying() {
+          return latest.current.playing;
+        },
         open: (at) => {
           const target = at === undefined ? undefined : Math.trunc(at);
           const moved = target !== undefined ? changeValue(target) : false;
@@ -345,17 +513,21 @@ export const ImageViewer = forwardRef<HTMLDivElement, ImageViewerProps>(
         zoomIn: () => stageApi.current?.zoomIn() ?? false,
         zoomOut: () => stageApi.current?.zoomOut() ?? false,
         resetZoom: () => stageApi.current?.reset() ?? false,
+        actualSize: () => stageApi.current?.actualSize() ?? false,
         rotate: (degrees = 90) => rotateBy(degrees),
+        flip: (axis = "horizontal") => flipBy(axis),
+        play: startPlaying,
+        pause: stopPlaying,
         toggleFullscreen,
       }),
-      [changeOpen, changeValue, step, rotateBy, toggleFullscreen],
+      [changeOpen, changeValue, step, rotateBy, flipBy, startPlaying, stopPlaying, toggleFullscreen],
     );
     useImperativeHandle(controllerRef, () => controller, [controller]);
 
     // The hook hands a part inside the viewer the same methods with a snapshot of the state, which changes as it does.
     const snapshot = useMemo<ImageViewerController>(
-      () => ({ ...controller, isOpen: open, value: index, count, zoom }),
-      [controller, open, index, count, zoom],
+      () => ({ ...controller, isOpen: open, value: index, count, zoom, isPlaying: playing }),
+      [controller, open, index, count, zoom, playing],
     );
 
     // --- Neighbours load in the background, so a step to them shows at once.
@@ -377,7 +549,8 @@ export const ImageViewer = forwardRef<HTMLDivElement, ImageViewerProps>(
       };
     }, [open, index, count, loop, images]);
 
-    // --- The announcement of a new image. Opening is not a change: the dialog announces itself.
+    // --- The announcement of a new image. Opening is not a change: the dialog announces itself. A running slideshow is
+    // silent, so it does not read over the person.
     const { message, announce } = useAnnouncement();
     const lastIndex = useRef<number | null>(null);
     useEffect(() => {
@@ -385,11 +558,11 @@ export const ImageViewer = forwardRef<HTMLDivElement, ImageViewerProps>(
         lastIndex.current = null;
         return;
       }
-      if (lastIndex.current !== null && lastIndex.current !== index && image) {
+      if (!playing && lastIndex.current !== null && lastIndex.current !== index && image) {
         announce(labels.announcement(index + 1, count, image.alt));
       }
       lastIndex.current = index;
-    }, [open, index, image, count, labels, announce]);
+    }, [open, playing, index, image, count, labels, announce]);
 
     // --- Development warnings.
     useEffect(() => {
@@ -399,6 +572,11 @@ export const ImageViewer = forwardRef<HTMLDivElement, ImageViewerProps>(
         console.warn("ImageViewer: every image needs an `alt` (pass \"\" for a purely decorative one).");
       }
     }, [count, images]);
+    useEffect(() => {
+      if (process.env.NODE_ENV !== "production" && inline && (trigger || openProp !== undefined || defaultOpen || closeOnHistoryBack)) {
+        console.warn("ImageViewer: `trigger`, `open`, `defaultOpen` and `closeOnHistoryBack` do nothing with `inline`, which is always open.");
+      }
+    }, [inline, trigger, openProp, defaultOpen, closeOnHistoryBack]);
 
     const themedButton = themedButtonIn(actions);
     useEffect(() => {
@@ -416,14 +594,20 @@ export const ImageViewer = forwardRef<HTMLDivElement, ImageViewerProps>(
     const showControls = controls === "auto";
     const directionSign: 1 | -1 = dir === "rtl" ? -1 : 1;
     const counterShown = showCounter === true || (showCounter === "auto" && canNavigate);
-    const percent = Math.round(zoom * 100);
+    // The zoom is shown as the share of the image's own pixels that are drawn, so 100% is one image pixel per screen pixel.
+    const actual = fit > 0 ? 1 / fit : 1;
+    const largestZoom = Math.max(maxZoom, actual);
+    const percent = Math.round(zoom * fit * 100);
     const zoomText = `${formatNumber(percent)}%`;
+    const atActual = Math.abs(zoom - actual) < 0.005;
     const atStart = neighbour(index, -1, count, loop) === null;
     const atEnd = neighbour(index, 1, count, loop) === null;
 
     const handleKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
       onKeyDown?.(event);
       if (event.defaultPrevented || event.altKey || event.ctrlKey || event.metaKey || isEditable(event.target)) return;
+      // Any key but Escape brings back controls a tap has hidden.
+      if (chromeHidden && event.key !== "Escape") setChromeHidden(false);
       const api = stageApi.current;
       const zoomed = latest.current.zoom > 1.001;
       let handled = true;
@@ -463,9 +647,25 @@ export const ImageViewer = forwardRef<HTMLDivElement, ImageViewerProps>(
         case "0":
           api?.reset();
           break;
+        case "1":
+          api?.actualSize();
+          break;
         case "r":
-        case "R":
           if (rotatable) rotateBy(90);
+          else handled = false;
+          break;
+        case "R":
+          if (rotatable) rotateBy(-90);
+          else handled = false;
+          break;
+        case "h":
+        case "H":
+          if (flippable) flipBy("horizontal");
+          else handled = false;
+          break;
+        case "v":
+        case "V":
+          if (flippable) flipBy("vertical");
           else handled = false;
           break;
         case "f":
@@ -482,51 +682,9 @@ export const ImageViewer = forwardRef<HTMLDivElement, ImageViewerProps>(
     const hiddenTitle = ariaLabel ?? labels.viewer;
     const describedBy = caption ? captionId : undefined;
 
-    const panel = (
-      <DialogPrimitive.Content
-        ref={mergeRefs(ref, panelRef)}
-        {...props}
-        {...(ariaLabelledBy ? { "aria-labelledby": ariaLabelledBy } : {})}
-        aria-label={ariaLabel}
-        aria-describedby={describedBy}
-        // Computed from the viewer's own state, so after `{...props}`: a same-named consumer prop must not replace them.
-        role="dialog"
-        aria-modal={true}
-        data-state={open ? "open" : "closed"}
-        data-status={status}
-        dir={dir}
-        tabIndex={-1}
-        className={cx(styles.panel, className)}
-        style={style}
-        onKeyDown={handleKeyDown}
-        onOpenAutoFocus={(event) => {
-          returnFocus.remember();
-          onOpenAutoFocus?.(event);
-          if (event.defaultPrevented) return;
-          // The viewer takes focus itself, so its keys work at once; a chosen element takes it instead.
-          event.preventDefault();
-          (initialFocus?.current ?? panelRef.current)?.focus();
-        }}
-        onCloseAutoFocus={(event) => {
-          onCloseAutoFocus?.(event);
-          returnFocus.restore(event);
-        }}
-        onEscapeKeyDown={(event) => {
-          onEscapeKeyDown?.(event);
-          if (!closeOnEscape) event.preventDefault();
-          else if (!event.defaultPrevented) reasonRef.current = "escape";
-        }}
-        // A press outside the image and its controls is handled by the stage, which covers the viewer; this only
-        // stops Radix treating a press on a layer portaled out of it (a menu in `actions`) as a dismissal.
-        onInteractOutside={(event) => {
-          onInteractOutside?.(event);
-          event.preventDefault();
-        }}
-      >
-        <OverlayLifecycle open={open} panelRef={panelRef} onOpenChangeComplete={onOpenChangeComplete} />
-        <DialogPrimitive.Title asChild>
-          <VisuallyHidden>{hiddenTitle}</VisuallyHidden>
-        </DialogPrimitive.Title>
+    // What is inside the viewer, whether it is a dialog or drawn in the page.
+    const inner = (
+      <>
         <div className={styles.toolbar}>
           <div className={styles.toolbarStart}>
             {counterShown && count > 0 && (
@@ -536,23 +694,59 @@ export const ImageViewer = forwardRef<HTMLDivElement, ImageViewerProps>(
             )}
           </div>
           <div className={styles.toolbarEnd}>
+            {autoPlayOn && canNavigate && (
+              <ViewerButton
+                label={playing ? labels.pause : labels.play}
+                icon={playing ? PauseIcon : PlayIcon}
+                onClick={() => (playing ? stopPlaying() : startPlaying())}
+              />
+            )}
             {showControls && (
               <>
-                <ViewerButton label={labels.zoomOut} icon={MagnifyingGlassMinusIcon} unavailable={!ready || zoom <= minZoom} onClick={() => stageApi.current?.zoomOut()} />
+                <ViewerButton
+                  label={labels.zoomOut}
+                  icon={MagnifyingGlassMinusIcon}
+                  aria-keyshortcuts="-"
+                  unavailable={!ready || zoom <= minZoom}
+                  onClick={() => stageApi.current?.zoomOut()}
+                />
                 <ViewerButton
                   label={labels.resetZoom(zoomText)}
+                  aria-keyshortcuts="0"
                   unavailable={!ready || zoom === 1}
                   className={styles.zoomValue}
                   onClick={() => stageApi.current?.reset()}
                 >
                   {zoomText}
                 </ViewerButton>
-                <ViewerButton label={labels.zoomIn} icon={MagnifyingGlassPlusIcon} unavailable={!ready || zoom >= maxZoom} onClick={() => stageApi.current?.zoomIn()} />
-                {rotatable && <ViewerButton label={labels.rotate} icon={ArrowClockwiseIcon} unavailable={!ready} onClick={() => rotateBy(90)} />}
+                <ViewerButton
+                  label={labels.zoomIn}
+                  icon={MagnifyingGlassPlusIcon}
+                  aria-keyshortcuts="+"
+                  unavailable={!ready || zoom >= largestZoom}
+                  onClick={() => stageApi.current?.zoomIn()}
+                />
+                <ViewerButton
+                  label={labels.actualSize}
+                  aria-keyshortcuts="1"
+                  aria-pressed={atActual}
+                  unavailable={!ready || actual <= 1.005}
+                  onClick={() => stageApi.current?.actualSize()}
+                >
+                  1:1
+                </ViewerButton>
+                {rotatable && (
+                  <>
+                    <ViewerButton label={labels.rotateCounterclockwise} icon={ArrowCounterClockwiseIcon} aria-keyshortcuts="Shift+R" unavailable={!ready} onClick={() => rotateBy(-90)} />
+                    <ViewerButton label={labels.rotate} icon={ArrowClockwiseIcon} aria-keyshortcuts="R" unavailable={!ready} onClick={() => rotateBy(90)} />
+                  </>
+                )}
+                {flippable && <ViewerButton label={labels.flipHorizontal} icon={FlipHorizontalIcon} aria-keyshortcuts="H" unavailable={!ready} onClick={() => flipBy("horizontal")} />}
                 {fullscreenButton && fullscreenAvailable && (
                   <ViewerButton
                     label={fullscreen ? labels.exitFullscreen : labels.enterFullscreen}
                     icon={fullscreen ? CornersInIcon : CornersOutIcon}
+                    aria-keyshortcuts="F"
                     aria-pressed={fullscreen}
                     onClick={toggleFullscreen}
                   />
@@ -560,11 +754,7 @@ export const ImageViewer = forwardRef<HTMLDivElement, ImageViewerProps>(
               </>
             )}
             {actions ? <div className={styles.actions}>{actions}</div> : null}
-            <ViewerButton
-              label={labels.close}
-              icon={XIcon}
-              onClick={() => closeFor("close-button")}
-            />
+            {!inline && <ViewerButton label={labels.close} icon={XIcon} onClick={() => closeFor("close-button")} />}
           </div>
         </div>
         <div className={styles.stageArea}>
@@ -573,21 +763,29 @@ export const ImageViewer = forwardRef<HTMLDivElement, ImageViewerProps>(
               key={imageKey}
               image={image}
               rotation={rotation}
+              flipX={flipX}
+              flipY={flipY}
               minZoom={minZoom}
               maxZoom={maxZoom}
               zoomStep={zoomStep}
               doubleClickZoom={doubleClickZoom}
               directionSign={directionSign}
-              canDismiss={swipeToDismiss}
+              canDismiss={swipeToDismiss && !inline}
+              enter={direction}
+              getOriginRect={getOriginRect}
               labels={labels}
               apiRef={stageApi}
               onZoomChange={handleZoomChange}
               onStatusChange={handleStatusChange}
-              onSwipeNavigate={(direction) => step(direction)}
+              onFitChange={handleFitChange}
+              onLoaded={handleLoaded}
+              onFailed={handleFailed}
+              onSwipeNavigate={(toward) => step(toward)}
               onSwipeDismiss={() => closeFor("swipe")}
               onBackgroundPress={() => {
-                if (closeOnOutsideClick) closeFor("outside");
+                if (closeOnOutsideClick && !inline) closeFor("outside");
               }}
+              onImageTap={tapToToggleControls ? () => setChromeHidden((hidden) => !hidden) : undefined}
             />
           )}
           {showControls && canNavigate && (
@@ -622,6 +820,84 @@ export const ImageViewer = forwardRef<HTMLDivElement, ImageViewerProps>(
           </div>
         )}
         <VisuallyHidden role="status">{message}</VisuallyHidden>
+      </>
+    );
+
+    if (inline) {
+      return (
+        <ControllerContext.Provider value={snapshot}>
+          {/* A focusable group that takes the viewer's keys: a widget with its own key model, which the lint rule that treats every group as static content does not know. */}
+          {/* eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions */}
+          <div
+            ref={mergeRefs(ref, panelRef)}
+            {...props}
+            aria-label={ariaLabel ?? (ariaLabelledBy ? undefined : labels.viewer)}
+            {...(ariaLabelledBy ? { "aria-labelledby": ariaLabelledBy } : {})}
+            aria-describedby={describedBy}
+            // Computed from the viewer's own state, so after `{...props}`: a same-named consumer prop must not replace them.
+            role="group"
+            data-status={status}
+            data-chrome={chromeHidden ? "hidden" : undefined}
+            dir={dir}
+            // eslint-disable-next-line jsx-a11y/no-noninteractive-tabindex
+            tabIndex={0}
+            className={cx(styles.panel, styles.inline, className)}
+            style={style}
+            onKeyDown={handleKeyDown}
+          >
+            {inner}
+          </div>
+        </ControllerContext.Provider>
+      );
+    }
+
+    const panel = (
+      <DialogPrimitive.Content
+        ref={mergeRefs(ref, panelRef)}
+        {...props}
+        {...(ariaLabelledBy ? { "aria-labelledby": ariaLabelledBy } : {})}
+        aria-label={ariaLabel}
+        aria-describedby={describedBy}
+        // Computed from the viewer's own state, so after `{...props}`: a same-named consumer prop must not replace them.
+        role="dialog"
+        aria-modal={true}
+        data-state={open ? "open" : "closed"}
+        data-status={status}
+        data-chrome={chromeHidden ? "hidden" : undefined}
+        dir={dir}
+        tabIndex={-1}
+        className={cx(styles.panel, className)}
+        style={style}
+        onKeyDown={handleKeyDown}
+        onOpenAutoFocus={(event) => {
+          returnFocus.remember();
+          onOpenAutoFocus?.(event);
+          if (event.defaultPrevented) return;
+          // The viewer takes focus itself, so its keys work at once; a chosen element takes it instead.
+          event.preventDefault();
+          (initialFocus?.current ?? panelRef.current)?.focus();
+        }}
+        onCloseAutoFocus={(event) => {
+          onCloseAutoFocus?.(event);
+          returnFocus.restore(event);
+        }}
+        onEscapeKeyDown={(event) => {
+          onEscapeKeyDown?.(event);
+          if (!closeOnEscape) event.preventDefault();
+          else if (!event.defaultPrevented) reasonRef.current = "escape";
+        }}
+        // A press outside the image and its controls is handled by the stage, which covers the viewer; this only
+        // stops Radix treating a press on a layer portaled out of it (a menu in `actions`) as a dismissal.
+        onInteractOutside={(event) => {
+          onInteractOutside?.(event);
+          event.preventDefault();
+        }}
+      >
+        <OverlayLifecycle open={open} panelRef={panelRef} onOpenChangeComplete={onOpenChangeComplete} />
+        <DialogPrimitive.Title asChild>
+          <VisuallyHidden>{hiddenTitle}</VisuallyHidden>
+        </DialogPrimitive.Title>
+        {inner}
       </DialogPrimitive.Content>
     );
 

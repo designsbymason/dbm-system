@@ -93,3 +93,9 @@ export const brokenImages: ImageViewerImage[] = [
 
 /** The same images with no size hints and no captions, as a list of plain addresses would give. */
 export const plainImages: ImageViewerImage[] = sampleImages.map(({ id, src, alt, thumbnail }) => ({ id, src, alt, thumbnail }));
+
+/** Five hundred small pictures, for a strip too long to draw whole. */
+export const manyImages: ImageViewerImage[] = Array.from({ length: 500 }, (_, index) => {
+  const sample: Sample = { label: `No. ${index + 1}`, width: 1200, height: 800, hue: (index * 37) % 360 };
+  return { id: `many-${index}`, src: pictureOf(sample, 0.5), thumbnail: pictureOf(sample, 0.06), alt: `Picture ${index + 1} of 500`, width: 600, height: 400 };
+});

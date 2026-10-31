@@ -86,3 +86,21 @@ export function neighbour(index: number, offset: number, count: number, loop: bo
   if (!loop || count < 2) return null;
   return ((target % count) + count) % count;
 }
+
+/** The most a drag may pull an image past an edge, in pixels. */
+export const RESIST_MAX = 64;
+
+/**
+ * A pan with some give: past an edge the image follows the finger a shorter and shorter way, up to `RESIST_MAX`, so a drag
+ * against the edge is felt rather than stopped dead. Released, the view is clamped back inside.
+ */
+export function rubberBand(value: number, limit: number): number {
+  const over = Math.abs(value) - limit;
+  if (over <= 0) return value;
+  return Math.sign(value) * (limit + RESIST_MAX * (1 - Math.exp(-over / (RESIST_MAX * 2))));
+}
+
+/** The scale at which one pixel of the image is one pixel on screen, given the ratio the fitted image is drawn at. */
+export function actualScale(fitRatio: number): number {
+  return fitRatio > 0 ? 1 / fitRatio : 1;
+}

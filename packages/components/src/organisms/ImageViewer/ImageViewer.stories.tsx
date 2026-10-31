@@ -8,7 +8,7 @@ import { Text } from "../../atoms/Text";
 import { ImageViewer, ImageViewerButton, useImageViewerController } from "./ImageViewer";
 import { imageViewerPlaygroundSnippet, imageViewerSnippets } from "./ImageViewer.snippets";
 import type { ImageViewerController, ImageViewerProps } from "./ImageViewer.types";
-import { ViewerStage, brokenImages, plainImages, sampleImages } from "./ImageViewerStoryKit";
+import { ViewerStage, brokenImages, manyImages, plainImages, sampleImages } from "./ImageViewerStoryKit";
 
 type PlaygroundArgs = ImageViewerProps;
 
@@ -25,7 +25,11 @@ const noControls = {
   zoomStep: { control: false },
   doubleClickZoom: { control: false },
   rotatable: { control: false },
+  flippable: { control: false },
   fullscreenButton: { control: false },
+  tapToToggleControls: { control: false },
+  closeOnHistoryBack: { control: false },
+  autoPlay: { control: false },
   thumbnails: { control: false },
   showCounter: { control: false },
   showCaptions: { control: false },
@@ -128,6 +132,39 @@ const meta: Meta<PlaygroundArgs> = {
       description: "Shows a rotate button in the toolbar. The image turns a quarter turn at a time; r does the same from the keyboard.",
       table: { defaultValue: { summary: "true" } },
     },
+    flippable: {
+      control: "boolean",
+      description: "Shows a button that mirrors the image left to right, and turns on h and v (top to bottom) from the keyboard.",
+      table: { defaultValue: { summary: "false" } },
+    },
+    tapToToggleControls: {
+      control: "boolean",
+      description: "Makes a single tap or click on the image hide and show the controls, counter, caption and thumbnails. A key other than Escape shows them again.",
+      table: { defaultValue: { summary: "false" } },
+    },
+    closeOnHistoryBack: {
+      control: "boolean",
+      description: "Makes the browser's Back button close the viewer instead of leaving the page, by adding a history entry while it is open. Reported as reason: history. No effect with inline.",
+      table: { defaultValue: { summary: "false" } },
+    },
+    autoPlay: {
+      control: "boolean",
+      description: "Steps through the images by itself: true for the default interval of 4 seconds, or { interval } in milliseconds. A pause button is always drawn while it is on. It starts paused under reduced motion, waits for each image to load and holds while one is zoomed.",
+      table: { defaultValue: { summary: "false" } },
+    },
+    inline: {
+      control: false,
+      description: "Draws the viewer in the page, in the box you give it, instead of over it: no scrim, close button or focus trap, and Escape and a swipe down do nothing. trigger, open, defaultOpen, onOpenChange, container, the scrim props and closeOnHistoryBack are ignored.",
+      table: { defaultValue: { summary: "false" } },
+    },
+    getOrigin: {
+      control: false,
+      description: "Called with the index in view as the viewer opens. Return the element to ease the first image in from, usually the thumbnail pressed; the image grows from its rectangle to its own. Not used under reduced motion or with inline.",
+    },
+    onImageLoad: { control: false, description: "Called when an image has loaded, with the image and its index." },
+    onImageError: { control: false, description: "Called when an image could not be loaded, with the image and its index. The viewer shows its message and a button to try again." },
+    onZoomChange: { control: false, description: "Called when the zoom of the image in view changes, relative to the fitted image (1 is all of it in view), with the index." },
+    onRotationChange: { control: false, description: "Called when the image in view is turned, with its turn in degrees (0, 90, 180 or 270) and the index." },
     fullscreenButton: {
       control: "boolean",
       description: "Shows a full screen button in the toolbar, where the browser supports it. f does the same from the keyboard.",
@@ -201,7 +238,11 @@ export const Playground: Story = {
     zoomStep: 1.5,
     doubleClickZoom: true,
     rotatable: true,
+    flippable: false,
     fullscreenButton: true,
+    tapToToggleControls: false,
+    closeOnHistoryBack: false,
+    autoPlay: false,
     thumbnails: false,
     showCounter: "auto",
     showCaptions: true,
@@ -303,13 +344,15 @@ export const Controlled: Story = {
   },
 };
 
-/** A grid of thumbnails of your own opens the viewer at the one pressed, with `controllerRef`. */
+/** A grid of thumbnails of your own opens the viewer at the one pressed, with `controllerRef`, and `getOrigin` eases the image in from that thumbnail. */
 export const OpenedFromAGrid: Story = {
   name: "Opened from a grid",
   argTypes: noControls,
-  parameters: { docs: { source: { code: imageViewerSnippets.controller } } },
+  parameters: { docs: { source: { code: imageViewerSnippets.origin } } },
   render: function GridStory() {
     const viewer = useRef<ImageViewerController>(null);
+    // The image eases in from the thumbnail that was pressed.
+    const cells = useRef<Array<HTMLElement | null>>([]);
     return (
       <ViewerStage>
         {(container) => (
@@ -318,6 +361,9 @@ export const OpenedFromAGrid: Story = {
               {sampleImages.map((image, index) => (
                 <button
                   key={image.id}
+                  ref={(element) => {
+                    cells.current[index] = element;
+                  }}
                   type="button"
                   aria-label={`Open ${image.alt}`}
                   onClick={() => viewer.current?.open(index)}
@@ -327,7 +373,7 @@ export const OpenedFromAGrid: Story = {
                 </button>
               ))}
             </div>
-            <ImageViewer container={container} controllerRef={viewer} images={sampleImages} thumbnails />
+            <ImageViewer container={container} controllerRef={viewer} images={sampleImages} thumbnails getOrigin={(index) => cells.current[index]} />
           </>
         )}
       </ViewerStage>
@@ -396,6 +442,74 @@ export const LoadFailure: Story = {
   parameters: { docs: { source: { code: imageViewerSnippets.basic } } },
   render: () => (
     <ViewerStage>{(container) => <ImageViewer container={container} trigger={openButton} images={brokenImages} />}</ViewerStage>
+  ),
+};
+
+/** `tapToToggleControls` hides the controls with a tap on the image, for an uncluttered view; any key but Escape brings them back. */
+export const TapToHide: Story = {
+  name: "Tap to hide the controls",
+  argTypes: noControls,
+  parameters: { docs: { source: { code: imageViewerSnippets.tapToHide } } },
+  render: () => (
+    <ViewerStage>
+      {(container) => <ImageViewer container={container} trigger={openButton} images={sampleImages} tapToToggleControls />}
+    </ViewerStage>
+  ),
+};
+
+/** `flippable` adds a button that mirrors the image, with h and v on the keyboard; rotate has a button each way. */
+export const Flippable: Story = {
+  name: "Rotate and flip",
+  argTypes: noControls,
+  parameters: { docs: { source: { code: imageViewerSnippets.flip } } },
+  render: () => (
+    <ViewerStage>{(container) => <ImageViewer container={container} trigger={openButton} images={sampleImages} flippable />}</ViewerStage>
+  ),
+};
+
+/** `autoPlay` steps through the images by itself. Its pause button is always drawn, it holds while an image is zoomed, and it starts paused under reduced motion. */
+export const Slideshow: Story = {
+  argTypes: noControls,
+  parameters: { docs: { source: { code: imageViewerSnippets.slideshow } } },
+  render: () => (
+    <ViewerStage>
+      {(container) => <ImageViewer container={container} trigger={openButton} images={sampleImages} autoPlay={{ interval: 3000 }} loop />}
+    </ViewerStage>
+  ),
+};
+
+/** `closeOnHistoryBack` makes the Back button close the viewer instead of leaving the page. */
+export const ClosesOnBack: Story = {
+  name: "Closes on the Back button",
+  argTypes: noControls,
+  parameters: { docs: { source: { code: imageViewerSnippets.history } } },
+  render: () => (
+    <ViewerStage>
+      {(container) => <ImageViewer container={container} trigger={openButton} images={sampleImages} closeOnHistoryBack />}
+    </ViewerStage>
+  ),
+};
+
+/** `inline` draws the viewer in the page, in the box you give it: no scrim, no close button, no focus trap. Everything else works the same. */
+export const Inline: Story = {
+  argTypes: noControls,
+  parameters: { docs: { source: { code: imageViewerSnippets.inline } } },
+  render: () => (
+    <div style={{ blockSize: "28rem" }}>
+      <ImageViewer inline aria-label="Photos" images={sampleImages} thumbnails />
+    </div>
+  ),
+};
+
+/** A long set draws only the thumbnails in view and a few either side, so 500 images cost no more than 20. */
+export const ManyImages: Story = {
+  name: "A long set",
+  argTypes: noControls,
+  parameters: { docs: { source: { code: imageViewerSnippets.many } } },
+  render: () => (
+    <div style={{ blockSize: "28rem" }}>
+      <ImageViewer inline aria-label="Five hundred photos" images={manyImages} thumbnails defaultValue={250} />
+    </div>
   ),
 };
 

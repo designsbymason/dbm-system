@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import type { RefObject } from "react";
-import { clamp, clampView, fitSize, panLimits, stepScale, wheelFactor, zoomAt } from "./imageViewerMath";
+import { clamp, clampView, fitSize, panLimits, rubberBand, stepScale, wheelFactor, zoomAt } from "./imageViewerMath";
 import type { Size, View } from "./imageViewerMath";
 
 /** Where a drag starts being a drag, in pixels: less than this is a tap. */
@@ -12,6 +12,10 @@ const DOUBLE_TAP_DISTANCE = 24;
 const DOUBLE_TAP_SCALE = 2;
 /** A flick faster than this, in pixels per millisecond, counts however short it was. */
 const FLICK_VELOCITY = 0.5;
+/** A released pan faster than this carries on a little, and stops by itself. */
+const COAST_VELOCITY = 0.3;
+/** How long a coasting pan takes to lose most of its speed, in milliseconds. */
+const COAST_TIME_CONSTANT = 160;
 
 /** What the stage asks its owner for when a swipe or a tap ends. */
 export interface ZoomGestureHandlers {
@@ -21,6 +25,8 @@ export interface ZoomGestureHandlers {
   onSwipeDismiss: () => void;
   /** A tap on the stage outside the image. */
   onBackgroundPress: () => void;
+  /** A single tap or click on the image (after the wait for a second one, where double tap zooms). */
+  onImageTap?: () => void;
 }
 
 export interface ImageZoomOptions extends ZoomGestureHandlers {
@@ -30,7 +36,11 @@ export interface ImageZoomOptions extends ZoomGestureHandlers {
   natural: Size | null;
   /** The turn in degrees, a multiple of 90. */
   rotation: number;
+  /** Whether the image is mirrored left to right and top to bottom, as the person sees it. */
+  flipX: boolean;
+  flipY: boolean;
   minZoom: number;
+  /** The largest zoom; actual size is always reachable, so the real limit is raised to it where that is larger. */
   maxZoom: number;
   zoomStep: number;
   doubleClickZoom: boolean;
@@ -50,14 +60,20 @@ export interface ImageZoomApi {
   zoomIn: () => boolean;
   zoomOut: () => boolean;
   reset: () => boolean;
+  /** Zooms to one image pixel per screen pixel, or back to the fitted size when already there. `false` where they are the same. */
+  actualSize: () => boolean;
   /** Moves the image by pixels, as the arrow keys do while it is zoomed. `false` at the edge. */
   panBy: (dx: number, dy: number) => boolean;
+  /** Draws the image first at the place and size of a rectangle on the page, then eases it to its own. */
+  enterFrom: (rect: DOMRect) => void;
 }
 
 interface Pointer {
   x: number;
   y: number;
 }
+
+const prefersReducedMotion = () => typeof window !== "undefined" && window.matchMedia?.("(prefers-reduced-motion: reduce)").matches === true;
 
 /**
  * The gestures of the zoomable stage. It lays the image out at its fitted size, keeps the view (zoom and offset) in a
@@ -66,12 +82,14 @@ interface Pointer {
  *
  * - A wheel zooms about the cursor, and a trackpad pinch (a wheel with the control key down) does so finely.
  * - Two fingers pinch and move together.
- * - One finger pans a zoomed image, and at the fitted size swipes: sideways to the next or previous image, down to
- *   dismiss. A mouse pans a zoomed image and does not swipe, since it has arrows.
- * - A double tap or click zooms about the point and back.
+ * - One finger pans a zoomed image, with give past an edge and a short coast when it is let go quickly, and at the
+ *   fitted size swipes: sideways to the next or previous image, down to dismiss. A mouse pans a zoomed image and does not
+ *   swipe, since it has arrows.
+ * - A double tap or click zooms about the point and back; a single tap on the image is reported after the wait for a
+ *   second one.
  */
-export function useImageZoom(options: ImageZoomOptions): { fitted: Size; api: ImageZoomApi } {
-  const { stageRef, boxRef, natural, rotation } = options;
+export function useImageZoom(options: ImageZoomOptions): { fitted: Size; fit: number; api: ImageZoomApi } {
+  const { stageRef, boxRef, natural, rotation, flipX, flipY } = options;
   const latest = useRef(options);
   useLayoutEffect(() => {
     latest.current = options;
@@ -96,10 +114,24 @@ export function useImageZoom(options: ImageZoomOptions): { fitted: Size; api: Im
 
   const view = useRef<View>({ scale: 1, x: 0, y: 0 });
   const reportedZoom = useRef(1);
-  const geometry = useRef({ fitted, stage, rotation });
+  const geometry = useRef({ fitted, stage, rotation, flipX, flipY });
   useLayoutEffect(() => {
-    geometry.current = { fitted, stage, rotation };
+    geometry.current = { fitted, stage, rotation, flipX, flipY };
   });
+  const coastFrame = useRef(0);
+  const stopCoast = useCallback(() => {
+    if (coastFrame.current) cancelAnimationFrame(coastFrame.current);
+    coastFrame.current = 0;
+  }, []);
+
+  // The scale at which one image pixel is one screen pixel: the fitted image is drawn at `fitted / natural` of its size.
+  const actualScaleNow = useCallback(() => {
+    const size = latest.current.natural;
+    const drawn = geometry.current.fitted;
+    return size && drawn.width > 0 ? size.width / drawn.width : 1;
+  }, []);
+  // Actual size is always within reach, however small `maxZoom` is.
+  const maxNow = useCallback(() => Math.max(latest.current.maxZoom, actualScaleNow()), [actualScaleNow]);
 
   const write = useCallback(
     (next: View, animate: boolean) => {
@@ -108,8 +140,10 @@ export function useImageZoom(options: ImageZoomOptions): { fitted: Size; api: Im
       if (box) {
         if (animate) box.setAttribute("data-animate", "");
         else box.removeAttribute("data-animate");
-        const turn = geometry.current.rotation;
-        box.style.transform = `translate(${next.x}px, ${next.y}px) rotate(${turn}deg) scale(${next.scale})`;
+        const { rotation: turn, flipX: mirrorX, flipY: mirrorY } = geometry.current;
+        // The flip comes before the turn in the list, so it is drawn after it: a mirror of the screen, not of the picture.
+        const flip = mirrorX || mirrorY ? ` scale(${mirrorX ? -1 : 1}, ${mirrorY ? -1 : 1})` : "";
+        box.style.transform = `translate(${next.x}px, ${next.y}px)${flip} rotate(${turn}deg) scale(${next.scale})`;
       }
       if (reportedZoom.current !== next.scale) {
         reportedZoom.current = next.scale;
@@ -121,13 +155,13 @@ export function useImageZoom(options: ImageZoomOptions): { fitted: Size; api: Im
 
   const constrained = useCallback((next: View): View => {
     const current = latest.current;
-    return clampView(next, geometry.current.fitted, geometry.current.stage, geometry.current.rotation, current.minZoom, current.maxZoom);
-  }, []);
+    return clampView(next, geometry.current.fitted, geometry.current.stage, geometry.current.rotation, current.minZoom, maxNow());
+  }, [maxNow]);
 
-  // A turn, a resize or a new size for the image keeps the view inside the stage.
+  // A turn, a flip, a resize or a new size for the image keeps the view inside the stage.
   useLayoutEffect(() => {
     write(constrained(view.current), true);
-  }, [fitted, rotation, write, constrained]);
+  }, [fitted, rotation, flipX, flipY, write, constrained]);
 
   const centred = useCallback(
     (clientX: number, clientY: number) => {
@@ -150,34 +184,61 @@ export function useImageZoom(options: ImageZoomOptions): { fitted: Size; api: Im
       zoom: () => view.current.scale,
       zoomIn: () => {
         const current = latest.current;
-        if (!current.enabled || view.current.scale >= current.maxZoom) return false;
-        zoomTo(stepScale(view.current.scale, 1, current.zoomStep, current.minZoom, current.maxZoom), { x: 0, y: 0 }, true);
+        if (!current.enabled || view.current.scale >= maxNow()) return false;
+        stopCoast();
+        zoomTo(stepScale(view.current.scale, 1, current.zoomStep, current.minZoom, maxNow()), { x: 0, y: 0 }, true);
         return true;
       },
       zoomOut: () => {
         const current = latest.current;
         if (!current.enabled || view.current.scale <= current.minZoom) return false;
-        zoomTo(stepScale(view.current.scale, -1, current.zoomStep, current.minZoom, current.maxZoom), { x: 0, y: 0 }, true);
+        stopCoast();
+        zoomTo(stepScale(view.current.scale, -1, current.zoomStep, current.minZoom, maxNow()), { x: 0, y: 0 }, true);
         return true;
       },
       reset: () => {
-        const home = clamp(1, latest.current.minZoom, latest.current.maxZoom);
+        stopCoast();
+        const home = clamp(1, latest.current.minZoom, maxNow());
         const before = view.current;
         if (before.scale === home && before.x === 0 && before.y === 0) return false;
         write({ scale: home, x: 0, y: 0 }, true);
         return true;
       },
+      actualSize: () => {
+        const current = latest.current;
+        const actual = actualScaleNow();
+        if (!current.enabled || actual <= 1.005) return false;
+        stopCoast();
+        const here = Math.abs(view.current.scale - actual) < 0.005;
+        if (here) write({ scale: clamp(1, current.minZoom, maxNow()), x: 0, y: 0 }, true);
+        else zoomTo(clamp(actual, current.minZoom, maxNow()), { x: 0, y: 0 }, true);
+        return true;
+      },
       panBy: (dx, dy) => {
         const limit = panLimits(geometry.current.fitted, geometry.current.stage, view.current.scale, geometry.current.rotation);
         if (limit.x === 0 && limit.y === 0) return false;
+        stopCoast();
         const before = view.current;
         const next = constrained({ ...before, x: before.x + dx, y: before.y + dy });
         if (next.x === before.x && next.y === before.y) return false;
         write(next, true);
         return true;
       },
+      enterFrom: (rect) => {
+        const stageRect = stageRef.current?.getBoundingClientRect();
+        const drawn = geometry.current.fitted;
+        if (!stageRect || drawn.width <= 0 || rect.width <= 0) return;
+        const from: View = {
+          scale: rect.width / drawn.width,
+          x: rect.left + rect.width / 2 - (stageRect.left + stageRect.width / 2),
+          y: rect.top + rect.height / 2 - (stageRect.top + stageRect.height / 2),
+        };
+        write(from, false);
+        // The next frame, so the browser has drawn the starting place before it is asked to ease away from it.
+        requestAnimationFrame(() => write({ scale: 1, x: 0, y: 0 }, true));
+      },
     }),
-    [write, constrained, zoomTo],
+    [write, constrained, zoomTo, stopCoast, stageRef, actualScaleNow, maxNow],
   );
 
   // The gestures. They are native listeners: the wheel has to be non-passive to stop the page scrolling, and the pointer
@@ -205,6 +266,11 @@ export function useImageZoom(options: ImageZoomOptions): { fitted: Size; api: Im
     } | null = null;
     let pinch: { distance: number; mid: Pointer; start: View } | null = null;
     let lastTap: { time: number; x: number; y: number } | null = null;
+    let tapTimer: ReturnType<typeof setTimeout> | null = null;
+    const clearTapTimer = () => {
+      if (tapTimer) clearTimeout(tapTimer);
+      tapTimer = null;
+    };
 
     const distanceOf = () => {
       const [a, b] = [...pointers.values()];
@@ -232,9 +298,32 @@ export function useImageZoom(options: ImageZoomOptions): { fitted: Size; api: Im
       };
     };
 
+    // A pan lets go with a little give past an edge: the view is eased back inside, or carried on by its speed.
+    const coast = (velocityX: number, velocityY: number) => {
+      let vx = velocityX;
+      let vy = velocityY;
+      let last = performance.now();
+      const frame = (now: number) => {
+        const dt = Math.min(32, Math.max(1, now - last));
+        last = now;
+        const decay = Math.exp(-dt / COAST_TIME_CONSTANT);
+        vx *= decay;
+        vy *= decay;
+        const before = view.current;
+        const next = constrained({ ...before, x: before.x + vx * dt, y: before.y + vy * dt });
+        // An axis that met its edge has nothing left to carry.
+        if (next.x === before.x) vx = 0;
+        if (next.y === before.y) vy = 0;
+        write(next, false);
+        coastFrame.current = Math.hypot(vx, vy) > 0.02 ? requestAnimationFrame(frame) : 0;
+      };
+      coastFrame.current = requestAnimationFrame(frame);
+    };
+
     const onDown = (event: PointerEvent) => {
       if (event.pointerType === "mouse" && event.button !== 0) return;
       if ((event.target as Element).closest("[data-viewer-ui]")) return;
+      stopCoast();
       pointers.set(event.pointerId, { x: event.clientX, y: event.clientY });
       if (!latest.current.enabled) {
         // Nothing to zoom yet, but a press on the stage outside the image still closes the viewer.
@@ -262,7 +351,7 @@ export function useImageZoom(options: ImageZoomOptions): { fitted: Size; api: Im
       if (!current.enabled) return;
 
       if (pinch && pointers.size >= 2) {
-        const nextScale = clamp(pinch.start.scale * (distanceOf() / pinch.distance), current.minZoom, current.maxZoom);
+        const nextScale = clamp(pinch.start.scale * (distanceOf() / pinch.distance), current.minZoom, maxNow());
         const mid = midpointOf();
         const zoomed = zoomAt(pinch.start, nextScale, pinch.mid.x, pinch.mid.y);
         write(constrained({ ...zoomed, x: zoomed.x + (mid.x - pinch.mid.x), y: zoomed.y + (mid.y - pinch.mid.y) }), false);
@@ -284,7 +373,9 @@ export function useImageZoom(options: ImageZoomOptions): { fitted: Size; api: Im
 
       if (view.current.scale > 1) {
         element.setAttribute("data-gesture", "pan");
-        write(constrained({ ...single.start, x: single.start.x + dx, y: single.start.y + dy }), false);
+        const raw = { ...single.start, x: single.start.x + dx, y: single.start.y + dy };
+        const limit = panLimits(geometry.current.fitted, geometry.current.stage, raw.scale, geometry.current.rotation);
+        write({ scale: raw.scale, x: rubberBand(raw.x, limit.x), y: rubberBand(raw.y, limit.y) }, false);
         event.preventDefault();
         return;
       }
@@ -303,17 +394,28 @@ export function useImageZoom(options: ImageZoomOptions): { fitted: Size; api: Im
         current.onBackgroundPress();
         return;
       }
-      if (!current.enabled || !current.doubleClickZoom) return;
+      if (!current.enabled) return;
       const now = event.timeStamp;
       const previous = lastTap;
-      if (previous && now - previous.time < DOUBLE_TAP_MS && Math.hypot(event.clientX - previous.x, event.clientY - previous.y) < DOUBLE_TAP_DISTANCE) {
+      if (current.doubleClickZoom && previous && now - previous.time < DOUBLE_TAP_MS && Math.hypot(event.clientX - previous.x, event.clientY - previous.y) < DOUBLE_TAP_DISTANCE) {
+        clearTapTimer();
         lastTap = null;
-        const target = view.current.scale > 1.001 ? 1 : Math.min(DOUBLE_TAP_SCALE, current.maxZoom);
+        const target = view.current.scale > 1.001 ? 1 : Math.min(DOUBLE_TAP_SCALE, maxNow());
         if (target === 1) write({ scale: 1, x: 0, y: 0 }, true);
         else zoomTo(target, centred(event.clientX, event.clientY), true);
         return;
       }
       lastTap = { time: now, x: event.clientX, y: event.clientY };
+      if (current.onImageTap) {
+        if (current.doubleClickZoom) {
+          // Where a second tap zooms, a single tap is only known to be single once the wait for it has passed.
+          clearTapTimer();
+          tapTimer = setTimeout(() => {
+            tapTimer = null;
+            latest.current.onImageTap?.();
+          }, DOUBLE_TAP_MS + 20);
+        } else current.onImageTap();
+      }
     };
 
     const onUp = (event: PointerEvent) => {
@@ -351,7 +453,13 @@ export function useImageZoom(options: ImageZoomOptions): { fitted: Size; api: Im
         return;
       }
       lastTap = null;
-      if (view.current.scale > 1) return;
+      if (view.current.scale > 1) {
+        // Past an edge the image eases back; otherwise a quick release carries it on a little.
+        const settled = constrained(view.current);
+        if (settled.x !== view.current.x || settled.y !== view.current.y) write(settled, true);
+        else if (Math.hypot(finished.velocityX, finished.velocityY) > COAST_VELOCITY && !prefersReducedMotion()) coast(finished.velocityX, finished.velocityY);
+        return;
+      }
 
       const { stage: size } = geometry.current;
       const dx = event.clientX - finished.startX;
@@ -378,6 +486,7 @@ export function useImageZoom(options: ImageZoomOptions): { fitted: Size; api: Im
       single = null;
       pinch = null;
       lastTap = null;
+      clearTapTimer();
       element.removeAttribute("data-gesture");
       write(constrained(view.current.scale > 1 ? view.current : { scale: 1, x: 0, y: 0 }), true);
     };
@@ -387,8 +496,9 @@ export function useImageZoom(options: ImageZoomOptions): { fitted: Size; api: Im
       event.preventDefault();
       const current = latest.current;
       if (!current.enabled) return;
+      stopCoast();
       const factor = wheelFactor(event.deltaY, event.deltaMode, event.ctrlKey);
-      const nextScale = clamp(view.current.scale * factor, current.minZoom, current.maxZoom);
+      const nextScale = clamp(view.current.scale * factor, current.minZoom, maxNow());
       if (nextScale === view.current.scale) return;
       zoomTo(nextScale, centred(event.clientX, event.clientY), false);
     };
@@ -405,8 +515,11 @@ export function useImageZoom(options: ImageZoomOptions): { fitted: Size; api: Im
       element.removeEventListener("pointercancel", onCancel);
       element.removeEventListener("wheel", onWheel);
       element.removeAttribute("data-gesture");
+      clearTapTimer();
+      stopCoast();
     };
-  }, [stageRef, boxRef, centred, write, constrained, zoomTo]);
+  }, [stageRef, boxRef, centred, write, constrained, zoomTo, stopCoast, maxNow]);
 
-  return { fitted, api };
+  const fit = natural && natural.width > 0 ? fitted.width / natural.width : 1;
+  return { fitted, fit, api };
 }

@@ -342,20 +342,21 @@ describe("ImageViewer zoom, turn and loading", () => {
     const { user } = await open();
     loadImage("First picture");
     await waitFor(() => expect(zoomButton()).toBeInTheDocument());
-    expect(zoomButton()).toHaveTextContent("100%");
-    expect(zoomButton()).toHaveAccessibleName("Reset zoom, 100%");
+    // 2000 x 1000 fitted into 1000 x 600 is drawn at half its own size, and the zoom is the share of its own pixels
+    expect(zoomButton()).toHaveTextContent("50%");
+    expect(zoomButton()).toHaveAccessibleName("Reset zoom, 50%");
     await user.click(screen.getByRole("button", { name: "Zoom in" }));
-    expect(zoomButton()).toHaveTextContent("150%");
+    expect(zoomButton()).toHaveTextContent("75%");
     await user.keyboard("+");
-    expect(zoomButton()).toHaveTextContent("200%");
+    expect(zoomButton()).toHaveTextContent("100%");
     expect(screen.getByRole("button", { name: "Zoom in" })).toHaveAttribute("aria-disabled", "true");
     await user.keyboard("-");
-    expect(zoomButton()).toHaveTextContent("133%");
+    expect(zoomButton()).toHaveTextContent("67%");
     await user.click(zoomButton());
-    expect(zoomButton()).toHaveTextContent("100%");
+    expect(zoomButton()).toHaveTextContent("50%");
     expect(screen.getByRole("button", { name: "Zoom out" })).toHaveAttribute("aria-disabled", "true");
     await user.keyboard("{+}{0}");
-    expect(zoomButton()).toHaveTextContent("100%");
+    expect(zoomButton()).toHaveTextContent("50%");
   });
 
   it("zooms with the wheel and keeps the zoom inside its limits", async () => {
@@ -365,11 +366,12 @@ describe("ImageViewer zoom, turn and loading", () => {
     await waitFor(() => expect(zoomButton()).toBeInTheDocument());
     const stage = screen.getByAltText("First picture").closest("[data-status]") as HTMLElement;
     fireEvent.wheel(stage, { deltaY: -300, clientX: 500, clientY: 300 });
-    await waitFor(() => expect(zoomButton()).not.toHaveTextContent("100%"));
+    await waitFor(() => expect(zoomButton()).not.toHaveTextContent("50%"));
     fireEvent.wheel(stage, { deltaY: -100000, clientX: 500, clientY: 300 });
-    await waitFor(() => expect(zoomButton()).toHaveTextContent("400%"));
+    // the largest zoom is 4 times the fitted image, which is 200% of its own pixels
+    await waitFor(() => expect(zoomButton()).toHaveTextContent("200%"));
     fireEvent.wheel(stage, { deltaY: 100000, clientX: 500, clientY: 300 });
-    await waitFor(() => expect(zoomButton()).toHaveTextContent("100%"));
+    await waitFor(() => expect(zoomButton()).toHaveTextContent("50%"));
   });
 
   it("moves a zoomed image with the arrow keys instead of changing the image", async () => {
@@ -409,7 +411,7 @@ describe("ImageViewer zoom, turn and loading", () => {
     await user.click(screen.getByRole("button", { name: "Next image" }));
     expect(counter()).toHaveTextContent("2 / 3");
     loadImage("Second picture", 1000, 1000);
-    await waitFor(() => expect(zoomButton()).toHaveTextContent("100%"));
+    await waitFor(() => expect(zoomButton()).toHaveTextContent("60%"));
     const box = screen.getByAltText("Second picture").closest("[data-drawn]") as HTMLElement;
     expect(box.style.transform).toContain("rotate(0deg)");
   });
@@ -568,8 +570,8 @@ describe("ImageViewer labels", () => {
     render(<Viewer labels={{ resetZoom: (zoom) => `Remettre le zoom (${zoom})` }} />);
     await open();
     loadImage("First picture");
-    const button = await screen.findByRole("button", { name: "Remettre le zoom (100%)" });
-    expect(button.textContent).toBe("100%");
+    const button = await screen.findByRole("button", { name: "Remettre le zoom (50%)" });
+    expect(button.textContent).toBe("50%");
   });
 });
 
@@ -655,5 +657,330 @@ describe("ImageViewer under React's StrictMode and accessibility", () => {
     });
     await screen.findByRole("img", { name: /could not be loaded/ });
     expect(await axe(dialog)).toHaveNoViolations();
+  });
+});
+
+describe("ImageViewer and the browser's Back button", () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it("adds a history entry while open, and closes with the reason history when Back is pressed", async () => {
+    const push = vi.spyOn(window.history, "pushState");
+    const back = vi.spyOn(window.history, "back").mockImplementation(() => undefined);
+    const onOpenChange = vi.fn();
+    render(<Viewer closeOnHistoryBack onOpenChange={onOpenChange} />);
+    expect(push).not.toHaveBeenCalled();
+    await open();
+    expect(push).toHaveBeenCalledTimes(1);
+    act(() => {
+      window.dispatchEvent(new PopStateEvent("popstate"));
+    });
+    await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
+    expect(onOpenChange).toHaveBeenLastCalledWith(false, { reason: "history" });
+    // the browser has already taken the entry off, so the viewer does not do it again
+    expect(back).not.toHaveBeenCalled();
+  });
+
+  it("takes its own entry off when it is closed another way, and ignores the Back that causes", async () => {
+    vi.spyOn(window.history, "pushState");
+    const back = vi.spyOn(window.history, "back").mockImplementation(() => undefined);
+    const onOpenChange = vi.fn();
+    render(<Viewer closeOnHistoryBack onOpenChange={onOpenChange} />);
+    const { user } = await open();
+    await user.keyboard("{Escape}");
+    await waitFor(() => expect(back).toHaveBeenCalledTimes(1));
+    act(() => {
+      window.dispatchEvent(new PopStateEvent("popstate"));
+    });
+    expect(onOpenChange).toHaveBeenCalledTimes(2);
+    expect(onOpenChange).toHaveBeenLastCalledWith(false, { reason: "escape" });
+  });
+
+  it("adds one entry inside StrictMode, and none unless asked", async () => {
+    const push = vi.spyOn(window.history, "pushState");
+    vi.spyOn(window.history, "back").mockImplementation(() => undefined);
+    const { unmount } = render(
+      <StrictMode>
+        <Viewer closeOnHistoryBack />
+      </StrictMode>,
+    );
+    await open();
+    expect(push).toHaveBeenCalledTimes(1);
+    unmount();
+    push.mockClear();
+    render(<Viewer />);
+    await open();
+    expect(push).not.toHaveBeenCalled();
+  });
+});
+
+describe("ImageViewer actual size and the zoom shown", () => {
+  it("shows the share of the image's own pixels, and zooms to one image pixel per screen pixel with 1:1 and the 1 key", async () => {
+    const onZoomChange = vi.fn();
+    render(<Viewer onZoomChange={onZoomChange} />);
+    const { user } = await open();
+    loadImage("First picture");
+    await waitFor(() => expect(zoomButton()).toHaveTextContent("50%"));
+    const actual = screen.getByRole("button", { name: "Actual size, 1:1" });
+    expect(actual).toHaveAttribute("aria-pressed", "false");
+    await user.click(actual);
+    expect(zoomButton()).toHaveTextContent("100%");
+    expect(actual).toHaveAttribute("aria-pressed", "true");
+    expect(onZoomChange).toHaveBeenLastCalledWith(2, 0);
+    await user.keyboard("1");
+    expect(zoomButton()).toHaveTextContent("50%");
+    expect(actual).toHaveAttribute("aria-pressed", "false");
+  });
+
+  it("is unavailable for an image no larger than the stage, and can reach actual size past maxZoom", async () => {
+    render(<Viewer maxZoom={1.2} />);
+    await open();
+    loadImage("First picture", 400, 200);
+    await waitFor(() => expect(zoomButton()).toHaveTextContent("100%"));
+    expect(screen.getByRole("button", { name: "Actual size, 1:1" })).toHaveAttribute("aria-disabled", "true");
+  });
+
+  it("allows actual size even when maxZoom is smaller than it", async () => {
+    render(<Viewer maxZoom={1.2} />);
+    const { user } = await open();
+    loadImage("First picture");
+    await waitFor(() => expect(zoomButton()).toHaveTextContent("50%"));
+    await user.click(screen.getByRole("button", { name: "Actual size, 1:1" }));
+    expect(zoomButton()).toHaveTextContent("100%");
+  });
+
+  it("gives the buttons their shortcuts for assistive technology", async () => {
+    render(<Viewer flippable />);
+    await open();
+    expect(screen.getByRole("button", { name: "Zoom in" })).toHaveAttribute("aria-keyshortcuts", "+");
+    expect(screen.getByRole("button", { name: "Zoom out" })).toHaveAttribute("aria-keyshortcuts", "-");
+    expect(screen.getByRole("button", { name: "Rotate clockwise" })).toHaveAttribute("aria-keyshortcuts", "R");
+    expect(screen.getByRole("button", { name: "Rotate counterclockwise" })).toHaveAttribute("aria-keyshortcuts", "Shift+R");
+    expect(screen.getByRole("button", { name: "Flip horizontally" })).toHaveAttribute("aria-keyshortcuts", "H");
+  });
+});
+
+describe("ImageViewer events, retry and the placeholder", () => {
+  it("reports a load and a failure with the image and its index, and shows a button that tries again", async () => {
+    const onImageLoad = vi.fn();
+    const onImageError = vi.fn();
+    render(<Viewer onImageLoad={onImageLoad} onImageError={onImageError} />);
+    await open();
+    const first = screen.getByAltText("First picture");
+    act(() => {
+      fireEvent.error(first);
+    });
+    expect(onImageError).toHaveBeenCalledWith(images[0], 0);
+    const retry = await screen.findByRole("button", { name: "Try again" });
+    await userEvent.setup().click(retry);
+    const again = await screen.findByAltText("First picture");
+    expect(again).not.toBe(first);
+    expect(screen.getByRole("dialog")).toHaveAttribute("data-status", "loading");
+    loadImage("First picture");
+    expect(onImageLoad).toHaveBeenCalledWith(images[0], 0);
+    await waitFor(() => expect(screen.getByRole("dialog")).toHaveAttribute("data-status", "ready"));
+  });
+
+  it("stands the thumbnail in, blurred, while the full image loads", async () => {
+    const { container } = render(<Viewer images={[{ src: "/full.jpg", thumbnail: "/small.jpg", alt: "With thumbnail" }]} />);
+    await open();
+    const placeholder = () => document.body.querySelector("img[src='/small.jpg']");
+    expect(placeholder()).not.toBeNull();
+    expect(placeholder()).toHaveAttribute("aria-hidden", "true");
+    loadImage("With thumbnail");
+    await waitFor(() => expect(placeholder()).toBeNull());
+    expect(container).toBeDefined();
+  });
+
+  it("does not draw a placeholder when the thumbnail is the image", async () => {
+    render(<Viewer images={[{ src: "/same.jpg", thumbnail: "/same.jpg", alt: "Same" }]} />);
+    await open();
+    expect(document.body.querySelectorAll("img[src='/same.jpg']")).toHaveLength(1);
+  });
+
+  it("reports a turn and, with flippable, mirrors the image as the person sees it", async () => {
+    const onRotationChange = vi.fn();
+    render(<Viewer onRotationChange={onRotationChange} flippable />);
+    const { user } = await open();
+    loadImage("First picture");
+    await waitFor(() => expect(zoomButton()).toBeInTheDocument());
+    const box = screen.getByAltText("First picture").closest("[data-drawn]") as HTMLElement;
+    await user.click(screen.getByRole("button", { name: "Rotate counterclockwise" }));
+    expect(box.style.transform).toContain("rotate(270deg)");
+    expect(onRotationChange).toHaveBeenLastCalledWith(270, 0);
+    await user.click(screen.getByRole("button", { name: "Flip horizontally" }));
+    expect(box.style.transform).toContain("scale(-1, 1)");
+    await user.keyboard("v");
+    expect(box.style.transform).toContain("scale(-1, -1)");
+    await user.keyboard("R");
+    expect(box.style.transform).toContain("rotate(180deg)");
+  });
+
+  it("offers no flip without flippable, and ignores h and v", async () => {
+    render(<Viewer />);
+    const { user } = await open();
+    loadImage("First picture");
+    await waitFor(() => expect(zoomButton()).toBeInTheDocument());
+    expect(screen.queryByRole("button", { name: "Flip horizontally" })).not.toBeInTheDocument();
+    await user.keyboard("hv");
+    expect(screen.getByAltText("First picture").closest("[data-drawn]")).not.toHaveStyle({ transform: "scale(-1, 1)" });
+  });
+
+  it("marks the direction an image comes from, and nothing on opening", async () => {
+    render(<Viewer />);
+    const { user } = await open();
+    loadImage("First picture");
+    expect(screen.getByAltText("First picture").closest("[data-drawn]")).not.toHaveAttribute("data-enter");
+    await user.keyboard("{PageDown}");
+    loadImage("Second picture", 1000, 1000);
+    await waitFor(() => expect(screen.getByAltText("Second picture").closest("[data-enter]")).toHaveAttribute("data-enter", "next"));
+    await user.keyboard("{PageUp}");
+    loadImage("First picture");
+    await waitFor(() => expect(screen.getByAltText("First picture").closest("[data-enter]")).toHaveAttribute("data-enter", "previous"));
+  });
+});
+
+describe("ImageViewer origin, slideshow, inline and long strips", () => {
+  afterEach(() => {
+    vi.useRealTimers();
+    vi.restoreAllMocks();
+  });
+
+  it("eases the first image in from the element it is given, once", async () => {
+    const origin = document.createElement("div");
+    vi.spyOn(origin, "getBoundingClientRect").mockReturnValue({ left: 0, top: 0, width: 200, height: 100, right: 200, bottom: 100, x: 0, y: 0, toJSON: () => ({}) });
+    const getOrigin = vi.fn(() => origin);
+    render(<Viewer getOrigin={getOrigin} images={[{ src: "/a.jpg", alt: "Hinted", width: 1000, height: 500 }, ...images.slice(1)]} />);
+    const { user } = await open();
+    expect(getOrigin).toHaveBeenCalledTimes(1);
+    expect(getOrigin).toHaveBeenCalledWith(0);
+    const box = screen.getByAltText("Hinted").closest("[data-drawn]") as HTMLElement;
+    // drawn at the origin's width first: 200px of the fitted 1000px
+    expect(box.style.transform).toMatch(/scale\(0\.2\)|scale\(1\)/);
+    await user.keyboard("{PageDown}{PageUp}");
+    expect(getOrigin).toHaveBeenCalledTimes(1);
+  });
+
+  it("steps through the images by itself once each has loaded, pauses on request, and stops at the last", async () => {
+    vi.useFakeTimers();
+    render(<Viewer defaultOpen trigger={undefined} autoPlay={{ interval: 1000 }} />);
+    await act(async () => {});
+    loadImage("First picture");
+    expect(screen.getByRole("button", { name: "Pause slideshow" })).toBeInTheDocument();
+    act(() => {
+      vi.advanceTimersByTime(900);
+    });
+    expect(counter()).toHaveTextContent("1 / 3");
+    act(() => {
+      vi.advanceTimersByTime(200);
+    });
+    expect(counter()).toHaveTextContent("2 / 3");
+    loadImage("Second picture");
+    fireEvent.click(screen.getByRole("button", { name: "Pause slideshow" }));
+    act(() => {
+      vi.advanceTimersByTime(5000);
+    });
+    expect(counter()).toHaveTextContent("2 / 3");
+    fireEvent.click(screen.getByRole("button", { name: "Start slideshow" }));
+    act(() => {
+      vi.advanceTimersByTime(1000);
+    });
+    expect(counter()).toHaveTextContent("3 / 3");
+    loadImage("Third picture");
+    act(() => {
+      vi.advanceTimersByTime(1000);
+    });
+    // nowhere to go: it stops, and the button offers to start it again
+    expect(screen.getByRole("button", { name: "Start slideshow" })).toBeInTheDocument();
+  });
+
+  it("is silent to a screen reader while it runs, and holds while the image is zoomed", async () => {
+    vi.useFakeTimers();
+    render(<Viewer defaultOpen trigger={undefined} autoPlay={{ interval: 1000 }} />);
+    await act(async () => {});
+    loadImage("First picture");
+    fireEvent.keyDown(screen.getByRole("dialog"), { key: "+" });
+    act(() => {
+      vi.advanceTimersByTime(3000);
+    });
+    expect(counter()).toHaveTextContent("1 / 3");
+    fireEvent.keyDown(screen.getByRole("dialog"), { key: "0" });
+    act(() => {
+      vi.advanceTimersByTime(1600);
+    });
+    expect(counter()).toHaveTextContent("2 / 3");
+    act(() => {
+      vi.advanceTimersByTime(1000);
+    });
+    expect(screen.getByRole("dialog")).not.toHaveTextContent("Image 2 of 3");
+  });
+
+  it("starts paused when the person prefers reduced motion, and draws the pause button whatever controls says", async () => {
+    const matchMedia = window.matchMedia;
+    window.matchMedia = ((query: string) => ({ matches: query.includes("reduce"), media: query, addEventListener: () => undefined, removeEventListener: () => undefined }) as unknown as MediaQueryList) as typeof window.matchMedia;
+    try {
+      render(<Viewer autoPlay controls="hidden" />);
+      await open();
+      expect(screen.getByRole("button", { name: "Start slideshow" })).toBeInTheDocument();
+      expect(screen.queryByRole("button", { name: "Zoom in" })).not.toBeInTheDocument();
+    } finally {
+      window.matchMedia = matchMedia;
+    }
+  });
+
+  it("can be started and paused from the controller", async () => {
+    const ref = createRef<ImageViewerController>();
+    render(<ImageViewer images={images} controllerRef={ref} defaultOpen autoPlay />);
+    await screen.findByRole("dialog");
+    expect(ref.current?.isPlaying).toBe(true);
+    act(() => {
+      expect(ref.current?.pause()).toBe(true);
+      expect(ref.current?.pause()).toBe(false);
+    });
+    expect(ref.current?.isPlaying).toBe(false);
+    act(() => {
+      expect(ref.current?.play()).toBe(true);
+    });
+  });
+
+  it("is drawn in the page with inline: a named group with no close button, that takes the keys and ignores Escape", async () => {
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
+    render(<ImageViewer inline aria-label="Gallery" images={images} />);
+    const group = screen.getByRole("group", { name: "Gallery" });
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Close" })).not.toBeInTheDocument();
+    expect(counter()).toHaveTextContent("1 / 3");
+    group.focus();
+    const user = userEvent.setup();
+    await user.keyboard("{ArrowRight}");
+    expect(counter()).toHaveTextContent("2 / 3");
+    await user.keyboard("{Escape}");
+    expect(group).toBeInTheDocument();
+    expect(warn).not.toHaveBeenCalled();
+  });
+
+  it("warns that inline ignores trigger, open and the history", () => {
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
+    render(<ImageViewer inline images={images} trigger={<Button>Open</Button>} />);
+    expect(warn).toHaveBeenCalledWith(expect.stringContaining("do nothing with `inline`"));
+  });
+
+  it("draws a long strip a window at a time, keeping the current thumbnail and the length of the strip", async () => {
+    const many = Array.from({ length: 200 }, (_, index) => ({ id: `n${index}`, src: `/n${index}.jpg`, alt: `Picture ${index + 1}` }));
+    render(<Viewer images={many} thumbnails defaultValue={150} />);
+    const { dialog } = await open();
+    const strip = within(dialog).getByRole("group", { name: "Thumbnails" });
+    const buttons = within(strip).getAllByRole("button");
+    expect(buttons.length).toBeLessThan(60);
+    expect(buttons.length).toBeGreaterThan(5);
+    expect(within(strip).getByRole("button", { name: "Show image 151 of 200" })).toHaveAttribute("aria-current", "true");
+    expect(strip.querySelectorAll("[aria-hidden='true']").length).toBeGreaterThan(0);
+  });
+
+  it("draws every thumbnail of a short strip", async () => {
+    render(<Viewer thumbnails />);
+    const { dialog } = await open();
+    expect(within(within(dialog).getByRole("group", { name: "Thumbnails" })).getAllByRole("button")).toHaveLength(3);
   });
 });

@@ -2087,7 +2087,11 @@ describe("ImageViewer's Playground snippet", () => {
     zoomStep: 2,
     doubleClickZoom: false,
     rotatable: false,
+    flippable: true,
     fullscreenButton: false,
+    tapToToggleControls: true,
+    closeOnHistoryBack: true,
+    autoPlay: { interval: 2500 },
     thumbnails: true,
     showCounter: true,
     showCaptions: false,
@@ -2115,7 +2119,11 @@ describe("ImageViewer's Playground snippet", () => {
       zoomStep: 1.5,
       doubleClickZoom: true,
       rotatable: true,
+      flippable: false,
       fullscreenButton: true,
+      tapToToggleControls: false,
+      closeOnHistoryBack: false,
+      autoPlay: false,
       thumbnails: false,
       showCounter: "auto",
       showCaptions: true,
@@ -2128,7 +2136,7 @@ describe("ImageViewer's Playground snippet", () => {
       dir: "ltr",
     });
     expect(code).toContain("<ImageViewer");
-    for (const word of ["loop", "Zoom", "doubleClick", "rotatable", "fullscreen", "thumbnails", "showCounter", "showCaptions", "controls", "swipe", "closeOn", "scrim", "dir"]) {
+    for (const word of ["loop", "Zoom", "doubleClick", "rotatable", "flippable", "fullscreen", "tapToToggle", "closeOnHistory", "autoPlay", "thumbnails", "showCounter", "showCaptions", "controls", "swipe", "closeOn", "scrim", "dir"]) {
       expect(code).not.toContain(word);
     }
   });
@@ -2142,7 +2150,11 @@ describe("ImageViewer's Playground snippet", () => {
       "zoomStep={2}",
       "doubleClickZoom={false}",
       "rotatable={false}",
+      "flippable",
       "fullscreenButton={false}",
+      "tapToToggleControls",
+      "closeOnHistoryBack",
+      "autoPlay={{ interval: 2500 }}",
       "thumbnails",
       "showCounter",
       "showCaptions={false}",

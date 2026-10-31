@@ -5,7 +5,7 @@ import { Button } from "../../atoms/Button";
 import { send } from "../../molecules/CodeBlock/browserProtocol";
 import { ImageViewer, ImageViewerButton } from "./ImageViewer";
 import type { ImageViewerProps } from "./ImageViewer.types";
-import { brokenImages, sampleImages } from "./ImageViewerStoryKit";
+import { brokenImages, manyImages, sampleImages } from "./ImageViewerStoryKit";
 
 // Real-browser checks for what jsdom can't evaluate: layout, the fit, a wheel and a drag on the real stage, the
 // touch gestures, the scroll lock, contrast from the computed styles, forced colours and reduced motion. Hidden from the
@@ -500,6 +500,305 @@ export const ActionsInheritWhiteText: Story = {
     const white = getComputedStyle(within(dialog).getByRole("button", { name: "Close" })).color;
     await expect(getComputedStyle(within(dialog).getByTestId("plain")).color).toBe(white);
     await expect(getComputedStyle(within(dialog).getByTestId("link")).color).toBe(white);
+    await closeWithEscape();
+  },
+};
+
+const reasonOf = () => body.getByTestId("reason");
+
+export const BackClosesTheViewer: Story = {
+  name: "With closeOnHistoryBack, Back closes the viewer and no entry is left behind",
+  render: () => <Harness closeOnHistoryBack />,
+  play: async () => {
+    const before = window.history.length;
+    await openViewer();
+    await expect(window.history.length).toBe(before + 1);
+    window.history.back();
+    await waitFor(() => expect(body.queryByRole("dialog")).toBeNull());
+    await expect(reasonOf()).toHaveTextContent("history");
+    // opened again and closed by Escape, the viewer takes its own entry off and does not close twice
+    await openViewer();
+    const reopened = window.history.length;
+    await closeWithEscape();
+    await waitFor(() => expect(reasonOf()).toHaveTextContent("escape"));
+    await sleep(300);
+    await expect(window.history.state?.dbmImageViewer).toBeUndefined();
+    await expect(reopened).toBeGreaterThanOrEqual(before + 1);
+  },
+};
+
+export const ActualSizeIsOnePixelPerPixel: Story = {
+  name: "1:1 draws the image at its own size in CSS pixels, and again fits it",
+  render: () => <Harness />,
+  play: async () => {
+    const dialog = await openViewer();
+    const box = boxOf(dialog);
+    await expect(box.getBoundingClientRect().width).toBeLessThan(1600);
+    await userEvent.click(within(dialog).getByRole("button", { name: "Actual size, 1:1" }));
+    await waitFor(() => expect(scaleOf(box)).toBeGreaterThan(1));
+    await settled(dialog);
+    await expect(Math.abs(box.getBoundingClientRect().width - 1600)).toBeLessThan(1);
+    await expect(within(dialog).getByRole("button", { name: /Reset zoom/ })).toHaveTextContent("100%");
+    await userEvent.keyboard("1");
+    await waitFor(() => expect(scaleOf(box)).toBe(1));
+    await closeWithEscape();
+  },
+};
+
+export const TapHidesTheControlsAndAKeyShowsThem: Story = {
+  name: "A single tap on the image hides the controls out of the page, a key shows them, and a double tap still zooms",
+  render: () => <Harness tapToToggleControls />,
+  play: async () => {
+    const dialog = await openViewer();
+    const rect = boxOf(dialog).getBoundingClientRect();
+    const centre = { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 };
+    await realClickAt(centre.x, centre.y);
+    await waitFor(() => expect(dialog).toHaveAttribute("data-chrome", "hidden"), { timeout: 2000 });
+    const close = within(dialog).getByRole("button", { name: "Close", hidden: true });
+    await waitFor(() => expect(getComputedStyle(close).visibility).toBe("hidden"));
+    await expect(within(dialog).queryByRole("button", { name: "Close" })).toBeNull();
+    await userEvent.keyboard("x");
+    await waitFor(() => expect(dialog).not.toHaveAttribute("data-chrome"));
+    await expect(within(dialog).getByRole("button", { name: "Close" })).toBeInTheDocument();
+    // two quick clicks zoom and do not hide anything
+    await realClickAt(centre.x, centre.y);
+    await realClickAt(centre.x, centre.y);
+    await waitFor(() => expect(scaleOf(boxOf(dialog))).toBe(2));
+    await sleep(500);
+    await expect(dialog).not.toHaveAttribute("data-chrome");
+    await closeWithEscape();
+  },
+};
+
+export const DragPastAnEdgeGivesThenSettles: Story = {
+  name: "A drag past an edge is followed a little way, and the image settles back inside when let go",
+  render: () => <Harness />,
+  play: async () => {
+    const dialog = await openViewer();
+    const box = boxOf(dialog);
+    await userEvent.keyboard("{+}{+}");
+    await waitFor(() => expect(scaleOf(box)).toBeCloseTo(2.25, 5));
+    await settled(dialog);
+    const stage = stageOf(dialog).getBoundingClientRect();
+    const rect = box.getBoundingClientRect();
+    const start = { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 };
+    const limitX = (rect.width - stage.width) / 2;
+    await realMouse("mouseMoved", start.x, start.y);
+    await realMouse("mousePressed", start.x, start.y, { button: "left", clickCount: 1 });
+    for (let step = 1; step <= 8; step += 1) {
+      await realMouse("mouseMoved", start.x + step * (limitX / 2 + 40), start.y, { button: "left", buttons: 1 });
+      await nextFrame();
+    }
+    const held = translationOf(box).x;
+    // past the edge, by some, and by less than the finger went
+    await expect(held).toBeGreaterThan(limitX + 1);
+    await expect(held).toBeLessThanOrEqual(limitX + 65);
+    await realMouse("mouseReleased", start.x + 8 * (limitX / 2 + 40), start.y, { button: "left", clickCount: 1 });
+    await waitFor(() => expect(Math.abs(translationOf(box).x - limitX)).toBeLessThan(1));
+    await closeWithEscape();
+  },
+};
+
+export const AQuickReleaseCarriesOnThenStops: Story = {
+  name: "A pan let go quickly coasts a little further, inside the edges, and stops by itself",
+  render: () => <Harness />,
+  play: async () => {
+    const dialog = await openViewer();
+    const box = boxOf(dialog);
+    await userEvent.keyboard("{+}{+}{+}");
+    await waitFor(() => expect(scaleOf(box)).toBeGreaterThan(3));
+    await settled(dialog);
+    // from the middle of the stage: a zoomed image is far larger than the screen, so a point of it can be off it
+    const area = stageOf(dialog).getBoundingClientRect();
+    const start = { x: area.left + area.width * 0.7, y: area.top + area.height / 2 };
+    await realMouse("mouseMoved", start.x, start.y);
+    await realMouse("mousePressed", start.x, start.y, { button: "left", clickCount: 1 });
+    for (let step = 1; step <= 5; step += 1) {
+      await realMouse("mouseMoved", start.x - step * 28, start.y, { button: "left", buttons: 1 });
+      await nextFrame();
+    }
+    await realMouse("mouseReleased", start.x - 140, start.y, { button: "left", clickCount: 1 });
+    const atRelease = translationOf(box).x;
+    await sleep(900);
+    const later = translationOf(box).x;
+    await expect(later).toBeLessThan(atRelease - 2);
+    const stage = stageOf(dialog).getBoundingClientRect();
+    await expect(box.getBoundingClientRect().right).toBeGreaterThanOrEqual(stage.right - 1);
+    // stopped
+    await sleep(300);
+    await expect(Math.abs(translationOf(box).x - later)).toBeLessThan(0.5);
+    await closeWithEscape();
+  },
+};
+
+export const OriginEasesTheImageIn: Story = {
+  name: "The first image starts at the rectangle of getOrigin's element and eases to its own place",
+  render: () => (
+    <div style={{ minBlockSize: "100vh", padding: "var(--dbm-space-4)" }}>
+      <div id="origin-thumb" style={{ inlineSize: "120px", blockSize: "80px", background: "gray", marginBlock: "2rem" }} />
+      <Harness getOrigin={() => document.getElementById("origin-thumb")} />
+    </div>
+  ),
+  play: async () => {
+    const seen: string[] = [];
+    const observer = new MutationObserver(() => {
+      const box = document.querySelector<HTMLElement>("[data-drawn]");
+      if (box && box.style.transform && seen[seen.length - 1] !== box.style.transform) seen.push(box.style.transform);
+    });
+    observer.observe(document.body, { subtree: true, attributes: true, childList: true, attributeFilter: ["style", "data-drawn"] });
+    try {
+      const dialog = await openViewer();
+      const box = boxOf(dialog);
+      await expect(seen.some((transform) => scaleOf({ style: { transform } } as unknown as HTMLElement) < 0.5)).toBe(true);
+      await settled(dialog);
+      await expect(scaleOf(box)).toBe(1);
+      await expect(translationOf(box)).toEqual({ x: 0, y: 0 });
+    } finally {
+      observer.disconnect();
+    }
+    await closeWithEscape();
+  },
+};
+
+export const SlideshowStepsPausesAndHolds: Story = {
+  name: "A slideshow steps by itself, pauses on its button, and holds while the image is zoomed",
+  render: () => <Harness autoPlay={{ interval: 700 }} />,
+  play: async () => {
+    const dialog = await openViewer();
+    await waitFor(() => expect(counterOf(dialog)).toHaveTextContent("2 / 6"), { timeout: 4000 });
+    await userEvent.click(within(dialog).getByRole("button", { name: "Pause slideshow" }));
+    const at = counterOf(dialog).textContent;
+    await sleep(1800);
+    await expect(counterOf(dialog).textContent).toBe(at);
+    await userEvent.click(within(dialog).getByRole("button", { name: "Start slideshow" }));
+    await userEvent.keyboard("{+}");
+    await waitFor(() => expect(scaleOf(boxOf(dialog))).toBeGreaterThan(1));
+    const held = counterOf(dialog).textContent;
+    await sleep(2000);
+    await expect(counterOf(dialog).textContent).toBe(held);
+    await closeWithEscape();
+  },
+};
+
+export const InlineSitsInThePage: Story = {
+  name: "An inline viewer is in the page's flow, takes keys when focused, shows its focus ring, and ignores Escape",
+  render: () => (
+    <div style={{ padding: "var(--dbm-space-4)" }}>
+      <button type="button">Before</button>
+      <div data-testid="frame" style={{ blockSize: "24rem", marginBlock: "1rem" }}>
+        <ImageViewer inline aria-label="Photos" images={sampleImages} thumbnails />
+      </div>
+      <button type="button">After</button>
+    </div>
+  ),
+  play: async () => {
+    const group = await body.findByRole("group", { name: "Photos" });
+    const frame = body.getByTestId("frame").getBoundingClientRect();
+    const rect = group.getBoundingClientRect();
+    await expect(Math.abs(rect.height - frame.height)).toBeLessThan(1);
+    await expect(Math.abs(rect.width - frame.width)).toBeLessThan(1);
+    await expect(body.queryByRole("dialog")).toBeNull();
+    await userEvent.tab();
+    await userEvent.tab();
+    await expect(document.activeElement).toBe(group);
+    await expect(getComputedStyle(group).outlineStyle).toBe("solid");
+    await userEvent.keyboard("{ArrowRight}");
+    await waitFor(() => expect(within(group).getByTestId("image-viewer-counter")).toHaveTextContent("2 / 6"));
+    await userEvent.keyboard("{Escape}");
+    await expect(group).toBeInTheDocument();
+    await userEvent.tab();
+    await userEvent.tab({ shift: true });
+    await userEvent.tab({ shift: true });
+    await expect(document.activeElement).not.toBe(group);
+  },
+};
+
+export const ALongStripIsWindowed: Story = {
+  name: "A 500-image strip draws a few dozen buttons, keeps its full length, and follows a scroll",
+  render: () => (
+    <div style={{ inlineSize: "40rem", blockSize: "26rem", padding: "var(--dbm-space-4)" }}>
+      <ImageViewer inline aria-label="Many" images={manyImages} thumbnails defaultValue={250} />
+    </div>
+  ),
+  play: async () => {
+    const group = await body.findByRole("group", { name: "Many" });
+    const strip = await within(group).findByRole("group", { name: "Thumbnails" });
+    await waitFor(() => expect(within(strip).getByRole("button", { name: "Show image 251 of 500" })).toHaveAttribute("aria-current", "true"));
+    await settled(group);
+    const before = within(strip).getAllByRole("button").length;
+    await expect(before, `width ${strip.clientWidth}, scrolled ${strip.scrollLeft}, window ${window.innerWidth}`).toBeLessThan(60);
+    const first = within(strip).getAllByRole("button")[0] as HTMLElement;
+    const pitch = first.getBoundingClientRect().width + Number.parseFloat(getComputedStyle(strip).columnGap);
+    // the strip is as long as 500 thumbnails, give or take padding
+    await expect(Math.abs(strip.scrollWidth - 500 * pitch)).toBeLessThan(pitch * 3);
+    strip.scrollLeft = 40 * pitch;
+    await waitFor(() => expect(within(strip).queryByRole("button", { name: "Show image 41 of 500" })).not.toBeNull());
+    await expect(within(strip).getAllByRole("button").length).toBeLessThan(60);
+    // the current image still has the tab stop wherever the strip has been scrolled to
+    await expect(strip.querySelectorAll("button[tabindex='0']").length).toBe(1);
+  },
+};
+
+export const NarrowScreenKeepsEveryControlInside: Story = {
+  name: "At phone width every control is inside the viewer, none overlap, and nothing scrolls sideways",
+  globals: { viewport: { value: "mobile1", isRotated: false } },
+  render: () => (
+    <Harness
+      flippable
+      thumbnails
+      autoPlay
+      actions={<ImageViewerButton label="Copy name">Copy name</ImageViewerButton>}
+    />
+  ),
+  play: async () => {
+    await expect(window.innerWidth).toBeLessThan(400);
+    const dialog = await openViewer();
+    const panel = dialog.getBoundingClientRect();
+    // a thumbnail scrolled out of its strip is clipped by the strip, which is what a scrolling strip is
+    const strip = within(dialog).getByRole("group", { name: "Thumbnails" }).getBoundingClientRect();
+    await expect(strip.left).toBeGreaterThanOrEqual(panel.left - 0.5);
+    await expect(strip.right).toBeLessThanOrEqual(panel.right + 0.5);
+    const buttons = within(dialog)
+      .getAllByRole("button")
+      .filter((button) => button.getBoundingClientRect().width > 0 && !button.closest("[aria-label='Thumbnails']"));
+    for (const button of buttons) {
+      const rect = button.getBoundingClientRect();
+      await expect(rect.left, button.getAttribute("aria-label") ?? "").toBeGreaterThanOrEqual(panel.left - 0.5);
+      await expect(rect.right, button.getAttribute("aria-label") ?? "").toBeLessThanOrEqual(panel.right + 0.5);
+    }
+    await expect(dialog.scrollWidth).toBeLessThanOrEqual(dialog.clientWidth + 1);
+    // the toolbar's own buttons do not sit on top of one another
+    const toolbar = Array.from(dialog.querySelectorAll<HTMLElement>("[class*='toolbar'] button"));
+    for (const [index, one] of toolbar.entries()) {
+      for (const other of toolbar.slice(index + 1)) {
+        const a = one.getBoundingClientRect();
+        const b = other.getBoundingClientRect();
+        const overlap = a.left < b.right - 1 && b.left < a.right - 1 && a.top < b.bottom - 1 && b.top < a.bottom - 1;
+        await expect(overlap, `${one.getAttribute("aria-label")} over ${other.getAttribute("aria-label")}`).toBe(false);
+      }
+    }
+    await closeWithEscape();
+  },
+};
+
+export const AStepEntersFromTheSideItCameFrom: Story = {
+  name: "A step eases the new image in from the side it came from, and under reduced motion only fades",
+  render: () => <Harness />,
+  play: async () => {
+    const dialog = await openViewer();
+    await userEvent.keyboard("{PageDown}");
+    await waitFor(() => expect(counterOf(dialog)).toHaveTextContent("2 / 6"));
+    await waitFor(() => expect(boxOf(dialog)).toHaveAttribute("data-enter", "next"));
+    await expect(getComputedStyle(boxOf(dialog)).animationName).toContain("viewerEnterFromEnd");
+    await emulate("prefers-reduced-motion", "reduce");
+    try {
+      await userEvent.keyboard("{PageUp}");
+      await waitFor(() => expect(counterOf(dialog)).toHaveTextContent("1 / 6"));
+      await waitFor(() => expect(boxOf(dialog)).toHaveAttribute("data-enter", "previous"));
+      await expect(getComputedStyle(boxOf(dialog)).animationName).toContain("viewerImageIn");
+    } finally {
+      await emulate("prefers-reduced-motion", "no-preference");
+    }
     await closeWithEscape();
   },
 };

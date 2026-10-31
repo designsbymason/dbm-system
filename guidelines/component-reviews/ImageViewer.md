@@ -8,6 +8,10 @@ A full-screen viewer for one image or a set ([ADR-0150](../adr/0150-imageviewer-
 
 Scope: fit, wheel, pinch and double-tap zoom about a point, drag to pan, rotate, full screen, a counter, captions, a thumbnail strip (one tab stop), previous and next by button, key and swipe, swipe down to dismiss, preloading of the neighbours, loading and failed states, `loop`, `controls="hidden"`, an `actions` slot with `useImageViewerController()`, `controllerRef`, `labels` and `formatNumber`, and `dir`. Every gesture has a button and a key.
 
+## Second round (ADR-0152)
+
+Added after the first build: the zoom shown as the share of the image's own pixels with a `1:1` actual-size button and key; a retry for a failed image and `onImageLoad`, `onImageError`, `onZoomChange`, `onRotationChange`; `aria-keyshortcuts` on the buttons; the thumbnail standing in, blurred, while an image loads; `tapToToggleControls`; a drag with give past an edge and a short coast; rotate both ways and an opt-in flip; the image easing in from the side the person came from; `getOrigin`; `closeOnHistoryBack`; a held `autoPlay` slideshow; a windowed thumbnail strip; and `inline`. A check at phone width found the strip widening the grid column (the panel's single column is now `minmax(0, 1fr)`), and a windowing check found that keeping the current thumbnail meant drawing every one between it and the scroll position (the current one is now drawn on its own with empty space either side). Mutation checks (no give, no coast, no windowing, no history clean-up) each failed the checks written for them.
+
 ## Decisions taken while building (inside ADR-0150 and ADR-0151)
 
 - **Esc always closes**; zoom is reset with `0` or the zoom button. A first Escape that only reset the zoom would be an invisible mode.
@@ -18,6 +22,7 @@ Scope: fit, wheel, pinch and double-tap zoom about a point, drag to pan, rotate,
 - **`useImageViewerController()` returns a snapshot** (the methods plus `isOpen`, `value`, `count`, `zoom` as of the last render), so a part in `actions` re-renders when the image changes; `controllerRef` hands out the one object that never changes.
 - **A controller method that changes an uncontrolled value updates the latest state at once**, so two calls in one event see each other.
 - **The stage's button is exported as `ImageViewerButton`** for the `actions` slot. The first `actions` example used a theme `Button` and failed contrast on the dark stage; a real-browser check now measures an `actions` button's contrast too.
+- **The slideshow's pause button and the retry button are the viewer's own `ImageViewerButton`**, so they share the contrast and focus ring checked for the rest.
 - **No tooltips, no `Indicators`**: both would put theme-coloured parts on a stage that is dark in every theme, and the counter and the strip say where the person is. Names are `aria-label`s.
 
 ## Verified
@@ -29,5 +34,5 @@ Scope: fit, wheel, pinch and double-tap zoom about a point, drag to pan, rotate,
 
 - **`text.white` and `border.white` were added** (semantic, `neutral.white` in all four themes, like `icon.white`) for the stage's text and focus ring, in place of `icon.white`. They are only for a surface that is dark in every theme.
 - **No Docs-page review yet in a running Storybook** beyond the stories: the Docs page, every "Show code" and the four themes need the §9 pass.
-- **Not checked:** Safari and Firefox, a real touch screen, and a real full screen (the button is covered by a mocked `requestFullscreen` in jsdom only). The offset is clamped with no edge resistance, and a flick does not coast.
+- **Not checked:** Safari and Firefox, a real touch screen, and a real full screen (the button is covered by a mocked `requestFullscreen` in jsdom only). The touch gestures are driven by the pointer events a touch screen raises, not by a real finger. `closeOnHistoryBack` is checked in Chromium's history only; an unmount while open leaves its entry.
 - **The counter reads "6 / 1" in a right-to-left stage** (the first image's "1 / 6" in logical order, drawn from the right). That is the order a right-to-left paragraph gives two numbers and a slash, and it matches the thumbnail strip and the toolbar mirroring; it is listed for the review to confirm rather than isolate the numbers.

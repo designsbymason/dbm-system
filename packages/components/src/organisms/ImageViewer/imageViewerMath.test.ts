@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { clamp, clampView, fitSize, neighbour, panLimits, stepScale, turn, wheelFactor, zoomAt } from "./imageViewerMath";
+import { RESIST_MAX, actualScale, clamp, clampView, fitSize, neighbour, panLimits, rubberBand, stepScale, turn, wheelFactor, zoomAt } from "./imageViewerMath";
 
 const stage = { width: 1000, height: 600 };
 
@@ -109,5 +109,29 @@ describe("turn and neighbour", () => {
   it("clamps", () => {
     expect(clamp(5, 1, 4)).toBe(4);
     expect(clamp(-5, 1, 4)).toBe(1);
+  });
+});
+
+describe("rubberBand and actualScale", () => {
+  it("leaves a position inside its limit alone", () => {
+    expect(rubberBand(30, 100)).toBe(30);
+    expect(rubberBand(-100, 100)).toBe(-100);
+  });
+
+  it("follows past the edge a shorter way each time, never past RESIST_MAX, in either direction", () => {
+    const small = rubberBand(110, 100) - 100;
+    const large = rubberBand(300, 100) - 100;
+    expect(small).toBeGreaterThan(0);
+    expect(small).toBeLessThan(10);
+    expect(large).toBeGreaterThan(small);
+    expect(large).toBeLessThan(RESIST_MAX);
+    expect(rubberBand(1e9, 100) - 100).toBeLessThanOrEqual(RESIST_MAX);
+    expect(rubberBand(-300, 100)).toBe(-rubberBand(300, 100));
+  });
+
+  it("gives the scale at which an image pixel is a screen pixel", () => {
+    expect(actualScale(0.5)).toBe(2);
+    expect(actualScale(1)).toBe(1);
+    expect(actualScale(0)).toBe(1);
   });
 });

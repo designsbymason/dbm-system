@@ -1,5 +1,6 @@
 export { ImageViewer, ImageViewerButton, useImageViewerController } from "./ImageViewer";
 export type {
+  ImageViewerAutoPlay,
   ImageViewerButtonProps,
   ImageViewerController,
   ImageViewerControls,
