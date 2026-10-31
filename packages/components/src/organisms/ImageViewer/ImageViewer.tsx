@@ -492,6 +492,21 @@ export const ImageViewer = forwardRef<HTMLDivElement, ImageViewerProps>(
       ignoredPops.current += 1;
       window.history.back();
     }, [open]);
+    // A viewer taken out of the page while it is open (its owner stopped drawing it) takes its entry off too, when the entry is
+    // still the current one. After a navigation it is not, and going back would undo the navigation, so it is left. The check
+    // waits a tick, so the remount `StrictMode` simulates in development is not taken for an unmount.
+    const mounted = useRef(false);
+    useEffect(() => {
+      mounted.current = true;
+      return () => {
+        mounted.current = false;
+        setTimeout(() => {
+          if (mounted.current || !historyEntry.current) return;
+          historyEntry.current = false;
+          if ((window.history.state as { dbmImageViewer?: boolean } | null)?.dbmImageViewer === true) window.history.back();
+        }, 0);
+      };
+    }, []);
 
     // --- Where the first image eases in from, asked for once the image is drawn.
     const originUsed = useRef(false);

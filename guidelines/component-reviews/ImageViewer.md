@@ -24,6 +24,7 @@ Fifteen findings, fourteen fixed and one withdrawn:
 - **`ImageViewerButton` had no Properties table**; it has a hidden docs-only stories file and a table (ADR-0013), and `onKeyDown` and `aria-describedby` are redeclared and documented.
 - **Test gaps:** the controller's `actualSize`, `flip`, `rotate`, `play` and `pause` and the `isPlaying` snapshot are covered, the origin test can now fail, and origin under reduced motion is covered.
 - **Snippets:** `photos` is defined in a comment, an unused snippet is removed, the load-failure and caption stories have snippets that match them, and all 19 were typechecked against the real components (with a planted bad prop to prove the check bites) and read in a settled "Show code" panel on the Docs page.
+- **An unmount while open** now takes the history entry off when it is still the current one, and leaves it after a navigation; a viewer closed first has already taken it off.
 - **A controlled viewer that kept itself open after Back** gets a new history entry for the next Back.
 - **The 500-picture story data** is made on first use.
 
@@ -55,5 +56,5 @@ Added after the first build: the zoom shown as the share of the image's own pixe
 
 - **`text.white` and `border.white` were added** (semantic, `neutral.white` in all four themes, like `icon.white`) for the stage's text and focus ring, in place of `icon.white`. They are only for a surface that is dark in every theme.
 - **No Docs-page review yet in a running Storybook** beyond the stories: the Docs page, every "Show code" and the four themes need the §9 pass.
-- **Not checked:** Safari and Firefox, a real touch screen, and a real full screen (the button is covered by a mocked `requestFullscreen` in jsdom only). The touch gestures are driven by the pointer events a touch screen raises, not by a real finger. `closeOnHistoryBack` is checked in Chromium's history only; an unmount while open leaves its entry.
+- **Not checked:** Safari and Firefox, a real touch screen, and a real full screen (the button is covered by a mocked `requestFullscreen` in jsdom only). The touch gestures are driven by the pointer events a touch screen raises, not by a real finger. `closeOnHistoryBack` is checked in Chromium's history only; an unmount caused by a navigation leaves its entry, which is one extra Back to the same page.
 - **The counter reads "6 / 1" in a right-to-left stage** (the first image's "1 / 6" in logical order, drawn from the right). That is the order a right-to-left paragraph gives two numbers and a slash, and it matches the thumbnail strip and the toolbar mirroring; it is listed for the review to confirm rather than isolate the numbers.

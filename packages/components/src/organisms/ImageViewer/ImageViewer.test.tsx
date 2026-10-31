@@ -702,7 +702,7 @@ describe("ImageViewer and the browser's Back button", () => {
 
   it("adds one entry inside StrictMode, and none unless asked", async () => {
     const push = vi.spyOn(window.history, "pushState");
-    vi.spyOn(window.history, "back").mockImplementation(() => undefined);
+    const back = vi.spyOn(window.history, "back").mockImplementation(() => undefined);
     const { unmount } = render(
       <StrictMode>
         <Viewer closeOnHistoryBack />
@@ -710,11 +710,51 @@ describe("ImageViewer and the browser's Back button", () => {
     );
     await open();
     expect(push).toHaveBeenCalledTimes(1);
+    // StrictMode's own unmount and remount is not the viewer leaving the page
+    await new Promise((resolve) => setTimeout(resolve, 20));
+    expect(back).not.toHaveBeenCalled();
     unmount();
     push.mockClear();
     render(<Viewer />);
     await open();
     expect(push).not.toHaveBeenCalled();
+  });
+});
+
+describe("ImageViewer taken out of the page while open, with closeOnHistoryBack", () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+    window.history.replaceState(null, "", "/");
+  });
+
+  it("takes its own history entry off when its owner stops drawing it", async () => {
+    const back = vi.spyOn(window.history, "back").mockImplementation(() => undefined);
+    const { unmount } = render(<Viewer closeOnHistoryBack />);
+    await open();
+    expect(window.history.state).toEqual({ dbmImageViewer: true });
+    unmount();
+    await waitFor(() => expect(back).toHaveBeenCalledTimes(1));
+  });
+
+  it("leaves the entry alone after a navigation, since going back would undo it", async () => {
+    const back = vi.spyOn(window.history, "back").mockImplementation(() => undefined);
+    const { unmount } = render(<Viewer closeOnHistoryBack />);
+    await open();
+    window.history.pushState({ page: "next" }, "", "/next");
+    unmount();
+    await new Promise((resolve) => setTimeout(resolve, 20));
+    expect(back).not.toHaveBeenCalled();
+  });
+
+  it("does nothing when it was closed first, which has already taken the entry off", async () => {
+    const back = vi.spyOn(window.history, "back").mockImplementation(() => undefined);
+    const { unmount } = render(<Viewer closeOnHistoryBack />);
+    const { user } = await open();
+    await user.keyboard("{Escape}");
+    await waitFor(() => expect(back).toHaveBeenCalledTimes(1));
+    unmount();
+    await new Promise((resolve) => setTimeout(resolve, 20));
+    expect(back).toHaveBeenCalledTimes(1);
   });
 });
 
