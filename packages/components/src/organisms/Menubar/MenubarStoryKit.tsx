@@ -5,17 +5,40 @@ import type { MenubarProps } from "./Menubar.types";
 /** The props the Playground drives, all of them the bar's own. */
 export type MenubarStageArgs = Pick<
   MenubarProps,
-  "size" | "surface" | "tone" | "loop" | "dir" | "onValueChange"
+  | "size"
+  | "surface"
+  | "tone"
+  | "overflow"
+  | "sticky"
+  | "stickyOffset"
+  | "hotkeys"
+  | "labels"
+  | "loop"
+  | "dir"
+  | "aria-label"
+  | "onValueChange"
+  | "onOpenChangeComplete"
+  | "value"
+  | "defaultValue"
+  | "controllerRef"
+  | "scrollContainerRef"
 >;
 
 /** The bar's props from a story's args, so a story that draws its own menus still follows every control. */
 export const barPropsOf = (args: MenubarStageArgs) => ({
+  "aria-label": args["aria-label"],
   size: args.size,
   surface: args.surface,
   tone: args.tone,
+  overflow: args.overflow,
+  sticky: args.sticky,
+  stickyOffset: args.stickyOffset,
+  hotkeys: args.hotkeys,
+  labels: args.labels,
   loop: args.loop,
   dir: args.dir,
   onValueChange: args.onValueChange,
+  onOpenChangeComplete: args.onOpenChangeComplete,
 });
 
 /** A File and an Edit menu, the shape of most stories: icons, shortcut hints and a danger item. */

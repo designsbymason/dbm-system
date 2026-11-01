@@ -31,6 +31,16 @@ const playgroundSource = {
     menubarPlaygroundSnippet(context.args),
 };
 
+const playgroundBoxStyle = {
+  inlineSize: "100%",
+  minInlineSize: 120,
+  maxInlineSize: "100%",
+  resize: "horizontal",
+  overflow: "hidden",
+  border: "var(--dbm-border-width-1) dashed var(--dbm-border-default)",
+  padding: "var(--dbm-space-1)",
+} as const;
+
 const meta: Meta<MenubarStageArgs> = {
   title: "Organisms/Navigation/Menubar",
   parameters: { layout: "padded" },
@@ -43,18 +53,47 @@ const meta: Meta<MenubarStageArgs> = {
       table: { defaultValue: { summary: '"md"' } },
     },
     surface: {
-      control: "inline-radio",
+      control: "select",
       options: ["ghost", "outlined", "filled"],
       description:
         "How the bar is drawn: ghost (no surface; the triggers sit on the page or on a header), outlined (a bordered bar) or filled (a tinted bar).",
       table: { defaultValue: { summary: '"ghost"' } },
     },
     tone: {
-      control: "inline-radio",
+      control: "select",
       options: ["neutral", "brand"],
       description:
         "The colour of the triggers' hover and open fills and of the bar's own border and fill: brand (the system's identity colour) or neutral. Every colour is a subtle one. It does not change the menus the bar opens.",
       table: { defaultValue: { summary: '"brand"' } },
+    },
+    overflow: {
+      control: "select",
+      options: ["scroll", "menu"],
+      description:
+        "What the bar does when its menus do not fit its container: scroll (sideways, with a fade at each end that has more behind it) or menu (the menus that do not fit move into a More menu, each as a submenu). Drag the corner of the box to narrow it.",
+      table: { defaultValue: { summary: '"scroll"' } },
+    },
+    sticky: {
+      control: "boolean",
+      description:
+        "Keeps the bar at the top of the page (or of scrollContainerRef) as the reader scrolls, with a surface behind it and a shadow while it is stuck. It needs a scrolling page or container to show.",
+      table: { defaultValue: { summary: "false" } },
+    },
+    stickyOffset: {
+      control: "number",
+      description:
+        "How far from the top a sticky bar sticks, from the spacing token scale. Has no effect without sticky.",
+      table: { defaultValue: { summary: "0" } },
+    },
+    hotkeys: {
+      control: "object",
+      description:
+        "Keys that open a menu from anywhere on the page: an object from a menu's value (file, edit or view here) to a combination such as alt+f, where mod is ⌘ on an Apple platform and Ctrl elsewhere, or false to turn one off. Nothing is bound by default.",
+    },
+    labels: {
+      control: "object",
+      description:
+        "The text the bar supplies itself, each with an English default: more, the More menu's label. Pass any subset.",
     },
     loop: {
       control: "boolean",
@@ -63,16 +102,47 @@ const meta: Meta<MenubarStageArgs> = {
       table: { defaultValue: { summary: "true" } },
     },
     dir: {
-      control: "inline-radio",
+      control: "select",
       options: ["ltr", "rtl"],
       description:
         "The reading direction, passed to the bar and its menus: it decides which arrow key moves to the next trigger and which side a submenu opens on.",
       table: { defaultValue: { summary: '"ltr"' } },
     },
+    "aria-label": {
+      control: "text",
+      description:
+        'An accessible name for the bar ("Application menu"). A page with more than one menubar needs one on each.',
+    },
+    value: {
+      control: false,
+      description:
+        "The value of the menu that is open, or an empty string when none is, to drive the bar from your own state. See Opened from code.",
+    },
+    defaultValue: {
+      control: false,
+      description:
+        "The menu that is open to begin with, for uncontrolled usage. Ignored once value is provided.",
+      table: { defaultValue: { summary: '""' } },
+    },
+    controllerRef: {
+      control: false,
+      description:
+        "Hands the bar's controls (open, close, value) to code outside it. See Opened from a controller.",
+    },
+    scrollContainerRef: {
+      control: false,
+      description:
+        "The scrollable container a sticky bar sticks within, if it isn't the page itself. Has no effect without sticky.",
+    },
     onValueChange: {
       control: false,
       description:
         "Called with the value of the menu that opened, or an empty string when the open one closed.",
+    },
+    onOpenChangeComplete: {
+      control: false,
+      description:
+        "Called with a menu's value and true once it has finished opening, or false once it has finished closing, its focus is back and it is out of the page.",
     },
   },
   // The Controls panel lists props in the order of these keys, so this is the order a reader sees: visual props
@@ -81,16 +151,27 @@ const meta: Meta<MenubarStageArgs> = {
     size: "md",
     surface: "ghost",
     tone: "brand",
+    overflow: "scroll",
+    sticky: false,
+    stickyOffset: 0,
+    hotkeys: {},
+    labels: { more: "More" },
     loop: true,
     dir: "ltr",
+    "aria-label": "Application menu",
     onValueChange: fn(),
+    onOpenChangeComplete: fn(),
   },
   render: (args) => (
-    <Menubar aria-label="Application menu" {...barPropsOf(args)}>
-      <DemoMenus>
-        <ViewMenu />
-      </DemoMenus>
-    </Menubar>
+    // A box the reader can narrow by dragging its corner, so `overflow` has a room to run out of. `overflow: hidden` is
+    // what lets a box be resized.
+    <div style={playgroundBoxStyle}>
+      <Menubar {...barPropsOf(args)}>
+        <DemoMenus>
+          <ViewMenu />
+        </DemoMenus>
+      </Menubar>
+    </div>
   ),
 };
 
@@ -107,7 +188,7 @@ export const IconsAndShortcuts: Story = {
   name: "Icons, shortcut hints and a danger item",
   parameters: { docs: { source: { code: menubarSnippets.iconsAndShortcuts } } },
   render: (args) => (
-    <Menubar aria-label="Application menu" {...barPropsOf(args)}>
+    <Menubar {...barPropsOf(args)}>
       <Menubar.Menu value="file">
         <Menubar.Trigger>File</Menubar.Trigger>
         <Menubar.Content>
@@ -136,7 +217,7 @@ export const IconsAndShortcuts: Story = {
 
 export const Sizes: Story = {
   name: "Sizes",
-  argTypes: { size: { control: false } },
+  argTypes: { size: { control: false }, "aria-label": { control: false } },
   parameters: { docs: { source: { code: menubarSnippets.sizes } } },
   render: (args) => (
     <div
@@ -149,8 +230,8 @@ export const Sizes: Story = {
       {(["xs", "sm", "md", "lg", "xl"] as const).map((size) => (
         <Menubar
           key={size}
-          aria-label={`Application menu, ${size}`}
           {...barPropsOf(args)}
+          aria-label={`Application menu, ${size}`}
           size={size}
         >
           <DemoMenus />
@@ -162,7 +243,7 @@ export const Sizes: Story = {
 
 export const Surfaces: Story = {
   name: "Surfaces",
-  argTypes: { surface: { control: false } },
+  argTypes: { surface: { control: false }, "aria-label": { control: false } },
   parameters: { docs: { source: { code: menubarSnippets.surfaces } } },
   render: (args) => (
     <div
@@ -175,8 +256,8 @@ export const Surfaces: Story = {
       {(["ghost", "outlined", "filled"] as const).map((surface) => (
         <Menubar
           key={surface}
-          aria-label={`Application menu, ${surface}`}
           {...barPropsOf(args)}
+          aria-label={`Application menu, ${surface}`}
           surface={surface}
         >
           <DemoMenus />
@@ -188,7 +269,11 @@ export const Surfaces: Story = {
 
 export const Tones: Story = {
   name: "Tones",
-  argTypes: { tone: { control: false } },
+  argTypes: {
+    tone: { control: false },
+    surface: { control: false },
+    "aria-label": { control: false },
+  },
   parameters: { docs: { source: { code: menubarSnippets.tones } } },
   render: (args) => (
     <div
@@ -202,8 +287,8 @@ export const Tones: Story = {
         (["ghost", "outlined", "filled"] as const).map((surface) => (
           <Menubar
             key={`${tone}-${surface}`}
-            aria-label={`Application menu, ${tone} ${surface}`}
             {...barPropsOf(args)}
+            aria-label={`Application menu, ${tone} ${surface}`}
             tone={tone}
             surface={surface}
           >
@@ -219,7 +304,7 @@ export const CheckboxAndRadioItems: Story = {
   name: "Checkbox items, radio items and a submenu",
   parameters: { docs: { source: { code: menubarSnippets.checkboxAndRadio } } },
   render: (args) => (
-    <Menubar aria-label="Application menu" {...barPropsOf(args)}>
+    <Menubar {...barPropsOf(args)}>
       <ViewMenu />
     </Menubar>
   ),
@@ -229,7 +314,7 @@ export const Submenus: Story = {
   name: "Submenus",
   parameters: { docs: { source: { code: menubarSnippets.submenus } } },
   render: (args) => (
-    <Menubar aria-label="Application menu" {...barPropsOf(args)}>
+    <Menubar {...barPropsOf(args)}>
       <Menubar.Menu value="file">
         <Menubar.Trigger>File</Menubar.Trigger>
         <Menubar.Content>
@@ -251,7 +336,7 @@ export const DisabledTrigger: Story = {
   name: "A disabled trigger",
   parameters: { docs: { source: { code: menubarSnippets.disabled } } },
   render: (args) => (
-    <Menubar aria-label="Application menu" {...barPropsOf(args)}>
+    <Menubar {...barPropsOf(args)}>
       <DemoMenus>
         <Menubar.Menu value="view">
           <Menubar.Trigger disabled>View</Menubar.Trigger>
@@ -293,7 +378,6 @@ function ControlledBar(args: MenubarStageArgs) {
         Open menu: {open === "" ? "none" : open} (Alt+F opens File)
       </span>
       <Menubar
-        aria-label="Application menu"
         {...barPropsOf(args)}
         value={open}
         onValueChange={(next) => {
@@ -325,7 +409,7 @@ export const Overflowing: Story = {
   parameters: { docs: { source: { code: menubarSnippets.overflowing } } },
   render: (args) => (
     <div style={roomStyle}>
-      <Menubar aria-label="Application menu" {...barPropsOf(args)}>
+      <Menubar {...barPropsOf(args)}>
         <DemoMenus>
           <ViewMenu />
           <Menubar.Menu value="window">
@@ -352,7 +436,7 @@ export const RightToLeft: Story = {
   parameters: { docs: { source: { code: menubarSnippets.rightToLeft } } },
   render: (args) => (
     <div dir="rtl">
-      <Menubar aria-label="Application menu" {...barPropsOf(args)}>
+      <Menubar {...barPropsOf(args)}>
         <DemoMenus>
           <ViewMenu />
         </DemoMenus>
@@ -365,7 +449,7 @@ export const Actions: Story = {
   name: "Actions beside the menus",
   parameters: { docs: { source: { code: menubarSnippets.actions } } },
   render: (args) => (
-    <Menubar aria-label="Application menu" {...barPropsOf(args)}>
+    <Menubar {...barPropsOf(args)}>
       <DemoMenus>
         <Menubar.Action icon={PlayIcon}>Run</Menubar.Action>
         <Menubar.Action asChild>
@@ -380,7 +464,7 @@ export const IconsAndTrailing: Story = {
   name: "An icon and trailing content on a trigger",
   parameters: { docs: { source: { code: menubarSnippets.iconsAndTrailing } } },
   render: (args) => (
-    <Menubar aria-label="Application menu" {...barPropsOf(args)}>
+    <Menubar {...barPropsOf(args)}>
       <Menubar.Menu value="file">
         <Menubar.Trigger icon={FileIcon}>File</Menubar.Trigger>
         <Menubar.Content>
@@ -399,7 +483,7 @@ export const DisabledWithAReason: Story = {
   name: "A trigger or an action disabled with a reason",
   parameters: { docs: { source: { code: menubarSnippets.disabledReason } } },
   render: (args) => (
-    <Menubar aria-label="Application menu" {...barPropsOf(args)}>
+    <Menubar {...barPropsOf(args)}>
       <DemoMenus>
         <Menubar.Menu value="view">
           <Menubar.Trigger
@@ -422,6 +506,7 @@ export const DisabledWithAReason: Story = {
 
 export const HotkeysAndPlatformShortcuts: Story = {
   name: "Hotkeys, and shortcut hints drawn for the platform",
+  args: { hotkeys: { file: "alt+f", edit: "alt+e" } },
   parameters: { docs: { source: { code: menubarSnippets.hotkeys } } },
   render: (args) => (
     <div
@@ -431,11 +516,7 @@ export const HotkeysAndPlatformShortcuts: Story = {
         justifyItems: "start",
       }}
     >
-      <Menubar
-        aria-label="Application menu"
-        {...barPropsOf(args)}
-        hotkeys={{ file: "alt+f", edit: "alt+e" }}
-      >
+      <Menubar {...barPropsOf(args)}>
         <Menubar.Menu value="file">
           <Menubar.Trigger>File</Menubar.Trigger>
           <Menubar.Content>
@@ -498,11 +579,7 @@ function ControllerBar(args: MenubarStageArgs) {
           Close
         </Button>
       </div>
-      <Menubar
-        aria-label="Application menu"
-        {...barPropsOf(args)}
-        controllerRef={bar}
-      >
+      <Menubar {...barPropsOf(args)} controllerRef={bar}>
         <DemoMenus />
       </Menubar>
     </div>
@@ -517,14 +594,11 @@ export const Controller: Story = {
 
 export const OverflowMenu: Story = {
   name: "Menus that do not fit move into a More menu",
+  args: { overflow: "menu" },
   parameters: { docs: { source: { code: menubarSnippets.overflowMenu } } },
   render: (args) => (
     <div style={roomStyle}>
-      <Menubar
-        aria-label="Application menu"
-        {...barPropsOf(args)}
-        overflow="menu"
-      >
+      <Menubar {...barPropsOf(args)}>
         <DemoMenus>
           <ViewMenu />
           <Menubar.Menu value="window">
@@ -542,6 +616,7 @@ export const OverflowMenu: Story = {
 
 export const Sticky: Story = {
   name: "A sticky bar",
+  args: { sticky: true },
   parameters: { docs: { source: { code: menubarSnippets.sticky } } },
   render: (args) => (
     <div
@@ -551,7 +626,7 @@ export const Sticky: Story = {
         border: "var(--dbm-border-width-1) solid var(--dbm-border-default)",
       }}
     >
-      <Menubar aria-label="Application menu" {...barPropsOf(args)} sticky>
+      <Menubar {...barPropsOf(args)}>
         <DemoMenus />
       </Menubar>
       <div

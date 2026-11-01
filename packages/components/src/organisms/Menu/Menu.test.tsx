@@ -38,8 +38,7 @@ function Basic({
 // A menu is portaled to the body, outside any landmark of the test page, which is what `region` flags.
 const noRegion = { rules: { region: { enabled: false } } };
 
-const trigger = () =>
-  screen.getByRole("button", { name: "Actions", hidden: true });
+const trigger = () => screen.getByRole("button", { name: "Actions", hidden: true });
 
 afterEach(() => {
   vi.restoreAllMocks();
@@ -64,34 +63,25 @@ describe("Menu", () => {
       expect(trigger()).toHaveAttribute("aria-expanded", "true");
     });
 
-    it.each([["{Enter}"], [" "], ["{ArrowDown}"]])(
-      "opens from the keyboard with %j",
-      async (key) => {
-        const user = userEvent.setup();
-        render(<Basic />);
-        trigger().focus();
-        await user.keyboard(key);
-        expect(await screen.findByRole("menu")).toBeInTheDocument();
-      },
-    );
+    it.each([["{Enter}"], [" "], ["{ArrowDown}"]])("opens from the keyboard with %j", async (key) => {
+      const user = userEvent.setup();
+      render(<Basic />);
+      trigger().focus();
+      await user.keyboard(key);
+      expect(await screen.findByRole("menu")).toBeInTheDocument();
+    });
 
     it("puts focus on the first item for ArrowDown and the last for ArrowUp", async () => {
       const user = userEvent.setup();
       render(<Basic />);
       trigger().focus();
       await user.keyboard("{ArrowDown}");
-      await waitFor(() =>
-        expect(screen.getByRole("menuitem", { name: "Edit" })).toHaveFocus(),
-      );
+      await waitFor(() => expect(screen.getByRole("menuitem", { name: "Edit" })).toHaveFocus());
       await user.keyboard("{Escape}");
-      await waitFor(() =>
-        expect(screen.queryByRole("menu")).not.toBeInTheDocument(),
-      );
+      await waitFor(() => expect(screen.queryByRole("menu")).not.toBeInTheDocument());
       trigger().focus();
       await user.keyboard("{ArrowUp}");
-      await waitFor(() =>
-        expect(screen.getByRole("menuitem", { name: "Archive" })).toHaveFocus(),
-      );
+      await waitFor(() => expect(screen.getByRole("menuitem", { name: "Archive" })).toHaveFocus());
     });
 
     it("closes on Escape and returns focus to the trigger", async () => {
@@ -100,9 +90,7 @@ describe("Menu", () => {
       await user.click(trigger());
       await screen.findByRole("menu");
       await user.keyboard("{Escape}");
-      await waitFor(() =>
-        expect(screen.queryByRole("menu")).not.toBeInTheDocument(),
-      );
+      await waitFor(() => expect(screen.queryByRole("menu")).not.toBeInTheDocument());
       expect(trigger()).toHaveFocus();
     });
 
@@ -145,9 +133,7 @@ describe("Menu", () => {
       await user.click(trigger());
       await screen.findByRole("menu");
       await user.click(screen.getByRole("menuitem", { name: "Edit" }));
-      await waitFor(() =>
-        expect(screen.queryByRole("menu")).not.toBeInTheDocument(),
-      );
+      await waitFor(() => expect(screen.queryByRole("menu")).not.toBeInTheDocument());
     });
 
     it("does not open from a disabled trigger", async () => {
@@ -194,18 +180,14 @@ describe("Menu", () => {
       await user.click(trigger());
       await user.click(await screen.findByRole("menuitem", { name: "Edit" }));
       expect(onSelect).toHaveBeenCalledTimes(1);
-      await waitFor(() =>
-        expect(screen.queryByRole("menu")).not.toBeInTheDocument(),
-      );
+      await waitFor(() => expect(screen.queryByRole("menu")).not.toBeInTheDocument());
     });
 
     it("keeps the menu open when onSelect calls preventDefault", async () => {
       const user = userEvent.setup();
       render(
         <Basic>
-          <Menu.Item onSelect={(event) => event.preventDefault()}>
-            Edit
-          </Menu.Item>
+          <Menu.Item onSelect={(event) => event.preventDefault()}>Edit</Menu.Item>
         </Basic>,
       );
       await user.click(trigger());
@@ -223,9 +205,7 @@ describe("Menu", () => {
       );
       trigger().focus();
       await user.keyboard("{ArrowDown}");
-      await waitFor(() =>
-        expect(screen.getByRole("menuitem", { name: "Edit" })).toHaveFocus(),
-      );
+      await waitFor(() => expect(screen.getByRole("menuitem", { name: "Edit" })).toHaveFocus());
       await user.keyboard("{Enter}");
       expect(onSelect).toHaveBeenCalledTimes(1);
     });
@@ -244,9 +224,7 @@ describe("Menu", () => {
       );
       trigger().focus();
       await user.keyboard("{ArrowDown}");
-      await waitFor(() =>
-        expect(screen.getByRole("menuitem", { name: "Edit" })).toHaveFocus(),
-      );
+      await waitFor(() => expect(screen.getByRole("menuitem", { name: "Edit" })).toHaveFocus());
       await user.keyboard("{ArrowDown}");
       expect(screen.getByRole("menuitem", { name: "Archive" })).toHaveFocus();
       const disabled = screen.getByRole("menuitem", { name: "Duplicate" });
@@ -261,25 +239,16 @@ describe("Menu", () => {
       render(<Basic />);
       trigger().focus();
       await user.keyboard("{ArrowDown}");
-      await waitFor(() =>
-        expect(screen.getByRole("menuitem", { name: "Edit" })).toHaveFocus(),
-      );
+      await waitFor(() => expect(screen.getByRole("menuitem", { name: "Edit" })).toHaveFocus());
       await user.keyboard("ar");
-      await waitFor(() =>
-        expect(screen.getByRole("menuitem", { name: "Archive" })).toHaveFocus(),
-      );
+      await waitFor(() => expect(screen.getByRole("menuitem", { name: "Archive" })).toHaveFocus());
     });
 
     it("marks the panel with the last kind of input, and still calls the consumer's handlers", async () => {
       const user = userEvent.setup();
       const onKeyDown = vi.fn();
       const onPointerMove = vi.fn();
-      render(
-        <Basic
-          root={{ defaultOpen: true }}
-          content={{ onKeyDown, onPointerMove }}
-        />,
-      );
+      render(<Basic root={{ defaultOpen: true }} content={{ onKeyDown, onPointerMove }} />);
       const menu = screen.getByRole("menu");
       expect(menu).not.toHaveAttribute("data-input");
       await user.hover(screen.getByRole("menuitem", { name: "Edit" }));
@@ -295,9 +264,7 @@ describe("Menu", () => {
       render(<Basic />);
       trigger().focus();
       await user.keyboard("{ArrowDown}");
-      await waitFor(() =>
-        expect(screen.getByRole("menuitem", { name: "Edit" })).toHaveFocus(),
-      );
+      await waitFor(() => expect(screen.getByRole("menuitem", { name: "Edit" })).toHaveFocus());
       await user.keyboard("{Tab}");
       expect(screen.getByRole("menu")).toBeInTheDocument();
       expect(screen.getByRole("menuitem", { name: "Edit" })).toHaveFocus();
@@ -308,9 +275,7 @@ describe("Menu", () => {
       render(<Basic content={{ loop: true }} />);
       trigger().focus();
       await user.keyboard("{ArrowDown}");
-      await waitFor(() =>
-        expect(screen.getByRole("menuitem", { name: "Edit" })).toHaveFocus(),
-      );
+      await waitFor(() => expect(screen.getByRole("menuitem", { name: "Edit" })).toHaveFocus());
       await user.keyboard("{End}");
       expect(screen.getByRole("menuitem", { name: "Archive" })).toHaveFocus();
       await user.keyboard("{ArrowDown}");
@@ -341,12 +306,8 @@ describe("Menu", () => {
           <Menu.Item>Edit</Menu.Item>
         </Basic>,
       );
-      expect(screen.getByRole("menuitem", { name: "Delete" })).toHaveClass(
-        styles.danger as string,
-      );
-      expect(screen.getByRole("menuitem", { name: "Edit" })).not.toHaveClass(
-        styles.danger as string,
-      );
+      expect(screen.getByRole("menuitem", { name: "Delete" })).toHaveClass(styles.danger as string);
+      expect(screen.getByRole("menuitem", { name: "Edit" })).not.toHaveClass(styles.danger as string);
     });
 
     it("makes a link an item through asChild", async () => {
@@ -363,15 +324,11 @@ describe("Menu", () => {
       expect(link).toHaveAttribute("href", "#docs");
       expect(link).toHaveClass(styles.item as string);
       await user.click(link);
-      await waitFor(() =>
-        expect(screen.queryByRole("menu")).not.toBeInTheDocument(),
-      );
+      await waitFor(() => expect(screen.queryByRole("menu")).not.toBeInTheDocument());
     });
 
     it("warns that icon and shortcut are not drawn in asChild mode", () => {
-      const warn = vi
-        .spyOn(console, "warn")
-        .mockImplementation(() => undefined);
+      const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
       render(
         <Basic root={{ defaultOpen: true }}>
           <Menu.Item asChild icon={CopyIcon}>
@@ -379,12 +336,8 @@ describe("Menu", () => {
           </Menu.Item>
         </Basic>,
       );
-      expect(warn).toHaveBeenCalledWith(
-        expect.stringContaining("have no effect when `asChild` is set"),
-      );
-      expect(
-        screen.getByRole("menuitem").querySelector("svg"),
-      ).not.toBeInTheDocument();
+      expect(warn).toHaveBeenCalledWith(expect.stringContaining("have no effect when `asChild` is set"));
+      expect(screen.getByRole("menuitem").querySelector("svg")).not.toBeInTheDocument();
     });
   });
 
@@ -394,27 +347,18 @@ describe("Menu", () => {
       const onCheckedChange = vi.fn();
       render(
         <Basic>
-          <Menu.CheckboxItem
-            defaultChecked
-            onCheckedChange={onCheckedChange}
-            onSelect={(event) => event.preventDefault()}
-          >
+          <Menu.CheckboxItem defaultChecked onCheckedChange={onCheckedChange} onSelect={(event) => event.preventDefault()}>
             Show grid
           </Menu.CheckboxItem>
         </Basic>,
       );
       await user.click(trigger());
-      const item = await screen.findByRole("menuitemcheckbox", {
-        name: "Show grid",
-      });
+      const item = await screen.findByRole("menuitemcheckbox", { name: "Show grid" });
       expect(item).toHaveAttribute("aria-checked", "true");
       expect(item).toHaveAttribute("data-state", "checked");
       await user.click(item);
       expect(onCheckedChange).toHaveBeenLastCalledWith(false);
-      expect(screen.getByRole("menuitemcheckbox")).toHaveAttribute(
-        "aria-checked",
-        "false",
-      );
+      expect(screen.getByRole("menuitemcheckbox")).toHaveAttribute("aria-checked", "false");
     });
 
     it("leaves a controlled value alone until the prop changes", async () => {
@@ -422,11 +366,7 @@ describe("Menu", () => {
       const onCheckedChange = vi.fn();
       render(
         <Basic>
-          <Menu.CheckboxItem
-            checked={false}
-            onCheckedChange={onCheckedChange}
-            onSelect={(event) => event.preventDefault()}
-          >
+          <Menu.CheckboxItem checked={false} onCheckedChange={onCheckedChange} onSelect={(event) => event.preventDefault()}>
             Show grid
           </Menu.CheckboxItem>
         </Basic>,
@@ -434,28 +374,17 @@ describe("Menu", () => {
       await user.click(trigger());
       await user.click(await screen.findByRole("menuitemcheckbox"));
       expect(onCheckedChange).toHaveBeenLastCalledWith(true);
-      expect(screen.getByRole("menuitemcheckbox")).toHaveAttribute(
-        "aria-checked",
-        "false",
-      );
+      expect(screen.getByRole("menuitemcheckbox")).toHaveAttribute("aria-checked", "false");
     });
 
     it("announces a mixed state", () => {
       render(
         <Basic root={{ defaultOpen: true }}>
-          <Menu.CheckboxItem checked="indeterminate">
-            Some columns
-          </Menu.CheckboxItem>
+          <Menu.CheckboxItem checked="indeterminate">Some columns</Menu.CheckboxItem>
         </Basic>,
       );
-      expect(screen.getByRole("menuitemcheckbox")).toHaveAttribute(
-        "aria-checked",
-        "mixed",
-      );
-      expect(screen.getByRole("menuitemcheckbox")).toHaveAttribute(
-        "data-state",
-        "indeterminate",
-      );
+      expect(screen.getByRole("menuitemcheckbox")).toHaveAttribute("aria-checked", "mixed");
+      expect(screen.getByRole("menuitemcheckbox")).toHaveAttribute("data-state", "indeterminate");
     });
 
     it("reports a mixed item chosen as checked", async () => {
@@ -463,10 +392,7 @@ describe("Menu", () => {
       const onCheckedChange = vi.fn();
       render(
         <Basic root={{ defaultOpen: true }}>
-          <Menu.CheckboxItem
-            checked="indeterminate"
-            onCheckedChange={onCheckedChange}
-          >
+          <Menu.CheckboxItem checked="indeterminate" onCheckedChange={onCheckedChange}>
             Some columns
           </Menu.CheckboxItem>
         </Basic>,
@@ -482,38 +408,22 @@ describe("Menu", () => {
       const onValueChange = vi.fn();
       render(
         <Basic>
-          <Menu.RadioGroup
-            defaultValue="name"
-            onValueChange={onValueChange}
-            aria-label="Sort by"
-          >
-            <Menu.RadioItem
-              value="name"
-              onSelect={(event) => event.preventDefault()}
-            >
+          <Menu.RadioGroup defaultValue="name" onValueChange={onValueChange} aria-label="Sort by">
+            <Menu.RadioItem value="name" onSelect={(event) => event.preventDefault()}>
               Name
             </Menu.RadioItem>
-            <Menu.RadioItem
-              value="date"
-              onSelect={(event) => event.preventDefault()}
-            >
+            <Menu.RadioItem value="date" onSelect={(event) => event.preventDefault()}>
               Date
             </Menu.RadioItem>
           </Menu.RadioGroup>
         </Basic>,
       );
       await user.click(trigger());
-      expect(
-        await screen.findByRole("menuitemradio", { name: "Name" }),
-      ).toHaveAttribute("aria-checked", "true");
+      expect(await screen.findByRole("menuitemradio", { name: "Name" })).toHaveAttribute("aria-checked", "true");
       await user.click(screen.getByRole("menuitemradio", { name: "Date" }));
       expect(onValueChange).toHaveBeenLastCalledWith("date");
-      expect(
-        screen.getByRole("menuitemradio", { name: "Date" }),
-      ).toHaveAttribute("aria-checked", "true");
-      expect(
-        screen.getByRole("menuitemradio", { name: "Name" }),
-      ).toHaveAttribute("aria-checked", "false");
+      expect(screen.getByRole("menuitemradio", { name: "Date" })).toHaveAttribute("aria-checked", "true");
+      expect(screen.getByRole("menuitemradio", { name: "Name" })).toHaveAttribute("aria-checked", "false");
     });
 
     it("leaves a controlled value alone until the prop changes", async () => {
@@ -521,16 +431,9 @@ describe("Menu", () => {
       const onValueChange = vi.fn();
       render(
         <Basic root={{ defaultOpen: true }}>
-          <Menu.RadioGroup
-            value="name"
-            onValueChange={onValueChange}
-            aria-label="Sort by"
-          >
+          <Menu.RadioGroup value="name" onValueChange={onValueChange} aria-label="Sort by">
             <Menu.RadioItem value="name">Name</Menu.RadioItem>
-            <Menu.RadioItem
-              value="date"
-              onSelect={(event) => event.preventDefault()}
-            >
+            <Menu.RadioItem value="date" onSelect={(event) => event.preventDefault()}>
               Date
             </Menu.RadioItem>
           </Menu.RadioGroup>
@@ -538,9 +441,7 @@ describe("Menu", () => {
       );
       await user.click(screen.getByRole("menuitemradio", { name: "Date" }));
       expect(onValueChange).toHaveBeenLastCalledWith("date");
-      expect(
-        screen.getByRole("menuitemradio", { name: "Name" }),
-      ).toHaveAttribute("aria-checked", "true");
+      expect(screen.getByRole("menuitemradio", { name: "Name" })).toHaveAttribute("aria-checked", "true");
     });
   });
 
@@ -557,21 +458,13 @@ describe("Menu", () => {
           </Menu.RadioGroup>
         </Basic>,
       );
-      await user.click(
-        screen.getByRole("menuitemcheckbox", { name: "Show grid" }),
-      );
+      await user.click(screen.getByRole("menuitemcheckbox", { name: "Show grid" }));
       expect(screen.getByRole("menu")).toBeInTheDocument();
-      expect(
-        screen.getByRole("menuitemcheckbox", { name: "Show grid" }),
-      ).toHaveAttribute("aria-checked", "true");
+      expect(screen.getByRole("menuitemcheckbox", { name: "Show grid" })).toHaveAttribute("aria-checked", "true");
       await user.click(screen.getByRole("menuitemradio", { name: "Date" }));
       expect(screen.getByRole("menu")).toBeInTheDocument();
-      await user.click(
-        screen.getByRole("menuitemcheckbox", { name: "Show rulers" }),
-      );
-      await waitFor(() =>
-        expect(screen.queryByRole("menu")).not.toBeInTheDocument(),
-      );
+      await user.click(screen.getByRole("menuitemcheckbox", { name: "Show rulers" }));
+      await waitFor(() => expect(screen.queryByRole("menu")).not.toBeInTheDocument());
     });
 
     it("keeps an action open with closeOnSelect={false}, and still reports the choice", async () => {
@@ -595,9 +488,7 @@ describe("Menu", () => {
     it("is busy while its promise is pending, ignores presses, and closes the menu when it resolves", async () => {
       const user = userEvent.setup();
       let finish!: () => void;
-      const onSelect = vi.fn(
-        () => new Promise<void>((resolve) => (finish = resolve)),
-      );
+      const onSelect = vi.fn(() => new Promise<void>((resolve) => (finish = resolve)));
       render(
         <Basic root={{ defaultOpen: true }}>
           <Menu.Item onSelect={onSelect}>Export</Menu.Item>
@@ -611,9 +502,7 @@ describe("Menu", () => {
       await user.click(item);
       expect(onSelect).toHaveBeenCalledTimes(1);
       finish();
-      await waitFor(() =>
-        expect(screen.queryByRole("menu")).not.toBeInTheDocument(),
-      );
+      await waitFor(() => expect(screen.queryByRole("menu")).not.toBeInTheDocument());
     });
 
     it("stays open and stops being busy when the promise rejects, handing the error over", async () => {
@@ -622,10 +511,7 @@ describe("Menu", () => {
       const onSelectError = vi.fn();
       render(
         <Basic root={{ defaultOpen: true }}>
-          <Menu.Item
-            onSelect={() => Promise.reject(error)}
-            onSelectError={onSelectError}
-          >
+          <Menu.Item onSelect={() => Promise.reject(error)} onSelectError={onSelectError}>
             Export
           </Menu.Item>
         </Basic>,
@@ -652,11 +538,7 @@ describe("Menu", () => {
         </Basic>,
       );
       await user.click(screen.getByRole("menuitem", { name: "Sync now" }));
-      await waitFor(() =>
-        expect(
-          screen.getByRole("menuitem", { name: "Sync now" }),
-        ).not.toHaveAttribute("aria-busy"),
-      );
+      await waitFor(() => expect(screen.getByRole("menuitem", { name: "Sync now" })).not.toHaveAttribute("aria-busy"));
       expect(screen.getByRole("menu")).toBeInTheDocument();
     });
   });
@@ -668,11 +550,7 @@ describe("Menu", () => {
       render(
         <Basic root={{ defaultOpen: true }}>
           <Menu.Item>Edit</Menu.Item>
-          <Menu.Item
-            disabled
-            disabledReason="You need the admin role"
-            onSelect={onSelect}
-          >
+          <Menu.Item disabled disabledReason="You need the admin role" onSelect={onSelect}>
             Delete
           </Menu.Item>
         </Basic>,
@@ -708,31 +586,20 @@ describe("Menu", () => {
       const onCheckedChange = vi.fn();
       render(
         <Basic root={{ defaultOpen: true }}>
-          <Menu.CheckboxItem
-            disabled
-            disabledReason="Locked by an admin"
-            onCheckedChange={onCheckedChange}
-          >
+          <Menu.CheckboxItem disabled disabledReason="Locked by an admin" onCheckedChange={onCheckedChange}>
             Show grid
           </Menu.CheckboxItem>
         </Basic>,
       );
-      await user.click(
-        screen.getByRole("menuitemcheckbox", { name: "Show grid" }),
-      );
+      await user.click(screen.getByRole("menuitemcheckbox", { name: "Show grid" }));
       expect(onCheckedChange).not.toHaveBeenCalled();
-      expect(screen.getByRole("menuitemcheckbox")).toHaveAttribute(
-        "aria-checked",
-        "false",
-      );
+      expect(screen.getByRole("menuitemcheckbox")).toHaveAttribute("aria-checked", "false");
     });
   });
 
   describe("a reason in the wrong place", () => {
     it("does not point aria-describedby at a hidden reason an asChild item never draws", () => {
-      const warn = vi
-        .spyOn(console, "warn")
-        .mockImplementation(() => undefined);
+      const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
       render(
         <Basic root={{ defaultOpen: true }}>
           <Menu.Item asChild disabled disabledReason="Admins only">
@@ -742,28 +609,18 @@ describe("Menu", () => {
       );
       const link = screen.getByRole("menuitem", { name: "Delete" });
       expect(link).not.toHaveAttribute("aria-describedby");
-      expect(warn).toHaveBeenCalledWith(
-        expect.stringContaining("not announced as the item's description"),
-      );
+      expect(warn).toHaveBeenCalledWith(expect.stringContaining("not announced as the item's description"));
     });
 
     it("warns, once per item, that a reason without disabled does nothing", () => {
-      const warn = vi
-        .spyOn(console, "warn")
-        .mockImplementation(() => undefined);
+      const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
       render(
         <Basic root={{ defaultOpen: true }}>
           <Menu.Item disabledReason="Admins only">Delete</Menu.Item>
         </Basic>,
       );
-      expect(warn).toHaveBeenCalledWith(
-        expect.stringContaining(
-          "`disabledReason` has no effect on an item that is not `disabled`",
-        ),
-      );
-      expect(
-        screen.getByRole("menuitem", { name: "Delete" }),
-      ).not.toHaveAttribute("aria-disabled");
+      expect(warn).toHaveBeenCalledWith(expect.stringContaining("`disabledReason` has no effect on an item that is not `disabled`"));
+      expect(screen.getByRole("menuitem", { name: "Delete" })).not.toHaveAttribute("aria-disabled");
     });
 
     it("passes aria-keyshortcuts through to the item", () => {
@@ -774,10 +631,7 @@ describe("Menu", () => {
           </Menu.Item>
         </Basic>,
       );
-      expect(screen.getByRole("menuitem", { name: /Edit/ })).toHaveAttribute(
-        "aria-keyshortcuts",
-        "Meta+E",
-      );
+      expect(screen.getByRole("menuitem", { name: /Edit/ })).toHaveAttribute("aria-keyshortcuts", "Meta+E");
     });
   });
 
@@ -785,10 +639,7 @@ describe("Menu", () => {
     it("draws a second line that describes the item without becoming its name", () => {
       render(
         <Basic root={{ defaultOpen: true }}>
-          <Menu.Item
-            description="Plan and invoices"
-            trailing={<span data-testid="badge">New</span>}
-          >
+          <Menu.Item description="Plan and invoices" trailing={<span data-testid="badge">New</span>}>
             Billing
           </Menu.Item>
         </Basic>,
@@ -805,10 +656,7 @@ describe("Menu", () => {
         <>
           <span id="extra">Extra note</span>
           <Basic root={{ defaultOpen: true }}>
-            <Menu.CheckboxItem
-              description="Shows guides"
-              aria-describedby="extra"
-            >
+            <Menu.CheckboxItem description="Shows guides" aria-describedby="extra">
               Grid
             </Menu.CheckboxItem>
             <Menu.RadioGroup value="a" aria-label="Mode">
@@ -819,34 +667,21 @@ describe("Menu", () => {
           </Basic>
         </>,
       );
-      expect(
-        screen.getByRole("menuitemcheckbox", { name: "Grid" }),
-      ).toHaveAccessibleDescription("Extra note Shows guides");
-      expect(
-        screen.getByRole("menuitemradio", { name: "Standard" }),
-      ).toHaveAccessibleDescription("The default view");
+      expect(screen.getByRole("menuitemcheckbox", { name: "Grid" })).toHaveAccessibleDescription("Extra note Shows guides");
+      expect(screen.getByRole("menuitemradio", { name: "Standard" })).toHaveAccessibleDescription("The default view");
     });
   });
 
   describe("after the menu has closed", () => {
     it("reports open and close completion, with focus already on the trigger", async () => {
       const user = userEvent.setup();
-      const onOpenChangeComplete = vi.fn((open: boolean) =>
-        open ? undefined : document.activeElement,
-      );
+      const onOpenChangeComplete = vi.fn((open: boolean) => (open ? undefined : document.activeElement));
       render(<Basic root={{ onOpenChangeComplete }} />);
       await user.click(trigger());
-      await waitFor(() =>
-        expect(onOpenChangeComplete).toHaveBeenCalledWith(true),
-      );
+      await waitFor(() => expect(onOpenChangeComplete).toHaveBeenCalledWith(true));
       await user.keyboard("{Escape}");
-      await waitFor(() =>
-        expect(onOpenChangeComplete).toHaveBeenCalledWith(false),
-      );
-      const closed =
-        onOpenChangeComplete.mock.results[
-          onOpenChangeComplete.mock.results.length - 1
-        ]?.value;
+      await waitFor(() => expect(onOpenChangeComplete).toHaveBeenCalledWith(false));
+      const closed = onOpenChangeComplete.mock.results[onOpenChangeComplete.mock.results.length - 1]?.value;
       expect(closed).toBe(trigger());
     });
   });
@@ -861,11 +696,7 @@ describe("Menu", () => {
           </Menu.Group>
         </Basic>,
       );
-      await waitFor(() =>
-        expect(
-          screen.getByRole("group", { name: "Account" }),
-        ).toBeInTheDocument(),
-      );
+      await waitFor(() => expect(screen.getByRole("group", { name: "Account" })).toBeInTheDocument());
     });
 
     it("names a radio group after its label too", async () => {
@@ -877,11 +708,7 @@ describe("Menu", () => {
           </Menu.RadioGroup>
         </Basic>,
       );
-      await waitFor(() =>
-        expect(
-          screen.getByRole("group", { name: "Sort by" }),
-        ).toBeInTheDocument(),
-      );
+      await waitFor(() => expect(screen.getByRole("group", { name: "Sort by" })).toBeInTheDocument());
     });
 
     it("lets an explicit aria-labelledby on the group win", async () => {
@@ -896,11 +723,7 @@ describe("Menu", () => {
           </Basic>
         </>,
       );
-      await waitFor(() =>
-        expect(
-          screen.getByRole("group", { name: "Outside name" }),
-        ).toBeInTheDocument(),
-      );
+      await waitFor(() => expect(screen.getByRole("group", { name: "Outside name" })).toBeInTheDocument());
     });
 
     it("leaves a group with no label unnamed, without a dangling reference", () => {
@@ -960,16 +783,10 @@ describe("Menu", () => {
       expect(subTrigger).toHaveAttribute("aria-haspopup", "menu");
       expect(subTrigger).toHaveAttribute("aria-expanded", "false");
       await user.keyboard("{ArrowRight}");
-      expect(
-        await screen.findByRole("menuitem", { name: "Email" }),
-      ).toBeInTheDocument();
+      expect(await screen.findByRole("menuitem", { name: "Email" })).toBeInTheDocument();
       expect(subTrigger).toHaveAttribute("aria-expanded", "true");
       await user.keyboard("{ArrowLeft}");
-      await waitFor(() =>
-        expect(
-          screen.queryByRole("menuitem", { name: "Email" }),
-        ).not.toBeInTheDocument(),
-      );
+      await waitFor(() => expect(screen.queryByRole("menuitem", { name: "Email" })).not.toBeInTheDocument());
       expect(subTrigger).toHaveFocus();
     });
 
@@ -978,17 +795,11 @@ describe("Menu", () => {
       render(<WithSub dir="rtl" />);
       trigger().focus();
       await user.keyboard("{ArrowDown}{ArrowDown}");
-      await waitFor(() =>
-        expect(screen.getByRole("menuitem", { name: "Share" })).toHaveFocus(),
-      );
+      await waitFor(() => expect(screen.getByRole("menuitem", { name: "Share" })).toHaveFocus());
       await user.keyboard("{ArrowRight}");
-      expect(
-        screen.queryByRole("menuitem", { name: "Email" }),
-      ).not.toBeInTheDocument();
+      expect(screen.queryByRole("menuitem", { name: "Email" })).not.toBeInTheDocument();
       await user.keyboard("{ArrowLeft}");
-      expect(
-        await screen.findByRole("menuitem", { name: "Email" }),
-      ).toBeInTheDocument();
+      expect(await screen.findByRole("menuitem", { name: "Email" })).toBeInTheDocument();
     });
 
     it("nests a submenu inside a submenu", async () => {
@@ -998,9 +809,7 @@ describe("Menu", () => {
       await user.keyboard("{ArrowDown}{ArrowDown}{ArrowRight}");
       await screen.findByRole("menuitem", { name: "Email" });
       await user.keyboard("{ArrowDown}{ArrowRight}");
-      expect(
-        await screen.findByRole("menuitem", { name: "Post" }),
-      ).toBeInTheDocument();
+      expect(await screen.findByRole("menuitem", { name: "Post" })).toBeInTheDocument();
       expect(screen.getAllByRole("menu")).toHaveLength(3);
     });
 
@@ -1022,9 +831,7 @@ describe("Menu", () => {
       );
       await user.click(await screen.findByRole("menuitem", { name: "Email" }));
       expect(onSelect).toHaveBeenCalled();
-      await waitFor(() =>
-        expect(screen.queryByRole("menu")).not.toBeInTheDocument(),
-      );
+      await waitFor(() => expect(screen.queryByRole("menu")).not.toBeInTheDocument());
     });
   });
 
@@ -1057,24 +864,15 @@ describe("Menu", () => {
           </Menu.Content>
         </Menu>,
       );
-      expect(screen.getByTestId("inherits")).toHaveClass(
-        styles.sizeLg as string,
-      );
+      expect(screen.getByTestId("inherits")).toHaveClass(styles.sizeLg as string);
       expect(screen.getByTestId("own")).toHaveClass(styles.sizeXs as string);
     });
 
     it("opens on the side asked for, and resolves a responsive map", () => {
-      const { unmount } = render(
-        <Basic root={{ defaultOpen: true }} content={{ side: "top" }} />,
-      );
+      const { unmount } = render(<Basic root={{ defaultOpen: true }} content={{ side: "top" }} />);
       expect(screen.getByRole("menu")).toHaveAttribute("data-side", "top");
       unmount();
-      render(
-        <Basic
-          root={{ defaultOpen: true }}
-          content={{ side: { base: "left", lg: "right" } }}
-        />,
-      );
+      render(<Basic root={{ defaultOpen: true }} content={{ side: { base: "left", lg: "right" } }} />);
       expect(screen.getByRole("menu")).toHaveAttribute("data-side", "left");
     });
 
@@ -1085,9 +883,7 @@ describe("Menu", () => {
       await screen.findByRole("menu");
       expect(document.body.style.pointerEvents).toBe("none");
       unmount();
-      await waitFor(() =>
-        expect(document.body.style.pointerEvents).not.toBe("none"),
-      );
+      await waitFor(() => expect(document.body.style.pointerEvents).not.toBe("none"));
       render(<Basic root={{ modal: false }} />);
       await user.click(trigger());
       await screen.findByRole("menu");
@@ -1110,12 +906,7 @@ describe("Menu", () => {
         subTrigger: createRef<HTMLDivElement>(),
         subContent: createRef<HTMLDivElement>(),
       };
-      const shared = (name: string) => ({
-        className: `custom-${name}`,
-        style: { color: "red" },
-        id: `id-${name}`,
-        "data-testid": `t-${name}`,
-      });
+      const shared = (name: string) => ({ className: `custom-${name}`, style: { color: "red" }, id: `id-${name}`, "data-testid": `t-${name}` });
       render(
         <Menu defaultOpen>
           <Menu.Trigger ref={refs.trigger} {...shared("trigger")}>
@@ -1128,11 +919,7 @@ describe("Menu", () => {
             <Menu.CheckboxItem ref={refs.checkbox} {...shared("checkbox")}>
               Grid
             </Menu.CheckboxItem>
-            <Menu.RadioGroup
-              ref={refs.radioGroup}
-              {...shared("radioGroup")}
-              value="a"
-            >
+            <Menu.RadioGroup ref={refs.radioGroup} {...shared("radioGroup")} value="a">
               <Menu.RadioItem ref={refs.radio} value="a" {...shared("radio")}>
                 A
               </Menu.RadioItem>
@@ -1167,42 +954,18 @@ describe("Menu", () => {
     it("keeps its own role and aria attributes when a consumer passes the same names", () => {
       render(
         <Menu defaultOpen>
-          <Menu.Trigger
-            role="tab"
-            aria-haspopup="dialog"
-            aria-expanded={false}
-            data-testid="trigger"
-          >
+          <Menu.Trigger role="tab" aria-haspopup="dialog" aria-expanded={false} data-testid="trigger">
             Actions
           </Menu.Trigger>
-          <Menu.Content
-            role="listbox"
-            aria-orientation="horizontal"
-            data-testid="content"
-          >
-            <Menu.Item
-              role="option"
-              aria-disabled={false}
-              disabled
-              data-testid="item"
-            >
+          <Menu.Content role="listbox" aria-orientation="horizontal" data-testid="content">
+            <Menu.Item role="option" aria-disabled={false} disabled data-testid="item">
               Edit
             </Menu.Item>
-            <Menu.CheckboxItem
-              role="option"
-              checked
-              aria-checked="false"
-              data-testid="checkbox"
-            >
+            <Menu.CheckboxItem role="option" checked aria-checked="false" data-testid="checkbox">
               Grid
             </Menu.CheckboxItem>
             <Menu.RadioGroup role="list" value="a" data-testid="radioGroup">
-              <Menu.RadioItem
-                value="a"
-                role="option"
-                aria-checked="false"
-                data-testid="radio"
-              >
+              <Menu.RadioItem value="a" role="option" aria-checked="false" data-testid="radio">
                 A
               </Menu.RadioItem>
             </Menu.RadioGroup>
@@ -1211,86 +974,35 @@ describe("Menu", () => {
             </Menu.Group>
             <Menu.Separator role="presentation" data-testid="separator" />
             <Menu.Sub open>
-              <Menu.SubTrigger
-                role="button"
-                aria-haspopup="dialog"
-                aria-expanded
-                data-testid="subTrigger"
-              >
+              <Menu.SubTrigger role="button" aria-haspopup="dialog" aria-expanded data-testid="subTrigger">
                 More
               </Menu.SubTrigger>
-              <Menu.SubContent
-                role="listbox"
-                aria-orientation="horizontal"
-                data-testid="subContent"
-              >
+              <Menu.SubContent role="listbox" aria-orientation="horizontal" data-testid="subContent">
                 <Menu.Item>Inside</Menu.Item>
               </Menu.SubContent>
             </Menu.Sub>
           </Menu.Content>
         </Menu>,
       );
-      expect(screen.getByTestId("trigger")).toHaveAttribute(
-        "aria-haspopup",
-        "menu",
-      );
-      expect(screen.getByTestId("trigger")).toHaveAttribute(
-        "aria-expanded",
-        "true",
-      );
+      expect(screen.getByTestId("trigger")).toHaveAttribute("aria-haspopup", "menu");
+      expect(screen.getByTestId("trigger")).toHaveAttribute("aria-expanded", "true");
       expect(screen.getByTestId("content")).toHaveAttribute("role", "menu");
-      expect(screen.getByTestId("content")).toHaveAttribute(
-        "aria-orientation",
-        "vertical",
-      );
+      expect(screen.getByTestId("content")).toHaveAttribute("aria-orientation", "vertical");
       expect(screen.getByTestId("item")).toHaveAttribute("role", "menuitem");
-      expect(screen.getByTestId("item")).toHaveAttribute(
-        "aria-disabled",
-        "true",
-      );
-      expect(screen.getByTestId("checkbox")).toHaveAttribute(
-        "role",
-        "menuitemcheckbox",
-      );
-      expect(screen.getByTestId("checkbox")).toHaveAttribute(
-        "aria-checked",
-        "true",
-      );
+      expect(screen.getByTestId("item")).toHaveAttribute("aria-disabled", "true");
+      expect(screen.getByTestId("checkbox")).toHaveAttribute("role", "menuitemcheckbox");
+      expect(screen.getByTestId("checkbox")).toHaveAttribute("aria-checked", "true");
       expect(screen.getByTestId("radioGroup")).toHaveAttribute("role", "group");
-      expect(screen.getByTestId("radio")).toHaveAttribute(
-        "role",
-        "menuitemradio",
-      );
-      expect(screen.getByTestId("radio")).toHaveAttribute(
-        "aria-checked",
-        "true",
-      );
+      expect(screen.getByTestId("radio")).toHaveAttribute("role", "menuitemradio");
+      expect(screen.getByTestId("radio")).toHaveAttribute("aria-checked", "true");
       expect(screen.getByTestId("group")).toHaveAttribute("role", "group");
-      expect(screen.getByTestId("subTrigger")).toHaveAttribute(
-        "role",
-        "menuitem",
-      );
-      expect(screen.getByTestId("subTrigger")).toHaveAttribute(
-        "aria-haspopup",
-        "menu",
-      );
-      expect(screen.getByTestId("subTrigger")).toHaveAttribute(
-        "aria-expanded",
-        "true",
-      );
+      expect(screen.getByTestId("subTrigger")).toHaveAttribute("role", "menuitem");
+      expect(screen.getByTestId("subTrigger")).toHaveAttribute("aria-haspopup", "menu");
+      expect(screen.getByTestId("subTrigger")).toHaveAttribute("aria-expanded", "true");
       expect(screen.getByTestId("subContent")).toHaveAttribute("role", "menu");
-      expect(screen.getByTestId("subContent")).toHaveAttribute(
-        "aria-orientation",
-        "vertical",
-      );
-      expect(screen.getByTestId("separator")).toHaveAttribute(
-        "role",
-        "separator",
-      );
-      expect(screen.getByTestId("separator")).toHaveAttribute(
-        "aria-orientation",
-        "horizontal",
-      );
+      expect(screen.getByTestId("subContent")).toHaveAttribute("aria-orientation", "vertical");
+      expect(screen.getByTestId("separator")).toHaveAttribute("role", "separator");
+      expect(screen.getByTestId("separator")).toHaveAttribute("aria-orientation", "horizontal");
     });
   });
 
@@ -1320,9 +1032,7 @@ describe("Menu", () => {
       await user.click(await screen.findByRole("menuitem", { name: "Delete" }));
       await screen.findByRole("dialog", { name: "Confirm" });
       await user.keyboard("{Escape}");
-      await waitFor(() =>
-        expect(screen.queryByRole("dialog")).not.toBeInTheDocument(),
-      );
+      await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
       await waitFor(() => expect(trigger()).toHaveFocus());
     });
 
@@ -1346,12 +1056,8 @@ describe("Menu", () => {
       await user.click(trigger());
       await user.click(await screen.findByRole("menuitem", { name: "Edit" }));
       expect(onSelect).toHaveBeenCalledTimes(1);
-      await waitFor(() =>
-        expect(screen.queryByRole("menu")).not.toBeInTheDocument(),
-      );
-      expect(
-        screen.getByRole("dialog", { name: "Settings" }),
-      ).toBeInTheDocument();
+      await waitFor(() => expect(screen.queryByRole("menu")).not.toBeInTheDocument());
+      expect(screen.getByRole("dialog", { name: "Settings" })).toBeInTheDocument();
     });
 
     it("closes the menu and not the dialog on one Escape", async () => {
@@ -1373,17 +1079,13 @@ describe("Menu", () => {
       await user.click(trigger());
       await screen.findByRole("menu");
       await user.keyboard("{Escape}");
-      await waitFor(() =>
-        expect(screen.queryByRole("menu")).not.toBeInTheDocument(),
-      );
+      await waitFor(() => expect(screen.queryByRole("menu")).not.toBeInTheDocument());
       expect(screen.getByRole("dialog")).toBeInTheDocument();
     });
   });
 
   describe("as a sheet", () => {
-    const sheetTree = (
-      root: Omit<React.ComponentProps<typeof Menu>, "children"> = {},
-    ) => (
+    const sheetTree = (root: Omit<React.ComponentProps<typeof Menu>, "children"> = {}) => (
       <Menu presentation="sheet" {...root}>
         <Menu.Trigger>Actions</Menu.Trigger>
         <Menu.Content>
@@ -1431,14 +1133,10 @@ describe("Menu", () => {
       );
       trigger().focus();
       await user.keyboard("{ArrowDown}");
-      await waitFor(() =>
-        expect(screen.getByRole("menuitem", { name: "Edit" })).toHaveFocus(),
-      );
+      await waitFor(() => expect(screen.getByRole("menuitem", { name: "Edit" })).toHaveFocus());
       await user.keyboard("{ArrowDown}{ArrowUp}{Enter}");
       expect(onSelect).toHaveBeenCalledTimes(1);
-      await waitFor(() =>
-        expect(screen.queryByRole("menu")).not.toBeInTheDocument(),
-      );
+      await waitFor(() => expect(screen.queryByRole("menu")).not.toBeInTheDocument());
     });
 
     it("opens a submenu over the menu with a Back row first, and Back returns to the menu", async () => {
@@ -1452,15 +1150,8 @@ describe("Menu", () => {
       const items = within(sub).getAllByRole("menuitem");
       expect(items.map((item) => item.textContent)).toEqual(["Back", "Email"]);
       await user.click(within(sub).getByRole("menuitem", { name: "Back" }));
-      await waitFor(() =>
-        expect(
-          screen.queryByRole("menuitem", { name: "Email" }),
-        ).not.toBeInTheDocument(),
-      );
-      expect(screen.getByRole("menuitem", { name: "Share" })).toHaveAttribute(
-        "aria-expanded",
-        "false",
-      );
+      await waitFor(() => expect(screen.queryByRole("menuitem", { name: "Email" })).not.toBeInTheDocument());
+      expect(screen.getByRole("menuitem", { name: "Share" })).toHaveAttribute("aria-expanded", "false");
       // Back steps out of the submenu; it doesn't close the menu the way choosing an item does
       await new Promise((resolve) => setTimeout(resolve, 400));
       expect(screen.getByRole("menu")).toBeInTheDocument();
@@ -1476,9 +1167,7 @@ describe("Menu", () => {
       await waitFor(() => expect(menu).toHaveAttribute("inert"));
       expect(sub).not.toHaveAttribute("inert");
       // focus was moved into the submenu before the menu was made inert
-      await waitFor(() =>
-        expect(sub.contains(document.activeElement)).toBe(true),
-      );
+      await waitFor(() => expect(sub.contains(document.activeElement)).toBe(true));
       await user.click(within(sub).getByRole("menuitem", { name: "Back" }));
       // (focus returning to the trigger is asserted in a real browser, which moves it the way a person's input does)
       await waitFor(() => expect(menu).not.toHaveAttribute("inert"));
@@ -1511,9 +1200,7 @@ describe("Menu", () => {
       render(sheetTree({ labels: { back: "Zurück" } }));
       await user.click(trigger());
       await user.click(await screen.findByRole("menuitem", { name: "Share" }));
-      expect(
-        await screen.findByRole("menuitem", { name: "Zurück" }),
-      ).toBeInTheDocument();
+      expect(await screen.findByRole("menuitem", { name: "Zurück" })).toBeInTheDocument();
     });
 
     it("keeps its default Back text when a label is passed as undefined", async () => {
@@ -1521,9 +1208,7 @@ describe("Menu", () => {
       render(sheetTree({ labels: { back: undefined } }));
       await user.click(trigger());
       await user.click(await screen.findByRole("menuitem", { name: "Share" }));
-      expect(
-        await screen.findByRole("menuitem", { name: "Back" }),
-      ).toBeInTheDocument();
+      expect(await screen.findByRole("menuitem", { name: "Back" })).toBeInTheDocument();
     });
 
     it("draws no Back row in a floating menu's submenu", async () => {
@@ -1544,9 +1229,7 @@ describe("Menu", () => {
       await user.click(trigger());
       await user.click(await screen.findByRole("menuitem", { name: "Share" }));
       await screen.findByRole("menuitem", { name: "Email" });
-      expect(
-        screen.queryByRole("menuitem", { name: "Back" }),
-      ).not.toBeInTheDocument();
+      expect(screen.queryByRole("menuitem", { name: "Back" })).not.toBeInTheDocument();
     });
 
     it("is a sheet below the width a responsive map names and a menu from it up", async () => {
@@ -1563,13 +1246,9 @@ describe("Menu", () => {
       }));
       vi.stubGlobal("matchMedia", matchMedia);
       try {
-        const { unmount } = render(
-          sheetTree({ presentation: { base: "sheet", md: "menu" } }),
-        );
+        const { unmount } = render(sheetTree({ presentation: { base: "sheet", md: "menu" } }));
         await user.click(trigger());
-        expect(await screen.findByRole("menu")).not.toHaveAttribute(
-          "data-presentation",
-        );
+        expect(await screen.findByRole("menu")).not.toHaveAttribute("data-presentation");
         unmount();
         matchMedia.mockImplementation((query: string) => ({
           matches: false,
@@ -1583,10 +1262,7 @@ describe("Menu", () => {
         }));
         render(sheetTree({ presentation: { base: "sheet", md: "menu" } }));
         await user.click(trigger());
-        expect(await screen.findByRole("menu")).toHaveAttribute(
-          "data-presentation",
-          "sheet",
-        );
+        expect(await screen.findByRole("menu")).toHaveAttribute("data-presentation", "sheet");
       } finally {
         vi.unstubAllGlobals();
       }
@@ -1617,11 +1293,7 @@ describe("Menu", () => {
         </StrictMode>,
       );
       await user.click(trigger());
-      await waitFor(() =>
-        expect(
-          screen.getByRole("group", { name: "Account" }),
-        ).toBeInTheDocument(),
-      );
+      await waitFor(() => expect(screen.getByRole("group", { name: "Account" })).toBeInTheDocument());
       await user.click(screen.getByRole("menuitem", { name: "Edit" }));
       expect(onSelect).toHaveBeenCalledTimes(1);
     });
@@ -1689,37 +1361,37 @@ describe("Menu", () => {
     });
   });
 
-  describe("shortcut hints written with mod", () => {
-    it("are drawn for the platform, and other text is drawn as written", async () => {
-      const user = userEvent.setup();
-      render(
-        <Menu>
-          <Menu.Trigger>Actions</Menu.Trigger>
-          <Menu.Content>
-            <Menu.Item shortcut="mod+shift+s">Save as</Menu.Item>
-            <Menu.Item shortcut="⌘E">Edit</Menu.Item>
-          </Menu.Content>
-        </Menu>,
-      );
-      await user.click(screen.getByRole("button", { name: "Actions" }));
-      expect(await screen.findByText("Ctrl+Shift+S")).toBeInTheDocument();
-      expect(screen.getByText("⌘E")).toBeInTheDocument();
-    });
-
-    it("use the command key on an Apple platform", async () => {
-      vi.stubGlobal("navigator", { ...navigator, platform: "MacIntel" });
-      const user = userEvent.setup();
-      render(
-        <Menu>
-          <Menu.Trigger>Actions</Menu.Trigger>
-          <Menu.Content>
-            <Menu.Item shortcut="mod+s">Save</Menu.Item>
-          </Menu.Content>
-        </Menu>,
-      );
-      await user.click(screen.getByRole("button", { name: "Actions" }));
-      expect(await screen.findByText("⌘S")).toBeInTheDocument();
-      vi.unstubAllGlobals();
-    });
+describe("shortcut hints written with mod", () => {
+  it("are drawn for the platform, and other text is drawn as written", async () => {
+    const user = userEvent.setup();
+    render(
+      <Menu>
+        <Menu.Trigger>Actions</Menu.Trigger>
+        <Menu.Content>
+          <Menu.Item shortcut="mod+shift+s">Save as</Menu.Item>
+          <Menu.Item shortcut="⌘E">Edit</Menu.Item>
+        </Menu.Content>
+      </Menu>,
+    );
+    await user.click(screen.getByRole("button", { name: "Actions" }));
+    expect(await screen.findByText("Ctrl+Shift+S")).toBeInTheDocument();
+    expect(screen.getByText("⌘E")).toBeInTheDocument();
   });
+
+  it("use the command key on an Apple platform", async () => {
+    vi.stubGlobal("navigator", { ...navigator, platform: "MacIntel" });
+    const user = userEvent.setup();
+    render(
+      <Menu>
+        <Menu.Trigger>Actions</Menu.Trigger>
+        <Menu.Content>
+          <Menu.Item shortcut="mod+s">Save</Menu.Item>
+        </Menu.Content>
+      </Menu>,
+    );
+    await user.click(screen.getByRole("button", { name: "Actions" }));
+    expect(await screen.findByText("⌘S")).toBeInTheDocument();
+    vi.unstubAllGlobals();
+  });
+});
 });

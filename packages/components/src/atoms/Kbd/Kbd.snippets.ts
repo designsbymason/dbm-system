@@ -15,11 +15,18 @@ export const kbdSnippets = {
 <Text as="span">
   <Kbd aria-label="Command">⌘</Kbd> + <Kbd>K</Kbd> to open the command palette
 </Text>`,
+
+  platform: `{/* keys draws a combination for the platform: mod is ⌘ on an Apple platform and Ctrl elsewhere, and
+    each key is its own keycap. It is named for a screen reader ("Command Shift P") and binds nothing. */}
+<Text as="span">
+  <Kbd keys="mod+shift+p" /> opens the command palette
+</Text>`,
 } as const;
 
 /** The Playground's live controls, as far as the snippet cares. */
 export interface KbdPlaygroundSnippetArgs {
   children?: unknown;
+  keys?: string;
   "aria-label"?: string;
 }
 
@@ -28,6 +35,10 @@ export interface KbdPlaygroundSnippetArgs {
  * when there is one (an empty one is the same as none). Also serves the "Default" story.
  */
 export function kbdPlaygroundSnippet(args: KbdPlaygroundSnippetArgs): string {
-  const label = args["aria-label"] ? ` aria-label=${quote(args["aria-label"])}` : "";
+  const label = args["aria-label"]
+    ? ` aria-label=${quote(args["aria-label"])}`
+    : "";
+  // `keys` replaces the key you spell yourself, and an empty one is the same as none.
+  if (args.keys) return `<Kbd keys=${quote(args.keys)}${label} />`;
   return `<Kbd${label}>${escapeJsxText(String(args.children ?? "Esc"))}</Kbd>`;
 }

@@ -5,10 +5,15 @@
 // shows, and `storySnippets.test.ts` checks that it uses only exports of the package.
 // See `07-storybook-and-documentation-standards.md` §4.2.
 
+import { quote } from "../../snippetHelpers";
 import type { MenubarSize, MenubarSurface, MenubarTone } from "./Menubar.types";
 
-const menubar = (barAttributes: string, body: string) =>
-  `<Menubar aria-label="Application menu"${barAttributes ? ` ${barAttributes}` : ""}>
+const menubar = (
+  barAttributes: string,
+  body: string,
+  name = "Application menu",
+) =>
+  `<Menubar aria-label=${quote(name)}${barAttributes ? ` ${barAttributes}` : ""}>
 ${body}
 </Menubar>`;
 
@@ -57,8 +62,8 @@ ${menubar('surface="outlined"', `${fileMenu}\n${editMenu}`)}`,
     all of them subtle. It reads best with a surface. */}
 ${menubar('tone="neutral" surface="outlined"', `${fileMenu}\n${editMenu}`)}`,
 
-  actions: `{/* A Menubar.Action is a button in the bar that opens no menu. It takes its place in the arrow-key order,
-    runs onSelect on a click, Enter or Space, and closes any menu that is open. */}
+  actions: `{/* PlayIcon comes from @dbm-system/icons. A Menubar.Action is a button in the bar that opens no menu. It takes
+    its place in the arrow-key order, runs onSelect on a click, Enter or Space, and closes any menu that is open. */}
 ${menubar(
   "",
   `${fileMenu}
@@ -120,12 +125,13 @@ ${menubar("controllerRef={bar}", `${fileMenu}\n${editMenu}`)}`,
 ${menubar('overflow="menu"', `${fileMenu}\n${editMenu}\n  {/* …more menus */}`)}
 </div>`,
 
-  sticky: `{/* sticky keeps the bar at the top of the page, with a surface behind it and a shadow while it is stuck.
-    stickyOffset leaves room for a header that is also sticky, and scrollContainerRef names a scrolling panel. */}
+  sticky: `{/* sticky keeps the bar at the top of the page (put it in a page or panel that scrolls), with a surface behind it
+    and a shadow while it is stuck. stickyOffset leaves room for a header that is also sticky, and scrollContainerRef
+    names a scrolling panel. */}
 ${menubar("sticky", `${fileMenu}\n${editMenu}`)}`,
 
-  narrowScreen: `{/* A menu bar expects a keyboard and a pointer. On a phone, show a Menu (or a NavigationMenu) from a
-    button instead. Hold the width in state with a media query, for example:
+  narrowScreen: `{/* ListIcon comes from @dbm-system/icons. A menu bar expects a keyboard and a pointer. On a phone, show a Menu (or a
+    NavigationMenu) from a button instead. Hold the width in state with a media query, for example:
     const wide = useSyncExternalStore(
       (notify) => { const query = window.matchMedia("(min-width: 48rem)"); query.addEventListener("change", notify); return () => query.removeEventListener("change", notify); },
       () => window.matchMedia("(min-width: 48rem)").matches,
@@ -216,8 +222,11 @@ ${menubar("value={open} onValueChange={setOpen}", `${fileMenu}\n${editMenu}`)}`,
 ${menubar("", `${fileMenu}\n${editMenu}\n  {/* …more menus */}`)}
 </div>`,
 
-  rightToLeft: `{/* dir is passed to the bar and its menus: the arrow keys swap and submenus open on the start side. */}
-${menubar('dir="rtl"', `${fileMenu}\n${editMenu}`)}`,
+  rightToLeft: `{/* dir is passed to the bar and its menus: the arrow keys swap and submenus open on the start side. The
+    direction of the container lays the triggers out, so a right-to-left page sets it too. */}
+<div dir="rtl">
+${menubar('dir="rtl"', `${fileMenu}\n${editMenu}`)}
+</div>`,
 } as const;
 
 /** The Playground's live controls, as far as the snippet cares. */
@@ -225,8 +234,14 @@ export interface MenubarPlaygroundSnippetArgs {
   size?: MenubarSize;
   surface?: MenubarSurface;
   tone?: MenubarTone;
+  overflow?: "scroll" | "menu";
+  sticky?: boolean;
+  stickyOffset?: number;
+  hotkeys?: Record<string, string | false>;
+  labels?: { more?: string };
   loop?: boolean;
   dir?: "ltr" | "rtl";
+  "aria-label"?: string;
 }
 
 /**
@@ -237,13 +252,31 @@ export function menubarPlaygroundSnippet(
   args: MenubarPlaygroundSnippetArgs,
 ): string {
   const attributes: string[] = [];
+  const name = args["aria-label"] || "Application menu";
   if (args.size && args.size !== "md") attributes.push(`size="${args.size}"`);
   if (args.surface && args.surface !== "ghost")
     attributes.push(`surface="${args.surface}"`);
   // `tone` defaults to brand, so it only needs writing when it is neutral.
   if (args.tone === "neutral") attributes.push('tone="neutral"');
+  if (args.overflow === "menu") attributes.push('overflow="menu"');
+  if (args.sticky) {
+    attributes.push("sticky");
+    if (args.stickyOffset)
+      attributes.push(`stickyOffset={${args.stickyOffset}}`);
+  }
+  const hotkeys = Object.entries(args.hotkeys ?? {}).filter(([, combo]) =>
+    typeof combo === "string" ? combo !== "" : combo === false,
+  );
+  if (hotkeys.length > 0) {
+    attributes.push(
+      `hotkeys={{ ${hotkeys.map(([menu, combo]) => `${/^[A-Za-z_$][\w$]*$/.test(menu) ? menu : JSON.stringify(menu)}: ${JSON.stringify(combo)}`).join(", ")} }}`,
+    );
+  }
+  // `labels.more` defaults to "More", so it only needs writing when it was changed.
+  if (args.labels?.more && args.labels.more !== "More")
+    attributes.push(`labels={{ more: ${JSON.stringify(args.labels.more)} }}`);
   // `loop` defaults to true, so it only needs writing when it's off.
   if (args.loop === false) attributes.push("loop={false}");
   if (args.dir && args.dir !== "ltr") attributes.push(`dir="${args.dir}"`);
-  return menubar(attributes.join(" "), `${fileMenu}\n${editMenu}`);
+  return menubar(attributes.join(" "), `${fileMenu}\n${editMenu}`, name);
 }

@@ -8,6 +8,7 @@ import * as KbdStories from "./Kbd.stories";
 
 export const propOrder = [
   "children",
+  "keys",
   "aria-label",
   "id",
   "className",
@@ -64,6 +65,13 @@ Drive every prop live.
 
 <Canvas of={KbdStories.Chord} />
 
+### A combination drawn for the platform
+
+`keys` takes a combination written with `mod` and draws it for the platform: ⌘ ⇧ P on an Apple platform, Ctrl + Shift + P elsewhere,
+each key its own keycap.
+
+<Canvas of={KbdStories.Platform} />
+
 ## Usage guidelines
 
 <div className="dbm-do-dont-grid">
@@ -109,6 +117,7 @@ Drive every prop live.
 - **Symbol-only content needs `aria-label`.** A Unicode glyph like `⌘` isn't reliably announced by
   screen readers on its own — pass `aria-label="Command"` (or the equivalent plain-language name)
   so it announces something meaningful.
+- **`keys` names itself.** A combination drawn from `keys` is one `role="img"` group with a plain-language name ("Command Shift P", "Ctrl Shift P"), and each keycap inside it is hidden from assistive technology so the symbols are not read one by one. Pass `aria-label` to say it your own way.
 - No keyboard interaction — `Kbd` is not an interactive element itself; it documents a shortcut,
   it doesn't trigger one.
 
@@ -128,6 +137,11 @@ Drive every prop live.
 ```
 
 ```tsx
+// A combination drawn for the platform: ⌘ ⇧ P on a Mac, Ctrl + Shift + P elsewhere
+<Kbd keys="mod+shift+p" />
+```
+
+```tsx
 // A native <kbd> attribute (title) passed straight through
 <Kbd title="Escape key">Esc</Kbd>
 ```
@@ -140,7 +154,7 @@ Drive every prop live.
 <TokenRow token="border-width.2" usage="the keycap's bottom-edge shadow offset, for the raised effect" />
 <TokenRow token="text.secondary" usage="the key label's text color" />
 <TokenRow token="radius.xs" usage="the keycap's corner radius" />
-<TokenRow token="space.1" usage="the keycap's block (vertical) padding" />
+<TokenRow token="space.1" usage="the keycap's block (vertical) padding, and the gap between the keycaps of a `keys` combination" />
 <TokenRow token="space.2" usage="the keycap's inline (horizontal) padding" />
 <TokenRow token="font-family.mono" usage="the monospace font stack" />
 <TokenRow token="font-size.xs" usage="the key label's fixed font size" />

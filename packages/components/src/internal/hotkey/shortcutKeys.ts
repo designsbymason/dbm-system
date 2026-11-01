@@ -22,8 +22,15 @@ const KEYS: Record<string, { apple: ShortcutKey; other: ShortcutKey }> = {
  * on an Apple platform and Ctrl and N elsewhere. Any other text is drawn as written, so `"⌘N"` and `["Ctrl", "N"]` are
  * left as they are.
  */
-export function shortcutKeys(shortcut: string | string[], apple: boolean): ShortcutKey[] {
-  const parts = Array.isArray(shortcut) ? shortcut : shortcut.length > 1 ? shortcut.split("+") : [shortcut];
+export function shortcutKeys(
+  shortcut: string | string[],
+  apple: boolean,
+): ShortcutKey[] {
+  const parts = Array.isArray(shortcut)
+    ? shortcut
+    : shortcut.length > 1
+      ? shortcut.split("+")
+      : [shortcut];
   return parts
     .map((part) => part.trim())
     .filter(Boolean)
@@ -31,4 +38,31 @@ export function shortcutKeys(shortcut: string | string[], apple: boolean): Short
       const known = KEYS[part.toLowerCase()];
       return known ? (apple ? known.apple : known.other) : { text: part };
     });
+}
+
+/**
+ * The keys of a shortcut as they are drawn: the modifier names written for the platform (`shortcutKeys`) and a single
+ * letter in capitals, so `"mod+shift+s"` is ⌘ ⇧ S on an Apple platform and Ctrl Shift S elsewhere.
+ */
+export function drawnShortcutKeys(
+  shortcut: string | string[],
+  apple: boolean,
+): ShortcutKey[] {
+  return shortcutKeys(shortcut, apple).map((key) =>
+    key.text.length === 1 ? { ...key, text: key.text.toUpperCase() } : key,
+  );
+}
+
+/** The keys of a shortcut as one run of text: `⌘⇧S` on an Apple platform, `Ctrl+Shift+S` elsewhere. */
+export function drawnShortcutText(
+  shortcut: string | string[],
+  apple: boolean,
+): string {
+  const texts = drawnShortcutKeys(shortcut, apple).map((key) => key.text);
+  return apple ? texts.join("") : texts.join("+");
+}
+
+/** What a screen reader should say for the keys, naming a symbol ("Command Shift S"). */
+export function shortcutSpokenName(keys: ShortcutKey[]): string {
+  return keys.map((key) => key.label ?? key.text).join(" ");
 }

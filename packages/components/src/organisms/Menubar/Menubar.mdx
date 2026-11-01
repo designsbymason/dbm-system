@@ -28,7 +28,9 @@ import * as MenubarSubStories from "./MenubarSub.stories";
 import * as MenubarSubTriggerStories from "./MenubarSubTrigger.stories";
 import * as MenubarSubContentStories from "./MenubarSubContent.stories";
 
-export const playgroundOrder = ["size", "surface", "tone", "loop", "dir"];
+export const playgroundOrder = ["size", "surface", "tone", "overflow", "sticky", "stickyOffset", "loop", "dir", "aria-label"];
+// `hotkeys` and `labels` are objects, which this panel can't edit; they are live in the Storybook Controls panel.
+export const playgroundExclude = ["hotkeys", "labels"];
 export const propOrder = [
   "children",
   "value",
@@ -231,14 +233,14 @@ import { Menubar } from "@dbm-system/components";
 
 ## Playground
 
-Press a trigger, or focus the bar and use the arrow keys. While a menu is open, moving onto another trigger opens that one.
+Press a trigger, or focus the bar and use the arrow keys. While a menu is open, moving onto another trigger opens that one. Drag the corner of the dashed box to narrow it and see `overflow` at work. `hotkeys` and `labels` take objects, so they are set in the Storybook Controls panel.
 
 <div className="dbm-playground-canvas">
 
 <Canvas of={MenubarStories.Playground} />
 
 </div>
-<PlaygroundControls of={MenubarStories.Playground} order={playgroundOrder} />
+<PlaygroundControls of={MenubarStories.Playground} order={playgroundOrder} exclude={playgroundExclude} />
 
 ## Properties
 
@@ -516,7 +518,7 @@ with a media query; the story below swaps at `48rem`.
 ## Code examples
 
 ```tsx
-{/* An application menu bar */}
+// An application menu bar
 <Menubar aria-label="Application menu">
   <Menubar.Menu value="file">
     <Menubar.Trigger>File</Menubar.Trigger>
@@ -528,38 +530,65 @@ with a media query; the story below swaps at `48rem`.
     </Menubar.Content>
   </Menubar.Menu>
 </Menubar>
+```
 
-{/* Open a menu from your own key: hold the open menu in state */}
-function AppMenu() {
-  const [open, setOpen] = useState("");
-  useEffect(() => {
-    const onKeyDown = (event: KeyboardEvent) => {
-      if (event.altKey && event.code === "KeyF") setOpen("file");
-    };
-    document.addEventListener("keydown", onKeyDown);
-    return () => document.removeEventListener("keydown", onKeyDown);
-  }, []);
-  return (
-    <Menubar aria-label="Application menu" value={open} onValueChange={setOpen}>
-      <Menubar.Menu value="file">
-        <Menubar.Trigger>File</Menubar.Trigger>
-        <Menubar.Content>
-          <Menubar.Item>New</Menubar.Item>
-        </Menubar.Content>
-      </Menubar.Menu>
-    </Menubar>
-  );
+```tsx
+// Keys that open a menu from anywhere on the page, and hints drawn for the platform
+<Menubar aria-label="Application menu" hotkeys={{ file: "alt+f", edit: "alt+e" }}>
+  <Menubar.Menu value="file">
+    <Menubar.Trigger>File</Menubar.Trigger>
+    <Menubar.Content>
+      <Menubar.Item shortcut="mod+s" onSelect={save}>Save</Menubar.Item>
+    </Menubar.Content>
+  </Menubar.Menu>
+</Menubar>
+```
+
+```tsx
+// A controller, for a button or a key of your own: open() says whether it had a menu to open
+function EditButton() {
+  const bar = useMenubarController();
+  return <Button onClick={() => bar.open("edit")}>Edit…</Button>;
 }
-
-{/* Keys that open a menu, and a controller for code that has none */}
+// or, outside the bar:
 const bar = useRef<MenubarController>(null);
-<Menubar aria-label="Application menu" hotkeys={{ file: "alt+f" }} controllerRef={bar}>…</Menubar>;
-<Button onClick={() => bar.current?.open("edit")}>Edit…</Button>
+<Menubar aria-label="Application menu" controllerRef={bar}>…</Menubar>;
+bar.current?.open("edit");
+```
 
-{/* A button in the bar that opens no menu */}
+```tsx
+// The open menu held in your own state
+const [open, setOpen] = useState("");
+<Menubar aria-label="Application menu" value={open} onValueChange={setOpen}>…</Menubar>;
+```
+
+```tsx
+// A button in the bar that opens no menu, and a link as one
 <Menubar.Action icon={PlayIcon} onSelect={run}>Run</Menubar.Action>
+<Menubar.Action asChild>
+  <a href="/help">Help</a>
+</Menubar.Action>
+```
 
-{/* A checkbox item leaves the menu open, and a radio group does too */}
+```tsx
+// A trigger that is unavailable for a reason a person can act on
+<Menubar.Trigger disabled disabledReason="Open a document to change the view">View</Menubar.Trigger>
+```
+
+```tsx
+// Menus that do not fit move into a "More" menu; the bar's container is sized by the layout
+<div style={{ inlineSize: 240 }}>
+  <Menubar aria-label="Application menu" overflow="menu">…</Menubar>
+</div>
+```
+
+```tsx
+// Stuck to the top of a scrolling panel, clear of a sticky header 48px tall (space.12)
+<Menubar aria-label="Application menu" sticky stickyOffset={12} scrollContainerRef={panel}>…</Menubar>
+```
+
+```tsx
+// A checkbox item leaves the menu open, and a radio group does too
 <Menubar.CheckboxItem checked={showGrid} onCheckedChange={setShowGrid}>
   Show grid
 </Menubar.CheckboxItem>
@@ -567,13 +596,24 @@ const bar = useRef<MenubarController>(null);
   <Menubar.RadioItem value="list">List</Menubar.RadioItem>
   <Menubar.RadioItem value="grid">Grid</Menubar.RadioItem>
 </Menubar.RadioGroup>
+```
 
-{/* An action that takes time: a spinner shows and the menu closes when the promise resolves */}
+```tsx
+// An action that takes time: a spinner shows and the menu closes when the promise resolves
 <Menubar.Item onSelect={() => exportRows()} onSelectError={(error) => showError(error)}>
   Export as CSV
 </Menubar.Item>
+```
 
-{/* A native <button> attribute on a trigger, passed straight through */}
+```tsx
+// A right-to-left bar: dir is passed to the bar and its menus, and the container's direction lays the triggers out
+<div dir="rtl">
+  <Menubar aria-label="القائمة" dir="rtl">…</Menubar>
+</div>
+```
+
+```tsx
+// A native <button> attribute on a trigger, passed straight through
 <Menubar.Trigger title="File commands">File</Menubar.Trigger>
 ```
 

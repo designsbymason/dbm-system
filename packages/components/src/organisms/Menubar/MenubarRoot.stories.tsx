@@ -43,21 +43,21 @@ const meta: Meta<typeof Menubar> = {
       table: { defaultValue: { summary: '"md"' } },
     },
     surface: {
-      control: "inline-radio",
+      control: "select",
       options: ["ghost", "outlined", "filled"],
       description:
         "How the bar is drawn: ghost (no surface; the triggers sit on the page or on a header), outlined (a bordered bar) or filled (a tinted bar).",
       table: { defaultValue: { summary: '"ghost"' } },
     },
     tone: {
-      control: "inline-radio",
+      control: "select",
       options: ["neutral", "brand"],
       description:
         "The colour of the triggers' hover and open fills and of the bar's own border and fill: brand (the system's identity colour) or neutral. Every colour is a subtle one. It does not change the menus the bar opens.",
       table: { defaultValue: { summary: '"brand"' } },
     },
     overflow: {
-      control: "inline-radio",
+      control: "select",
       options: ["scroll", "menu"],
       description:
         "What the bar does when its menus do not fit its container: scroll (sideways, with a fade at each end that has more behind it) or menu (the menus that do not fit move into a More menu, each as a submenu). Each Menubar.Menu and Menubar.Action tells the bar what it is, so they can sit inside a component of your own. menu sizes the bar against its container, which has to be sized by the layout and not by the bar.",
@@ -102,7 +102,7 @@ const meta: Meta<typeof Menubar> = {
       table: { defaultValue: { summary: "true" } },
     },
     dir: {
-      control: "inline-radio",
+      control: "select",
       options: ["ltr", "rtl"],
       description:
         "The reading direction, passed to the bar and its menus: it decides which arrow key moves to the next trigger and which side a submenu opens on.",

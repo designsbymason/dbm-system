@@ -11,3 +11,16 @@
   padding-block: var(--dbm-space-1);
   padding-inline: var(--dbm-space-2);
 }
+
+/* A combination drawn from `keys`: one keycap per key, side by side. The group is not a keycap itself. */
+.group {
+  align-items: center;
+  display: inline-flex;
+  gap: var(--dbm-space-1);
+}
+
+.plus {
+  color: var(--dbm-text-secondary);
+  font-family: var(--dbm-font-family-mono);
+  font-size: var(--dbm-font-size-xs);
+}

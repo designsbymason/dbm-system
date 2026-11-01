@@ -1441,6 +1441,8 @@ describe("Playground snippets for the eight typography atoms", () => {
   it("Kbd writes an aria-label only when there is one", () => {
     expect(kbdPlaygroundSnippet({ children: "Esc", "aria-label": "" })).toBe("<Kbd>Esc</Kbd>");
     expect(kbdPlaygroundSnippet({ children: "Esc", "aria-label": "Escape" })).toBe('<Kbd aria-label="Escape">Esc</Kbd>');
+    expect(kbdPlaygroundSnippet({ children: "Esc", keys: "mod+k" })).toBe('<Kbd keys="mod+k" />');
+    expect(kbdPlaygroundSnippet({ children: "Esc", keys: "", "aria-label": "" })).toBe("<Kbd>Esc</Kbd>");
   });
 
   it.each([
@@ -1973,20 +1975,39 @@ describe("Playground snippet for ContextMenu", () => {
 });
 
 describe("Playground snippet for Menubar", () => {
-  const everything = { size: "lg", surface: "outlined", tone: "neutral", loop: false, dir: "rtl" } as const;
+  const everything = {
+    size: "lg",
+    surface: "outlined",
+    tone: "neutral",
+    overflow: "menu",
+    sticky: true,
+    stickyOffset: 8,
+    hotkeys: { file: "alt+f", edit: false },
+    labels: { more: "Mehr" },
+    loop: false,
+    dir: "rtl",
+    "aria-label": "Main menu",
+  } as const;
+  const defaults = { size: "md", surface: "ghost", tone: "brand", overflow: "scroll", sticky: false, stickyOffset: 0, hotkeys: {}, labels: { more: "More" }, loop: true, dir: "ltr", "aria-label": "Application menu" } as const;
 
-  it.each([{}, everything, { size: "md", surface: "ghost", tone: "brand", loop: true, dir: "ltr" }] as const)("Menubar %j is a real snippet", (args) => {
+  it.each([{}, everything, defaults] as const)("Menubar %j is a real snippet", (args) => {
     expect(problemsIn(menubarPlaygroundSnippet(args))).toEqual([]);
   });
 
   it("writes only what differs from the defaults", () => {
-    const code = menubarPlaygroundSnippet({ size: "md", surface: "ghost", tone: "brand", loop: true, dir: "ltr" });
-    expect(code).toContain('<Menubar aria-label="Application menu">');
+    expect(menubarPlaygroundSnippet(defaults)).toContain('<Menubar aria-label="Application menu">');
   });
 
   it("writes each setting that is changed", () => {
-    const code = menubarPlaygroundSnippet(everything);
-    expect(code).toContain('<Menubar aria-label="Application menu" size="lg" surface="outlined" tone="neutral" loop={false} dir="rtl">');
+    expect(menubarPlaygroundSnippet(everything)).toContain(
+      '<Menubar aria-label="Main menu" size="lg" surface="outlined" tone="neutral" overflow="menu" sticky stickyOffset={8} hotkeys={{ file: "alt+f", edit: false }} labels={{ more: "Mehr" }} loop={false} dir="rtl">',
+    );
+  });
+
+  it("leaves out a stickyOffset without sticky and a hotkey with no combination", () => {
+    const code = menubarPlaygroundSnippet({ sticky: false, stickyOffset: 8, hotkeys: { file: "" } });
+    expect(code).not.toContain("stickyOffset");
+    expect(code).not.toContain("hotkeys");
   });
 });
 
