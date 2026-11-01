@@ -109,6 +109,17 @@ describe("Menubar", () => {
     });
   });
 
+  describe("tone", () => {
+    it("is brand by default and neutral on request, on the bar", () => {
+      const { rerender } = render(<Basic />);
+      const brand = screen.getByRole("menubar").className;
+      rerender(<Basic root={{ tone: "neutral" }} />);
+      expect(screen.getByRole("menubar").className).not.toBe(brand);
+      rerender(<Basic root={{ tone: "brand" }} />);
+      expect(screen.getByRole("menubar").className).toBe(brand);
+    });
+  });
+
   describe("opening and closing", () => {
     it("opens a menu on a press and marks the trigger expanded", async () => {
       const user = userEvent.setup();

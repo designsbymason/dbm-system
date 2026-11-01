@@ -5,7 +5,7 @@
 // shows, and `storySnippets.test.ts` checks that it uses only exports of the package.
 // See `07-storybook-and-documentation-standards.md` §4.2.
 
-import type { MenubarSize, MenubarSurface } from "./Menubar.types";
+import type { MenubarSize, MenubarSurface, MenubarTone } from "./Menubar.types";
 
 const menubar = (barAttributes: string, body: string) =>
   `<Menubar aria-label="Application menu"${barAttributes ? ` ${barAttributes}` : ""}>
@@ -52,6 +52,10 @@ ${menubar('size="lg"', `${fileMenu}\n${editMenu}`)}`,
 
   surfaces: `{/* surface: "ghost" (default, no surface) | "outlined" | "filled". */}
 ${menubar('surface="outlined"', `${fileMenu}\n${editMenu}`)}`,
+
+  tones: `{/* tone: "brand" (default) | "neutral" — the colour of the triggers and of the bar's own border and fill,
+    all of them subtle. It reads best with a surface. */}
+${menubar('tone="neutral" surface="outlined"', `${fileMenu}\n${editMenu}`)}`,
 
   checkboxAndRadio: `{/* A checkbox or radio item leaves the menu open when it is chosen; closeOnSelect closes it. */}
 ${menubar(
@@ -122,6 +126,7 @@ ${menubar('dir="rtl"', `${fileMenu}\n${editMenu}`)}`,
 export interface MenubarPlaygroundSnippetArgs {
   size?: MenubarSize;
   surface?: MenubarSurface;
+  tone?: MenubarTone;
   loop?: boolean;
   dir?: "ltr" | "rtl";
 }
@@ -137,6 +142,8 @@ export function menubarPlaygroundSnippet(
   if (args.size && args.size !== "md") attributes.push(`size="${args.size}"`);
   if (args.surface && args.surface !== "ghost")
     attributes.push(`surface="${args.surface}"`);
+  // `tone` defaults to brand, so it only needs writing when it is neutral.
+  if (args.tone === "neutral") attributes.push('tone="neutral"');
   // `loop` defaults to true, so it only needs writing when it's off.
   if (args.loop === false) attributes.push("loop={false}");
   if (args.dir && args.dir !== "ltr") attributes.push(`dir="${args.dir}"`);

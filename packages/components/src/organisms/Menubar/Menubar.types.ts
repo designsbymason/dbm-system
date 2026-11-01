@@ -20,6 +20,9 @@ export type {
 /** The size of the bar's triggers, and of every menu it opens unless a `Menubar.Content` sets its own. */
 export type MenubarSize = MenuSize;
 
+/** The colour family of the triggers and of the bar's own border and fill: the system's identity colour, or neutral. */
+export type MenubarTone = "neutral" | "brand";
+
 /** How the bar itself is drawn: no surface of its own, a bordered bar, or a tinted bar. */
 export type MenubarSurface = "ghost" | "outlined" | "filled";
 
@@ -57,6 +60,12 @@ export interface MenubarProps extends Omit<
    * @default 'ghost'
    */
   surface?: MenubarSurface;
+  /**
+   * The colour of the triggers and of the bar's own border and fill: `brand` (the system's identity colour) or
+   * `neutral`. Every colour is a subtle one. It does not change the menus the bar opens.
+   * @default 'brand'
+   */
+  tone?: MenubarTone;
   /**
    * Whether the arrow keys wrap from the last trigger to the first and back.
    * @default true

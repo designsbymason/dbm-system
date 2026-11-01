@@ -38,6 +38,13 @@ const meta: Meta<MenubarStageArgs> = {
         "How the bar is drawn: ghost (no surface; the triggers sit on the page or on a header), outlined (a bordered bar) or filled (a tinted bar).",
       table: { defaultValue: { summary: '"ghost"' } },
     },
+    tone: {
+      control: "inline-radio",
+      options: ["neutral", "brand"],
+      description:
+        "The colour of the triggers and of the bar's own border and fill: brand (the system's identity colour) or neutral. Every colour is a subtle one. It does not change the menus the bar opens.",
+      table: { defaultValue: { summary: '"brand"' } },
+    },
     loop: {
       control: "boolean",
       description:
@@ -62,6 +69,7 @@ const meta: Meta<MenubarStageArgs> = {
   args: {
     size: "md",
     surface: "ghost",
+    tone: "brand",
     loop: true,
     dir: "ltr",
     onValueChange: fn(),
@@ -164,6 +172,35 @@ export const Surfaces: Story = {
           <DemoMenus />
         </Menubar>
       ))}
+    </div>
+  ),
+};
+
+export const Tones: Story = {
+  name: "Tones",
+  argTypes: { tone: { control: false } },
+  parameters: { docs: { source: { code: menubarSnippets.tones } } },
+  render: (args) => (
+    <div
+      style={{
+        display: "grid",
+        gap: "var(--dbm-space-4)",
+        justifyItems: "start",
+      }}
+    >
+      {(["brand", "neutral"] as const).flatMap((tone) =>
+        (["ghost", "outlined", "filled"] as const).map((surface) => (
+          <Menubar
+            key={`${tone}-${surface}`}
+            aria-label={`Application menu, ${tone} ${surface}`}
+            {...barPropsOf(args)}
+            tone={tone}
+            surface={surface}
+          >
+            <DemoMenus />
+          </Menubar>
+        )),
+      )}
     </div>
   ),
 };

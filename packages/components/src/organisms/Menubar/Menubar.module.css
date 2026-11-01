@@ -53,6 +53,7 @@
    push the triggers off the line they should align to. */
 .ghost {
   --menubar-padding: 0;
+  --menubar-rest: transparent;
 }
 
 .outlined,
@@ -62,12 +63,41 @@
 }
 
 .outlined {
+  --menubar-rest: var(--dbm-bg-surface);
   background-color: var(--dbm-bg-surface);
-  border: var(--dbm-border-width-1) solid var(--dbm-border-default);
+  border: var(--dbm-border-width-1) solid var(--menubar-border);
 }
 
 .filled {
-  background-color: var(--dbm-bg-neutral-subtle);
+  --menubar-rest: var(--menubar-fill);
+  background-color: var(--menubar-fill);
+}
+
+/* Tone — set on the bar and read by the surface and every trigger. Every colour is a subtle token: the bar's border and
+   fill, a trigger under the pointer, and the open trigger, which takes the hover's own pair one step deeper. */
+.toneBrand {
+  --menubar-border: var(--dbm-border-brand-subtle);
+  --menubar-fill: var(--dbm-bg-brand-subtle);
+  --menubar-hover: var(--dbm-bg-brand-subtle);
+  --menubar-open: var(--dbm-bg-brand-subtle-hover);
+  --menubar-text: var(--dbm-text-brand);
+}
+
+.toneNeutral {
+  --menubar-border: var(--dbm-border-neutral-subtle);
+  --menubar-fill: var(--dbm-bg-neutral-subtle);
+  --menubar-hover: var(--dbm-bg-neutral-subtle);
+  --menubar-open: var(--dbm-bg-neutral-subtle-hover);
+  --menubar-text: var(--dbm-text-primary);
+}
+
+/* On a filled bar the hover would match the fill, so a filled bar's triggers hover to the deeper pair. */
+.filled.toneBrand {
+  --menubar-hover: var(--dbm-bg-brand-subtle-hover);
+}
+
+.filled.toneNeutral {
+  --menubar-hover: var(--dbm-bg-neutral-subtle-hover);
 }
 
 /* Sizes — set on the bar, read by every trigger. A trigger is its padding plus a line of text, as a `Button` is, and
@@ -106,7 +136,7 @@
   background: none;
   border: none;
   border-radius: var(--dbm-radius-md);
-  color: var(--dbm-text-primary);
+  color: var(--menubar-text);
   cursor: pointer;
   flex-shrink: 0;
   font: inherit;
@@ -123,18 +153,21 @@
   white-space: nowrap;
 }
 
-.trigger:hover:not(:disabled):not([data-state="open"]) {
-  background-color: var(--dbm-bg-neutral-subtle);
+.trigger:hover:not(:disabled):not([data-state="open"]):not(:focus-visible) {
+  background-color: var(--menubar-hover);
 }
 
-/* The open trigger carries the same tint an open submenu's trigger does in the panel below it. */
 .trigger[data-state="open"] {
-  background-color: var(--dbm-bg-brand-subtle);
+  background-color: var(--menubar-open);
 }
 
 /* The ring is drawn inside the trigger: the bar scrolls, so it clips whatever is drawn outside its edge
    (`05-component-api-conventions.md` §6). A focused trigger is painted over its neighbours. */
-.trigger:focus-visible {
+.trigger:focus-visible,
+.trigger[data-state="open"]:focus-visible {
+  /* A focused trigger rests on the bar's own fill, so the ring is always drawn on a surface it clears: the deeper
+     hover and open pairs are not 3:1 against it in every theme. */
+  background-color: var(--menubar-rest);
   border-radius: var(--dbm-radius-sm);
   outline: var(--dbm-border-width-2) solid var(--dbm-border-focus);
   outline-offset: calc(-1 * var(--dbm-border-width-2));
@@ -152,8 +185,7 @@
     mask-image: none;
   }
 
-  .outlined,
-  .filled {
+  .outlined {
     border-color: CanvasText;
   }
 

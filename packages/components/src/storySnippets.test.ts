@@ -1973,20 +1973,20 @@ describe("Playground snippet for ContextMenu", () => {
 });
 
 describe("Playground snippet for Menubar", () => {
-  const everything = { size: "lg", surface: "outlined", loop: false, dir: "rtl" } as const;
+  const everything = { size: "lg", surface: "outlined", tone: "neutral", loop: false, dir: "rtl" } as const;
 
-  it.each([{}, everything, { size: "md", surface: "ghost", loop: true, dir: "ltr" }] as const)("Menubar %j is a real snippet", (args) => {
+  it.each([{}, everything, { size: "md", surface: "ghost", tone: "brand", loop: true, dir: "ltr" }] as const)("Menubar %j is a real snippet", (args) => {
     expect(problemsIn(menubarPlaygroundSnippet(args))).toEqual([]);
   });
 
   it("writes only what differs from the defaults", () => {
-    const code = menubarPlaygroundSnippet({ size: "md", surface: "ghost", loop: true, dir: "ltr" });
+    const code = menubarPlaygroundSnippet({ size: "md", surface: "ghost", tone: "brand", loop: true, dir: "ltr" });
     expect(code).toContain('<Menubar aria-label="Application menu">');
   });
 
   it("writes each setting that is changed", () => {
     const code = menubarPlaygroundSnippet(everything);
-    expect(code).toContain('<Menubar aria-label="Application menu" size="lg" surface="outlined" loop={false} dir="rtl">');
+    expect(code).toContain('<Menubar aria-label="Application menu" size="lg" surface="outlined" tone="neutral" loop={false} dir="rtl">');
   });
 });
 

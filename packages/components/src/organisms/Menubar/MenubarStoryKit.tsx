@@ -5,13 +5,14 @@ import type { MenubarProps } from "./Menubar.types";
 /** The props the Playground drives, all of them the bar's own. */
 export type MenubarStageArgs = Pick<
   MenubarProps,
-  "size" | "surface" | "loop" | "dir" | "onValueChange"
+  "size" | "surface" | "tone" | "loop" | "dir" | "onValueChange"
 >;
 
 /** The bar's props from a story's args, so a story that draws its own menus still follows every control. */
 export const barPropsOf = (args: MenubarStageArgs) => ({
   size: args.size,
   surface: args.surface,
+  tone: args.tone,
   loop: args.loop,
   dir: args.dir,
   onValueChange: args.onValueChange,

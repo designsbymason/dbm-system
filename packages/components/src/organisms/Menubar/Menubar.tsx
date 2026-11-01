@@ -37,6 +37,7 @@ import type {
   MenubarProps,
   MenubarSize,
   MenubarSurface,
+  MenubarTone,
   MenubarTriggerProps,
 } from "./Menubar.types";
 
@@ -49,6 +50,11 @@ const sizeClass: Record<MenubarSize, string | undefined> = {
   md: styles.sizeMd,
   lg: styles.sizeLg,
   xl: styles.sizeXl,
+};
+
+const toneClass: Record<MenubarTone, string | undefined> = {
+  neutral: styles.toneNeutral,
+  brand: styles.toneBrand,
 };
 
 const surfaceClass: Record<MenubarSurface, string | undefined> = {
@@ -99,6 +105,7 @@ const MenubarRoot = forwardRef<HTMLDivElement, MenubarProps>(
       onOpenChangeComplete,
       size = "md",
       surface = "ghost",
+      tone = "brand",
       loop = true,
       dir = "ltr",
       className,
@@ -139,6 +146,7 @@ const MenubarRoot = forwardRef<HTMLDivElement, MenubarProps>(
             styles.root,
             sizeClass[size],
             surfaceClass[surface],
+            toneClass[tone],
             className,
           )}
           {...props}

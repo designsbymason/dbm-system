@@ -83,6 +83,26 @@ async function realClick(element: Element) {
   });
 }
 
+// A real key press: `:focus-visible` never matches after Storybook's synthetic keys.
+async function realKey(
+  key: string,
+  code: string,
+  windowsVirtualKeyCode: number,
+) {
+  await send("Input.dispatchKeyEvent", {
+    type: "rawKeyDown",
+    key,
+    code,
+    windowsVirtualKeyCode,
+  });
+  await send("Input.dispatchKeyEvent", {
+    type: "keyUp",
+    key,
+    code,
+    windowsVirtualKeyCode,
+  });
+}
+
 const Page = ({ children }: { children: React.ReactNode }) => (
   <div style={{ minBlockSize: "100vh", padding: "var(--dbm-space-4)" }}>
     {children}
@@ -391,38 +411,128 @@ export const PointerCloseReturnsFocusWithoutARing: Story = {
 };
 
 export const TriggerStatesPassContrast: Story = {
-  name: "Trigger text and focus ring clear their floors on the hover, open and bar fills",
+  name: "Trigger text and focus ring clear their floors on every fill a tone draws, and the tones draw their own colours",
   render: () => (
     <Page>
-      <Menubar aria-label="Application menu" surface="filled">
-        <DemoMenus />
-      </Menubar>
+      <div
+        style={{
+          display: "grid",
+          gap: "var(--dbm-space-4)",
+          justifyItems: "start",
+        }}
+      >
+        <Menubar aria-label="Brand bar" tone="brand" surface="filled">
+          <DemoMenus />
+        </Menubar>
+        <Menubar aria-label="Neutral bar" tone="neutral" surface="filled">
+          <DemoMenus />
+        </Menubar>
+      </div>
     </Page>
   ),
   play: async () => {
-    const text = resolved("color", "text-primary");
     const ring = resolved("backgroundColor", "border-focus");
-    for (const fill of ["bg-surface", "bg-neutral-subtle", "bg-brand-subtle"]) {
-      const background = resolved("backgroundColor", fill);
-      await expect(
-        contrast(text, background),
-        `text on ${fill}`,
-      ).toBeGreaterThanOrEqual(4.5);
-      await expect(
-        contrast(ring, background),
-        `focus ring on ${fill}`,
-      ).toBeGreaterThanOrEqual(3);
+    const pairs: Record<string, { text: string; fills: string[] }> = {
+      brand: {
+        text: "text-brand",
+        fills: ["bg-surface", "bg-brand-subtle", "bg-brand-subtle-hover"],
+      },
+      neutral: {
+        text: "text-primary",
+        fills: ["bg-surface", "bg-neutral-subtle", "bg-neutral-subtle-hover"],
+      },
+    };
+    for (const [tone, { text, fills }] of Object.entries(pairs)) {
+      const color = resolved("color", text);
+      for (const fill of fills) {
+        const background = resolved("backgroundColor", fill);
+        await expect(
+          contrast(color, background),
+          `${tone} text on ${fill}`,
+        ).toBeGreaterThanOrEqual(4.5);
+        // the ring is drawn on the bar's resting fill: a focused trigger gives up its hover and open tints
+        if (!fill.endsWith("-hover"))
+          await expect(
+            contrast(ring, background),
+            `focus ring on ${fill}`,
+          ).toBeGreaterThanOrEqual(3);
+      }
     }
-    // the open trigger really takes the brand tint, and the bar its own fill
-    await realClick(barTrigger("File"));
-    await openMenu();
-    await expect(getComputedStyle(barTrigger("File")).backgroundColor).toBe(
+    // a trigger with keyboard focus rests on its bar's fill
+    const focusedBar = body.getByRole("menubar", { name: "Neutral bar" });
+    const edit = within(focusedBar).getByRole("menuitem", { name: "Edit" });
+    edit.focus();
+    await realKey("ArrowLeft", "ArrowLeft", 37);
+    const file = within(focusedBar).getByRole("menuitem", { name: "File" });
+    await expect(file).toHaveFocus();
+    await expect(file.matches(":focus-visible")).toBe(true);
+    // the fill eases in, so wait for it
+    // resolved once, outside the wait: a probe added on every poll would re-trigger `waitFor`'s own observer
+    const rest = resolved("backgroundColor", "bg-neutral-subtle");
+    await waitFor(() =>
+      expect(getComputedStyle(file).backgroundColor).toBe(rest),
+    );
+    // each bar really draws its own tone: the fill, the trigger text and the open trigger
+    const brand = body.getByRole("menubar", { name: "Brand bar" });
+    const neutral = body.getByRole("menubar", { name: "Neutral bar" });
+    await expect(getComputedStyle(brand).backgroundColor).toBe(
       resolved("backgroundColor", "bg-brand-subtle"),
     );
-    await expect(
-      getComputedStyle(body.getByRole("menubar")).backgroundColor,
-    ).toBe(resolved("backgroundColor", "bg-neutral-subtle"));
+    await expect(getComputedStyle(neutral).backgroundColor).toBe(
+      resolved("backgroundColor", "bg-neutral-subtle"),
+    );
+    const trigger = (bar: HTMLElement, name: string) =>
+      within(bar).getByRole("menuitem", { name });
+    await expect(getComputedStyle(trigger(brand, "File")).color).toBe(
+      resolved("color", "text-brand"),
+    );
+    await expect(getComputedStyle(trigger(neutral, "File")).color).toBe(
+      resolved("color", "text-primary"),
+    );
+    await realClick(trigger(brand, "File"));
+    await openMenu();
+    await expect(getComputedStyle(trigger(brand, "File")).backgroundColor).toBe(
+      resolved("backgroundColor", "bg-brand-subtle-hover"),
+    );
     await closeMenu();
+    await realClick(trigger(neutral, "Edit"));
+    await openMenu();
+    await expect(
+      getComputedStyle(trigger(neutral, "Edit")).backgroundColor,
+    ).toBe(resolved("backgroundColor", "bg-neutral-subtle-hover"));
+    await closeMenu();
+  },
+};
+
+export const OutlinedBarBorderIsSubtle: Story = {
+  name: "An outlined bar's border is the subtle token of its tone",
+  render: () => (
+    <Page>
+      <div
+        style={{
+          display: "grid",
+          gap: "var(--dbm-space-4)",
+          justifyItems: "start",
+        }}
+      >
+        <Menubar aria-label="Brand bar" tone="brand" surface="outlined">
+          <DemoMenus />
+        </Menubar>
+        <Menubar aria-label="Neutral bar" tone="neutral" surface="outlined">
+          <DemoMenus />
+        </Menubar>
+      </div>
+    </Page>
+  ),
+  play: async () => {
+    const border = (name: string) =>
+      getComputedStyle(body.getByRole("menubar", { name })).borderTopColor;
+    await expect(border("Brand bar")).toBe(
+      resolved("backgroundColor", "border-brand-subtle"),
+    );
+    await expect(border("Neutral bar")).toBe(
+      resolved("backgroundColor", "border-neutral-subtle"),
+    );
   },
 };
 

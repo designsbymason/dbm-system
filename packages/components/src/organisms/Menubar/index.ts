@@ -18,5 +18,6 @@ export type {
   MenubarSubProps,
   MenubarSubTriggerProps,
   MenubarSurface,
+  MenubarTone,
   MenubarTriggerProps,
 } from "./Menubar.types";

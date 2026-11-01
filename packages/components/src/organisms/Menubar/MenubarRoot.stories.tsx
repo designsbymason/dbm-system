@@ -49,6 +49,13 @@ const meta: Meta<typeof Menubar> = {
         "How the bar is drawn: ghost (no surface; the triggers sit on the page or on a header), outlined (a bordered bar) or filled (a tinted bar).",
       table: { defaultValue: { summary: '"ghost"' } },
     },
+    tone: {
+      control: "inline-radio",
+      options: ["neutral", "brand"],
+      description:
+        "The colour of the triggers and of the bar's own border and fill: brand (the system's identity colour) or neutral. Every colour is a subtle one. It does not change the menus the bar opens.",
+      table: { defaultValue: { summary: '"brand"' } },
+    },
     loop: {
       control: "boolean",
       description:

@@ -27,7 +27,7 @@ import * as MenubarSubStories from "./MenubarSub.stories";
 import * as MenubarSubTriggerStories from "./MenubarSubTrigger.stories";
 import * as MenubarSubContentStories from "./MenubarSubContent.stories";
 
-export const playgroundOrder = ["size", "surface", "loop", "dir"];
+export const playgroundOrder = ["size", "surface", "tone", "loop", "dir"];
 export const propOrder = [
   "children",
   "value",
@@ -36,6 +36,7 @@ export const propOrder = [
   "onOpenChangeComplete",
   "size",
   "surface",
+  "tone",
   "loop",
   "dir",
   "aria-label",
@@ -327,6 +328,10 @@ A story's menus are closed until you open one.
 
 <Canvas of={MenubarStories.Surfaces} />
 
+### Tones
+
+<Canvas of={MenubarStories.Tones} />
+
 ### Checkbox items, radio items and a submenu
 
 <Canvas of={MenubarStories.CheckboxAndRadioItems} />
@@ -387,6 +392,7 @@ A story's menus are closed until you open one.
   focus that press gave.
 - A bar wider than its container scrolls sideways, with a fade at each end that has more behind it, and keeps the focused
   trigger in view. Prefer fewer, shorter menus to a bar that scrolls.
+- `tone` colours the triggers and, on an `outlined` or `filled` bar, its border and fill, all from subtle tokens: `brand` (the default) suits an application's own chrome, `neutral` a bar that should sit back. It does not change the menus the bar opens, which keep `Menu`'s look.
 - `size` sets the trigger height and the row size of its menus; give a `Menubar.Content` its own `size` only to differ.
 - A menu taller than the room there is scrolls inside its panel, with a fade at each end that has more behind it. The panel flips to
   stay inside the viewport; give it `collisionPadding` where a fixed header or footer covers the edge.
@@ -474,11 +480,11 @@ function AppMenu() {
 
 ## Design tokens used
 
-<TokenRow token="bg.brand-subtle" usage="highlighted item and open submenu trigger background; the open menu's trigger in the bar" />
+<TokenRow token="bg.brand-subtle" usage="highlighted item and open submenu trigger background; with the brand tone, a trigger under the pointer and the filled bar" />
 <TokenRow token="bg.danger-subtle" usage="highlighted danger item background" />
-<TokenRow token="bg.neutral-subtle" usage="a trigger under the pointer, and the tinted (filled) bar" />
+<TokenRow token="bg.neutral-subtle" usage="with the neutral tone, a trigger under the pointer and the filled bar" />
 <TokenRow token="bg.surface" usage="panel background, the colour the scroll fades run out into, and an outlined bar's background" />
-<TokenRow token="border.default" usage="panel border, the separator line and an outlined bar's border" />
+<TokenRow token="border.default" usage="panel border and the separator line" />
 <TokenRow token="border.focus" usage="the keyboard focus ring drawn inside a focused trigger and a focused item" />
 <TokenRow token="border-width.1" usage="panel border and separator width, and an outlined bar's border" />
 <TokenRow token="border-width.2" usage="the keyboard focus ring (inside a trigger and inside an item), and the highlighted item's outline in forced-colours mode" />
@@ -517,9 +523,14 @@ function AppMenu() {
 <TokenRow token="space.6" usage="item and trigger minimum height (the 24px target floor); the height of a scroll fade, in the panel and at the ends of the bar" />
 <TokenRow token="text.danger" usage="danger item text" />
 <TokenRow token="text.disabled" usage="disabled item and disabled trigger text" />
-<TokenRow token="text.primary" usage="item, panel and trigger text" />
+<TokenRow token="text.primary" usage="item and panel text, and trigger text with the neutral tone" />
 <TokenRow token="text.secondary" usage="shortcut hint, item description and label heading text" />
 <TokenRow token="z-index.popover" usage="panel stacking order, above a dialog it is opened from" />
+<TokenRow token="bg.brand-subtle-hover" usage="with the brand tone, the open trigger, and a trigger under the pointer on a filled bar" />
+<TokenRow token="bg.neutral-subtle-hover" usage="with the neutral tone, the open trigger, and a trigger under the pointer on a filled bar" />
+<TokenRow token="border.brand-subtle" usage="with the brand tone, the border of an outlined bar" />
+<TokenRow token="border.neutral-subtle" usage="with the neutral tone, the border of an outlined bar" />
+<TokenRow token="text.brand" usage="with the brand tone, trigger text" />
 
 ## Related components
 
