@@ -2,6 +2,7 @@ import type { Meta, StoryContext, StoryObj } from "@storybook/react-vite";
 import type { Responsive } from "@dbm-system/utils";
 import { expect, userEvent, waitFor, within } from "storybook/test";
 import { Fragment, useRef, useState } from "react";
+import { Button } from "../../atoms/Button";
 import { navigationMenuPlaygroundSnippet, navigationMenuSnippets } from "./NavigationMenu.snippets";
 import type {
   NavigationMenuController,
@@ -392,17 +393,17 @@ export const FromOutside: Story = {
     const [done, setDone] = useState("nothing yet");
     return (
       <MenuStage>
+        <div style={{ display: "flex", gap: "var(--dbm-space-2)", marginBlockEnd: "var(--dbm-space-3)" }}>
+          <Button variant="secondary" size="sm" onClick={() => controller.current?.open("products")}>
+            Open Products
+          </Button>
+          <Button variant="secondary" size="sm" onClick={() => controller.current?.close()}>
+            Close
+          </Button>
+        </div>
         <DemoNavigation {...menuArgs(args)} defaultValue="" controllerRef={controller} onOpenChangeComplete={(open, value) => setDone(`${value} ${open ? "opened" : "closed"}`)}>
           <DemoItems />
         </DemoNavigation>
-        <div style={{ display: "flex", gap: "var(--dbm-space-2)", marginBlockStart: "var(--dbm-space-3)" }}>
-          <button type="button" onClick={() => controller.current?.open("products")}>
-            Open Products
-          </button>
-          <button type="button" onClick={() => controller.current?.close()}>
-            Close
-          </button>
-        </div>
         <p>Finished: {done}</p>
       </MenuStage>
     );
@@ -416,18 +417,18 @@ export const Controlled: Story = {
     const [open, setOpen] = useState("");
     return (
       <MenuStage>
+        <div style={{ display: "flex", gap: "var(--dbm-space-2)", marginBlockEnd: "var(--dbm-space-3)" }}>
+          <Button variant="secondary" size="sm" onClick={() => setOpen("solutions")}>
+            Open Solutions
+          </Button>
+          <Button variant="secondary" size="sm" onClick={() => setOpen("")}>
+            Close
+          </Button>
+        </div>
         <DemoNavigation {...menuArgs(args)} defaultValue={undefined} value={open} onValueChange={setOpen}>
           <DemoItems />
         </DemoNavigation>
         <p style={{ marginBlockStart: "var(--dbm-space-3)" }}>Open item: {open === "" ? "none" : open}</p>
-        <div style={{ display: "flex", gap: "var(--dbm-space-2)" }}>
-          <button type="button" onClick={() => setOpen("solutions")}>
-            Open Solutions
-          </button>
-          <button type="button" onClick={() => setOpen("")}>
-            Close
-          </button>
-        </div>
       </MenuStage>
     );
   },
