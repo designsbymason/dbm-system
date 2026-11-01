@@ -1,0 +1,155 @@
+/* The portal's own box. It is deliberately not positioned, so it makes no stacking context of its own and its children
+   sit on their own z-index steps: the dim and the shield on `overlay`, the card on `popover`. */
+.layer[data-state="open"] {
+  animation: fadeIn var(--dbm-motion-duration-base) var(--dbm-motion-easing-standard);
+}
+
+.layer[data-state="closed"] {
+  animation: fadeOut var(--dbm-motion-duration-base) var(--dbm-motion-easing-standard);
+}
+
+/* Measured, never seen: it covers the same containing block the ring and the card are placed in, so the tour reads
+   positions from its corner. A container that is a containing block for fixed descendants moves that corner. */
+.origin {
+  inset: 0;
+  pointer-events: none;
+  position: fixed;
+  visibility: hidden;
+}
+
+/* Swallows presses on the dimmed page. A step that lets the page be used cuts a hole in it with an inline `clip-path`,
+   and hit-testing follows the clip. A wheel or a touch drag over it still scrolls the page. */
+.shield {
+  inset: 0;
+  position: fixed;
+  z-index: var(--dbm-z-index-overlay);
+}
+
+/* The spotlight. Its box is the element's box plus `--tour-padding`; the page is dimmed by a shadow spread past the
+   edge of the screen, so the corners follow `border-radius` and moving the ring moves the hole. `direction: ltr` and
+   `translate` from the top-left because the position is measured in physical pixels from the layer's corner. */
+.ring {
+  border-radius: var(--dbm-radius-md);
+  box-shadow: 0 0 0 100vmax
+    color-mix(
+      in srgb,
+      var(--dbm-bg-overlay) calc(var(--tour-scrim-opacity, var(--dbm-opacity-60)) * 100%),
+      transparent
+    );
+  box-sizing: content-box;
+  direction: ltr;
+  inset-block-start: 0;
+  inset-inline-start: 0;
+  margin: calc(-1 * var(--tour-padding));
+  padding: var(--tour-padding);
+  pointer-events: none;
+  position: fixed;
+  transition:
+    translate var(--dbm-motion-duration-base) var(--dbm-motion-easing-standard),
+    inline-size var(--dbm-motion-duration-base) var(--dbm-motion-easing-standard),
+    block-size var(--dbm-motion-duration-base) var(--dbm-motion-easing-standard),
+    padding var(--dbm-motion-duration-base) var(--dbm-motion-easing-standard),
+    margin var(--dbm-motion-duration-base) var(--dbm-motion-easing-standard);
+  z-index: var(--dbm-z-index-overlay);
+}
+
+/* The card: the same surface as `Popover`'s panel. `font-family` is set because the layer is portaled outside the app. */
+.card {
+  background-color: var(--dbm-bg-surface);
+  border: var(--dbm-border-width-1) solid var(--dbm-border-default);
+  border-radius: var(--dbm-radius-md);
+  box-shadow: var(--dbm-shadow-light-md);
+  box-sizing: border-box;
+  color: var(--dbm-text-primary);
+  display: flex;
+  flex-direction: column;
+  font-family: var(--dbm-font-family-primary);
+  gap: var(--dbm-space-2);
+  max-inline-size: min(var(--dbm-popover-max-width), var(--radix-popper-available-width, 100%));
+  padding: var(--dbm-space-4);
+  position: relative;
+  z-index: var(--dbm-z-index-popover);
+}
+
+[data-theme$="-dark"] .card {
+  box-shadow: var(--dbm-shadow-dark-md);
+}
+
+/* It takes focus programmatically as a step opens, to be read out; a ring on a box nobody can operate adds nothing. */
+.card:focus {
+  outline: none;
+}
+
+.centered {
+  block-size: fit-content;
+  inline-size: min(var(--dbm-popover-max-width), calc(100% - 2 * var(--dbm-space-4)));
+  inset: 0;
+  margin: auto;
+  position: fixed;
+}
+
+.docked {
+  inline-size: auto;
+  inset-block-end: var(--dbm-space-4);
+  inset-inline: var(--dbm-space-4);
+  max-inline-size: none;
+  position: fixed;
+}
+
+.progress {
+  margin: 0;
+}
+
+.title {
+  margin: 0;
+}
+
+.content {
+  margin: 0;
+}
+
+.actions {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--dbm-space-2);
+  margin-block-start: var(--dbm-space-2);
+}
+
+.spacer {
+  flex: 1;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: var(--dbm-opacity-0);
+  }
+
+  to {
+    opacity: var(--dbm-opacity-100);
+  }
+}
+
+@keyframes fadeOut {
+  from {
+    opacity: var(--dbm-opacity-100);
+  }
+
+  to {
+    opacity: var(--dbm-opacity-0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ring {
+    transition: none;
+  }
+}
+
+/* Forced colours drops a shadow, so the dim is gone: the element is told from the page by an outline in a system colour. */
+@media (forced-colors: active) {
+  .ring {
+    box-shadow: none;
+    outline: var(--dbm-border-width-2) solid Highlight;
+  }
+}

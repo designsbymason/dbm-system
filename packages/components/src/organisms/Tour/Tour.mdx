@@ -1,0 +1,301 @@
+import { Canvas, Meta } from "@storybook/addon-docs/blocks";
+import { Callout, ComponentHeader, FieldsTable, PlaygroundControls, PropertiesTable, RelatedCard, TokenRow } from "../../../.storybook/blocks";
+import { Button } from "../../atoms/Button";
+import { VisuallyHidden } from "../../atoms/VisuallyHidden";
+import { Popover } from "../../molecules/Popover";
+import { Dialog } from "../Dialog";
+import { Stepper } from "../Stepper";
+import * as TourStories from "./Tour.stories";
+
+export const propOrder = [
+  "steps",
+  "open",
+  "defaultOpen",
+  "onOpenChange",
+  "value",
+  "defaultValue",
+  "onValueChange",
+  "presentation",
+  "progress",
+  "scrimOpacity",
+  "closeOnOutsidePress",
+  "targetTimeout",
+  "onTargetMissing",
+  "dir",
+  "labels",
+  "formatNumber",
+  "container",
+  "controllerRef",
+  "aria-label",
+  "aria-labelledby",
+  "aria-describedby",
+  "className",
+  "style",
+  "id",
+  "data-testid",
+];
+
+export const stepFields = [
+  { name: "id", required: true, description: "A name for the step, unique among the steps. It is the tour's `value`." },
+  { name: "title", required: true, description: "The step's heading, and the card's name." },
+  { name: "target", description: "The element to highlight: a CSS selector, an element, a ref or a function that returns one. Leave it out for a card in the middle of the screen." },
+  { name: "content", description: "The step's text, shown under the title. It may hold links, images or a field." },
+  { name: "textValue", description: "The plain-text form of `title`, for the announcement and the card's name when `title` is not a string." },
+  { name: "side", options: ["top", "bottom", "start", "end"], description: "Which side of the element the card sits on. It flips when there is no room. `start` and `end` follow `dir`.", defaultValue: '"bottom"' },
+  { name: "align", options: ["start", "center", "end"], description: "Alignment of the card along that side.", defaultValue: '"center"' },
+  { name: "padding", options: ["0", "1", "2", "3", "4", "5", "6", "8", "10", "12", "16", "20", "24", "32"], description: "Room between the element and the edge of the spotlight, a step on the spacing scale.", defaultValue: "2" },
+  { name: "interactive", description: "Whether the person can use the highlighted element while the tour is open.", defaultValue: "false" },
+  { name: "labels", description: "This step's own button text (`next`, `back`, `skip`, `finish`), over the tour's `labels`." },
+];
+
+<Meta of={TourStories} />
+
+<VisuallyHidden asChild><h2>Intro</h2></VisuallyHidden>
+
+<ComponentHeader title="Tour" tier="Organism" />
+
+A tour walks a person through a page that is already on screen, one element at a time: it dims everything except the
+element a step is about (the spotlight), and puts a card beside it with the step's heading and text and the buttons to go
+back, go on or skip. Use it to show someone a new feature or a first-run layout, where telling them where things are is
+worth more than a help page.
+
+The steps are data: `steps` is an array, each step an `id`, an optional `target` (the element to highlight), a `title` and some
+`content`. The step showing is the tour's `value` (an id), controlled or not. A tour has no button of its own: it opens from code,
+by `open`, or from anywhere on the page through `controllerRef`, and it reports how it ended (finished, skipped, escaped) to
+`onOpenChange`, which is where an app remembers that a person has seen it. A step with no `target` is a card in the middle of the
+screen, for a welcome or a goodbye, and so is a step whose element never turns up.
+
+While it is open the dimmed page can't be pressed (a step marked `interactive` leaves a hole over its element so the person can
+use it), the page can still be scrolled, and the keyboard stays inside the card. On a phone, `presentation="docked"` pins the card
+across the bottom of the screen, since there is nowhere beside a full-width element for a card to go.
+
+### Import
+
+```tsx
+import { Tour } from "@dbm-system/components";
+```
+
+## Playground
+
+<div className="dbm-playground-canvas">
+
+<Canvas of={TourStories.Playground} />
+
+</div>
+<PlaygroundControls of={TourStories.Playground} order={propOrder} exclude={["steps", "open", "defaultOpen", "onOpenChange", "value", "defaultValue", "onValueChange", "onTargetMissing", "container", "labels", "formatNumber", "controllerRef", "aria-labelledby", "aria-describedby", "className", "style", "id", "data-testid"]} />
+
+Every demo on this page draws its tour inside the box above it, so the dimmed layer covers the box and not the page; in your app
+the tour covers the screen. Each starts closed: press **Start the tour**.
+
+## Properties
+
+`ref`, `className`, `style`, `id` and `data-testid` go on the card, the element with `role="dialog"`. The tour draws nothing else
+that takes props. Also accepts any other native `<div>` attribute beyond what's listed here (e.g. `title`, `lang`): it is
+passed straight through to the card.
+
+<PropertiesTable of={TourStories} order={propOrder} />
+
+A step is an object, not a component, so its fields have a table of their own, in the same style:
+
+<FieldsTable rows={stepFields} />
+
+`onOpenChange(open, { reason, stepId })` is told why the tour changed: `"finish"` (Finish on the last step), `"skip"`,
+`"escape"`, `"outside"` (the dimmed page was pressed, with `closeOnOutsidePress`) or `"controller"`. Closing an uncontrolled tour
+puts it back at its first step, so opening it again starts over.
+
+`controllerRef` receives `{ isOpen, value, open(stepId?), close(), next(), back(), goTo(stepId) }`: the same object for the tour's
+life, whose methods ask for a change the way the card's buttons do and return whether there was anything to do. `labels` holds the
+text the tour writes itself (`next`, `back`, `skip`, `finish`, `stepOf`, `announcement`, `dialog`), and the numbers it shows go
+through `formatNumber`.
+
+## Variants
+
+### Docked, for a phone
+
+<Canvas of={TourStories.Docked} />
+
+### A step the person can use
+
+<Canvas of={TourStories.InteractiveStep} />
+
+### Cards with no element
+
+<Canvas of={TourStories.WithoutElements} />
+
+### Controlled
+
+<Canvas of={TourStories.Controlled} />
+
+### Opened and moved from a controller
+
+<Canvas of={TourStories.WithController} />
+
+### Shown once
+
+<Canvas of={TourStories.SeenOnce} />
+
+### Translated text
+
+<Canvas of={TourStories.Translated} />
+
+### Right-to-left
+
+<Canvas of={TourStories.RightToLeft} />
+
+## Usage guidelines
+
+<div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(16rem, 1fr))", gap: "var(--dbm-space-4)" }}>
+<Callout tone="success" title="Do">
+
+- Use it to introduce a page's layout or a new feature, in about three to six steps, each about one element.
+- Give each step a short title and one or two sentences of text. Say what the element is for, not what it looks like.
+- Open it from a first visit or a "Take the tour" link, and remember that it was finished or skipped (see Code examples).
+- Give a step with a hidden or late element a `targetTimeout`, and leave out the `target` for a welcome or closing card.
+- Mark a step `interactive` only when the point is for the person to try the element.
+
+</Callout>
+<Callout tone="danger" title="Don't">
+
+- Don't use it for a flow a person has to complete in order — that is `Stepper`.
+- Don't use it for a message about one control that can sit beside it — that is `Popover`, or `Tooltip` for a short hint.
+- Don't start it on top of a modal `Dialog`: the dialog keeps the page outside it out of reach, and the dim sits under it.
+- Don't make it the only place a feature is explained: it can be skipped, and a person who skips it should still find the feature.
+- Don't start it again on every visit.
+
+</Callout>
+</div>
+
+## Best practices
+
+- **Say where it ends.** The card shows "Step 2 of 5" so a person knows how long it is, and the last step says Finish. Keep the count small.
+- **Make a person's way out obvious.** Skip is on every step but the last, and Escape closes the tour. Don't remove either.
+- **Point at things that stay put.** A step whose element isn't on the page yet waits up to `targetTimeout`, then shows its card in the middle of the screen; handle `onTargetMissing` if a missing step should be skipped instead.
+- **Dock the card on a phone.** `presentation={{ base: "docked", md: "anchored" }}` keeps the card out of the way of a full-width element.
+- **Keep the page the same.** The tour doesn't change the page, so if a step needs a menu open or a tab selected, do it in `onValueChange` before the step's element is looked for.
+
+## Accessibility
+
+<Callout tone="info" title="A dialog named by the step's title, with focus held inside it, and the step announced when it changes">
+
+The card is a `role="dialog"` named by the step's title and described by its text. It is not `aria-modal`, and the page behind is
+not hidden: the tour is a guide to the page, so a screen-reader user can still read the element it points at. Focus moves to the card
+when the tour opens, stays inside it (Tab and Shift+Tab loop through Skip, Back and Next), and returns to what opened the tour when it
+closes. Pressing Next or Back keeps focus on that button, and when Back disappears on the first step focus moves to Next. When the step
+changes, a polite live region announces "Step 3 of 5: Title", a change and never the first appearance. The dimmed page is out of
+reach of a pointer, not of assistive technology; a step marked `interactive` also lets the keyboard reach its element, by Tab from
+the card's last button.
+
+| Key | Behaviour |
+|---|---|
+| `Tab` / `Shift+Tab` | Move between Skip, Back and Next, and loop inside the card (on an `interactive` step, Tab from Next goes into the element) |
+| `Enter` / `Space` | Press the focused button |
+| `ArrowRight` / `ArrowLeft` | Next and Back, mirrored in right-to-left; not while a field in the step's own text has focus, and not on an `interactive` step |
+| `Escape` | Closes the tour, reported with the reason `"escape"` |
+
+Every control is at least 24 × 24 CSS pixels. The spotlight and card animate unless the person prefers reduced motion, when they
+move without easing and the page scrolls without smoothing. In forced-colours mode the dim is gone, since a shadow is not drawn, and
+the element is told from the page by an outline in the system highlight colour.
+
+</Callout>
+
+## Code examples
+
+```tsx
+{/* A tour that opens by itself on a first visit and is remembered */}
+const { ready, dismissed, dismiss } = usePersistentDismiss("product-tour");
+
+<Tour
+  open={ready && !dismissed}
+  onOpenChange={(open, { reason }) => {
+    if (!open && (reason === "finish" || reason === "skip")) dismiss();
+  }}
+  steps={[
+    { id: "search", target: "#search", title: "Search", content: "Find anything from here." },
+    { id: "done", title: "You're set", content: "Start the tour again from Help." },
+  ]}
+/>
+```
+
+```tsx
+{/* A "Take the tour" button, through the controller */}
+const tour = useRef<TourController | null>(null);
+
+<Button onClick={() => tour.current?.open()}>Take the tour</Button>
+<Tour controllerRef={tour} steps={steps} />
+```
+
+```tsx
+{/* A step that opens a menu first, then points at it: do it when the step is chosen */}
+<Tour
+  open={open}
+  onOpenChange={setOpen}
+  onValueChange={(id) => id === "profile" && setMenuOpen(true)}
+  targetTimeout={1500}
+  steps={steps}
+/>
+```
+
+```tsx
+{/* A native <div> attribute on the card, and the tour drawn into your own container */}
+<Tour lang="de" title="Produkttour" container={appRoot} steps={steps} />
+```
+
+## Design tokens used
+
+<TokenRow token="bg.overlay" usage="the dimmed page around the spotlight, at the scrim's opacity" />
+<TokenRow token="opacity.60" usage="how dark the dimmed page is, until scrimOpacity says otherwise" />
+<TokenRow token="bg.surface" usage="the card's background, and the arrow's fill" />
+<TokenRow token="border.default" usage="the card's border, and the arrow's stroke" />
+<TokenRow token="text.primary" usage="the card's text" />
+<TokenRow token="border-width.1" usage="the card's border" />
+<TokenRow token="border-width.2" usage="the spotlight's outline in forced colours" />
+<TokenRow token="radius.md" usage="the card's corners and the spotlight's" />
+<TokenRow token="shadow.light-md" usage="the card's elevation in a light theme" />
+<TokenRow token="shadow.dark-md" usage="the card's elevation in a dark theme" />
+<TokenRow token="font-family.primary" usage="the card's typography, set because the card is drawn outside the app" />
+<TokenRow token="popover.max-width" usage="the widest the card grows" />
+<TokenRow token="space.2" usage="the gap between the card's parts, and its buttons" />
+<TokenRow token="space.4" usage="the card's padding; its inset from the screen when docked or centred" />
+<TokenRow token="z-index.overlay" usage="the dimmed page and the layer that blocks presses" />
+<TokenRow token="z-index.popover" usage="the card, above the dimmed page and above a modal dialog" />
+<TokenRow token="motion.duration.base" usage="the tour fading in and out, and the spotlight moving between steps" />
+<TokenRow token="motion.easing.standard" usage="the same" />
+<TokenRow token="opacity.0" usage="the start and end of the fades" />
+<TokenRow token="opacity.100" usage="the end of the fades" />
+
+A step's `padding` is a step on the spacing scale (`space.0` to `space.32`), read as the matching `--dbm-space-*` token.
+
+## Related components
+
+<div className="dbm-card-grid">
+<RelatedCard
+  name="Popover"
+  description="A panel beside one control that the person opens, rather than a sequence the page walks through"
+  href="/?path=/docs/molecules-overlay-popover--docs"
+>
+  <Popover>
+    <Popover.Trigger asChild>
+      <Button variant="secondary" size="sm">Open</Button>
+    </Popover.Trigger>
+    <Popover.Content aria-label="Example">Content</Popover.Content>
+  </Popover>
+</RelatedCard>
+<RelatedCard
+  name="Dialog"
+  description="A window that interrupts the page for focused work, with the page behind it out of reach"
+  href="/?path=/docs/organisms-overlay-dialog--docs"
+>
+  <Button variant="secondary" size="sm">Open dialog</Button>
+</RelatedCard>
+<RelatedCard
+  name="Stepper"
+  description="Shows where someone is in a flow they work through in order, instead of pointing at the page"
+  href="/?path=/docs/organisms-navigation-stepper--docs"
+>
+  <Stepper defaultValue="b" size="xs" showLabels={false} aria-label="Example">
+    <Stepper.Step value="a" title="One" />
+    <Stepper.Step value="b" title="Two" />
+    <Stepper.Step value="c" title="Three" />
+  </Stepper>
+</RelatedCard>
+</div>

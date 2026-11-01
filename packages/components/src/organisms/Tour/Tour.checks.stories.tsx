@@ -1,0 +1,448 @@
+import type { Meta, StoryObj } from "@storybook/react-vite";
+import { useState } from "react";
+import { expect, userEvent, waitFor, within } from "storybook/test";
+import { Button } from "../../atoms/Button";
+import { send } from "../../molecules/CodeBlock/browserProtocol";
+import { Tour } from "./Tour";
+import type { TourStep } from "./Tour.types";
+import { Demo, interactiveSteps } from "./TourStoryKit";
+
+// Real-browser checks for what jsdom can't evaluate: where the spotlight and the card are drawn, what a real press reaches,
+// scrolling, the keyboard loop, forced colours and reduced motion. Hidden from the sidebar and the Docs page, and still run as
+// tests (07 §4.2, guidelines/adr/0013).
+const meta: Meta = {
+  title: "Organisms/Overlay/Tour/Checks",
+  tags: ["!dev"],
+  parameters: { layout: "padded" },
+};
+
+export default meta;
+
+type Story = StoryObj;
+
+const body = within(document.body);
+const nextFrame = () => new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
+const sleep = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms));
+
+const layerOf = () => document.querySelector<HTMLElement>('[class*="_layer_"]');
+const ringOf = () => document.querySelector<HTMLElement>('[class*="_ring_"]');
+const shieldOf = () => document.querySelector<HTMLElement>('[class*="_shield_"]');
+const demoElement = (name: string) => document.querySelector<HTMLElement>(`[data-demo="${name}"]`) as HTMLElement;
+
+// Everything is measured once the spotlight has finished moving and has been still for a few frames: its box is read from the
+// page every frame, so it is the last thing to settle after a layout change.
+const settled = async () => {
+  await nextFrame();
+  const key = () => {
+    const ring = ringOf();
+    const box = ring?.getBoundingClientRect();
+    return box ? `${box.left},${box.top},${box.width},${box.height}` : "";
+  };
+  let last = key();
+  let still = 0;
+  for (let frame = 0; frame < 120 && still < 4; frame += 1) {
+    await nextFrame();
+    const now = key();
+    still = now === last ? still + 1 : 0;
+    last = now;
+  }
+};
+
+const startTour = async () => {
+  await document.fonts.ready;
+  await userEvent.click(await body.findByTestId("start-tour"));
+  const dialog = await body.findByRole("dialog");
+  await waitFor(() => expect(dialog).toHaveAttribute("data-placement"));
+  await settled();
+  return dialog;
+};
+
+// A tour opened by a check closes, and is gone, before the check ends: the accessibility run that follows every story would
+// otherwise see it still fading out with the page behind it covered.
+const closeWithEscape = async () => {
+  await userEvent.keyboard("{Escape}");
+  await waitFor(() => expect(body.queryByRole("dialog")).toBeNull());
+  await waitFor(() => expect(layerOf()).toBeNull());
+};
+
+// The test page scales its iframe, so a point inside the story is mapped to the page it is drawn on.
+function pagePoint(clientX: number, clientY: number) {
+  const frame = window.frameElement?.getBoundingClientRect();
+  const scale = frame ? frame.width / window.innerWidth : 1;
+  return { x: (frame?.left ?? 0) + clientX * scale, y: (frame?.top ?? 0) + clientY * scale };
+}
+
+async function realMouse(type: "mouseMoved" | "mousePressed" | "mouseReleased" | "mouseWheel", clientX: number, clientY: number, extra: Record<string, unknown> = {}) {
+  const { x, y } = pagePoint(clientX, clientY);
+  await send("Input.dispatchMouseEvent", { type, x, y, ...extra });
+}
+
+async function realClickAt(clientX: number, clientY: number) {
+  await realMouse("mouseMoved", clientX, clientY);
+  await realMouse("mousePressed", clientX, clientY, { button: "left", clickCount: 1 });
+  await realMouse("mouseReleased", clientX, clientY, { button: "left", clickCount: 1 });
+}
+
+const centreOf = (element: Element) => {
+  const rect = element.getBoundingClientRect();
+  return { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 };
+};
+
+const emulate = (feature: string, value: string) => send("Emulation.setEmulatedMedia", { features: [{ name: feature, value }] });
+// Puts the browser's own preferences back. The test browser is shared by every file in a run, so an override left behind, even one
+// that restates the default, is another check's to meet; clearing is not the same as setting the value back.
+const clearEmulation = () => send("Emulation.setEmulatedMedia", { features: [] });
+
+const close = (a: number, b: number, tolerance = 1) => Math.abs(a - b) <= tolerance;
+
+/** A button behind the dimmed page, counting what reaches it. */
+function Behind({ onPress }: { onPress: () => void }) {
+  return (
+    <div style={{ position: "absolute", insetBlockEnd: "var(--dbm-space-4)", insetInlineStart: "var(--dbm-space-4)" }}>
+      <Button size="xs" data-testid="behind" onClick={onPress}>
+        Behind
+      </Button>
+    </div>
+  );
+}
+
+function Counting({ interactive = false }: { interactive?: boolean }) {
+  const [count, setCount] = useState(0);
+  return (
+    <>
+      <p data-testid="count">{count}</p>
+      <Demo steps={interactive ? interactiveSteps : undefined}>
+        <Behind onPress={() => setCount((value) => value + 1)} />
+      </Demo>
+    </>
+  );
+}
+
+export const SpotlightIsTheElementPlusItsPadding: Story = {
+  name: "The spotlight is the element's box plus the padding, inside a transformed container",
+  render: () => <Demo />,
+  play: async () => {
+    await startTour();
+    const ring = ringOf() as HTMLElement;
+    const element = demoElement("search").getBoundingClientRect();
+    const padding = parseFloat(getComputedStyle(ring).paddingLeft);
+    await expect(padding).toBeGreaterThan(0);
+    const box = ring.getBoundingClientRect();
+    await expect(Math.abs(box.left - (element.left - padding))).toBeLessThanOrEqual(1);
+    await expect(Math.abs(box.top - (element.top - padding))).toBeLessThanOrEqual(1);
+    await expect(Math.abs(box.width - (element.width + 2 * padding))).toBeLessThanOrEqual(1);
+    await expect(Math.abs(box.height - (element.height + 2 * padding))).toBeLessThanOrEqual(1);
+    await closeWithEscape();
+  },
+};
+
+export const CardClearsTheElementAndStaysInTheStage: Story = {
+  name: "The card sits clear of the spotlight, inside the stage, and over the dimmed layers",
+  render: () => <Demo />,
+  play: async () => {
+    const dialog = await startTour();
+    const card = dialog.getBoundingClientRect();
+    const ring = (ringOf() as HTMLElement).getBoundingClientRect();
+    const stage = (await body.findByTestId("stage")).getBoundingClientRect();
+    await expect(card.top).toBeGreaterThanOrEqual(ring.bottom);
+    await expect(card.left).toBeGreaterThanOrEqual(stage.left);
+    await expect(card.right).toBeLessThanOrEqual(stage.right + 1);
+    const top = document.elementFromPoint(card.left + card.width / 2, card.top + card.height / 2);
+    await expect(dialog.contains(top)).toBe(true);
+    await expect(Number(getComputedStyle(dialog).zIndex)).toBeGreaterThan(Number(getComputedStyle(shieldOf() as HTMLElement).zIndex));
+    await closeWithEscape();
+  },
+};
+
+export const ARealPressOnTheDimmedPageDoesNotReachIt: Story = {
+  name: "A real press on the dimmed page never reaches the page behind it",
+  render: () => <Counting />,
+  play: async () => {
+    await startTour();
+    const { x, y } = centreOf(await body.findByTestId("behind"));
+    await expect(document.elementFromPoint(x, y)).toBe(shieldOf());
+    await realClickAt(x, y);
+    await sleep(100);
+    await expect((await body.findByTestId("count")).textContent).toBe("0");
+    await expect(body.queryByRole("dialog")).not.toBeNull();
+    await closeWithEscape();
+    await expect(document.elementFromPoint(x, y)?.textContent).toBe("Behind");
+    await realClickAt(x, y);
+    await waitFor(async () => expect((await body.findByTestId("count")).textContent).toBe("1"));
+  },
+};
+
+export const AnInteractiveStepLetsAPressThrough: Story = {
+  name: "A real press inside an interactive step's spotlight reaches the element, and outside it does not",
+  render: () => <Counting interactive />,
+  play: async () => {
+    const dialog = await startTour();
+    const field = body.getByRole("textbox", { name: "Search" });
+    await expect(dialog).toHaveAttribute("data-interactive");
+    const { x, y } = centreOf(field);
+    await expect(document.elementFromPoint(x, y)).toBe(field);
+    await realClickAt(x, y);
+    await expect(document.activeElement).toBe(field);
+    await userEvent.keyboard("hello");
+    await expect((field as HTMLInputElement).value).toBe("hello");
+    const behind = centreOf(await body.findByTestId("behind"));
+    await realClickAt(behind.x, behind.y);
+    await sleep(100);
+    await expect((await body.findByTestId("count")).textContent).toBe("0");
+    await closeWithEscape();
+  },
+};
+
+export const TabStaysInsideTheCard: Story = {
+  name: "Tab and Shift+Tab loop inside the card and never reach the page behind",
+  render: () => (
+    <>
+      <Button data-testid="before">Before</Button>
+      <Demo />
+      <Button data-testid="after">After</Button>
+    </>
+  ),
+  play: async () => {
+    const dialog = await startTour();
+    const stops = () => within(dialog).getAllByRole("button");
+    await expect(stops().map((button) => button.textContent)).toEqual(["Skip tour", "Next"]);
+    for (let press = 0; press < 5; press += 1) {
+      await userEvent.tab();
+      await expect(dialog.contains(document.activeElement)).toBe(true);
+    }
+    for (let press = 0; press < 5; press += 1) {
+      await userEvent.tab({ shift: true });
+      await expect(dialog.contains(document.activeElement)).toBe(true);
+    }
+    await closeWithEscape();
+  },
+};
+
+export const FocusFollowsThePressedControl: Story = {
+  name: "Focus stays on Next across steps by keyboard, and moves to Next when Back goes",
+  render: () => <Demo />,
+  play: async () => {
+    const dialog = await startTour();
+    await expect(dialog).toHaveFocus();
+    while (document.activeElement !== within(dialog).getByRole("button", { name: "Next" })) await userEvent.tab();
+    await userEvent.keyboard("{Enter}");
+    await waitFor(() => expect(body.getByRole("dialog")).toHaveAccessibleName("Start something new"));
+    await waitFor(() => expect(body.getByRole("button", { name: "Next" })).toHaveFocus());
+    await userEvent.tab({ shift: true });
+    await expect(body.getByRole("button", { name: "Back" })).toHaveFocus();
+    await userEvent.keyboard("{Enter}");
+    await waitFor(() => expect(body.getByRole("dialog")).toHaveAccessibleName("Search"));
+    await waitFor(() => expect(body.getByRole("button", { name: "Next" })).toHaveFocus());
+    await closeWithEscape();
+  },
+};
+
+export const EscapeGivesFocusBack: Story = {
+  name: "Escape closes the tour and gives focus back to the button that opened it",
+  render: () => <Demo />,
+  play: async () => {
+    await startTour();
+    await closeWithEscape();
+    await waitFor(() => expect(body.getByTestId("start-tour")).toHaveFocus());
+  },
+};
+
+export const ARealPressOnNextChangesTheStep: Story = {
+  name: "A real mouse press on Next moves the spotlight, which eases to the next element",
+  render: () => <Demo />,
+  play: async () => {
+    const dialog = await startTour();
+    const before = (ringOf() as HTMLElement).getBoundingClientRect();
+    const { x, y } = centreOf(within(dialog).getByRole("button", { name: "Next" }));
+    await realClickAt(x, y);
+    await waitFor(() => expect(body.getByRole("dialog")).toHaveAccessibleName("Start something new"));
+    await waitFor(() => expect(body.getByRole("dialog")).toHaveAttribute("data-placement", "anchored"));
+    await settled();
+    const element = demoElement("create").getBoundingClientRect();
+    const ring = (ringOf() as HTMLElement).getBoundingClientRect();
+    await expect(ring.left).not.toBe(before.left);
+    await expect(ring.left).toBeLessThanOrEqual(element.left);
+    await expect(ring.right).toBeGreaterThanOrEqual(element.right);
+    await closeWithEscape();
+  },
+};
+
+export const ACardWithNoElementIsInTheMiddle: Story = {
+  name: "A step with no element is a card in the middle of the stage and dims all of it",
+  render: () => <Demo defaultValue="done" />,
+  play: async () => {
+    const dialog = await startTour();
+    await expect(dialog).toHaveAttribute("data-placement", "centered");
+    const stage = (await body.findByTestId("stage")).getBoundingClientRect();
+    const card = dialog.getBoundingClientRect();
+    await expect(close(card.left + card.width / 2, stage.left + stage.width / 2, 2)).toBe(true);
+    await expect(close(card.top + card.height / 2, stage.top + stage.height / 2, 2)).toBe(true);
+    await closeWithEscape();
+  },
+};
+
+export const DockedCardSpansTheBottomAndLeavesTheElementClear: Story = {
+  name: "A docked card spans the bottom of the stage and the element is scrolled clear of it",
+  render: () => <Demo presentation="docked" />,
+  play: async () => {
+    const dialog = await startTour();
+    await expect(dialog).toHaveAttribute("data-placement", "docked");
+    const stage = (await body.findByTestId("stage")).getBoundingClientRect();
+    const card = dialog.getBoundingClientRect();
+    await expect(card.bottom).toBeLessThanOrEqual(stage.bottom);
+    await expect(card.width).toBeGreaterThan(stage.width * 0.8);
+    await expect(card.top).toBeGreaterThanOrEqual(demoElement("search").getBoundingClientRect().bottom);
+    await closeWithEscape();
+  },
+};
+
+function ScrollingPage() {
+  return (
+    <div>
+      <div data-testid="tall" style={{ blockSize: "180vh", paddingBlockStart: "70vh" }}>
+        <Button data-demo="far">Far down</Button>
+      </div>
+      <Tour
+        defaultOpen
+        steps={[{ id: "far", target: () => document.querySelector<HTMLElement>('[data-demo="far"]'), title: "Far down" }]}
+      />
+    </div>
+  );
+}
+
+export const TheSpotlightFollowsARealWheelScroll: Story = {
+  name: "A real wheel over the dimmed page scrolls the page and the spotlight stays on its element",
+  parameters: { layout: "fullscreen" },
+  render: () => <ScrollingPage />,
+  play: async () => {
+    const dialog = await body.findByRole("dialog");
+    await waitFor(() => expect(dialog).toHaveAttribute("data-placement", "anchored"));
+    await settled();
+    const element = demoElement("far");
+    const before = window.scrollY;
+    await realMouse("mouseWheel", 40, 40, { deltaX: 0, deltaY: 120 });
+    await waitFor(() => expect(window.scrollY).not.toBe(before));
+    await settled();
+    const box = (ringOf() as HTMLElement).getBoundingClientRect();
+    const padding = parseFloat(getComputedStyle(ringOf() as HTMLElement).paddingLeft);
+    await expect(close(box.top, element.getBoundingClientRect().top - padding)).toBe(true);
+    await userEvent.keyboard("{Escape}");
+    await waitFor(() => expect(body.queryByRole("dialog")).toBeNull());
+  },
+};
+
+function InnerScroller() {
+  const steps: TourStep[] = [
+    { id: "deep", target: () => document.querySelector<HTMLElement>('[data-demo="deep"]'), title: "Deep in the list" },
+  ];
+  return (
+    <div style={{ position: "relative", transform: "translateZ(0)", overflow: "hidden", blockSize: "20rem" }} data-testid="stage">
+      <div data-testid="scroller" style={{ blockSize: "8rem", overflow: "auto" }}>
+        <div style={{ blockSize: "30rem", paddingBlockStart: "20rem" }}>
+          <Button data-demo="deep">Deep</Button>
+        </div>
+      </div>
+      <Tour defaultOpen steps={steps} />
+    </div>
+  );
+}
+
+export const AnElementInAScrollingBoxIsBroughtIntoView: Story = {
+  name: "An element inside a scrolling box is scrolled into that box, and the spotlight follows it",
+  render: () => <InnerScroller />,
+  play: async () => {
+    const dialog = await body.findByRole("dialog");
+    await waitFor(() => expect(dialog).toHaveAttribute("data-placement", "anchored"));
+    await waitFor(async () => expect((await body.findByTestId("scroller")).scrollTop).toBeGreaterThan(0));
+    await sleep(600);
+    await settled();
+    const scroller = (await body.findByTestId("scroller")).getBoundingClientRect();
+    const element = demoElement("deep").getBoundingClientRect();
+    await expect(element.top).toBeGreaterThanOrEqual(scroller.top - 1);
+    await expect(element.bottom).toBeLessThanOrEqual(scroller.bottom + 1);
+    const ring = (ringOf() as HTMLElement).getBoundingClientRect();
+    const padding = parseFloat(getComputedStyle(ringOf() as HTMLElement).paddingLeft);
+    await expect(close(ring.top, element.top - padding)).toBe(true);
+    await userEvent.keyboard("{Escape}");
+    await waitFor(() => expect(body.queryByRole("dialog")).toBeNull());
+  },
+};
+
+export const RightToLeftPlacesTheCardOnTheStartSide: Story = {
+  name: "In right-to-left, side start is the right of the element and the arrow keys are mirrored",
+  render: () => (
+    <div dir="rtl">
+      <Demo
+        dir="rtl"
+        steps={(find) => [
+          { id: "create", target: () => find("create"), title: "Create", side: "start" },
+          { id: "status", target: () => find("status"), title: "Status", side: "bottom" },
+        ]}
+      />
+    </div>
+  ),
+  play: async () => {
+    const dialog = await startTour();
+    const element = demoElement("create").getBoundingClientRect();
+    await expect(dialog.getBoundingClientRect().left).toBeGreaterThanOrEqual(element.right);
+    await userEvent.keyboard("{ArrowLeft}");
+    await waitFor(() => expect(body.getByRole("dialog")).toHaveAccessibleName("Status"));
+    await userEvent.keyboard("{ArrowRight}");
+    await waitFor(() => expect(body.getByRole("dialog")).toHaveAccessibleName("Create"));
+    await closeWithEscape();
+  },
+};
+
+export const InForcedColoursTheSpotlightIsOutlined: Story = {
+  name: "In forced colours the dim is gone and the element is told by an outline in a system colour",
+  render: () => <Demo />,
+  play: async () => {
+    await startTour();
+    const ring = ringOf() as HTMLElement;
+    await expect(getComputedStyle(ring).boxShadow).not.toBe("none");
+    await emulate("forced-colors", "active");
+    try {
+      await sleep(300);
+      await expect(window.matchMedia("(forced-colors: active)").matches).toBe(true);
+      await expect(getComputedStyle(ring).boxShadow).toBe("none");
+      await expect(getComputedStyle(ring).outlineStyle).toBe("solid");
+      await expect(parseFloat(getComputedStyle(ring).outlineWidth)).toBeGreaterThan(0);
+    } finally {
+      await clearEmulation();
+    }
+    await closeWithEscape();
+  },
+};
+
+export const UnderReducedMotionTheSpotlightJumps: Story = {
+  name: "Under reduced motion the spotlight moves without easing",
+  render: () => <Demo />,
+  play: async () => {
+    await startTour();
+    const ring = ringOf() as HTMLElement;
+    await expect(getComputedStyle(ring).transitionDuration).not.toBe("0s");
+    await emulate("prefers-reduced-motion", "reduce");
+    try {
+      await sleep(300);
+      await expect(window.matchMedia("(prefers-reduced-motion: reduce)").matches).toBe(true);
+      await expect(getComputedStyle(ring).transitionDuration).toBe("0s");
+    } finally {
+      await clearEmulation();
+    }
+    await closeWithEscape();
+  },
+};
+
+export const EveryControlIsAtLeast24Pixels: Story = {
+  name: "Every control on the card is at least 24 by 24 CSS pixels",
+  render: () => <Demo />,
+  play: async () => {
+    const dialog = await startTour();
+    for (const button of within(dialog).getAllByRole("button")) {
+      const rect = button.getBoundingClientRect();
+      await expect(rect.width).toBeGreaterThanOrEqual(24);
+      await expect(rect.height).toBeGreaterThanOrEqual(24);
+    }
+    await closeWithEscape();
+  },
+};
