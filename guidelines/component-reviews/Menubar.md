@@ -1,6 +1,6 @@
 # Menubar — review findings
 
-**Status:** built 2026-11-01 with the `06-engineering-standards.md` §9 checklist applied as it was written; awaiting the maintainer's Finalized declaration and the final review pass.
+**Status:** Finalized 2026-11-01, declared by the maintainer after the final review pass below. Built the same day with the `06-engineering-standards.md` §9 checklist applied as it was written. Open at finalization: the items under "Not verified" (a real touch device, a screen reader, Safari and Firefox, Windows high contrast on a real machine).
 
 ## What was built
 

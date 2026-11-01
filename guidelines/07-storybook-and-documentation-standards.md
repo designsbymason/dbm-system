@@ -280,7 +280,7 @@ Foundational components first (prove the template before mass-applying it), then
 | DataTable | Organism | Data Display | ✅ | ✅ 2026-10-17 | [DataTable.md](component-reviews/DataTable.md) |
 | Navbar | Organism | Navigation | ✅ | ✅ 2026-10-19 (built-in link badge made solid brand 2026-10-19; re-verified: design quality, theming, Docs, tests; a group menu's current item changed from a start-edge bar to a tint 2026-11-01, re-verified: design quality, theming, forced colours, tests) | [Navbar.md](component-reviews/Navbar.md) |
 | NavigationMenu | Organism | Navigation | ✅ | ✅ 2026-11-01 | [NavigationMenu.md](component-reviews/NavigationMenu.md) |
-| Menubar | Organism | Navigation | ✅ | — | [Menubar.md](component-reviews/Menubar.md) |
+| Menubar | Organism | Navigation | ✅ | ✅ 2026-11-01 | [Menubar.md](component-reviews/Menubar.md) |
 | Sidebar | Organism | Navigation | ✅ | ✅ 2026-10-21 (final review: section-heading padding, focus kept on a resize, account scaling, section `value`) | [Sidebar.md](component-reviews/Sidebar.md) |
 | FileUpload | Organism | Inputs & Forms | ✅ | ✅ 2026-10-24 | [FileUpload.md](component-reviews/FileUpload.md) |
 | ContextMenu | Organism | Overlay | ✅ | ✅ 2026-10-24 | [ContextMenu.md](component-reviews/ContextMenu.md) |
