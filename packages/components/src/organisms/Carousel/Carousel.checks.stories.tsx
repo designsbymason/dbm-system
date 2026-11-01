@@ -99,8 +99,9 @@ export const ReportsASwipe: Story = {
     const scroller = track(canvasElement);
     scroller.scrollTo({ left: scroller.scrollLeft + box(slideOf(canvasElement, 3)).left - inner(scroller).left, behavior: "instant" });
     await waitFor(() => expect(within(canvasElement).getByTestId("reported")).toHaveTextContent("2"));
-    await expect(inertOf(slideOf(canvasElement, 3))).toBe(false);
-    await expect(inertOf(slideOf(canvasElement, 1))).toBe(true);
+    // `inert` is set by each slide's own effect, which runs after the commit that shows the report, so wait for it
+    await waitFor(() => expect(inertOf(slideOf(canvasElement, 3))).toBe(false));
+    await waitFor(() => expect(inertOf(slideOf(canvasElement, 1))).toBe(true));
   },
 };
 

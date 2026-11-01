@@ -35,3 +35,6 @@ A hand-rolled organism with no new dependency ([ADR-0147](../adr/0147-carousel-s
 ## Verified
 
 Unit tests (`Carousel.test.tsx`, `carouselHelpers.test.ts`, `Carousel.ssr.test.tsx`: structure, ARIA, `{...props}` ordering, controlled and uncontrolled, loop, stops, controller, announcements, labels with an `undefined` entry, auto-play pauses, StrictMode, axe, server render and hydration); real-browser checks (`Carousel.checks.stories.tsx`: scroll alignment, a swipe reported once settled, peek geometry, right-to-left order and keys, vertical, focus ring, `inert`, reduced motion, button target sizes), broken on purpose once to confirm they fail.
+
+## Post-Finalization follow-up (2026-11-01, at explicit direction): a check that raced an effect
+`ReportsASwipe` read each slide's `inert` as soon as the reported value showed, but `inert` is set by the slide's own effect after that commit, so CI (two attempts) read it a moment early. The check now waits for it. A test-only change: no component code moved, so `Carousel` stays Finalized.
