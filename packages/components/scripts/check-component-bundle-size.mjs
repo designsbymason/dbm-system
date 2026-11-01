@@ -108,7 +108,7 @@ const JS_BUDGET_OVERRIDES_KB = { Calendar: 12, ColorPicker: 15, CommandPalette: 
 // origin handling and the inline form: 8.89KB at first, 11.97KB with those. Budget 13KB.
 //
 // `Menubar`'s bundle holds the shared menu item parts (as `ContextMenu`'s does), a `Tooltip` for a reason, the `Affix` of a sticky bar, the
-// overflow measurement and the hotkey and shortcut code: 6.16KB measured first, 9.95KB with the controller, `hotkeys`, `Menubar.Action`, reasons,
+// overflow measurement and the hotkey and shortcut code: 6.16KB measured first, 10.34KB with the controller, `hotkeys`, `Menubar.Action`, reasons,
 // platform-drawn hints, `sticky`, the trigger icon and the More menu. Budget 12KB.
 //
 // The same for CSS. `DataTable`'s bundle holds the stylesheets of the `Table`, `TableToolbar`, `Pagination`, `Select`,

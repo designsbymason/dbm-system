@@ -5,6 +5,7 @@ import { useState } from "react";
 import { Button } from "../../atoms/Button";
 import { Input } from "../../atoms/Input";
 import { send } from "../../molecules/CodeBlock/browserProtocol";
+import { Popover } from "../../molecules/Popover";
 import { Dialog } from "../Dialog";
 import { Menu } from "../Menu";
 import { Menubar } from "./Menubar";
@@ -904,3 +905,59 @@ const iconSize = (size: MenubarSize): Story => ({
 export const IconTriggerXs: Story = iconSize("xs");
 export const IconTriggerMd: Story = iconSize("md");
 export const IconTriggerXl: Story = iconSize("xl");
+
+export const RealPointerInsideAPopover: Story = {
+  name: "An item chosen with a real mouse in a menu opened from inside a Popover, which stays open",
+  render: () => {
+    function Host() {
+      const [picked, setPicked] = useState("none");
+      return (
+        <Page>
+          <Popover defaultOpen>
+            <Popover.Trigger asChild>
+              <Button>Settings</Button>
+            </Popover.Trigger>
+            <Popover.Content aria-label="Settings">
+              <Menubar aria-label="Application menu">
+                <Menubar.Menu value="file">
+                  <Menubar.Trigger>File</Menubar.Trigger>
+                  <Menubar.Content>
+                    <Menubar.Item onSelect={() => setPicked("New")}>
+                      New
+                    </Menubar.Item>
+                    <Menubar.Item onSelect={() => setPicked("Open")}>
+                      Open
+                    </Menubar.Item>
+                  </Menubar.Content>
+                </Menubar.Menu>
+              </Menubar>
+              <p data-testid="picked">{picked}</p>
+            </Popover.Content>
+          </Popover>
+        </Page>
+      );
+    }
+    return <Host />;
+  },
+  play: async () => {
+    await realClick(
+      await body.findByRole("menuitem", { name: "File", hidden: true }),
+    );
+    const menu = await openMenu();
+    const item = within(menu).getByRole("menuitem", { name: "Open" });
+    const { left, top } = item.getBoundingClientRect();
+    // the list is above the popover and takes the pointer
+    await expect(
+      document
+        .elementFromPoint(left + 6, top + 6)
+        ?.closest('[role="menuitem"]'),
+    ).toBe(item);
+    await realClick(item);
+    await waitFor(() => expect(body.queryByRole("menu")).toBeNull());
+    await expect(body.getByTestId("picked")).toHaveTextContent("Open");
+    // choosing did not close the popover
+    await expect(
+      body.getByRole("dialog", { name: "Settings" }),
+    ).toBeInTheDocument();
+  },
+};

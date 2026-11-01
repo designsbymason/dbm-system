@@ -8,7 +8,7 @@ import {
 } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { axe } from "jest-axe";
-import { createRef, useState } from "react";
+import { createRef, StrictMode, useState } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { Menu } from "../Menu";
 import { Menubar, useMenubarController } from "./Menubar";
@@ -51,8 +51,24 @@ class Observer {
   disconnect() {}
 }
 
+// A resize observer a test can fire, for what a container's resize reports.
+const resizeCallbacks = new Set<() => void>();
+class FiringResizeObserver {
+  callback: () => void;
+  constructor(callback: () => void) {
+    this.callback = callback;
+  }
+  observe() {
+    resizeCallbacks.add(this.callback);
+  }
+  unobserve() {}
+  disconnect() {
+    resizeCallbacks.delete(this.callback);
+  }
+}
+
 beforeEach(() => {
-  vi.stubGlobal("ResizeObserver", Observer);
+  vi.stubGlobal("ResizeObserver", FiringResizeObserver);
   vi.stubGlobal("IntersectionObserver", Observer);
 });
 
@@ -520,12 +536,15 @@ describe("overflow menu", () => {
   it("brings every menu back when there is room, and draws all of them when nothing is measured", async () => {
     const room = { current: 200 };
     stubWidths(room);
-    const { rerender } = render(<FourMenus />);
+    render(<FourMenus />);
     await waitFor(() =>
       expect(screen.getAllByRole("menuitem")).toHaveLength(2),
     );
     room.current = 500;
-    rerender(<FourMenus labels={{ more: "More" }} size="md" />);
+    // the container's resize is what reports the new room
+    await act(async () => {
+      resizeCallbacks.forEach((callback) => callback());
+    });
     await waitFor(() =>
       expect(screen.getAllByRole("menuitem")).toHaveLength(4),
     );
@@ -571,6 +590,86 @@ describe("overflow menu", () => {
     expect(screen.getByRole("menuitem", { name: "Help" })).toBeInTheDocument();
   });
 
+  describe("a menu that moves into More", () => {
+    function Panels({ controlled }: { controlled: boolean }) {
+      const [grid, setGrid] = useState(false);
+      return (
+        <div data-room="">
+          <Menubar aria-label="Application menu" overflow="menu">
+            {["file", "edit"].map((name) => (
+              <Menubar.Menu key={name} value={name}>
+                <Menubar.Trigger>{name}</Menubar.Trigger>
+                <Menubar.Content>
+                  <Menubar.Item>{`${name} item`}</Menubar.Item>
+                </Menubar.Content>
+              </Menubar.Menu>
+            ))}
+            <Menubar.Menu value="view">
+              <Menubar.Trigger>view</Menubar.Trigger>
+              <Menubar.Content>
+                {controlled ? (
+                  <Menubar.CheckboxItem
+                    checked={grid}
+                    onCheckedChange={setGrid}
+                  >
+                    Grid
+                  </Menubar.CheckboxItem>
+                ) : (
+                  <Menubar.CheckboxItem>Grid</Menubar.CheckboxItem>
+                )}
+              </Menubar.Content>
+            </Menubar.Menu>
+          </Menubar>
+        </div>
+      );
+    }
+
+    async function chooseGridThenShrink(
+      user: ReturnType<typeof userEvent.setup>,
+      room: { current: number },
+    ) {
+      await user.click(item("view"));
+      await user.click(
+        await screen.findByRole("menuitemcheckbox", { name: "Grid" }),
+      );
+      // a checkbox item leaves its menu open
+      await user.keyboard("{Escape}");
+      await waitFor(() =>
+        expect(screen.queryByRole("menu")).not.toBeInTheDocument(),
+      );
+      // the trigger has focus after the menu closes, and a trigger with focus is held in the bar
+      await act(async () => (document.activeElement as HTMLElement).blur());
+      room.current = 200;
+      await act(async () => {
+        resizeCallbacks.forEach((callback) => callback());
+      });
+      await waitFor(() =>
+        expect(
+          screen.queryByRole("menuitem", { name: "view" }),
+        ).not.toBeInTheDocument(),
+      );
+      await user.click(item("More"));
+      await user.click(await screen.findByRole("menuitem", { name: "view" }));
+      return screen.findByRole("menuitemcheckbox", { name: "Grid" });
+    }
+
+    it("keeps a controlled checkbox item's state", async () => {
+      const room = { current: 500 };
+      stubWidths(room);
+      render(<Panels controlled />);
+      const grid = await chooseGridThenShrink(userEvent.setup(), room);
+      expect(grid).toHaveAttribute("aria-checked", "true");
+    });
+
+    it("starts an uncontrolled checkbox item over, so a bar that can overflow holds its checked state itself", async () => {
+      const room = { current: 500 };
+      stubWidths(room);
+      render(<Panels controlled={false} />);
+      const grid = await chooseGridThenShrink(userEvent.setup(), room);
+      expect(grid).toHaveAttribute("aria-checked", "false");
+    });
+  });
+
   it("names the More menu from labels", async () => {
     stubWidths({ current: 200 });
     render(<FourMenus labels={{ more: "Mehr" }} />);
@@ -596,5 +695,246 @@ describe("overflow menu", () => {
       expect(screen.getAllByRole("menuitem")).toHaveLength(2),
     );
     expect(await axe(container, noRegion)).toHaveNoViolations();
+  });
+});
+
+describe("the bar's name", () => {
+  it("warns once when a bar has neither aria-label nor aria-labelledby, and not when it has one", () => {
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
+    const { unmount } = render(
+      <Menubar aria-label="Named">
+        <Menubar.Menu value="x">
+          <Menubar.Trigger>x</Menubar.Trigger>
+          <Menubar.Content>
+            <Menubar.Item>One</Menubar.Item>
+          </Menubar.Content>
+        </Menubar.Menu>
+      </Menubar>,
+    );
+    expect(warn).not.toHaveBeenCalledWith(
+      expect.stringContaining("accessible name"),
+    );
+    unmount();
+    render(
+      <Menubar>
+        <Menubar.Menu value="y">
+          <Menubar.Trigger>y</Menubar.Trigger>
+          <Menubar.Content>
+            <Menubar.Item>One</Menubar.Item>
+          </Menubar.Content>
+        </Menubar.Menu>
+      </Menubar>,
+    );
+    expect(warn).toHaveBeenCalledWith(
+      expect.stringContaining("accessible name"),
+    );
+  });
+});
+
+describe("Menubar.Action attributes", () => {
+  it("keeps its role, and stays a non-popup, when the same props are passed", () => {
+    render(
+      <Bar>
+        <Menubar.Action
+          role="button"
+          aria-haspopup="dialog"
+          aria-expanded={true}
+          aria-label="Run it"
+        >
+          Run
+        </Menubar.Action>
+      </Bar>,
+    );
+    const run = screen.getByRole("menuitem", { name: "Run it" });
+    expect(run).not.toHaveAttribute("aria-haspopup");
+    expect(run).not.toHaveAttribute("aria-expanded");
+  });
+
+  it("takes aria-label, aria-labelledby and aria-describedby, and adds its reason to the description", () => {
+    render(
+      <Bar>
+        <span id="note">Extra note</span>
+        <Menubar.Action
+          disabled
+          disabledReason="Not yet"
+          aria-describedby="note"
+        >
+          Run
+        </Menubar.Action>
+      </Bar>,
+    );
+    expect(item("Run")).toHaveAccessibleDescription("Extra note Not yet");
+  });
+});
+
+describe("the arrow keys, Home and End", () => {
+  it("move focus to the first and last trigger", async () => {
+    const user = userEvent.setup();
+    render(
+      <Bar>
+        <Menubar.Action>Run</Menubar.Action>
+      </Bar>,
+    );
+    item("Edit").focus();
+    await user.keyboard("{End}");
+    expect(item("Run")).toHaveFocus();
+    await user.keyboard("{Home}");
+    expect(item("File")).toHaveFocus();
+  });
+});
+
+describe("an action that is chosen from More", () => {
+  it("runs onSelect with an event that can be prevented", async () => {
+    const user = userEvent.setup();
+    const onSelect = vi.fn();
+    vi.spyOn(HTMLElement.prototype, "getBoundingClientRect").mockImplementation(
+      function (this: HTMLElement) {
+        const width = this.hasAttribute("data-menubar-more")
+          ? 40
+          : this.hasAttribute("data-menubar-item")
+            ? 100
+            : this.dataset.room !== undefined
+              ? 150
+              : 0;
+        return {
+          width,
+          height: 24,
+          top: 0,
+          left: 0,
+          right: width,
+          bottom: 24,
+          x: 0,
+          y: 0,
+          toJSON: () => ({}),
+        };
+      },
+    );
+    render(
+      <div data-room="">
+        <Menubar aria-label="Application menu" overflow="menu">
+          <Menubar.Menu value="file">
+            <Menubar.Trigger>file</Menubar.Trigger>
+            <Menubar.Content>
+              <Menubar.Item>New</Menubar.Item>
+            </Menubar.Content>
+          </Menubar.Menu>
+          <Menubar.Action onSelect={onSelect}>Run</Menubar.Action>
+        </Menubar>
+      </div>,
+    );
+    await waitFor(() =>
+      expect(
+        screen.queryByRole("menuitem", { name: "Run" }),
+      ).not.toBeInTheDocument(),
+    );
+    await user.click(item("More"));
+    await user.click(await screen.findByRole("menuitem", { name: "Run" }));
+    expect(onSelect).toHaveBeenCalledTimes(1);
+    expect(typeof onSelect.mock.calls[0]?.[0].preventDefault).toBe("function");
+  });
+});
+
+describe("focus handed to an action", () => {
+  it("is not held for the next menu: a later close gives focus back to that menu's trigger", async () => {
+    const user = userEvent.setup();
+    render(
+      <Bar>
+        <Menubar.Action>Run</Menubar.Action>
+      </Bar>,
+    );
+    await user.click(item("File"));
+    await screen.findByRole("menu");
+    await user.keyboard("{ArrowLeft}");
+    await waitFor(() => expect(item("Run")).toHaveFocus());
+    await waitFor(() =>
+      expect(screen.queryByRole("menu")).not.toBeInTheDocument(),
+    );
+    await user.click(item("Edit"));
+    await screen.findByRole("menu");
+    await user.keyboard("{Escape}");
+    await waitFor(() =>
+      expect(screen.queryByRole("menu")).not.toBeInTheDocument(),
+    );
+    expect(item("Edit")).toHaveFocus();
+  });
+});
+
+describe("in StrictMode", () => {
+  it("opens from a hotkey and from a controller, and takes an action's focus", async () => {
+    const user = userEvent.setup();
+    const ref = createRef<MenubarController>();
+    render(
+      <StrictMode>
+        <Bar root={{ hotkeys: { file: "alt+f" }, controllerRef: ref }}>
+          <Menubar.Action>Run</Menubar.Action>
+        </Bar>
+      </StrictMode>,
+    );
+    fireEvent.keyDown(document, { key: "f", code: "KeyF", altKey: true });
+    await waitFor(() => expect(item(/^Save/)).toHaveFocus());
+    await user.keyboard("{Escape}");
+    await waitFor(() =>
+      expect(screen.queryByRole("menu")).not.toBeInTheDocument(),
+    );
+    act(() => {
+      ref.current?.open("edit");
+    });
+    await waitFor(() =>
+      expect(screen.getByRole("menuitem", { name: "Undo" })).toHaveFocus(),
+    );
+    await user.keyboard("{ArrowRight}");
+    await waitFor(() => expect(item("Run")).toHaveFocus());
+  });
+
+  it("registers its menus for the More menu once, and moves them as the room changes", async () => {
+    const room = { current: 200 };
+    vi.spyOn(HTMLElement.prototype, "getBoundingClientRect").mockImplementation(
+      function (this: HTMLElement) {
+        const width = this.hasAttribute("data-menubar-more")
+          ? 40
+          : this.hasAttribute("data-menubar-item")
+            ? 100
+            : this.dataset.room !== undefined
+              ? room.current
+              : 0;
+        return {
+          width,
+          height: 24,
+          top: 0,
+          left: 0,
+          right: width,
+          bottom: 24,
+          x: 0,
+          y: 0,
+          toJSON: () => ({}),
+        };
+      },
+    );
+    render(
+      <StrictMode>
+        <div data-room="">
+          <Menubar aria-label="Application menu" overflow="menu">
+            {["file", "edit", "view"].map((name) => (
+              <Menubar.Menu key={name} value={name}>
+                <Menubar.Trigger>{name}</Menubar.Trigger>
+                <Menubar.Content>
+                  <Menubar.Item>{`${name} item`}</Menubar.Item>
+                </Menubar.Content>
+              </Menubar.Menu>
+            ))}
+          </Menubar>
+        </div>
+      </StrictMode>,
+    );
+    await waitFor(() =>
+      expect(screen.getAllByRole("menuitem")).toHaveLength(2),
+    );
+    room.current = 500;
+    await act(async () => {
+      resizeCallbacks.forEach((callback) => callback());
+    });
+    await waitFor(() =>
+      expect(screen.getAllByRole("menuitem")).toHaveLength(3),
+    );
   });
 });

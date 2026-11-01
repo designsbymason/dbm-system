@@ -105,7 +105,7 @@ export interface MenubarProps extends Omit<
    * What the bar does when its menus do not fit its container: `scroll` (sideways, with a fade at each end that has
    * more behind it) or `menu` (the menus that do not fit move into a "More" menu, each as a submenu). Each
    * `Menubar.Menu` and `Menubar.Action` tells the bar what it is, so they can sit inside a component of your own. `menu`
-   * sizes the bar against its container, which has to be sized by the layout and not by the bar.
+   * sizes the bar against its container, which has to be sized by the layout and not by the bar. A menu that moves into "More" is drawn again there, so a checkbox or radio item that must keep its state holds it in your own state (`checked`, `value`), not its own (`defaultChecked`).
    * @default 'scroll'
    */
   overflow?: MenubarOverflow;
@@ -197,6 +197,12 @@ export interface MenubarTriggerProps extends Omit<
   icon?: PhosphorIcon;
   /** Content after the label: a count, a `Badge`. */
   trailing?: ReactNode;
+  /** An accessible name, for a trigger whose label is not its visible text (an icon-only trigger needs one). The menu it opens is named after it. */
+  "aria-label"?: string;
+  /** The id of an element that names the trigger. */
+  "aria-labelledby"?: string;
+  /** The id(s) of elements that describe the trigger, in addition to its `disabledReason`, which is added to it. */
+  "aria-describedby"?: string;
   /** Standard DOM id. */
   id?: string;
   /** Additional CSS classes for customization. */
@@ -214,9 +220,11 @@ export interface MenubarActionProps extends Omit<
   /** The action's label: "Run", "Help". */
   children?: ReactNode;
   /**
-   * Called when the action is chosen, by a click, Enter or Space. It opens no menu and closes any that is open.
+   * Called when the action is chosen, by a click, Enter or Space. It opens no menu and closes any that is open. The
+   * event is the React event of the click or key; once the action has moved into the "More" menu it is that menu's own
+   * (native) event, so read only what both have (`preventDefault`, `target`, `type`).
    */
-  onSelect?: (event: SyntheticEvent) => void;
+  onSelect?: (event: SyntheticEvent | Event) => void;
   /**
    * Renders as the single child element (through Radix `Slot`), such as a link, which keeps its own element and
    * receives the action's role and keys. The action then draws no icon or trailing content of its own.
@@ -234,6 +242,12 @@ export interface MenubarActionProps extends Omit<
   icon?: PhosphorIcon;
   /** Content after the label: a count, a `Badge`. */
   trailing?: ReactNode;
+  /** An accessible name, for a action whose label is not its visible text (an icon-only action needs one). */
+  "aria-label"?: string;
+  /** The id of an element that names the action. */
+  "aria-labelledby"?: string;
+  /** The id(s) of elements that describe the action, in addition to its `disabledReason`, which is added to it. */
+  "aria-describedby"?: string;
   /** Standard DOM id. */
   id?: string;
   /** Additional CSS classes for customization. */

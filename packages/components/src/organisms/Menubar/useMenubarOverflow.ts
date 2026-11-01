@@ -110,9 +110,11 @@ export function useMenubarOverflow({
     setState({ visible: count, count });
   }, [signature, count]);
 
+  // Fit once what it depends on has changed (items drawn or not, their count or look), not after every render of the bar:
+  // reading layout is the cost, and a resize of the container is the observer's to report.
   useIsomorphicLayoutEffect(() => {
     fit();
-  });
+  }, [fit, state.visible, state.count, count, signature]);
 
   useEffect(() => {
     const bar = barRef.current;

@@ -60,7 +60,7 @@ const meta: Meta<typeof Menubar> = {
       control: "select",
       options: ["scroll", "menu"],
       description:
-        "What the bar does when its menus do not fit its container: scroll (sideways, with a fade at each end that has more behind it) or menu (the menus that do not fit move into a More menu, each as a submenu). Each Menubar.Menu and Menubar.Action tells the bar what it is, so they can sit inside a component of your own. menu sizes the bar against its container, which has to be sized by the layout and not by the bar.",
+        "What the bar does when its menus do not fit its container: scroll (sideways, with a fade at each end that has more behind it) or menu (the menus that do not fit move into a More menu, each as a submenu). Each Menubar.Menu and Menubar.Action tells the bar what it is, so they can sit inside a component of your own. menu sizes the bar against its container, which has to be sized by the layout and not by the bar. A menu that moves into \"More\" is drawn again there, so a checkbox or radio item that must keep its state holds it in your own state (checked, value), not its own (defaultChecked).",
       table: { defaultValue: { summary: '"scroll"' } },
     },
     hotkeys: {

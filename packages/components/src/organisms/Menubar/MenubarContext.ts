@@ -86,3 +86,6 @@ export const INERT_CONTROLLER: MenubarController = {
   close: () => undefined,
   value: "",
 };
+
+/** The name of the menu that holds what does not fit the bar (`overflow="menu"`). */
+export const MORE_MENU = "__menubar-more";

@@ -1,84 +1,45 @@
-import { DotsThreeIcon } from "@dbm-system/icons";
-import {
-  cx,
-  mergeDefined,
-  mergeRefs,
-  useResolvedResponsiveValue,
-  useScrollEdges,
-} from "@dbm-system/utils";
+import { cx, mergeDefined, mergeRefs, useScrollEdges } from "@dbm-system/utils";
 import * as MenubarPrimitive from "@radix-ui/react-menubar";
 import {
-  Children,
   forwardRef,
-  isValidElement,
   useCallback,
   useContext,
   useEffect,
-  useId,
   useImperativeHandle,
   useMemo,
   useReducer,
   useRef,
   useState,
-  type ReactElement,
-  type ReactNode,
-  type SyntheticEvent,
 } from "react";
 import { Affix } from "../../atoms/Affix";
-import { ButtonGroupReset } from "../../atoms/Button/buttonGroupContext";
-import { Icon } from "../../atoms/Icon";
-import { Tooltip } from "../../atoms/Tooltip";
-import { VisuallyHidden } from "../../atoms/VisuallyHidden";
-import {
-  isApplePlatform,
-  matchesHotkey,
-  parseHotkey,
-} from "../../internal/hotkey/hotkey";
-import { OverlayLifecycle } from "../../internal/overlay/OverlayLifecycle";
 import { warnOnce } from "../../internal/warnOnce";
 import styles from "./Menubar.module.css";
-import menuStyles from "../../internal/menu/menu.module.css";
-import {
-  MenuViewport,
-  iconSizeFor,
-  menuSharedParts,
-  sizeClass as menuSizeClass,
-} from "../../internal/menu/menuParts";
-import {
-  DEFAULT_MENU_LABELS,
-  MenuPrimitiveContext,
-  MenuRootContext,
-  MenuSizeContext,
-  useControllableState,
-  type MenuPrimitiveKit,
-} from "../../internal/menu/MenuContext";
+import { menuSharedParts } from "../../internal/menu/menuParts";
+import { useControllableState } from "../../internal/menu/MenuContext";
 import {
   INERT_CONTROLLER,
   MenubarContext,
   MenubarControllerContext,
-  MenubarMenuContext,
   type MenubarEntry,
   type MenubarItemInfo,
 } from "./MenubarContext";
+import { MenubarContent } from "./MenubarContent";
+import { MenubarMenu } from "./MenubarMenu";
+import { MenubarMoreMenu } from "./MenubarMoreMenu";
+import { MenubarAction, MenubarTrigger } from "./MenubarTrigger";
 import {
   useIsomorphicLayoutEffect,
   useMenubarOverflow,
 } from "./useMenubarOverflow";
+import { useMenubarHotkeys } from "./useMenubarHotkeys";
 import type {
-  MenubarActionProps,
-  MenubarContentProps,
   MenubarController,
   MenubarLabels,
-  MenubarMenuProps,
   MenubarProps,
   MenubarSize,
   MenubarSurface,
   MenubarTone,
-  MenubarTriggerProps,
 } from "./Menubar.types";
-
-// Radix Menubar's item, group and submenu parts, which the shared parts draw with inside a `Menubar`'s panels.
-const primitiveKit: MenuPrimitiveKit = MenubarPrimitive;
 
 const sizeClass: Record<MenubarSize, string | undefined> = {
   xs: styles.sizeXs,
@@ -100,9 +61,6 @@ const surfaceClass: Record<MenubarSurface, string | undefined> = {
 };
 
 const DEFAULT_LABELS: MenubarLabels = { more: "More" };
-
-// The name of the menu that holds what does not fit.
-const MORE = "__menubar-more";
 
 /**
  * A desktop-style bar of menus (File, Edit, View) built on Radix Menubar: one tab stop, the arrow keys moving between
@@ -187,6 +145,16 @@ const MenubarRoot = forwardRef<HTMLDivElement, MenubarProps>(
       [],
     );
 
+    // A menubar is a landmark-like widget a page may hold more than one of, so it needs a name to be told apart.
+    const named = Boolean(props["aria-label"] || props["aria-labelledby"]);
+    useEffect(() => {
+      if (!named) {
+        warnOnce(
+          'Menubar: give it an accessible name with `aria-label` ("Application menu") or `aria-labelledby`, so a screen reader can tell it from any other menu bar on the page.',
+        );
+      }
+    }, [named]);
+
     // What is in the bar, so a menu can be opened from code and a press on what can't open is not taken for an open.
     const registry = useRef(new Map<string, MenubarEntry>());
     const handoff = useRef(false);
@@ -216,6 +184,8 @@ const MenubarRoot = forwardRef<HTMLDivElement, MenubarProps>(
         }
         return;
       }
+      // Whatever was handed to an action has been dealt with once another menu opens.
+      if (next !== "") handoff.current = false;
       latest.current.setValueRaw(next);
     }, []);
     const openFromCode = useCallback((name: string): boolean => {
@@ -223,6 +193,7 @@ const MenubarRoot = forwardRef<HTMLDivElement, MenubarProps>(
       if (!entry || entry.kind !== "menu" || entry.blocked()) return false;
       if (entry.focusFirstRef) entry.focusFirstRef.current = true;
       entry.trigger()?.focus();
+      handoff.current = false;
       latest.current.setValueRaw(name);
       return true;
     }, []);
@@ -242,37 +213,7 @@ const MenubarRoot = forwardRef<HTMLDivElement, MenubarProps>(
     );
     useImperativeHandle(controllerRef, () => controller, [controller]);
 
-    // `hotkeys` is an object an app writes inline, so what is bound is read from its content, not its identity.
-    const hotkeysKey = hotkeys ? JSON.stringify(hotkeys) : "";
-    useEffect(() => {
-      if (!hotkeysKey) return undefined;
-      const bindings = Object.entries(
-        JSON.parse(hotkeysKey) as Record<string, string | false>,
-      ).flatMap(([menu, combo]) => {
-        if (combo === false) return [];
-        const parsed = parseHotkey(combo);
-        if (!parsed) {
-          warnOnce(
-            `Menubar: the hotkey "${combo}" for "${menu}" is not a key combination (modifiers and a key joined by +, such as "alt+f"), so it binds nothing.`,
-          );
-          return [];
-        }
-        return [[menu, parsed] as const];
-      });
-      if (bindings.length === 0) return undefined;
-      const onKeyDown = (event: KeyboardEvent) => {
-        if (event.defaultPrevented || event.repeat || event.isComposing) return;
-        const apple = isApplePlatform();
-        const hit = bindings.find(([, parsed]) =>
-          matchesHotkey(event, parsed, apple),
-        );
-        if (!hit) return;
-        // A key for a menu that is not in the bar (it moved into "More", or is not mounted) is left to the browser.
-        if (openFromCode(hit[0])) event.preventDefault();
-      };
-      document.addEventListener("keydown", onKeyDown);
-      return () => document.removeEventListener("keydown", onKeyDown);
-    }, [hotkeysKey, openFromCode]);
+    useMenubarHotkeys(hotkeys, openFromCode);
 
     // `overflow="menu"`: each menu and action tells the bar what it is as it mounts (so they can sit inside a component of
     // the app's own), the bar puts them in the order they are drawn in, and what does not fit is drawn in "More".
@@ -392,7 +333,7 @@ const MenubarRoot = forwardRef<HTMLDivElement, MenubarProps>(
         >
           {children}
           {overflowMenu && hidden.length > 0 && (
-            <MoreMenu
+            <MenubarMoreMenu
               hidden={hidden.map(({ info }) => info)}
               label={labels.more}
             />
@@ -421,54 +362,6 @@ const MenubarRoot = forwardRef<HTMLDivElement, MenubarProps>(
 );
 MenubarRoot.displayName = "Menubar";
 
-/** The menu that holds the menus and actions that did not fit: each menu is a submenu, each action an item. */
-function MoreMenu({
-  hidden,
-  label,
-}: {
-  hidden: MenubarItemInfo[];
-  label: string;
-}) {
-  return (
-    <MenubarMenu value={MORE}>
-      <MenubarTrigger
-        icon={DotsThreeIcon}
-        data-menubar-more=""
-        aria-label={label}
-        title={label}
-      />
-      <MenubarContent>
-        {hidden.map((item, index) =>
-          item.kind === "menu" ? (
-            <menuSharedParts.Sub key={item.value ?? index}>
-              <menuSharedParts.SubTrigger
-                icon={item.icon}
-                disabled={item.disabled}
-              >
-                {item.label}
-              </menuSharedParts.SubTrigger>
-              <menuSharedParts.SubContent size={item.contentSize}>
-                {item.content}
-              </menuSharedParts.SubContent>
-            </menuSharedParts.Sub>
-          ) : (
-            <menuSharedParts.Item
-              key={index}
-              icon={item.icon}
-              disabled={item.disabled}
-              onSelect={(event) =>
-                item.onSelect?.(event as unknown as SyntheticEvent)
-              }
-            >
-              {item.label}
-            </menuSharedParts.Item>
-          ),
-        )}
-      </MenubarContent>
-    </MenubarMenu>
-  );
-}
-
 /** Scrolls the bar just far enough to bring `target` fully into view, clear of its `scroll-padding`. */
 function revealInBar(bar: HTMLElement | null, target: EventTarget) {
   if (!bar || !(target instanceof HTMLElement) || !bar.contains(target)) return;
@@ -482,577 +375,6 @@ function revealInBar(bar: HTMLElement | null, target: EventTarget) {
   else if (rect.right > barRect.right - padding)
     bar.scrollBy({ left: rect.right - barRect.right + padding });
 }
-
-/**
- * One menu of the bar: a `Menubar.Trigger` and the `Menubar.Content` it opens. `value` names it, and is what the bar's
- * own `value` holds while it is open. It renders no element of its own, so it takes no `ref`, `className` or `style`.
- */
-function MenubarMenu({ value, children }: MenubarMenuProps) {
-  const bar = useContext(MenubarContext);
-  if (bar === null && process.env.NODE_ENV !== "production") {
-    console.warn(
-      "Menubar.Menu: rendered outside a <Menubar>, so it has no bar to open from.",
-    );
-  }
-  const open = bar !== null && bar.value === value;
-  const setValue = bar?.setValue;
-  const register = bar?.register;
-  const overflowMenu = bar?.overflowMenu ?? false;
-  const registerItem = bar?.registerItem;
-  const unregisterItem = bar?.unregisterItem;
-  const id = useId();
-  const slotRef = useRef<HTMLSpanElement | null>(null);
-  const isMore = value === MORE;
-  const hidden = bar?.hiddenIds.has(id) ?? false;
-  const hiddenRef = useRef(hidden);
-  useEffect(() => {
-    hiddenRef.current = hidden;
-  });
-  const dir = bar?.dir ?? "ltr";
-  const reportComplete = bar?.reportComplete;
-  const focusLastRef = useRef(false);
-  const focusFirstRef = useRef(false);
-  const blockedRef = useRef(false);
-  const inputRef = useRef<"pointer" | "keyboard" | null>(null);
-  const triggerRef = useRef<HTMLElement | null>(null);
-  const latestOpen = useRef(open);
-  useEffect(() => {
-    latestOpen.current = open;
-  });
-  useEffect(
-    () =>
-      register?.(value, {
-        kind: "menu",
-        trigger: () => triggerRef.current,
-        blocked: () => blockedRef.current || hiddenRef.current,
-        focusFirstRef,
-      }),
-    [register, value],
-  );
-  // What the "More" menu needs to draw this menu as a submenu: its label, icon and items, read from its own children.
-  useEffect(() => {
-    if (!overflowMenu || isMore || !registerItem) return;
-    const inside = Children.toArray(children).filter(
-      isValidElement,
-    ) as ReactElement<Record<string, unknown>>[];
-    const trigger = inside.find((node) => node.type === MenubarTrigger);
-    const panel = inside.find((node) => node.type === MenubarContent);
-    registerItem(id, {
-      kind: "menu",
-      value,
-      label: (trigger?.props.children as ReactNode) ?? null,
-      icon: trigger?.props.icon as MenubarTriggerProps["icon"],
-      disabled: Boolean(trigger?.props.disabled),
-      content: panel?.props.children as ReactNode,
-      contentSize: panel?.props.size as MenubarSize | undefined,
-      slot: () => slotRef.current,
-    });
-  }, [overflowMenu, isMore, registerItem, id, value, children]);
-  useEffect(() => () => unregisterItem?.(id), [unregisterItem, id]);
-  const openToLast = useCallback(() => {
-    focusLastRef.current = true;
-    setValue?.(value);
-  }, [setValue, value]);
-  const close = useCallback(() => {
-    // An async item can resolve after the menu was dismissed another way; it has nothing left to close.
-    if (latestOpen.current) setValue?.("");
-  }, [setValue]);
-  const reportClosed = useCallback(
-    () => reportComplete?.(value, false),
-    [reportComplete, value],
-  );
-  const reportOpened = useCallback(
-    () => reportComplete?.(value, true),
-    [reportComplete, value],
-  );
-  const context = useMemo(
-    () => ({
-      open,
-      dir,
-      openToLast,
-      focusLastRef,
-      inputRef,
-      triggerRef,
-      close,
-      reportClosed,
-      reportOpened,
-      // A menu bar is a desktop pattern: its panels are never a sheet.
-      sheet: false,
-      labels: DEFAULT_MENU_LABELS,
-    }),
-    [open, dir, openToLast, close, reportClosed, reportOpened],
-  );
-  const setBlocked = useCallback((blocked: boolean) => {
-    blockedRef.current = blocked;
-  }, []);
-  const takeFocusFirst = useCallback(() => {
-    const had = focusFirstRef.current;
-    focusFirstRef.current = false;
-    return had;
-  }, []);
-  const menu = useMemo(
-    () => ({ value, setBlocked, takeFocusFirst }),
-    [value, setBlocked, takeFocusFirst],
-  );
-  return (
-    <>
-      {overflowMenu && !isMore && (
-        <span hidden ref={slotRef} data-menubar-slot="" />
-      )}
-      {hidden ? null : (
-        <MenubarMenuContext.Provider value={menu}>
-          <MenuRootContext.Provider value={context}>
-            <MenubarPrimitive.Menu value={value}>
-              {children}
-            </MenubarPrimitive.Menu>
-          </MenuRootContext.Provider>
-        </MenubarMenuContext.Provider>
-      )}
-    </>
-  );
-}
-MenubarMenu.displayName = "Menubar.Menu";
-
-/** What a trigger or an action draws inside its button: an optional icon, the label, optional trailing content and the reason, hidden, that describes it. */
-function TriggerBody({
-  icon,
-  trailing,
-  reason,
-  reasonId,
-  children,
-}: {
-  icon: MenubarTriggerProps["icon"];
-  trailing: ReactNode;
-  reason: ReactNode;
-  reasonId: string;
-  children: ReactNode;
-}) {
-  const bar = useContext(MenubarContext);
-  const size = bar?.size ?? "md";
-  const hasLabel =
-    children !== undefined && children !== null && children !== false;
-  return (
-    <>
-      {icon && (
-        <span className={styles.icon}>
-          <Icon icon={icon} size={iconSizeFor[size]} tone="default" />
-        </span>
-      )}
-      {hasLabel && <span className={styles.label}>{children}</span>}
-      {trailing !== undefined && trailing !== null && (
-        <span className={styles.trailing}>{trailing}</span>
-      )}
-      {reason !== undefined && reason !== null && (
-        <VisuallyHidden id={reasonId} aria-hidden="true">
-          {reason}
-        </VisuallyHidden>
-      )}
-    </>
-  );
-}
-
-/**
- * The bar's button that opens a menu: "File", "Edit". Renders a native `<button>` with `role="menuitem"`. Enter, Space,
- * ArrowDown and ArrowUp open its menu, the last two placing focus on the first or the last item, and Left and Right
- * move to the next trigger. A disabled trigger opens nothing; with a `disabledReason` it stays focusable and says why.
- */
-const MenubarTrigger = forwardRef<HTMLButtonElement, MenubarTriggerProps>(
-  (
-    {
-      asChild = false,
-      icon,
-      trailing,
-      disabled = false,
-      disabledReason,
-      className,
-      children,
-      onKeyDown,
-      onPointerDown,
-      "aria-describedby": ariaDescribedBy,
-      ...props
-    },
-    ref,
-  ) => {
-    const { open, openToLast, inputRef, triggerRef } =
-      useContext(MenuRootContext);
-    const menu = useContext(MenubarMenuContext);
-    const reasonId = useId();
-    const mergedRef = useMemo(
-      () => mergeRefs(ref, triggerRef),
-      [ref, triggerRef],
-    );
-    const hasReason =
-      disabled && disabledReason !== undefined && disabledReason !== null;
-    const reasonWithoutDisabled =
-      !disabled && disabledReason !== undefined && disabledReason !== null;
-    const setBlocked = menu?.setBlocked;
-    // A trigger with a reason is not disabled to Radix (it would leave the tab order and the arrow keys): the bar
-    // refuses to open it instead, and it says it is unavailable itself.
-    useEffect(() => {
-      if (!setBlocked) return undefined;
-      setBlocked(hasReason);
-      return () => setBlocked(false);
-    }, [setBlocked, hasReason]);
-    useEffect(() => {
-      if (reasonWithoutDisabled) {
-        warnOnce(
-          "Menubar.Trigger: `disabledReason` has no effect on a trigger that is not `disabled` — it explains why a trigger can't be opened. Add `disabled`, or remove `disabledReason`.",
-        );
-      }
-    }, [reasonWithoutDisabled]);
-    const trigger = (
-      <MenubarPrimitive.Trigger
-        ref={mergedRef}
-        asChild={asChild}
-        className={asChild ? className : cx(styles.trigger, className)}
-        data-menubar-item=""
-        {...props}
-        disabled={disabled && !hasReason}
-        onPointerDown={(event) => {
-          onPointerDown?.(event);
-          inputRef.current = "pointer";
-        }}
-        onKeyDown={(event) => {
-          onKeyDown?.(event);
-          inputRef.current = "keyboard";
-          // ArrowDown, Enter and Space are Radix's. ArrowUp opens too, onto the last item, as the menu-button pattern
-          // allows.
-          if (event.defaultPrevented || event.key !== "ArrowUp" || disabled)
-            return;
-          event.preventDefault();
-          openToLast();
-        }}
-        role="menuitem"
-        aria-haspopup="menu"
-        aria-expanded={open}
-        aria-describedby={
-          [ariaDescribedBy, hasReason ? reasonId : undefined]
-            .filter(Boolean)
-            .join(" ") || undefined
-        }
-        {...(hasReason ? { "aria-disabled": true, "data-disabled": "" } : {})}
-      >
-        {asChild ? (
-          children
-        ) : (
-          <TriggerBody
-            icon={icon}
-            trailing={trailing}
-            reason={hasReason ? disabledReason : undefined}
-            reasonId={reasonId}
-          >
-            {children}
-          </TriggerBody>
-        )}
-      </MenubarPrimitive.Trigger>
-    );
-    return hasReason ? (
-      <Tooltip content={disabledReason} side="bottom">
-        {trigger}
-      </Tooltip>
-    ) : (
-      trigger
-    );
-  },
-);
-MenubarTrigger.displayName = "Menubar.Trigger";
-
-/**
- * A button in the bar that opens no menu ("Run", "Help"). It takes its place in the bar's arrow-key order beside the
- * triggers and runs `onSelect` on a click, Enter or Space; choosing it closes any menu that is open, and so does moving
- * onto it. With `asChild` it is the element you give it, such as a link.
- */
-const MenubarAction = forwardRef<HTMLButtonElement, MenubarActionProps>(
-  (
-    {
-      asChild = false,
-      icon,
-      trailing,
-      disabled = false,
-      disabledReason,
-      onSelect,
-      className,
-      children,
-      onClick,
-      onKeyDown,
-      "aria-describedby": ariaDescribedBy,
-      ...props
-    },
-    ref,
-  ) => {
-    const bar = useContext(MenubarContext);
-    const name = useId();
-    const reasonId = useId();
-    const elementRef = useRef<HTMLButtonElement | null>(null);
-    const mergedRef = useMemo(() => mergeRefs(ref, elementRef), [ref]);
-    const register = bar?.register;
-    const overflowMenu = bar?.overflowMenu ?? false;
-    const registerItem = bar?.registerItem;
-    const unregisterItem = bar?.unregisterItem;
-    const slotRef = useRef<HTMLSpanElement | null>(null);
-    const hidden = bar?.hiddenIds.has(name) ?? false;
-    useEffect(
-      () =>
-        register?.(name, {
-          kind: "action",
-          trigger: () => elementRef.current,
-          blocked: () => true,
-        }),
-      [register, name],
-    );
-    // What the "More" menu needs to draw this action as an item.
-    useEffect(() => {
-      if (!overflowMenu || !registerItem) return;
-      registerItem(name, {
-        kind: "action",
-        label: children,
-        icon,
-        disabled,
-        onSelect,
-        slot: () => slotRef.current,
-      });
-    }, [overflowMenu, registerItem, name, children, icon, disabled, onSelect]);
-    useEffect(() => () => unregisterItem?.(name), [unregisterItem, name]);
-    const hasReason =
-      disabled && disabledReason !== undefined && disabledReason !== null;
-    const unavailable = disabled || hasReason;
-    const action = (
-      <MenubarPrimitive.Trigger
-        ref={mergedRef}
-        asChild={asChild}
-        className={asChild ? className : cx(styles.trigger, className)}
-        data-menubar-item=""
-        {...props}
-        disabled={disabled && !hasReason}
-        onClick={(event) => {
-          onClick?.(event);
-          // A click a key made (detail 0) was handled on the key itself.
-          if (event.defaultPrevented || event.detail === 0 || unavailable)
-            return;
-          onSelect?.(event);
-        }}
-        onKeyDown={(event) => {
-          onKeyDown?.(event);
-          if (event.defaultPrevented) return;
-          if (event.key === "Enter" || event.key === " ") {
-            // Radix would open the "menu" this stands in for.
-            event.preventDefault();
-            if (!unavailable) onSelect?.(event);
-          } else if (event.key === "ArrowDown") {
-            event.preventDefault();
-          }
-        }}
-        role="menuitem"
-        aria-haspopup={undefined}
-        aria-expanded={undefined}
-        aria-controls={undefined}
-        aria-describedby={
-          [ariaDescribedBy, hasReason ? reasonId : undefined]
-            .filter(Boolean)
-            .join(" ") || undefined
-        }
-        {...(hasReason ? { "aria-disabled": true, "data-disabled": "" } : {})}
-      >
-        {asChild ? (
-          children
-        ) : (
-          <TriggerBody
-            icon={icon}
-            trailing={trailing}
-            reason={hasReason ? disabledReason : undefined}
-            reasonId={reasonId}
-          >
-            {children}
-          </TriggerBody>
-        )}
-      </MenubarPrimitive.Trigger>
-    );
-    return (
-      <>
-        {overflowMenu && <span hidden ref={slotRef} data-menubar-slot="" />}
-        {hidden ? null : (
-          <MenubarPrimitive.Menu value={name}>
-            {hasReason ? (
-              <Tooltip content={disabledReason} side="bottom">
-                {action}
-              </Tooltip>
-            ) : (
-              action
-            )}
-          </MenubarPrimitive.Menu>
-        )}
-      </>
-    );
-  },
-);
-MenubarAction.displayName = "Menubar.Action";
-
-/**
- * The floating panel of a menu, rendered in a portal on the document body and placed under its trigger. It scrolls
- * when taller than the room there is, and takes the row size for every item inside it (by default the bar's).
- */
-const MenubarContent = forwardRef<HTMLDivElement, MenubarContentProps>(
-  (
-    {
-      size: sizeProp,
-      align = "start",
-      side = "bottom",
-      sideOffset = 4,
-      alignOffset = 0,
-      avoidCollisions = true,
-      collisionPadding = 8,
-      container,
-      className,
-      children,
-      onPointerMove,
-      onPointerDown,
-      onKeyDown,
-      onPointerDownOutside,
-      onInteractOutside,
-      onCloseAutoFocus,
-      ...props
-    },
-    ref,
-  ) => {
-    const bar = useContext(MenubarContext);
-    const {
-      open,
-      focusLastRef,
-      inputRef,
-      triggerRef,
-      reportClosed,
-      reportOpened,
-    } = useContext(MenuRootContext);
-    const size = sizeProp ?? bar?.size ?? "md";
-    const contentRef = useRef<HTMLDivElement | null>(null);
-    const mergedRef = useMemo(() => mergeRefs(ref, contentRef), [ref]);
-    // Whether the menu was closed by a press elsewhere on the page, which leaves focus where that press put it.
-    const outsideRef = useRef(false);
-    const menu = useContext(MenubarMenuContext);
-    // Opened by a key of the app's own (`hotkeys`, or the controller): put focus on the first item that can have it,
-    // as the key on the trigger would.
-    useEffect(() => {
-      if (!open || !menu?.takeFocusFirst()) return undefined;
-      const frame = requestAnimationFrame(() => {
-        const items = contentRef.current?.querySelectorAll<HTMLElement>(
-          '[role="menuitem"],[role="menuitemcheckbox"],[role="menuitemradio"]',
-        );
-        [...(items ?? [])]
-          .find((item) => !item.hasAttribute("data-disabled"))
-          ?.focus();
-      });
-      return () => cancelAnimationFrame(frame);
-    }, [open, menu]);
-    // Opened with ArrowUp: once Radix has put focus on its first item, move it to the last one that can have it.
-    useEffect(() => {
-      if (!open || !focusLastRef.current) return undefined;
-      focusLastRef.current = false;
-      const frame = requestAnimationFrame(() => {
-        const items = contentRef.current?.querySelectorAll<HTMLElement>(
-          '[role="menuitem"],[role="menuitemcheckbox"],[role="menuitemradio"]',
-        );
-        [...(items ?? [])]
-          .reverse()
-          .find((item) => !item.hasAttribute("data-disabled"))
-          ?.focus();
-      });
-      return () => cancelAnimationFrame(frame);
-    }, [open, focusLastRef]);
-    const resolvedSide = useResolvedResponsiveValue(side, "bottom");
-    return (
-      <MenubarPrimitive.Portal container={container}>
-        <MenubarPrimitive.Content
-          ref={mergedRef}
-          side={resolvedSide}
-          align={align}
-          sideOffset={sideOffset}
-          alignOffset={alignOffset}
-          avoidCollisions={avoidCollisions}
-          collisionPadding={collisionPadding}
-          className={cx(menuStyles.content, menuSizeClass[size], className)}
-          {...props}
-          // The last input is recorded on the panel (`data-input`, read by Menu's stylesheet to hold the focus ring
-          // back while it is `"pointer"`) and on the menu (read as the panel closes, below).
-          onPointerMove={(event) => {
-            onPointerMove?.(event);
-            event.currentTarget.dataset.input = "pointer";
-            inputRef.current = "pointer";
-          }}
-          onPointerDown={(event) => {
-            onPointerDown?.(event);
-            event.currentTarget.dataset.input = "pointer";
-            inputRef.current = "pointer";
-          }}
-          onKeyDown={(event) => {
-            onKeyDown?.(event);
-            event.currentTarget.dataset.input = "keyboard";
-            inputRef.current = "keyboard";
-          }}
-          onPointerDownOutside={(event) => {
-            onPointerDownOutside?.(event);
-            inputRef.current = "pointer";
-            outsideRef.current = true;
-          }}
-          onInteractOutside={(event) => {
-            onInteractOutside?.(event);
-            // A menu that is playing its exit while another opens still hears the press or the focus that moved to the
-            // new one, and Radix would take it as a dismissal of the whole bar (it closes by name, not by menu).
-            if (!open) event.preventDefault();
-          }}
-          onCloseAutoFocus={(event) => {
-            onCloseAutoFocus?.(event);
-            // Focus went to an action beside the triggers, which the closing menu must not take back.
-            if (!open && bar?.takeFocusHandoff()) {
-              outsideRef.current = false;
-              event.preventDefault();
-              queueMicrotask(reportClosed);
-              return;
-            }
-            const outside = outsideRef.current;
-            outsideRef.current = false;
-            // Radix hands focus back to the trigger with a plain `focus()`, which a browser may draw a ring for even
-            // though the person only used a pointer. After a pointer on the menu itself, give it back without the ring;
-            // after the keyboard, leave Radix's own focus (and the ring that tells the keyboard where it is). A press
-            // elsewhere on the page keeps the focus it gave.
-            if (
-              !event.defaultPrevented &&
-              !outside &&
-              inputRef.current === "pointer"
-            ) {
-              event.preventDefault();
-              triggerRef.current?.focus({
-                focusVisible: false,
-              } as FocusOptions);
-            }
-            if (!open) queueMicrotask(reportClosed);
-          }}
-          role="menu"
-          aria-orientation="vertical"
-        >
-          <OverlayLifecycle
-            open={open}
-            panelRef={contentRef}
-            // Only the entrance is read from the lifecycle: its close report fires when the panel unmounts, which can be
-            // before Radix has put focus back, so the close is reported from `onCloseAutoFocus` above.
-            onOpenChangeComplete={(done) => {
-              if (done) reportOpened();
-            }}
-          />
-          <MenuSizeContext.Provider value={size}>
-            <MenuViewport>
-              {/* The kit is provided here, so the items inside the panel draw with the bar's parts, while a `Menu` in a
-                  panel's own content keeps the dropdown's. */}
-              <MenuPrimitiveContext.Provider value={primitiveKit}>
-                <ButtonGroupReset>{children}</ButtonGroupReset>
-              </MenuPrimitiveContext.Provider>
-            </MenuViewport>
-          </MenuSizeContext.Provider>
-        </MenubarPrimitive.Content>
-      </MenubarPrimitive.Portal>
-    );
-  },
-);
-MenubarContent.displayName = "Menubar.Content";
 
 type MenubarComponent = typeof MenubarRoot & {
   Menu: typeof MenubarMenu;
