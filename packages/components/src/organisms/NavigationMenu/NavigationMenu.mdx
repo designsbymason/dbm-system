@@ -1,7 +1,11 @@
 import { Canvas, Meta } from "@storybook/addon-docs/blocks";
 import { Callout, ComponentHeader, PlaygroundControls, PropertiesTable, RelatedCard, TokenRow } from "../../../.storybook/blocks";
 import { Button } from "../../atoms/Button";
+import { Icon } from "../../atoms/Icon";
 import { VisuallyHidden } from "../../atoms/VisuallyHidden";
+import { Tabs } from "../../molecules/Tabs";
+import { Navbar } from "../Navbar";
+import { CaretDownIcon, GearIcon, HouseIcon, UsersIcon } from "@dbm-system/icons";
 import * as NavigationMenuStories from "./NavigationMenu.stories";
 import * as NavigationMenuListStories from "./NavigationMenuList.stories";
 import * as NavigationMenuItemStories from "./NavigationMenuItem.stories";
@@ -511,27 +515,50 @@ it is the stacked list, and choosing a link closes the menu.
   description="The application header the menu sits in: brand, links and actions, with a phone menu"
   href="/?path=/docs/organisms-navigation-navbar--docs"
 >
-  <Button variant="secondary" size="sm">Navbar</Button>
+  <div style={{ inlineSize: "13rem" }}>
+    <Navbar size="xs" collapseBelow="never" variant="ghost" aria-label="Example">
+      <Navbar.Brand>dbM</Navbar.Brand>
+      <Navbar.Links aria-label="Example links">
+        <Navbar.Link href="#home" current>Home</Navbar.Link>
+        <Navbar.Link href="#docs">Docs</Navbar.Link>
+      </Navbar.Links>
+    </Navbar>
+  </div>
 </RelatedCard>
 <RelatedCard
   name="Menu"
   description="A floating list of actions opened from a trigger"
   href="/?path=/docs/organisms-navigation-menu--docs"
 >
-  <Button variant="secondary" size="sm">Menu</Button>
+  <Button variant="secondary" size="sm" trailingIcon={CaretDownIcon}>Actions</Button>
 </RelatedCard>
 <RelatedCard
   name="Sidebar"
   description="A page's persistent navigation column, for an app with many sections"
   href="/?path=/docs/organisms-navigation-sidebar--docs"
 >
-  <Button variant="secondary" size="sm">Sidebar</Button>
+  <div style={{ display: "flex", flexDirection: "column", gap: "var(--dbm-space-1)", inlineSize: "8rem", fontSize: "var(--dbm-font-size-xs)" }}>
+    <span style={{ display: "flex", alignItems: "center", gap: "var(--dbm-space-2)", padding: "var(--dbm-space-1) var(--dbm-space-2)", borderRadius: "var(--dbm-radius-sm)", background: "var(--dbm-bg-brand-subtle)", color: "var(--dbm-text-brand)" }}>
+      <Icon icon={HouseIcon} size="xs" /> Home
+    </span>
+    <span style={{ display: "flex", alignItems: "center", gap: "var(--dbm-space-2)", padding: "var(--dbm-space-1) var(--dbm-space-2)", color: "var(--dbm-text-secondary)" }}>
+      <Icon icon={UsersIcon} size="xs" /> Team
+    </span>
+    <span style={{ display: "flex", alignItems: "center", gap: "var(--dbm-space-2)", padding: "var(--dbm-space-1) var(--dbm-space-2)", color: "var(--dbm-text-secondary)" }}>
+      <Icon icon={GearIcon} size="xs" /> Settings
+    </span>
+  </div>
 </RelatedCard>
 <RelatedCard
   name="Tabs"
   description="Switch between views of one page, where NavigationMenu moves between pages"
   href="/?path=/docs/molecules-navigation-tabs--docs"
 >
-  <Button variant="secondary" size="sm">Tabs</Button>
+  <Tabs defaultValue="a">
+    <Tabs.List aria-label="Example">
+      <Tabs.Trigger value="a">Overview</Tabs.Trigger>
+      <Tabs.Trigger value="b">Usage</Tabs.Trigger>
+    </Tabs.List>
+  </Tabs>
 </RelatedCard>
 </div>

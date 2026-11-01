@@ -373,7 +373,8 @@
   gap: var(--dbm-space-3);
   box-sizing: border-box;
   min-block-size: var(--dbm-space-6);
-  max-inline-size: calc(var(--dbm-navigation-menu-panel-min-width) * 1.5);
+  /* The whole width of its column, so a hover or the current page tints the row and not just the text. */
+  inline-size: 100%;
   padding: var(--dbm-space-2) var(--dbm-space-3);
   border-radius: var(--dbm-radius-md);
   color: var(--dbm-text-primary);
@@ -408,6 +409,7 @@
 
 .linkBody {
   display: flex;
+  flex: 1 1 auto;
   flex-direction: column;
   gap: var(--dbm-space-1);
   min-inline-size: 0;
@@ -424,7 +426,9 @@
   flex: none;
 }
 
+/* A description wraps at about a line and a half of the least panel width, so it doesn't make the panel as wide as its longest sentence. */
 .description {
+  max-inline-size: calc(var(--dbm-navigation-menu-panel-min-width) * 1.5);
   color: var(--dbm-text-secondary);
   font-size: var(--dbm-font-size-xs);
   font-weight: var(--dbm-font-weight-regular);
@@ -600,6 +604,30 @@
   color: inherit;
 }
 
+/* `underline`: the line is under the whole surface, the label and the caret, not under the link alone. */
+.splitUnderline {
+  position: relative;
+}
+
+.splitUnderline .currentUnderline::after {
+  content: none;
+}
+
+.splitUnderline::after {
+  content: "";
+  position: absolute;
+  inset-inline: var(--dbm-space-3);
+  inset-block-end: 0;
+  block-size: var(--dbm-border-width-2);
+  border-radius: var(--dbm-radius-full);
+  background-color: var(--dbm-bg-brand);
+  pointer-events: none;
+}
+
+.splitUnderline .link.current {
+  color: var(--dbm-text-primary);
+}
+
 /* --- Featured block and footer in a panel ------------------------------------------------------------------------------------- */
 
 .feature {
@@ -682,6 +710,14 @@
 
 /* In a column the current line is a bar at the start edge (the left in left-to-right text, the right in right-to-left), not under the text. */
 .vertical .currentUnderline::after {
+  inset-inline: auto;
+  inset-inline-start: 0;
+  inset-block: var(--dbm-space-2);
+  inline-size: var(--dbm-border-width-2);
+  block-size: auto;
+}
+
+.vertical .splitUnderline::after {
   inset-inline: auto;
   inset-inline-start: 0;
   inset-block: var(--dbm-space-2);
@@ -805,12 +841,13 @@
   --nm-columns: 1;
 }
 
-.stackedContent .panelLink {
+.stackedContent .description {
   max-inline-size: none;
 }
 
 /* In a list of rows the current line is a bar at the start edge, not under the text. */
-.stackedRoot .currentUnderline::after {
+.stackedRoot .currentUnderline::after,
+.stackedRoot .splitUnderline::after {
   inset-inline: auto;
   inset-inline-start: 0;
   inset-block: var(--dbm-space-2);
@@ -954,7 +991,8 @@
   }
 
   /* The underline is a background, which forced colours replaces, so it names a system colour and marks the link by itself. */
-  .currentUnderline::after {
+  .currentUnderline::after,
+  .splitUnderline::after {
     background-color: Highlight;
   }
 

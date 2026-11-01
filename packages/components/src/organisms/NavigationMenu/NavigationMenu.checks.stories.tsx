@@ -782,3 +782,51 @@ export const AChosenLinkBecomesTheCurrentPage: Story = {
     await closeAndWait(canvasElement);
   },
 };
+
+export const APanelLinkFillsItsColumn: Story = {
+  name: "A link in a panel is the whole width of its column, so a hover tints the row and not only the text",
+  render: () => (
+    <MenuStage>
+      <DemoMenu />
+    </MenuStage>
+  ),
+  play: async ({ canvasElement }) => {
+    await parkPointer();
+    const canvas = within(canvasElement);
+    await press(canvas.getByRole("button", { name: "Solutions" }));
+    // the shorter of the two links is as wide as the cell it is in
+    const short = await canvas.findByRole("link", { name: /Support/ });
+    const area = short.closest<HTMLElement>('[class*="_viewport_"]')!;
+    await settled(area);
+    await waitFor(() => expect(Math.abs(short.getBoundingClientRect().width - short.parentElement!.getBoundingClientRect().width)).toBeLessThanOrEqual(1), { timeout: 5000 });
+    const longer = canvas.getByRole("link", { name: /Engineering/ });
+    expect(Math.abs(short.getBoundingClientRect().width - longer.getBoundingClientRect().width)).toBeLessThanOrEqual(1);
+    await closeAndWait(canvasElement);
+  },
+};
+
+export const ASplitTriggersLineIsUnderBothHalves: Story = {
+  name: "A split trigger's current-page line is drawn under the whole surface, the label and the caret",
+  render: () => (
+    <MenuStage>
+      <DemoNavigation currentPath="/products">
+        <RichItems splitProducts />
+      </DemoNavigation>
+    </MenuStage>
+  ),
+  play: async ({ canvasElement }) => {
+    await parkPointer();
+    const canvas = within(canvasElement);
+    const link = canvas.getByRole("link", { name: /Products/ });
+    const caret = canvas.getByRole("button", { name: "Products menu" });
+    const wrapper = link.parentElement!;
+    expect(link).toHaveAttribute("aria-current", "page");
+    // the line belongs to the wrapper, which is as wide as both halves; the link draws none of its own
+    expect(getComputedStyle(link, "::after").content).toBe("none");
+    const line = getComputedStyle(wrapper, "::after");
+    expect(line.content).not.toBe("none");
+    const inset = 2 * tokenLength("--dbm-space-3");
+    expect(Math.abs(Number.parseFloat(line.width) - (wrapper.getBoundingClientRect().width - inset))).toBeLessThanOrEqual(1);
+    expect(wrapper.getBoundingClientRect().width).toBeGreaterThanOrEqual(link.getBoundingClientRect().width + caret.getBoundingClientRect().width - 1);
+  },
+};
