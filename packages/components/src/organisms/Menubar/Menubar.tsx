@@ -357,40 +357,47 @@ const MenubarRoot = forwardRef<HTMLDivElement, MenubarProps>(
         unregisterItem,
       ],
     );
+    // Radix takes `dir` for its keys and does not put it on the element, so the bar draws its own element with it (a
+    // right-to-left bar lays its triggers out from the right), which Radix then gives its role and focus handling to.
     const bar = (
       <MenubarPrimitive.Root
-        ref={mergedRef}
+        asChild
         value={value}
         onValueChange={setValue}
         loop={loop}
         dir={dir}
-        className={cx(
-          styles.root,
-          sizeClass[size],
-          surfaceClass[surface],
-          toneClass[tone],
-          sticky && styles.sticky,
-          className,
-        )}
-        {...props}
-        // A trigger that is only partly in view is not scrolled to by the browser, which acts on one that is wholly
-        // hidden, so it is revealed here, clear of the fade, once the browser has had its say.
-        onFocus={(event) => {
-          onFocus?.(event);
-          const target = event.target;
-          requestAnimationFrame(() => revealInBar(barRef.current, target));
-        }}
-        role="menubar"
-        data-overflow-start={overflowStart || undefined}
-        data-overflow-end={overflowEnd || undefined}
       >
-        {children}
-        {overflowMenu && hidden.length > 0 && (
-          <MoreMenu
-            hidden={hidden.map(({ info }) => info)}
-            label={labels.more}
-          />
-        )}
+        <div
+          ref={mergedRef}
+          className={cx(
+            styles.root,
+            sizeClass[size],
+            surfaceClass[surface],
+            toneClass[tone],
+            sticky && styles.sticky,
+            className,
+          )}
+          {...props}
+          dir={dir}
+          // A trigger that is only partly in view is not scrolled to by the browser, which acts on one that is wholly
+          // hidden, so it is revealed here, clear of the fade, once the browser has had its say.
+          onFocus={(event) => {
+            onFocus?.(event);
+            const target = event.target;
+            requestAnimationFrame(() => revealInBar(barRef.current, target));
+          }}
+          role="menubar"
+          data-overflow-start={overflowStart || undefined}
+          data-overflow-end={overflowEnd || undefined}
+        >
+          {children}
+          {overflowMenu && hidden.length > 0 && (
+            <MoreMenu
+              hidden={hidden.map(({ info }) => info)}
+              label={labels.more}
+            />
+          )}
+        </div>
       </MenubarPrimitive.Root>
     );
     return (

@@ -222,11 +222,10 @@ ${menubar("value={open} onValueChange={setOpen}", `${fileMenu}\n${editMenu}`)}`,
 ${menubar("", `${fileMenu}\n${editMenu}\n  {/* …more menus */}`)}
 </div>`,
 
-  rightToLeft: `{/* dir is passed to the bar and its menus: the arrow keys swap and submenus open on the start side. The
-    direction of the container lays the triggers out, so a right-to-left page sets it too. */}
-<div dir="rtl">
-${menubar('dir="rtl"', `${fileMenu}\n${editMenu}`)}
-</div>`,
+  rightToLeft: `{/* dir is the bar's direction and its menus': the triggers are laid out from the right, the arrow keys swap and
+    submenus open on the start side. */}
+${menubar('dir="rtl"', `${fileMenu}
+${editMenu}`)}`,
 } as const;
 
 /** The Playground's live controls, as far as the snippet cares. */

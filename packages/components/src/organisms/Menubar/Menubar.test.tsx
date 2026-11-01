@@ -90,6 +90,13 @@ describe("Menubar", () => {
       expect(screen.getByRole("menubar")).toBeInTheDocument();
     });
 
+    it("sets its own direction, which lays the triggers out", () => {
+      const { rerender } = render(<Basic />);
+      expect(screen.getByRole("menubar")).toHaveAttribute("dir", "ltr");
+      rerender(<Basic root={{ dir: "rtl" }} />);
+      expect(screen.getByRole("menubar")).toHaveAttribute("dir", "rtl");
+    });
+
     it("is one tab stop", async () => {
       const user = userEvent.setup();
       render(

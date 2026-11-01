@@ -606,10 +606,8 @@ const [open, setOpen] = useState("");
 ```
 
 ```tsx
-// A right-to-left bar: dir is passed to the bar and its menus, and the container's direction lays the triggers out
-<div dir="rtl">
-  <Menubar aria-label="القائمة" dir="rtl">…</Menubar>
-</div>
+// A right-to-left bar: the triggers are laid out from the right, and the keys and submenus follow
+<Menubar aria-label="القائمة" dir="rtl">…</Menubar>
 ```
 
 ```tsx

@@ -105,7 +105,7 @@ const meta: Meta<typeof Menubar> = {
       control: "select",
       options: ["ltr", "rtl"],
       description:
-        "The reading direction, passed to the bar and its menus: it decides which arrow key moves to the next trigger and which side a submenu opens on.",
+        "The reading direction of the bar and its menus: it lays the triggers out (from the right in rtl), decides which arrow key moves to the next trigger and which side a submenu opens on.",
       table: { defaultValue: { summary: '"ltr"' } },
     },
     "aria-label": {

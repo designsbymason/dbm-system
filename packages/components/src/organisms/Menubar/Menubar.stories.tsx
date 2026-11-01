@@ -31,15 +31,79 @@ const playgroundSource = {
     menubarPlaygroundSnippet(context.args),
 };
 
+// Every control the stories share. A story keeps live only the ones its canvas really shows, and the rest read "–".
+const everyControl = [
+  "size",
+  "surface",
+  "tone",
+  "overflow",
+  "sticky",
+  "stickyOffset",
+  "hotkeys",
+  "labels",
+  "loop",
+  "dir",
+  "aria-label",
+] as const;
+type ControlName = (typeof everyControl)[number];
+const onlyControls = (...live: ControlName[]) =>
+  Object.fromEntries(
+    everyControl.filter((name) => !live.includes(name)).map((name) => [name, { control: false }]),
+  );
+// What a story with one ordinary bar can show.
+const barControls: ControlName[] = ["size", "surface", "tone", "loop", "dir", "aria-label"];
+
+// A box the reader can narrow by dragging its corner (so `overflow` has a room to run out of) and scroll (so `sticky`
+// has something to stick to). `overflow: auto` is also what lets a box be resized.
 const playgroundBoxStyle = {
+  blockSize: 240,
   inlineSize: "100%",
   minInlineSize: 120,
   maxInlineSize: "100%",
   resize: "horizontal",
-  overflow: "hidden",
+  overflow: "auto",
   border: "var(--dbm-border-width-1) dashed var(--dbm-border-default)",
   padding: "var(--dbm-space-1)",
 } as const;
+
+const fillerStyle = {
+  color: "var(--dbm-text-secondary)",
+  display: "grid",
+  fontFamily: "var(--dbm-font-family-primary)",
+  fontSize: "var(--dbm-font-size-sm)",
+  gap: "var(--dbm-space-3)",
+  lineHeight: "var(--dbm-line-height-normal)",
+  padding: "var(--dbm-space-4)",
+} as const;
+
+/** Text under the bar, so a box has something to scroll and a sticky bar something to stay above. */
+function Filler({ count = 8 }: { count?: number }) {
+  return (
+    <div style={fillerStyle}>
+      {Array.from({ length: count }, (_, index) => (
+        <p key={index} style={{ margin: 0 }}>
+          {index === 0
+            ? "Scroll this box: with sticky on, the bar stays at the top while this text moves under it."
+            : "A menu bar holds the commands of a window under a few short headings, so that the rest of the screen can be given to the work itself. Each heading opens a menu, and the arrow keys move between them."}
+        </p>
+      ))}
+    </div>
+  );
+}
+
+function PlaygroundStage(args: MenubarStageArgs) {
+  const box = useRef<HTMLDivElement>(null);
+  return (
+    <div ref={box} style={playgroundBoxStyle}>
+      <Menubar {...barPropsOf(args)} scrollContainerRef={box}>
+        <DemoMenus>
+          <ViewMenu />
+        </DemoMenus>
+      </Menubar>
+      <Filler />
+    </div>
+  );
+}
 
 const meta: Meta<MenubarStageArgs> = {
   title: "Organisms/Navigation/Menubar",
@@ -105,7 +169,7 @@ const meta: Meta<MenubarStageArgs> = {
       control: "select",
       options: ["ltr", "rtl"],
       description:
-        "The reading direction, passed to the bar and its menus: it decides which arrow key moves to the next trigger and which side a submenu opens on.",
+        "The reading direction of the bar and its menus: it lays the triggers out (from the right in rtl), decides which arrow key moves to the next trigger and which side a submenu opens on.",
       table: { defaultValue: { summary: '"ltr"' } },
     },
     "aria-label": {
@@ -162,17 +226,7 @@ const meta: Meta<MenubarStageArgs> = {
     onValueChange: fn(),
     onOpenChangeComplete: fn(),
   },
-  render: (args) => (
-    // A box the reader can narrow by dragging its corner, so `overflow` has a room to run out of. `overflow: hidden` is
-    // what lets a box be resized.
-    <div style={playgroundBoxStyle}>
-      <Menubar {...barPropsOf(args)}>
-        <DemoMenus>
-          <ViewMenu />
-        </DemoMenus>
-      </Menubar>
-    </div>
-  ),
+  render: (args) => <PlaygroundStage {...args} />,
 };
 
 export default meta;
@@ -186,6 +240,7 @@ export const Playground: Story = {
 
 export const IconsAndShortcuts: Story = {
   name: "Icons, shortcut hints and a danger item",
+  argTypes: onlyControls(...barControls),
   parameters: { docs: { source: { code: menubarSnippets.iconsAndShortcuts } } },
   render: (args) => (
     <Menubar {...barPropsOf(args)}>
@@ -217,7 +272,7 @@ export const IconsAndShortcuts: Story = {
 
 export const Sizes: Story = {
   name: "Sizes",
-  argTypes: { size: { control: false }, "aria-label": { control: false } },
+  argTypes: onlyControls("surface", "tone", "loop", "dir"),
   parameters: { docs: { source: { code: menubarSnippets.sizes } } },
   render: (args) => (
     <div
@@ -243,7 +298,7 @@ export const Sizes: Story = {
 
 export const Surfaces: Story = {
   name: "Surfaces",
-  argTypes: { surface: { control: false }, "aria-label": { control: false } },
+  argTypes: onlyControls("size", "tone", "loop", "dir"),
   parameters: { docs: { source: { code: menubarSnippets.surfaces } } },
   render: (args) => (
     <div
@@ -269,11 +324,7 @@ export const Surfaces: Story = {
 
 export const Tones: Story = {
   name: "Tones",
-  argTypes: {
-    tone: { control: false },
-    surface: { control: false },
-    "aria-label": { control: false },
-  },
+  argTypes: onlyControls("size", "loop", "dir"),
   parameters: { docs: { source: { code: menubarSnippets.tones } } },
   render: (args) => (
     <div
@@ -302,6 +353,7 @@ export const Tones: Story = {
 
 export const CheckboxAndRadioItems: Story = {
   name: "Checkbox items, radio items and a submenu",
+  argTypes: onlyControls(...barControls),
   parameters: { docs: { source: { code: menubarSnippets.checkboxAndRadio } } },
   render: (args) => (
     <Menubar {...barPropsOf(args)}>
@@ -312,6 +364,7 @@ export const CheckboxAndRadioItems: Story = {
 
 export const Submenus: Story = {
   name: "Submenus",
+  argTypes: onlyControls(...barControls),
   parameters: { docs: { source: { code: menubarSnippets.submenus } } },
   render: (args) => (
     <Menubar {...barPropsOf(args)}>
@@ -334,6 +387,7 @@ export const Submenus: Story = {
 
 export const DisabledTrigger: Story = {
   name: "A disabled trigger",
+  argTypes: onlyControls(...barControls),
   parameters: { docs: { source: { code: menubarSnippets.disabled } } },
   render: (args) => (
     <Menubar {...barPropsOf(args)}>
@@ -393,6 +447,7 @@ function ControlledBar(args: MenubarStageArgs) {
 
 export const Controlled: Story = {
   name: "Opened from code",
+  argTypes: onlyControls(...barControls),
   parameters: { docs: { source: { code: menubarSnippets.controlled } } },
   render: (args) => <ControlledBar {...args} />,
 };
@@ -406,6 +461,7 @@ const roomStyle = {
 
 export const Overflowing: Story = {
   name: "A bar wider than its room",
+  argTypes: onlyControls(...barControls, "overflow", "labels"),
   parameters: { docs: { source: { code: menubarSnippets.overflowing } } },
   render: (args) => (
     <div style={roomStyle}>
@@ -432,21 +488,21 @@ export const Overflowing: Story = {
 
 export const RightToLeft: Story = {
   name: "Right to left",
+  argTypes: onlyControls(...barControls),
   args: { dir: "rtl" },
   parameters: { docs: { source: { code: menubarSnippets.rightToLeft } } },
   render: (args) => (
-    <div dir="rtl">
-      <Menubar {...barPropsOf(args)}>
-        <DemoMenus>
-          <ViewMenu />
-        </DemoMenus>
-      </Menubar>
-    </div>
+    <Menubar {...barPropsOf(args)}>
+      <DemoMenus>
+        <ViewMenu />
+      </DemoMenus>
+    </Menubar>
   ),
 };
 
 export const Actions: Story = {
   name: "Actions beside the menus",
+  argTypes: onlyControls(...barControls),
   parameters: { docs: { source: { code: menubarSnippets.actions } } },
   render: (args) => (
     <Menubar {...barPropsOf(args)}>
@@ -462,6 +518,7 @@ export const Actions: Story = {
 
 export const IconsAndTrailing: Story = {
   name: "An icon and trailing content on a trigger",
+  argTypes: onlyControls(...barControls),
   parameters: { docs: { source: { code: menubarSnippets.iconsAndTrailing } } },
   render: (args) => (
     <Menubar {...barPropsOf(args)}>
@@ -481,6 +538,7 @@ export const IconsAndTrailing: Story = {
 
 export const DisabledWithAReason: Story = {
   name: "A trigger or an action disabled with a reason",
+  argTypes: onlyControls(...barControls),
   parameters: { docs: { source: { code: menubarSnippets.disabledReason } } },
   render: (args) => (
     <Menubar {...barPropsOf(args)}>
@@ -506,6 +564,7 @@ export const DisabledWithAReason: Story = {
 
 export const HotkeysAndPlatformShortcuts: Story = {
   name: "Hotkeys, and shortcut hints drawn for the platform",
+  argTypes: onlyControls(...barControls, "hotkeys"),
   args: { hotkeys: { file: "alt+f", edit: "alt+e" } },
   parameters: { docs: { source: { code: menubarSnippets.hotkeys } } },
   render: (args) => (
@@ -588,12 +647,14 @@ function ControllerBar(args: MenubarStageArgs) {
 
 export const Controller: Story = {
   name: "Opened from a controller",
+  argTypes: onlyControls(...barControls),
   parameters: { docs: { source: { code: menubarSnippets.controller } } },
   render: (args) => <ControllerBar {...args} />,
 };
 
 export const OverflowMenu: Story = {
   name: "Menus that do not fit move into a More menu",
+  argTypes: onlyControls(...barControls, "overflow", "labels"),
   args: { overflow: "menu" },
   parameters: { docs: { source: { code: menubarSnippets.overflowMenu } } },
   render: (args) => (
@@ -616,6 +677,7 @@ export const OverflowMenu: Story = {
 
 export const Sticky: Story = {
   name: "A sticky bar",
+  argTypes: onlyControls(...barControls, "sticky", "stickyOffset"),
   args: { sticky: true },
   parameters: { docs: { source: { code: menubarSnippets.sticky } } },
   render: (args) => (

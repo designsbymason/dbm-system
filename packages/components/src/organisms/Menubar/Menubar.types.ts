@@ -146,8 +146,8 @@ export interface MenubarProps extends Omit<
    */
   loop?: boolean;
   /**
-   * The reading direction, passed to the bar and its menus: it decides which arrow key moves to the next trigger and
-   * which side a submenu opens on. Defaulted, not read from the page.
+   * The reading direction of the bar and its menus: it lays the triggers out (from the right in `rtl`), decides which
+   * arrow key moves to the next trigger and which side a submenu opens on. Defaulted, not read from the page.
    * @default 'ltr'
    */
   dir?: "ltr" | "rtl";
