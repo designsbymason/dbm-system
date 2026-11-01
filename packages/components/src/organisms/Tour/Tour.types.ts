@@ -16,8 +16,27 @@ export type TourAlign = "start" | "center" | "end";
  */
 export type TourPresentation = "anchored" | "docked";
 
-/** What the card shows for progress: `"text"` writes "Step 2 of 5" (the default), `"none"` shows nothing. */
-export type TourProgress = "text" | "none";
+/**
+ * What the card shows for progress.
+ *
+ * - `"text"` (the default) — "Step 2 of 5".
+ * - `"bar"` — a row of segments, one per step, those reached filled. The text is still read by a screen reader.
+ * - `"both"` — the segments and the text.
+ * - `"none"` — nothing is drawn. The step is still announced when it changes.
+ */
+export type TourProgress = "text" | "bar" | "both" | "none";
+
+/** An event on a step's element that moves the tour to the next step. */
+export type TourAdvanceEvent = "click" | "input" | "change" | "focus" | "submit";
+
+/**
+ * What a step does when its element never appears: `"center"` shows its card in the middle of the screen (the default),
+ * `"skip"` moves on to the next step (or back to the previous one, if the person was going back).
+ */
+export type TourMissingTarget = "center" | "skip";
+
+/** The extra ways out of a tour, beside Skip: `"later"` (remind me later) and `"never"` (don't show again). */
+export type TourDismissal = "later" | "never";
 
 /**
  * Why the tour changed.
@@ -26,9 +45,11 @@ export type TourProgress = "text" | "none";
  * - `"skip"` — Skip was pressed.
  * - `"escape"` — Escape was pressed.
  * - `"outside"` — the dimmed page was pressed, with `closeOnOutsidePress`.
+ * - `"later"` — "Remind me later" was pressed (see `dismissals`).
+ * - `"never"` — "Don't show again" was pressed (see `dismissals`).
  * - `"controller"` — code called `open()` or `close()` on the controller.
  */
-export type TourChangeReason = "finish" | "skip" | "escape" | "outside" | "controller";
+export type TourChangeReason = "finish" | "skip" | "escape" | "outside" | "later" | "never" | "controller";
 
 /** What `onOpenChange` is told besides the new state. */
 export interface TourChangeDetails {
@@ -55,6 +76,10 @@ export interface TourLabels {
   skip: string;
   /** The Next button's text on the last step. @default 'Finish' */
   finish: string;
+  /** The "remind me later" button's text. @default 'Remind me later' */
+  later: string;
+  /** The "don't show again" button's text. @default "Don't show again" */
+  never: string;
   /** The progress text, written from the plain numbers. @default 'Step 2 of 5' */
   stepOf: (current: number, total: number) => string;
   /**
@@ -100,13 +125,35 @@ export interface TourStep {
    */
   padding?: SpaceValue;
   /**
-   * Whether the person can use the highlighted element: a press inside the spotlight reaches it, and focus is not held
-   * inside the card, so Tab can reach the element. The arrow keys then belong to the page, not the card.
+   * Whether the person can use the highlighted element: a press inside the spotlight reaches it, and Tab moves between
+   * the card and the element (the card's last button to the element's first control, the element's last back to the
+   * card). The arrow keys then belong to the page, not the card. Set by default on a step with `advanceOn`.
    * @default false
    */
   interactive?: boolean;
+  /**
+   * An event on the element that moves the tour on by itself, so using the element is the step ("click" the button, type
+   * in the field). Needs a `target`; implies `interactive`.
+   */
+  advanceOn?: TourAdvanceEvent;
+  /**
+   * Called each time the step is about to be shown, before its element is looked for: open a menu, select a tab. The
+   * tour waits for a returned promise. Under `StrictMode` in development it runs twice.
+   */
+  onEnter?: () => void | Promise<void>;
+  /** What to do when this step's element never appears, over the tour's `missingTarget`. */
+  missingTarget?: TourMissingTarget;
+  /** A picture or illustration drawn at the top of the card, above the progress. */
+  media?: ReactNode;
+  /** Extra content between the step's text and its buttons. */
+  footer?: ReactNode;
+  /**
+   * The step's own buttons, in place of Skip, Back and Next: a node, or a function that is handed the tour's controller
+   * (`next()`, `back()`, `goTo()`, `close()`). Escape and the arrow keys still work.
+   */
+  actions?: ReactNode | ((controller: TourController) => ReactNode);
   /** This step's own button text, over the tour's `labels`. */
-  labels?: Partial<Pick<TourLabels, "next" | "back" | "skip" | "finish">>;
+  labels?: Partial<Pick<TourLabels, "next" | "back" | "skip" | "finish" | "later" | "never">>;
 }
 
 /** The controls `controllerRef` hands to code outside the tour. Its identity never changes. */
@@ -156,6 +203,21 @@ export interface TourProps
    * @default 'text'
    */
   progress?: TourProgress;
+  /**
+   * Extra ways out beside Skip, shown on every step but the last: `"later"` and `"never"`, reported as those reasons to
+   * `onOpenChange` so the app can remember them differently (see the `usePersistentDismiss` recipe).
+   */
+  dismissals?: TourDismissal[];
+  /**
+   * What a step does when its element never appears, unless the step says otherwise.
+   * @default 'center'
+   */
+  missingTarget?: TourMissingTarget;
+  /**
+   * Room, in pixels, to keep clear at the top and bottom of the screen when a step's element is scrolled into view: the
+   * height of a sticky header or footer. A page that sets `scroll-padding` needs none.
+   */
+  scrollOffset?: { top?: number; bottom?: number };
   /**
    * How dark the dimmed page is, 0 to 1.
    * @default 0.6

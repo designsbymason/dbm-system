@@ -13,6 +13,8 @@ export function defaultLabelsFor(
     back: "Back",
     skip: "Skip tour",
     finish: "Finish",
+    later: "Remind me later",
+    never: "Don't show again",
     stepOf: progress,
     announcement: (current, total, title) => `${progress(current, total)}: ${title}`,
     dialog: "Tour",
@@ -95,20 +97,42 @@ export function holeClipPath(rect: SpotlightRect): string {
   return `polygon(evenodd, 0 0, 100% 0, 100% 100%, 0 100%, 0 0, ${x1} ${y1}, ${x1} ${y2}, ${x2} ${y2}, ${x2} ${y1}, ${x1} ${y1})`;
 }
 
+export interface ScrollOptions {
+  /** Pixels to keep clear at the bottom (a docked card). */
+  reserve: number;
+  /** Pixels to keep clear at the top and bottom (a sticky header or footer). */
+  offset: { top?: number; bottom?: number } | undefined;
+  smooth: boolean;
+}
+
 /**
- * Brings an element into view: inside any scrolling box it sits in and the page. With a card docked across the bottom,
- * `reserve` keeps that much of the bottom edge clear of it.
+ * Brings an element into view: inside any scrolling box it sits in and the page. `reserve` keeps the bottom edge clear of a
+ * docked card, and `offset` of a sticky header or footer; both are the element's `scroll-margin` for the length of the call.
  */
-export function scrollTargetIntoView(element: HTMLElement, reserve: number, smooth: boolean): void {
+export function scrollTargetIntoView(element: HTMLElement, { reserve, offset, smooth }: ScrollOptions): void {
   const behavior = smooth ? "smooth" : "auto";
-  if (reserve > 0) {
-    const previous = element.style.scrollMarginBlockEnd;
-    element.style.scrollMarginBlockEnd = `${reserve}px`;
-    element.scrollIntoView({ block: "nearest", inline: "nearest", behavior });
-    element.style.scrollMarginBlockEnd = previous;
-    return;
-  }
+  const top = offset?.top ?? 0;
+  const bottom = Math.max(offset?.bottom ?? 0, reserve);
+  const previous = { start: element.style.scrollMarginBlockStart, end: element.style.scrollMarginBlockEnd };
+  if (top > 0) element.style.scrollMarginBlockStart = `${top}px`;
+  if (bottom > 0) element.style.scrollMarginBlockEnd = `${bottom}px`;
   const rect = element.getBoundingClientRect();
-  const fits = rect.top >= 0 && rect.bottom <= window.innerHeight;
-  element.scrollIntoView({ block: fits ? "nearest" : "center", inline: "nearest", behavior });
+  const fits = rect.top >= top && rect.bottom <= window.innerHeight - bottom;
+  element.scrollIntoView({ block: fits || bottom > 0 ? "nearest" : "center", inline: "nearest", behavior });
+  element.style.scrollMarginBlockStart = previous.start;
+  element.style.scrollMarginBlockEnd = previous.end;
+}
+
+const FOCUSABLE = 'a[href], button:not([disabled]), input:not([disabled]):not([type="hidden"]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"]), [contenteditable="true"]';
+
+/** The controls inside an element (or the element itself, if it is one) that Tab reaches, in order. */
+export function focusablesIn(element: HTMLElement): HTMLElement[] {
+  const inside = [...element.querySelectorAll<HTMLElement>(FOCUSABLE)].filter(
+    (candidate) => {
+      if (candidate.closest("[hidden], [inert]")) return false;
+      const style = getComputedStyle(candidate);
+      return style.display !== "none" && style.visibility !== "hidden";
+    },
+  );
+  return element.matches(FOCUSABLE) ? [element, ...inside] : inside;
 }

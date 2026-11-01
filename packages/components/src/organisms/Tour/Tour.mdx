@@ -17,6 +17,9 @@ export const propOrder = [
   "onValueChange",
   "presentation",
   "progress",
+  "dismissals",
+  "missingTarget",
+  "scrollOffset",
   "scrimOpacity",
   "closeOnOutsidePress",
   "targetTimeout",
@@ -44,8 +47,14 @@ export const stepFields = [
   { name: "side", options: ["top", "bottom", "start", "end"], description: "Which side of the element the card sits on. It flips when there is no room. `start` and `end` follow `dir`.", defaultValue: '"bottom"' },
   { name: "align", options: ["start", "center", "end"], description: "Alignment of the card along that side.", defaultValue: '"center"' },
   { name: "padding", options: ["0", "1", "2", "3", "4", "5", "6", "8", "10", "12", "16", "20", "24", "32"], description: "Room between the element and the edge of the spotlight, a step on the spacing scale.", defaultValue: "2" },
-  { name: "interactive", description: "Whether the person can use the highlighted element while the tour is open.", defaultValue: "false" },
-  { name: "labels", description: "This step's own button text (`next`, `back`, `skip`, `finish`), over the tour's `labels`." },
+  { name: "interactive", description: "Whether the person can use the highlighted element while the tour is open. Tab then moves between the card and the element. Set by default on a step with `advanceOn`.", defaultValue: "false" },
+  { name: "advanceOn", options: ["click", "input", "change", "focus", "submit"], description: "An event on the element that moves the tour on by itself, so using the element is the step. Needs a `target`; implies `interactive`." },
+  { name: "onEnter", description: "Called each time the step is about to be shown, before its element is looked for: open a menu, select a tab. The tour waits for a returned promise." },
+  { name: "missingTarget", options: ["center", "skip"], description: "What to do when this step's element never appears, over the tour's `missingTarget`." },
+  { name: "media", description: "A picture or illustration drawn at the top of the card, above the progress." },
+  { name: "footer", description: "Extra content between the step's text and its buttons." },
+  { name: "actions", description: "The step's own buttons in place of Skip, Back and Next: a node, or a function handed the controller (`next()`, `back()`, `goTo()`, `close()`)." },
+  { name: "labels", description: "This step's own button text (`next`, `back`, `skip`, `finish`, `later`, `never`), over the tour's `labels`." },
 ];
 
 <Meta of={TourStories} />
@@ -100,7 +109,8 @@ A step is an object, not a component, so its fields have a table of their own, i
 <FieldsTable rows={stepFields} />
 
 `onOpenChange(open, { reason, stepId })` is told why the tour changed: `"finish"` (Finish on the last step), `"skip"`,
-`"escape"`, `"outside"` (the dimmed page was pressed, with `closeOnOutsidePress`) or `"controller"`. Closing an uncontrolled tour
+`"escape"`, `"outside"` (the dimmed page was pressed, with `closeOnOutsidePress`), `"later"` or `"never"` (the buttons
+`dismissals` adds) or `"controller"`. Closing an uncontrolled tour
 puts it back at its first step, so opening it again starts over.
 
 `controllerRef` receives `{ isOpen, value, open(stepId?), close(), next(), back(), goTo(stepId) }`: the same object for the tour's
@@ -109,6 +119,30 @@ text the tour writes itself (`next`, `back`, `skip`, `finish`, `stepOf`, `announ
 through `formatNumber`.
 
 ## Variants
+
+### Progress as a bar
+
+<Canvas of={TourStories.ProgressBar} />
+
+### Remind me later and don't show again
+
+<Canvas of={TourStories.Dismissals} />
+
+### A picture, a footer and your own buttons
+
+<Canvas of={TourStories.RicherCards} />
+
+### A step that moves on when its element is used
+
+<Canvas of={TourStories.AdvancesByItself} />
+
+### A step that opens what it points at
+
+<Canvas of={TourStories.OpensWhatItPointsAt} />
+
+### Skipping a step whose element is missing
+
+<Canvas of={TourStories.SkipsAMissingElement} />
 
 ### Docked, for a phone
 
@@ -187,13 +221,14 @@ the card's last button.
 
 | Key | Behaviour |
 |---|---|
-| `Tab` / `Shift+Tab` | Move between Skip, Back and Next, and loop inside the card (on an `interactive` step, Tab from Next goes into the element) |
+| `Tab` / `Shift+Tab` | Move between the card's buttons, and loop inside the card; on an `interactive` step the loop runs card, then the element's controls, then the card again, in both directions |
 | `Enter` / `Space` | Press the focused button |
 | `ArrowRight` / `ArrowLeft` | Next and Back, mirrored in right-to-left; not while a field in the step's own text has focus, and not on an `interactive` step |
-| `Escape` | Closes the tour, reported with the reason `"escape"` |
+| `Escape` | Closes the tour, reported with the reason `"escape"`. It is not passed on, so a tour inside a dialog does not close the dialog too |
 
 Every control is at least 24 × 24 CSS pixels. The spotlight and card animate unless the person prefers reduced motion, when they
-move without easing and the page scrolls without smoothing. In forced-colours mode the dim is gone, since a shadow is not drawn, and
+move without easing and the page scrolls without smoothing. A docked card keeps clear of a phone's home indicator and of an
+on-screen keyboard. In forced-colours mode the dim is gone, since a shadow is not drawn, and
 the element is told from the page by an outline in the system highlight colour.
 
 </Callout>
@@ -236,6 +271,33 @@ const tour = useRef<TourController | null>(null);
 ```
 
 ```tsx
+{/* "Remind me later" comes back in a week; the rest are remembered for good */}
+const later = usePersistentDismiss("product-tour-later", { expiresAfter: 7 * 24 * 60 * 60 * 1000 });
+const done = usePersistentDismiss("product-tour");
+
+<Tour
+  open={later.ready && done.ready && !later.dismissed && !done.dismissed}
+  dismissals={["later", "never"]}
+  onOpenChange={(open, { reason }) => {
+    if (open) return;
+    if (reason === "later") later.dismiss();
+    else if (reason !== "escape") done.dismiss();
+  }}
+  steps={steps}
+/>
+```
+
+```tsx
+{/* To tour something inside a modal Dialog, render the tour inside Dialog.Content */}
+<Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+  <Dialog.Content>
+    {/* … the dialog's form … */}
+    <Tour open={tourOpen} onOpenChange={setTourOpen} steps={steps} />
+  </Dialog.Content>
+</Dialog>
+```
+
+```tsx
 {/* A native <div> attribute on the card, and the tour drawn into your own container */}
 <Tour lang="de" title="Produkttour" container={appRoot} steps={steps} />
 ```
@@ -244,20 +306,25 @@ const tour = useRef<TourController | null>(null);
 
 <TokenRow token="bg.overlay" usage="the dimmed page around the spotlight, at the scrim's opacity" />
 <TokenRow token="opacity.60" usage="how dark the dimmed page is, until scrimOpacity says otherwise" />
+<TokenRow token="bg.brand" usage="a reached segment of the progress bar" />
+<TokenRow token="bg.neutral-subtle" usage="a segment of the progress bar not yet reached" />
 <TokenRow token="bg.surface" usage="the card's background, and the arrow's fill" />
 <TokenRow token="border.default" usage="the card's border, and the arrow's stroke" />
 <TokenRow token="text.primary" usage="the card's text" />
 <TokenRow token="border-width.1" usage="the card's border" />
 <TokenRow token="border-width.2" usage="the spotlight's outline in forced colours" />
 <TokenRow token="radius.md" usage="the card's corners and the spotlight's" />
+<TokenRow token="radius.sm" usage="the corners of a step's media" />
+<TokenRow token="radius.full" usage="the progress segments" />
 <TokenRow token="shadow.light-md" usage="the card's elevation in a light theme" />
 <TokenRow token="shadow.dark-md" usage="the card's elevation in a dark theme" />
 <TokenRow token="font-family.primary" usage="the card's typography, set because the card is drawn outside the app" />
 <TokenRow token="popover.max-width" usage="the widest the card grows" />
+<TokenRow token="space.1" usage="the gap between progress segments, and a segment's height" />
 <TokenRow token="space.2" usage="the gap between the card's parts, and its buttons" />
 <TokenRow token="space.4" usage="the card's padding; its inset from the screen when docked or centred" />
-<TokenRow token="z-index.overlay" usage="the dimmed page and the layer that blocks presses" />
-<TokenRow token="z-index.popover" usage="the card, above the dimmed page and above a modal dialog" />
+<TokenRow token="z-index.modal" usage="the dimmed page and the layer that blocks presses, drawn after a dialog's panel so above it when a tour runs inside one" />
+<TokenRow token="z-index.popover" usage="the card, above the dimmed page and above a modal dialog's panel" />
 <TokenRow token="motion.duration.base" usage="the tour fading in and out, and the spotlight moving between steps" />
 <TokenRow token="motion.easing.standard" usage="the same" />
 <TokenRow token="opacity.0" usage="the start and end of the fades" />

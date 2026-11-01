@@ -39,6 +39,8 @@ describe("Tour — server render and hydration", () => {
   });
 
   it("hydrates the same markup with no recoverable error, then draws the tour", async () => {
+    // The first test unstubbed the setup's browser stubs, and a real browser has this one.
+    vi.stubGlobal("ResizeObserver", class { observe() {} unobserve() {} disconnect() {} });
     const host = document.createElement("div");
     host.innerHTML = renderToString(tree);
     document.body.appendChild(host);

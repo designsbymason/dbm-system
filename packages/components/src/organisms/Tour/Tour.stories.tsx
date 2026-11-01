@@ -1,13 +1,14 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { expect, userEvent, waitFor, within } from "storybook/test";
 import { tourPlaygroundSnippet, tourSnippets } from "./Tour.snippets";
-import type { TourPresentation, TourProgress, TourProps } from "./Tour.types";
-import { ControlledDemo, ControllerDemo, Demo, interactiveSteps, SeenOnceDemo, welcomeSteps } from "./TourStoryKit";
+import type { TourMissingTarget, TourPresentation, TourProgress, TourProps } from "./Tour.types";
+import { advancingSteps, ControlledDemo, ControllerDemo, Demo, interactiveSteps, missingSteps, OnEnterDemo, richSteps, SeenOnceDemo, welcomeSteps } from "./TourStoryKit";
 import type { DemoProps } from "./TourStoryKit";
 
 interface PlaygroundArgs extends DemoProps {
   presentation: TourPresentation;
   progress: TourProgress;
+  missingTarget: TourMissingTarget;
   scrimOpacity: number;
   closeOnOutsidePress: boolean;
   targetTimeout: number;
@@ -21,6 +22,9 @@ interface PlaygroundArgs extends DemoProps {
 const noControls = {
   presentation: { control: false },
   progress: { control: false },
+  missingTarget: { control: false },
+  dismissals: { control: false },
+  scrollOffset: { control: false },
   scrimOpacity: { control: false },
   closeOnOutsidePress: { control: false },
   targetTimeout: { control: false },
@@ -58,9 +62,23 @@ const meta: Meta<PlaygroundArgs> = {
     },
     progress: {
       control: "select",
-      options: ["text", "none"],
-      description: 'What the card shows for progress: "Step 2 of 5", or nothing.',
+      options: ["text", "bar", "both", "none"],
+      description: 'What the card shows for progress: "Step 2 of 5", a bar of segments, both, or nothing.',
       table: { defaultValue: { summary: '"text"' } },
+    },
+    dismissals: {
+      control: false,
+      description: 'Extra ways out beside Skip, shown on every step but the last: "later" (Remind me later) and "never" (Don\'t show again), reported as those reasons to onOpenChange.',
+    },
+    missingTarget: {
+      control: "select",
+      options: ["center", "skip"],
+      description: "What a step does when its element never appears, unless the step says otherwise: show its card in the middle of the screen, or move on.",
+      table: { defaultValue: { summary: '"center"' } },
+    },
+    scrollOffset: {
+      control: false,
+      description: "Room, in pixels, to keep clear at the top and bottom of the screen when an element is scrolled into view: the height of a sticky header or footer.",
     },
     scrimOpacity: {
       control: { type: "number", min: 0, max: 1, step: 0.1 },
@@ -108,6 +126,7 @@ export const Playground: Story = {
   args: {
     presentation: "anchored",
     progress: "text",
+    missingTarget: "center",
     scrimOpacity: 0.6,
     closeOnOutsidePress: false,
     targetTimeout: 1000,
@@ -120,6 +139,42 @@ export const Playground: Story = {
     },
   },
   render: ({ "aria-label": ariaLabel, ...args }) => <Demo {...args} aria-label={ariaLabel || undefined} />,
+};
+
+export const ProgressBar: Story = {
+  argTypes: noControls,
+  parameters: { docs: { source: { code: tourSnippets.progress } } },
+  render: () => <Demo progress="both" />,
+};
+
+export const Dismissals: Story = {
+  argTypes: noControls,
+  parameters: { docs: { source: { code: tourSnippets.dismissals } } },
+  render: () => <Demo dismissals={["later", "never"]} />,
+};
+
+export const RicherCards: Story = {
+  argTypes: noControls,
+  parameters: { docs: { source: { code: tourSnippets.richer } } },
+  render: () => <Demo steps={richSteps} />,
+};
+
+export const AdvancesByItself: Story = {
+  argTypes: noControls,
+  parameters: { docs: { source: { code: tourSnippets.advance } } },
+  render: () => <Demo steps={advancingSteps} />,
+};
+
+export const OpensWhatItPointsAt: Story = {
+  argTypes: noControls,
+  parameters: { docs: { source: { code: tourSnippets.onEnter } } },
+  render: () => <OnEnterDemo />,
+};
+
+export const SkipsAMissingElement: Story = {
+  argTypes: noControls,
+  parameters: { docs: { source: { code: tourSnippets.missing } } },
+  render: () => <Demo steps={missingSteps} missingTarget="skip" targetTimeout={200} />,
 };
 
 export const Docked: Story = {

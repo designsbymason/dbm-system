@@ -1,5 +1,6 @@
 /* The portal's own box. It is deliberately not positioned, so it makes no stacking context of its own and its children
-   sit on their own z-index steps: the dim and the shield on `overlay`, the card on `popover`. */
+   sit on their own z-index steps: the dim and the shield on `modal` (drawn after a dialog's panel, so above it when a tour
+   is run inside one), the card on `popover`. */
 .layer[data-state="open"] {
   animation: fadeIn var(--dbm-motion-duration-base) var(--dbm-motion-easing-standard);
 }
@@ -21,8 +22,10 @@
    and hit-testing follows the clip. A wheel or a touch drag over it still scrolls the page. */
 .shield {
   inset: 0;
+  /* A modal dialog's own layer sets `pointer-events: none` on the page outside it. */
+  pointer-events: auto;
   position: fixed;
-  z-index: var(--dbm-z-index-overlay);
+  z-index: var(--dbm-z-index-modal);
 }
 
 /* The spotlight. Its box is the element's box plus `--tour-padding`; the page is dimmed by a shadow spread past the
@@ -50,7 +53,7 @@
     block-size var(--dbm-motion-duration-base) var(--dbm-motion-easing-standard),
     padding var(--dbm-motion-duration-base) var(--dbm-motion-easing-standard),
     margin var(--dbm-motion-duration-base) var(--dbm-motion-easing-standard);
-  z-index: var(--dbm-z-index-overlay);
+  z-index: var(--dbm-z-index-modal);
 }
 
 /* The card: the same surface as `Popover`'s panel. `font-family` is set because the layer is portaled outside the app. */
@@ -67,6 +70,7 @@
   gap: var(--dbm-space-2);
   max-inline-size: min(var(--dbm-popover-max-width), var(--radix-popper-available-width, 100%));
   padding: var(--dbm-space-4);
+  pointer-events: auto;
   position: relative;
   z-index: var(--dbm-z-index-popover);
 }
@@ -88,9 +92,11 @@
   position: fixed;
 }
 
+/* Clear of a home indicator (the safe area) and of an on-screen keyboard (`--tour-keyboard-inset`, set from the visual
+   viewport). */
 .docked {
   inline-size: auto;
-  inset-block-end: var(--dbm-space-4);
+  inset-block-end: calc(max(var(--dbm-space-4), env(safe-area-inset-bottom, 0px)) + var(--tour-keyboard-inset, 0px));
   inset-inline: var(--dbm-space-4);
   max-inline-size: none;
   position: fixed;
@@ -98,6 +104,36 @@
 
 .progress {
   margin: 0;
+}
+
+.media {
+  border-radius: var(--dbm-radius-sm);
+  overflow: hidden;
+}
+
+.media > * {
+  display: block;
+  inline-size: 100%;
+}
+
+.footer {
+  margin: 0;
+}
+
+.bar {
+  display: flex;
+  gap: var(--dbm-space-1);
+}
+
+.segment {
+  background-color: var(--dbm-bg-neutral-subtle);
+  block-size: var(--dbm-space-1);
+  border-radius: var(--dbm-radius-full);
+  flex: 1;
+}
+
+.segment[data-reached] {
+  background-color: var(--dbm-bg-brand);
 }
 
 .title {
@@ -148,6 +184,15 @@
 
 /* Forced colours drops a shadow, so the dim is gone: the element is told from the page by an outline in a system colour. */
 @media (forced-colors: active) {
+  .segment {
+    background-color: GrayText;
+    forced-color-adjust: none;
+  }
+
+  .segment[data-reached] {
+    background-color: Highlight;
+  }
+
   .ring {
     box-shadow: none;
     outline: var(--dbm-border-width-2) solid Highlight;

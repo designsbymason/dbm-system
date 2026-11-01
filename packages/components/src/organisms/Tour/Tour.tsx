@@ -3,7 +3,7 @@ import * as PopperPrimitive from "@radix-ui/react-popper";
 import { Portal as PortalPrimitive } from "@radix-ui/react-portal";
 import { Presence } from "@radix-ui/react-presence";
 import { forwardRef, useCallback, useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from "react";
-import type { CSSProperties, KeyboardEvent } from "react";
+import type { CSSProperties, FocusEvent, KeyboardEvent } from "react";
 import { VisuallyHidden } from "../../atoms/VisuallyHidden";
 import { FocusTrap } from "../../atoms/FocusTrap";
 import { OverlayArrow } from "../../internal/OverlayArrow/OverlayArrow";
@@ -14,7 +14,16 @@ import styles from "./Tour.module.css";
 import { TourCard } from "./TourCard";
 import type { TourAction } from "./TourCard";
 import type { TourProps } from "./Tour.types";
-import { defaultLabelsFor, holeClipPath, labelsForStep, physicalSide, plainTitle, scrollTargetIntoView } from "./tourHelpers";
+import {
+  defaultLabelsFor,
+  focusablesIn,
+  holeClipPath,
+  labelsForStep,
+  physicalSide,
+  plainTitle,
+  scrollTargetIntoView,
+} from "./tourHelpers";
+import { useKeyboardInset } from "./useKeyboardInset";
 import { useTourController } from "./useTourController";
 import { useTourSpotlight } from "./useTourSpotlight";
 import { useTourState } from "./useTourState";
@@ -34,8 +43,9 @@ const COLLISION_PADDING = 8;
  * pass `open`, or use `controllerRef`. It has no trigger of its own. What the person finishes or skips is reported to
  * `onOpenChange` with a reason, which is where an app remembers that the tour has been seen (`usePersistentDismiss`).
  *
- * While it is open the dimmed page cannot be pressed (a step marked `interactive` leaves a hole over its element), the
- * page can still be scrolled, and focus stays inside the card. A step with no `target`, or whose element does not appear,
+ * While it is open the dimmed page cannot be pressed (a step marked `interactive` or with `advanceOn` leaves a hole over its
+ * element), the page can still be scrolled, and focus stays inside the card. It can be drawn inside a modal `Dialog`: render it
+ * inside `Dialog.Content`, so a press on it is not read as a press outside the dialog. A step with no `target`, or whose element does not appear,
  * is a card in the middle of the screen. On a phone, `presentation="docked"` pins the card across the bottom.
  *
  * It renders its card in a portal and forwards `ref`, `className`, `style`, `id` and `data-testid` to the card, the
@@ -65,6 +75,9 @@ export const Tour = forwardRef<HTMLDivElement, TourProps>(
       onValueChange,
       presentation = "anchored",
       progress = "text",
+      dismissals = [],
+      missingTarget = "center",
+      scrollOffset,
       scrimOpacity,
       closeOnOutsidePress = false,
       targetTimeout = 1000,
@@ -92,10 +105,11 @@ export const Tour = forwardRef<HTMLDivElement, TourProps>(
       defaultValue,
       onValueChange,
     });
-    useTourController(controllerRef, state);
+    const controller = useTourController(controllerRef, state);
     const { open, step, index, requestClose, next, back } = state;
     const total = steps.length;
     const visible = open && total > 0;
+    const stepId = step?.id;
 
     const labels = labelsForStep(
       mergeDefined(defaultLabelsFor(formatNumber, labelsProp?.stepOf), labelsProp),
@@ -113,13 +127,63 @@ export const Tour = forwardRef<HTMLDivElement, TourProps>(
     const cardNode = useRef<HTMLDivElement | null>(null);
     const cardRef = useMemo(() => mergeRefs(ref, setCard, cardNode), [ref]);
 
-    const spot = useTourSpotlight({ step, active: visible, layerRef: originRef, timeout: targetTimeout, onMissing: onTargetMissing });
+    // A step's `onEnter` runs before its element is looked for; the card waits for it.
+    const [entered, setEntered] = useState<string | null>(null);
+    const latestStep = useRef(step);
+    useEffect(() => {
+      latestStep.current = step;
+    });
+    useEffect(() => {
+      if (!visible || stepId === undefined) return undefined;
+      let cancelled = false;
+      const id = stepId;
+      Promise.resolve()
+        .then(() => latestStep.current?.onEnter?.())
+        .catch((error: unknown) => {
+          warnOnce(`Tour: the onEnter of the step "${id}" threw (${String(error)}); the step is shown anyway.`);
+        })
+        .then(() => {
+          if (!cancelled) setEntered(id);
+        });
+      return () => {
+        cancelled = true;
+      };
+    }, [visible, stepId]);
+    useEffect(
+      () => () => {
+        setEntered(null);
+      },
+      [visible],
+    );
+    const hold = visible && Boolean(step?.onEnter) && entered !== stepId;
+
+    const spot = useTourSpotlight({
+      step,
+      active: visible,
+      layerRef: originRef,
+      timeout: targetTimeout,
+      hold,
+      onMissing: onTargetMissing,
+    });
     const centered = spot.status !== "found";
     const docked = resolvedPresentation === "docked";
     const placement = centered ? "centered" : docked ? "docked" : "anchored";
-    const interactive = Boolean(step?.interactive) && !centered;
+    const interactive = (step?.interactive ?? step?.advanceOn !== undefined) && !centered;
+
+    // Which way the person is going, so a step whose element is missing is skipped in that direction.
+    const [direction, setDirection] = useState<1 | -1>(1);
+    const missingMode = step?.missingTarget ?? missingTarget;
+    const canSkip = direction === 1 ? index < total - 1 : index > 0;
+    const skipping = spot.status === "missing" && missingMode === "skip" && canSkip;
+    useEffect(() => {
+      if (!skipping) return;
+      if (direction === 1) next();
+      else back();
+    }, [skipping, direction, next, back]);
+
     // The card waits for a box measured for this very step, so it is drawn once, in its place.
-    const cardReady = spot.rect !== null && spot.status !== "waiting" && spot.rect.owner === spot.element;
+    const cardReady =
+      spot.rect !== null && spot.status !== "waiting" && !skipping && spot.rect.owner === spot.element;
 
     // Development checks, once per message.
     useEffect(() => {
@@ -128,6 +192,9 @@ export const Tour = forwardRef<HTMLDivElement, TourProps>(
       for (const candidate of steps) {
         if (ids.has(candidate.id)) warnOnce(`Tour: two steps share the id "${candidate.id}"; each id must be unique.`);
         ids.add(candidate.id);
+        if (candidate.advanceOn && candidate.target === undefined) {
+          warnOnce(`Tour: the step "${candidate.id}" has advanceOn but no target, so nothing can advance it.`);
+        }
       }
       if (open && steps.length === 0) warnOnce("Tour: it is open but has no steps, so nothing is drawn.");
     }, [steps, open]);
@@ -140,15 +207,37 @@ export const Tour = forwardRef<HTMLDivElement, TourProps>(
       return () => restore(new Event("tour"));
     }, [visible, remember, restore]);
 
-    // Move to a step: bring the element into view, clear of a docked card.
+    // Move to a step: bring the element into view, clear of a docked card and of a sticky header or footer.
+    const offsetTop = scrollOffset?.top;
+    const offsetBottom = scrollOffset?.bottom;
     useEffect(() => {
       const element = spot.element;
       if (!visible || !element) return;
       const reserve = docked && card ? Math.max(0, window.innerHeight - card.getBoundingClientRect().top) : 0;
-      scrollTargetIntoView(element, reserve, !reducedMotion);
+      scrollTargetIntoView(element, { reserve, offset: { top: offsetTop, bottom: offsetBottom }, smooth: !reducedMotion });
       // Only when the element or the layout changes, not on every card render.
       // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [visible, spot.element, docked]);
+    }, [visible, spot.element, docked, offsetTop, offsetBottom]);
+
+    // A step that advances by itself when its element is used.
+    const advanceOn = step?.advanceOn;
+    useEffect(() => {
+      const element = spot.element;
+      if (!visible || !advanceOn || !element) return undefined;
+      let fired = false;
+      let timer = 0;
+      const onEvent = () => {
+        if (fired) return;
+        fired = true;
+        // After the element's own handlers have run.
+        timer = window.setTimeout(next, 0);
+      };
+      element.addEventListener(advanceOn, onEvent, true);
+      return () => {
+        element.removeEventListener(advanceOn, onEvent, true);
+        window.clearTimeout(timer);
+      };
+    }, [visible, advanceOn, spot.element, next]);
 
     // Say which step it is on, when it changes. The first appearance is read out by the card getting focus.
     const { message, announce } = useAnnouncement();
@@ -171,38 +260,83 @@ export const Tour = forwardRef<HTMLDivElement, TourProps>(
       [visible],
     );
 
-    // Keep focus on the control that was pressed across a step, even when the card is drawn afresh or Back is gone.
-    const pendingFocus = useRef<TourAction | null>(null);
-    const stepId = step?.id;
+    // Keep focus where it was across a step or a change of form (anchored to docked and back), even when the card is drawn
+    // afresh or the control that was pressed is gone: on that control by name, else the card.
+    const pendingFocus = useRef<TourAction | "card" | null>(null);
+    const focusState = useRef<{ inside: boolean; action: TourAction | null }>({ inside: false, action: null });
     useEffect(() => {
-      const wanted = pendingFocus.current;
-      // The card is drawn afresh while the next step's element is looked for; wait for the one that is in the page.
-      if (!wanted || !card?.isConnected) return;
+      if (!card?.isConnected) return;
+      let wanted = pendingFocus.current;
+      const lost = document.activeElement === document.body || document.activeElement === null;
+      if (!wanted && focusState.current.inside && lost) wanted = focusState.current.action ?? "card";
+      if (!wanted) return;
       pendingFocus.current = null;
       const control =
-        card.querySelector<HTMLElement>(`[data-tour-action="${wanted}"]`) ??
-        card.querySelector<HTMLElement>('[data-tour-action="next"]');
-      if (control && control !== document.activeElement) control.focus({ preventScroll: true });
+        wanted === "card"
+          ? card
+          : (card.querySelector<HTMLElement>(`[data-tour-action="${wanted}"]`) ??
+            card.querySelector<HTMLElement>('[data-tour-action="next"]') ??
+            card);
+      if (control !== document.activeElement) control.focus({ preventScroll: true });
     }, [card, stepId]);
+    useEffect(
+      () => () => {
+        focusState.current = { inside: false, action: null };
+      },
+      [visible],
+    );
+    const onCardFocus = (event: FocusEvent<HTMLDivElement>) => {
+      const action = (event.target as HTMLElement).getAttribute("data-tour-action") as TourAction | null;
+      focusState.current = { inside: true, action };
+    };
+    const onCardBlur = (event: FocusEvent<HTMLDivElement>) => {
+      const to = event.relatedTarget as Node | null;
+      // A blur to nowhere is what removing the focused card looks like; only a move to another element leaves it.
+      if (to && !event.currentTarget.contains(to)) focusState.current = { inside: false, action: null };
+    };
 
-    // Escape closes, wherever focus is.
+    // Escape closes, wherever focus is, and is not passed on: a tour inside a dialog must not close the dialog too.
     useEffect(() => {
       if (!visible) return undefined;
       const onKeyDown = (event: globalThis.KeyboardEvent) => {
-        if (event.key !== "Escape" || event.defaultPrevented || event.isComposing) return;
+        if (event.key !== "Escape" || event.isComposing) return;
+        event.stopPropagation();
         requestClose("escape");
+      };
+      window.addEventListener("keydown", onKeyDown, true);
+      return () => window.removeEventListener("keydown", onKeyDown, true);
+    }, [visible, requestClose]);
+
+    // On a step that lets the page be used, Tab moves between the card and the element's own controls, both ways.
+    const targetElement = spot.element;
+    useEffect(() => {
+      if (!visible || !interactive || !targetElement) return undefined;
+      const onKeyDown = (event: globalThis.KeyboardEvent) => {
+        // The card's own handler has already moved focus on a press that began there.
+        if (event.key !== "Tab" || event.defaultPrevented || event.altKey || event.ctrlKey || event.metaKey) return;
+        const active = document.activeElement as HTMLElement | null;
+        if (!active || !targetElement.contains(active)) return;
+        const controls = focusablesIn(targetElement);
+        const edge = event.shiftKey ? controls[0] : controls[controls.length - 1];
+        if (active !== edge && controls.length > 0) return;
+        const own = card ? focusablesIn(card) : [];
+        const to = event.shiftKey ? own[own.length - 1] : own[0];
+        if (!to) return;
+        event.preventDefault();
+        to.focus();
       };
       document.addEventListener("keydown", onKeyDown);
       return () => document.removeEventListener("keydown", onKeyDown);
-    }, [visible, requestClose]);
+    }, [visible, interactive, targetElement, card]);
 
     const onAction = useCallback(
       (action: TourAction) => {
-        if (action === "skip") {
-          requestClose("skip");
+        if (action === "skip" || action === "later" || action === "never") {
+          requestClose(action);
           return;
         }
         pendingFocus.current = action;
+        setDirection(action === "next" ? 1 : -1);
         if (action === "next") next();
         else back();
       },
@@ -216,34 +350,36 @@ export const Tour = forwardRef<HTMLDivElement, TourProps>(
         event.preventDefault();
         const forward = (event.key === "ArrowRight") === (dir === "ltr");
         pendingFocus.current = forward ? "next" : "back";
+        setDirection(forward ? 1 : -1);
         if (forward) next();
         else back();
         return;
       }
-      // On a step that lets the page be used, Tab from the card's last control goes on into the highlighted element.
-      if (interactive && event.key === "Tab" && !event.shiftKey && spot.element) {
-        const controls = event.currentTarget.querySelectorAll<HTMLElement>("[data-tour-action]");
-        if (event.target === controls[controls.length - 1]) {
-          const inside = spot.element.matches("a[href], button, input, select, textarea, [tabindex]")
-            ? spot.element
-            : spot.element.querySelector<HTMLElement>("a[href], button, input, select, textarea, [tabindex]");
-          if (inside) {
-            event.preventDefault();
-            inside.focus();
-          }
+      // On a step that lets the page be used, the card's ends hand Tab on to the element's controls, or round to each other.
+      if (interactive && event.key === "Tab") {
+        const own = focusablesIn(event.currentTarget);
+        const controls = spot.element ? focusablesIn(spot.element) : [];
+        if (!event.shiftKey && event.target === own[own.length - 1]) {
+          event.preventDefault();
+          (controls[0] ?? own[0])?.focus();
+        } else if (event.shiftKey && (event.target === own[0] || event.target === event.currentTarget)) {
+          event.preventDefault();
+          (controls[controls.length - 1] ?? own[own.length - 1])?.focus();
         }
       }
     };
 
     const onMountAutoFocus = (event: Event) => {
       event.preventDefault();
-      if (!pendingFocus.current) cardNode.current?.focus({ preventScroll: true });
+      if (!pendingFocus.current && !focusState.current.inside) cardNode.current?.focus({ preventScroll: true });
     };
 
+    const keyboardInset = useKeyboardInset(visible && placement === "docked");
     const padding = centered ? 0 : (step?.padding ?? 2);
     const layerStyle = {
       "--tour-padding": `var(--dbm-space-${padding})`,
       ...(scrimOpacity === undefined ? null : { "--tour-scrim-opacity": String(scrimOpacity) }),
+      ...(keyboardInset > 0 ? { "--tour-keyboard-inset": `${keyboardInset}px` } : null),
     } as CSSProperties;
     const ringStyle: CSSProperties | undefined = spot.rect
       ? {
@@ -255,18 +391,23 @@ export const Tour = forwardRef<HTMLDivElement, TourProps>(
     const shieldStyle: CSSProperties | undefined =
       interactive && spot.rect ? { clipPath: holeClipPath(spot.rect) } : undefined;
 
+    const actions = typeof step?.actions === "function" ? step.actions(controller) : step?.actions;
     const cardElement = step && cardReady && (
       <TourCard
         {...rest}
         ref={cardRef}
         title={step.title}
         content={step.content}
+        media={step.media}
+        footer={step.footer}
+        actions={actions}
         titleId={titleId}
         contentId={contentId}
         index={index}
         total={total}
         labels={labels}
         progress={progress}
+        dismissals={dismissals}
         dir={dir}
         placement={placement}
         interactive={interactive}
@@ -279,6 +420,8 @@ export const Tour = forwardRef<HTMLDivElement, TourProps>(
         }
         onAction={onAction}
         onKeyDown={onKeyDown}
+        onFocus={onCardFocus}
+        onBlur={onCardBlur}
         className={className}
         style={style}
         aria-label={ariaLabel ?? (typeof step.title === "string" || step.textValue ? undefined : labels.dialog)}
@@ -322,8 +465,7 @@ export const Tour = forwardRef<HTMLDivElement, TourProps>(
                     collisionPadding={COLLISION_PADDING}
                     // Popper measures against the screen; a tour drawn into a box has to stay inside that box.
                     collisionBoundary={container ?? undefined}
-                    updatePositionStrategy="always"
-                  >
+                                      >
                     {cardElement}
                   </PopperPrimitive.Content>
                 ) : (

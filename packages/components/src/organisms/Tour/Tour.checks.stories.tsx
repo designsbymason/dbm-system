@@ -1,7 +1,9 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { expect, userEvent, waitFor, within } from "storybook/test";
 import { Button } from "../../atoms/Button";
+import { Input } from "../../atoms/Input";
+import { Dialog } from "../Dialog";
 import { send } from "../../molecules/CodeBlock/browserProtocol";
 import { Tour } from "./Tour";
 import type { TourStep } from "./Tour.types";
@@ -263,6 +265,8 @@ export const ARealPressOnNextChangesTheStep: Story = {
     await expect(ring.left).not.toBe(before.left);
     await expect(ring.left).toBeLessThanOrEqual(element.left);
     await expect(ring.right).toBeGreaterThanOrEqual(element.right);
+    // The card followed the spotlight to its new place and sits clear of it.
+    await expect(body.getByRole("dialog").getBoundingClientRect().top).toBeGreaterThanOrEqual(ring.bottom);
     await closeWithEscape();
   },
 };
@@ -458,6 +462,213 @@ export const EveryControlIsAtLeast24Pixels: Story = {
     for (const button of within(dialog).getAllByRole("button")) {
       const rect = button.getBoundingClientRect();
       await expect(rect.width).toBeGreaterThanOrEqual(24);
+      await expect(rect.height).toBeGreaterThanOrEqual(24);
+    }
+    await closeWithEscape();
+  },
+};
+
+function Swapping() {
+  const [presentation, setPresentation] = useState<"anchored" | "docked">("docked");
+  // Toggled from the check with an event, since the page behind the tour cannot be pressed.
+  useEffect(() => {
+    const toggle = () => setPresentation((current) => (current === "docked" ? "anchored" : "docked"));
+    window.addEventListener("tour-swap", toggle);
+    return () => window.removeEventListener("tour-swap", toggle);
+  }, []);
+  return <Demo presentation={presentation} />;
+}
+
+export const FocusSurvivesAChangeOfForm: Story = {
+  name: "Focus stays on Next when the card changes form (docked to anchored and back)",
+  render: () => <Swapping />,
+  play: async () => {
+    const dialog = await startTour();
+    while (document.activeElement !== within(dialog).getByRole("button", { name: "Next" })) await userEvent.tab();
+    await expect(dialog).toHaveAttribute("data-placement", "docked");
+    window.dispatchEvent(new Event("tour-swap"));
+    await waitFor(() => expect(body.getByRole("dialog")).toHaveAttribute("data-placement", "anchored"));
+    await settled();
+    await expect(body.getByRole("button", { name: "Next" })).toHaveFocus();
+    window.dispatchEvent(new Event("tour-swap"));
+    await waitFor(() => expect(body.getByRole("dialog")).toHaveAttribute("data-placement", "docked"));
+    await settled();
+    await expect(body.getByRole("button", { name: "Next" })).toHaveFocus();
+    await closeWithEscape();
+  },
+};
+
+export const TabGoesRoundBetweenTheCardAndAnInteractiveElement: Story = {
+  name: "On an interactive step Tab goes from the card into the element and back, in both directions",
+  render: () => <Demo steps={interactiveSteps} />,
+  play: async () => {
+    const dialog = await startTour();
+    const field = body.getByRole("textbox", { name: "Search" });
+    const next = within(dialog).getByRole("button", { name: "Next" });
+    next.focus();
+    await userEvent.tab();
+    await expect(field).toHaveFocus();
+    await userEvent.tab();
+    await expect(dialog.contains(document.activeElement)).toBe(true);
+    await userEvent.tab({ shift: true });
+    await expect(field).toHaveFocus();
+    await userEvent.tab({ shift: true });
+    await expect(next).toHaveFocus();
+    await closeWithEscape();
+  },
+};
+
+export const UsingTheElementAdvancesTheStep: Story = {
+  name: "A real press on an element with advanceOn moves the tour on",
+  render: () => (
+    <Demo
+      steps={(find) => [
+        { id: "create", target: () => find("create"), title: "Press the button", advanceOn: "click" },
+        { id: "done", title: "Well done" },
+      ]}
+    />
+  ),
+  play: async () => {
+    await startTour();
+    const { x, y } = centreOf(demoElement("create"));
+    await realClickAt(x, y);
+    await waitFor(() => expect(body.getByRole("dialog")).toHaveAccessibleName("Well done"));
+    await closeWithEscape();
+  },
+};
+
+export const AStillPageIsNotMeasuredEveryFrame: Story = {
+  name: "A tour on a still page slows its measuring down, and speeds up again when the page scrolls",
+  render: () => <ScrollingPage />,
+  parameters: { layout: "fullscreen" },
+  play: async () => {
+    await body.findByRole("dialog");
+    await settled();
+    await sleep(900);
+    // Count the frames the tour (and the positioning engine it follows) asks for, by who is asking, over 700ms: a page that
+    // measured every frame would ask about forty times.
+    const original = window.requestAnimationFrame;
+    let asked = 0;
+    window.requestAnimationFrame = (callback) => {
+      if (/useTourSpotlight|frameLoop/.test(new Error().stack ?? "")) asked += 1;
+      return original(callback);
+    };
+    await sleep(700);
+    window.requestAnimationFrame = original;
+    await expect(asked).toBeLessThan(8);
+    window.scrollBy(0, 40);
+    await settled();
+    const box = (ringOf() as HTMLElement).getBoundingClientRect();
+    const padding = parseFloat(getComputedStyle(ringOf() as HTMLElement).paddingLeft);
+    await expect(close(box.top, demoElement("far").getBoundingClientRect().top - padding)).toBe(true);
+    await userEvent.keyboard("{Escape}");
+    await waitFor(() => expect(body.queryByRole("dialog")).toBeNull());
+  },
+};
+
+function StickyHeaderPage() {
+  return (
+    <div>
+      <div data-testid="header" style={{ background: "var(--dbm-bg-surface)", blockSize: "4rem", insetBlockStart: 0, position: "fixed", inlineSize: "100%", zIndex: 5 }}>
+        Header
+      </div>
+      <div style={{ blockSize: "170vh", paddingBlockStart: "120vh" }}>
+        <Button data-demo="low">Low down</Button>
+      </div>
+      <Tour
+        defaultOpen
+        scrollOffset={{ top: 64 }}
+        steps={[{ id: "low", target: () => document.querySelector<HTMLElement>('[data-demo="low"]'), title: "Low down" }]}
+      />
+    </div>
+  );
+}
+
+export const AStickyHeaderStaysClearOfTheElement: Story = {
+  name: "scrollOffset keeps a scrolled-to element clear of a sticky header",
+  parameters: { layout: "fullscreen" },
+  render: () => <StickyHeaderPage />,
+  play: async () => {
+    await body.findByRole("dialog");
+    await waitFor(() => expect(window.scrollY).toBeGreaterThan(0));
+    await sleep(700);
+    await settled();
+    const header = (await body.findByTestId("header")).getBoundingClientRect();
+    await expect(demoElement("low").getBoundingClientRect().top).toBeGreaterThanOrEqual(header.bottom);
+    await userEvent.keyboard("{Escape}");
+    await waitFor(() => expect(body.queryByRole("dialog")).toBeNull());
+  },
+};
+
+function InsideADialog() {
+  const [dialogOpen, setDialogOpen] = useState(true);
+  const [tourOpen, setTourOpen] = useState(true);
+  return (
+    <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+      <Dialog.Content>
+        <Dialog.Header>
+          <Dialog.Title>Profile</Dialog.Title>
+        </Dialog.Header>
+        <Dialog.Body>
+          <div data-demo="field">
+            <Input aria-label="Name" placeholder="Name" />
+          </div>
+        </Dialog.Body>
+        <Tour
+          open={tourOpen}
+          onOpenChange={setTourOpen}
+          steps={[
+            { id: "name", target: () => document.querySelector<HTMLElement>('[data-demo="field"]'), title: "Your name", content: "Say who you are." },
+            { id: "end", title: "That's it" },
+          ]}
+        />
+      </Dialog.Content>
+    </Dialog>
+  );
+}
+
+export const ATourRunsInsideAModalDialog: Story = {
+  name: "A tour inside a modal dialog dims the dialog, can be pressed, and Escape closes only the tour",
+  render: () => <InsideADialog />,
+  play: async () => {
+    await waitFor(() => expect(document.querySelector('[role="dialog"][data-placement="anchored"]')).not.toBeNull());
+    await settled();
+    const dialogs = body.getAllByRole("dialog");
+    const tour = dialogs.find((candidate) => candidate.hasAttribute("data-placement")) as HTMLElement;
+    const panel = dialogs.find((candidate) => !candidate.hasAttribute("data-placement")) as HTMLElement;
+    // The dim is drawn over the dialog's own panel.
+    const corner = panel.getBoundingClientRect();
+    await expect(document.elementFromPoint(corner.left + 4, corner.top + 4)).toBe(shieldOf());
+    // A real press on the tour's card is not a press outside the dialog.
+    const { x, y } = centreOf(within(tour).getByRole("button", { name: "Next" }));
+    await realClickAt(x, y);
+    await waitFor(() => expect(body.getByRole("dialog", { name: "That's it" })).toBeInTheDocument());
+    await expect(body.getAllByRole("dialog")).toHaveLength(2);
+    await userEvent.keyboard("{Escape}");
+    await waitFor(() => expect(layerOf()).toBeNull());
+    // Only the tour closed.
+    await expect(body.getByRole("dialog", { name: "Profile" })).toBeInTheDocument();
+    await userEvent.keyboard("{Escape}");
+    await waitFor(() => expect(body.queryByRole("dialog")).toBeNull());
+  },
+};
+
+export const TheProgressBarIsToldApartInForcedColours: Story = {
+  name: "In forced colours a reached progress segment differs from one not reached",
+  render: () => <Demo progress="bar" dismissals={["later", "never"]} />,
+  play: async () => {
+    const dialog = await startTour();
+    const segments = dialog.querySelectorAll<HTMLElement>('[class*="_segment_"]');
+    await expect(segments).toHaveLength(4);
+    await emulate("forced-colors", "active");
+    try {
+      await sleep(300);
+      await expect(getComputedStyle(segments[0] as HTMLElement).backgroundColor).not.toBe(getComputedStyle(segments[3] as HTMLElement).backgroundColor);
+    } finally {
+      await clearEmulation();
+    }
+    for (const button of within(dialog).getAllByRole("button")) {
+      const rect = button.getBoundingClientRect();
       await expect(rect.height).toBeGreaterThanOrEqual(24);
     }
     await closeWithEscape();

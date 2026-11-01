@@ -218,3 +218,97 @@ export function SeenOnceDemo() {
     </Demo>
   );
 }
+
+/** Cards with a picture, a footer and a step's own buttons. */
+export const richSteps = (find: Finder): TourStep[] => [
+  {
+    id: "search",
+    target: () => find("search"),
+    title: "Search",
+    content: "Find a project, a person or a setting from anywhere.",
+    media: (
+      <div
+        aria-hidden="true"
+        style={{ background: "var(--dbm-bg-brand-subtle)", blockSize: "var(--dbm-space-16)", display: "grid", placeItems: "center" }}
+      >
+        <Text weight="semibold">A picture goes here</Text>
+      </div>
+    ),
+    footer: <Text size="xs" color="secondary">Tip: press / to jump to the search field.</Text>,
+  },
+  {
+    id: "create",
+    target: () => find("create"),
+    title: "Start something new",
+    content: "Your own buttons replace the standard ones.",
+    actions: (controller) => (
+      <>
+        <Button size="sm" variant="tertiary" onClick={() => controller.close()}>
+          Not now
+        </Button>
+        <span style={{ flex: 1 }} />
+        <Button size="sm" variant="secondary" onClick={() => controller.back()}>
+          Previous
+        </Button>
+        <Button size="sm" onClick={() => controller.next()}>
+          Show me
+        </Button>
+      </>
+    ),
+  },
+  { id: "done", title: "That's all" },
+];
+
+/** A step that moves on when its button is pressed. */
+export const advancingSteps = (find: Finder): TourStep[] => [
+  {
+    id: "create",
+    target: () => find("create"),
+    title: "Press New project",
+    content: "The tour moves on when you use the button.",
+    advanceOn: "click",
+  },
+  { id: "done", title: "Well done", content: "That was the whole step." },
+];
+
+/** A step that opens a menu before pointing at it. */
+export function OnEnterDemo() {
+  const [menuOpen, setMenuOpen] = useState(false);
+  return (
+    <Demo
+      steps={(find) => [
+        {
+          id: "menu",
+          target: () => find("menu"),
+          title: "The account menu",
+          content: "It was closed until this step opened it.",
+          side: "bottom",
+          align: "start",
+          onEnter: async () => {
+            setMenuOpen(true);
+            await new Promise((resolve) => setTimeout(resolve, 150));
+          },
+        },
+        { id: "done", title: "Closed again", content: "The next step does not need it." },
+      ]}
+    >
+      <div style={rowStyle}>
+        <Button size="xs" variant="secondary" onClick={() => setMenuOpen((open) => !open)}>
+          Account
+        </Button>
+        {menuOpen && (
+          <div data-demo="menu" style={{ border: "var(--dbm-border-width-1) solid var(--dbm-border-default)", borderRadius: "var(--dbm-radius-md)", padding: "var(--dbm-space-2)" }}>
+            <Text size="sm">Profile · Settings · Sign out</Text>
+          </div>
+        )}
+      </div>
+    </Demo>
+  );
+}
+
+/** A step whose element is not on the page, skipped. */
+export const missingSteps = (find: Finder): TourStep[] => [
+  { id: "search", target: () => find("search"), title: "Search" },
+  { id: "gone", target: () => find("not-on-this-page"), title: "A step for another page", content: "Never shown: its element is missing." },
+  { id: "create", target: () => find("create"), title: "New project", content: "The tour went straight here from Search." },
+];

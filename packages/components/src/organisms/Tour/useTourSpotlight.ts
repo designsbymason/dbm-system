@@ -16,8 +16,14 @@ interface SpotlightOptions {
   layerRef: RefObject<HTMLElement | null>;
   /** Milliseconds to wait for the element to appear. */
   timeout: number;
+  /** Whether the step is not ready to be looked at yet (its `onEnter` has not finished): the card waits. */
+  hold: boolean;
   onMissing: ((step: TourStep) => void) | undefined;
 }
+
+/** Frames of no movement before the loop slows down, and how long between checks once it has. */
+const STILL_FRAMES = 30;
+const IDLE_MS = 250;
 
 interface Resolved {
   key: string | null;
@@ -38,9 +44,10 @@ export interface Spotlight {
  * it, and one rectangle read a frame is cheap beside listening for each cause. A step with no element, or whose element
  * never turned up, is the middle of the layer.
  */
-export function useTourSpotlight({ step, active, layerRef, timeout, onMissing }: SpotlightOptions): Spotlight {
+export function useTourSpotlight({ step, active, layerRef, timeout, hold, onMissing }: SpotlightOptions): Spotlight {
   const stepId = step?.id;
   const key = active && stepId !== undefined ? stepId : null;
+  const searching = key !== null && !hold;
   const hasTarget = step?.target !== undefined;
   const [resolved, setResolved] = useState<Resolved>({ key: null, element: null, status: "none" });
   const [retry, setRetry] = useState(0);
@@ -53,7 +60,7 @@ export function useTourSpotlight({ step, active, layerRef, timeout, onMissing }:
 
   // Look for the element: now, on every change to the page, and until the timeout.
   useEffect(() => {
-    if (key === null || !hasTarget) return undefined;
+    if (!searching || !hasTarget) return undefined;
     let done = false;
     let timer = 0;
     let frame = 0;
@@ -84,27 +91,30 @@ export function useTourSpotlight({ step, active, layerRef, timeout, onMissing }:
       }
     }, timeout);
     return finish;
-  }, [key, hasTarget, timeout, retry]);
+  }, [key, searching, hasTarget, timeout, retry]);
 
-  const current: Resolved =
-    resolved.key === key && key !== null && hasTarget
-      ? resolved
-      : { key, element: null, status: key === null || !hasTarget ? "none" : "waiting" };
+  const found = resolved.key === key && key !== null && hasTarget && !hold;
+  const current: Resolved = found
+    ? resolved
+    : { key, element: null, status: key === null || !hasTarget ? "none" : "waiting" };
 
-  // Follow the element's box, frame by frame, from the layer's own corner.
+  // Follow the element's box from the layer's own corner. A frame a moment while anything is moving, then a slow check
+  // that wakes at once on a scroll, a resize or a change in the element's own size, so a still page costs next to nothing.
   const element = current.element;
   useEffect(() => {
     if (key === null) return undefined;
     let frame = 0;
-    const tick = () => {
-      frame = requestAnimationFrame(tick);
+    let timer = 0;
+    let still = 0;
+    let lastBox: SpotlightRect | null = null;
+    const measure = (): boolean => {
       const layer = layerRef.current;
-      if (!layer) return;
+      if (!layer) return false;
       if (element && !element.isConnected) {
         // The page removed it: look again.
         setResolved({ key: null, element: null, status: "none" });
         setRetry((count) => count + 1);
-        return;
+        return false;
       }
       const origin = layer.getBoundingClientRect();
       let next: SpotlightRect;
@@ -114,10 +124,38 @@ export function useTourSpotlight({ step, active, layerRef, timeout, onMissing }:
       } else {
         next = { x: origin.width / 2, y: origin.height / 2, width: 0, height: 0, centered: true, owner: null };
       }
+      const changed = !sameRect(lastBox, next);
+      lastBox = next;
       setRect((previous) => (sameRect(previous, next) ? previous : next));
+      return changed;
     };
-    frame = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(frame);
+    const run = () => {
+      frame = 0;
+      timer = 0;
+      still = measure() ? 0 : still + 1;
+      if (still < STILL_FRAMES) frame = requestAnimationFrame(run);
+      else timer = window.setTimeout(run, IDLE_MS);
+    };
+    const wake = () => {
+      still = 0;
+      if (timer) {
+        window.clearTimeout(timer);
+        timer = 0;
+      }
+      if (!frame) frame = requestAnimationFrame(run);
+    };
+    frame = requestAnimationFrame(run);
+    window.addEventListener("scroll", wake, { capture: true, passive: true });
+    window.addEventListener("resize", wake);
+    const observer = element && typeof ResizeObserver !== "undefined" ? new ResizeObserver(wake) : null;
+    if (element) observer?.observe(element);
+    return () => {
+      cancelAnimationFrame(frame);
+      window.clearTimeout(timer);
+      window.removeEventListener("scroll", wake, { capture: true });
+      window.removeEventListener("resize", wake);
+      observer?.disconnect();
+    };
   }, [key, element, layerRef]);
 
   return { status: current.status, element: current.element, rect: key === null ? null : rect };

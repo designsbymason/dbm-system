@@ -1,6 +1,6 @@
 # 0167 — `Tour` positions its card with Radix Popper over `Popover`, and docks it across the bottom on a phone, over a collision shift
 
-**Status:** Accepted · **Date:** 2026-11-01
+**Status:** Accepted · **Date:** 2026-11-01 · **Amended 2026-11-01** — the position strategy; the decision itself is unchanged
 
 ## Context
 The card sits beside a highlighted element, so it needs the placement `Popover` has: sides, alignment, flipping and a width cap. The plan was
@@ -12,7 +12,7 @@ step needs Tab to leave the card. On a phone there is also no room beside a full
 - **`@radix-ui/react-popper` is used directly,** pinned at 1.3.7, the version `@radix-ui/react-popover@1.1.23` already uses, so there is one copy
   ([`02` §3](../02-tech-stack-and-structure.md), the Radix family moves together). The card is `Popper.Content` with `asChild`, anchored to the ring
   element through `Popper.Anchor`'s `virtualRef`, and the focus loop is `FocusTrap`, which a step can turn off.
-  `updatePositionStrategy="always"` follows the ring as it eases.
+  The ring is a real element, so Popper's own move detection follows it as it eases *(Amended 2026-11-01: this first used `updatePositionStrategy="always"`, which asks for a frame forever; a strategy is fixed when the card first mounts, so it could not be switched off once still)*.
 - **`side` is logical** (`top`, `bottom`, `start`, `end`), mapped to Radix's physical side by the tour's `dir`, like `Drawer`'s.
 - **`presentation` is `"anchored"` (default) or `"docked"`, or a breakpoint map,** resolved in JavaScript since it chooses what is drawn
   ([`05` §3](../05-component-api-conventions.md)). Docked pins the card across the bottom of the screen and scrolls the element into the room above it.
