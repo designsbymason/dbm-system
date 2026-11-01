@@ -17,6 +17,8 @@ import { Tooltip } from "../../atoms/Tooltip";
 import { VisuallyHidden } from "../../atoms/VisuallyHidden";
 import type { IconSize, IconTone } from "../../atoms/Icon/Icon.types";
 import { ButtonGroupReset } from "../../atoms/Button/buttonGroupContext";
+import { useIsApplePlatform } from "../hotkey/hotkey";
+import { shortcutKeys } from "../hotkey/shortcutKeys";
 import styles from "./menu.module.css";
 import type {
   MenuCheckboxItemProps,
@@ -36,6 +38,7 @@ import {
   MenuPrimitiveContext,
   MenuRadioValueContext,
   MenuRootContext,
+  MenuShortcutFormatContext,
   MenuSizeContext,
   MenuSubContext,
   useControllableState,
@@ -100,6 +103,10 @@ function ItemBody({
   children,
 }: ItemBodyProps) {
   const hasDescription = description !== undefined && description !== null;
+  const formatShortcuts = useContext(MenuShortcutFormatContext);
+  const apple = useIsApplePlatform();
+  const shortcutText =
+    formatShortcuts && typeof shortcut === "string" && /(^|\+)mod\+/i.test(shortcut) ? formatShortcut(shortcut, apple) : shortcut;
   // A pending item shows its spinner without moving anything: in the place of its icon when it has one, and otherwise
   // over the end of the row, where the trailing content and shortcut stay (hidden, still taking their room) so the row
   // and the panel it widens keep their size.
@@ -130,11 +137,17 @@ function ItemBody({
         <span className={cx(styles.trailing, spinnerAtEnd && styles.underSpinner)}>{trailing}</span>
       )}
       {shortcut !== undefined && shortcut !== null && (
-        <kbd className={cx(styles.shortcut, spinnerAtEnd && styles.underSpinner)}>{shortcut}</kbd>
+        <kbd className={cx(styles.shortcut, spinnerAtEnd && styles.underSpinner)}>{shortcutText}</kbd>
       )}
       {spinnerAtEnd && <Spinner size={spinnerSizeFor[size]} className={styles.spinnerAtEnd} />}
     </>
   );
+}
+
+/** A hint written with `mod` as the platform draws it: `⌘S` on an Apple platform, `Ctrl+S` elsewhere. */
+function formatShortcut(shortcut: string, apple: boolean): string {
+  const texts = shortcutKeys(shortcut, apple).map((key) => (key.text.length === 1 ? key.text.toUpperCase() : key.text));
+  return apple ? texts.join("") : texts.join("+");
 }
 
 function isThenable(value: unknown): value is PromiseLike<unknown> {

@@ -1,9 +1,15 @@
+import { FileIcon } from "@dbm-system/icons";
 import { act, screen } from "@testing-library/react";
 import { hydrateRoot } from "react-dom/client";
 import { renderToString } from "react-dom/server";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { Menubar } from "./Menubar";
-import type { MenubarContentProps, MenubarProps } from "./Menubar.types";
+import { createRef } from "react";
+import type {
+  MenubarContentProps,
+  MenubarController,
+  MenubarProps,
+} from "./Menubar.types";
 
 // Server rendering and hydration. The unit project runs in jsdom, where `window` and `document` exist, so the
 // server render is done with both removed: what it proves is that nothing touches them while rendering.
@@ -55,6 +61,17 @@ function Tree({
           </Menubar.Sub>
         </Menubar.Content>
       </Menubar.Menu>
+      <Menubar.Action icon={FileIcon} trailing="3">
+        Run
+      </Menubar.Action>
+      <Menubar.Menu value="reason">
+        <Menubar.Trigger disabled disabledReason="Not yet">
+          Reason
+        </Menubar.Trigger>
+        <Menubar.Content>
+          <Menubar.Item shortcut="mod+s">Save</Menubar.Item>
+        </Menubar.Content>
+      </Menubar.Menu>
       <Menubar.Menu value="edit">
         <Menubar.Trigger disabled>Edit</Menubar.Trigger>
         <Menubar.Content>
@@ -76,6 +93,15 @@ const variants: Array<[string, Parameters<typeof Tree>[0]]> = [
   ["outlined", { root: { surface: "outlined" } }],
   ["right to left", { root: { defaultValue: "file", dir: "rtl" } }],
   ["not looping", { root: { loop: false } }],
+  ["neutral tone", { root: { tone: "neutral" } }],
+  ["hotkeys", { root: { hotkeys: { file: "alt+f", edit: false } } }],
+  ["a controller", { root: { controllerRef: createRef<MenubarController>() } }],
+  ["an overflow menu", { root: { overflow: "menu", defaultValue: "file" } }],
+  ["a sticky bar", { root: { sticky: true, stickyOffset: 4 } }],
+  [
+    "a custom More label",
+    { root: { overflow: "menu", labels: { more: "Mehr" } } },
+  ],
   [
     "a responsive side",
     {
@@ -84,6 +110,18 @@ const variants: Array<[string, Parameters<typeof Tree>[0]]> = [
     },
   ],
 ];
+
+// `Affix` (a sticky bar) watches a marker with an IntersectionObserver, which jsdom does not have. The server render
+// clears every stubbed global when it ends, so the stub is made after it, before the client hydrates.
+const stubObservers = () =>
+  vi.stubGlobal(
+    "IntersectionObserver",
+    class {
+      observe() {}
+      unobserve() {}
+      disconnect() {}
+    },
+  );
 
 afterEach(() => {
   vi.unstubAllGlobals();
@@ -117,6 +155,7 @@ describe("Menubar hydrating", () => {
       const container = document.createElement("div");
       container.innerHTML = html;
       document.body.appendChild(container);
+      stubObservers();
       let root!: ReturnType<typeof hydrateRoot>;
       // React 19 reports a hydration mismatch through this callback (and recovers by redrawing), not console.error.
       const recoverable: string[] = [];

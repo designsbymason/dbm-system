@@ -56,6 +56,45 @@ const meta: Meta<typeof Menubar> = {
         "The colour of the triggers' hover and open fills and of the bar's own border and fill: brand (the system's identity colour) or neutral. Every colour is a subtle one. It does not change the menus the bar opens.",
       table: { defaultValue: { summary: '"brand"' } },
     },
+    overflow: {
+      control: "inline-radio",
+      options: ["scroll", "menu"],
+      description:
+        "What the bar does when its menus do not fit its container: scroll (sideways, with a fade at each end that has more behind it) or menu (the menus that do not fit move into a More menu, each as a submenu). menu reads the bar's Menubar.Menu and Menubar.Action children, so they have to be direct children, and it sizes the bar against its container, which has to be sized by the layout and not by the bar.",
+      table: { defaultValue: { summary: '"scroll"' } },
+    },
+    hotkeys: {
+      control: false,
+      description:
+        'Keys that open a menu from anywhere on the page: an object from a menu\'s value to a combination ("alt+f", "mod+shift+e"), where mod is ⌘ on an Apple platform and Ctrl elsewhere, or false to turn one off. Nothing is bound by default. A press that matches is kept from the browser and opens the menu with focus on its first item.',
+    },
+    controllerRef: {
+      control: false,
+      description:
+        "Hands the bar's controls (open, close, value) to code outside it, such as a button or a key you handle yourself. Inside the bar, useMenubarController() returns the same object.",
+    },
+    labels: {
+      control: false,
+      description:
+        "The text the bar supplies itself, each with an English default: more, the More menu's label. Pass any subset.",
+    },
+    sticky: {
+      control: "boolean",
+      description:
+        "Keeps the bar at the top of the page (or of scrollContainerRef) as the reader scrolls, with a surface behind it and a shadow while it is stuck. Built on Affix.",
+      table: { defaultValue: { summary: "false" } },
+    },
+    stickyOffset: {
+      control: false,
+      description:
+        "How far from the top a sticky bar sticks, from the spacing token scale. Has no effect without sticky.",
+      table: { defaultValue: { summary: "0" } },
+    },
+    scrollContainerRef: {
+      control: false,
+      description:
+        "The scrollable container a sticky bar sticks within, if it isn't the page itself. Has no effect without sticky.",
+    },
     loop: {
       control: "boolean",
       description:

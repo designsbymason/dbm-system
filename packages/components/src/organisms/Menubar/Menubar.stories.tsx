@@ -1,13 +1,25 @@
 import type { Meta, StoryContext, StoryObj } from "@storybook/react-vite";
-import { CopyIcon, PencilSimpleIcon, TrashIcon } from "@dbm-system/icons";
+import {
+  CopyIcon,
+  FileIcon,
+  ListIcon,
+  PencilSimpleIcon,
+  PlayIcon,
+  TrashIcon,
+} from "@dbm-system/icons";
 import { fn } from "storybook/test";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState, useSyncExternalStore } from "react";
+import { Badge } from "../../atoms/Badge";
 import { Button } from "../../atoms/Button";
+import { IconButton } from "../../atoms/IconButton";
+import { Menu } from "../Menu";
 import { Menubar } from "./Menubar";
+import type { MenubarController } from "./Menubar.types";
 import { menubarPlaygroundSnippet, menubarSnippets } from "./Menubar.snippets";
 import {
   barPropsOf,
   DemoMenus,
+  overflowDemoChildren,
   ViewMenu,
   type MenubarStageArgs,
 } from "./MenubarStoryKit";
@@ -346,4 +358,253 @@ export const RightToLeft: Story = {
       </Menubar>
     </div>
   ),
+};
+
+export const Actions: Story = {
+  name: "Actions beside the menus",
+  parameters: { docs: { source: { code: menubarSnippets.actions } } },
+  render: (args) => (
+    <Menubar aria-label="Application menu" {...barPropsOf(args)}>
+      <DemoMenus>
+        <Menubar.Action icon={PlayIcon}>Run</Menubar.Action>
+        <Menubar.Action asChild>
+          <a href="#help">Help</a>
+        </Menubar.Action>
+      </DemoMenus>
+    </Menubar>
+  ),
+};
+
+export const IconsAndTrailing: Story = {
+  name: "An icon and trailing content on a trigger",
+  parameters: { docs: { source: { code: menubarSnippets.iconsAndTrailing } } },
+  render: (args) => (
+    <Menubar aria-label="Application menu" {...barPropsOf(args)}>
+      <Menubar.Menu value="file">
+        <Menubar.Trigger icon={FileIcon}>File</Menubar.Trigger>
+        <Menubar.Content>
+          <Menubar.Item>New</Menubar.Item>
+          <Menubar.Item>Open</Menubar.Item>
+        </Menubar.Content>
+      </Menubar.Menu>
+      <Menubar.Action trailing={<Badge size="sm">3</Badge>}>
+        Inbox
+      </Menubar.Action>
+    </Menubar>
+  ),
+};
+
+export const DisabledWithAReason: Story = {
+  name: "A trigger or an action disabled with a reason",
+  parameters: { docs: { source: { code: menubarSnippets.disabledReason } } },
+  render: (args) => (
+    <Menubar aria-label="Application menu" {...barPropsOf(args)}>
+      <DemoMenus>
+        <Menubar.Menu value="view">
+          <Menubar.Trigger
+            disabled
+            disabledReason="Open a document to change the view"
+          >
+            View
+          </Menubar.Trigger>
+          <Menubar.Content>
+            <Menubar.Item>Zoom</Menubar.Item>
+          </Menubar.Content>
+        </Menubar.Menu>
+        <Menubar.Action disabled disabledReason="Nothing to run yet">
+          Run
+        </Menubar.Action>
+      </DemoMenus>
+    </Menubar>
+  ),
+};
+
+export const HotkeysAndPlatformShortcuts: Story = {
+  name: "Hotkeys, and shortcut hints drawn for the platform",
+  parameters: { docs: { source: { code: menubarSnippets.hotkeys } } },
+  render: (args) => (
+    <div
+      style={{
+        display: "grid",
+        gap: "var(--dbm-space-3)",
+        justifyItems: "start",
+      }}
+    >
+      <Menubar
+        aria-label="Application menu"
+        {...barPropsOf(args)}
+        hotkeys={{ file: "alt+f", edit: "alt+e" }}
+      >
+        <Menubar.Menu value="file">
+          <Menubar.Trigger>File</Menubar.Trigger>
+          <Menubar.Content>
+            <Menubar.Item shortcut="mod+n">New</Menubar.Item>
+            <Menubar.Item shortcut="mod+s">Save</Menubar.Item>
+            <Menubar.Item shortcut="mod+shift+s">Save as…</Menubar.Item>
+          </Menubar.Content>
+        </Menubar.Menu>
+        <Menubar.Menu value="edit">
+          <Menubar.Trigger>Edit</Menubar.Trigger>
+          <Menubar.Content>
+            <Menubar.Item shortcut="mod+z">Undo</Menubar.Item>
+            <Menubar.Item shortcut="mod+shift+z">Redo</Menubar.Item>
+          </Menubar.Content>
+        </Menubar.Menu>
+      </Menubar>
+      <span
+        style={{
+          color: "var(--dbm-text-secondary)",
+          fontFamily: "var(--dbm-font-family-primary)",
+        }}
+      >
+        Press Alt+F or Alt+E anywhere on the page. The hints on the items follow
+        your platform.
+      </span>
+    </div>
+  ),
+};
+
+function ControllerBar(args: MenubarStageArgs) {
+  const bar = useRef<MenubarController>(null);
+  return (
+    <div
+      style={{
+        display: "grid",
+        gap: "var(--dbm-space-3)",
+        justifyItems: "start",
+      }}
+    >
+      <Menubar
+        aria-label="Application menu"
+        {...barPropsOf(args)}
+        controllerRef={bar}
+      >
+        <DemoMenus />
+      </Menubar>
+      <div style={{ display: "flex", gap: "var(--dbm-space-2)" }}>
+        <Button
+          variant="secondary"
+          size="sm"
+          onClick={() => bar.current?.open("file")}
+        >
+          Open File
+        </Button>
+        <Button
+          variant="secondary"
+          size="sm"
+          onClick={() => bar.current?.open("edit")}
+        >
+          Open Edit
+        </Button>
+        <Button
+          variant="secondary"
+          size="sm"
+          onClick={() => bar.current?.close()}
+        >
+          Close
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+export const Controller: Story = {
+  name: "Opened from a controller",
+  parameters: { docs: { source: { code: menubarSnippets.controller } } },
+  render: (args) => <ControllerBar {...args} />,
+};
+
+export const OverflowMenu: Story = {
+  name: "Menus that do not fit move into a More menu",
+  parameters: { docs: { source: { code: menubarSnippets.overflowMenu } } },
+  render: (args) => (
+    <div style={{ inlineSize: 220 }}>
+      <Menubar
+        aria-label="Application menu"
+        {...barPropsOf(args)}
+        surface="outlined"
+        overflow="menu"
+      >
+        {overflowDemoChildren}
+      </Menubar>
+    </div>
+  ),
+};
+
+export const Sticky: Story = {
+  name: "A sticky bar",
+  parameters: { docs: { source: { code: menubarSnippets.sticky } } },
+  render: (args) => (
+    <div
+      style={{
+        blockSize: 160,
+        overflow: "auto",
+        border: "var(--dbm-border-width-1) solid var(--dbm-border-default)",
+      }}
+    >
+      <Menubar
+        aria-label="Application menu"
+        {...barPropsOf(args)}
+        surface="outlined"
+        sticky
+      >
+        <DemoMenus />
+      </Menubar>
+      <div
+        style={{
+          blockSize: 480,
+          padding: "var(--dbm-space-4)",
+          color: "var(--dbm-text-secondary)",
+          fontFamily: "var(--dbm-font-family-primary)",
+        }}
+      >
+        Scroll this panel: the bar stays at the top with a shadow.
+      </div>
+    </div>
+  ),
+};
+
+const subscribeToWidth = (notify: () => void) => {
+  const query = window.matchMedia("(min-width: 48rem)");
+  query.addEventListener("change", notify);
+  return () => query.removeEventListener("change", notify);
+};
+
+function NarrowScreenRecipe() {
+  const wide = useSyncExternalStore(
+    subscribeToWidth,
+    () => window.matchMedia("(min-width: 48rem)").matches,
+    () => true,
+  );
+  return wide ? (
+    <Menubar aria-label="Application menu">
+      <Menubar.Menu value="file">
+        <Menubar.Trigger>File</Menubar.Trigger>
+        <Menubar.Content>
+          <Menubar.Item>New</Menubar.Item>
+          <Menubar.Item>Save</Menubar.Item>
+        </Menubar.Content>
+      </Menubar.Menu>
+    </Menubar>
+  ) : (
+    <Menu>
+      <Menu.Trigger asChild>
+        <IconButton icon={ListIcon} aria-label="Menu" />
+      </Menu.Trigger>
+      <Menu.Content>
+        <Menu.Label>File</Menu.Label>
+        <Menu.Item>New</Menu.Item>
+        <Menu.Item>Save</Menu.Item>
+      </Menu.Content>
+    </Menu>
+  );
+}
+
+export const NarrowScreen: Story = {
+  name: "Recipe: a menubar on a desktop, a Menu on a phone",
+  parameters: {
+    controls: { disable: true },
+    docs: { source: { code: menubarSnippets.narrowScreen } },
+  },
+  render: () => <NarrowScreenRecipe />,
 };

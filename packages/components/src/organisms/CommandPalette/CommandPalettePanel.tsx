@@ -17,7 +17,7 @@ import type { CommandItem, CommandPaletteLabels, CommandPaletteProps } from "./C
 import { ARGUMENT_VALUE, buildEntries, buildVisible, modeFor, problemWith } from "./commandPalette.entries";
 import { keywordHints } from "./commandPalette.hints";
 import { isApplePlatform } from "../../internal/hotkey/hotkey";
-import { shortcutKeys } from "./commandPalette.shortcut";
+import { shortcutKeys } from "../../internal/hotkey/shortcutKeys";
 import { modeWarnings, valueWarnings } from "./commandPalette.warnings";
 import { useCommandRunner } from "./useCommandRunner";
 import { useHighlightReport } from "./useHighlightReport";

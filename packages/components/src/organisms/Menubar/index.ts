@@ -1,5 +1,9 @@
-export { Menubar } from "./Menubar";
+export { Menubar, useMenubarController } from "./Menubar";
 export type {
+  MenubarActionProps,
+  MenubarController,
+  MenubarLabels,
+  MenubarOverflow,
   MenubarAlign,
   MenubarCheckboxItemProps,
   MenubarContentProps,

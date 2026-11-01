@@ -49,6 +49,23 @@
   mask-image: linear-gradient(to right, transparent, black var(--menubar-fade));
 }
 
+/* `sticky`: a surface behind the bar so what scrolls beneath it doesn't show through (a filled or outlined bar sets its
+   own, below), and a shadow while it is stuck (`Affix` puts `data-stuck` on this element). `Affix` puts a 1px marker in
+   front of a sticky element to tell when it is stuck, so pulling the bar up by the marker's height cancels it. Shadows
+   aren't a reactive semantic token, so the light/dark pair is swapped per theme, as `Toolbar` does. */
+.sticky {
+  background-color: var(--dbm-bg-surface);
+  margin-block-start: calc(var(--dbm-space-px) * -1);
+}
+
+.sticky[data-stuck] {
+  box-shadow: var(--dbm-shadow-light-md);
+}
+
+[data-theme$="-dark"] .sticky[data-stuck] {
+  box-shadow: var(--dbm-shadow-dark-md);
+}
+
 /* Surfaces, with the same three names and looks as `Toolbar`. A ghost bar has none, so it adds no padding that would
    push the triggers off the line they should align to. */
 .ghost {
@@ -131,15 +148,18 @@
 }
 
 .trigger {
+  align-items: center;
   background: none;
   border: none;
   border-radius: var(--dbm-radius-md);
   color: var(--dbm-text-primary);
   cursor: pointer;
+  display: inline-flex;
   flex-shrink: 0;
   font: inherit;
   font-size: var(--menubar-font-size);
   font-weight: var(--dbm-font-weight-semibold);
+  gap: var(--dbm-space-2);
   line-height: var(--dbm-line-height-tight);
   min-block-size: var(--dbm-space-6);
   min-inline-size: var(--dbm-space-6);
@@ -149,6 +169,21 @@
   transition: background-color var(--dbm-motion-duration-fast)
     var(--dbm-motion-easing-standard);
   white-space: nowrap;
+}
+
+/* A leading icon takes its colour from the `icon.*` family, not the label's. */
+.icon {
+  align-items: center;
+  display: inline-flex;
+}
+
+.label {
+  white-space: nowrap;
+}
+
+.trailing {
+  align-items: center;
+  display: inline-flex;
 }
 
 .trigger:hover:not(:disabled):not([data-state="open"]):not(:focus-visible) {
@@ -185,6 +220,10 @@
 
   .outlined {
     border-color: CanvasText;
+  }
+
+  .sticky[data-stuck] {
+    outline: var(--dbm-border-width-1) solid CanvasText;
   }
 
   .trigger[data-state="open"] {

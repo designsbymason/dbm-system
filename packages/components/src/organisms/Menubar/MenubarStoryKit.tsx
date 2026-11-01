@@ -75,3 +75,39 @@ export function ViewMenu() {
     </Menubar.Menu>
   );
 }
+
+/**
+ * The menus and actions of `DemoMenus` and `ViewMenu`, plus a Window menu and a Help action, as an array of direct children:
+ * `overflow="menu"` reads a bar's `Menubar.Menu` and `Menubar.Action` children, so it can't see inside a component that
+ * returns them.
+ */
+export const overflowDemoChildren = [
+  <Menubar.Menu key="file" value="file">
+    <Menubar.Trigger>File</Menubar.Trigger>
+    <Menubar.Content>
+      <Menubar.Item shortcut="mod+n">New</Menubar.Item>
+      <Menubar.Item shortcut="mod+s">Save</Menubar.Item>
+    </Menubar.Content>
+  </Menubar.Menu>,
+  <Menubar.Menu key="edit" value="edit">
+    <Menubar.Trigger>Edit</Menubar.Trigger>
+    <Menubar.Content>
+      <Menubar.Item shortcut="mod+z">Undo</Menubar.Item>
+      <Menubar.Item shortcut="mod+shift+z">Redo</Menubar.Item>
+    </Menubar.Content>
+  </Menubar.Menu>,
+  <Menubar.Menu key="view" value="view">
+    <Menubar.Trigger>View</Menubar.Trigger>
+    <Menubar.Content>
+      <Menubar.CheckboxItem defaultChecked>Sidebar</Menubar.CheckboxItem>
+      <Menubar.CheckboxItem>Status bar</Menubar.CheckboxItem>
+    </Menubar.Content>
+  </Menubar.Menu>,
+  <Menubar.Menu key="window" value="window">
+    <Menubar.Trigger>Window</Menubar.Trigger>
+    <Menubar.Content>
+      <Menubar.Item>Minimize</Menubar.Item>
+    </Menubar.Content>
+  </Menubar.Menu>,
+  <Menubar.Action key="help">Help</Menubar.Action>,
+];

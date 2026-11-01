@@ -1,3 +1,5 @@
+import { useSyncExternalStore } from "react";
+
 // Reading and matching a keyboard shortcut written as a combination such as `"mod+k"`: shared by `CommandPalette` (its hotkey and the
 // modifier keys it draws) and `EditorTabs` (its `hotkeys`), per `05-component-api-conventions.md` §3.
 //
@@ -66,4 +68,19 @@ export function matchesHotkey(
   const pressed = event.key.toLowerCase();
   if (pressed === hotkey.key) return true;
   return /^[a-z]$/.test(hotkey.key) && event.code === `Key${hotkey.key.toUpperCase()}`;
+}
+
+const noop = () => undefined;
+
+/**
+ * Whether the browser is on an Apple platform, for text that is drawn (a shortcut hint). It is read through a store with
+ * a server snapshot, so a server render and the first client render agree (the non-Apple form) and an Apple platform
+ * redraws once after hydration (`06-engineering-standards.md` §9, SSR).
+ */
+export function useIsApplePlatform(): boolean {
+  return useSyncExternalStore(
+    () => noop,
+    isApplePlatform,
+    () => false,
+  );
 }

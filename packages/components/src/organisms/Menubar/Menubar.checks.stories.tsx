@@ -1,12 +1,15 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { expect, userEvent, waitFor, within } from "storybook/test";
+import { FileIcon, PlayIcon } from "@dbm-system/icons";
+import { useState } from "react";
 import { Button } from "../../atoms/Button";
 import { Input } from "../../atoms/Input";
 import { send } from "../../molecules/CodeBlock/browserProtocol";
 import { Dialog } from "../Dialog";
+import { Menu } from "../Menu";
 import { Menubar } from "./Menubar";
 import type { MenubarSize } from "./Menubar.types";
-import { DemoMenus, ViewMenu } from "./MenubarStoryKit";
+import { DemoMenus, overflowDemoChildren, ViewMenu } from "./MenubarStoryKit";
 
 // Real-browser checks for what jsdom can't evaluate: layout, the stacking above a dialog, a real pointer, computed
 // style from the cascade, scrolling and forced colours. Hidden from the sidebar and the Docs page, and still run as
@@ -44,7 +47,7 @@ const closeMenu = async () => {
   await userEvent.keyboard("{Escape}");
   await waitFor(() => expect(body.queryByRole("menu")).toBeNull());
 };
-const barTrigger = (name: string) =>
+const barTrigger = (name: string | RegExp) =>
   body.getByRole("menuitem", { name, hidden: true });
 
 // A real mouse, through the Chrome DevTools Protocol: Storybook's `userEvent` sends synthetic events. The test page
@@ -572,3 +575,321 @@ export const ForcedColoursDrawAnOutlineOnTheOpenTrigger: Story = {
     }
   },
 };
+
+// ---- actions, overflow, hotkeys, reasons, sticky and platform shortcuts ----
+
+const ManyMenus = ({ room }: { room: number }) => (
+  <Page>
+    <div data-room="" style={{ inlineSize: room }}>
+      <Menubar aria-label="Application menu" surface="outlined" overflow="menu">
+        {overflowDemoChildren}
+      </Menubar>
+    </div>
+  </Page>
+);
+
+export const OverflowMenuFitsAndGrows: Story = {
+  name: "overflow='menu' keeps the bar inside its room, lists the rest in More, and gives them back as the room grows",
+  render: () => <ManyMenus room={180} />,
+  play: async () => {
+    const room = document.querySelector<HTMLElement>(
+      "[data-room]",
+    ) as HTMLElement;
+    const bar = body.getByRole("menubar");
+    await waitFor(() =>
+      expect(
+        within(bar).getByRole("menuitem", { name: "More" }),
+      ).toBeInTheDocument(),
+    );
+    await expect(bar.getBoundingClientRect().right).toBeLessThanOrEqual(
+      room.getBoundingClientRect().right + 0.5,
+    );
+    await expect(
+      within(bar).getByRole("menuitem", { name: "File" }),
+    ).toBeInTheDocument();
+    await expect(
+      within(bar).queryByRole("menuitem", { name: "Help" }),
+    ).toBeNull();
+    // what moved is reachable: each hidden menu is a submenu, each action an item, of the More menu
+    await realClick(within(bar).getByRole("menuitem", { name: "More" }));
+    const panel = await openMenu();
+    await expect(
+      within(panel).getByRole("menuitem", { name: "Help" }),
+    ).toBeInTheDocument();
+    await expect(
+      within(panel).getByRole("menuitem", { name: "Window" }),
+    ).toHaveAttribute("aria-haspopup", "menu");
+    await closeMenu();
+    // the room grows: every menu comes back and More goes
+    room.style.inlineSize = "900px";
+    await waitFor(() =>
+      expect(within(bar).queryByRole("menuitem", { name: "More" })).toBeNull(),
+    );
+    await expect(within(bar).getAllByRole("menuitem")).toHaveLength(5);
+  },
+};
+
+export const OverflowHoldsTheTriggerWithFocus: Story = {
+  name: "overflow='menu' never takes a trigger out from under keyboard focus, and settles when focus leaves",
+  render: () => (
+    <div>
+      <ManyMenus room={900} />
+      <Button>Elsewhere</Button>
+    </div>
+  ),
+  play: async () => {
+    const room = document.querySelector<HTMLElement>(
+      "[data-room]",
+    ) as HTMLElement;
+    const bar = body.getByRole("menubar");
+    await waitFor(() =>
+      expect(within(bar).getAllByRole("menuitem")).toHaveLength(5),
+    );
+    const help = within(bar).getByRole("menuitem", { name: "Help" });
+    help.focus();
+    room.style.inlineSize = "150px";
+    await new Promise((resolve) => setTimeout(resolve, 300));
+    // held: the focused one is still in the bar and still focused
+    await expect(help).toBeInTheDocument();
+    await expect(help).toHaveFocus();
+    body.getByRole("button", { name: "Elsewhere" }).focus();
+    await waitFor(() =>
+      expect(within(bar).queryByRole("menuitem", { name: "Help" })).toBeNull(),
+    );
+    await expect(
+      within(bar).getByRole("menuitem", { name: "More" }),
+    ).toBeInTheDocument();
+  },
+};
+
+export const ActionsAndTheOpenMenu: Story = {
+  name: "An action runs on a real click, and a real pointer moving onto it closes the open menu",
+  render: () => {
+    const Run = () => {
+      const [runs, setRuns] = useState(0);
+      return (
+        <Page>
+          <Menubar aria-label="Application menu">
+            <DemoMenus>
+              <Menubar.Action onSelect={() => setRuns((n) => n + 1)}>
+                Run
+              </Menubar.Action>
+            </DemoMenus>
+          </Menubar>
+          <output>{`runs: ${runs}`}</output>
+        </Page>
+      );
+    };
+    return <Run />;
+  },
+  play: async () => {
+    const run = barTrigger("Run");
+    await realClick(run);
+    await waitFor(() => expect(body.getByText("runs: 1")).toBeInTheDocument());
+    await expect(body.queryByRole("menu")).toBeNull();
+    await realClick(barTrigger("File"));
+    await openMenu();
+    await realMove(run);
+    await waitFor(() => expect(body.queryByRole("menu")).toBeNull());
+    // the action keeps the focus; the closing menu does not take it back to its trigger
+    await waitFor(() => expect(run).toHaveFocus());
+    await expect(body.getByText("runs: 1")).toBeInTheDocument();
+  },
+};
+
+export const AHotkeyOpensAMenuOntoItsFirstItem: Story = {
+  name: "A real Alt+F from outside the bar opens File with focus on its first item",
+  render: () => (
+    <Page>
+      <Menubar aria-label="Application menu" hotkeys={{ file: "alt+f" }}>
+        <DemoMenus />
+      </Menubar>
+      <Button>Elsewhere</Button>
+    </Page>
+  ),
+  play: async () => {
+    body.getByRole("button", { name: "Elsewhere" }).focus();
+    await send("Input.dispatchKeyEvent", {
+      type: "rawKeyDown",
+      key: "Alt",
+      code: "AltLeft",
+      windowsVirtualKeyCode: 18,
+      modifiers: 1,
+    });
+    await send("Input.dispatchKeyEvent", {
+      type: "rawKeyDown",
+      key: "f",
+      code: "KeyF",
+      windowsVirtualKeyCode: 70,
+      modifiers: 1,
+    });
+    await send("Input.dispatchKeyEvent", {
+      type: "keyUp",
+      key: "f",
+      code: "KeyF",
+      windowsVirtualKeyCode: 70,
+      modifiers: 1,
+    });
+    await send("Input.dispatchKeyEvent", {
+      type: "keyUp",
+      key: "Alt",
+      code: "AltLeft",
+      windowsVirtualKeyCode: 18,
+      modifiers: 0,
+    });
+    const menu = await openMenu();
+    await waitFor(() =>
+      expect(
+        within(menu).getByRole("menuitem", { name: /^New/ }),
+      ).toHaveFocus(),
+    );
+    await closeMenu();
+    await waitFor(() => expect(barTrigger("File")).toHaveFocus());
+  },
+};
+
+export const AReasonIsShownOnHoverAndFocus: Story = {
+  name: "A trigger disabled with a reason is focusable, opens nothing, and shows its reason on a real hover and on focus",
+  render: () => (
+    <Page>
+      <Menubar aria-label="Application menu">
+        <DemoMenus>
+          <Menubar.Menu value="view">
+            <Menubar.Trigger
+              disabled
+              disabledReason="Open a document to change the view"
+            >
+              View
+            </Menubar.Trigger>
+            <Menubar.Content>
+              <Menubar.Item>Zoom</Menubar.Item>
+            </Menubar.Content>
+          </Menubar.Menu>
+        </DemoMenus>
+      </Menubar>
+    </Page>
+  ),
+  play: async () => {
+    const view = barTrigger("View");
+    await realClick(view);
+    await expect(body.queryByRole("menu")).toBeNull();
+    await expect(view).toHaveAttribute("aria-disabled", "true");
+    await realMove(view);
+    await waitFor(() =>
+      expect(
+        body.getAllByText("Open a document to change the view").length,
+      ).toBeGreaterThan(0),
+    );
+    // focus alone shows it too, and the arrow keys reach the trigger
+    barTrigger("Edit").focus();
+    await realKey("ArrowRight", "ArrowRight", 39);
+    await waitFor(() => expect(view).toHaveFocus());
+    await expect(view).toHaveAccessibleDescription(
+      "Open a document to change the view",
+    );
+  },
+};
+
+export const AStickyBarStaysAtTheTop: Story = {
+  name: "A sticky bar stays at the top of its scroll container with a shadow while it is stuck",
+  render: () => (
+    <div data-scroller="" style={{ blockSize: 240, overflow: "auto" }}>
+      <Menubar aria-label="Application menu" surface="outlined" sticky>
+        <DemoMenus />
+      </Menubar>
+      <div style={{ blockSize: 800 }} />
+    </div>
+  ),
+  play: async () => {
+    const scroller = document.querySelector<HTMLElement>(
+      "[data-scroller]",
+    ) as HTMLElement;
+    const bar = body.getByRole("menubar");
+    scroller.scrollTop = 300;
+    await waitFor(() => expect(bar).toHaveAttribute("data-stuck"));
+    await expect(
+      Math.abs(
+        bar.getBoundingClientRect().top - scroller.getBoundingClientRect().top,
+      ),
+    ).toBeLessThanOrEqual(2);
+    await expect(getComputedStyle(bar).boxShadow).not.toBe("none");
+  },
+};
+
+export const ShortcutHintsFollowThePlatform: Story = {
+  name: "A hint written with mod is drawn for the platform in a menubar, and as written in a Menu",
+  render: () => (
+    <Page>
+      <Menubar aria-label="Application menu">
+        <Menubar.Menu value="file">
+          <Menubar.Trigger>File</Menubar.Trigger>
+          <Menubar.Content>
+            <Menubar.Item shortcut="mod+shift+s">Save as</Menubar.Item>
+          </Menubar.Content>
+        </Menubar.Menu>
+      </Menubar>
+      <Menu>
+        <Menu.Trigger asChild>
+          <Button>Actions</Button>
+        </Menu.Trigger>
+        <Menu.Content>
+          <Menu.Item shortcut="mod+shift+s">Save as</Menu.Item>
+        </Menu.Content>
+      </Menu>
+    </Page>
+  ),
+  play: async () => {
+    const apple = /mac|iphone|ipad|ipod/i.test(navigator.platform);
+    await realClick(barTrigger("File"));
+    const panel = await openMenu();
+    await waitFor(() =>
+      expect(
+        within(panel).getByText(apple ? "⌘⇧S" : "Ctrl+Shift+S"),
+      ).toBeInTheDocument(),
+    );
+    await closeMenu();
+    await realClick(body.getByRole("button", { name: "Actions" }));
+    const menu = await openMenu();
+    await expect(within(menu).getByText("mod+shift+s")).toBeInTheDocument();
+    await closeMenu();
+  },
+};
+
+const iconSize = (size: MenubarSize): Story => ({
+  name: `A trigger with an icon at size ${size} is at least 24px square and the icon sits before the label`,
+  render: () => (
+    <Page>
+      <Menubar aria-label="Application menu" size={size} surface="outlined">
+        <Menubar.Menu value="file">
+          <Menubar.Trigger icon={FileIcon}>File</Menubar.Trigger>
+          <Menubar.Content>
+            <Menubar.Item>New</Menubar.Item>
+          </Menubar.Content>
+        </Menubar.Menu>
+        <Menubar.Action icon={PlayIcon} trailing={<span>3</span>}>
+          Run
+        </Menubar.Action>
+      </Menubar>
+    </Page>
+  ),
+  play: async () => {
+    for (const name of ["File", /^Run/]) {
+      const trigger = barTrigger(name);
+      const rect = trigger.getBoundingClientRect();
+      await expect(rect.height).toBeGreaterThanOrEqual(24);
+      await expect(rect.width).toBeGreaterThanOrEqual(24);
+      const icon = trigger.querySelector("svg") as SVGElement;
+      await expect(icon.getBoundingClientRect().right).toBeLessThanOrEqual(
+        (
+          trigger.querySelector("span:not(:first-child)") as HTMLElement
+        ).getBoundingClientRect().left + 1,
+      );
+      await expect(trigger.scrollWidth).toBeLessThanOrEqual(
+        trigger.clientWidth,
+      );
+    }
+  },
+});
+export const IconTriggerXs: Story = iconSize("xs");
+export const IconTriggerMd: Story = iconSize("md");
+export const IconTriggerXl: Story = iconSize("xl");

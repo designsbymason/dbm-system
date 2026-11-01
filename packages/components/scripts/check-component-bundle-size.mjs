@@ -97,7 +97,7 @@ const PER_COMPONENT_CSS_BUDGET_KB = 5;
 //   running-a-command code, 14.75KB of JS and 6.11KB of CSS measured (with searching inside lists, the keyword a row matched through and a list's own text) against the defaults of 10KB and 5KB (ADR-0132, ADR-0133, ADR-0134).
 //   With the highlight report, values asked for in the search field, modes reached by a prefix, capped and suggested groups, the Enter
 //   hint and platform keys (ADR-0135): 16.02KB of JS and 6.12KB of CSS. The budgets are 18KB and 7KB.
-const JS_BUDGET_OVERRIDES_KB = { Calendar: 12, ColorPicker: 15, CommandPalette: 18, DataTable: 32, DatePicker: 18, DateRangePicker: 22, EditorTabs: 16, FileUpload: 14, ImageViewer: 13, MultiSelect: 18, Navbar: 22, Sidebar: 22, TimeRangePicker: 12, Toolbar: 13 };
+const JS_BUDGET_OVERRIDES_KB = { Calendar: 12, ColorPicker: 15, CommandPalette: 18, DataTable: 32, DatePicker: 18, DateRangePicker: 22, EditorTabs: 16, FileUpload: 14, ImageViewer: 13, Menubar: 12, MultiSelect: 18, Navbar: 22, Sidebar: 22, TimeRangePicker: 12, Toolbar: 13 };
 
 // `EditorTabs`'s bundle holds `Tabs`, the `Menu` and `ContextMenu` its tab list and per-tab menus open, the `IconButton` and `Tooltip` of its
 // add button and tabs, the `Spinner`, and `useSortable`: 12.21KB measured first, 14.49KB with the tab menu, status, tooltips, shortcuts and the vertical strip,
@@ -106,6 +106,10 @@ const JS_BUDGET_OVERRIDES_KB = { Calendar: 12, ColorPicker: 15, CommandPalette: 
 // `ImageViewer`'s bundle holds Radix Dialog with the shared overlay hooks, the `Image`, `Icon` and `Spinner` it draws with, its gesture hook
 // (wheel, pinch, pan with give and a coast, swipe, double tap), the maths, the thumbnail strip with its window, the slideshow, history and
 // origin handling and the inline form: 8.89KB at first, 11.97KB with those. Budget 13KB.
+//
+// `Menubar`'s bundle holds the shared menu item parts (as `ContextMenu`'s does), a `Tooltip` for a reason, the `Affix` of a sticky bar, the
+// overflow measurement and the hotkey and shortcut code: 6.16KB measured first, 9.95KB with the controller, `hotkeys`, `Menubar.Action`, reasons,
+// platform-drawn hints, `sticky`, the trigger icon and the More menu. Budget 12KB.
 //
 // The same for CSS. `DataTable`'s bundle holds the stylesheets of the `Table`, `TableToolbar`, `Pagination`, `Select`,
 // `Checkbox` and `Menu` parts it draws with (6.30KB measured against 3.45KB for `TableToolbar`, the largest of them), plus its own; 8.10KB

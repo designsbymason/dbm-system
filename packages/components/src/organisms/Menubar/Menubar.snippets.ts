@@ -57,6 +57,104 @@ ${menubar('surface="outlined"', `${fileMenu}\n${editMenu}`)}`,
     all of them subtle. It reads best with a surface. */}
 ${menubar('tone="neutral" surface="outlined"', `${fileMenu}\n${editMenu}`)}`,
 
+  actions: `{/* A Menubar.Action is a button in the bar that opens no menu. It takes its place in the arrow-key order,
+    runs onSelect on a click, Enter or Space, and closes any menu that is open. */}
+${menubar(
+  "",
+  `${fileMenu}
+  <Menubar.Action icon={PlayIcon} onSelect={run}>Run</Menubar.Action>
+  <Menubar.Action asChild>
+    <a href="/help">Help</a>
+  </Menubar.Action>`,
+)}`,
+
+  iconsAndTrailing: `{/* FileIcon comes from @dbm-system/icons. icon is a leading icon, trailing is content after the label. */}
+${menubar(
+  "",
+  `  <Menubar.Menu value="file">
+    <Menubar.Trigger icon={FileIcon}>File</Menubar.Trigger>
+    <Menubar.Content>
+      <Menubar.Item>New</Menubar.Item>
+    </Menubar.Content>
+  </Menubar.Menu>
+  <Menubar.Action trailing={<Badge size="sm">3</Badge>}>Inbox</Menubar.Action>`,
+)}`,
+
+  disabledReason: `{/* A trigger or an action with a disabledReason stays focusable and says why in a tooltip, and the reason
+    is announced as its description. Without a reason a disabled one leaves the arrow-key order. */}
+${menubar(
+  "",
+  `${fileMenu}
+  <Menubar.Menu value="view">
+    <Menubar.Trigger disabled disabledReason="Open a document to change the view">View</Menubar.Trigger>
+    <Menubar.Content>
+      <Menubar.Item>Zoom</Menubar.Item>
+    </Menubar.Content>
+  </Menubar.Menu>
+  <Menubar.Action disabled disabledReason="Nothing to run yet">Run</Menubar.Action>`,
+)}`,
+
+  hotkeys: `{/* hotkeys maps a menu's value to a key combination: mod is ⌘ on an Apple platform and Ctrl elsewhere, false
+    turns one off, and nothing is bound by default. A press that matches is kept from the browser and opens the
+    menu onto its first item. A shortcut hint written with mod ("mod+s") is drawn for the platform. */}
+${menubar(
+  `hotkeys={{ file: "alt+f", edit: "alt+e" }}`,
+  `  <Menubar.Menu value="file">
+    <Menubar.Trigger>File</Menubar.Trigger>
+    <Menubar.Content>
+      <Menubar.Item shortcut="mod+n">New</Menubar.Item>
+      <Menubar.Item shortcut="mod+s">Save</Menubar.Item>
+    </Menubar.Content>
+  </Menubar.Menu>
+${editMenu}`,
+)}`,
+
+  controller: `{/* controllerRef hands the bar's controls to code outside it: const bar = useRef<MenubarController>(null);
+    then bar.current?.open("file"), bar.current?.close() and bar.current?.value. Inside the bar,
+    useMenubarController() returns the same object. open says whether it had anything to open. */}
+${menubar("controllerRef={bar}", `${fileMenu}\n${editMenu}`)}`,
+
+  overflowMenu: `{/* overflow="menu" moves the menus and actions that do not fit into a "More" menu, each menu as a
+    submenu. They have to be direct children of the bar, and the bar's container has to be sized by the layout. */}
+<div style={{ inlineSize: 240 }}>
+${menubar('overflow="menu"', `${fileMenu}\n${editMenu}\n  {/* …more menus */}`)}
+</div>`,
+
+  sticky: `{/* sticky keeps the bar at the top of the page, with a surface behind it and a shadow while it is stuck.
+    stickyOffset leaves room for a header that is also sticky, and scrollContainerRef names a scrolling panel. */}
+${menubar("sticky", `${fileMenu}\n${editMenu}`)}`,
+
+  narrowScreen: `{/* A menu bar expects a keyboard and a pointer. On a phone, show a Menu (or a NavigationMenu) from a
+    button instead. Hold the width in state with a media query, for example:
+    const wide = useSyncExternalStore(
+      (notify) => { const query = window.matchMedia("(min-width: 48rem)"); query.addEventListener("change", notify); return () => query.removeEventListener("change", notify); },
+      () => window.matchMedia("(min-width: 48rem)").matches,
+      () => true,
+    );
+    The same commands then come from one place, as the items of both. */}
+{wide ? (
+  <Menubar aria-label="Application menu">
+    <Menubar.Menu value="file">
+      <Menubar.Trigger>File</Menubar.Trigger>
+      <Menubar.Content>
+        <Menubar.Item onSelect={newFile}>New</Menubar.Item>
+        <Menubar.Item onSelect={save}>Save</Menubar.Item>
+      </Menubar.Content>
+    </Menubar.Menu>
+  </Menubar>
+) : (
+  <Menu>
+    <Menu.Trigger asChild>
+      <IconButton icon={ListIcon} aria-label="Menu" />
+    </Menu.Trigger>
+    <Menu.Content>
+      <Menu.Label>File</Menu.Label>
+      <Menu.Item onSelect={newFile}>New</Menu.Item>
+      <Menu.Item onSelect={save}>Save</Menu.Item>
+    </Menu.Content>
+  </Menu>
+)}`,
+
   checkboxAndRadio: `{/* A checkbox or radio item leaves the menu open when it is chosen; closeOnSelect closes it. */}
 ${menubar(
   "",

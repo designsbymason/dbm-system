@@ -22,8 +22,22 @@ const meta: Meta<typeof Menubar.Trigger> = {
     disabled: {
       control: "boolean",
       description:
-        "A disabled trigger opens nothing and is skipped by the arrow keys.",
+        "A disabled trigger opens nothing and is skipped by the arrow keys, unless it has a disabledReason.",
       table: { defaultValue: { summary: "false" } },
+    },
+    disabledReason: {
+      control: "text",
+      description:
+        "Why the trigger is disabled, shown in a tooltip and announced as its description. Only with disabled. A trigger with a reason stays focusable (and aria-disabled) so the reason can be reached and heard, and the arrow keys stop on it.",
+    },
+    icon: {
+      control: false,
+      description:
+        "A leading icon, as a component reference (icon={FileIcon}), drawn in icon.* colours. Decorative: the label carries the meaning.",
+    },
+    trailing: {
+      control: false,
+      description: "Content after the label: a count, a Badge.",
     },
     "aria-haspopup": {
       control: false,

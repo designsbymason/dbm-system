@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { shortcutKeys } from "./commandPalette.shortcut";
+import { shortcutKeys } from "./shortcutKeys";
 
 describe("shortcutKeys", () => {
   it("writes mod as ⌘ on an Apple platform and Ctrl elsewhere, with a name for the symbol", () => {

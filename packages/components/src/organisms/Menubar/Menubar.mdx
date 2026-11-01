@@ -15,6 +15,7 @@ import * as MenubarStories from "./Menubar.stories";
 import * as MenubarRootStories from "./MenubarRoot.stories";
 import * as MenubarMenuStories from "./MenubarMenu.stories";
 import * as MenubarTriggerStories from "./MenubarTrigger.stories";
+import * as MenubarActionStories from "./MenubarAction.stories";
 import * as MenubarContentStories from "./MenubarContent.stories";
 import * as MenubarItemStories from "./MenubarItem.stories";
 import * as MenubarCheckboxItemStories from "./MenubarCheckboxItem.stories";
@@ -37,6 +38,13 @@ export const propOrder = [
   "size",
   "surface",
   "tone",
+  "overflow",
+  "hotkeys",
+  "controllerRef",
+  "labels",
+  "sticky",
+  "stickyOffset",
+  "scrollContainerRef",
   "loop",
   "dir",
   "aria-label",
@@ -146,10 +154,26 @@ export const subContentPropOrder = [
   ...sharedTail,
 ];
 
+export const actionPropOrder = [
+  "children",
+  "icon",
+  "trailing",
+  "onSelect",
+  "disabled",
+  "disabledReason",
+  "aria-label",
+  "aria-labelledby",
+  "aria-describedby",
+  "asChild",
+  ...sharedTail,
+];
 export const menuPropOrder = ["value", "children"];
 export const triggerPropOrder = [
   "children",
+  "icon",
+  "trailing",
   "disabled",
+  "disabledReason",
   "aria-label",
   "aria-labelledby",
   "aria-describedby",
@@ -224,6 +248,20 @@ through to the bar. `role` is set by the bar and can't be replaced. The item, la
 
 <PropertiesTable of={MenubarRootStories} order={propOrder} />
 
+### The controller
+
+`controllerRef` (or `useMenubarController()` inside the bar) hands out an object that opens and closes a menu from code, so
+a button or a key of your own needs no state of its own. Its methods say whether there was something to do:
+
+- `open(value)` opens the menu named `value` and puts focus on its first item, as the key that opens it would. It returns `false`, and does
+  nothing, when there is no such menu (not mounted, or moved into the "More" menu), when `value` names a `Menubar.Action`, or when
+  its trigger is disabled with a reason.
+- `close()` closes the open menu, and does nothing if none is open.
+- `value` reads the open menu's name now (an empty string when none is open). It is a getter on a stable object: the object never changes, so keep it.
+
+Outside a `Menubar`, `useMenubarController()` returns an object whose methods do nothing and warns in development. `value` and
+`onValueChange` still drive a bar from your own state; the controller is for the code that has none.
+
 ### Menubar.Menu properties
 
 One menu of the bar. It renders no element of its own, so it takes no `className`, `style`, `id`, `data-testid` or `ref`.
@@ -237,6 +275,15 @@ The bar's button that opens a menu. Also accepts any other native `<button>` att
 be replaced.
 
 <PropertiesTable of={MenubarTriggerStories} order={triggerPropOrder} />
+
+### Menubar.Action properties
+
+A button in the bar that opens no menu ("Run", "Help"). It joins the arrow-key order beside the triggers and runs `onSelect`
+on a click, Enter or Space. Also accepts any other native `<button>` attribute beyond what's listed here (e.g. `onFocus`,
+`title`), passed straight through. `role` is set by the bar and can't be replaced; it is not a popup, so it has no
+`aria-haspopup` or `aria-expanded`.
+
+<PropertiesTable of={MenubarActionStories} order={actionPropOrder} />
 
 ### Menubar.Content properties
 
@@ -332,6 +379,34 @@ A story's menus are closed until you open one.
 
 <Canvas of={MenubarStories.Tones} />
 
+### Actions beside the menus
+
+<Canvas of={MenubarStories.Actions} />
+
+### An icon and trailing content on a trigger
+
+<Canvas of={MenubarStories.IconsAndTrailing} />
+
+### A trigger or an action disabled with a reason
+
+<Canvas of={MenubarStories.DisabledWithAReason} />
+
+### Hotkeys, and shortcut hints drawn for the platform
+
+<Canvas of={MenubarStories.HotkeysAndPlatformShortcuts} />
+
+### Opened from a controller
+
+<Canvas of={MenubarStories.Controller} />
+
+### Menus that do not fit move into a More menu
+
+<Canvas of={MenubarStories.OverflowMenu} />
+
+### A sticky bar
+
+<Canvas of={MenubarStories.Sticky} />
+
 ### Checkbox items, radio items and a submenu
 
 <Canvas of={MenubarStories.CheckboxAndRadioItems} />
@@ -356,6 +431,14 @@ A story's menus are closed until you open one.
 
 <Canvas of={MenubarStories.RightToLeft} />
 
+### Recipe: a menubar on a desktop, a Menu on a phone
+
+A menubar expects a keyboard and a pointer, and it has no sheet presentation. On a touch screen show a `Menu` from a button
+(or a `NavigationMenu` for a site) and keep the commands in one place so both forms draw the same ones. Hold the width in state
+with a media query; the story below swaps at `48rem`.
+
+<Canvas of={MenubarStories.NarrowScreen} />
+
 ## Usage guidelines
 
 <div className="dbm-do-dont-grid">
@@ -366,7 +449,8 @@ A story's menus are closed until you open one.
 - Name the bar with `aria-label` ("Application menu"); a page with more than one needs one on each.
 - Keep each trigger's label to one word, so the bar stays short and typeahead is unambiguous.
 - Put the destructive action last in its menu, after a `Menubar.Separator`, with `tone="danger"`.
-- Bind the keys a `shortcut` hint shows yourself, and open a menu from your own key (Alt+F for File) with the bar's `value`.
+- Open a menu from a key with the bar's `hotkeys` (`{ file: "alt+f" }`), and bind the keys a `shortcut` hint shows yourself. Write a hint with `mod` (`"mod+s"`) to have it drawn as ⌘S or Ctrl+S.
+- Give a `disabledReason` to a trigger or an action that is unavailable for a reason a person can act on.
 - Give each `Menubar.Menu` a stable `value`: it is what `value` and `onValueChange` report.
 
 </Callout>
@@ -376,8 +460,9 @@ A story's menus are closed until you open one.
 - Don't use it as a single button of actions: that is a `Menu`. A bar of one trigger is a `Menu` with extra steps.
 - Don't rely on a `shortcut` hint to make a key work. It only displays the key; bind it yourself.
 - Don't put a form or arbitrary content in a menu. A menu holds `menuitem`s only.
-- Don't count on it on a phone: it expects a keyboard and a pointer, and there is no sheet presentation. Show a `Menu`
-  or a `NavigationMenu` from a button on a touch screen.
+- Don't count on it on a phone: it expects a keyboard and a pointer, and there is no sheet presentation. Swap to a `Menu`
+  or a `NavigationMenu` below a breakpoint (the recipe above).
+- Don't use a trigger that opens nothing for a plain command: use a `Menubar.Action`.
 - Don't hide an action that only the menubar offers: also put anything people need often within reach on the page.
 
 </Callout>
@@ -392,6 +477,8 @@ A story's menus are closed until you open one.
   focus that press gave.
 - A bar wider than its container scrolls sideways, with a fade at each end that has more behind it, and keeps the focused
   trigger in view. Prefer fewer, shorter menus to a bar that scrolls.
+- A bar wider than its container scrolls by default. With `overflow="menu"` the menus and actions that do not fit move into a "More" menu (each menu as a submenu); give the bar's `Menubar.Menu` and `Menubar.Action` as direct children, and size its container with the layout (a bar that sizes its own container has no room to measure against). A trigger with keyboard focus is held in place until focus leaves it.
+- `sticky` keeps the bar at the top of the page, or of `scrollContainerRef`, with `stickyOffset` clear of a header that is also sticky.
 - `tone` colours the triggers' hover and open fills and, on an `outlined` or `filled` bar, its border and fill, all from subtle tokens (the trigger label is `text.primary` in both tones): `brand` (the default) suits an application's own chrome, `neutral` a bar that should sit back. It does not change the menus the bar opens, which keep `Menu`'s look.
 - `size` sets the trigger height and the row size of its menus; give a `Menubar.Content` its own `size` only to differ.
 - A menu taller than the room there is scrolls inside its panel, with a fade at each end that has more behind it. The panel flips to
@@ -410,6 +497,9 @@ A story's menus are closed until you open one.
 - With a menu open, `ArrowLeft` and `ArrowRight` move to the previous or next menu, and moving the pointer onto another
   trigger opens that one. Inside a panel, `ArrowDown` and `ArrowUp` move between items, skipping disabled ones, `Home` and
   `End` jump to the first and last, and typing letters moves to the item that starts with them.
+- A `Menubar.Action` is a `menuitem` that is not a popup: it has no `aria-haspopup` or `aria-expanded`, it is in the same arrow-key order, and moving onto it with an open menu closes that menu and takes focus.
+- A trigger or an action with a `disabledReason` stays focusable and `aria-disabled`, shows the reason in a tooltip and announces it as its description; nothing opens or runs. Without a reason a disabled one is skipped by the arrow keys.
+- A key from `hotkeys` is kept from the browser only when its menu is in the bar, and puts focus on the menu's first item. A menu that has moved into "More" is left to the browser.
 - `ArrowRight` opens a submenu and `ArrowLeft` closes it, swapped in right-to-left text (`dir="rtl"`).
 - A `description` is announced as the item's description, not as part of its name. A `disabledReason` keeps the item focusable and
   `aria-disabled`, shows the reason in a tooltip and announces it as the description. An item with a pending action is
@@ -459,6 +549,14 @@ function AppMenu() {
     </Menubar>
   );
 }
+
+{/* Keys that open a menu, and a controller for code that has none */}
+const bar = useRef<MenubarController>(null);
+<Menubar aria-label="Application menu" hotkeys={{ file: "alt+f" }} controllerRef={bar}>…</Menubar>;
+<Button onClick={() => bar.current?.open("edit")}>Edit…</Button>
+
+{/* A button in the bar that opens no menu */}
+<Menubar.Action icon={PlayIcon} onSelect={run}>Run</Menubar.Action>
 
 {/* A checkbox item leaves the menu open, and a radio group does too */}
 <Menubar.CheckboxItem checked={showGrid} onCheckedChange={setShowGrid}>
@@ -530,6 +628,8 @@ function AppMenu() {
 <TokenRow token="bg.neutral-subtle-hover" usage="with the neutral tone, the open trigger, and a trigger under the pointer on a filled bar" />
 <TokenRow token="border.brand-subtle" usage="with the brand tone, the border of an outlined bar" />
 <TokenRow token="border.neutral-subtle" usage="with the neutral tone, the border of an outlined bar" />
+<TokenRow token="space.px" usage="a sticky bar's pull up by the 1px marker `Affix` puts before it" />
+<TokenRow token="shadow.light.md / shadow.dark.md" usage="a sticky bar's elevation while it is stuck" />
 
 ## Related components
 
