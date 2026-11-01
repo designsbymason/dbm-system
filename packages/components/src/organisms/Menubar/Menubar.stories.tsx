@@ -42,7 +42,7 @@ const meta: Meta<MenubarStageArgs> = {
       control: "inline-radio",
       options: ["neutral", "brand"],
       description:
-        "The colour of the triggers and of the bar's own border and fill: brand (the system's identity colour) or neutral. Every colour is a subtle one. It does not change the menus the bar opens.",
+        "The colour of the triggers' hover and open fills and of the bar's own border and fill: brand (the system's identity colour) or neutral. Every colour is a subtle one. It does not change the menus the bar opens.",
       table: { defaultValue: { summary: '"brand"' } },
     },
     loop: {

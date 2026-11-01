@@ -392,7 +392,7 @@ A story's menus are closed until you open one.
   focus that press gave.
 - A bar wider than its container scrolls sideways, with a fade at each end that has more behind it, and keeps the focused
   trigger in view. Prefer fewer, shorter menus to a bar that scrolls.
-- `tone` colours the triggers and, on an `outlined` or `filled` bar, its border and fill, all from subtle tokens: `brand` (the default) suits an application's own chrome, `neutral` a bar that should sit back. It does not change the menus the bar opens, which keep `Menu`'s look.
+- `tone` colours the triggers' hover and open fills and, on an `outlined` or `filled` bar, its border and fill, all from subtle tokens (the trigger label is `text.primary` in both tones): `brand` (the default) suits an application's own chrome, `neutral` a bar that should sit back. It does not change the menus the bar opens, which keep `Menu`'s look.
 - `size` sets the trigger height and the row size of its menus; give a `Menubar.Content` its own `size` only to differ.
 - A menu taller than the room there is scrolls inside its panel, with a fade at each end that has more behind it. The panel flips to
   stay inside the viewport; give it `collisionPadding` where a fixed header or footer covers the edge.
@@ -523,14 +523,13 @@ function AppMenu() {
 <TokenRow token="space.6" usage="item and trigger minimum height (the 24px target floor); the height of a scroll fade, in the panel and at the ends of the bar" />
 <TokenRow token="text.danger" usage="danger item text" />
 <TokenRow token="text.disabled" usage="disabled item and disabled trigger text" />
-<TokenRow token="text.primary" usage="item and panel text, and trigger text with the neutral tone" />
+<TokenRow token="text.primary" usage="item, panel and trigger text, in both tones" />
 <TokenRow token="text.secondary" usage="shortcut hint, item description and label heading text" />
 <TokenRow token="z-index.popover" usage="panel stacking order, above a dialog it is opened from" />
 <TokenRow token="bg.brand-subtle-hover" usage="with the brand tone, the open trigger, and a trigger under the pointer on a filled bar" />
 <TokenRow token="bg.neutral-subtle-hover" usage="with the neutral tone, the open trigger, and a trigger under the pointer on a filled bar" />
 <TokenRow token="border.brand-subtle" usage="with the brand tone, the border of an outlined bar" />
 <TokenRow token="border.neutral-subtle" usage="with the neutral tone, the border of an outlined bar" />
-<TokenRow token="text.brand" usage="with the brand tone, trigger text" />
 
 ## Related components
 

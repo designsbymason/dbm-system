@@ -74,13 +74,12 @@
 }
 
 /* Tone — set on the bar and read by the surface and every trigger. Every colour is a subtle token: the bar's border and
-   fill, a trigger under the pointer, and the open trigger, which takes the hover's own pair one step deeper. */
+   fill, a trigger under the pointer, and the open trigger (the label is `text.primary` in both tones), which takes the hover's own pair one step deeper. */
 .toneBrand {
   --menubar-border: var(--dbm-border-brand-subtle);
   --menubar-fill: var(--dbm-bg-brand-subtle);
   --menubar-hover: var(--dbm-bg-brand-subtle);
   --menubar-open: var(--dbm-bg-brand-subtle-hover);
-  --menubar-text: var(--dbm-text-brand);
 }
 
 .toneNeutral {
@@ -88,7 +87,6 @@
   --menubar-fill: var(--dbm-bg-neutral-subtle);
   --menubar-hover: var(--dbm-bg-neutral-subtle);
   --menubar-open: var(--dbm-bg-neutral-subtle-hover);
-  --menubar-text: var(--dbm-text-primary);
 }
 
 /* On a filled bar the hover would match the fill, so a filled bar's triggers hover to the deeper pair. */
@@ -136,7 +134,7 @@
   background: none;
   border: none;
   border-radius: var(--dbm-radius-md);
-  color: var(--menubar-text);
+  color: var(--dbm-text-primary);
   cursor: pointer;
   flex-shrink: 0;
   font: inherit;

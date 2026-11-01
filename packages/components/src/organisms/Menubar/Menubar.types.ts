@@ -61,7 +61,7 @@ export interface MenubarProps extends Omit<
    */
   surface?: MenubarSurface;
   /**
-   * The colour of the triggers and of the bar's own border and fill: `brand` (the system's identity colour) or
+   * The colour of the triggers' hover and open fills and of the bar's own border and fill: `brand` (the system's identity colour) or
    * `neutral`. Every colour is a subtle one. It does not change the menus the bar opens.
    * @default 'brand'
    */

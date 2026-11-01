@@ -434,7 +434,7 @@ export const TriggerStatesPassContrast: Story = {
     const ring = resolved("backgroundColor", "border-focus");
     const pairs: Record<string, { text: string; fills: string[] }> = {
       brand: {
-        text: "text-brand",
+        text: "text-primary",
         fills: ["bg-surface", "bg-brand-subtle", "bg-brand-subtle-hover"],
       },
       neutral: {
@@ -484,7 +484,7 @@ export const TriggerStatesPassContrast: Story = {
     const trigger = (bar: HTMLElement, name: string) =>
       within(bar).getByRole("menuitem", { name });
     await expect(getComputedStyle(trigger(brand, "File")).color).toBe(
-      resolved("color", "text-brand"),
+      resolved("color", "text-primary"),
     );
     await expect(getComputedStyle(trigger(neutral, "File")).color).toBe(
       resolved("color", "text-primary"),

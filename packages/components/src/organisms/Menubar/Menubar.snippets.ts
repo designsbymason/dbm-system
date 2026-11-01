@@ -53,7 +53,7 @@ ${menubar('size="lg"', `${fileMenu}\n${editMenu}`)}`,
   surfaces: `{/* surface: "ghost" (default, no surface) | "outlined" | "filled". */}
 ${menubar('surface="outlined"', `${fileMenu}\n${editMenu}`)}`,
 
-  tones: `{/* tone: "brand" (default) | "neutral" — the colour of the triggers and of the bar's own border and fill,
+  tones: `{/* tone: "brand" (default) | "neutral" — the colour of the triggers' hover and open fills and of the bar's own border and fill,
     all of them subtle. It reads best with a surface. */}
 ${menubar('tone="neutral" surface="outlined"', `${fileMenu}\n${editMenu}`)}`,
 
