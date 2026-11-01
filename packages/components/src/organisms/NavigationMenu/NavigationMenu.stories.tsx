@@ -401,10 +401,10 @@ export const FromOutside: Story = {
             Close
           </Button>
         </div>
+        <p style={{ marginBlock: "0 var(--dbm-space-3)" }}>Finished: {done}</p>
         <DemoNavigation {...menuArgs(args)} defaultValue="" controllerRef={controller} onOpenChangeComplete={(open, value) => setDone(`${value} ${open ? "opened" : "closed"}`)}>
           <DemoItems />
         </DemoNavigation>
-        <p>Finished: {done}</p>
       </MenuStage>
     );
   },
@@ -425,10 +425,10 @@ export const Controlled: Story = {
             Close
           </Button>
         </div>
+        <p style={{ marginBlock: "0 var(--dbm-space-3)" }}>Open item: {open === "" ? "none" : open}</p>
         <DemoNavigation {...menuArgs(args)} defaultValue={undefined} value={open} onValueChange={setOpen}>
           <DemoItems />
         </DemoNavigation>
-        <p style={{ marginBlockStart: "var(--dbm-space-3)" }}>Open item: {open === "" ? "none" : open}</p>
       </MenuStage>
     );
   },
