@@ -23,6 +23,7 @@ import { Collapse } from "../../atoms/Collapse";
 import { Icon } from "../../atoms/Icon";
 import { VisuallyHidden } from "../../atoms/VisuallyHidden";
 import { blockDisabledClick, EXTERNAL_HREF_PATTERN } from "../../internal/linkGuard";
+import { warnOnce } from "../../internal/warnOnce";
 import { useNavigationEmbed } from "../../internal/navigationEmbed";
 import styles from "./NavigationMenu.module.css";
 import {
@@ -188,6 +189,13 @@ function useRoom(
   return resolved;
 }
 
+/** Whether something gives a link or trigger a name: text or a badge or description, or an `aria-label` / `aria-labelledby`. */
+function hasName(children: ReactNode, label: string | undefined, labelledBy: string | undefined, ...others: ReactNode[]): boolean {
+  if (label !== undefined && label !== "") return true;
+  if (labelledBy !== undefined && labelledBy !== "") return true;
+  return [children, ...others].some((part) => part !== undefined && part !== null && part !== false && part !== "");
+}
+
 // --- Intent --------------------------------------------------------------------------------------------------------------------
 
 /** Calls `onIntent` when a mouse has rested on the element for a moment, or it takes focus: the moment to prefetch what it leads to. */
@@ -214,14 +222,18 @@ function useIntent(onIntent: (() => void) | undefined) {
 
 // --- Shared drawing ------------------------------------------------------------------------------------------------------------
 
-/** A badge you pass is drawn as written (its tone, variant, `max`…) with the size filled in; anything else is a solid brand badge's content. */
-function renderBadge(badge: ReactNode) {
+/**
+ * A badge you pass is drawn as written (its tone, variant, `max`…) with the size filled in; anything else is a brand badge's
+ * content, solid, or subtle on a brand fill (the solid current-page look), where a solid brand pill would be the colour of what is
+ * under it.
+ */
+function renderBadge(badge: ReactNode, onBrandFill = false) {
   if (badge === undefined || badge === null) return null;
   if (isValidElement(badge) && badge.type === Badge) {
     return cloneElement(badge as ReactElement<BadgeProps>, { size: (badge as ReactElement<BadgeProps>).props.size ?? "xs" });
   }
   return (
-    <Badge tone="brand" variant="solid" size="xs">
+    <Badge tone="brand" variant={onBrandFill ? "subtle" : "solid"} size="xs">
       {badge}
     </Badge>
   );
@@ -452,6 +464,56 @@ const NavigationMenuRoot = forwardRef<HTMLElement, NavigationMenuProps>(
       };
     }, [value]);
 
+    // A swap between the mega and the stacked form (a width map crossing its step) draws different elements, so a focused trigger or
+    // link would be removed and focus would fall to the page. Which stop had focus is remembered, by its place among the stops, and
+    // focus is given to the same stop of the new form, only when the old one was lost, never taken from anywhere else.
+    const focusStop = useRef<number | null>(null);
+    useEffect(() => {
+      const root = rootRef.current;
+      if (root === null) return;
+      const note = (event: globalThis.FocusEvent) => {
+        const target = event.target as Element;
+        const stop = target.closest("[data-nm-stop]") ?? target.closest("[data-nm-item]")?.querySelector("[data-nm-stop]");
+        focusStop.current = stop ? [...root.querySelectorAll("[data-nm-stop]")].indexOf(stop) : null;
+      };
+      // Focus leaving for somewhere else forgets the stop. A browser may also report a blur for an element that is being removed, which
+      // is the very swap this is for, so that one is told apart by the element being gone once the removal has finished.
+      const leave = (event: globalThis.FocusEvent) => {
+        const target = event.target as Node;
+        if (event.relatedTarget instanceof Node && root.contains(event.relatedTarget)) return;
+        queueMicrotask(() => {
+          if (target.isConnected) focusStop.current = null;
+        });
+      };
+      root.addEventListener("focusin", note);
+      root.addEventListener("focusout", leave);
+      return () => {
+        root.removeEventListener("focusin", note);
+        root.removeEventListener("focusout", leave);
+      };
+    }, [stacked]);
+    const wasStacked = useRef(stacked);
+    useEffect(() => {
+      if (wasStacked.current === stacked) return;
+      wasStacked.current = stacked;
+      const index = focusStop.current;
+      if (index === null || (document.activeElement !== document.body && document.activeElement !== null)) return;
+      rootRef.current?.querySelectorAll<HTMLElement>("[data-nm-stop]")[index]?.focus();
+    }, [stacked]);
+
+    // Combinations the menu ignores, said once in development.
+    useEffect(() => {
+      if (process.env.NODE_ENV === "production") return;
+      if (indicator && (stacked || !viewport || vertical)) {
+        warnOnce("NavigationMenu: `indicator` needs the shared panel area (`viewport`) and the horizontal direction, and is not drawn otherwise.");
+      }
+      if (exclusive === false && !stacked) warnOnce("NavigationMenu: `exclusive` only applies to the stacked form; the mega form shows one panel at a time.");
+      if (controlled && defaultValue !== "") warnOnce("NavigationMenu: `defaultValue` is ignored when `value` is controlled.");
+      if (panelSize === "full" && !stacked && rootRef.current?.offsetParent === document.body) {
+        warnOnce("NavigationMenu: `panelSize=\"full\"` spans the nearest positioned ancestor, and there is none, so it spans the page; give the box to span `position: relative` (a sticky `Navbar` is one).");
+      }
+    }, [indicator, stacked, viewport, vertical, exclusive, controlled, defaultValue, panelSize]);
+
     const context = useMemo<NavigationMenuContextValue>(
       () => ({
         stacked,
@@ -597,6 +659,11 @@ const NavigationMenuItem = forwardRef<HTMLLIElement, NavigationMenuItemProps>(
     const generated = useId();
     const value = valueProp ?? generated;
     const contentId = useId();
+    useEffect(() => {
+      if (defaultOpen !== undefined && (!stacked || controlled)) {
+        warnOnce("NavigationMenu.Item: `defaultOpen` only applies to an uncontrolled stacked menu, and is ignored here.");
+      }
+    }, [defaultOpen, stacked, controlled]);
     // An item that holds the current page starts expanded in the stacked form, unless it was told not to.
     const holds = holdsCurrent(children, currentPath, currentMatch);
     const [local, setLocal] = useState(defaultOpen ?? holds);
@@ -627,11 +694,11 @@ const NavigationMenuItem = forwardRef<HTMLLIElement, NavigationMenuItemProps>(
       <NavigationMenuItemContext.Provider value={item}>
         {stacked ? (
           // eslint-disable-next-line jsx-a11y/no-redundant-roles
-          <li {...props} ref={itemMergedRef} role="listitem" className={cx(itemClass, styles.stackedItem)}>
+          <li {...props} ref={itemMergedRef} role="listitem" data-nm-item="" className={cx(itemClass, styles.stackedItem)}>
             {children}
           </li>
         ) : (
-          <Primitive.Item {...props} ref={itemMergedRef} value={value} role="listitem" className={itemClass}>
+          <Primitive.Item {...props} ref={itemMergedRef} value={value} role="listitem" data-nm-item="" className={itemClass}>
             {children}
           </Primitive.Item>
         )}
@@ -656,6 +723,7 @@ const NavigationMenuTrigger = forwardRef<HTMLButtonElement, NavigationMenuTrigge
       disabled = false,
       onIntent,
       delayDuration: ownDelay,
+      "aria-label": ariaLabel,
       className,
       children,
       onClick,
@@ -689,6 +757,10 @@ const NavigationMenuTrigger = forwardRef<HTMLButtonElement, NavigationMenuTrigge
     );
     const delay = ownDelay ?? delayDuration;
     const split = href !== undefined;
+    const onBrandFill = current && currentVariant === "solid";
+    if (process.env.NODE_ENV !== "production" && !hasName(children, ariaLabel, props["aria-labelledby"], badge)) {
+      warnOnce("NavigationMenu.Trigger: a trigger with no text or badge has no accessible name; give it an `aria-label`.");
+    }
     const classes = cx(
       styles.link,
       styles.trigger,
@@ -701,11 +773,12 @@ const NavigationMenuTrigger = forwardRef<HTMLButtonElement, NavigationMenuTrigge
       <>
         {icon && <Icon icon={icon} size="sm" />}
         {children}
-        {renderBadge(badge)}
+        {renderBadge(badge, onBrandFill)}
       </>
     );
     const caret = <Icon icon={CaretDownIcon} size="xs" className={styles.caret} />;
-    const toggleName = labels.togglePanel(typeof children === "string" ? children : "Menu");
+    // A split trigger's caret is named by the menu's own label, unless the trigger is given a name, which then names the caret.
+    const toggleName = ariaLabel ?? labels.togglePanel(typeof children === "string" ? children : "Menu");
 
     // The pointer handlers the trigger adds to the primitive's own: the intent callback, and (with its own `delayDuration`) the opening.
     const handlers = {
@@ -758,6 +831,7 @@ const NavigationMenuTrigger = forwardRef<HTMLButtonElement, NavigationMenuTrigge
       const link = (
         <SelectableAnchor
           href={href}
+          data-nm-stop=""
           current={linkCurrent}
           disabled={disabled}
           onIntent={onIntent}
@@ -777,6 +851,7 @@ const NavigationMenuTrigger = forwardRef<HTMLButtonElement, NavigationMenuTrigge
           aria-expanded={open}
           aria-controls={item.contentId}
           aria-label={toggleName}
+          data-nm-stop=""
           className={cx(styles.link, styles.trigger, styles.splitCaret, rounded && styles.rounded)}
           onClick={(event: MouseEvent<HTMLButtonElement>) => {
             onClick?.(event);
@@ -792,6 +867,7 @@ const NavigationMenuTrigger = forwardRef<HTMLButtonElement, NavigationMenuTrigge
           disabled={disabled}
           aria-expanded={open}
           aria-label={toggleName}
+          data-nm-stop=""
           onClick={onClick}
           className={cx(styles.link, styles.trigger, styles.splitCaret, rounded && styles.rounded)}
         >
@@ -818,6 +894,8 @@ const NavigationMenuTrigger = forwardRef<HTMLButtonElement, NavigationMenuTrigge
           disabled={disabled}
           aria-expanded={open}
           aria-controls={item.contentId}
+          aria-label={ariaLabel}
+          data-nm-stop=""
           className={classes}
           onClick={(event: MouseEvent<HTMLButtonElement>) => {
             onClick?.(event);
@@ -831,7 +909,7 @@ const NavigationMenuTrigger = forwardRef<HTMLButtonElement, NavigationMenuTrigge
     }
 
     return (
-      <Primitive.Trigger {...props} {...handlers} ref={ref} disabled={disabled} aria-expanded={open} onClick={onClick} className={classes}>
+      <Primitive.Trigger {...props} {...handlers} ref={ref} disabled={disabled} aria-expanded={open} aria-label={ariaLabel} data-nm-stop="" onClick={onClick} className={classes}>
         {body}
         {caret}
       </Primitive.Trigger>
@@ -851,6 +929,11 @@ const NavigationMenuContent = forwardRef<HTMLDivElement, NavigationMenuContentPr
     const { stacked, viewport, panelSize } = useNavigationMenuContext("NavigationMenu.Content");
     const item = useContext(NavigationMenuItemContext);
     if (item === null) throw new Error("NavigationMenu.Content must be used inside NavigationMenu.Item.");
+    useEffect(() => {
+      if (stacked && (forceMount || onEscapeKeyDown || onPointerDownOutside || onFocusOutside || onInteractOutside)) {
+        warnOnce("NavigationMenu.Content: `forceMount` and the dismissal callbacks belong to the floating panel, and are ignored in the stacked form.");
+      }
+    }, [stacked, forceMount, onEscapeKeyDown, onPointerDownOutside, onFocusOutside, onInteractOutside]);
     const kids = Children.toArray(children);
     const inner = (
       <NavigationMenuContentContext.Provider value>
@@ -902,6 +985,11 @@ const NavigationMenuLink = forwardRef<HTMLAnchorElement, NavigationMenuLinkProps
     const inPanel = useContext(NavigationMenuContentContext);
     const isExternal = !asChild && (external ?? EXTERNAL_HREF_PATTERN.test(href ?? ""));
     const current = ownCurrent ?? matchesCurrent(currentPath, href, currentMatch);
+    const onBrandFill = !inPanel && current && currentVariant === "solid";
+
+    if (process.env.NODE_ENV !== "production" && !asChild && !hasName(children, props["aria-label"], props["aria-labelledby"], badge, description)) {
+      warnOnce("NavigationMenu.Link: a link with no text, badge or description has no accessible name; give it an `aria-label`.");
+    }
 
     const classes = cx(
       inPanel ? styles.panelLink : cx(styles.link, rounded && styles.rounded, current && styles.current, current && currentVariantClass[currentVariant]),
@@ -934,13 +1022,14 @@ const NavigationMenuLink = forwardRef<HTMLAnchorElement, NavigationMenuLinkProps
             </span>
           )}
         </span>
-        {renderBadge(badge)}
+        {renderBadge(badge, onBrandFill)}
       </>
     );
 
     return (
       <SelectableAnchor
         {...props}
+        {...(inPanel ? {} : { "data-nm-stop": "" })}
         {...(asChild ? {} : { href, target: target ?? (isExternal ? "_blank" : undefined), rel: rel ?? (isExternal ? "noopener noreferrer" : undefined) })}
         ref={ref}
         asChild={asChild}

@@ -1,3 +1,4 @@
+import { ChartBarIcon } from "@dbm-system/icons";
 import { act, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { axe } from "jest-axe";
@@ -429,5 +430,122 @@ describe("layout choices", () => {
       </NavigationMenu>,
     );
     expect(await axe(container)).toHaveNoViolations();
+  });
+});
+
+describe("a split trigger's naming", () => {
+  it("lets an aria-label name the caret in place of labels.togglePanel", () => {
+    render(
+      <NavigationMenu aria-label="Primary">
+        <NavigationMenu.List>
+          <NavigationMenu.Item value="a">
+            <NavigationMenu.Trigger href="/a" aria-label="More about A">
+              A
+            </NavigationMenu.Trigger>
+            <NavigationMenu.Content>x</NavigationMenu.Content>
+          </NavigationMenu.Item>
+        </NavigationMenu.List>
+      </NavigationMenu>,
+    );
+    expect(screen.getByRole("button", { name: "More about A" })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "A" })).toBeInTheDocument();
+  });
+
+  it("names a stacked split trigger's caret the same way", () => {
+    render(
+      <NavigationMenu aria-label="Primary" presentation="stacked">
+        <NavigationMenu.List>
+          <NavigationMenu.Item value="a">
+            <NavigationMenu.Trigger href="/a" aria-label="More about A">
+              A
+            </NavigationMenu.Trigger>
+            <NavigationMenu.Content>x</NavigationMenu.Content>
+          </NavigationMenu.Item>
+        </NavigationMenu.List>
+      </NavigationMenu>,
+    );
+    expect(screen.getByRole("button", { name: "More about A" })).toBeInTheDocument();
+  });
+});
+
+describe("development warnings", () => {
+  function warnings(render_: () => void): string[] {
+    const spy = vi.spyOn(console, "warn").mockImplementation(() => {});
+    render_();
+    const messages = spy.mock.calls.map((call) => String(call[0]));
+    spy.mockRestore();
+    return messages;
+  }
+
+  it("says an indicator that needs the shared panel area is not drawn", async () => {
+    const messages = warnings(() => {
+      render(<Menu indicator viewport={false} />);
+    });
+    await waitFor(() => undefined);
+    expect(messages.some((message) => message.includes("`indicator` needs the shared panel area"))).toBe(true);
+  });
+
+  it("says exclusive is for the stacked form, and defaultValue is ignored when controlled", () => {
+    const messages = warnings(() => {
+      render(<Menu exclusive={false} />);
+      render(<Menu value="" defaultValue="products" />);
+    });
+    expect(messages.some((message) => message.includes("`exclusive` only applies to the stacked form"))).toBe(true);
+    expect(messages.some((message) => message.includes("`defaultValue` is ignored when `value` is controlled"))).toBe(true);
+  });
+
+  it("says defaultOpen on an item and forceMount on a stacked panel are ignored", () => {
+    const messages = warnings(() => {
+      render(
+        <NavigationMenu aria-label="Primary">
+          <NavigationMenu.List>
+            <NavigationMenu.Item value="a" defaultOpen>
+              <NavigationMenu.Trigger>A</NavigationMenu.Trigger>
+              <NavigationMenu.Content>x</NavigationMenu.Content>
+            </NavigationMenu.Item>
+          </NavigationMenu.List>
+        </NavigationMenu>,
+      );
+      render(
+        <NavigationMenu aria-label="Stacked" presentation="stacked">
+          <NavigationMenu.List>
+            <NavigationMenu.Item value="b">
+              <NavigationMenu.Trigger>B</NavigationMenu.Trigger>
+              <NavigationMenu.Content forceMount>x</NavigationMenu.Content>
+            </NavigationMenu.Item>
+          </NavigationMenu.List>
+        </NavigationMenu>,
+      );
+    });
+    expect(messages.some((message) => message.includes("`defaultOpen` only applies to an uncontrolled stacked menu"))).toBe(true);
+    expect(messages.some((message) => message.includes("belong to the floating panel"))).toBe(true);
+  });
+
+  it("says a link or trigger with no text has no accessible name, and says nothing of one that has", () => {
+    const messages = warnings(() => {
+      render(
+        <NavigationMenu aria-label="Names">
+          <NavigationMenu.List>
+            <NavigationMenu.Item>
+              <NavigationMenu.Link href="/x" icon={ChartBarIcon} />
+            </NavigationMenu.Item>
+            <NavigationMenu.Item value="t">
+              <NavigationMenu.Trigger icon={ChartBarIcon} />
+              <NavigationMenu.Content>x</NavigationMenu.Content>
+            </NavigationMenu.Item>
+            <NavigationMenu.Item>
+              <NavigationMenu.Link href="/y" icon={ChartBarIcon} aria-label="Named">
+                {null}
+              </NavigationMenu.Link>
+            </NavigationMenu.Item>
+            <NavigationMenu.Item>
+              <NavigationMenu.Link href="/z">Text</NavigationMenu.Link>
+            </NavigationMenu.Item>
+          </NavigationMenu.List>
+        </NavigationMenu>,
+      );
+    });
+    expect(messages.filter((message) => message.includes("NavigationMenu.Link: a link with no text"))).toHaveLength(1);
+    expect(messages.filter((message) => message.includes("NavigationMenu.Trigger: a trigger with no text"))).toHaveLength(1);
   });
 });

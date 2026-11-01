@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
+import { useEffect, useState } from "react";
 import { expect, userEvent, waitFor, within } from "storybook/test";
 import { send } from "../../molecules/CodeBlock/browserProtocol";
 import { Navbar } from "../Navbar";
@@ -828,5 +829,173 @@ export const ASplitTriggersLineIsUnderBothHalves: Story = {
     const inset = 2 * tokenLength("--dbm-space-3");
     expect(Math.abs(Number.parseFloat(line.width) - (wrapper.getBoundingClientRect().width - inset))).toBeLessThanOrEqual(1);
     expect(wrapper.getBoundingClientRect().width).toBeGreaterThanOrEqual(link.getBoundingClientRect().width + caret.getBoundingClientRect().width - 1);
+  },
+};
+
+// --- Review round: targets, badges, right-to-left and a swap of forms ------------------------------------------------------------
+
+export const EveryPanelTargetIsAtLeast24Pixels: Story = {
+  name: "Every target in an open panel, a group heading link, a feature, a footer link and a split caret included, is at least 24 × 24 CSS pixels at the smallest and largest size",
+  render: () => (
+    <div style={{ display: "flex", flexDirection: "column", gap: "var(--dbm-space-6)" }}>
+      {(["xs", "xl"] as const).map((size) => (
+        <MenuStage key={size} height="30rem">
+          <DemoNavigation size={size} aria-label={`Primary ${size}`}>
+            <RichItems splitProducts />
+          </DemoNavigation>
+        </MenuStage>
+      ))}
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    await parkPointer();
+    const canvas = within(canvasElement);
+    for (const size of ["xs", "xl"] as const) {
+      const menu = canvas.getByRole("navigation", { name: `Primary ${size}` });
+      const caret = within(menu).getByRole("button", { name: "Products menu" });
+      await press(caret);
+      await within(menu).findByRole("link", { name: /Analytics/ });
+      await settled(menu.querySelector('[class*="_viewport_"]')!);
+      for (const target of menu.querySelectorAll<HTMLElement>("a, button")) {
+        const rect = target.getBoundingClientRect();
+        expect(rect.height, `${size}: ${target.textContent}`).toBeGreaterThanOrEqual(24);
+        expect(rect.width, `${size}: ${target.textContent}`).toBeGreaterThanOrEqual(24);
+      }
+      await closeAndWait(menu);
+    }
+  },
+};
+
+export const ABadgeIsSeenOnTheSolidCurrentLook: Story = {
+  name: "On the solid current-page look a badge still reads as a badge: it is not the colour of the fill under it",
+  render: () => (
+    <MenuStage>
+      <DemoNavigation currentVariant="solid" currentPath="/analytics">
+        <RichItems />
+      </DemoNavigation>
+    </MenuStage>
+  ),
+  play: async ({ canvasElement }) => {
+    const trigger = within(canvasElement).getByRole("button", { name: /Products/ });
+    expect(trigger.className).toMatch(/currentSolid/);
+    const badge = trigger.querySelector<HTMLElement>('[class*="_root_"]:not(svg)')!;
+    expect(badge).not.toBeNull();
+    expect(getComputedStyle(badge).backgroundColor).not.toBe(getComputedStyle(trigger).backgroundColor);
+  },
+};
+
+export const RightToLeftIndicatorIsOverTheTrigger: Story = {
+  name: "In right-to-left text the indicator's arrow is centred over the open trigger",
+  render: () => (
+    <MenuStage>
+      <DemoMenu indicator dir="rtl" />
+    </MenuStage>
+  ),
+  play: async ({ canvasElement }) => {
+    await parkPointer();
+    const canvas = within(canvasElement);
+    const trigger = canvas.getByRole("button", { name: "Solutions" });
+    await press(trigger);
+    await canvas.findByRole("link", { name: /Engineering/ });
+    await waitFor(() => {
+      const arrow = canvasElement.querySelector<HTMLElement>('[class*="_arrow_"]');
+      expect(arrow).not.toBeNull();
+      const middle = (rect: DOMRect) => rect.left + rect.width / 2;
+      expect(Math.abs(middle(arrow!.getBoundingClientRect()) - middle(trigger.getBoundingClientRect()))).toBeLessThanOrEqual(3);
+    }, { timeout: 5000 });
+    await closeAndWait(canvasElement);
+  },
+};
+
+export const RightToLeftEndAlignmentAndSplitOrder: Story = {
+  name: "In right-to-left text an end-aligned panel lines up with the menu's left edge, a split trigger's link is right of its caret, and ArrowLeft moves to the next trigger",
+  render: () => (
+    <MenuStage>
+      <DemoNavigation dir="rtl" panelAlign="end">
+        <RichItems splitProducts />
+      </DemoNavigation>
+    </MenuStage>
+  ),
+  play: async ({ canvasElement }) => {
+    await parkPointer();
+    const canvas = within(canvasElement);
+    const root = canvas.getByRole("navigation", { name: "Primary" });
+    const link = canvas.getByRole("link", { name: /Products/ });
+    const caret = canvas.getByRole("button", { name: "Products menu" });
+    expect(link.getBoundingClientRect().left).toBeGreaterThan(caret.getBoundingClientRect().left);
+    await press(caret);
+    const first = await canvas.findByRole("link", { name: /Analytics/ });
+    const area = first.closest<HTMLElement>('[class*="_viewport_"]')!;
+    await settled(area);
+    await waitFor(() => expect(Math.abs(area.getBoundingClientRect().left - root.getBoundingClientRect().left)).toBeLessThanOrEqual(3), { timeout: 5000 });
+    await closeAndWait(canvasElement);
+    caret.focus();
+    await userEvent.keyboard("{ArrowLeft}");
+    expect(canvas.getByRole("button", { name: "Solutions" })).toHaveFocus();
+  },
+};
+
+export const RightToLeftVerticalOpensToTheLeft: Story = {
+  name: "In right-to-left text a vertical menu opens its panel to the left of the column",
+  render: () => (
+    <MenuStage height="30rem">
+      <div style={{ inlineSize: "14rem", marginInlineStart: "auto" }}>
+        <DemoMenu orientation="vertical" dir="rtl" />
+      </div>
+    </MenuStage>
+  ),
+  play: async ({ canvasElement }) => {
+    await parkPointer();
+    const canvas = within(canvasElement);
+    const root = canvas.getByRole("navigation", { name: "Primary" });
+    await press(canvas.getByRole("button", { name: "Products" }));
+    const link = await canvas.findByRole("link", { name: /Analytics/ });
+    const area = link.closest<HTMLElement>('[class*="_viewport_"]')!;
+    await settled(area);
+    await waitFor(() => expect(area.getBoundingClientRect().right).toBeLessThanOrEqual(root.getBoundingClientRect().left + 1), { timeout: 5000 });
+    await closeAndWait(canvasElement);
+  },
+};
+
+/** A menu whose form the page swaps, as a width map does when the window crosses its step. */
+function SwapDemo() {
+  const [presentation, setPresentation] = useState<"mega" | "stacked">("mega");
+  useEffect(() => {
+    const swap = () => setPresentation((current) => (current === "mega" ? "stacked" : "mega"));
+    document.addEventListener("navigation-menu-demo-swap", swap);
+    return () => document.removeEventListener("navigation-menu-demo-swap", swap);
+  }, []);
+  return <DemoMenu presentation={presentation} />;
+}
+
+export const FocusSurvivesASwapOfForms: Story = {
+  name: "A trigger or link that has keyboard focus keeps it when the menu swaps between the mega and the stacked form",
+  render: () => (
+    <MenuStage>
+      <SwapDemo />
+    </MenuStage>
+  ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const swap = () => document.dispatchEvent(new Event("navigation-menu-demo-swap"));
+    // a trigger, mega to stacked and back
+    canvas.getByRole("button", { name: "Solutions" }).focus();
+    swap();
+    await waitFor(() => expect(canvasElement.querySelector('[class*="_stackedRoot_"]')).not.toBeNull());
+    await waitFor(() => expect(canvas.getByRole("button", { name: "Solutions" })).toHaveFocus());
+    swap();
+    await waitFor(() => expect(canvasElement.querySelector('[class*="_stackedRoot_"]')).toBeNull());
+    await waitFor(() => expect(canvas.getByRole("button", { name: "Solutions" })).toHaveFocus());
+    // a top-level link
+    canvas.getByRole("link", { name: "Pricing" }).focus();
+    swap();
+    await waitFor(() => expect(canvas.getByRole("link", { name: "Pricing" })).toHaveFocus());
+    swap();
+    await waitFor(() => expect(canvas.getByRole("link", { name: "Pricing" })).toHaveFocus());
+    // and focus that was somewhere else is left alone
+    (document.activeElement as HTMLElement).blur();
+    swap();
+    await new Promise((resolve) => setTimeout(resolve, 200));
+    expect(document.activeElement).toBe(document.body);
   },
 };

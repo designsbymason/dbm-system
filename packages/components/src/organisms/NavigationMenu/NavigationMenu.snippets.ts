@@ -147,10 +147,10 @@ ${menu("indicator")}`,
 
   currentPath: `{/* currentPath: the page's path. A link with that href is the current page, and so is the trigger of the panel that holds it.
     A link's own current wins. currentMatch="prefix" also matches everything under a link's path. */}
-${menu('currentPath="/analytics"')}`,
+${menu('currentPath="/analytics"', `${panel}\n${pricing()}`)}`,
 
   stackedSeveralOpen: `{/* exclusive={false}: several items can be open at once in the stacked form. An item that holds the current page starts open. */}
-${menu('presentation="stacked" exclusive={false} currentPath="/analytics"')}`,
+${menu('presentation="stacked" exclusive={false} currentPath="/analytics"', `${panel}\n${pricing()}`)}`,
 
   controller: `{/* const controller = useRef<NavigationMenuController>(null);
     controller.current?.open("products")  // true when it was not already open
@@ -172,6 +172,7 @@ ${menu('dir="rtl"')}`,
 
 /** The Playground's snippet: only the props that differ from their defaults, around a small real example. */
 export function navigationMenuPlaygroundSnippet(args: {
+  defaultValue?: string;
   presentation?: NavigationMenuPresentation;
   viewport?: boolean;
   panelAlign?: NavigationMenuPanelAlign;
@@ -192,6 +193,7 @@ export function navigationMenuPlaygroundSnippet(args: {
   const attributes: string[] = [];
   const label = args["aria-label"];
   attributes.push(`aria-label=${label !== undefined && label !== "" ? quote(label) : '"Primary"'}`);
+  if (typeof args.defaultValue === "string" && args.defaultValue !== "") attributes.push(`defaultValue=${quote(args.defaultValue)}`);
   if (args.presentation !== undefined && args.presentation !== "mega") attributes.push(`presentation=${quote(args.presentation)}`);
   if (args.viewport === false) attributes.push("viewport={false}");
   if (args.panelAlign !== undefined && args.panelAlign !== "start") attributes.push(`panelAlign=${quote(args.panelAlign)}`);

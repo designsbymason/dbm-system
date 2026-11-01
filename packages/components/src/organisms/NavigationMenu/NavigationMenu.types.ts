@@ -232,7 +232,9 @@ export interface NavigationMenuTriggerProps extends ComponentPropsWithoutRef<"bu
   badge?: ReactNode;
   /**
    * Makes a split trigger: the text is a link to this address and a caret button beside it opens the panel. Without it the whole
-   * trigger is the button. The link opens the panel too when the pointer rests on it.
+   * trigger is the button. The link opens the panel too when the pointer rests on it. In a split trigger the `ref`, `aria-label`
+   * (which names the caret, in place of `labels.togglePanel`), `aria-labelledby`, `aria-describedby` and every other native prop go to
+   * the caret button; the link is named by its text.
    */
   href?: string;
   /**

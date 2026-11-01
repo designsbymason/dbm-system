@@ -1,10 +1,11 @@
 import { act } from "@testing-library/react";
+import { createRef } from "react";
 import { hydrateRoot } from "react-dom/client";
 import { renderToString } from "react-dom/server";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { Navbar } from "../Navbar";
 import { NavigationMenu } from "./NavigationMenu";
-import type { NavigationMenuProps } from "./NavigationMenu.types";
+import type { NavigationMenuController, NavigationMenuProps } from "./NavigationMenu.types";
 
 // Removing the server render's stubs removes every stub, the setup file's `ResizeObserver` included, which an open panel needs
 // once mounted; the render puts one back.
@@ -48,6 +49,50 @@ function Tree(props: NavigationMenuProps) {
     </NavigationMenu>
   );
 }
+
+/** Every newer part: a split trigger and badge, a linked group, a feature, a footer, a clamped description, a controller. */
+function RichTree(props: NavigationMenuProps) {
+  const controller = createRef<NavigationMenuController>();
+  return (
+    <NavigationMenu aria-label="Primary" controllerRef={controller} {...props}>
+      <NavigationMenu.List>
+        <NavigationMenu.Item value="products">
+          <NavigationMenu.Trigger href="/products" badge="New">
+            Products
+          </NavigationMenu.Trigger>
+          <NavigationMenu.Content layout="columns">
+            <NavigationMenu.Group label="Platform" href="/platform" columns={2}>
+              <NavigationMenu.Link href="/analytics" description="Dashboards" descriptionLines={2} badge="New">
+                Analytics
+              </NavigationMenu.Link>
+            </NavigationMenu.Group>
+            <NavigationMenu.Feature title="Launch" href="/launch">
+              Everything shipped
+            </NavigationMenu.Feature>
+            <NavigationMenu.Footer>
+              <NavigationMenu.Link href="/all">All</NavigationMenu.Link>
+            </NavigationMenu.Footer>
+          </NavigationMenu.Content>
+        </NavigationMenu.Item>
+        <NavigationMenu.Item value="more" panelAlign="end" defaultOpen>
+          <NavigationMenu.Trigger>More</NavigationMenu.Trigger>
+          <NavigationMenu.Content>
+            <NavigationMenu.Link href="/more">More</NavigationMenu.Link>
+          </NavigationMenu.Content>
+        </NavigationMenu.Item>
+      </NavigationMenu.List>
+    </NavigationMenu>
+  );
+}
+
+const richVariants: Array<[string, NavigationMenuProps]> = [
+  ["rich, by default", {}],
+  ["rich, open", { defaultValue: "products" }],
+  ["rich, stacked and open", { presentation: "stacked", defaultValue: "products" }],
+  ["rich, stacked, several open, from a path", { presentation: "stacked", exclusive: false, currentPath: "/analytics" }],
+  ["rich, own panels, end aligned, auto sized", { viewport: false, panelAlign: "auto", panelSize: "md" }],
+  ["rich, vertical and right to left", { orientation: "vertical", dir: "rtl" }],
+];
 
 const variants: Array<[string, NavigationMenuProps]> = [
   ["by default", {}],
@@ -100,6 +145,26 @@ describe("NavigationMenu hydration", () => {
     const errors: unknown[] = [];
     await act(async () => {
       hydrateRoot(container, <Tree {...props} />, { onRecoverableError: (error) => errors.push(error) });
+    });
+    expect(errors).toEqual([]);
+    container.remove();
+  });
+});
+
+describe("NavigationMenu's newer parts on the server", () => {
+  it.each(richVariants)("renders %s without touching the browser", (_name, props) => {
+    const html = onTheServer(() => renderToString(<RichTree {...props} />));
+    expect(html).toContain("Products");
+  });
+
+  it.each(richVariants)("hydrates %s with no recoverable error", async (_name, props) => {
+    const html = onTheServer(() => renderToString(<RichTree {...props} />));
+    const container = document.createElement("div");
+    container.innerHTML = html;
+    document.body.append(container);
+    const errors: unknown[] = [];
+    await act(async () => {
+      hydrateRoot(container, <RichTree {...props} />, { onRecoverableError: (error) => errors.push(error) });
     });
     expect(errors).toEqual([]);
     container.remove();

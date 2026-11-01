@@ -198,7 +198,7 @@ One entry of the list: an `<li>`. Also accepts any other native `<li>` attribute
 ### NavigationMenu.Trigger properties
 
 The button that opens an item's panel. Also accepts any other native `<button>` attribute beyond what's listed
-here (e.g. `onFocus`, `title`), passed straight through. `aria-expanded` is set by the menu and can't be replaced.
+here (e.g. `onFocus`, `title`), passed straight through. `aria-expanded` is set by the menu and can't be replaced. In a split trigger (with an `href`) the link is named by its text, and the `ref`, `aria-label` (which names the caret in place of `labels.togglePanel`) and every other native prop go to the caret button.
 
 <PropertiesTable of={NavigationMenuTriggerStories} order={triggerPropOrder} />
 

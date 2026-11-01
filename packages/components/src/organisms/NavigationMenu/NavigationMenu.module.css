@@ -502,6 +502,7 @@
   display: inline-flex;
   align-items: center;
   gap: var(--dbm-space-1);
+  min-block-size: var(--dbm-space-6);
   color: inherit;
   font: inherit;
   text-decoration: none;
@@ -777,9 +778,10 @@
 /* --- The indicator: a small arrow from the open trigger to its panel -------------------------------------------------------- */
 
 .indicator {
+  /* The primitive writes `left: 0` and a physical offset (the trigger's `offsetLeft`) itself, so no logical inset is set here: one would
+     fight it and, in right-to-left text, put the arrow at the opposite edge. */
   position: absolute;
   inset-block-end: calc(-1 * var(--dbm-space-2));
-  inset-inline-start: 0;
   z-index: var(--dbm-z-index-popover);
   display: flex;
   align-items: flex-end;
