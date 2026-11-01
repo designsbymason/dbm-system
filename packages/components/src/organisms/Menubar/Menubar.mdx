@@ -29,7 +29,7 @@ import * as MenubarSubTriggerStories from "./MenubarSubTrigger.stories";
 import * as MenubarSubContentStories from "./MenubarSubContent.stories";
 
 export const playgroundOrder = ["size", "surface", "tone", "overflow", "sticky", "stickyOffset", "loop", "dir", "aria-label"];
-// `hotkeys` and `labels` are objects, which this panel can't edit; they are live in the Storybook Controls panel.
+// `hotkeys` and `labels` are objects, which neither Controls panel edits, so they read "–" and are set in code.
 export const playgroundExclude = ["hotkeys", "labels"];
 export const propOrder = [
   "children",
@@ -233,7 +233,7 @@ import { Menubar } from "@dbm-system/components";
 
 ## Playground
 
-Press a trigger, or focus the bar and use the arrow keys. While a menu is open, moving onto another trigger opens that one. Drag the corner of the dashed box to narrow it and see `overflow` at work. `hotkeys` and `labels` take objects, so they are set in the Storybook Controls panel.
+Press a trigger, or focus the bar and use the arrow keys. While a menu is open, moving onto another trigger opens that one. Drag the corner of the dashed box to narrow it and see `overflow` at work. `hotkeys` and `labels` take objects, so they are set in code (see the Hotkeys story and the Code examples).
 
 <div className="dbm-playground-canvas">
 

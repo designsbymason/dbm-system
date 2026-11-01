@@ -150,12 +150,12 @@ const meta: Meta<MenubarStageArgs> = {
       table: { defaultValue: { summary: "0" } },
     },
     hotkeys: {
-      control: "object",
+      control: false,
       description:
         "Keys that open a menu from anywhere on the page: an object from a menu's value (file, edit or view here) to a combination such as alt+f, where mod is ⌘ on an Apple platform and Ctrl elsewhere, or false to turn one off. Nothing is bound by default.",
     },
     labels: {
-      control: "object",
+      control: false,
       description:
         "The text the bar supplies itself, each with an English default: more, the More menu's label. Pass any subset.",
     },
@@ -461,7 +461,7 @@ const roomStyle = {
 
 export const Overflowing: Story = {
   name: "A bar wider than its room",
-  argTypes: onlyControls(...barControls, "overflow", "labels"),
+  argTypes: onlyControls(...barControls, "overflow"),
   parameters: { docs: { source: { code: menubarSnippets.overflowing } } },
   render: (args) => (
     <div style={roomStyle}>
@@ -564,7 +564,7 @@ export const DisabledWithAReason: Story = {
 
 export const HotkeysAndPlatformShortcuts: Story = {
   name: "Hotkeys, and shortcut hints drawn for the platform",
-  argTypes: onlyControls(...barControls, "hotkeys"),
+  argTypes: onlyControls(...barControls),
   args: { hotkeys: { file: "alt+f", edit: "alt+e" } },
   parameters: { docs: { source: { code: menubarSnippets.hotkeys } } },
   render: (args) => (
@@ -654,7 +654,7 @@ export const Controller: Story = {
 
 export const OverflowMenu: Story = {
   name: "Menus that do not fit move into a More menu",
-  argTypes: onlyControls(...barControls, "overflow", "labels"),
+  argTypes: onlyControls(...barControls, "overflow"),
   args: { overflow: "menu" },
   parameters: { docs: { source: { code: menubarSnippets.overflowMenu } } },
   render: (args) => (
