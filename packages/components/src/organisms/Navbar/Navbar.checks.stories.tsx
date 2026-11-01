@@ -834,7 +834,7 @@ export const HidesWhileScrollingDown: Story = {
 };
 
 export const GroupMenuMarksTheCurrentItem: Story = {
-  name: "The current item of a group's menu is marked in colour and by a bar, and the menu is drawn in the container",
+  name: "The current item of a group's menu is marked in colour and by a tint, and the menu is drawn in the container",
   render: () => (
     <NavbarStage minBlockSize="24rem">
       {(menuContainer) => (
@@ -857,13 +857,12 @@ export const GroupMenuMarksTheCurrentItem: Story = {
     const current = within(menu).getByRole("menuitem", { name: "Guides" });
     const other = within(menu).getByRole("menuitem", { name: "Blog" });
     const style = getComputedStyle(current);
-    // a different colour from the others, which clears 4.5:1 on the menu's own surface, and a bar at the start edge
+    // a different colour from the others, a tint behind it, and the text clearing 4.5:1 on that tint
     expect(style.color).not.toBe(getComputedStyle(other).color);
-    expect(contrast(style.color, getComputedStyle(menu).backgroundColor)).toBeGreaterThanOrEqual(4.5);
-    expect(style.backgroundImage).toContain("linear-gradient");
-    expect(getComputedStyle(other).backgroundImage).toBe("none");
-    expect(style.backgroundPosition.startsWith("0%") || style.backgroundPosition.startsWith("0px") || style.backgroundPosition.startsWith("left")).toBe(true);
-    // forced colours replace the bar, so an outline marks it instead
+    expect(style.backgroundColor).not.toBe(getComputedStyle(other).backgroundColor);
+    expect(style.backgroundImage).toBe("none");
+    expect(contrast(style.color, style.backgroundColor)).toBeGreaterThanOrEqual(4.5);
+    // forced colours replace the fill, so an outline marks it instead
     const emulate = (value: "active" | "none") =>
       send("Emulation.setEmulatedMedia", { features: [{ name: "forced-colors", value }] });
     await emulate("active");

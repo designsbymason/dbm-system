@@ -254,20 +254,18 @@ a.brand:focus-visible,
   box-shadow: var(--dbm-shadow-dark-md);
 }
 
-/* The current link as an item of a group's floating menu: the menu draws the item itself, so the look is a brand text colour and a
-   bar at the item's start edge (two cues, since colour alone can't be the only one). The attribute selector raises the specificity
-   over the menu's own item colour, whichever stylesheet loads first. The bar is a background gradient, which has no logical form,
-   so right-to-left names the other edge. */
+/* The current link as an item of a group's floating menu: the menu draws the item itself, so the look is the tint `NavigationMenu`'s
+   current panel link has: brand text on `bg.brand-subtle` (6.5:1 or more in every theme), a step darker while the item is the
+   highlighted one, since `Menu` tints the highlighted item with the same `bg.brand-subtle`. The attribute selector raises the
+   specificity over the menu's own item colour and highlight, whichever stylesheet loads first. */
 .menuCurrent[role="menuitem"] {
   color: var(--dbm-text-brand);
-  background-image: linear-gradient(var(--dbm-bg-brand), var(--dbm-bg-brand));
-  background-repeat: no-repeat;
-  background-position: left center;
-  background-size: var(--dbm-border-width-2) 60%;
+  background-color: var(--dbm-bg-brand-subtle);
 }
 
-.menuCurrent[role="menuitem"]:dir(rtl) {
-  background-position: right center;
+.menuCurrent[role="menuitem"][data-highlighted],
+.menuCurrent[role="menuitem"][data-state="open"] {
+  background-color: var(--dbm-bg-brand-subtle-hover);
 }
 
 /* `Navbar.Row`'s `columns`: the row's parts are drawn in a group each for the start, the centre and the end. Above the step the groups are
@@ -1152,9 +1150,8 @@ a.brand:focus-visible,
     background-color: Highlight;
   }
 
-  /* A background gradient is replaced in forced colours, so the current menu item gets an outline inside its box instead. */
+  /* A fill is replaced in forced colours, so the current menu item gets an outline inside its box instead. */
   .menuCurrent[role="menuitem"] {
-    background-image: none;
     outline: var(--dbm-border-width-1) solid Highlight;
     outline-offset: calc(-1 * var(--dbm-border-width-1));
   }
