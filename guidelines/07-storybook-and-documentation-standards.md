@@ -218,7 +218,7 @@ Foundational components first (prove the template before mass-applying it), then
 | Code | Atom | Typography | ✅ | ✅ 2026-09-06 | [Code.md](component-reviews/Code.md) |
 | Heading | Atom | Typography | ✅ | ✅ 2026-09-06 | [Heading.md](component-reviews/Heading.md) |
 | Highlight | Atom | Typography | ✅ | ✅ 2026-09-07 | [Highlight.md](component-reviews/Highlight.md) |
-| Kbd | Atom | Typography | ✅ | ✅ 2026-09-07 | [Kbd.md](component-reviews/Kbd.md) |
+| Kbd | Atom | Typography | ✅ | ✅ 2026-09-07 (`keys` added 2026-11-01; re-verified: types, stories, Docs, tests) | [Kbd.md](component-reviews/Kbd.md) |
 | Link | Atom | Typography | ✅ | ✅ 2026-09-07 (optional `size` added and the external icon made to scale with the text 2026-10-20; re-verified: design quality, theming, responsiveness, Docs, tests) | [Link.md](component-reviews/Link.md) |
 | ListItem | Atom | Typography | ✅ | ✅ 2026-09-07 | [ListItem.md](component-reviews/ListItem.md) |
 | Text | Atom | Typography | ✅ | ✅ 2026-09-07 | [Text.md](component-reviews/Text.md) |
@@ -272,7 +272,7 @@ Foundational components first (prove the template before mass-applying it), then
 | AlertDialog | Organism | Overlay | ✅ | ✅ 2026-10-11 (`onOpenChangeComplete` added 2026-10-11; re-verified: types, stories, Docs, tests) | [AlertDialog.md](component-reviews/AlertDialog.md) |
 | ConfirmDialog | Organism | Feedback | ✅ | ✅ 2026-10-11 (`onOpenChangeComplete` added 2026-10-11; re-verified: types, stories, Docs, tests) | [ConfirmDialog.md](component-reviews/ConfirmDialog.md) |
 | Drawer | Organism | Overlay | ✅ | ✅ 2026-10-11 | [Drawer.md](component-reviews/Drawer.md) |
-| Menu | Organism | Navigation | ✅ | ✅ 2026-10-12 | [Menu.md](component-reviews/Menu.md) |
+| Menu | Organism | Navigation | ✅ | ✅ 2026-10-12 (shortcut hints written with `mod` drawn for the platform 2026-11-01; additive) | [Menu.md](component-reviews/Menu.md) |
 | Toast | Organism | Feedback | ✅ | ✅ 2026-10-13 | [Toast.md](component-reviews/Toast.md) |
 | Form | Organism | Inputs & Forms | ✅ | ✅ 2026-10-14 | [Form.md](component-reviews/Form.md) |
 | Combobox | Organism | Inputs & Forms | ✅ | ✅ 2026-10-16 (list, helpers and buttons moved to `internal/optionList` 2026-10-25; nothing changed; re-verified: functional verification, Docs) | [Combobox.md](component-reviews/Combobox.md) |
@@ -283,7 +283,7 @@ Foundational components first (prove the template before mass-applying it), then
 | Menubar | Organism | Navigation | ✅ | ✅ 2026-11-01 | [Menubar.md](component-reviews/Menubar.md) |
 | Sidebar | Organism | Navigation | ✅ | ✅ 2026-10-21 (final review: section-heading padding, focus kept on a resize, account scaling, section `value`) | [Sidebar.md](component-reviews/Sidebar.md) |
 | FileUpload | Organism | Inputs & Forms | ✅ | ✅ 2026-10-24 | [FileUpload.md](component-reviews/FileUpload.md) |
-| ContextMenu | Organism | Overlay | ✅ | ✅ 2026-10-24 | [ContextMenu.md](component-reviews/ContextMenu.md) |
+| ContextMenu | Organism | Overlay | ✅ | ✅ 2026-10-24 (shortcut hints written with `mod` drawn for the platform 2026-11-01; additive) | [ContextMenu.md](component-reviews/ContextMenu.md) |
 | MultiSelect | Organism | Inputs & Forms | ✅ | ✅ 2026-10-25 | [MultiSelect.md](component-reviews/MultiSelect.md) |
 | DateRangePicker | Organism | Inputs & Forms | ✅ | ✅ 2026-10-25 | [DateRangePicker.md](component-reviews/DateRangePicker.md) |
 | CommandPalette | Organism | Navigation | ✅ | ✅ 2026-10-26 | [CommandPalette.md](component-reviews/CommandPalette.md) |

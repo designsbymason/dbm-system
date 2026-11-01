@@ -40,7 +40,7 @@ Text rendering primitives — Nunito for UI, Lora for editorial/display per the 
 | Blockquote | atom | 🟡 | Uses Lora for editorial feel |
 | List | molecule | 🟢 | Ordered/unordered, custom marker support — meaningless without `ListItem` children, so molecule-tier per [ADR-0012](adr/0012-item-components-are-atom-tier-even-when-their-container-is-a-molecule.md) |
 | ListItem | atom | 🟢 | A single item within a `List` — optional custom marker icon, trailing content, interactive/selected/disabled states. Renders/functions correctly standalone, so atom-tier per [ADR-0012](adr/0012-item-components-are-atom-tier-even-when-their-container-is-a-molecule.md) despite typically being used inside a molecule |
-| Kbd | atom | ⚪ | Keyboard shortcut display |
+| Kbd | atom | ⚪ | Keyboard shortcut display; `keys` draws a combination written with `mod` for the platform (⌘ ⇧ P or Ctrl + Shift + P), one keycap per key, named for a screen reader |
 | Highlight | atom | 🟡 | Inline text-highlight span; wrap the match yourself, or pass `query` to have it find and wrap matches itself |
 
 ## 3. Inputs & Forms
