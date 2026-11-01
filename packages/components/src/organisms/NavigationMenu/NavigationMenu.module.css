@@ -210,7 +210,10 @@
    its border, corners and shadow. Shadows are a fixed light/dark pair, so the dark one is chosen by the theme attribute below. */
 .viewport {
   position: relative;
-  box-sizing: border-box;
+  /* A flex item of the frame, which is only as wide as the menu: it must keep the width the primitive measured, not shrink to it. The
+     measured size is of the panel inside, so the border is added to it and not taken out of it. */
+  flex: none;
+  box-sizing: content-box;
   inline-size: var(--radix-navigation-menu-viewport-width);
   block-size: var(--radix-navigation-menu-viewport-height);
   margin-block-start: var(--dbm-space-2);
@@ -247,7 +250,7 @@
   box-sizing: border-box;
   inline-size: max-content;
   min-inline-size: min(var(--dbm-navigation-menu-panel-min-width), 100vw);
-  max-inline-size: min(var(--dbm-navigation-menu-panel-max-width), 100vw);
+  max-inline-size: min(var(--dbm-navigation-menu-panel-max-width), calc(var(--navigation-menu-room, 100vw) - 2 * var(--dbm-border-width-1)), 100vw);
   padding: var(--dbm-space-3);
 }
 
@@ -412,6 +415,17 @@
 .groupItem {
   display: flex;
   min-inline-size: 0;
+}
+
+/* Below the `sm` breakpoint (40rem; `@media` can't read a token) a group's links run in one column, whatever `columns` says. */
+@media (max-width: 40rem) {
+  .groupList {
+    --nm-columns: 1;
+  }
+
+  .groupList[data-columns] {
+    --nm-columns: 1;
+  }
 }
 
 /* --- The stacked form ------------------------------------------------------------------------------------------------------ */

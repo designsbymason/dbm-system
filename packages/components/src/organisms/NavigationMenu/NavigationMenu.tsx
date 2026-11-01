@@ -1,8 +1,9 @@
 import { ArrowSquareOutIcon, CaretDownIcon } from "@dbm-system/icons";
-import { cx, mergeDefined, useResolvedResponsiveValue } from "@dbm-system/utils";
+import { cx, mergeDefined, mergeRefs, useResolvedResponsiveValue } from "@dbm-system/utils";
 import * as Primitive from "@radix-ui/react-navigation-menu";
 import { Slot } from "@radix-ui/react-slot";
-import { Children, cloneElement, forwardRef, isValidElement, useCallback, useContext, useId, useMemo, useRef, useState } from "react";
+import { Children, cloneElement, forwardRef, isValidElement, useCallback, useContext, useEffect, useId, useMemo, useRef, useState } from "react";
+import type { RefObject } from "react";
 import type { MouseEvent, ReactElement } from "react";
 import { Badge } from "../../atoms/Badge";
 import type { BadgeProps } from "../../atoms/Badge";
@@ -45,6 +46,36 @@ const currentVariantClass: Record<NavigationMenuCurrentVariant, string> = {
   underline: styles.currentUnderline!,
   solid: styles.currentSolid!,
 };
+
+/**
+ * Tells a panel how much room there is: the width from the element it hangs from to the screen's edge on the side it grows toward
+ * (or, centred, twice the distance to the nearer edge), kept in a custom property the stylesheet caps the panel's width with. A panel
+ * is positioned from its menu or item and not from the screen, so without it a panel wider than the room runs off the screen
+ * instead of wrapping its links. Written onto the element directly, from an effect, so a server render has none.
+ */
+function useRoom(ref: RefObject<HTMLElement | null>, enabled: boolean, align: "start" | "center", watch: string) {
+  useEffect(() => {
+    const element = ref.current;
+    if (!enabled || element === null) return;
+    const update = () => {
+      const rect = element.getBoundingClientRect();
+      const width = document.documentElement.clientWidth;
+      const rtl = getComputedStyle(element).direction === "rtl";
+      let room = rtl ? rect.right : width - rect.left;
+      if (align === "center") {
+        const middle = (rect.left + rect.right) / 2;
+        room = 2 * Math.min(middle, width - middle);
+      }
+      element.style.setProperty("--navigation-menu-room", `${Math.max(0, Math.floor(room))}px`);
+    };
+    update();
+    window.addEventListener("resize", update);
+    return () => {
+      window.removeEventListener("resize", update);
+      element.style.removeProperty("--navigation-menu-room");
+    };
+  }, [ref, enabled, align, watch]);
+}
 
 /**
  * The site-header navigation with panels: a row of triggers each opening a panel of grouped links under it (a mega menu), or a
@@ -112,14 +143,17 @@ const NavigationMenuRoot = forwardRef<HTMLElement, NavigationMenuProps>(
     const controlled = valueProp !== undefined;
     const [inner, setInner] = useState(defaultValue);
     const value = controlled ? valueProp : inner;
-    const latest = useRef({ controlled, value, onValueChange });
-    latest.current = { controlled, value, onValueChange };
-    const setValue = useCallback((next: string) => {
-      const current = latest.current;
-      if (next === current.value) return;
-      if (!current.controlled) setInner(next);
-      current.onValueChange?.(next);
-    }, []);
+    const rootRef = useRef<HTMLElement | null>(null);
+    useRoom(rootRef, !stacked && viewport, panelAlign, value);
+    const mergedRef = useMemo(() => mergeRefs(ref, rootRef), [ref]);
+    const setValue = useCallback(
+      (next: string) => {
+        if (next === value) return;
+        if (!controlled) setInner(next);
+        onValueChange?.(next);
+      },
+      [controlled, value, onValueChange],
+    );
 
     const context = useMemo<NavigationMenuContextValue>(
       () => ({
@@ -149,7 +183,7 @@ const NavigationMenuRoot = forwardRef<HTMLElement, NavigationMenuProps>(
     );
 
     if (stacked) {
-      const stackedProps = { ...props, className: rootClass, ref: ref as never };
+      const stackedProps = { ...props, className: rootClass, ref: mergedRef as never };
       return (
         <NavigationMenuContext.Provider value={context}>
           {embedded ? (
@@ -178,7 +212,7 @@ const NavigationMenuRoot = forwardRef<HTMLElement, NavigationMenuProps>(
         {embedded ? (
           <Primitive.Root asChild value={value} onValueChange={setValue} dir={dir} delayDuration={delayDuration} skipDelayDuration={skipDelayDuration}>
             {/* eslint-disable-next-line jsx-a11y/no-redundant-roles */}
-            <li {...props} ref={ref as never} role="listitem" className={rootClass}>
+            <li {...props} ref={mergedRef as never} role="listitem" className={rootClass}>
               {children}
               {panelArea}
             </li>
@@ -186,7 +220,7 @@ const NavigationMenuRoot = forwardRef<HTMLElement, NavigationMenuProps>(
         ) : (
           <Primitive.Root
             {...props}
-            ref={ref}
+            ref={mergedRef}
             aria-label={name}
             aria-labelledby={ariaLabelledBy}
             value={value}
@@ -217,20 +251,23 @@ NavigationMenuList.displayName = "NavigationMenu.List";
 
 /** One entry of the list: a trigger with its panel, or a link. */
 const NavigationMenuItem = forwardRef<HTMLLIElement, NavigationMenuItemProps>(({ value: valueProp, className, ...props }, ref) => {
-  const { stacked, viewport } = useNavigationMenuContext("NavigationMenu.Item");
+  const { stacked, viewport, panelAlign, value: openValue } = useNavigationMenuContext("NavigationMenu.Item");
+  const itemRef = useRef<HTMLLIElement | null>(null);
+  const itemMergedRef = useMemo(() => mergeRefs(ref, itemRef), [ref]);
   const generated = useId();
   const value = valueProp ?? generated;
   const contentId = useId();
   const item = useMemo(() => ({ value, contentId }), [value, contentId]);
+  useRoom(itemRef, !stacked && !viewport, panelAlign, openValue);
   // Without a shared panel area each panel hangs from its own item, which is then what the panel is positioned against.
   const itemClass = cx(styles.item, !stacked && !viewport && styles.itemAnchor, className);
   return (
     <NavigationMenuItemContext.Provider value={item}>
       {stacked ? (
         // eslint-disable-next-line jsx-a11y/no-redundant-roles
-        <li {...props} ref={ref} role="listitem" className={cx(itemClass, styles.stackedItem)} />
+        <li {...props} ref={itemMergedRef} role="listitem" className={cx(itemClass, styles.stackedItem)} />
       ) : (
-        <Primitive.Item {...props} ref={ref} value={value} role="listitem" className={itemClass} />
+        <Primitive.Item {...props} ref={itemMergedRef} value={value} role="listitem" className={itemClass} />
       )}
     </NavigationMenuItemContext.Provider>
   );
@@ -438,9 +475,15 @@ const NavigationMenuLink = forwardRef<HTMLAnchorElement, NavigationMenuLinkProps
       );
     }
 
+    // The primitive's link goes round a child element, so the caller's own `onClick` is merged by the slot and not composed by the
+    // primitive: a composed handler that calls `preventDefault()` (a router's link does, to navigate without a page load) would stop
+    // the panel closing, and that is the link that most needs it to.
+    const Element = asChild ? Slot : "a";
     return (
-      <Primitive.Link {...linkProps} ref={ref} asChild={asChild} active={current} onSelect={onSelect} onClick={onClick}>
-        {content}
+      <Primitive.Link asChild active={current} onSelect={onSelect}>
+        <Element {...linkProps} ref={ref} onClick={onClick}>
+          {content}
+        </Element>
       </Primitive.Link>
     );
   },

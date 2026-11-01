@@ -1,8 +1,11 @@
 import { BookOpenIcon, ChartBarIcon, CodeIcon, LightningIcon, PlugsIcon, ShieldCheckIcon, UsersIcon } from "@dbm-system/icons";
-import type { ReactNode } from "react";
+import type { MouseEvent, ReactNode } from "react";
 import { Navbar } from "../Navbar";
 import { NavigationMenu } from "./NavigationMenu";
 import type { NavigationMenuProps } from "./NavigationMenu.types";
+
+/** A demo has nowhere to go: a link in it keeps the page where it is. */
+const stay = (event: MouseEvent) => event.preventDefault();
 
 /** A box with a transform, so a panel drawn under the menu stays inside the demo (every Canvas on a Docs page shares one document). */
 export function MenuStage({ children, height = "26rem" }: { children: ReactNode; height?: string }) {
@@ -31,16 +34,16 @@ export function DemoItems({ currentPage = "pricing" }: { currentPage?: "products
         <NavigationMenu.Trigger current={currentPage === "products"}>Products</NavigationMenu.Trigger>
         <NavigationMenu.Content>
           <NavigationMenu.Group label="Platform" columns={2}>
-            <NavigationMenu.Link href="#analytics" icon={ChartBarIcon} description="Dashboards and reports for every team">
+            <NavigationMenu.Link onClick={stay} href="#analytics" icon={ChartBarIcon} description="Dashboards and reports for every team">
               Analytics
             </NavigationMenu.Link>
-            <NavigationMenu.Link href="#automation" icon={LightningIcon} description="Workflows that run themselves">
+            <NavigationMenu.Link onClick={stay} href="#automation" icon={LightningIcon} description="Workflows that run themselves">
               Automation
             </NavigationMenu.Link>
-            <NavigationMenu.Link href="#security" icon={ShieldCheckIcon} description="Single sign-on, roles and audit logs">
+            <NavigationMenu.Link onClick={stay} href="#security" icon={ShieldCheckIcon} description="Single sign-on, roles and audit logs">
               Security
             </NavigationMenu.Link>
-            <NavigationMenu.Link href="#integrations" icon={PlugsIcon} description="Connect the tools you already use" badge="New">
+            <NavigationMenu.Link onClick={stay} href="#integrations" icon={PlugsIcon} description="Connect the tools you already use" badge="New">
               Integrations
             </NavigationMenu.Link>
           </NavigationMenu.Group>
@@ -50,22 +53,22 @@ export function DemoItems({ currentPage = "pricing" }: { currentPage?: "products
         <NavigationMenu.Trigger>Solutions</NavigationMenu.Trigger>
         <NavigationMenu.Content>
           <NavigationMenu.Group label="By team">
-            <NavigationMenu.Link href="#engineering" icon={CodeIcon}>
+            <NavigationMenu.Link onClick={stay} href="#engineering" icon={CodeIcon}>
               Engineering
             </NavigationMenu.Link>
-            <NavigationMenu.Link href="#support" icon={UsersIcon}>
+            <NavigationMenu.Link onClick={stay} href="#support" icon={UsersIcon}>
               Support
             </NavigationMenu.Link>
           </NavigationMenu.Group>
         </NavigationMenu.Content>
       </NavigationMenu.Item>
       <NavigationMenu.Item>
-        <NavigationMenu.Link href="#pricing" current={currentPage === "pricing"}>
+        <NavigationMenu.Link onClick={stay} href="#pricing" current={currentPage === "pricing"}>
           Pricing
         </NavigationMenu.Link>
       </NavigationMenu.Item>
       <NavigationMenu.Item>
-        <NavigationMenu.Link href="https://example.com/docs" icon={BookOpenIcon}>
+        <NavigationMenu.Link onClick={stay} href="https://example.com/docs" icon={BookOpenIcon}>
           Docs
         </NavigationMenu.Link>
       </NavigationMenu.Item>
@@ -86,7 +89,7 @@ export function DemoMenu(props: NavigationMenuProps & { currentPage?: "products"
 export function DemoNavbarMenu({ collapseBelow = "md" }: { collapseBelow?: "sm" | "md" | "lg" | "never" }) {
   return (
     <Navbar aria-label="Site" collapseBelow={collapseBelow}>
-      <Navbar.Brand>Acme</Navbar.Brand>
+      <Navbar.Brand>dbM</Navbar.Brand>
       <Navbar.Links aria-label="Primary">
         <NavigationMenu>
           <DemoItems />

@@ -266,7 +266,7 @@ export const UnderAStickyBar: Story = {
   render: () => (
     <MenuStage height="30rem">
       <Navbar sticky aria-label="Site">
-        <Navbar.Brand>Acme</Navbar.Brand>
+        <Navbar.Brand>dbM</Navbar.Brand>
         <Navbar.Links aria-label="Primary">
           <NavigationMenu>
             <DemoItems />
@@ -393,5 +393,86 @@ export const ClosedAtTheEnd: Story = {
     await closeAndWait(canvasElement);
     expect(canvas.queryByRole("link", { name: /Analytics/ })).not.toBeInTheDocument();
     expect(panelFor(canvasElement)).toBeNull();
+  },
+};
+
+export const PanelHoldsItsContentInABar: Story = {
+  name: "In a bar the panel is as wide as the links in it: none is cut off at its edge",
+  render: () => (
+    <MenuStage>
+      <Navbar aria-label="Site">
+        <Navbar.Brand>dbM</Navbar.Brand>
+        <Navbar.Links aria-label="Primary">
+          <NavigationMenu>
+            <DemoItems />
+          </NavigationMenu>
+        </Navbar.Links>
+      </Navbar>
+    </MenuStage>
+  ),
+  play: async ({ canvasElement }) => {
+    await parkPointer();
+    expect(window.innerWidth).toBeGreaterThanOrEqual(768);
+    const canvas = within(canvasElement);
+    await press(canvas.getByRole("button", { name: "Products" }));
+    const link = await canvas.findByRole("link", { name: /Integrations/ });
+    const area = link.closest<HTMLElement>('[class*="_viewport_"]')!;
+    await settled(area);
+    // the bar's links are narrower than the panel, which must not shrink to them
+    await waitFor(() => {
+      const edge = area.getBoundingClientRect().right;
+      for (const each of area.querySelectorAll("a")) expect(each.getBoundingClientRect().right).toBeLessThanOrEqual(edge + 1);
+      expect(area.scrollWidth).toBeLessThanOrEqual(Math.ceil(area.getBoundingClientRect().width));
+    }, { timeout: 5000 });
+    await closeAndWait(canvasElement);
+  },
+};
+
+export const NarrowRoomWrapsTheLinks: Story = {
+  name: "In a narrow window the panel stays on the screen, its links in one column and wrapped, none cut off",
+  parameters: { viewport: { defaultViewport: "mobile1" } },
+  globals: { viewport: { value: "mobile1", isRotated: false } },
+  render: () => (
+    <NavigationMenu aria-label="Primary">
+      <DemoItems />
+    </NavigationMenu>
+  ),
+  play: async ({ canvasElement }) => {
+    await parkPointer();
+    expect(window.innerWidth).toBeLessThan(640);
+    const canvas = within(canvasElement);
+    await press(canvas.getByRole("button", { name: "Products" }));
+    const link = await canvas.findByRole("link", { name: /Integrations/ });
+    const area = link.closest<HTMLElement>('[class*="_viewport_"]')!;
+    await settled(area);
+    await waitFor(() => {
+      const rect = area.getBoundingClientRect();
+      expect(rect.right).toBeLessThanOrEqual(window.innerWidth + 1);
+      for (const each of area.querySelectorAll("a")) expect(each.getBoundingClientRect().right).toBeLessThanOrEqual(rect.right + 1);
+    }, { timeout: 5000 });
+    // one column: the four links are stacked
+    const tops = [...area.querySelectorAll("a")].map((each) => Math.round(each.getBoundingClientRect().top));
+    expect(new Set(tops).size).toBe(tops.length);
+    await closeAndWait(canvasElement);
+  },
+};
+
+export const ADemoLinkStaysOnThePage: Story = {
+  name: "A link in a demo keeps the page where it is and still closes the panel",
+  render: () => (
+    <MenuStage>
+      <DemoMenu />
+    </MenuStage>
+  ),
+  play: async ({ canvasElement }) => {
+    await parkPointer();
+    const canvas = within(canvasElement);
+    const before = window.location.href;
+    const trigger = canvas.getByRole("button", { name: "Products" });
+    await press(trigger);
+    await userEvent.click(await canvas.findByRole("link", { name: /Analytics/ }));
+    await waitFor(() => expect(trigger).toHaveAttribute("aria-expanded", "false"));
+    expect(window.location.href).toBe(before);
+    await closeAndWait(canvasElement);
   },
 };

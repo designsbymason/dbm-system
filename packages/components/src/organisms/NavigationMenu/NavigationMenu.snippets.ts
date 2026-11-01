@@ -77,7 +77,7 @@ ${menu("rounded")}`,
 
   inNavbar: `{/* In the bar it is a mega menu; in the bar's phone menu it is the stacked form, and a link chosen closes the menu */}
 <Navbar>
-  <Navbar.Brand>Acme</Navbar.Brand>
+  <Navbar.Brand>dbM</Navbar.Brand>
   <Navbar.Links aria-label="Primary">
     <NavigationMenu>
       <NavigationMenu.List>

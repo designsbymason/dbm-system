@@ -187,6 +187,28 @@ describe("NavigationMenu", () => {
     expect(trigger).toHaveAttribute("aria-expanded", "true");
   });
 
+  it("closes the panel when a link is chosen even if the caller's own onClick prevents the default", async () => {
+    const user = userEvent.setup();
+    render(
+      <NavigationMenu aria-label="Primary">
+        <NavigationMenu.List>
+          <NavigationMenu.Item value="a">
+            <NavigationMenu.Trigger>A</NavigationMenu.Trigger>
+            <NavigationMenu.Content>
+              <NavigationMenu.Link href="/x" onClick={(event) => event.preventDefault()}>
+                Go
+              </NavigationMenu.Link>
+            </NavigationMenu.Content>
+          </NavigationMenu.Item>
+        </NavigationMenu.List>
+      </NavigationMenu>,
+    );
+    const trigger = screen.getByRole("button", { name: "A" });
+    await user.click(trigger);
+    await user.click(await screen.findByRole("link", { name: "Go" }));
+    await waitFor(() => expect(trigger).toHaveAttribute("aria-expanded", "false"));
+  });
+
   it("does not let consumer props override the state it computes (every part)", () => {
     render(
       <NavigationMenu aria-label="Primary">
