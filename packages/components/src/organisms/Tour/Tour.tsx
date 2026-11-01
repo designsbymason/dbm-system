@@ -320,6 +320,8 @@ export const Tour = forwardRef<HTMLDivElement, TourProps>(
                     align={step?.align ?? "center"}
                     sideOffset={CARD_OFFSET}
                     collisionPadding={COLLISION_PADDING}
+                    // Popper measures against the screen; a tour drawn into a box has to stay inside that box.
+                    collisionBoundary={container ?? undefined}
                     updatePositionStrategy="always"
                   >
                     {cardElement}

@@ -267,6 +267,23 @@ export const ARealPressOnNextChangesTheStep: Story = {
   },
 };
 
+export const ACardNearTheContainersEdgeStaysInsideIt: Story = {
+  name: "A card for an element at the container's edge shifts to stay inside the container",
+  render: () => (
+    <Demo
+      steps={(find) => [{ id: "create", target: () => find("create"), title: "Start something new", content: "Create a project here. It takes a few seconds." }]}
+    />
+  ),
+  play: async () => {
+    const dialog = await startTour();
+    const stage = (await body.findByTestId("stage")).getBoundingClientRect();
+    const card = dialog.getBoundingClientRect();
+    await expect(card.right).toBeLessThanOrEqual(stage.right);
+    await expect(card.left).toBeGreaterThanOrEqual(stage.left);
+    await closeWithEscape();
+  },
+};
+
 export const ACardWithNoElementIsInTheMiddle: Story = {
   name: "A step with no element is a card in the middle of the stage and dims all of it",
   render: () => <Demo defaultValue="done" />,
