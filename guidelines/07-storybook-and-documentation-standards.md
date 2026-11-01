@@ -279,6 +279,7 @@ Foundational components first (prove the template before mass-applying it), then
 | DatePicker | Organism | Inputs & Forms | ✅ | ✅ 2026-10-17 | [DatePicker.md](component-reviews/DatePicker.md) |
 | DataTable | Organism | Data Display | ✅ | ✅ 2026-10-17 | [DataTable.md](component-reviews/DataTable.md) |
 | Navbar | Organism | Navigation | ✅ | ✅ 2026-10-19 (built-in link badge made solid brand 2026-10-19; re-verified: design quality, theming, Docs, tests) | [Navbar.md](component-reviews/Navbar.md) |
+| NavigationMenu | Organism | Navigation | ✅ | — | [NavigationMenu.md](component-reviews/NavigationMenu.md) |
 | Sidebar | Organism | Navigation | ✅ | ✅ 2026-10-21 (final review: section-heading padding, focus kept on a resize, account scaling, section `value`) | [Sidebar.md](component-reviews/Sidebar.md) |
 | FileUpload | Organism | Inputs & Forms | ✅ | ✅ 2026-10-24 | [FileUpload.md](component-reviews/FileUpload.md) |
 | ContextMenu | Organism | Overlay | ✅ | ✅ 2026-10-24 | [ContextMenu.md](component-reviews/ContextMenu.md) |

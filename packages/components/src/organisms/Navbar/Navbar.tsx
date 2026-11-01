@@ -28,6 +28,7 @@ import type { NavbarContextValue } from "./NavbarContext";
 import { defaultLinkSize, linkIconSize, linkTrailingIconSize, stepDown } from "./linkSizes";
 import { Badge } from "../../atoms/Badge";
 import type { BadgeProps } from "../../atoms/Badge";
+import { NavigationEmbedContext } from "../../internal/navigationEmbed";
 import { NavbarRow } from "./NavbarRow";
 import { NavbarSearch } from "./NavbarSearch";
 import { useHideOnScroll } from "./useHideOnScroll";
@@ -429,7 +430,8 @@ NavbarBrand.displayName = "Navbar.Brand";
  */
 const NavbarLinks = forwardRef<HTMLElement, NavbarLinksProps>(
   ({ children, className, align = "start", quiet = false, linkSize: ownLinkSize, column: _column, "aria-label": ariaLabel, "aria-labelledby": ariaLabelledBy, ...props }, ref) => {
-    const { labels, panelBody, panelQuietBody, size: barSize, linkSize: barLinkSize } = useNavbarContext("Navbar.Links");
+    const { labels, panelBody, panelQuietBody, size: barSize, linkSize: barLinkSize, currentVariant, rounded, dir, closeMenu, closeMenuOnNavigate } =
+      useNavbarContext("Navbar.Links");
     const row = useContext(NavbarRowContext);
     // The size a set reads: its own, else its row's, else the bar's; none of them set, it follows the row's height step. A `quiet` set
     // reads one step below that.
@@ -439,6 +441,13 @@ const NavbarLinks = forwardRef<HTMLElement, NavbarLinksProps>(
     const linkSizeValue = useMemo(() => ({ size: resolvedLinkSize, explicit: explicit !== undefined }), [resolvedLinkSize, explicit]);
     const panelTarget = quiet ? panelQuietBody : panelBody;
     const name = ariaLabelledBy === undefined ? (ariaLabel ?? labels.navigation) : ariaLabel;
+    // A `NavigationMenu` among the links follows the bar (its look, its direction) and is stacked in the menu panel, where a click on
+    // one of its links closes the panel.
+    const barEmbed = useMemo(() => ({ currentVariant, rounded, dir, inPanel: false, closePanel: null }), [currentVariant, rounded, dir]);
+    const panelEmbed = useMemo(
+      () => ({ currentVariant, rounded, dir, inPanel: true, closePanel: closeMenuOnNavigate ? closeMenu : null }),
+      [currentVariant, rounded, dir, closeMenuOnNavigate, closeMenu],
+    );
 
     return (
       <>
@@ -453,7 +462,9 @@ const NavbarLinks = forwardRef<HTMLElement, NavbarLinksProps>(
           {/* `role="list"` and `role="listitem"` are redundant on paper; Safari with VoiceOver drops list semantics under `list-style: none`. */}
           {/* eslint-disable-next-line jsx-a11y/no-redundant-roles */}
           <ul role="list" className={styles.list}>
-            <NavbarLinkSizeContext.Provider value={linkSizeValue}>{children}</NavbarLinkSizeContext.Provider>
+            <NavbarLinkSizeContext.Provider value={linkSizeValue}>
+              <NavigationEmbedContext.Provider value={barEmbed}>{children}</NavigationEmbedContext.Provider>
+            </NavbarLinkSizeContext.Provider>
           </ul>
         </nav>
         {/* The menu panel is drawn by the bar, once; each set of links puts its copy into it, in the order they are written. */}
@@ -462,7 +473,9 @@ const NavbarLinks = forwardRef<HTMLElement, NavbarLinksProps>(
             <nav aria-label={name} aria-labelledby={ariaLabelledBy} className={cx(styles.panelNav, quiet && styles.quiet)}>
               {/* eslint-disable-next-line jsx-a11y/no-redundant-roles */}
               <ul role="list" className={cx(styles.list, styles.panelList)}>
-                <NavbarPanelContext.Provider value>{children}</NavbarPanelContext.Provider>
+                <NavbarPanelContext.Provider value>
+                  <NavigationEmbedContext.Provider value={panelEmbed}>{children}</NavigationEmbedContext.Provider>
+                </NavbarPanelContext.Provider>
               </ul>
             </nav>,
             panelTarget,

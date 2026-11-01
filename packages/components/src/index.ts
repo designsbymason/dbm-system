@@ -111,6 +111,7 @@ export * from "./organisms/ContextMenu";
 export * from "./organisms/Menu";
 export * from "./organisms/MultiSelect";
 export * from "./organisms/Navbar";
+export * from "./organisms/NavigationMenu";
 export * from "./organisms/Sidebar";
 export * from "./organisms/Stepper";
 export * from "./organisms/Timeline";

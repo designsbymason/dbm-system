@@ -1,0 +1,354 @@
+import { Canvas, Meta } from "@storybook/addon-docs/blocks";
+import { Callout, ComponentHeader, PlaygroundControls, PropertiesTable, RelatedCard, TokenRow } from "../../../.storybook/blocks";
+import { Button } from "../../atoms/Button";
+import { VisuallyHidden } from "../../atoms/VisuallyHidden";
+import * as NavigationMenuStories from "./NavigationMenu.stories";
+import * as NavigationMenuListStories from "./NavigationMenuList.stories";
+import * as NavigationMenuItemStories from "./NavigationMenuItem.stories";
+import * as NavigationMenuTriggerStories from "./NavigationMenuTrigger.stories";
+import * as NavigationMenuContentStories from "./NavigationMenuContent.stories";
+import * as NavigationMenuLinkStories from "./NavigationMenuLink.stories";
+import * as NavigationMenuGroupStories from "./NavigationMenuGroup.stories";
+
+export const propOrder = [
+  "children",
+  "value",
+  "defaultValue",
+  "onValueChange",
+  "presentation",
+  "viewport",
+  "panelAlign",
+  "size",
+  "currentVariant",
+  "rounded",
+  "delayDuration",
+  "skipDelayDuration",
+  "dir",
+  "labels",
+  "aria-label",
+  "aria-labelledby",
+  "id",
+  "className",
+  "style",
+  "data-testid",
+];
+export const playgroundOrder = [
+  "presentation",
+  "viewport",
+  "panelAlign",
+  "size",
+  "currentVariant",
+  "rounded",
+  "delayDuration",
+  "skipDelayDuration",
+  "dir",
+  "aria-label",
+  "id",
+];
+export const listPropOrder = ["children", "id", "className", "style", "data-testid"];
+export const itemPropOrder = ["value", "children", "id", "className", "style", "data-testid"];
+export const triggerPropOrder = ["children", "icon", "current", "disabled", "aria-label", "aria-labelledby", "aria-describedby", "id", "className", "style", "data-testid"];
+export const contentPropOrder = ["children", "forceMount", "onEscapeKeyDown", "onPointerDownOutside", "onFocusOutside", "onInteractOutside", "className", "style", "data-testid"];
+export const linkPropOrder = ["children", "href", "icon", "description", "badge", "external", "current", "disabled", "asChild", "onSelect", "aria-label", "aria-labelledby", "aria-describedby", "id", "className", "style", "data-testid"];
+export const groupPropOrder = ["label", "children", "columns", "id", "className", "style", "data-testid"];
+
+<Meta of={NavigationMenuStories} />
+
+<VisuallyHidden asChild><h2>Intro</h2></VisuallyHidden>
+
+<ComponentHeader title="NavigationMenu" tier="Organism" />
+
+The navigation of a site's header when some of its items open a **panel** of links under them: a row of
+triggers, each opening a panel of grouped links with descriptions and icons (a mega menu), beside plain
+links that go straight to a page. A compound component, meaning it is made of named sub-parts you compose
+together: `NavigationMenu.List` of `NavigationMenu.Item`s, each holding a `NavigationMenu.Trigger` with its
+`NavigationMenu.Content`, or a `NavigationMenu.Link`; a panel holds `NavigationMenu.Group`s of links.
+
+It is a navigation, not a menu of actions: it follows the disclosure pattern (buttons that show and hide
+links), not `role="menu"`. A short dropdown of links is a `Navbar.Group`; a list of actions is a `Menu`.
+Drawn inside a `Navbar` it follows the bar, and in the bar's phone menu it becomes a stacked list.
+
+### Import
+
+```tsx
+import { NavigationMenu } from "@dbm-system/components";
+```
+
+## Playground
+
+Each demo is drawn inside a dashed box so that an open panel stays inside it and not over this page. Rest the
+pointer on **Products** or press it; with the keyboard, `Enter`, `Space` or the Down arrow opens it and `Escape`
+closes it.
+
+<div className="dbm-playground-canvas">
+
+<Canvas of={NavigationMenuStories.Playground} />
+
+</div>
+<PlaygroundControls of={NavigationMenuStories.Playground} order={playgroundOrder} />
+
+## Properties
+
+`NavigationMenu` is the `<nav>` element (or, inside a `Navbar`, a list item in the bar's own navigation), so it also
+accepts any other native `<nav>` attribute beyond what's listed here (e.g. `onFocus`, `title`), passed straight through.
+`dir` is set by the menu and can't be replaced by a same-named attribute.
+
+<PropertiesTable of={NavigationMenuStories} order={propOrder} />
+
+### NavigationMenu.List properties
+
+The row of items: a `<ul>` that states `role="list"`. Also accepts any other native `<ul>` attribute beyond what's listed here.
+
+<PropertiesTable of={NavigationMenuListStories} order={listPropOrder} />
+
+### NavigationMenu.Item properties
+
+One entry of the list: an `<li>`. Also accepts any other native `<li>` attribute beyond what's listed here.
+
+<PropertiesTable of={NavigationMenuItemStories} order={itemPropOrder} />
+
+### NavigationMenu.Trigger properties
+
+The button that opens an item's panel. Also accepts any other native `<button>` attribute beyond what's listed
+here (e.g. `onFocus`, `title`), passed straight through. `aria-expanded` is set by the menu and can't be replaced.
+
+<PropertiesTable of={NavigationMenuTriggerStories} order={triggerPropOrder} />
+
+### NavigationMenu.Content properties
+
+An item's panel. Also accepts any other native `<div>` attribute beyond what's listed here. It takes no `id`: the menu makes one
+and points the trigger's `aria-controls` at it.
+
+<PropertiesTable of={NavigationMenuContentStories} order={contentPropOrder} />
+
+### NavigationMenu.Link properties
+
+A link, at the top level or in a panel. Also accepts any other native `<a>` attribute beyond what's listed here
+(e.g. `target`, `rel`, `download`), passed straight through. `aria-current` and `aria-disabled` are set by the link and can't be replaced.
+
+<PropertiesTable of={NavigationMenuLinkStories} order={linkPropOrder} />
+
+### NavigationMenu.Group properties
+
+A labelled run of links in a panel. Also accepts any other native `<div>` attribute beyond what's listed here.
+
+<PropertiesTable of={NavigationMenuGroupStories} order={groupPropOrder} />
+
+## Variants
+
+### Panels under their own items
+
+By default every panel is drawn in one shared area that resizes between them as you move from trigger to
+trigger. `viewport={false}` hangs each panel from its own item instead, centred under it with `panelAlign="center"`.
+
+<Canvas of={NavigationMenuStories.OwnPanels} />
+
+### Stacked
+
+`presentation="stacked"` draws a vertical list in which each trigger is a disclosure button and its links nest beneath
+it, for a phone or a side panel. One item is open at a time. A width map chooses by screen:
+`presentation={{ base: "stacked", md: "mega" }}`.
+
+<Canvas of={NavigationMenuStories.Stacked} />
+
+### Marking the current page
+
+`current` on a link, or on the trigger of the item whose panel holds the page, marks it. `aria-current="page"` is set on a link
+whichever look is chosen. Inside a `Navbar` the bar's choice applies.
+
+<Canvas of={NavigationMenuStories.CurrentVariants} />
+
+### Sizes
+
+<Canvas of={NavigationMenuStories.Sizes} />
+
+### Rounded
+
+<Canvas of={NavigationMenuStories.Rounded} />
+
+### Controlled from your own state
+
+`value` is the open item's value (`""` for none). The menu reports changes through `onValueChange` and shows the
+value it is given, so you can open it from a button, close it on a route change, or keep it open.
+
+<Canvas of={NavigationMenuStories.Controlled} />
+
+### Inside a Navbar
+
+Put the menu in `Navbar.Links`. In the bar it is the mega menu in the bar's current-page look and rounding; in the bar's phone menu
+it is the stacked list, and choosing a link closes the menu.
+
+<Canvas of={NavigationMenuStories.InNavbar} />
+
+### In right-to-left text
+
+<Canvas of={NavigationMenuStories.RightToLeft} />
+
+## Usage guidelines
+
+<div className="dbm-do-dont-grid">
+<Callout tone="success" title="Do">
+
+- Use it when a few items each lead to several pages worth grouping, with a line of description each.
+- Keep a panel to a handful of links in one to three groups, and head each group with a short `label`.
+- Give a trigger a name that says what is behind it ("Products"), and the menu a name (`aria-label`) when the page has more than one navigation.
+- Mark the current page with `current`, from your router, so it is right on a server-rendered page.
+- Put a link that is a destination on its own (Pricing) beside the triggers as a `NavigationMenu.Link`.
+- Use `asChild` with your router's link so navigation stays client-side.
+
+</Callout>
+<Callout tone="danger" title="Don't">
+
+- Don't use it for a short dropdown of links: that is `Navbar.Group`. Don't use it for actions (Edit, Delete): that is a `Menu`.
+- Don't put a form, a dialog trigger or anything that is not navigation in a panel.
+- Don't nest a menu in a panel, or open a panel from anything but its trigger.
+- Don't make a trigger that is also a link: a trigger opens a panel; give the destination its own link inside it.
+- Don't rely on hover alone: a phone has none, and a trigger opens on a press too.
+
+</Callout>
+</div>
+
+## Best practices
+
+- **A panel is a list of destinations, not a page.** If you need more than three columns, the site's structure wants a landing page, which the trigger's neighbour can link to.
+- **Say it once.** Put a link to the section's own page first in its panel (an "Overview" row), so the person who wants the section as a whole has somewhere to go.
+- **Let it follow the bar.** Inside a `Navbar` the current-page look, rounding and direction come from the bar, so there is one set of choices to make and the phone menu is written for you.
+- **Descriptions earn their line.** A description is part of the link's name, so write it as a short phrase that helps someone choose, not a repeat of the title.
+- **Test with the keyboard first.** Every panel must be reachable without a pointer; `Tab` goes into an open panel and `Escape` returns to its trigger.
+
+## Accessibility
+
+<Callout tone="info" title="A named navigation of a list, with disclosure buttons that say whether their panel is open">
+
+- The root is a `<nav>` named by `aria-label` (`labels.navigation`, "Main", otherwise), holding a `role="list"` list whose items are `role="listitem"`, which keeps list semantics under Safari with VoiceOver, where a list without markers loses them. Inside a `Navbar` the bar's own navigation is the landmark and the menu is one of its list items.
+- A trigger is a `<button>` with `aria-expanded` and `aria-controls` pointing at its panel. It is not `role="menu"` or `aria-haspopup`: the panel is links, not menu items.
+- The current page is `aria-current="page"`. A trigger with `current` is only drawn as current: it has no `aria-current`, since a button is not a page. A disabled link is `aria-disabled` and stays focusable, with its click blocked; a disabled trigger is a native disabled button and leaves the tab order.
+- A link's description and badge are part of its name, and an external link's new tab is announced by a visually hidden "(opens in a new tab)".
+- Keys: `Tab` and `Shift+Tab` move through the triggers and links in order, and `Tab` from an open trigger goes into its panel. `Enter`, `Space` or `ArrowDown` opens a panel; `ArrowLeft` and `ArrowRight` move between the triggers and links of the bar; `Escape` closes the panel and returns focus to its trigger; `Enter` follows a link.
+- The primitive keeps a hidden, focusable stop beside an open trigger to hand focus into the panel. An accessibility checker that runs while a panel is open reports it (`aria-hidden-focus`); the stop is how `Tab` gets into the panel and is gone when the panel closes.
+- A link in an exiting panel stays in the page until its exit animation ends, a fraction of a second, as for any animated panel.
+- In the stacked form there is no primitive: a trigger is a disclosure button with `aria-expanded` and `aria-controls`, its links are plain tab stops, and a collapsed panel is `hidden`, so its links leave the tab order and the accessibility tree.
+- Every trigger and link is at least 24 by 24 CSS pixels at every size. The current-page marks keep an outline in forced colours, and an open panel keeps its border and loses its shadow.
+- With a reduced-motion preference a panel fades in and out and does not slide.
+
+</Callout>
+
+## Code examples
+
+```tsx
+<NavigationMenu aria-label="Primary">
+  <NavigationMenu.List>
+    <NavigationMenu.Item value="products">
+      <NavigationMenu.Trigger>Products</NavigationMenu.Trigger>
+      <NavigationMenu.Content>
+        <NavigationMenu.Group label="Platform" columns={2}>
+          <NavigationMenu.Link href="/analytics" icon={ChartBarIcon} description="Dashboards for every team">
+            Analytics
+          </NavigationMenu.Link>
+          <NavigationMenu.Link href="/automation" icon={LightningIcon} description="Workflows that run themselves">
+            Automation
+          </NavigationMenu.Link>
+        </NavigationMenu.Group>
+      </NavigationMenu.Content>
+    </NavigationMenu.Item>
+    <NavigationMenu.Item>
+      <NavigationMenu.Link href="/pricing" current>
+        Pricing
+      </NavigationMenu.Link>
+    </NavigationMenu.Item>
+  </NavigationMenu.List>
+</NavigationMenu>
+
+{/* A native <nav> attribute (title), a link that opens a new tab, and a router's link */}
+<NavigationMenu aria-label="Primary" title="Site navigation">
+  <NavigationMenu.List>
+    <NavigationMenu.Item>
+      <NavigationMenu.Link href="https://example.com/docs" target="_blank" rel="noopener noreferrer">
+        Docs
+      </NavigationMenu.Link>
+    </NavigationMenu.Item>
+    <NavigationMenu.Item>
+      <NavigationMenu.Link asChild>
+        <RouterLink to="/blog">Blog</RouterLink>
+      </NavigationMenu.Link>
+    </NavigationMenu.Item>
+  </NavigationMenu.List>
+</NavigationMenu>
+
+{/* In a Navbar: a mega menu in the bar, a stacked list in the phone menu */}
+<Navbar>
+  <Navbar.Brand>Acme</Navbar.Brand>
+  <Navbar.Links aria-label="Primary">
+    <NavigationMenu>
+      <NavigationMenu.List>{/* items */}</NavigationMenu.List>
+    </NavigationMenu>
+  </Navbar.Links>
+</Navbar>
+
+{/* const [open, setOpen] = useState("");  control the open item, "" for none */}
+<NavigationMenu value={open} onValueChange={setOpen}>{/* … */}</NavigationMenu>
+```
+
+## Design tokens used
+
+<TokenRow token="bg.surface" usage="a panel's surface" />
+<TokenRow token="border.default" usage="a panel's edge" />
+<TokenRow token="border.focus" usage="the focus ring on a trigger or link, drawn inside the row in a panel, which clips what is outside it" />
+<TokenRow token="bg.brand-subtle / bg.brand-subtle-hover" usage="a trigger or link's hover, an open trigger, and the current link's fill in the subtle look" />
+<TokenRow token="bg.brand / bg.brand-hover" usage="the solid look's fill and its hover, and the underline look's line" />
+<TokenRow token="text.primary" usage="a panel link's text, and the current link in the underline look" />
+<TokenRow token="text.secondary" usage="a trigger or link at rest, a group's label and a link's description" />
+<TokenRow token="text.brand" usage="the current link, in the subtle look" />
+<TokenRow token="text.on-brand" usage="the current link's text in the solid look" />
+<TokenRow token="text.disabled" usage="a disabled trigger or link" />
+<TokenRow token="icon.on-brand" usage="the focus ring on the solid look, drawn inside the link where the standard ring would be unreadable" />
+<TokenRow token="border-width.1" usage="a panel's edge" />
+<TokenRow token="border-width.2" usage="the focus ring's width, and the underline look's line thickness" />
+<TokenRow token="radius.md" usage="a panel's and a link's corners" />
+<TokenRow token="radius.sm" usage="the focus ring's corners" />
+<TokenRow token="radius.full" usage="a rounded link, and the underline's ends" />
+<TokenRow token="shadow.light-lg / shadow.dark-lg" usage="a panel's elevation, a fixed light and dark pair" />
+<TokenRow token="z-index.popover" usage="a panel's layer, above a dialog's scrim when opened from one" />
+<TokenRow token="navigation-menu.panel-min-width" usage="the least width a panel takes" />
+<TokenRow token="navigation-menu.panel-max-width" usage="the most width a panel takes, so several columns fit without running across a wide screen" />
+<TokenRow token="space.1 / space.2 / space.3 / space.4 / space.6" usage="gaps and padding, the panel's distance from the bar, the slide distance, and the 24px floor of a target" />
+<TokenRow token="font-size.xs / font-size.sm / font-size.base / font-size.md / font-size.lg" usage="the text size of a trigger or link at each size, and a panel's text" />
+<TokenRow token="font-weight.regular / font-weight.medium / font-weight.semibold" usage="a description, a trigger or link, and a group's label" />
+<TokenRow token="font-family.primary" usage="a panel's own text, which does not inherit it from the bar" />
+<TokenRow token="line-height.snug" usage="the menu's line height" />
+<TokenRow token="opacity.0 / opacity.100" usage="the ends of a panel's fade" />
+<TokenRow token="motion.duration.fast / motion.duration.moderate" usage="hover and fade, and the slide and resize between panels" />
+<TokenRow token="motion.easing.standard / motion.easing.emphasized" usage="leaving and entering" />
+
+## Related components
+
+<div className="dbm-card-grid">
+<RelatedCard
+  name="Navbar"
+  description="The application header the menu sits in: brand, links and actions, with a phone menu"
+  href="/?path=/docs/organisms-navigation-navbar--docs"
+>
+  <Button variant="secondary" size="sm">Navbar</Button>
+</RelatedCard>
+<RelatedCard
+  name="Menu"
+  description="A floating list of actions opened from a trigger"
+  href="/?path=/docs/organisms-navigation-menu--docs"
+>
+  <Button variant="secondary" size="sm">Menu</Button>
+</RelatedCard>
+<RelatedCard
+  name="Sidebar"
+  description="A page's persistent navigation column, for an app with many sections"
+  href="/?path=/docs/organisms-navigation-sidebar--docs"
+>
+  <Button variant="secondary" size="sm">Sidebar</Button>
+</RelatedCard>
+<RelatedCard
+  name="Tabs"
+  description="Switch between views of one page, where NavigationMenu moves between pages"
+  href="/?path=/docs/molecules-navigation-tabs--docs"
+>
+  <Button variant="secondary" size="sm">Tabs</Button>
+</RelatedCard>
+</div>

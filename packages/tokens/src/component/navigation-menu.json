@@ -1,0 +1,14 @@
+{
+  "navigation-menu": {
+    "panel-min-width": {
+      "$type": "dimension",
+      "$value": "16rem",
+      "$description": "New token (2026-10-31), added for NavigationMenu's panel — the least width a panel takes, so a panel holding one short group of links still reads as a panel under its item and not a thin sliver. No primitive scale holds it (the spacing scale tops out at 8rem), and `menu.min-width` caps a list of actions, not a panel of grouped links."
+    },
+    "panel-max-width": {
+      "$type": "dimension",
+      "$value": "56rem",
+      "$description": "New token (2026-10-31), added for NavigationMenu's panel — the most width a panel takes, so a panel of several columns of grouped links, descriptions and a featured block fits without running across a wide screen. A content measure with no home on any primitive scale; `menu.max-width` and `popover.max-width` (24rem) cap a list and a small popover, a different thing."
+    }
+  }
+}

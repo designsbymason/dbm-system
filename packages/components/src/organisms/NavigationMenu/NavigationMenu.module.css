@@ -1,0 +1,625 @@
+/* NavigationMenu — a row of triggers whose panels open under them (the `mega` form), or a vertical list of disclosure buttons (the
+   `stacked` form). Every value is a token; the panel's measure is the two `navigation-menu.*` tokens. */
+
+.root {
+  --nm-font: var(--dbm-font-size-base);
+  --nm-pad-block: var(--dbm-space-2);
+  --nm-pad-inline: var(--dbm-space-3);
+  --nm-travel: var(--dbm-space-6);
+
+  position: relative;
+  box-sizing: border-box;
+  color: var(--dbm-text-primary);
+  font-family: var(--dbm-font-family-primary);
+  font-size: var(--nm-font);
+  line-height: var(--dbm-line-height-snug);
+}
+
+/* Inside a `Navbar`'s links the bar sets the text size and the padding, through its own custom properties. */
+.embedded {
+  display: flex;
+  font-size: inherit;
+}
+
+.embedded .link {
+  padding-block: var(--navbar-link-pad-block, var(--nm-pad-block));
+  padding-inline: var(--navbar-link-pad-inline, var(--nm-pad-inline));
+}
+
+.sizeXs {
+  --nm-font: var(--dbm-font-size-xs);
+  --nm-pad-block: var(--dbm-space-1);
+  --nm-pad-inline: var(--dbm-space-2);
+}
+
+.sizeSm {
+  --nm-font: var(--dbm-font-size-sm);
+  --nm-pad-block: var(--dbm-space-2);
+  --nm-pad-inline: var(--dbm-space-3);
+}
+
+.sizeMd {
+  --nm-font: var(--dbm-font-size-base);
+  --nm-pad-block: var(--dbm-space-2);
+  --nm-pad-inline: var(--dbm-space-3);
+}
+
+.sizeLg {
+  --nm-font: var(--dbm-font-size-md);
+  --nm-pad-block: var(--dbm-space-3);
+  --nm-pad-inline: var(--dbm-space-4);
+}
+
+.sizeXl {
+  --nm-font: var(--dbm-font-size-lg);
+  --nm-pad-block: var(--dbm-space-3);
+  --nm-pad-inline: var(--dbm-space-4);
+}
+
+.list {
+  display: flex;
+  align-items: center;
+  gap: var(--dbm-space-1);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.item {
+  display: flex;
+}
+
+/* Without a shared panel area a panel hangs from its own item. */
+.itemAnchor {
+  position: relative;
+}
+
+/* --- Triggers and top-level links ------------------------------------------------------------------------------------------- */
+
+.link {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--dbm-space-2);
+  box-sizing: border-box;
+  min-block-size: var(--dbm-space-6);
+  padding-block: var(--nm-pad-block);
+  padding-inline: var(--nm-pad-inline);
+  border-radius: var(--dbm-radius-md);
+  color: var(--dbm-text-secondary);
+  font-family: inherit;
+  font-size: inherit;
+  font-weight: var(--dbm-font-weight-medium);
+  text-decoration: none;
+  white-space: nowrap;
+  transition:
+    background-color var(--dbm-motion-duration-fast) var(--dbm-motion-easing-standard),
+    color var(--dbm-motion-duration-fast) var(--dbm-motion-easing-standard);
+}
+
+.trigger {
+  appearance: none;
+  border: 0;
+  background-color: transparent;
+  cursor: pointer;
+}
+
+.link:hover,
+.trigger[aria-expanded="true"] {
+  background-color: var(--dbm-bg-brand-subtle);
+}
+
+.link:focus-visible {
+  outline: var(--dbm-border-width-2) solid var(--dbm-border-focus);
+  outline-offset: var(--dbm-space-1);
+  border-radius: var(--dbm-radius-sm);
+}
+
+.rounded,
+.rounded:focus-visible {
+  border-radius: var(--dbm-radius-full);
+}
+
+.caret {
+  transition: transform var(--dbm-motion-duration-fast) var(--dbm-motion-easing-standard);
+}
+
+.trigger[aria-expanded="true"] .caret {
+  transform: rotate(180deg);
+}
+
+.trigger:disabled,
+.disabled {
+  color: var(--dbm-text-disabled);
+  cursor: not-allowed;
+}
+
+.trigger:disabled:hover,
+.disabled:hover {
+  background-color: transparent;
+}
+
+/* --- The current page: `subtle` (the tint), `underline` (a line) and `solid` (a fill) ------------------------------------------ */
+
+.current,
+.current:hover {
+  background-color: var(--dbm-bg-brand-subtle);
+  color: var(--dbm-text-brand);
+}
+
+.currentSubtle:hover {
+  background-color: var(--dbm-bg-brand-subtle-hover);
+}
+
+.currentUnderline,
+.currentUnderline:hover {
+  position: relative;
+  background-color: transparent;
+  color: var(--dbm-text-primary);
+}
+
+.currentUnderline:hover {
+  background-color: var(--dbm-bg-brand-subtle);
+}
+
+.currentUnderline::after {
+  content: "";
+  position: absolute;
+  inset-inline: var(--dbm-space-3);
+  inset-block-end: 0;
+  block-size: var(--dbm-border-width-2);
+  border-radius: var(--dbm-radius-full);
+  background-color: var(--dbm-bg-brand);
+}
+
+.currentSolid,
+.currentSolid:hover {
+  background-color: var(--dbm-bg-brand);
+  color: var(--dbm-text-on-brand);
+}
+
+.currentSolid:hover {
+  background-color: var(--dbm-bg-brand-hover);
+}
+
+/* A brand fill hides the standard ring, so it is drawn inside the link in the on-brand colour. */
+.currentSolid:focus-visible {
+  outline-color: var(--dbm-icon-on-brand);
+  outline-offset: calc(-1 * var(--dbm-border-width-2));
+}
+
+/* --- The panel ------------------------------------------------------------------------------------------------------------ */
+
+/* The frame the shared panel area sits in: under the whole menu, lined up with its start edge or centred. It takes no pointer events,
+   so the space beside the panel stays the page's; the panel itself does. */
+.viewportFrame {
+  position: absolute;
+  inset-block-start: 100%;
+  inset-inline-start: 0;
+  display: flex;
+  justify-content: flex-start;
+  inline-size: 100%;
+  pointer-events: none;
+  z-index: var(--dbm-z-index-popover);
+}
+
+.viewportFrame[data-align="center"] {
+  justify-content: center;
+}
+
+/* The shared panel area takes the size of the open panel (Radix measures it into these two properties) and is the panel's surface:
+   its border, corners and shadow. Shadows are a fixed light/dark pair, so the dark one is chosen by the theme attribute below. */
+.viewport {
+  position: relative;
+  box-sizing: border-box;
+  inline-size: var(--radix-navigation-menu-viewport-width);
+  block-size: var(--radix-navigation-menu-viewport-height);
+  margin-block-start: var(--dbm-space-2);
+  overflow: hidden;
+  pointer-events: auto;
+  background-color: var(--dbm-bg-surface);
+  border: var(--dbm-border-width-1) solid var(--dbm-border-default);
+  border-radius: var(--dbm-radius-md);
+  box-shadow: var(--dbm-shadow-light-lg);
+  color: var(--dbm-text-primary);
+  font-family: var(--dbm-font-family-primary);
+  transform-origin: top center;
+  transition:
+    inline-size var(--dbm-motion-duration-moderate) var(--dbm-motion-easing-emphasized),
+    block-size var(--dbm-motion-duration-moderate) var(--dbm-motion-easing-emphasized);
+}
+
+[data-theme$="-dark"] .viewport,
+[data-theme$="-dark"] .contentOwn {
+  box-shadow: var(--dbm-shadow-dark-lg);
+}
+
+.viewport[data-state="open"] {
+  animation: panelIn var(--dbm-motion-duration-fast) var(--dbm-motion-easing-emphasized);
+}
+
+.viewport[data-state="closed"] {
+  animation: panelOut var(--dbm-motion-duration-fast) var(--dbm-motion-easing-standard);
+}
+
+/* A panel is as wide as its content wants, between the two measure tokens and never wider than the screen. It is positioned over
+   the shared area's corner, so the area is sized by it. */
+.content {
+  box-sizing: border-box;
+  inline-size: max-content;
+  min-inline-size: min(var(--dbm-navigation-menu-panel-min-width), 100vw);
+  max-inline-size: min(var(--dbm-navigation-menu-panel-max-width), 100vw);
+  padding: var(--dbm-space-3);
+}
+
+.viewport .content {
+  position: absolute;
+  inset-block-start: 0;
+  inset-inline-start: 0;
+}
+
+/* Without a shared area the panel is its own surface, hung from its item. */
+.contentOwn {
+  position: absolute;
+  inset-block-start: calc(100% + var(--dbm-space-2));
+  inset-inline-start: 0;
+  z-index: var(--dbm-z-index-popover);
+  background-color: var(--dbm-bg-surface);
+  border: var(--dbm-border-width-1) solid var(--dbm-border-default);
+  border-radius: var(--dbm-radius-md);
+  box-shadow: var(--dbm-shadow-light-lg);
+  font-family: var(--dbm-font-family-primary);
+}
+
+.contentOwn[data-align="center"] {
+  inset-inline-start: 50%;
+  translate: -50% 0;
+}
+
+.contentOwn[data-align="center"]:dir(rtl) {
+  translate: 50% 0;
+}
+
+/* Moving from one panel to another slides the old out and the new in from the side the trigger is on; the first panel just fades.
+   The primitive names the side physically (`start` is the left, in both directions, as `translate` has no logical form), so
+   nothing here mirrors for right-to-left text. */
+.content[data-motion="from-start"] {
+  animation: enterFromStart var(--dbm-motion-duration-moderate) var(--dbm-motion-easing-emphasized);
+}
+
+.content[data-motion="from-end"] {
+  animation: enterFromEnd var(--dbm-motion-duration-moderate) var(--dbm-motion-easing-emphasized);
+}
+
+.content[data-motion="to-start"] {
+  animation: exitToStart var(--dbm-motion-duration-fast) var(--dbm-motion-easing-standard);
+}
+
+.content[data-motion="to-end"] {
+  animation: exitToEnd var(--dbm-motion-duration-fast) var(--dbm-motion-easing-standard);
+}
+
+.contentOwn[data-state="open"]:not([data-motion]) {
+  animation: panelIn var(--dbm-motion-duration-fast) var(--dbm-motion-easing-emphasized);
+}
+
+.contentOwn[data-state="closed"]:not([data-motion]) {
+  animation: panelOut var(--dbm-motion-duration-fast) var(--dbm-motion-easing-standard);
+}
+
+/* --- Links in a panel ----------------------------------------------------------------------------------------------------- */
+
+.panelLink {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--dbm-space-3);
+  box-sizing: border-box;
+  min-block-size: var(--dbm-space-6);
+  max-inline-size: calc(var(--dbm-navigation-menu-panel-min-width) * 1.5);
+  padding: var(--dbm-space-2) var(--dbm-space-3);
+  border-radius: var(--dbm-radius-md);
+  color: var(--dbm-text-primary);
+  font-size: var(--dbm-font-size-sm);
+  text-decoration: none;
+  transition: background-color var(--dbm-motion-duration-fast) var(--dbm-motion-easing-standard);
+}
+
+.panelLink:hover {
+  background-color: var(--dbm-bg-brand-subtle);
+}
+
+/* A panel clips what is drawn outside it, so the ring is drawn inside the row. */
+.panelLink:focus-visible {
+  outline: var(--dbm-border-width-2) solid var(--dbm-border-focus);
+  outline-offset: calc(-1 * var(--dbm-border-width-2));
+  border-radius: var(--dbm-radius-sm);
+}
+
+.panelLink[aria-current="page"] {
+  background-color: var(--dbm-bg-brand-subtle);
+  color: var(--dbm-text-brand);
+}
+
+.panelLink[aria-current="page"]:hover {
+  background-color: var(--dbm-bg-brand-subtle-hover);
+}
+
+.linkIcon {
+  flex: none;
+}
+
+.linkBody {
+  display: flex;
+  flex-direction: column;
+  gap: var(--dbm-space-1);
+  min-inline-size: 0;
+}
+
+.linkText {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--dbm-space-1);
+  font-weight: var(--dbm-font-weight-medium);
+}
+
+.external {
+  flex: none;
+}
+
+.description {
+  color: var(--dbm-text-secondary);
+  font-size: var(--dbm-font-size-xs);
+  font-weight: var(--dbm-font-weight-regular);
+  line-height: var(--dbm-line-height-snug);
+}
+
+.panelLink[aria-current="page"] .description {
+  color: var(--dbm-text-secondary);
+}
+
+.group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--dbm-space-1);
+  min-inline-size: 0;
+}
+
+.groupLabel {
+  margin: 0;
+  padding-block: var(--dbm-space-1);
+  padding-inline: var(--dbm-space-3);
+  color: var(--dbm-text-secondary);
+  font-size: var(--dbm-font-size-xs);
+  font-weight: var(--dbm-font-weight-semibold);
+}
+
+.groupList {
+  display: grid;
+  grid-template-columns: repeat(var(--nm-columns, 1), minmax(0, 1fr));
+  gap: var(--dbm-space-1);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.groupList[data-columns="2"] {
+  --nm-columns: 2;
+}
+
+.groupList[data-columns="3"] {
+  --nm-columns: 3;
+}
+
+.groupItem {
+  display: flex;
+  min-inline-size: 0;
+}
+
+/* --- The stacked form ------------------------------------------------------------------------------------------------------ */
+
+.stackedRoot {
+  display: block;
+}
+
+.stackedList {
+  flex-direction: column;
+  align-items: stretch;
+}
+
+.stackedItem {
+  flex-direction: column;
+  align-items: stretch;
+}
+
+.stackedItem > .link {
+  inline-size: 100%;
+}
+
+.stackedItem > .trigger {
+  justify-content: space-between;
+}
+
+.stackedContent {
+  padding-inline-start: var(--dbm-space-4);
+}
+
+.stackedContent[hidden] {
+  display: none;
+}
+
+.stackedContent .groupList {
+  --nm-columns: 1;
+}
+
+.stackedContent .panelLink {
+  max-inline-size: none;
+}
+
+/* In a list of rows the current line is a bar at the start edge, not under the text. */
+.stackedRoot .currentUnderline::after {
+  inset-inline: auto;
+  inset-inline-start: 0;
+  inset-block: var(--dbm-space-2);
+  inline-size: var(--dbm-border-width-2);
+  block-size: auto;
+}
+
+/* --- Animation ------------------------------------------------------------------------------------------------------------- */
+
+@keyframes panelIn {
+  from {
+    opacity: var(--dbm-opacity-0);
+    transform: translateY(calc(-1 * var(--dbm-space-2)));
+  }
+
+  to {
+    opacity: var(--dbm-opacity-100);
+    transform: none;
+  }
+}
+
+@keyframes panelOut {
+  from {
+    opacity: var(--dbm-opacity-100);
+    transform: none;
+  }
+
+  to {
+    opacity: var(--dbm-opacity-0);
+    transform: translateY(calc(-1 * var(--dbm-space-2)));
+  }
+}
+
+@keyframes enterFromStart {
+  from {
+    opacity: var(--dbm-opacity-0);
+    transform: translateX(calc(-1 * var(--nm-travel)));
+  }
+
+  to {
+    opacity: var(--dbm-opacity-100);
+    transform: none;
+  }
+}
+
+@keyframes enterFromEnd {
+  from {
+    opacity: var(--dbm-opacity-0);
+    transform: translateX(var(--nm-travel));
+  }
+
+  to {
+    opacity: var(--dbm-opacity-100);
+    transform: none;
+  }
+}
+
+@keyframes exitToStart {
+  from {
+    opacity: var(--dbm-opacity-100);
+    transform: none;
+  }
+
+  to {
+    opacity: var(--dbm-opacity-0);
+    transform: translateX(calc(-1 * var(--nm-travel)));
+  }
+}
+
+@keyframes exitToEnd {
+  from {
+    opacity: var(--dbm-opacity-100);
+    transform: none;
+  }
+
+  to {
+    opacity: var(--dbm-opacity-0);
+    transform: translateX(var(--nm-travel));
+  }
+}
+
+/* --- Forced colours --------------------------------------------------------------------------------------------------------- */
+
+@media (forced-colors: active) {
+  .current {
+    outline: var(--dbm-border-width-1) solid Highlight;
+    outline-offset: calc(-1 * var(--dbm-border-width-1));
+  }
+
+  .current:focus-visible {
+    outline-offset: var(--dbm-space-1);
+    outline-width: var(--dbm-border-width-2);
+  }
+
+  /* The underline is a background, which forced colours replaces, so it names a system colour and marks the link by itself. */
+  .currentUnderline::after {
+    background-color: Highlight;
+  }
+
+  .currentUnderline:not(:focus-visible) {
+    outline: none;
+  }
+
+  .currentSolid:focus-visible {
+    outline-color: HighlightText;
+    outline-offset: calc(-1 * var(--dbm-border-width-2));
+  }
+
+  .panelLink[aria-current="page"] {
+    outline: var(--dbm-border-width-1) solid Highlight;
+    outline-offset: calc(-1 * var(--dbm-border-width-1));
+  }
+
+  .panelLink[aria-current="page"]:focus-visible {
+    outline-width: var(--dbm-border-width-2);
+  }
+
+  /* A panel is told from the page by its border, which forced colours keeps; the shadow is dropped. */
+  .viewport,
+  .contentOwn {
+    border-color: CanvasText;
+    box-shadow: none;
+  }
+}
+
+/* One-shot motion: with a reduced-motion preference the panels fade and do not slide, and nothing resizes by easing. */
+@media (prefers-reduced-motion: reduce) {
+  .link,
+  .caret,
+  .panelLink,
+  .viewport {
+    transition: none;
+  }
+
+  .viewport[data-state],
+  .contentOwn[data-state],
+  .content[data-motion] {
+    animation-name: fadeOnly;
+  }
+
+  .viewport[data-state="closed"],
+  .contentOwn[data-state="closed"],
+  .content[data-motion="to-start"],
+  .content[data-motion="to-end"] {
+    animation-name: fadeOutOnly;
+  }
+
+  @keyframes fadeOnly {
+    from {
+      opacity: var(--dbm-opacity-0);
+    }
+
+    to {
+      opacity: var(--dbm-opacity-100);
+    }
+  }
+
+  @keyframes fadeOutOnly {
+    from {
+      opacity: var(--dbm-opacity-100);
+    }
+
+    to {
+      opacity: var(--dbm-opacity-0);
+    }
+  }
+}
