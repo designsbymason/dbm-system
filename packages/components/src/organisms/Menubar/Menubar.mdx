@@ -459,6 +459,7 @@ with a media query; the story below swaps at `48rem`.
 - Don't use it for a site's navigation: that is `NavigationMenu` or `Navbar`, which are links, not commands.
 - Don't use it as a single button of actions: that is a `Menu`. A bar of one trigger is a `Menu` with extra steps.
 - Don't rely on a `shortcut` hint to make a key work. It only displays the key; bind it yourself.
+- Write a hint that differs by platform with `mod` (`shortcut="mod+s"`): it is drawn as ⌘S on an Apple platform and Ctrl+S elsewhere, and any other text is drawn as written.
 - Don't put a form or arbitrary content in a menu. A menu holds `menuitem`s only.
 - Don't count on it on a phone: it expects a keyboard and a pointer, and there is no sheet presentation. Swap to a `Menu`
   or a `NavigationMenu` below a breakpoint (the recipe above).
@@ -477,7 +478,7 @@ with a media query; the story below swaps at `48rem`.
   focus that press gave.
 - A bar wider than its container scrolls sideways, with a fade at each end that has more behind it, and keeps the focused
   trigger in view. Prefer fewer, shorter menus to a bar that scrolls.
-- A bar wider than its container scrolls by default. With `overflow="menu"` the menus and actions that do not fit move into a "More" menu (each menu as a submenu); give the bar's `Menubar.Menu` and `Menubar.Action` as direct children, and size its container with the layout (a bar that sizes its own container has no room to measure against). A trigger with keyboard focus is held in place until focus leaves it.
+- A bar wider than its container scrolls by default. With `overflow="menu"` the menus and actions that do not fit move into a "More" menu (each menu as a submenu); size its container with the layout (a bar that sizes its own container has no room to measure against); the menus and actions can sit inside a component of your own. A trigger with keyboard focus is held in place until focus leaves it.
 - `sticky` keeps the bar at the top of the page, or of `scrollContainerRef`, with `stickyOffset` clear of a header that is also sticky.
 - `tone` colours the triggers' hover and open fills and, on an `outlined` or `filled` bar, its border and fill, all from subtle tokens (the trigger label is `text.primary` in both tones): `brand` (the default) suits an application's own chrome, `neutral` a bar that should sit back. It does not change the menus the bar opens, which keep `Menu`'s look.
 - `size` sets the trigger height and the row size of its menus; give a `Menubar.Content` its own `size` only to differ.

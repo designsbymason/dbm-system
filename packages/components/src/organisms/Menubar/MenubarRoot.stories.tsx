@@ -60,7 +60,7 @@ const meta: Meta<typeof Menubar> = {
       control: "inline-radio",
       options: ["scroll", "menu"],
       description:
-        "What the bar does when its menus do not fit its container: scroll (sideways, with a fade at each end that has more behind it) or menu (the menus that do not fit move into a More menu, each as a submenu). menu reads the bar's Menubar.Menu and Menubar.Action children, so they have to be direct children, and it sizes the bar against its container, which has to be sized by the layout and not by the bar.",
+        "What the bar does when its menus do not fit its container: scroll (sideways, with a fade at each end that has more behind it) or menu (the menus that do not fit move into a More menu, each as a submenu). Each Menubar.Menu and Menubar.Action tells the bar what it is, so they can sit inside a component of your own. menu sizes the bar against its container, which has to be sized by the layout and not by the bar.",
       table: { defaultValue: { summary: '"scroll"' } },
     },
     hotkeys: {

@@ -17,7 +17,9 @@ import {
   useId,
   useImperativeHandle,
   useMemo,
+  useReducer,
   useRef,
+  useState,
   type ReactElement,
   type ReactNode,
   type SyntheticEvent,
@@ -46,7 +48,6 @@ import {
   DEFAULT_MENU_LABELS,
   MenuPrimitiveContext,
   MenuRootContext,
-  MenuShortcutFormatContext,
   MenuSizeContext,
   useControllableState,
   type MenuPrimitiveKit,
@@ -57,8 +58,12 @@ import {
   MenubarControllerContext,
   MenubarMenuContext,
   type MenubarEntry,
+  type MenubarItemInfo,
 } from "./MenubarContext";
-import { useMenubarOverflow } from "./useMenubarOverflow";
+import {
+  useIsomorphicLayoutEffect,
+  useMenubarOverflow,
+} from "./useMenubarOverflow";
 import type {
   MenubarActionProps,
   MenubarContentProps,
@@ -269,46 +274,60 @@ const MenubarRoot = forwardRef<HTMLDivElement, MenubarProps>(
       return () => document.removeEventListener("keydown", onKeyDown);
     }, [hotkeysKey, openFromCode]);
 
-    // `overflow="menu"` reads the bar's menus and actions from its children, so they are direct children.
-    const parts = useMemo(
-      () => (overflow === "menu" ? readBarChildren(children) : []),
-      [children, overflow],
-    );
-    const items = parts.filter(
-      (part): part is BarItem => part.kind !== "other",
-    );
-    const signature = `${size}|${dir}|${labels.more}|${items.map((item) => `${item.kind}:${item.value ?? ""}`).join("|")}`;
+    // `overflow="menu"`: each menu and action tells the bar what it is as it mounts (so they can sit inside a component of
+    // the app's own), the bar puts them in the order they are drawn in, and what does not fit is drawn in "More".
+    const overflowMenu = overflow === "menu";
+    const infos = useRef(new Map<string, MenubarItemInfo>());
+    const [version, bumpVersion] = useReducer((count: number) => count + 1, 0);
+    const [ordered, setOrdered] = useState<
+      Array<{ id: string; info: MenubarItemInfo }>
+    >([]);
+    const registerItem = useCallback((id: string, info: MenubarItemInfo) => {
+      infos.current.set(id, info);
+      bumpVersion();
+    }, []);
+    const unregisterItem = useCallback((id: string) => {
+      if (infos.current.delete(id)) bumpVersion();
+    }, []);
+    useIsomorphicLayoutEffect(() => {
+      if (!overflowMenu) {
+        setOrdered((current) => (current.length === 0 ? current : []));
+        return;
+      }
+      const position = (info: MenubarItemInfo) => info.slot();
+      const entries = [...infos.current.entries()].map(([id, info]) => ({
+        id,
+        info,
+      }));
+      entries.sort((a, b) => {
+        const first = position(a.info);
+        const second = position(b.info);
+        if (!first || !second) return first ? -1 : second ? 1 : 0;
+        return first.compareDocumentPosition(second) &
+          Node.DOCUMENT_POSITION_FOLLOWING
+          ? -1
+          : 1;
+      });
+      setOrdered(entries);
+    }, [version, overflowMenu]);
+    const signature = `${size}|${dir}|${labels.more}|${ordered.map(({ id, info }) => `${id}:${typeof info.label === "string" ? info.label : ""}`).join("|")}`;
     const shown = useMenubarOverflow({
-      enabled: overflow === "menu",
+      enabled: overflowMenu,
       barRef,
-      count: items.length,
+      count: ordered.length,
       signature,
     });
-    const hidden = items.slice(shown);
+    const hidden = useMemo(() => ordered.slice(shown), [ordered, shown]);
+    const hiddenIds = useMemo<ReadonlySet<string>>(
+      () => new Set(hidden.map(({ id }) => id)),
+      [hidden],
+    );
     // A menu that has moved into "More" can't stay open under its own name.
-    const hiddenNames = hidden.map((item) => item.value ?? "").join("|");
+    const hiddenNames = hidden.map(({ info }) => info.value ?? "").join("|");
     useEffect(() => {
       if (hiddenNames && value !== "" && hiddenNames.split("|").includes(value))
         latest.current.setValueRaw("");
     }, [hiddenNames, value]);
-    const drawn: ReactNode =
-      overflow === "menu"
-        ? [
-            ...parts.map((part, index) => {
-              if (part.kind === "other") return part.element;
-              // Which of the bar's items this is, counting the ones before it.
-              const place = parts
-                .slice(0, index)
-                .filter((other) => other.kind !== "other").length;
-              return place < shown ? (
-                <Keyed key={index}>{part.element}</Keyed>
-              ) : null;
-            }),
-            hidden.length > 0 ? (
-              <MoreMenu key={MORE} hidden={hidden} label={labels.more} />
-            ) : null,
-          ]
-        : children;
 
     const context = useMemo(
       () => ({
@@ -319,8 +338,24 @@ const MenubarRoot = forwardRef<HTMLDivElement, MenubarProps>(
         reportComplete,
         register,
         takeFocusHandoff,
+        overflowMenu,
+        hiddenIds,
+        registerItem,
+        unregisterItem,
       }),
-      [value, setValue, size, dir, reportComplete, register, takeFocusHandoff],
+      [
+        value,
+        setValue,
+        size,
+        dir,
+        reportComplete,
+        register,
+        takeFocusHandoff,
+        overflowMenu,
+        hiddenIds,
+        registerItem,
+        unregisterItem,
+      ],
     );
     const bar = (
       <MenubarPrimitive.Root
@@ -349,7 +384,13 @@ const MenubarRoot = forwardRef<HTMLDivElement, MenubarProps>(
         data-overflow-start={overflowStart || undefined}
         data-overflow-end={overflowEnd || undefined}
       >
-        {drawn}
+        {children}
+        {overflowMenu && hidden.length > 0 && (
+          <MoreMenu
+            hidden={hidden.map(({ info }) => info)}
+            label={labels.more}
+          />
+        )}
       </MenubarPrimitive.Root>
     );
     return (
@@ -373,65 +414,14 @@ const MenubarRoot = forwardRef<HTMLDivElement, MenubarProps>(
 );
 MenubarRoot.displayName = "Menubar";
 
-/** Gives a bar's child a stable place among its siblings as some of them come and go. */
-function Keyed({ children }: { children: ReactNode }) {
-  return <>{children}</>;
-}
-
-/** What a bar's child is, for `overflow="menu"`: a menu or an action that can move into "More", or anything else, left in place. */
-type BarPart = { kind: "other"; element: ReactNode } | BarItem;
-interface BarItem {
-  kind: "menu" | "action";
-  element: ReactElement;
-  /** A menu's `value`. */
-  value?: string;
-  label: ReactNode;
-  icon: MenubarTriggerProps["icon"];
-  disabled: boolean;
-  /** A menu's items, and the size its own `Menubar.Content` gave them. */
-  content?: ReactNode;
-  contentSize?: MenubarSize;
-  /** An action's `onSelect`. */
-  onSelect?: MenubarActionProps["onSelect"];
-}
-
-function readBarChildren(children: ReactNode): BarPart[] {
-  return Children.toArray(children).map((child): BarPart => {
-    if (!isValidElement(child)) return { kind: "other", element: child };
-    const element = child as ReactElement<Record<string, unknown>>;
-    if (element.type === MenubarMenu) {
-      const inside = Children.toArray(
-        element.props.children as ReactNode,
-      ).filter(isValidElement) as ReactElement<Record<string, unknown>>[];
-      const trigger = inside.find((node) => node.type === MenubarTrigger);
-      const panel = inside.find((node) => node.type === MenubarContent);
-      return {
-        kind: "menu",
-        element,
-        value: element.props.value as string,
-        label: (trigger?.props.children as ReactNode) ?? null,
-        icon: trigger?.props.icon as MenubarTriggerProps["icon"],
-        disabled: Boolean(trigger?.props.disabled),
-        content: panel?.props.children as ReactNode,
-        contentSize: panel?.props.size as MenubarSize | undefined,
-      };
-    }
-    if (element.type === MenubarAction) {
-      return {
-        kind: "action",
-        element,
-        label: element.props.children as ReactNode,
-        icon: element.props.icon as MenubarActionProps["icon"],
-        disabled: Boolean(element.props.disabled),
-        onSelect: element.props.onSelect as MenubarActionProps["onSelect"],
-      };
-    }
-    return { kind: "other", element };
-  });
-}
-
 /** The menu that holds the menus and actions that did not fit: each menu is a submenu, each action an item. */
-function MoreMenu({ hidden, label }: { hidden: BarItem[]; label: string }) {
+function MoreMenu({
+  hidden,
+  label,
+}: {
+  hidden: MenubarItemInfo[];
+  label: string;
+}) {
   return (
     <MenubarMenu value={MORE}>
       <MenubarTrigger
@@ -500,6 +490,17 @@ function MenubarMenu({ value, children }: MenubarMenuProps) {
   const open = bar !== null && bar.value === value;
   const setValue = bar?.setValue;
   const register = bar?.register;
+  const overflowMenu = bar?.overflowMenu ?? false;
+  const registerItem = bar?.registerItem;
+  const unregisterItem = bar?.unregisterItem;
+  const id = useId();
+  const slotRef = useRef<HTMLSpanElement | null>(null);
+  const isMore = value === MORE;
+  const hidden = bar?.hiddenIds.has(id) ?? false;
+  const hiddenRef = useRef(hidden);
+  useEffect(() => {
+    hiddenRef.current = hidden;
+  });
   const dir = bar?.dir ?? "ltr";
   const reportComplete = bar?.reportComplete;
   const focusLastRef = useRef(false);
@@ -516,11 +517,31 @@ function MenubarMenu({ value, children }: MenubarMenuProps) {
       register?.(value, {
         kind: "menu",
         trigger: () => triggerRef.current,
-        blocked: () => blockedRef.current,
+        blocked: () => blockedRef.current || hiddenRef.current,
         focusFirstRef,
       }),
     [register, value],
   );
+  // What the "More" menu needs to draw this menu as a submenu: its label, icon and items, read from its own children.
+  useEffect(() => {
+    if (!overflowMenu || isMore || !registerItem) return;
+    const inside = Children.toArray(children).filter(
+      isValidElement,
+    ) as ReactElement<Record<string, unknown>>[];
+    const trigger = inside.find((node) => node.type === MenubarTrigger);
+    const panel = inside.find((node) => node.type === MenubarContent);
+    registerItem(id, {
+      kind: "menu",
+      value,
+      label: (trigger?.props.children as ReactNode) ?? null,
+      icon: trigger?.props.icon as MenubarTriggerProps["icon"],
+      disabled: Boolean(trigger?.props.disabled),
+      content: panel?.props.children as ReactNode,
+      contentSize: panel?.props.size as MenubarSize | undefined,
+      slot: () => slotRef.current,
+    });
+  }, [overflowMenu, isMore, registerItem, id, value, children]);
+  useEffect(() => () => unregisterItem?.(id), [unregisterItem, id]);
   const openToLast = useCallback(() => {
     focusLastRef.current = true;
     setValue?.(value);
@@ -567,11 +588,20 @@ function MenubarMenu({ value, children }: MenubarMenuProps) {
     [value, setBlocked, takeFocusFirst],
   );
   return (
-    <MenubarMenuContext.Provider value={menu}>
-      <MenuRootContext.Provider value={context}>
-        <MenubarPrimitive.Menu value={value}>{children}</MenubarPrimitive.Menu>
-      </MenuRootContext.Provider>
-    </MenubarMenuContext.Provider>
+    <>
+      {overflowMenu && !isMore && (
+        <span hidden ref={slotRef} data-menubar-slot="" />
+      )}
+      {hidden ? null : (
+        <MenubarMenuContext.Provider value={menu}>
+          <MenuRootContext.Provider value={context}>
+            <MenubarPrimitive.Menu value={value}>
+              {children}
+            </MenubarPrimitive.Menu>
+          </MenuRootContext.Provider>
+        </MenubarMenuContext.Provider>
+      )}
+    </>
   );
 }
 MenubarMenu.displayName = "Menubar.Menu";
@@ -749,6 +779,11 @@ const MenubarAction = forwardRef<HTMLButtonElement, MenubarActionProps>(
     const elementRef = useRef<HTMLButtonElement | null>(null);
     const mergedRef = useMemo(() => mergeRefs(ref, elementRef), [ref]);
     const register = bar?.register;
+    const overflowMenu = bar?.overflowMenu ?? false;
+    const registerItem = bar?.registerItem;
+    const unregisterItem = bar?.unregisterItem;
+    const slotRef = useRef<HTMLSpanElement | null>(null);
+    const hidden = bar?.hiddenIds.has(name) ?? false;
     useEffect(
       () =>
         register?.(name, {
@@ -758,6 +793,19 @@ const MenubarAction = forwardRef<HTMLButtonElement, MenubarActionProps>(
         }),
       [register, name],
     );
+    // What the "More" menu needs to draw this action as an item.
+    useEffect(() => {
+      if (!overflowMenu || !registerItem) return;
+      registerItem(name, {
+        kind: "action",
+        label: children,
+        icon,
+        disabled,
+        onSelect,
+        slot: () => slotRef.current,
+      });
+    }, [overflowMenu, registerItem, name, children, icon, disabled, onSelect]);
+    useEffect(() => () => unregisterItem?.(name), [unregisterItem, name]);
     const hasReason =
       disabled && disabledReason !== undefined && disabledReason !== null;
     const unavailable = disabled || hasReason;
@@ -813,15 +861,20 @@ const MenubarAction = forwardRef<HTMLButtonElement, MenubarActionProps>(
       </MenubarPrimitive.Trigger>
     );
     return (
-      <MenubarPrimitive.Menu value={name}>
-        {hasReason ? (
-          <Tooltip content={disabledReason} side="bottom">
-            {action}
-          </Tooltip>
-        ) : (
-          action
+      <>
+        {overflowMenu && <span hidden ref={slotRef} data-menubar-slot="" />}
+        {hidden ? null : (
+          <MenubarPrimitive.Menu value={name}>
+            {hasReason ? (
+              <Tooltip content={disabledReason} side="bottom">
+                {action}
+              </Tooltip>
+            ) : (
+              action
+            )}
+          </MenubarPrimitive.Menu>
         )}
-      </MenubarPrimitive.Menu>
+      </>
     );
   },
 );
@@ -983,9 +1036,7 @@ const MenubarContent = forwardRef<HTMLDivElement, MenubarContentProps>(
               {/* The kit is provided here, so the items inside the panel draw with the bar's parts, while a `Menu` in a
                   panel's own content keeps the dropdown's. */}
               <MenuPrimitiveContext.Provider value={primitiveKit}>
-                <MenuShortcutFormatContext.Provider value>
-                  <ButtonGroupReset>{children}</ButtonGroupReset>
-                </MenuShortcutFormatContext.Provider>
+                <ButtonGroupReset>{children}</ButtonGroupReset>
               </MenuPrimitiveContext.Provider>
             </MenuViewport>
           </MenuSizeContext.Provider>

@@ -1,5 +1,10 @@
-import { createContext, type MutableRefObject } from "react";
-import type { MenubarController, MenubarSize } from "./Menubar.types";
+import type { Icon as PhosphorIcon } from "@dbm-system/icons";
+import { createContext, type MutableRefObject, type ReactNode } from "react";
+import type {
+  MenubarActionProps,
+  MenubarController,
+  MenubarSize,
+} from "./Menubar.types";
 
 /** What a menu or an action tells the bar about itself, so the bar can open it from code and refuse to open what can't open. */
 export interface MenubarEntry {
@@ -9,6 +14,26 @@ export interface MenubarEntry {
   blocked: () => boolean;
   /** Set by the bar before it opens the menu from code, and read once by the panel as it takes focus. */
   focusFirstRef?: MutableRefObject<boolean>;
+}
+
+/**
+ * What a menu or an action tells the bar about itself while `overflow="menu"` is on, so the bar can draw it in its "More"
+ * menu without reading its own children: a menu is a submenu there, an action an item.
+ */
+export interface MenubarItemInfo {
+  kind: "menu" | "action";
+  /** A menu's `value`. */
+  value?: string;
+  label: ReactNode;
+  icon: PhosphorIcon | undefined;
+  disabled: boolean;
+  /** A menu's items, and the size its own `Menubar.Content` gave them. */
+  content?: ReactNode;
+  contentSize?: MenubarSize;
+  /** An action's `onSelect`. */
+  onSelect?: MenubarActionProps["onSelect"];
+  /** The marker the item leaves in the bar, which says where it is among the others even while it is not drawn. */
+  slot: () => HTMLElement | null;
 }
 
 /** What the bar shares with its menus: the open menu, how to change it, and the size and direction they follow. */
@@ -26,6 +51,13 @@ export interface MenubarContextValue {
    * returning it to its trigger, as Radix does. Reads and clears the note.
    */
   takeFocusHandoff: () => boolean;
+  /** Whether menus and actions move into a "More" menu when they do not fit. */
+  overflowMenu: boolean;
+  /** The items (by id) that are in the "More" menu now, and so are not drawn in the bar. */
+  hiddenIds: ReadonlySet<string>;
+  /** Tells the bar what an item is, for the "More" menu; call again when it changes. */
+  registerItem: (id: string, info: MenubarItemInfo) => void;
+  unregisterItem: (id: string) => void;
 }
 
 export const MenubarContext = createContext<MenubarContextValue | null>(null);

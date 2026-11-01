@@ -19,7 +19,6 @@ import { menubarPlaygroundSnippet, menubarSnippets } from "./Menubar.snippets";
 import {
   barPropsOf,
   DemoMenus,
-  overflowDemoChildren,
   ViewMenu,
   type MenubarStageArgs,
 } from "./MenubarStoryKit";
@@ -153,7 +152,6 @@ export const Sizes: Story = {
           aria-label={`Application menu, ${size}`}
           {...barPropsOf(args)}
           size={size}
-          surface="outlined"
         >
           <DemoMenus />
         </Menubar>
@@ -283,17 +281,6 @@ function ControlledBar(args: MenubarStageArgs) {
         justifyItems: "start",
       }}
     >
-      <Menubar
-        aria-label="Application menu"
-        {...barPropsOf(args)}
-        value={open}
-        onValueChange={(next) => {
-          setOpen(next);
-          args.onValueChange?.(next);
-        }}
-      >
-        <DemoMenus />
-      </Menubar>
       <Button variant="secondary" size="sm" onClick={() => setOpen("edit")}>
         Open the Edit menu from code
       </Button>
@@ -305,6 +292,17 @@ function ControlledBar(args: MenubarStageArgs) {
       >
         Open menu: {open === "" ? "none" : open} (Alt+F opens File)
       </span>
+      <Menubar
+        aria-label="Application menu"
+        {...barPropsOf(args)}
+        value={open}
+        onValueChange={(next) => {
+          setOpen(next);
+          args.onValueChange?.(next);
+        }}
+      >
+        <DemoMenus />
+      </Menubar>
     </div>
   );
 }
@@ -315,16 +313,19 @@ export const Controlled: Story = {
   render: (args) => <ControlledBar {...args} />,
 };
 
+// A box of a fixed width, drawn so the room the bar has to fit in can be seen whatever its surface.
+const roomStyle = {
+  inlineSize: 220,
+  border: "var(--dbm-border-width-1) dashed var(--dbm-border-default)",
+  padding: "var(--dbm-space-1)",
+} as const;
+
 export const Overflowing: Story = {
   name: "A bar wider than its room",
   parameters: { docs: { source: { code: menubarSnippets.overflowing } } },
   render: (args) => (
-    <div style={{ inlineSize: 220 }}>
-      <Menubar
-        aria-label="Application menu"
-        {...barPropsOf(args)}
-        surface="outlined"
-      >
+    <div style={roomStyle}>
+      <Menubar aria-label="Application menu" {...barPropsOf(args)}>
         <DemoMenus>
           <ViewMenu />
           <Menubar.Menu value="window">
@@ -474,13 +475,6 @@ function ControllerBar(args: MenubarStageArgs) {
         justifyItems: "start",
       }}
     >
-      <Menubar
-        aria-label="Application menu"
-        {...barPropsOf(args)}
-        controllerRef={bar}
-      >
-        <DemoMenus />
-      </Menubar>
       <div style={{ display: "flex", gap: "var(--dbm-space-2)" }}>
         <Button
           variant="secondary"
@@ -504,6 +498,13 @@ function ControllerBar(args: MenubarStageArgs) {
           Close
         </Button>
       </div>
+      <Menubar
+        aria-label="Application menu"
+        {...barPropsOf(args)}
+        controllerRef={bar}
+      >
+        <DemoMenus />
+      </Menubar>
     </div>
   );
 }
@@ -518,14 +519,22 @@ export const OverflowMenu: Story = {
   name: "Menus that do not fit move into a More menu",
   parameters: { docs: { source: { code: menubarSnippets.overflowMenu } } },
   render: (args) => (
-    <div style={{ inlineSize: 220 }}>
+    <div style={roomStyle}>
       <Menubar
         aria-label="Application menu"
         {...barPropsOf(args)}
-        surface="outlined"
         overflow="menu"
       >
-        {overflowDemoChildren}
+        <DemoMenus>
+          <ViewMenu />
+          <Menubar.Menu value="window">
+            <Menubar.Trigger>Window</Menubar.Trigger>
+            <Menubar.Content>
+              <Menubar.Item>Minimize</Menubar.Item>
+            </Menubar.Content>
+          </Menubar.Menu>
+          <Menubar.Action>Help</Menubar.Action>
+        </DemoMenus>
       </Menubar>
     </div>
   ),
@@ -542,12 +551,7 @@ export const Sticky: Story = {
         border: "var(--dbm-border-width-1) solid var(--dbm-border-default)",
       }}
     >
-      <Menubar
-        aria-label="Application menu"
-        {...barPropsOf(args)}
-        surface="outlined"
-        sticky
-      >
+      <Menubar aria-label="Application menu" {...barPropsOf(args)} sticky>
         <DemoMenus />
       </Menubar>
       <div

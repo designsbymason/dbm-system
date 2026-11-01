@@ -115,7 +115,7 @@ ${editMenu}`,
 ${menubar("controllerRef={bar}", `${fileMenu}\n${editMenu}`)}`,
 
   overflowMenu: `{/* overflow="menu" moves the menus and actions that do not fit into a "More" menu, each menu as a
-    submenu. They have to be direct children of the bar, and the bar's container has to be sized by the layout. */}
+    submenu. The bar's container has to be sized by the layout, not by the bar. */}
 <div style={{ inlineSize: 240 }}>
 ${menubar('overflow="menu"', `${fileMenu}\n${editMenu}\n  {/* …more menus */}`)}
 </div>`,

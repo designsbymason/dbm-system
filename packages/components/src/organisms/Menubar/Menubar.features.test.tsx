@@ -422,7 +422,7 @@ describe("shortcut hints written with mod", () => {
     expect(screen.queryByText("mod+s")).not.toBeInTheDocument();
   });
 
-  it("are left as written in a Menu", async () => {
+  it("are drawn the same in a Menu", async () => {
     const user = userEvent.setup();
     render(
       <Menu>
@@ -433,7 +433,7 @@ describe("shortcut hints written with mod", () => {
       </Menu>,
     );
     await user.click(screen.getByRole("button", { name: "Actions" }));
-    expect(await screen.findByText("mod+s")).toBeInTheDocument();
+    expect(await screen.findByText("Ctrl+S")).toBeInTheDocument();
   });
 
   it("use the command key on an Apple platform", async () => {
@@ -532,6 +532,43 @@ describe("overflow menu", () => {
     expect(
       screen.queryByRole("menuitem", { name: "More" }),
     ).not.toBeInTheDocument();
+  });
+
+  it("works with menus and actions inside a component of the app's own", async () => {
+    stubWidths({ current: 200 });
+    const user = userEvent.setup();
+    function Menus() {
+      return (
+        <>
+          {["file", "edit", "view"].map((name) => (
+            <Menubar.Menu key={name} value={name}>
+              <Menubar.Trigger>{name}</Menubar.Trigger>
+              <Menubar.Content>
+                <Menubar.Item>{`${name} item`}</Menubar.Item>
+              </Menubar.Content>
+            </Menubar.Menu>
+          ))}
+          <Menubar.Action>Help</Menubar.Action>
+        </>
+      );
+    }
+    render(
+      <div data-room="">
+        <Menubar aria-label="Application menu" overflow="menu">
+          <Menus />
+        </Menubar>
+      </div>,
+    );
+    await waitFor(() =>
+      expect(screen.getAllByRole("menuitem")).toHaveLength(2),
+    );
+    expect(item("file")).toBeInTheDocument();
+    await user.click(item("More"));
+    expect(
+      await screen.findByRole("menuitem", { name: "edit" }),
+    ).toHaveAttribute("aria-haspopup", "menu");
+    expect(screen.getByRole("menuitem", { name: "view" })).toBeInTheDocument();
+    expect(screen.getByRole("menuitem", { name: "Help" })).toBeInTheDocument();
   });
 
   it("names the More menu from labels", async () => {

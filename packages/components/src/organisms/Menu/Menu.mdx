@@ -371,6 +371,7 @@ The submenu's panel. Also accepts any other native `<div>` attribute beyond what
 - Don't nest submenus more than one deep without a reason: each level is another hover and another key
   press to reach an action.
 - Don't rely on a `shortcut` hint to make a key work. It only displays the key; bind it yourself.
+- Write a hint that differs by platform with `mod` (`shortcut="mod+s"`): it is drawn as ⌘S on an Apple platform and Ctrl+S elsewhere, and any other text is drawn as written.
 - Don't put the `Dialog` an item opens inside the menu's content: it unmounts with the menu. Keep it beside the
   menu, opened from state (see Code examples).
 - Don't use a `description` for text a person must read to choose: it is read as a description, not as part

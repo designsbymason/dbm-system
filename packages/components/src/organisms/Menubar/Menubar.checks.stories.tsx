@@ -9,7 +9,7 @@ import { Dialog } from "../Dialog";
 import { Menu } from "../Menu";
 import { Menubar } from "./Menubar";
 import type { MenubarSize } from "./Menubar.types";
-import { DemoMenus, overflowDemoChildren, ViewMenu } from "./MenubarStoryKit";
+import { DemoMenus, ViewMenu } from "./MenubarStoryKit";
 
 // Real-browser checks for what jsdom can't evaluate: layout, the stacking above a dialog, a real pointer, computed
 // style from the cascade, scrolling and forced colours. Hidden from the sidebar and the Docs page, and still run as
@@ -582,7 +582,16 @@ const ManyMenus = ({ room }: { room: number }) => (
   <Page>
     <div data-room="" style={{ inlineSize: room }}>
       <Menubar aria-label="Application menu" surface="outlined" overflow="menu">
-        {overflowDemoChildren}
+        <DemoMenus>
+          <ViewMenu />
+          <Menubar.Menu value="window">
+            <Menubar.Trigger>Window</Menubar.Trigger>
+            <Menubar.Content>
+              <Menubar.Item>Minimize</Menubar.Item>
+            </Menubar.Content>
+          </Menubar.Menu>
+          <Menubar.Action>Help</Menubar.Action>
+        </DemoMenus>
       </Menubar>
     </div>
   </Page>
@@ -817,7 +826,7 @@ export const AStickyBarStaysAtTheTop: Story = {
 };
 
 export const ShortcutHintsFollowThePlatform: Story = {
-  name: "A hint written with mod is drawn for the platform in a menubar, and as written in a Menu",
+  name: "A hint written with mod is drawn for the platform in a menubar and in a Menu",
   render: () => (
     <Page>
       <Menubar aria-label="Application menu">
@@ -850,7 +859,9 @@ export const ShortcutHintsFollowThePlatform: Story = {
     await closeMenu();
     await realClick(body.getByRole("button", { name: "Actions" }));
     const menu = await openMenu();
-    await expect(within(menu).getByText("mod+shift+s")).toBeInTheDocument();
+    await expect(
+      within(menu).getByText(apple ? "⌘⇧S" : "Ctrl+Shift+S"),
+    ).toBeInTheDocument();
     await closeMenu();
   },
 };

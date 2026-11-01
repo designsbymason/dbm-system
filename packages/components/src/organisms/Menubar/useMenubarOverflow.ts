@@ -8,7 +8,7 @@ import {
 } from "react";
 
 // `useLayoutEffect` warns on the server; the bar draws every item there and measures once it is in a browser.
-const useIsomorphicLayoutEffect =
+export const useIsomorphicLayoutEffect =
   typeof document === "undefined" ? useEffect : useLayoutEffect;
 
 const pixels = (value: string) => Number.parseFloat(value) || 0;
@@ -36,7 +36,10 @@ export function useMenubarOverflow({
   /** Changes when what the items are drawn as changes, so their remembered widths are forgotten. */
   signature: string;
 }): number {
-  const [visible, setVisible] = useState(count);
+  // How many were drawn for how many items: items that have just come (or gone) are all drawn until they are measured.
+  const [state, setState] = useState({ visible: count, count });
+  const visible =
+    state.count === count ? Math.min(state.visible, count) : count;
   const widths = useRef<number[]>([]);
   const moreWidth = useRef(0);
   const latest = useRef({ visible, count });
@@ -46,12 +49,14 @@ export function useMenubarOverflow({
     if (!enabled || !bar) return;
     const { visible: shown, count: total } = latest.current;
     const items = [
-      ...bar.querySelectorAll<HTMLElement>(":scope > [data-menubar-item]"),
+      ...bar.querySelectorAll<HTMLElement>(
+        "[data-menubar-item]:not([data-menubar-more])",
+      ),
     ];
     // Only a draw of every item has every width to read.
     if (shown >= total && items.length === total)
       widths.current = items.map((item) => item.getBoundingClientRect().width);
-    const more = bar.querySelector<HTMLElement>(":scope > [data-menubar-more]");
+    const more = bar.querySelector<HTMLElement>("[data-menubar-more]");
     if (more) moreWidth.current = more.getBoundingClientRect().width;
     if (widths.current.length !== total) return;
     const parent = bar.parentElement;
@@ -91,7 +96,7 @@ export function useMenubarOverflow({
         ? items.findIndex((item) => item === active || item.contains(active))
         : -1;
     if (next < shown && focused >= next) return;
-    setVisible(next);
+    setState({ visible: next, count: total });
   }, [barRef, enabled]);
 
   useIsomorphicLayoutEffect(() => {
@@ -102,7 +107,7 @@ export function useMenubarOverflow({
   useIsomorphicLayoutEffect(() => {
     widths.current = [];
     moreWidth.current = 0;
-    setVisible(count);
+    setState({ visible: count, count });
   }, [signature, count]);
 
   useIsomorphicLayoutEffect(() => {
@@ -126,5 +131,5 @@ export function useMenubarOverflow({
     };
   }, [barRef, enabled, fit]);
 
-  return enabled ? Math.min(visible, count) : count;
+  return enabled ? visible : count;
 }

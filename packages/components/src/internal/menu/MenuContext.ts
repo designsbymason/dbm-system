@@ -79,12 +79,6 @@ export interface MenuSubContextValue {
 export const MenuSubContext = createContext<MenuSubContextValue | null>(null);
 
 /** The size set by the nearest `Menu.Content` or `Menu.SubContent`, read by items, labels and the icons inside them. */
-/**
- * Whether a shortcut hint written with `mod` (`"mod+s"`) is drawn for the platform (⌘S on an Apple platform, Ctrl+S
- * elsewhere). Off by default, so `Menu` and `ContextMenu` draw a hint exactly as written; `Menubar` turns it on.
- */
-export const MenuShortcutFormatContext = createContext(false);
-
 export const MenuSizeContext = createContext<MenuSize>("md");
 
 /**

@@ -38,7 +38,6 @@ import {
   MenuPrimitiveContext,
   MenuRadioValueContext,
   MenuRootContext,
-  MenuShortcutFormatContext,
   MenuSizeContext,
   MenuSubContext,
   useControllableState,
@@ -103,10 +102,9 @@ function ItemBody({
   children,
 }: ItemBodyProps) {
   const hasDescription = description !== undefined && description !== null;
-  const formatShortcuts = useContext(MenuShortcutFormatContext);
   const apple = useIsApplePlatform();
   const shortcutText =
-    formatShortcuts && typeof shortcut === "string" && /(^|\+)mod\+/i.test(shortcut) ? formatShortcut(shortcut, apple) : shortcut;
+    typeof shortcut === "string" && /(^|\+)mod\+/i.test(shortcut) ? formatShortcut(shortcut, apple) : shortcut;
   // A pending item shows its spinner without moving anything: in the place of its icon when it has one, and otherwise
   // over the end of the row, where the trailing content and shortcut stay (hidden, still taking their room) so the row
   // and the panel it widens keep their size.

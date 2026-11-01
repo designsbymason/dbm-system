@@ -220,7 +220,9 @@ interface MenuItemBaseProps
   icon?: PhosphorIcon;
   /**
    * A shortcut hint shown at the item's end (`"⌘C"`). It displays the shortcut and does not bind it: wire the
-   * key yourself, and pass `aria-keyshortcuts` on the item if it should be announced.
+   * key yourself, and pass `aria-keyshortcuts` on the item if it should be announced. A string written with `mod`
+   * (`"mod+s"`, `"mod+shift+z"`) is drawn for the platform, as `⌘S` on an Apple platform and `Ctrl+S` elsewhere;
+   * any other text is drawn as written.
    */
   shortcut?: ReactNode;
   /**

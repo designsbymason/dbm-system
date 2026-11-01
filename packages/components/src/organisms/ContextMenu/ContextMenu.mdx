@@ -361,6 +361,7 @@ Each demo has an area to press in. A story's menu is closed until you open it.
   press or a key.
 - Don't put a form or arbitrary content in it. A context menu holds `menuitem`s only.
 - Don't rely on a `shortcut` hint to make a key work. It only displays the key; bind it yourself.
+- Write a hint that differs by platform with `mod` (`shortcut="mod+s"`): it is drawn as ⌘S on an Apple platform and Ctrl+S elsewhere, and any other text is drawn as written.
 - Don't set `open` to open it from code: with no press to place it, it is drawn at the top-left corner of the page.
   Use the controller's `openAt` or `openFrom`, which open it where you say. `open` is for following and closing it.
 - Don't turn off the browser's menu on a whole page. Wrap only the thing that has actions.
