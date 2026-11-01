@@ -519,9 +519,27 @@
 
 /* --- A split trigger: the text is a link, and a caret button beside it opens the panel -------------------------------------- */
 
+/* The two halves share one surface, so a hover, an open panel or the current page tints both at the height of the taller. The halves
+   draw nothing of their own. */
 .split {
   display: inline-flex;
-  align-items: center;
+  align-items: stretch;
+  border-radius: var(--dbm-radius-md);
+  transition: background-color var(--dbm-motion-duration-fast) var(--dbm-motion-easing-standard);
+}
+
+.split.rounded {
+  border-radius: var(--dbm-radius-full);
+}
+
+.split:hover,
+.split[data-open] {
+  background-color: var(--dbm-bg-brand-subtle);
+}
+
+.split .link,
+.split .link:hover {
+  background-color: transparent;
 }
 
 .splitLink {
@@ -531,23 +549,55 @@
 }
 
 .splitCaret {
+  align-self: stretch;
   border-start-start-radius: 0;
   border-end-start-radius: 0;
   padding-inline: var(--dbm-space-2);
 }
 
-.splitLink.rounded,
-.splitCaret.rounded {
+.split .splitLink.rounded,
+.split .splitCaret.rounded {
   border-radius: var(--dbm-radius-full);
 }
 
-.split[data-open] .splitLink,
-.split[data-open] .splitCaret {
+/* The current page in the subtle and solid looks is the surface's fill, not the link's. */
+.splitSubtle,
+.splitSubtle:hover,
+.splitSubtle[data-open] {
   background-color: var(--dbm-bg-brand-subtle);
 }
 
-.split[data-open] .splitLink.current {
-  background-color: var(--dbm-bg-brand-subtle);
+.splitSubtle:hover,
+.splitSubtle[data-open] {
+  background-color: var(--dbm-bg-brand-subtle-hover);
+}
+
+.splitSubtle .splitCaret {
+  color: var(--dbm-text-brand);
+}
+
+.splitSolid,
+.splitSolid[data-open] {
+  background-color: var(--dbm-bg-brand);
+}
+
+.splitSolid:hover,
+.splitSolid[data-open] {
+  background-color: var(--dbm-bg-brand-hover);
+}
+
+.splitSolid .splitCaret,
+.splitSolid .splitLink {
+  color: var(--dbm-text-on-brand);
+}
+
+.splitSolid .link:focus-visible {
+  outline-color: var(--dbm-icon-on-brand);
+  outline-offset: calc(-1 * var(--dbm-border-width-2));
+}
+
+.splitCurrent .splitCaret {
+  color: inherit;
 }
 
 /* --- Featured block and footer in a panel ------------------------------------------------------------------------------------- */
@@ -628,6 +678,15 @@
 .vertical .trigger {
   justify-content: space-between;
   inline-size: 100%;
+}
+
+/* In a column the current line is a bar at the start edge (the left in left-to-right text, the right in right-to-left), not under the text. */
+.vertical .currentUnderline::after {
+  inset-inline: auto;
+  inset-inline-start: 0;
+  inset-block: var(--dbm-space-2);
+  inline-size: var(--dbm-border-width-2);
+  block-size: auto;
 }
 
 .vertical .caret {

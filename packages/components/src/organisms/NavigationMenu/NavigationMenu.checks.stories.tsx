@@ -3,7 +3,7 @@ import { expect, userEvent, waitFor, within } from "storybook/test";
 import { send } from "../../molecules/CodeBlock/browserProtocol";
 import { Navbar } from "../Navbar";
 import { NavigationMenu } from "./NavigationMenu";
-import { Aligned, DemoItems, DemoMenu, MenuStage, RichItems, TallItems } from "./NavigationMenuStoryKit";
+import { Aligned, DemoItems, DemoMenu, DemoNavigation, MenuStage, RichItems, TallItems } from "./NavigationMenuStoryKit";
 
 // Hidden real-browser checks (guidelines/adr/0013): what jsdom can't do (layout, the cascade, a real pointer, forced colours,
 // direction). They run in the `storybook` (Chromium) project; the test window is 1200px wide unless a story pins another.
@@ -658,6 +658,127 @@ export const ASplitTriggerOpensOnTheLinkAndTheCaret: Story = {
     // and the caret is a button of its own
     await press(caret);
     await canvas.findByRole("link", { name: /Analytics/ });
+    await closeAndWait(canvasElement);
+  },
+};
+
+/** The colour a token paints, as the browser computes it. */
+function tokenFill(name: string): string {
+  const probe = document.createElement("div");
+  probe.style.cssText = `position:absolute;visibility:hidden;background-color:var(${name})`;
+  document.body.append(probe);
+  const color = getComputedStyle(probe).backgroundColor;
+  probe.remove();
+  return color;
+}
+
+export const VerticalMarksTheCurrentPageOnTheStartEdge: Story = {
+  name: "In a vertical menu the current page is a bar on the start edge, left to right and right to left",
+  render: () => (
+    <div style={{ display: "flex", flexDirection: "column", gap: "var(--dbm-space-6)", inlineSize: "14rem" }}>
+      <DemoMenu orientation="vertical" aria-label="Column, left to right" />
+      <DemoMenu orientation="vertical" dir="rtl" aria-label="Column, right to left" />
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    const edge = tokenPx("--dbm-border-width-2");
+    for (const [name, rtl] of [["Column, left to right", false], ["Column, right to left", true]] as const) {
+      const menu = within(canvasElement).getByRole("navigation", { name });
+      const current = within(menu).getByRole("link", { name: "Pricing" });
+      const link = current.getBoundingClientRect();
+      const after = getComputedStyle(current, "::after");
+      // a vertical bar, as wide as the line and as tall as the link less its padding
+      expect(Number.parseFloat(after.width)).toBeCloseTo(edge, 0);
+      expect(Number.parseFloat(after.height)).toBeGreaterThan(edge * 4);
+      // on the left in left-to-right text and the right in right-to-left
+      expect(Number.parseFloat(rtl ? after.right : after.left)).toBeLessThanOrEqual(1);
+      expect(after.bottom === "auto" || Number.parseFloat(after.bottom) > 0).toBe(true);
+      expect(link.width).toBeGreaterThan(0);
+    }
+  },
+};
+
+export const AClippingBoxEndsThePanelsRoom: Story = {
+  name: "Inside a box narrower than the window the panel ends at the box's edge, its groups wrapping and nothing cut off",
+  render: () => (
+    <div style={{ inlineSize: "36rem", overflow: "hidden", position: "relative", blockSize: "32rem" }} data-testid="box">
+      <DemoNavigation>
+        <RichItems />
+      </DemoNavigation>
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    await parkPointer();
+    expect(window.innerWidth).toBeGreaterThanOrEqual(768);
+    const canvas = within(canvasElement);
+    const box = canvas.getByTestId("box");
+    await press(canvas.getByRole("button", { name: /Products/ }));
+    const link = await canvas.findByRole("link", { name: /Analytics/ });
+    const area = link.closest<HTMLElement>('[class*="_viewport_"]')!;
+    await settled(area);
+    await waitFor(() => {
+      expect(area.getBoundingClientRect().right).toBeLessThanOrEqual(box.getBoundingClientRect().right + 1);
+      // the footer's text and the feature are inside the panel and the box, whole
+      for (const part of [...area.querySelectorAll<HTMLElement>('[class*="_footer_"] span, [class*="_featureBody_"]')]) {
+        expect(part.getBoundingClientRect().right).toBeLessThanOrEqual(area.getBoundingClientRect().right + 1);
+      }
+    }, { timeout: 5000 });
+    await closeAndWait(canvasElement);
+  },
+};
+
+export const ASplitTriggerIsOneSurface: Story = {
+  name: "A split trigger's two halves are one surface: the same height as it, and a hover or an open panel tints the whole",
+  render: () => (
+    <MenuStage>
+      <DemoNavigation>
+        <RichItems splitProducts />
+      </DemoNavigation>
+    </MenuStage>
+  ),
+  play: async ({ canvasElement }) => {
+    await parkPointer();
+    const canvas = within(canvasElement);
+    const link = canvas.getByRole("link", { name: /Products/ });
+    const caret = canvas.getByRole("button", { name: "Products menu" });
+    const wrapper = link.parentElement!;
+    const height = Math.round(wrapper.getBoundingClientRect().height);
+    // the badge makes the label taller than the caret's own content, and the caret still fills the surface
+    expect(Math.round(link.getBoundingClientRect().height)).toBe(height);
+    expect(Math.round(caret.getBoundingClientRect().height)).toBe(height);
+    const tint = tokenFill("--dbm-bg-brand-subtle");
+    expect(getComputedStyle(wrapper).backgroundColor).not.toBe(tint);
+    await pointAt(caret);
+    await waitFor(() => expect(getComputedStyle(wrapper).backgroundColor).toBe(tint));
+    // only the surface is filled: neither half paints a fill of its own
+    expect(getComputedStyle(link).backgroundColor).toBe("rgba(0, 0, 0, 0)");
+    expect(getComputedStyle(caret).backgroundColor).toBe("rgba(0, 0, 0, 0)");
+    await parkPointer();
+    await waitFor(() => expect(canvas.queryByRole("link", { name: /Analytics/ })).not.toBeInTheDocument(), { timeout: 4000 });
+  },
+};
+
+export const AChosenLinkBecomesTheCurrentPage: Story = {
+  name: "In a demo, choosing a link makes it the current page and its section's trigger too",
+  render: () => (
+    <MenuStage>
+      <DemoMenu />
+    </MenuStage>
+  ),
+  play: async ({ canvasElement }) => {
+    await parkPointer();
+    const canvas = within(canvasElement);
+    const before = window.location.href;
+    expect(canvas.getByRole("link", { name: "Pricing" })).toHaveAttribute("aria-current", "page");
+    const trigger = canvas.getByRole("button", { name: "Products" });
+    await press(trigger);
+    await userEvent.click(await canvas.findByRole("link", { name: /Security/ }));
+    await waitFor(() => expect(trigger).toHaveAttribute("aria-expanded", "false"));
+    expect(canvas.getByRole("link", { name: "Pricing" })).not.toHaveAttribute("aria-current");
+    expect(trigger.className).toMatch(/currentUnderline/);
+    await press(trigger);
+    expect(await canvas.findByRole("link", { name: /Security/ })).toHaveAttribute("aria-current", "page");
+    expect(window.location.href).toBe(before);
     await closeAndWait(canvasElement);
   },
 };

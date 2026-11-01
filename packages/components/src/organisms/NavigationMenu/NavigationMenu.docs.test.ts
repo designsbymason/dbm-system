@@ -64,3 +64,14 @@ describe("NavigationMenu's Properties tables", () => {
     expect(orderIn(orderName).sort()).toEqual([...declared].sort());
   });
 });
+
+// The Controls panel lists the Playground's props in the order its meta writes them, so that order is held to the Properties table's.
+describe("NavigationMenu's Controls panel", () => {
+  it("lists the Playground's props in the order of the Properties table", () => {
+    const stories = readFileSync(join(folder, "NavigationMenu.stories.tsx"), "utf8");
+    const block = /\n {2}argTypes: \{\n(.*?)\n {2}\},\n {2}args: \{/s.exec(stories)?.[1] ?? "";
+    const keys = [...block.matchAll(/^ {4}("[^"]+"|[A-Za-z]+): /gm)].map((match) => (match[1] as string).replace(/"/g, ""));
+    expect(keys.length).toBeGreaterThan(20);
+    expect(keys).toEqual(orderIn("propOrder"));
+  });
+});

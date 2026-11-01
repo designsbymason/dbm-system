@@ -209,11 +209,13 @@ export function navigationMenuPlaygroundSnippet(args: {
   if (args.dir !== undefined && args.dir !== "ltr") attributes.push(`dir=${quote(args.dir)}`);
   const [first, ...rest] = attributes;
   const opening = rest.length === 0 ? `<NavigationMenu ${first}>` : `<NavigationMenu ${first}\n  ${rest.join("\n  ")}\n>`;
+  // With a path the menu finds the current page itself; without one the link says so.
+  const hasPath = typeof args.currentPath === "string" && args.currentPath !== "";
   return `{/* ChartBarIcon and LightningIcon come from @dbm-system/icons */}
 ${opening}
   <NavigationMenu.List>
 ${panel}
-${pricing(" current")}
+${pricing(hasPath ? "" : " current")}
   </NavigationMenu.List>
 </NavigationMenu>`;
 }

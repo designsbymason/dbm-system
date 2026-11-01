@@ -68,6 +68,12 @@ const currentVariantClass: Record<NavigationMenuCurrentVariant, string> = {
   solid: styles.currentSolid!,
 };
 
+const splitVariantClass: Record<NavigationMenuCurrentVariant, string> = {
+  subtle: styles.splitSubtle!,
+  underline: styles.splitUnderline!,
+  solid: styles.splitSolid!,
+};
+
 const panelSizeClass: Record<NavigationMenuPanelSize, string | undefined> = {
   auto: undefined,
   sm: styles.panelSm,
@@ -100,7 +106,7 @@ function holdsCurrent(node: ReactNode, currentPath: string | undefined, mode: Na
   Children.forEach(node, (child) => {
     if (found || !isValidElement(child)) return;
     const props = child.props as { current?: boolean; href?: string; children?: ReactNode };
-    if (child.type === NavigationMenuLink) {
+    if (child.type === NavigationMenuLink || child.type === NavigationMenuTrigger) {
       found = props.current ?? matchesCurrent(currentPath, props.href, mode);
       return;
     }
@@ -113,7 +119,7 @@ function holdsCurrent(node: ReactNode, currentPath: string | undefined, mode: Na
 
 /**
  * Tells a panel how much room there is, in custom properties the stylesheet caps its width and height with: the width from the
- * element it hangs from to the screen's edge on the side it grows toward (centred, twice the distance to the nearer edge; beside a
+ * element it hangs from to the edge of what can show it (the window, narrowed by any ancestor that clips) on the side it grows toward (centred, twice the distance to the nearer edge; beside a
  * vertical menu, what is left beyond it), and the height below it. A panel is positioned from its menu or item and not from the
  * screen, so without them a panel wider or taller than the room runs off the screen instead of wrapping its links or scrolling. With
  * `auto` it also settles which side to grow toward. Written onto the element directly, from an effect, so a server render has none.
@@ -130,32 +136,52 @@ function useRoom(
   useEffect(() => {
     const element = ref.current;
     if (!enabled || element === null) return;
+    // What can show a panel is the window narrowed by every ancestor that clips: a box that scrolls or hides its overflow (a demo's
+    // frame, a page's scrolling main) ends the room at its own edge, which is narrower than the window.
+    const clippers: HTMLElement[] = [];
+    for (let node = element.parentElement; node !== null && node !== document.body && node !== document.documentElement; node = node.parentElement) {
+      const style = getComputedStyle(node);
+      if (style.overflowX !== "visible" || style.overflowY !== "visible") clippers.push(node);
+    }
     const update = () => {
+      let left = 0;
+      let top = 0;
+      let right = document.documentElement.clientWidth;
+      let bottom = window.innerHeight;
+      for (const clipper of clippers) {
+        const box = clipper.getBoundingClientRect();
+        left = Math.max(left, box.left);
+        top = Math.max(top, box.top);
+        right = Math.min(right, box.right);
+        bottom = Math.min(bottom, box.bottom);
+      }
       const rect = element.getBoundingClientRect();
-      const width = document.documentElement.clientWidth;
       const rtl = getComputedStyle(element).direction === "rtl";
-      const toEnd = rtl ? rect.right : width - rect.left;
-      const toStart = rtl ? width - rect.left : rect.right;
+      const toEnd = rtl ? rect.right - left : right - rect.left;
+      const toStart = rtl ? right - rect.left : rect.right - left;
       const side = choice === "auto" ? (toEnd < toStart ? "end" : "start") : choice;
       let room = side === "end" ? toStart : toEnd;
       if (side === "center") {
         const middle = (rect.left + rect.right) / 2;
-        room = 2 * Math.min(middle, width - middle);
+        room = 2 * Math.min(middle - left, right - middle);
       }
-      if (vertical) room = rtl ? rect.left : width - rect.right;
+      if (vertical) room = rtl ? rect.left - left : right - rect.right;
       element.style.setProperty("--navigation-menu-room", `${Math.max(0, Math.floor(room))}px`);
-      const blockRoom = vertical ? window.innerHeight - rect.top : window.innerHeight - rect.bottom;
+      const blockRoom = vertical ? bottom - rect.top : bottom - rect.bottom;
       element.style.setProperty("--navigation-menu-room-block", `${Math.max(0, Math.floor(blockRoom))}px`);
-      if (full) element.style.setProperty("--navigation-menu-full", `${element.offsetParent?.clientWidth ?? width}px`);
+      if (full) element.style.setProperty("--navigation-menu-full", `${element.offsetParent?.clientWidth ?? right - left}px`);
       setResolved(side);
     };
     update();
     window.addEventListener("resize", update);
+    const observer = new ResizeObserver(update);
+    for (const clipper of clippers) observer.observe(clipper);
     // The room below moves as the page scrolls, which only matters while a panel is open.
     if (open) window.addEventListener("scroll", update, { passive: true, capture: true });
     return () => {
       window.removeEventListener("resize", update);
       window.removeEventListener("scroll", update, { capture: true });
+      observer.disconnect();
       for (const name of ["--navigation-menu-room", "--navigation-menu-room-block", "--navigation-menu-full"]) element.style.removeProperty(name);
     };
   }, [ref, enabled, choice, open, vertical, full]);
@@ -641,11 +667,14 @@ const NavigationMenuTrigger = forwardRef<HTMLButtonElement, NavigationMenuTrigge
     },
     ref,
   ) => {
-    const { stacked, value: openValue, setValue, currentVariant, rounded, labels, delayDuration } = useNavigationMenuContext("NavigationMenu.Trigger");
+    const { stacked, value: openValue, setValue, currentVariant, rounded, labels, delayDuration, currentPath, currentMatch } =
+      useNavigationMenuContext("NavigationMenu.Trigger");
     const item = useContext(NavigationMenuItemContext);
     if (item === null) throw new Error("NavigationMenu.Trigger must be used inside NavigationMenu.Item.");
     const { open } = item;
-    const current = ownCurrent ?? item.holdsCurrent;
+    // A split trigger's own link counts too: the trigger is current when its address is the page or a link in its panel is.
+    const linkCurrent = ownCurrent ?? matchesCurrent(currentPath, href, currentMatch);
+    const current = ownCurrent ?? (linkCurrent || item.holdsCurrent);
     const intent = useIntent(onIntent);
     const hoverTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
     const closeTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
@@ -729,7 +758,7 @@ const NavigationMenuTrigger = forwardRef<HTMLButtonElement, NavigationMenuTrigge
       const link = (
         <SelectableAnchor
           href={href}
-          current={ownCurrent ?? false}
+          current={linkCurrent}
           disabled={disabled}
           onIntent={onIntent}
           onPointerEnter={linkEnter}
@@ -770,7 +799,10 @@ const NavigationMenuTrigger = forwardRef<HTMLButtonElement, NavigationMenuTrigge
         </Primitive.Trigger>
       );
       return (
-        <span className={styles.split} data-open={open || undefined}>
+        <span
+          className={cx(styles.split, rounded && styles.rounded, current && styles.splitCurrent, current && splitVariantClass[currentVariant])}
+          data-open={open || undefined}
+        >
           {link}
           {caretButton}
         </span>
