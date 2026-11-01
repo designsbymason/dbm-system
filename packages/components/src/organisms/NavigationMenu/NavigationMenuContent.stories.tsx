@@ -9,6 +9,12 @@ const meta: Meta<typeof NavigationMenu.Content> = {
   tags: ["!dev"],
   argTypes: {
     children: { control: false, description: "The panel's content: NavigationMenu.Groups, NavigationMenu.Links and anything else (a featured block)." },
+    layout: {
+      control: "radio",
+      options: ["stack", "columns"],
+      description: "How the children are laid out: stacked one under another, or side by side in columns that wrap. Not read in the stacked form.",
+      table: { defaultValue: { summary: '"stack"' } },
+    },
     forceMount: {
       control: false,
       description: "Keeps the panel mounted while it is closed, for an animation of your own or to keep its state.",

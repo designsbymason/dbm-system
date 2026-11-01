@@ -28,6 +28,7 @@ import type { NavbarContextValue } from "./NavbarContext";
 import { defaultLinkSize, linkIconSize, linkTrailingIconSize, stepDown } from "./linkSizes";
 import { Badge } from "../../atoms/Badge";
 import type { BadgeProps } from "../../atoms/Badge";
+import { blockDisabledClick, EXTERNAL_HREF_PATTERN } from "../../internal/linkGuard";
 import { NavigationEmbedContext } from "../../internal/navigationEmbed";
 import { NavbarRow } from "./NavbarRow";
 import { NavbarSearch } from "./NavbarSearch";
@@ -55,7 +56,6 @@ const stickyOffsetProperty = "--navbar-sticky-offset";
 /** The custom property holding how far the leading rows that scroll away take the bar above the top of the page. */
 const leadingHeightProperty = "--navbar-leading-height";
 
-const EXTERNAL_HREF_PATTERN = /^(https?:)?\/\//i;
 
 const hideBelowClass: Record<NonNullable<NavbarActionProps["hideBelow"]>, string | undefined> = {
   sm: styles.hideBelowSm,
@@ -527,12 +527,7 @@ const NavbarLink = forwardRef<HTMLAnchorElement, NavbarLinkProps>(
 
     // Capture-phase, so it runs before a slotted child's own `onClick` (a router's navigation), as `Link`'s does.
     const handleClickCapture = (event: MouseEvent<HTMLAnchorElement>) => {
-      if (disabled) {
-        event.preventDefault();
-        event.stopPropagation();
-        return;
-      }
-      onClickCapture?.(event);
+      if (!blockDisabledClick(event, disabled)) onClickCapture?.(event);
     };
 
     // A link chosen in the menu panel closes it. `preventDefault` doesn't stop that: a router's link calls it to navigate

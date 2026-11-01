@@ -1,6 +1,6 @@
 import type { Icon as PhosphorIcon } from "@dbm-system/icons";
 import type { Responsive } from "@dbm-system/utils";
-import type { ComponentPropsWithoutRef, ReactNode } from "react";
+import type { ComponentPropsWithoutRef, ReactNode, Ref } from "react";
 
 /** The size of the links and triggers, on the shared five-step scale (the steps `Menu` and `Navbar`'s links use). */
 export type NavigationMenuSize = "xs" | "sm" | "md" | "lg" | "xl";
@@ -18,8 +18,38 @@ export type NavigationMenuCurrentVariant = "subtle" | "underline" | "solid";
  */
 export type NavigationMenuPresentation = "mega" | "stacked";
 
-/** Where a panel sits under the menu: lined up with its start edge, or centred under it. */
-export type NavigationMenuPanelAlign = "start" | "center";
+/**
+ * Where a panel sits under the menu: lined up with its start edge, centred under it, lined up with its end edge, or `auto`, which is
+ * `start` unless there is more room toward the start side than the end side (a menu far along the bar), when it is `end`. All logical,
+ * so `start` is the right edge in right-to-left text.
+ */
+export type NavigationMenuPanelAlign = "start" | "center" | "end" | "auto";
+
+/**
+ * How wide a panel is: `auto` (as wide as its content wants, between the two measure tokens), `sm`, `md` or `lg` (one, two or three
+ * and a half times the least width: fixed widths, still kept on the screen), or `full` (the width of the nearest positioned ancestor:
+ * a `sticky` `Navbar` is one, and otherwise give the box to span `position: relative`).
+ */
+export type NavigationMenuPanelSize = "auto" | "sm" | "md" | "lg" | "full";
+
+/** The direction the triggers run: `horizontal` (a bar, panels under them) or `vertical` (a column, panels beside them). */
+export type NavigationMenuOrientation = "horizontal" | "vertical";
+
+/** How a panel lays out its children: stacked one under another, or side by side in columns that wrap. */
+export type NavigationMenuContentLayout = "stack" | "columns";
+
+/** How `currentPath` is matched against a link's `href`: the whole path, or the path and everything under it. */
+export type NavigationMenuCurrentMatch = "exact" | "prefix";
+
+/** What `controllerRef` gives code outside the menu. Its identity never changes, and its methods read the latest state. */
+export interface NavigationMenuController {
+  /** Opens the panel of the item with this value. Returns `false` when it was already the open one. */
+  open: (value: string) => boolean;
+  /** Closes the open panel. Returns `false` when none was open. */
+  close: () => boolean;
+  /** The value of the open item (`""` for none), as of the latest render. */
+  readonly value: string;
+}
 
 /** The reading direction. Not read from the page: pass `"rtl"` on a right-to-left page. */
 export type NavigationMenuDirection = "ltr" | "rtl";
@@ -30,6 +60,8 @@ export interface NavigationMenuLabels {
   navigation: string;
   /** Read out after an external link's text, in place of a visible cue. @default '(opens in a new tab)' */
   externalLink: string;
+  /** The name of a split trigger's caret button, given the trigger's text (or "Menu" when it is not plain text). @default (name) => `${name} menu` */
+  togglePanel: (name: string) => string;
 }
 
 export interface NavigationMenuProps extends Omit<ComponentPropsWithoutRef<"nav">, "dir" | "defaultValue" | "onChange"> {
@@ -47,11 +79,24 @@ export interface NavigationMenuProps extends Omit<ComponentPropsWithoutRef<"nav"
   /** Called with the value of the item whose panel is now open, or `""` when the last one closed. */
   onValueChange?: (value: string) => void;
   /**
+   * Called once a panel has finished opening, or the last one has finished closing, with its entrance or exit over: `onValueChange`
+   * says a change started, this says it is done. `value` is the item that opened, or that was open when it closed.
+   */
+  onOpenChangeComplete?: (open: boolean, value: string) => void;
+  /** Gives code outside the menu a way to open and close it — see {@link NavigationMenuController}. A controlled `value` does the same. */
+  controllerRef?: Ref<NavigationMenuController>;
+  /**
    * How the menu is drawn — see {@link NavigationMenuPresentation}. A width map (`{ base: "stacked", md: "mega" }`) chooses by
    * screen width, resolved in the browser like `Menu`'s `presentation`. Inside a `Navbar`'s menu panel it is always `stacked`.
    * @default 'mega'
    */
   presentation?: Responsive<NavigationMenuPresentation>;
+  /**
+   * Whether more than one item can be open at once in the stacked form. Off, opening one closes the others. Not read in the mega
+   * form, which shows one panel at a time.
+   * @default true
+   */
+  exclusive?: boolean;
   /**
    * One panel area, shared by every item and resized between them, or (`false`) a panel under its own item.
    * @default true
@@ -59,10 +104,38 @@ export interface NavigationMenuProps extends Omit<ComponentPropsWithoutRef<"nav"
   viewport?: boolean;
   /**
    * Where a panel sits — see {@link NavigationMenuPanelAlign}. In the shared panel area it lines up under the whole menu; with
-   * `viewport={false}` under its own item.
+   * `viewport={false}` under its own item, which can say otherwise itself.
    * @default 'start'
    */
   panelAlign?: NavigationMenuPanelAlign;
+  /**
+   * How wide a panel is — see {@link NavigationMenuPanelSize}. `full` spans the nearest positioned ancestor: a `sticky` `Navbar` is one, and otherwise the box to span needs `position: relative`.
+   * @default 'auto'
+   */
+  panelSize?: NavigationMenuPanelSize;
+  /**
+   * The direction the triggers run — see {@link NavigationMenuOrientation}. Vertical suits a side navigation on a wide screen; the
+   * stacked form is the phone one.
+   * @default 'horizontal'
+   */
+  orientation?: NavigationMenuOrientation;
+  /**
+   * Draws a small arrow from the open item's trigger to its panel, sliding between triggers. Needs the shared panel area and the
+   * horizontal direction.
+   * @default false
+   */
+  indicator?: boolean;
+  /**
+   * The path of the current page. A link whose `href` is this path is the current page without its own `current`, and the trigger of
+   * an item whose panel holds it is marked too. A link's own `current` (either value) wins. Only same-site paths are compared; a
+   * hash, a query and a trailing slash are ignored.
+   */
+  currentPath?: string;
+  /**
+   * How `currentPath` is matched — see {@link NavigationMenuCurrentMatch}.
+   * @default 'exact'
+   */
+  currentMatch?: NavigationMenuCurrentMatch;
   /**
    * The text size, icon size and padding of the triggers and links, on the shared five-step scale. Inside a `Navbar` the bar's
    * link size applies and this one is ignored.
@@ -129,6 +202,14 @@ export interface NavigationMenuItemProps extends Omit<ComponentPropsWithoutRef<"
   value?: string;
   /** A `NavigationMenu.Trigger` with its `NavigationMenu.Content`, or a `NavigationMenu.Link`. */
   children?: ReactNode;
+  /**
+   * Starts the item expanded in the stacked form. Left out, an item starts expanded when a link in its panel is the current page
+   * (from `currentPath` or a link's own `current`); `false` keeps it closed. Ignored once any item has been pressed, and when `value`
+   * is controlled.
+   */
+  defaultOpen?: boolean;
+  /** Where this item's panel sits when panels hang from their own items (`viewport={false}`), in place of the menu's `panelAlign`. */
+  panelAlign?: NavigationMenuPanelAlign;
   /** Extra class names for the item. */
   className?: string;
   /** Inline styles for the item. */
@@ -145,11 +226,30 @@ export interface NavigationMenuTriggerProps extends ComponentPropsWithoutRef<"bu
   /** An icon (a component reference) drawn before the text. */
   icon?: PhosphorIcon;
   /**
+   * A mark after the text (a count, a "New"), part of the trigger's name. A `Badge` you pass is drawn as written; anything else is
+   * the content of a solid brand badge.
+   */
+  badge?: ReactNode;
+  /**
+   * Makes a split trigger: the text is a link to this address and a caret button beside it opens the panel. Without it the whole
+   * trigger is the button. The link opens the panel too when the pointer rests on it.
+   */
+  href?: string;
+  /**
    * Marks the item whose panel holds the current page: tints or underlines the trigger in the menu's `currentVariant`. It sets no
-   * `aria-current`, since a button is not a page.
-   * @default false
+   * `aria-current`, since a button is not a page. Left out, it follows the item's panel: current when a link in it is.
    */
   current?: boolean;
+  /**
+   * Called when the person shows intent to open this item: the pointer has rested on the trigger for a moment, or keyboard focus
+   * arrives. Use it to prefetch what the panel's links lead to. It can fire more than once, so keep it idempotent.
+   */
+  onIntent?: () => void;
+  /**
+   * How long, in milliseconds, the pointer rests on this trigger before its panel opens, in place of the menu's `delayDuration`. A
+   * panel already open elsewhere is still replaced at once.
+   */
+  delayDuration?: number;
   /**
    * Stops the trigger opening its panel. A native `disabled` button, so it leaves the tab order.
    * @default false
@@ -173,8 +273,16 @@ export interface NavigationMenuTriggerProps extends ComponentPropsWithoutRef<"bu
 
 /** The panel takes no `id`: the menu generates it and points the trigger's `aria-controls` at it. */
 export interface NavigationMenuContentProps extends Omit<ComponentPropsWithoutRef<"div">, "dir" | "id"> {
-  /** The panel's content: `NavigationMenu.Group`s, `NavigationMenu.Link`s and anything else (a featured block). */
+  /**
+   * The panel's content: `NavigationMenu.Group`s, `NavigationMenu.Link`s, a `NavigationMenu.Feature` and anything else. A
+   * `NavigationMenu.Footer` that is a direct child is drawn under the rest.
+   */
   children?: ReactNode;
+  /**
+   * How the children are laid out — see {@link NavigationMenuContentLayout}. Not read in the stacked form, which is always one column.
+   * @default 'stack'
+   */
+  layout?: NavigationMenuContentLayout;
   /**
    * Keeps the panel mounted while it is closed, for an animation of your own or to keep its state.
    * @default false
@@ -220,6 +328,10 @@ export interface NavigationMenuLinkProps extends Omit<ComponentPropsWithoutRef<"
   icon?: PhosphorIcon;
   /** A second line under the text, in a panel: what the link leads to. It is part of the link's name. */
   description?: ReactNode;
+  /** The most lines the description takes before it is cut with an ellipsis. Left out, it wraps in full. */
+  descriptionLines?: 1 | 2 | 3 | 4;
+  /** Called when the person shows intent to follow the link: the pointer has rested on it for a moment, or keyboard focus arrives. Use it to prefetch. It can fire more than once, so keep it idempotent. */
+  onIntent?: () => void;
   /** A mark after the text (a count, a "New"), part of the link's name. */
   badge?: ReactNode;
   /**
@@ -247,6 +359,8 @@ export interface NavigationMenuLinkProps extends Omit<ComponentPropsWithoutRef<"
 export interface NavigationMenuGroupProps extends Omit<ComponentPropsWithoutRef<"div">, "title"> {
   /** The group's heading: it names the list of links beneath it. */
   label?: ReactNode;
+  /** Makes the heading a link to the group's own page, which closes the panel as any link does. */
+  href?: string;
   /** The `NavigationMenu.Link`s of the group. */
   children?: ReactNode;
   /**
@@ -261,5 +375,39 @@ export interface NavigationMenuGroupProps extends Omit<ComponentPropsWithoutRef<
   /** The id of the group. */
   id?: string;
   /** A test id for the group. */
+  "data-testid"?: string;
+}
+
+export interface NavigationMenuFeatureProps extends Omit<ComponentPropsWithoutRef<"div">, "title" | "onSelect"> {
+  /** A picture or other media drawn above the text: an `<img>`, an `Image`. It sets its own height. */
+  media?: ReactNode;
+  /** The block's heading. */
+  title: ReactNode;
+  /** The block's text. */
+  children?: ReactNode;
+  /** Makes the whole block a link to this address, which closes the panel as any link does. Without it the block is plain content. */
+  href?: string;
+  /** Called when the block is chosen, when it is a link. Call `event.preventDefault()` to keep the panel open. */
+  onSelect?: (event: Event) => void;
+  /** Extra class names for the block. */
+  className?: string;
+  /** Inline styles for the block. */
+  style?: ComponentPropsWithoutRef<"div">["style"];
+  /** The id of the block. */
+  id?: string;
+  /** A test id for the block. */
+  "data-testid"?: string;
+}
+
+export interface NavigationMenuFooterProps extends ComponentPropsWithoutRef<"div"> {
+  /** What the footer holds: links ("View all"), a help line. */
+  children?: ReactNode;
+  /** Extra class names for the footer. */
+  className?: string;
+  /** Inline styles for the footer. */
+  style?: ComponentPropsWithoutRef<"div">["style"];
+  /** The id of the footer. */
+  id?: string;
+  /** A test id for the footer. */
   "data-testid"?: string;
 }

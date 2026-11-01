@@ -7,8 +7,11 @@
 import { quote } from "../../snippetHelpers";
 import type {
   NavigationMenuCurrentVariant,
+  NavigationMenuCurrentMatch,
   NavigationMenuDirection,
+  NavigationMenuOrientation,
   NavigationMenuPanelAlign,
+  NavigationMenuPanelSize,
   NavigationMenuPresentation,
   NavigationMenuSize,
 } from "./NavigationMenu.types";
@@ -88,6 +91,81 @@ ${pricing(" current").replace(/^/gm, "    ")}
   </Navbar.Links>
 </Navbar>`,
 
+  split: `{/* A trigger with an href is a link beside a caret button that opens the panel; the link opens it on hover too */}
+<NavigationMenu aria-label="Primary">
+  <NavigationMenu.List>
+    <NavigationMenu.Item value="products">
+      <NavigationMenu.Trigger href="/products">Products</NavigationMenu.Trigger>
+      <NavigationMenu.Content>
+        <NavigationMenu.Link href="/analytics">Analytics</NavigationMenu.Link>
+      </NavigationMenu.Content>
+    </NavigationMenu.Item>
+  </NavigationMenu.List>
+</NavigationMenu>`,
+
+  richPanel: `{/* ChartBarIcon, LightningIcon, ShieldCheckIcon and PlugsIcon come from @dbm-system/icons */}
+<NavigationMenu aria-label="Primary">
+  <NavigationMenu.List>
+    <NavigationMenu.Item value="products">
+      <NavigationMenu.Trigger badge="New">Products</NavigationMenu.Trigger>
+      <NavigationMenu.Content layout="columns">
+        <NavigationMenu.Group label="Platform" href="/platform">
+          <NavigationMenu.Link href="/analytics" icon={ChartBarIcon} description="Dashboards and reports for every team" descriptionLines={2}>
+            Analytics
+          </NavigationMenu.Link>
+          <NavigationMenu.Link href="/automation" icon={LightningIcon} description="Workflows that run themselves">
+            Automation
+          </NavigationMenu.Link>
+        </NavigationMenu.Group>
+        <NavigationMenu.Group label="Trust">
+          <NavigationMenu.Link href="/security" icon={ShieldCheckIcon}>Security</NavigationMenu.Link>
+          <NavigationMenu.Link href="/integrations" icon={PlugsIcon} badge="New">Integrations</NavigationMenu.Link>
+        </NavigationMenu.Group>
+        <NavigationMenu.Feature title="Launch week" href="/launch">
+          Everything we shipped this quarter.
+        </NavigationMenu.Feature>
+        <NavigationMenu.Footer>
+          <NavigationMenu.Link href="/products">View all products</NavigationMenu.Link>
+        </NavigationMenu.Footer>
+      </NavigationMenu.Content>
+    </NavigationMenu.Item>
+  </NavigationMenu.List>
+</NavigationMenu>`,
+
+  panelAlign: `{/* panelAlign: "start" (default) | "center" | "end" | "auto" — auto is end when there is more room toward the start side.
+    Panels are kept on the screen either way, their links wrapping to the room there is. */}
+${menu('panelAlign="auto"')}`,
+
+  panelSizes: `{/* panelSize: "auto" (default) | "sm" | "md" | "lg" | "full" — full spans the nearest positioned ancestor (a sticky Navbar, or a box with position: relative) */}
+${menu('panelSize="md"')}`,
+
+  vertical: `{/* orientation="vertical": a column of triggers with their panels beside them; ArrowUp and ArrowDown move between them */}
+${menu('orientation="vertical"')}`,
+
+  indicator: `{/* indicator: a small arrow from the open trigger to its panel, sliding between triggers */}
+${menu("indicator")}`,
+
+  currentPath: `{/* currentPath: the page's path. A link with that href is the current page, and so is the trigger of the panel that holds it.
+    A link's own current wins. currentMatch="prefix" also matches everything under a link's path. */}
+${menu('currentPath="/analytics"')}`,
+
+  stackedSeveralOpen: `{/* exclusive={false}: several items can be open at once in the stacked form. An item that holds the current page starts open. */}
+${menu('presentation="stacked" exclusive={false} currentPath="/analytics"')}`,
+
+  controller: `{/* const controller = useRef<NavigationMenuController>(null);
+    controller.current?.open("products")  // true when it was not already open
+    controller.current?.close()           // true when one was open */}
+<NavigationMenu aria-label="Primary" controllerRef={controller} onOpenChangeComplete={(open, value) => {}}>
+  <NavigationMenu.List>
+    <NavigationMenu.Item value="products">
+      <NavigationMenu.Trigger>Products</NavigationMenu.Trigger>
+      <NavigationMenu.Content>
+        <NavigationMenu.Link href="/analytics">Analytics</NavigationMenu.Link>
+      </NavigationMenu.Content>
+    </NavigationMenu.Item>
+  </NavigationMenu.List>
+</NavigationMenu>`,
+
   rightToLeft: `{/* dir is passed to the primitive and every part around it, not read from the page */}
 ${menu('dir="rtl"')}`,
 };
@@ -97,6 +175,12 @@ export function navigationMenuPlaygroundSnippet(args: {
   presentation?: NavigationMenuPresentation;
   viewport?: boolean;
   panelAlign?: NavigationMenuPanelAlign;
+  panelSize?: NavigationMenuPanelSize;
+  orientation?: NavigationMenuOrientation;
+  indicator?: boolean;
+  exclusive?: boolean;
+  currentPath?: string;
+  currentMatch?: NavigationMenuCurrentMatch;
   size?: NavigationMenuSize;
   currentVariant?: NavigationMenuCurrentVariant;
   rounded?: boolean;
@@ -111,6 +195,12 @@ export function navigationMenuPlaygroundSnippet(args: {
   if (args.presentation !== undefined && args.presentation !== "mega") attributes.push(`presentation=${quote(args.presentation)}`);
   if (args.viewport === false) attributes.push("viewport={false}");
   if (args.panelAlign !== undefined && args.panelAlign !== "start") attributes.push(`panelAlign=${quote(args.panelAlign)}`);
+  if (args.panelSize !== undefined && args.panelSize !== "auto") attributes.push(`panelSize=${quote(args.panelSize)}`);
+  if (args.orientation !== undefined && args.orientation !== "horizontal") attributes.push(`orientation=${quote(args.orientation)}`);
+  if (args.indicator === true) attributes.push("indicator");
+  if (args.exclusive === false) attributes.push("exclusive={false}");
+  if (typeof args.currentPath === "string" && args.currentPath !== "") attributes.push(`currentPath=${quote(args.currentPath)}`);
+  if (args.currentMatch !== undefined && args.currentMatch !== "exact") attributes.push(`currentMatch=${quote(args.currentMatch)}`);
   if (args.size !== undefined && args.size !== "md") attributes.push(`size=${quote(args.size)}`);
   if (args.currentVariant !== undefined && args.currentVariant !== "underline") attributes.push(`currentVariant=${quote(args.currentVariant)}`);
   if (args.rounded === true) attributes.push("rounded");

@@ -3,7 +3,7 @@ import { expect, userEvent, waitFor, within } from "storybook/test";
 import { send } from "../../molecules/CodeBlock/browserProtocol";
 import { Navbar } from "../Navbar";
 import { NavigationMenu } from "./NavigationMenu";
-import { DemoItems, DemoMenu, MenuStage } from "./NavigationMenuStoryKit";
+import { Aligned, DemoItems, DemoMenu, MenuStage, RichItems, TallItems } from "./NavigationMenuStoryKit";
 
 // Hidden real-browser checks (guidelines/adr/0013): what jsdom can't do (layout, the cascade, a real pointer, forced colours,
 // direction). They run in the `storybook` (Chromium) project; the test window is 1200px wide unless a story pins another.
@@ -473,6 +473,191 @@ export const ADemoLinkStaysOnThePage: Story = {
     await userEvent.click(await canvas.findByRole("link", { name: /Analytics/ }));
     await waitFor(() => expect(trigger).toHaveAttribute("aria-expanded", "false"));
     expect(window.location.href).toBe(before);
+    await closeAndWait(canvasElement);
+  },
+};
+
+export const ATallPanelScrolls: Story = {
+  name: "A panel taller than the room scrolls inside itself and its last link can be reached",
+  render: () => (
+    <NavigationMenu aria-label="Primary">
+      <TallItems />
+    </NavigationMenu>
+  ),
+  play: async ({ canvasElement }) => {
+    await parkPointer();
+    const canvas = within(canvasElement);
+    await press(canvas.getByRole("button", { name: "Everything" }));
+    const last = await canvas.findByRole("link", { name: "Page 40" });
+    const area = last.closest<HTMLElement>('[class*="_viewport_"]')!;
+    const panel = last.closest<HTMLElement>('[class*="_content_"]')!;
+    await settled(area);
+    await waitFor(() => expect(area.getBoundingClientRect().bottom).toBeLessThanOrEqual(window.innerHeight + 1), { timeout: 5000 });
+    expect(getComputedStyle(panel).overflowY).toBe("auto");
+    expect(panel.scrollHeight).toBeGreaterThan(panel.clientHeight);
+    panel.scrollTop = panel.scrollHeight;
+    await waitFor(() => {
+      const rect = last.getBoundingClientRect();
+      expect(last.contains(document.elementFromPoint(rect.left + rect.width / 2, rect.top + rect.height / 2))).toBe(true);
+    });
+    await closeAndWait(canvasElement);
+  },
+};
+
+export const AutoAlignsToTheEndAtTheFarEdge: Story = {
+  name: "With panelAlign auto, a menu at the far end of the window lines its panel up with its end edge, on the screen",
+  render: () => (
+    <MenuStage>
+      <Aligned>
+        <NavigationMenu aria-label="Primary" panelAlign="auto">
+          <RichItems />
+        </NavigationMenu>
+      </Aligned>
+    </MenuStage>
+  ),
+  play: async ({ canvasElement }) => {
+    await parkPointer();
+    const canvas = within(canvasElement);
+    const root = canvas.getByRole("navigation", { name: "Primary" });
+    await press(canvas.getByRole("button", { name: /Products/ }));
+    const link = await canvas.findByRole("link", { name: /Analytics/ });
+    const area = link.closest<HTMLElement>('[class*="_viewport_"]')!;
+    const frame = area.parentElement!;
+    await waitFor(() => expect(frame.dataset.align).toBe("end"), { timeout: 3000 });
+    await settled(area);
+    await waitFor(() => {
+      expect(Math.abs(area.getBoundingClientRect().right - root.getBoundingClientRect().right)).toBeLessThanOrEqual(3);
+      expect(area.getBoundingClientRect().left).toBeGreaterThanOrEqual(-1);
+    }, { timeout: 5000 });
+    await closeAndWait(canvasElement);
+  },
+};
+
+export const PanelSizesFollowTheTokens: Story = {
+  name: "A fixed panel size is that many times the least width, and full spans the bar",
+  render: () => (
+    <MenuStage height="30rem">
+      <Navbar sticky aria-label="Site">
+        <Navbar.Brand>dbM</Navbar.Brand>
+        <Navbar.Links aria-label="Primary">
+          <NavigationMenu panelSize="full">
+            <DemoItems />
+          </NavigationMenu>
+        </Navbar.Links>
+      </Navbar>
+    </MenuStage>
+  ),
+  play: async ({ canvasElement }) => {
+    await parkPointer();
+    expect(window.innerWidth).toBeGreaterThanOrEqual(768);
+    const canvas = within(canvasElement);
+    await press(canvas.getByRole("button", { name: "Products" }));
+    const link = await canvas.findByRole("link", { name: /Analytics/ });
+    const area = link.closest<HTMLElement>('[class*="_viewport_"]')!;
+    const header = canvasElement.querySelector("header")!;
+    await settled(area);
+    await waitFor(() => expect(Math.abs(area.getBoundingClientRect().width - header.getBoundingClientRect().width)).toBeLessThanOrEqual(3), { timeout: 5000 });
+    expect(Math.abs(area.getBoundingClientRect().left - header.getBoundingClientRect().left)).toBeLessThanOrEqual(3);
+    await closeAndWait(canvasElement);
+  },
+};
+
+export const AMediumPanelIsTwiceTheLeastWidth: Story = {
+  name: "panelSize md is twice the least width",
+  render: () => (
+    <MenuStage>
+      <DemoMenu panelSize="md" />
+    </MenuStage>
+  ),
+  play: async ({ canvasElement }) => {
+    await parkPointer();
+    const canvas = within(canvasElement);
+    await press(canvas.getByRole("button", { name: "Products" }));
+    const link = await canvas.findByRole("link", { name: /Analytics/ });
+    const area = link.closest<HTMLElement>('[class*="_viewport_"]')!;
+    await settled(area);
+    const expected = 2 * tokenLength("--dbm-navigation-menu-panel-min-width") + 2 * tokenPx("--dbm-border-width-1");
+    await waitFor(() => expect(Math.abs(area.getBoundingClientRect().width - expected)).toBeLessThanOrEqual(2), { timeout: 5000 });
+    await closeAndWait(canvasElement);
+  },
+};
+
+export const VerticalOpensBesideAndArrowsMoveDown: Story = {
+  name: "A vertical menu opens its panel beside the column and ArrowDown moves to the next trigger",
+  render: () => (
+    <MenuStage height="30rem">
+      <div style={{ inlineSize: "14rem" }}>
+        <DemoMenu orientation="vertical" />
+      </div>
+    </MenuStage>
+  ),
+  play: async ({ canvasElement }) => {
+    await parkPointer();
+    const canvas = within(canvasElement);
+    const root = canvas.getByRole("navigation", { name: "Primary" });
+    const products = canvas.getByRole("button", { name: "Products" });
+    await press(products);
+    const link = await canvas.findByRole("link", { name: /Analytics/ });
+    const area = link.closest<HTMLElement>('[class*="_viewport_"]')!;
+    await settled(area);
+    expect(area.getBoundingClientRect().left).toBeGreaterThanOrEqual(root.getBoundingClientRect().right - 1);
+    await closeAndWait(canvasElement);
+    products.focus();
+    await userEvent.keyboard("{ArrowDown}");
+    expect(canvas.getByRole("button", { name: "Solutions" })).toHaveFocus();
+  },
+};
+
+export const IndicatorSitsOverTheOpenTrigger: Story = {
+  name: "The indicator's arrow is centred over the open trigger",
+  render: () => (
+    <MenuStage>
+      <DemoMenu indicator />
+    </MenuStage>
+  ),
+  play: async ({ canvasElement }) => {
+    await parkPointer();
+    const canvas = within(canvasElement);
+    const trigger = canvas.getByRole("button", { name: "Solutions" });
+    await press(trigger);
+    await canvas.findByRole("link", { name: /Engineering/ });
+    await waitFor(() => {
+      const arrow = canvasElement.querySelector<HTMLElement>('[class*="_arrow_"]');
+      expect(arrow).not.toBeNull();
+      const middle = (rect: DOMRect) => rect.left + rect.width / 2;
+      expect(Math.abs(middle(arrow!.getBoundingClientRect()) - middle(trigger.getBoundingClientRect()))).toBeLessThanOrEqual(3);
+    }, { timeout: 5000 });
+    await closeAndWait(canvasElement);
+  },
+};
+
+export const ASplitTriggerOpensOnTheLinkAndTheCaret: Story = {
+  name: "A split trigger: the link opens the panel when the pointer rests on it, and leaving closes it",
+  render: () => (
+    <MenuStage>
+      <NavigationMenu aria-label="Primary">
+        <RichItems splitProducts />
+      </NavigationMenu>
+    </MenuStage>
+  ),
+  play: async ({ canvasElement }) => {
+    await parkPointer();
+    const canvas = within(canvasElement);
+    const link = canvas.getByRole("link", { name: /Products/ });
+    const caret = canvas.getByRole("button", { name: "Products menu" });
+    await pointAt(link);
+    await waitFor(() => expect(caret).toHaveAttribute("aria-expanded", "true"), { timeout: 3000 });
+    // across to the panel, which stays open
+    const panelLink = await canvas.findByRole("link", { name: /Analytics/ });
+    await settled(panelLink.closest("[data-state]")!);
+    await pointAt(panelLink);
+    await wait(600);
+    expect(caret).toHaveAttribute("aria-expanded", "true");
+    await parkPointer();
+    await waitFor(() => expect(caret).toHaveAttribute("aria-expanded", "false"), { timeout: 3000 });
+    // and the caret is a button of its own
+    await press(caret);
+    await canvas.findByRole("link", { name: /Analytics/ });
     await closeAndWait(canvasElement);
   },
 };

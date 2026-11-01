@@ -206,6 +206,10 @@
   justify-content: center;
 }
 
+.viewportFrame[data-align="end"] {
+  justify-content: flex-end;
+}
+
 /* The shared panel area takes the size of the open panel (Radix measures it into these two properties) and is the panel's surface:
    its border, corners and shadow. Shadows are a fixed light/dark pair, so the dark one is chosen by the theme attribute below. */
 .viewport {
@@ -251,7 +255,54 @@
   inline-size: max-content;
   min-inline-size: min(var(--dbm-navigation-menu-panel-min-width), 100vw);
   max-inline-size: min(var(--dbm-navigation-menu-panel-max-width), calc(var(--navigation-menu-room, 100vw) - 2 * var(--dbm-border-width-1)), 100vw);
+  /* A panel taller than the room below the menu scrolls inside itself. */
+  max-block-size: calc(var(--navigation-menu-room-block, 100vh) - var(--dbm-space-4));
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.contentBody {
   padding: var(--dbm-space-3);
+}
+
+.contentBody[data-layout="columns"] {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: var(--dbm-space-4);
+}
+
+.contentBody[data-layout="columns"] > .group {
+  flex: 1 1 var(--dbm-navigation-menu-panel-min-width);
+}
+
+/* A panel's width, when it is not as wide as its content wants: still kept on the screen by the room. */
+.panelSm {
+  inline-size: var(--dbm-navigation-menu-panel-min-width);
+}
+
+.panelMd {
+  inline-size: calc(2 * var(--dbm-navigation-menu-panel-min-width));
+}
+
+.panelLg {
+  inline-size: calc(3.5 * var(--dbm-navigation-menu-panel-min-width));
+}
+
+/* The whole width of the nearest positioned ancestor (the bar): the menu stops being the frame's containing block. */
+.panelFull {
+  inline-size: calc(var(--navigation-menu-full, 100vw) - 2 * var(--dbm-border-width-1));
+  min-inline-size: 0;
+  max-inline-size: none;
+}
+
+.rootFull {
+  position: static;
+}
+
+.rootFull .viewportFrame {
+  inset-inline: 0;
+  inline-size: auto;
 }
 
 .viewport .content {
@@ -280,6 +331,11 @@
 
 .contentOwn[data-align="center"]:dir(rtl) {
   translate: 50% 0;
+}
+
+.contentOwn[data-align="end"] {
+  inset-inline-start: auto;
+  inset-inline-end: 0;
 }
 
 /* Moving from one panel to another slides the old out and the new in from the side the trigger is on; the first panel just fades.
@@ -428,6 +484,236 @@
   }
 }
 
+/* A description cut after a number of lines. */
+.description[data-clamped] {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: var(--nm-lines);
+  line-clamp: var(--nm-lines);
+  overflow: hidden;
+}
+
+/* A group heading that is a link to the group's own page. */
+.groupLabelLink {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--dbm-space-1);
+  color: inherit;
+  font: inherit;
+  text-decoration: none;
+  border-radius: var(--dbm-radius-sm);
+}
+
+.groupLabelLink:hover {
+  color: var(--dbm-text-brand);
+}
+
+.groupLabelLink:focus-visible {
+  outline: var(--dbm-border-width-2) solid var(--dbm-border-focus);
+  outline-offset: calc(-1 * var(--dbm-border-width-2));
+}
+
+.groupLabelArrow {
+  flex: none;
+}
+
+/* --- A split trigger: the text is a link, and a caret button beside it opens the panel -------------------------------------- */
+
+.split {
+  display: inline-flex;
+  align-items: center;
+}
+
+.splitLink {
+  border-start-end-radius: 0;
+  border-end-end-radius: 0;
+  padding-inline-end: var(--dbm-space-2);
+}
+
+.splitCaret {
+  border-start-start-radius: 0;
+  border-end-start-radius: 0;
+  padding-inline: var(--dbm-space-2);
+}
+
+.splitLink.rounded,
+.splitCaret.rounded {
+  border-radius: var(--dbm-radius-full);
+}
+
+.split[data-open] .splitLink,
+.split[data-open] .splitCaret {
+  background-color: var(--dbm-bg-brand-subtle);
+}
+
+.split[data-open] .splitLink.current {
+  background-color: var(--dbm-bg-brand-subtle);
+}
+
+/* --- Featured block and footer in a panel ------------------------------------------------------------------------------------- */
+
+.feature {
+  flex: 0 0 auto;
+  inline-size: calc(var(--dbm-navigation-menu-panel-min-width) * 0.75);
+  max-inline-size: 100%;
+}
+
+.featureBody {
+  display: flex;
+  flex-direction: column;
+  gap: var(--dbm-space-2);
+  box-sizing: border-box;
+  padding: var(--dbm-space-3);
+  border-radius: var(--dbm-radius-md);
+  background-color: var(--dbm-bg-brand-subtle);
+  color: var(--dbm-text-primary);
+  font-size: var(--dbm-font-size-sm);
+  text-decoration: none;
+}
+
+.featureLink:hover {
+  background-color: var(--dbm-bg-brand-subtle-hover);
+}
+
+.featureLink:focus-visible {
+  outline: var(--dbm-border-width-2) solid var(--dbm-border-focus);
+  outline-offset: calc(-1 * var(--dbm-border-width-2));
+  border-radius: var(--dbm-radius-sm);
+}
+
+.featureMedia {
+  display: block;
+  overflow: hidden;
+  border-radius: var(--dbm-radius-sm);
+}
+
+.featureMedia > * {
+  display: block;
+  inline-size: 100%;
+}
+
+.featureTitle {
+  font-weight: var(--dbm-font-weight-semibold);
+}
+
+.featureText {
+  color: var(--dbm-text-secondary);
+  font-size: var(--dbm-font-size-xs);
+  line-height: var(--dbm-line-height-snug);
+}
+
+.footer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--dbm-space-2);
+  padding: var(--dbm-space-2) var(--dbm-space-3);
+  border-block-start: var(--dbm-border-width-1) solid var(--dbm-border-default);
+  color: var(--dbm-text-secondary);
+  font-size: var(--dbm-font-size-sm);
+}
+
+/* --- Vertical: a column of triggers with their panels beside them ------------------------------------------------------------ */
+
+.vertical .list {
+  flex-direction: column;
+  align-items: stretch;
+}
+
+.vertical .item {
+  flex-direction: column;
+}
+
+.vertical .trigger {
+  justify-content: space-between;
+  inline-size: 100%;
+}
+
+.vertical .caret {
+  rotate: -90deg;
+}
+
+.vertical:dir(rtl) .caret {
+  rotate: 90deg;
+}
+
+.vertical .trigger[aria-expanded="true"] .caret {
+  transform: none;
+}
+
+.vertical .viewportFrame {
+  inset-block-start: 0;
+  inset-inline-start: 100%;
+  inline-size: auto;
+  align-items: flex-start;
+}
+
+.vertical .viewport {
+  margin-block-start: 0;
+  margin-inline-start: var(--dbm-space-2);
+}
+
+.vertical .contentOwn {
+  inset-block-start: 0;
+  inset-inline-start: calc(100% + var(--dbm-space-2));
+}
+
+.vertical .content {
+  max-block-size: calc(var(--navigation-menu-room-block, 100vh) - var(--dbm-space-4));
+}
+
+.vertical .content[data-motion="from-start"] {
+  animation-name: enterFromTop;
+}
+
+.vertical .content[data-motion="from-end"] {
+  animation-name: enterFromBottom;
+}
+
+.vertical .content[data-motion="to-start"] {
+  animation-name: exitToTop;
+}
+
+.vertical .content[data-motion="to-end"] {
+  animation-name: exitToBottom;
+}
+
+/* --- The indicator: a small arrow from the open trigger to its panel -------------------------------------------------------- */
+
+.indicator {
+  position: absolute;
+  inset-block-end: calc(-1 * var(--dbm-space-2));
+  inset-inline-start: 0;
+  z-index: var(--dbm-z-index-popover);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  block-size: var(--dbm-space-2);
+  overflow: visible;
+  pointer-events: none;
+  transition:
+    translate var(--dbm-motion-duration-moderate) var(--dbm-motion-easing-emphasized),
+    inline-size var(--dbm-motion-duration-moderate) var(--dbm-motion-easing-emphasized);
+}
+
+.indicator[data-state="hidden"] {
+  opacity: var(--dbm-opacity-0);
+}
+
+.arrow {
+  position: relative;
+  inset-block-end: calc(-1 * var(--dbm-space-1));
+  display: block;
+  box-sizing: border-box;
+  inline-size: var(--dbm-space-3);
+  block-size: var(--dbm-space-3);
+  background-color: var(--dbm-bg-surface);
+  border-block-start: var(--dbm-border-width-1) solid var(--dbm-border-default);
+  border-inline-start: var(--dbm-border-width-1) solid var(--dbm-border-default);
+  rotate: 45deg;
+}
+
 /* --- The stacked form ------------------------------------------------------------------------------------------------------ */
 
 .stackedRoot {
@@ -456,10 +742,6 @@
   padding-inline-start: var(--dbm-space-4);
 }
 
-.stackedContent[hidden] {
-  display: none;
-}
-
 .stackedContent .groupList {
   --nm-columns: 1;
 }
@@ -478,6 +760,54 @@
 }
 
 /* --- Animation ------------------------------------------------------------------------------------------------------------- */
+
+@keyframes enterFromTop {
+  from {
+    opacity: var(--dbm-opacity-0);
+    transform: translateY(calc(-1 * var(--nm-travel)));
+  }
+
+  to {
+    opacity: var(--dbm-opacity-100);
+    transform: none;
+  }
+}
+
+@keyframes enterFromBottom {
+  from {
+    opacity: var(--dbm-opacity-0);
+    transform: translateY(var(--nm-travel));
+  }
+
+  to {
+    opacity: var(--dbm-opacity-100);
+    transform: none;
+  }
+}
+
+@keyframes exitToTop {
+  from {
+    opacity: var(--dbm-opacity-100);
+    transform: none;
+  }
+
+  to {
+    opacity: var(--dbm-opacity-0);
+    transform: translateY(calc(-1 * var(--nm-travel)));
+  }
+}
+
+@keyframes exitToBottom {
+  from {
+    opacity: var(--dbm-opacity-100);
+    transform: none;
+  }
+
+  to {
+    opacity: var(--dbm-opacity-0);
+    transform: translateY(var(--nm-travel));
+  }
+}
 
 @keyframes panelIn {
   from {
@@ -587,6 +917,20 @@
     outline-width: var(--dbm-border-width-2);
   }
 
+  .arrow {
+    background-color: Canvas;
+    border-color: CanvasText;
+  }
+
+  .featureBody {
+    outline: var(--dbm-border-width-1) solid CanvasText;
+    outline-offset: calc(-1 * var(--dbm-border-width-1));
+  }
+
+  .footer {
+    border-color: CanvasText;
+  }
+
   /* A panel is told from the page by its border, which forced colours keeps; the shadow is dropped. */
   .viewport,
   .contentOwn {
@@ -600,7 +944,8 @@
   .link,
   .caret,
   .panelLink,
-  .viewport {
+  .viewport,
+  .indicator {
     transition: none;
   }
 

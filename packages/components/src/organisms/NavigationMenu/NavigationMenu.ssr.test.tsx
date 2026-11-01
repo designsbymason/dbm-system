@@ -56,6 +56,9 @@ const variants: Array<[string, NavigationMenuProps]> = [
   ["with a width map", { presentation: { base: "stacked", md: "mega" } }],
   ["right to left", { dir: "rtl", size: "lg", rounded: true, currentVariant: "solid" }],
   ["open by default", { defaultValue: "products" }],
+  ["aligned automatically, sized, with an indicator", { panelAlign: "auto", panelSize: "full", indicator: true, currentPath: "/pricing" }],
+  ["vertical", { orientation: "vertical" }],
+  ["stacked with several open", { presentation: "stacked", exclusive: false, currentPath: "/analytics" }],
 ];
 
 beforeEach(() => {

@@ -11,6 +11,8 @@ const meta: Meta<typeof NavigationMenu.Link> = {
     href: { control: "text", description: "Where the link goes." },
     icon: { control: false, description: "An icon (a component reference) drawn before the text." },
     description: { control: "text", description: "A second line under the text, in a panel: what the link leads to. It is part of the link's name." },
+    descriptionLines: { control: "select", options: [undefined, 1, 2, 3, 4], description: "The most lines the description takes before it is cut with an ellipsis. Left out, it wraps in full." },
+    onIntent: { control: false, description: "Called when the person shows intent to follow the link: the pointer has rested on it for a moment, or keyboard focus arrives. Use it to prefetch. It can fire more than once, so keep it idempotent." },
     badge: { control: "text", description: "A mark after the text (a count, a \"New\"), part of the link's name." },
     external: {
       control: "boolean",

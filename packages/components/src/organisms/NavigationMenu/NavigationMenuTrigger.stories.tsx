@@ -9,6 +9,10 @@ const meta: Meta<typeof NavigationMenu.Trigger> = {
   argTypes: {
     children: { control: "text", description: "The trigger's text." },
     icon: { control: false, description: "An icon (a component reference) drawn before the text." },
+    badge: { control: "text", description: "A mark after the text (a count, a \"New\"), part of the trigger's name. A Badge you pass is drawn as written; anything else is the content of a solid brand badge." },
+    href: { control: "text", description: "Makes a split trigger: the text is a link to this address and a caret button beside it opens the panel. The link opens the panel too when the pointer rests on it." },
+    onIntent: { control: false, description: "Called when the person shows intent to open this item: the pointer has rested on the trigger for a moment, or keyboard focus arrives. Use it to prefetch. It can fire more than once, so keep it idempotent." },
+    delayDuration: { control: "number", description: "How long, in milliseconds, the pointer rests on this trigger before its panel opens, in place of the menu's delayDuration. A panel already open elsewhere is still replaced at once." },
     current: {
       control: "boolean",
       description: "Marks the item whose panel holds the current page, in the menu's currentVariant. It sets no aria-current, since a button is not a page.",

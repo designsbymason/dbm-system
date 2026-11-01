@@ -1,17 +1,21 @@
 import type { Meta, StoryContext, StoryObj } from "@storybook/react-vite";
 import type { Responsive } from "@dbm-system/utils";
 import { expect, userEvent, waitFor, within } from "storybook/test";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { navigationMenuPlaygroundSnippet, navigationMenuSnippets } from "./NavigationMenu.snippets";
 import type {
+  NavigationMenuController,
+  NavigationMenuCurrentMatch,
   NavigationMenuCurrentVariant,
   NavigationMenuDirection,
+  NavigationMenuOrientation,
   NavigationMenuPanelAlign,
+  NavigationMenuPanelSize,
   NavigationMenuPresentation,
   NavigationMenuProps,
   NavigationMenuSize,
 } from "./NavigationMenu.types";
-import { DemoItems, DemoMenu, DemoNavbarMenu, MenuStage } from "./NavigationMenuStoryKit";
+import { Aligned, DemoItems, DemoMenu, DemoNavbarMenu, MenuStage, RichItems } from "./NavigationMenuStoryKit";
 import { NavigationMenu } from "./NavigationMenu";
 
 interface PlaygroundArgs {
@@ -19,9 +23,17 @@ interface PlaygroundArgs {
   value?: string;
   defaultValue: string;
   onValueChange?: (value: string) => void;
+  onOpenChangeComplete?: (open: boolean, value: string) => void;
+  controllerRef?: NavigationMenuProps["controllerRef"];
   presentation: Responsive<NavigationMenuPresentation>;
+  exclusive: boolean;
   viewport: boolean;
   panelAlign: NavigationMenuPanelAlign;
+  panelSize: NavigationMenuPanelSize;
+  orientation: NavigationMenuOrientation;
+  indicator: boolean;
+  currentPath: string;
+  currentMatch: NavigationMenuCurrentMatch;
   size: NavigationMenuSize;
   currentVariant: NavigationMenuCurrentVariant;
   rounded: boolean;
@@ -44,8 +56,14 @@ const playgroundSource = {
 
 const editableArgs = [
   "presentation",
+  "exclusive",
   "viewport",
   "panelAlign",
+  "panelSize",
+  "orientation",
+  "indicator",
+  "currentPath",
+  "currentMatch",
   "size",
   "currentVariant",
   "rounded",
@@ -76,6 +94,40 @@ const meta: Meta<PlaygroundArgs> = {
       table: { defaultValue: { summary: '""' } },
     },
     onValueChange: readOnly("Called with the value of the item whose panel is now open, or \"\" when the last one closed."),
+    onOpenChangeComplete: readOnly("Called once a panel has finished opening, or the last one has finished closing, with the item's value: onValueChange says a change started, this says it is done."),
+    controllerRef: readOnly("Gives code outside the menu a way to open and close it: open(value) and close(), each saying whether it had anything to do, and the open value."),
+    exclusive: {
+      control: "boolean",
+      description: "Whether more than one item can be open at once in the stacked form. Off, opening one closes the others. Not read in the mega form.",
+      table: { defaultValue: { summary: "true" } },
+    },
+    panelSize: {
+      control: "select",
+      options: ["auto", "sm", "md", "lg", "full"],
+      description: "How wide a panel is: as wide as its content wants (auto), a fixed width, or (full) the width of the nearest positioned ancestor: a sticky Navbar is one, and otherwise the box to span needs position: relative.",
+      table: { defaultValue: { summary: '"auto"' } },
+    },
+    orientation: {
+      control: "radio",
+      options: ["horizontal", "vertical"],
+      description: "The direction the triggers run: a bar with panels under them, or a column with panels beside them.",
+      table: { defaultValue: { summary: '"horizontal"' } },
+    },
+    indicator: {
+      control: "boolean",
+      description: "Draws a small arrow from the open item's trigger to its panel, sliding between triggers. Needs the shared panel area and the horizontal direction.",
+      table: { defaultValue: { summary: "false" } },
+    },
+    currentPath: {
+      control: "text",
+      description: "The path of the current page. A link whose href is this path is the current page, and so is the trigger of the panel that holds it. A link's own current wins.",
+    },
+    currentMatch: {
+      control: "radio",
+      options: ["exact", "prefix"],
+      description: "How currentPath is matched: the whole path, or the path and everything under it.",
+      table: { defaultValue: { summary: '"exact"' } },
+    },
     presentation: {
       control: "radio",
       options: ["mega", "stacked"],
@@ -90,8 +142,8 @@ const meta: Meta<PlaygroundArgs> = {
     },
     panelAlign: {
       control: "radio",
-      options: ["start", "center"],
-      description: "Where a panel sits: lined up with its start edge, or centred under the menu (under its own item with viewport false).",
+      options: ["start", "center", "end", "auto"],
+      description: "Where a panel sits: lined up with its start edge, centred, lined up with its end edge, or auto (start, unless there is more room toward the start side). Logical, so start is the right edge in right-to-left text.",
       table: { defaultValue: { summary: '"start"' } },
     },
     size: {
@@ -141,8 +193,14 @@ const meta: Meta<PlaygroundArgs> = {
   args: {
     defaultValue: "",
     presentation: "mega",
+    exclusive: true,
     viewport: true,
     panelAlign: "start",
+    panelSize: "auto",
+    orientation: "horizontal",
+    indicator: false,
+    currentPath: "",
+    currentMatch: "exact",
     size: "md",
     currentVariant: "underline",
     rounded: false,
@@ -228,6 +286,129 @@ export const RightToLeft: Story = {
     </MenuStage>
   ),
   parameters: { docs: { source: { code: navigationMenuSnippets.rightToLeft } } },
+};
+
+export const SplitTrigger: Story = {
+  name: "A trigger that is also a link",
+  argTypes: { ...noControls },
+  render: () => (
+    <MenuStage>
+      <NavigationMenu aria-label="Primary">
+        <RichItems splitProducts />
+      </NavigationMenu>
+    </MenuStage>
+  ),
+  parameters: { docs: { source: { code: navigationMenuSnippets.split } } },
+};
+
+export const RichPanels: Story = {
+  name: "Rich panels",
+  argTypes: { ...noControls },
+  render: () => (
+    <MenuStage height="30rem">
+      <NavigationMenu aria-label="Primary">
+        <RichItems />
+      </NavigationMenu>
+    </MenuStage>
+  ),
+  parameters: { docs: { source: { code: navigationMenuSnippets.richPanel } } },
+};
+
+export const PanelAlignment: Story = {
+  name: "Where a panel sits",
+  argTypes: { ...noControls },
+  render: () => (
+    <MenuStage height="30rem">
+      <Aligned>
+        <NavigationMenu aria-label="Primary" panelAlign="auto">
+          <RichItems />
+        </NavigationMenu>
+      </Aligned>
+    </MenuStage>
+  ),
+  parameters: { docs: { source: { code: navigationMenuSnippets.panelAlign } } },
+};
+
+export const PanelSizes: Story = {
+  name: "Panel widths",
+  argTypes: { ...noControls },
+  render: () => (
+    <MenuStage height="30rem">
+      <DemoMenu panelSize="md" />
+    </MenuStage>
+  ),
+  parameters: { docs: { source: { code: navigationMenuSnippets.panelSizes } } },
+};
+
+export const Vertical: Story = {
+  argTypes: { ...noControls },
+  render: () => (
+    <MenuStage height="30rem">
+      <div style={{ inlineSize: "14rem" }}>
+        <DemoMenu orientation="vertical" />
+      </div>
+    </MenuStage>
+  ),
+  parameters: { docs: { source: { code: navigationMenuSnippets.vertical } } },
+};
+
+export const WithIndicator: Story = {
+  name: "With an indicator",
+  argTypes: { ...noControls },
+  render: () => (
+    <MenuStage>
+      <DemoMenu indicator />
+    </MenuStage>
+  ),
+  parameters: { docs: { source: { code: navigationMenuSnippets.indicator } } },
+};
+
+export const FromThePath: Story = {
+  name: "The current page from a path",
+  argTypes: { ...noControls },
+  render: () => (
+    <MenuStage>
+      <DemoMenu currentPath="/analytics" currentPage="none" />
+    </MenuStage>
+  ),
+  parameters: { docs: { source: { code: navigationMenuSnippets.currentPath } } },
+};
+
+export const StackedSeveralOpen: Story = {
+  name: "Stacked, several open",
+  argTypes: { ...noControls },
+  render: () => (
+    <div style={{ inlineSize: "18rem" }}>
+      <DemoMenu presentation="stacked" exclusive={false} currentPath="/analytics" currentPage="none" />
+    </div>
+  ),
+  parameters: { docs: { source: { code: navigationMenuSnippets.stackedSeveralOpen } } },
+};
+
+export const FromOutside: Story = {
+  name: "Opened from outside",
+  argTypes: { ...noControls },
+  render: function FromOutsideMenu() {
+    const controller = useRef<NavigationMenuController>(null);
+    const [done, setDone] = useState("nothing yet");
+    return (
+      <MenuStage>
+        <NavigationMenu aria-label="Primary" controllerRef={controller} onOpenChangeComplete={(open, value) => setDone(`${value} ${open ? "opened" : "closed"}`)}>
+          <DemoItems />
+        </NavigationMenu>
+        <div style={{ display: "flex", gap: "var(--dbm-space-2)", marginBlockStart: "var(--dbm-space-3)" }}>
+          <button type="button" onClick={() => controller.current?.open("products")}>
+            Open Products
+          </button>
+          <button type="button" onClick={() => controller.current?.close()}>
+            Close
+          </button>
+        </div>
+        <p>Finished: {done}</p>
+      </MenuStage>
+    );
+  },
+  parameters: { docs: { source: { code: navigationMenuSnippets.controller } } },
 };
 
 export const Controlled: Story = {

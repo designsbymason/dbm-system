@@ -9,6 +9,7 @@ const meta: Meta<typeof NavigationMenu.Group> = {
   tags: ["!dev"],
   argTypes: {
     label: { control: "text", description: "The group's heading: it names the list of links beneath it." },
+    href: { control: "text", description: "Makes the heading a link to the group's own page, which closes the panel as any link does." },
     children: { control: false, description: "The NavigationMenu.Links of the group." },
     columns: {
       control: "radio",

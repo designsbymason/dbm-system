@@ -53,6 +53,8 @@ const tables: Array<[string, string]> = [
   ["NavigationMenuContentProps", "contentPropOrder"],
   ["NavigationMenuLinkProps", "linkPropOrder"],
   ["NavigationMenuGroupProps", "groupPropOrder"],
+  ["NavigationMenuFeatureProps", "featurePropOrder"],
+  ["NavigationMenuFooterProps", "footerPropOrder"],
 ];
 
 describe("NavigationMenu's Properties tables", () => {

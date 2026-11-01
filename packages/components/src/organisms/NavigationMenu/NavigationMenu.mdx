@@ -9,15 +9,25 @@ import * as NavigationMenuTriggerStories from "./NavigationMenuTrigger.stories";
 import * as NavigationMenuContentStories from "./NavigationMenuContent.stories";
 import * as NavigationMenuLinkStories from "./NavigationMenuLink.stories";
 import * as NavigationMenuGroupStories from "./NavigationMenuGroup.stories";
+import * as NavigationMenuFeatureStories from "./NavigationMenuFeature.stories";
+import * as NavigationMenuFooterStories from "./NavigationMenuFooter.stories";
 
 export const propOrder = [
   "children",
   "value",
   "defaultValue",
   "onValueChange",
+  "onOpenChangeComplete",
+  "controllerRef",
   "presentation",
+  "exclusive",
   "viewport",
   "panelAlign",
+  "panelSize",
+  "orientation",
+  "indicator",
+  "currentPath",
+  "currentMatch",
   "size",
   "currentVariant",
   "rounded",
@@ -34,8 +44,14 @@ export const propOrder = [
 ];
 export const playgroundOrder = [
   "presentation",
+  "exclusive",
   "viewport",
   "panelAlign",
+  "panelSize",
+  "orientation",
+  "indicator",
+  "currentPath",
+  "currentMatch",
   "size",
   "currentVariant",
   "rounded",
@@ -46,11 +62,78 @@ export const playgroundOrder = [
   "id",
 ];
 export const listPropOrder = ["children", "id", "className", "style", "data-testid"];
-export const itemPropOrder = ["value", "children", "id", "className", "style", "data-testid"];
-export const triggerPropOrder = ["children", "icon", "current", "disabled", "aria-label", "aria-labelledby", "aria-describedby", "id", "className", "style", "data-testid"];
-export const contentPropOrder = ["children", "forceMount", "onEscapeKeyDown", "onPointerDownOutside", "onFocusOutside", "onInteractOutside", "className", "style", "data-testid"];
-export const linkPropOrder = ["children", "href", "icon", "description", "badge", "external", "current", "disabled", "asChild", "onSelect", "aria-label", "aria-labelledby", "aria-describedby", "id", "className", "style", "data-testid"];
-export const groupPropOrder = ["label", "children", "columns", "id", "className", "style", "data-testid"];
+export const itemPropOrder = [
+  "value",
+  "defaultOpen",
+  "panelAlign",
+  "children",
+  "id",
+  "className",
+  "style",
+  "data-testid",
+];
+export const triggerPropOrder = [
+  "children",
+  "icon",
+  "badge",
+  "href",
+  "current",
+  "disabled",
+  "onIntent",
+  "delayDuration",
+  "aria-label",
+  "aria-labelledby",
+  "aria-describedby",
+  "id",
+  "className",
+  "style",
+  "data-testid",
+];
+export const contentPropOrder = [
+  "children",
+  "layout",
+  "forceMount",
+  "onEscapeKeyDown",
+  "onPointerDownOutside",
+  "onFocusOutside",
+  "onInteractOutside",
+  "className",
+  "style",
+  "data-testid",
+];
+export const linkPropOrder = [
+  "children",
+  "href",
+  "icon",
+  "description",
+  "descriptionLines",
+  "badge",
+  "external",
+  "current",
+  "disabled",
+  "asChild",
+  "onSelect",
+  "onIntent",
+  "aria-label",
+  "aria-labelledby",
+  "aria-describedby",
+  "id",
+  "className",
+  "style",
+  "data-testid",
+];
+export const featurePropOrder = ["media", "title", "children", "href", "onSelect", "id", "className", "style", "data-testid"];
+export const footerPropOrder = ["children", "id", "className", "style", "data-testid"];
+export const groupPropOrder = [
+  "label",
+  "href",
+  "children",
+  "columns",
+  "id",
+  "className",
+  "style",
+  "data-testid",
+];
 
 <Meta of={NavigationMenuStories} />
 
@@ -62,7 +145,8 @@ The navigation of a site's header when some of its items open a **panel** of lin
 triggers, each opening a panel of grouped links with descriptions and icons (a mega menu), beside plain
 links that go straight to a page. A compound component, meaning it is made of named sub-parts you compose
 together: `NavigationMenu.List` of `NavigationMenu.Item`s, each holding a `NavigationMenu.Trigger` with its
-`NavigationMenu.Content`, or a `NavigationMenu.Link`; a panel holds `NavigationMenu.Group`s of links.
+`NavigationMenu.Content`, or a `NavigationMenu.Link`; a panel holds `NavigationMenu.Group`s of links, a
+`NavigationMenu.Feature` (a featured block) and a `NavigationMenu.Footer`.
 
 It is a navigation, not a menu of actions: it follows the disclosure pattern (buttons that show and hide
 links), not `role="menu"`. A short dropdown of links is a `Navbar.Group`; a list of actions is a `Menu`.
@@ -134,6 +218,18 @@ A labelled run of links in a panel. Also accepts any other native `<div>` attrib
 
 <PropertiesTable of={NavigationMenuGroupStories} order={groupPropOrder} />
 
+### NavigationMenu.Feature properties
+
+A featured block in a panel: media, a heading and text, optionally one link as a whole. Also accepts any other native `<div>` attribute beyond what's listed here.
+
+<PropertiesTable of={NavigationMenuFeatureStories} order={featurePropOrder} />
+
+### NavigationMenu.Footer properties
+
+The strip under a panel's content, drawn after the rest wherever it is written. Also accepts any other native `<div>` attribute beyond what's listed here.
+
+<PropertiesTable of={NavigationMenuFooterStories} order={footerPropOrder} />
+
 ## Variants
 
 ### Panels under their own items
@@ -166,6 +262,70 @@ whichever look is chosen. Inside a `Navbar` the bar's choice applies.
 
 <Canvas of={NavigationMenuStories.Rounded} />
 
+### Rich panels
+
+A panel can hold several groups side by side (`layout="columns"`, which wraps as the room narrows), a group whose heading is a link
+(`href` on the group), a featured block (`NavigationMenu.Feature`), a footer under it all (`NavigationMenu.Footer`), a badge on a link
+or a trigger, and a description cut after a number of lines (`descriptionLines`).
+
+<Canvas of={NavigationMenuStories.RichPanels} />
+
+### A trigger that is also a link
+
+Give a trigger an `href` and it is a link to the section's own page beside a caret button that opens the panel. The link opens the panel
+too when the pointer rests on it, so the section is one click away and its panel is one hover away.
+
+<Canvas of={NavigationMenuStories.SplitTrigger} />
+
+### Where a panel sits
+
+`panelAlign` is `start`, `center`, `end` or `auto`, which is `start` unless there is more room toward the start side, as there is for a
+menu at the far end of a bar. A panel is kept on the screen whichever it is: its width is capped by the room from where it hangs to the
+screen's edge, so its links wrap, and one taller than the room below scrolls inside itself.
+
+<Canvas of={NavigationMenuStories.PanelAlignment} />
+
+### Panel widths
+
+`panelSize` is `auto` (as wide as the content wants), a fixed width (`sm`, `md`, `lg`) or `full`, the width of the nearest positioned
+ancestor: a `sticky` `Navbar` is one, and otherwise the box to span needs `position: relative`.
+
+<Canvas of={NavigationMenuStories.PanelSizes} />
+
+### Vertical
+
+`orientation="vertical"` is a column of triggers with their panels beside them, and `ArrowUp` and `ArrowDown` move between them. It
+suits a side navigation on a wide screen; the stacked form is for a phone.
+
+<Canvas of={NavigationMenuStories.Vertical} />
+
+### With an indicator
+
+`indicator` draws a small arrow from the open trigger to its panel, sliding as you move between triggers.
+
+<Canvas of={NavigationMenuStories.WithIndicator} />
+
+### The current page from a path
+
+Give the menu the page's `currentPath` and the link with that `href` is the current page, and so is the trigger of the panel that holds
+it, with no `current` to write. A link's own `current` (either value) wins, and `currentMatch="prefix"` also matches everything under a
+link's path. Only same-site paths are compared; a hash, a query and a trailing slash are ignored.
+
+<Canvas of={NavigationMenuStories.FromThePath} />
+
+### Stacked, several open
+
+In the stacked form one item is open at a time unless `exclusive={false}`. An item whose panel holds the current page starts open.
+
+<Canvas of={NavigationMenuStories.StackedSeveralOpen} />
+
+### Opened from outside
+
+`controllerRef` gives code outside the menu `open(value)` and `close()`, each returning whether it had anything to do, and
+`onOpenChangeComplete` says when a panel's entrance or exit is over.
+
+<Canvas of={NavigationMenuStories.FromOutside} />
+
 ### Controlled from your own state
 
 `value` is the open item's value (`""` for none). The menu reports changes through `onValueChange` and shows the
@@ -193,7 +353,9 @@ it is the stacked list, and choosing a link closes the menu.
 - Keep a panel to a handful of links in one to three groups, and head each group with a short `label`.
 - Give a trigger a name that says what is behind it ("Products"), and the menu a name (`aria-label`) when the page has more than one navigation.
 - Mark the current page with `current`, from your router, so it is right on a server-rendered page.
-- Put a link that is a destination on its own (Pricing) beside the triggers as a `NavigationMenu.Link`.
+- Put a link that is a destination on its own (Pricing) beside the triggers as a `NavigationMenu.Link`, or give a trigger an `href` when its section has a page of its own.
+- Give the menu `currentPath` from your router so the current page and its section are marked without writing `current` on each.
+- Use `onIntent` to prefetch the route a link leads to; it fires when the pointer rests or focus arrives.
 - Use `asChild` with your router's link so navigation stays client-side.
 
 </Callout>
@@ -224,8 +386,13 @@ it is the stacked list, and choosing a link closes the menu.
 - A trigger is a `<button>` with `aria-expanded` and `aria-controls` pointing at its panel. It is not `role="menu"` or `aria-haspopup`: the panel is links, not menu items.
 - The current page is `aria-current="page"`. A trigger with `current` is only drawn as current: it has no `aria-current`, since a button is not a page. A disabled link is `aria-disabled` and stays focusable, with its click blocked; a disabled trigger is a native disabled button and leaves the tab order.
 - A link's description and badge are part of its name, and an external link's new tab is announced by a visually hidden "(opens in a new tab)".
+- A split trigger is a link and a caret `<button>` named by `labels.togglePanel` ("Products menu"), each its own tab stop; the link has no `aria-expanded`, the button does.
+- A group heading that is a link names the list of links beneath it. A featured block is a link as a whole when it has an `href`, and plain content when it does not.
+- A panel taller than the room scrolls inside itself, and the browser scrolls a focused link into view.
+- In the vertical form the arrow keys that move between triggers are `ArrowUp` and `ArrowDown`.
 - Keys: `Tab` and `Shift+Tab` move through the triggers and links in order, and `Tab` from an open trigger goes into its panel. `Enter`, `Space` or `ArrowDown` opens a panel; `ArrowLeft` and `ArrowRight` move between the triggers and links of the bar; `Escape` closes the panel and returns focus to its trigger; `Enter` follows a link.
 - The primitive keeps a hidden, focusable stop beside an open trigger to hand focus into the panel. An accessibility checker that runs while a panel is open reports it (`aria-hidden-focus`); the stop is how `Tab` gets into the panel and is gone when the panel closes.
+- The stacked form's panels open and close with a height transition, and a closed one is removed from the page, so its links leave the tab order and the accessibility tree.
 - A link in an exiting panel stays in the page until its exit animation ends, a fraction of a second, as for any animated panel.
 - In the stacked form there is no primitive: a trigger is a disclosure button with `aria-expanded` and `aria-controls`, its links are plain tab stops, and a collapsed panel is `hidden`, so its links leave the tab order and the accessibility tree.
 - Every trigger and link is at least 24 by 24 CSS pixels at every size. The current-page marks keep an outline in forced colours, and an open panel keeps its border and loses its shadow.
@@ -274,6 +441,22 @@ it is the stacked list, and choosing a link closes the menu.
     </NavigationMenu.Item>
   </NavigationMenu.List>
 </NavigationMenu>
+
+{/* A panel with an image, a featured block and a footer; Image and the router's link come from your app */}
+<NavigationMenu.Content layout="columns">
+  <NavigationMenu.Group label="Platform" href="/platform">{/* links */}</NavigationMenu.Group>
+  <NavigationMenu.Feature title="Launch week" href="/launch" media={<img src="/launch.png" alt="" />}>
+    Everything we shipped this quarter.
+  </NavigationMenu.Feature>
+  <NavigationMenu.Footer>
+    <NavigationMenu.Link href="/products">View all products</NavigationMenu.Link>
+  </NavigationMenu.Footer>
+</NavigationMenu.Content>
+
+{/* Close the open panel when the route changes, and mark the current page from the router's path:
+    const { pathname } = useLocation();  const controller = useRef<NavigationMenuController>(null);
+    useEffect(() => { controller.current?.close(); }, [pathname]); */}
+<NavigationMenu currentPath={pathname} controllerRef={controller}>{/* … */}</NavigationMenu>
 
 {/* In a Navbar: a mega menu in the bar, a stacked list in the phone menu */}
 <Navbar>

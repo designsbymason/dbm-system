@@ -25,6 +25,7 @@ import { Drawer } from "../Drawer";
 import { Menu } from "../Menu";
 // Not part of the package's public surface: shared by path, so the rail's flyout gap is `Menu`'s own.
 import { MENU_SIDE_OFFSET } from "../Menu/Menu";
+import { blockDisabledClick, EXTERNAL_HREF_PATTERN } from "../../internal/linkGuard";
 import styles from "./Sidebar.module.css";
 import { holdsPath, matchesPath, rolledUpCount } from "./Sidebar.paths";
 import {
@@ -61,7 +62,6 @@ import type {
 } from "./Sidebar.types";
 import { useSidebarState } from "./useSidebarState";
 
-const EXTERNAL_HREF_PATTERN = /^(https?:)?\/\//i;
 
 /** How many groups may nest before the development warning: deeper than this is a tree, and `Tree` is its own component. */
 const MAX_GROUP_DEPTH = 3;
@@ -807,12 +807,7 @@ const SidebarItem = forwardRef<HTMLElement, SidebarItemProps>(
 
     // Capture-phase, so it runs before a slotted child's own `onClick` (a router's navigation), as `Link`'s does.
     const handleClickCapture = (event: MouseEvent<HTMLElement>) => {
-      if (disabled) {
-        event.preventDefault();
-        event.stopPropagation();
-        return;
-      }
-      onClickCapture?.(event as never);
+      if (!blockDisabledClick(event, disabled)) onClickCapture?.(event as never);
     };
 
     // An item chosen in the phone panel closes it. `preventDefault` doesn't stop that: a router's link calls it to navigate without a page
