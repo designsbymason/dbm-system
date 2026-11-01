@@ -1,6 +1,6 @@
 # ColorPicker — review findings
 
-**Status:** Built 2026-10-31 and taken through a full `06-engineering-standards.md` §9 review pass the same day (findings and fixes below). Not Finalized: only the maintainer declares that. Open at the end of the pass: Safari, Firefox, a real touch screen, a screen reader, the real `EyeDropper` API, a second browser tab for `persistKey`, a phone with an on-screen keyboard.
+**Status:** Finalized 2026-10-31, declared by the maintainer after the final review round below. Open at finalization: Safari, Firefox, a real touch screen, a screen reader, the real `EyeDropper` API, a second browser tab for `persistKey`, a phone with an on-screen keyboard, the Docs page in all four themes (two were looked at), the transparency checkerboard's contrast and the §5 sweep of every story's Controls (see "Not done").
 
 ## What was built
 
