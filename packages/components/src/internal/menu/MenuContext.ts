@@ -1,6 +1,6 @@
 import * as DropdownMenuPrimitive from "@radix-ui/react-dropdown-menu";
 import { createContext, useCallback, useState, type MutableRefObject } from "react";
-import type { MenuLabels, MenuSize } from "./Menu.types";
+import type { MenuLabels, MenuSize } from "../../organisms/Menu/Menu.types";
 
 export const DEFAULT_MENU_LABELS: MenuLabels = { back: "Back" };
 

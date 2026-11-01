@@ -7,7 +7,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { Button } from "../../atoms/Button";
 import { Dialog } from "../Dialog";
 import { Menu } from "./Menu";
-import styles from "./Menu.module.css";
+import styles from "../../internal/menu/menu.module.css";
 
 function Basic({
   root,

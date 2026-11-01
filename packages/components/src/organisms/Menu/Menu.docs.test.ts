@@ -5,7 +5,7 @@ import { describe, expect, it } from "vitest";
 // The Docs page's "Design tokens used" table is written by hand, so it can drift from the stylesheet. This holds the
 // two together. A row may name several tokens, separated by " / ". (The tests run from the package's own folder.)
 const folder = join(process.cwd(), "src/organisms/Menu");
-const css = readFileSync(join(folder, "Menu.module.css"), "utf8");
+const css = readFileSync(join(process.cwd(), "src/internal/menu/menu.module.css"), "utf8");
 const mdx = readFileSync(join(folder, "Menu.mdx"), "utf8");
 
 const usedTokens = [...new Set([...css.matchAll(/var\(--dbm-([a-z0-9-]+)/g)].map((match) => match[1] as string))];

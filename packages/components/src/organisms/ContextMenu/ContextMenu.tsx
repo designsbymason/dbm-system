@@ -5,7 +5,7 @@ import { Backdrop } from "../../atoms/Backdrop";
 import { ButtonGroupReset } from "../../atoms/Button/buttonGroupContext";
 import { registerMenuInvoker } from "../../internal/overlay/menuInvokers";
 import { OverlayLifecycle } from "../../internal/overlay/OverlayLifecycle";
-import menuStyles from "../Menu/Menu.module.css";
+import menuStyles from "../../internal/menu/menu.module.css";
 import { menuSharedParts, menuSizeClass, MenuViewport } from "../Menu/Menu";
 import {
   DEFAULT_MENU_LABELS,
@@ -14,7 +14,7 @@ import {
   MenuSizeContext,
   useControllableState,
   type MenuPrimitiveKit,
-} from "../Menu/MenuContext";
+} from "../../internal/menu/MenuContext";
 import styles from "./ContextMenu.module.css";
 import {
   ContextMenuControllerContext,

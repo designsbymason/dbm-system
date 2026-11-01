@@ -6,7 +6,7 @@ import { describe, expect, it } from "vitest";
 // them together. The panel, items and labels are drawn with `Menu`'s stylesheet, which this component imports, so the
 // table covers both. A row may name several tokens, separated by " / ". (The tests run from the package's own folder.)
 const organisms = join(process.cwd(), "src/organisms");
-const css = ["Menu/Menu.module.css", "ContextMenu/ContextMenu.module.css"]
+const css = ["../internal/menu/menu.module.css", "ContextMenu/ContextMenu.module.css"]
   .map((file) => readFileSync(join(organisms, file), "utf8"))
   .join("\n");
 const mdx = readFileSync(join(organisms, "ContextMenu/ContextMenu.mdx"), "utf8");
