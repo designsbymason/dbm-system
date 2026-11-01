@@ -1,0 +1,169 @@
+/* The bar: a row of triggers, as wide as they are up to its container, scrolling sideways past that. The scrollbar is
+   hidden and a fade at each end that has more behind it says so (`data-overflow-*`, from `useScrollEdges`), drawn as a
+   mask so it needs no colour of its own. `scroll-padding` keeps a focused trigger clear of the fade. */
+.root {
+  --menubar-fade: var(--dbm-space-6);
+  --menubar-gap: var(--dbm-space-1);
+  --menubar-padding: 0;
+  align-items: center;
+  box-sizing: border-box;
+  display: flex;
+  font-family: var(--dbm-font-family-primary);
+  gap: var(--menubar-gap);
+  inline-size: fit-content;
+  max-inline-size: 100%;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  padding: var(--menubar-padding);
+  scroll-padding-inline: var(--menubar-fade);
+  scrollbar-width: none;
+}
+
+.root::-webkit-scrollbar {
+  display: none;
+}
+
+.root[data-overflow-start] {
+  mask-image: linear-gradient(to right, transparent, black var(--menubar-fade));
+}
+
+.root[data-overflow-end] {
+  mask-image: linear-gradient(to left, transparent, black var(--menubar-fade));
+}
+
+.root[data-overflow-start][data-overflow-end] {
+  mask-image: linear-gradient(
+    to right,
+    transparent,
+    black var(--menubar-fade),
+    black calc(100% - var(--menubar-fade)),
+    transparent
+  );
+}
+
+.root:dir(rtl)[data-overflow-start] {
+  mask-image: linear-gradient(to left, transparent, black var(--menubar-fade));
+}
+
+.root:dir(rtl)[data-overflow-end] {
+  mask-image: linear-gradient(to right, transparent, black var(--menubar-fade));
+}
+
+/* Surfaces, with the same three names and looks as `Toolbar`. A ghost bar has none, so it adds no padding that would
+   push the triggers off the line they should align to. */
+.ghost {
+  --menubar-padding: 0;
+}
+
+.outlined,
+.filled {
+  --menubar-padding: var(--dbm-space-1);
+  border-radius: var(--dbm-radius-lg);
+}
+
+.outlined {
+  background-color: var(--dbm-bg-surface);
+  border: var(--dbm-border-width-1) solid var(--dbm-border-default);
+}
+
+.filled {
+  background-color: var(--dbm-bg-neutral-subtle);
+}
+
+/* Sizes — set on the bar, read by every trigger. A trigger is its padding plus a line of text, as a `Button` is, and
+   keeps the 24px floor below. */
+.sizeXs {
+  --menubar-font-size: var(--dbm-font-size-xs);
+  --menubar-pad-block: var(--dbm-space-1);
+  --menubar-pad-inline: var(--dbm-space-2);
+}
+
+.sizeSm {
+  --menubar-font-size: var(--dbm-font-size-sm);
+  --menubar-pad-block: var(--dbm-space-2);
+  --menubar-pad-inline: var(--dbm-space-3);
+}
+
+.sizeMd {
+  --menubar-font-size: var(--dbm-font-size-base);
+  --menubar-pad-block: var(--dbm-space-2);
+  --menubar-pad-inline: var(--dbm-space-3);
+}
+
+.sizeLg {
+  --menubar-font-size: var(--dbm-font-size-md);
+  --menubar-pad-block: var(--dbm-space-3);
+  --menubar-pad-inline: var(--dbm-space-4);
+}
+
+.sizeXl {
+  --menubar-font-size: var(--dbm-font-size-lg);
+  --menubar-pad-block: var(--dbm-space-3);
+  --menubar-pad-inline: var(--dbm-space-4);
+}
+
+.trigger {
+  background: none;
+  border: none;
+  border-radius: var(--dbm-radius-md);
+  color: var(--dbm-text-primary);
+  cursor: pointer;
+  flex-shrink: 0;
+  font: inherit;
+  font-size: var(--menubar-font-size);
+  font-weight: var(--dbm-font-weight-semibold);
+  line-height: var(--dbm-line-height-tight);
+  min-block-size: var(--dbm-space-6);
+  min-inline-size: var(--dbm-space-6);
+  padding-block: var(--menubar-pad-block);
+  padding-inline: var(--menubar-pad-inline);
+  position: relative;
+  transition: background-color var(--dbm-motion-duration-fast)
+    var(--dbm-motion-easing-standard);
+  white-space: nowrap;
+}
+
+.trigger:hover:not(:disabled):not([data-state="open"]) {
+  background-color: var(--dbm-bg-neutral-subtle);
+}
+
+/* The open trigger carries the same tint an open submenu's trigger does in the panel below it. */
+.trigger[data-state="open"] {
+  background-color: var(--dbm-bg-brand-subtle);
+}
+
+/* The ring is drawn inside the trigger: the bar scrolls, so it clips whatever is drawn outside its edge
+   (`05-component-api-conventions.md` §6). A focused trigger is painted over its neighbours. */
+.trigger:focus-visible {
+  border-radius: var(--dbm-radius-sm);
+  outline: var(--dbm-border-width-2) solid var(--dbm-border-focus);
+  outline-offset: calc(-1 * var(--dbm-border-width-2));
+}
+
+.trigger:disabled,
+.trigger[data-disabled] {
+  color: var(--dbm-text-disabled);
+  cursor: not-allowed;
+}
+
+@media (forced-colors: active) {
+  .root[data-overflow-start],
+  .root[data-overflow-end] {
+    mask-image: none;
+  }
+
+  .outlined,
+  .filled {
+    border-color: CanvasText;
+  }
+
+  .trigger[data-state="open"] {
+    outline: var(--dbm-border-width-2) solid Highlight;
+    outline-offset: calc(-1 * var(--dbm-border-width-2));
+  }
+
+  .trigger:disabled,
+  .trigger[data-disabled] {
+    color: GrayText;
+  }
+}

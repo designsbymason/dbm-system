@@ -71,6 +71,7 @@ import { sidebarPlaygroundSnippet } from "./organisms/Sidebar/Sidebar.snippets";
 import { commandPalettePlaygroundSnippet } from "./organisms/CommandPalette/CommandPalette.snippets";
 import { imageViewerPlaygroundSnippet } from "./organisms/ImageViewer/ImageViewer.snippets";
 import { contextMenuPlaygroundSnippet } from "./organisms/ContextMenu/ContextMenu.snippets";
+import { menubarPlaygroundSnippet } from "./organisms/Menubar/Menubar.snippets";
 import { fileUploadPlaygroundSnippet } from "./organisms/FileUpload/FileUpload.snippets";
 import { formPlaygroundSnippet } from "./organisms/Form/Form.snippets";
 import { toastPlaygroundSnippet } from "./organisms/Toast/Toast.snippets";
@@ -1968,6 +1969,24 @@ describe("Playground snippet for ContextMenu", () => {
     const code = contextMenuPlaygroundSnippet(everything);
     expect(code).toContain('<ContextMenu modal={false} dir="rtl">');
     expect(code).toContain('<ContextMenu.Content size="lg" alignOffset={6} avoidCollisions={false} collisionPadding={20} loop>');
+  });
+});
+
+describe("Playground snippet for Menubar", () => {
+  const everything = { size: "lg", surface: "outlined", loop: false, dir: "rtl" } as const;
+
+  it.each([{}, everything, { size: "md", surface: "ghost", loop: true, dir: "ltr" }] as const)("Menubar %j is a real snippet", (args) => {
+    expect(problemsIn(menubarPlaygroundSnippet(args))).toEqual([]);
+  });
+
+  it("writes only what differs from the defaults", () => {
+    const code = menubarPlaygroundSnippet({ size: "md", surface: "ghost", loop: true, dir: "ltr" });
+    expect(code).toContain('<Menubar aria-label="Application menu">');
+  });
+
+  it("writes each setting that is changed", () => {
+    const code = menubarPlaygroundSnippet(everything);
+    expect(code).toContain('<Menubar aria-label="Application menu" size="lg" surface="outlined" loop={false} dir="rtl">');
   });
 });
 

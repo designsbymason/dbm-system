@@ -109,6 +109,7 @@ export * from "./organisms/Form";
 export * from "./organisms/ImageViewer";
 export * from "./organisms/ContextMenu";
 export * from "./organisms/Menu";
+export * from "./organisms/Menubar";
 export * from "./organisms/MultiSelect";
 export * from "./organisms/Navbar";
 export * from "./organisms/NavigationMenu";
