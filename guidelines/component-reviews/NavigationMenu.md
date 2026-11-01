@@ -1,6 +1,6 @@
 # NavigationMenu — review findings
 
-**Status:** Built 2026-10-31; not declared Finalized. Open: see "Not verified" below.
+**Status:** Finalized 2026-11-01, declared by the maintainer after the final review round below. Open at finalization: the items under "Not verified" (other browsers, a real finger, a screen reader, the Docs page in two of the four themes, and the primitive's hidden focus stop under an accessibility scan); none changes the component.
 
 ## What was built
 
