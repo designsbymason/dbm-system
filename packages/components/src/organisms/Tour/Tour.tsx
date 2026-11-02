@@ -374,6 +374,20 @@ export const Tour = forwardRef<HTMLDivElement, TourProps>(
       if (!pendingFocus.current && !focusState.current.inside) cardNode.current?.focus({ preventScroll: true });
     };
 
+    // The spotlight eases to a new step, and only then: for a moment after the step changes.
+    const [easeStep, setEaseStep] = useState(stepId);
+    const [easing, setEasing] = useState(false);
+    if (easeStep !== stepId) {
+      setEaseStep(stepId);
+      setEasing(true);
+    }
+    useEffect(() => {
+      if (!easing) return undefined;
+      // `transitionend` ends it; this is for a transition that never runs (reduced motion, no change of place).
+      const timer = window.setTimeout(() => setEasing(false), 600);
+      return () => window.clearTimeout(timer);
+    }, [easing, stepId]);
+
     const keyboardInset = useKeyboardInset(visible && placement === "docked");
     const padding = centered ? 0 : (step?.padding ?? 2);
     const layerStyle = {
@@ -445,7 +459,16 @@ export const Tour = forwardRef<HTMLDivElement, TourProps>(
             aria-hidden="true"
             onPointerDown={closeOnOutsidePress ? () => requestClose("outside") : undefined}
           />
-          {spot.rect && <div ref={ringRef} className={styles.ring} style={ringStyle} aria-hidden="true" />}
+          {spot.rect && (
+            <div
+              ref={ringRef}
+              className={styles.ring}
+              style={ringStyle}
+              data-easing={easing ? "" : undefined}
+              onTransitionEnd={(event) => event.propertyName === "translate" && setEasing(false)}
+              aria-hidden="true"
+            />
+          )}
           <PopperPrimitive.Root>
             <PopperPrimitive.Anchor virtualRef={ringRef} />
             {cardElement && (

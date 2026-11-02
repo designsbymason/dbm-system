@@ -47,13 +47,17 @@
   padding: var(--tour-padding);
   pointer-events: none;
   position: fixed;
+  z-index: var(--dbm-z-index-modal);
+}
+
+/* It eases only between steps. Following an element that scrolls or animates by easing would trail it by the duration. */
+.ring[data-easing] {
   transition:
     translate var(--dbm-motion-duration-base) var(--dbm-motion-easing-standard),
     inline-size var(--dbm-motion-duration-base) var(--dbm-motion-easing-standard),
     block-size var(--dbm-motion-duration-base) var(--dbm-motion-easing-standard),
     padding var(--dbm-motion-duration-base) var(--dbm-motion-easing-standard),
     margin var(--dbm-motion-duration-base) var(--dbm-motion-easing-standard);
-  z-index: var(--dbm-z-index-modal);
 }
 
 /* The card: the same surface as `Popover`'s panel. `font-family` is set because the layer is portaled outside the app. */
@@ -177,7 +181,7 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .ring {
+  .ring[data-easing] {
     transition: none;
   }
 }

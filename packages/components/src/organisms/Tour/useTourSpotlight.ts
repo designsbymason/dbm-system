@@ -147,6 +147,12 @@ export function useTourSpotlight({ step, active, layerRef, timeout, hold, onMiss
     frame = requestAnimationFrame(run);
     window.addEventListener("scroll", wake, { capture: true, passive: true });
     window.addEventListener("resize", wake);
+    // Content inserted or restyled elsewhere on the page, and a CSS transition or animation starting or ending, move an
+    // element without a scroll, a resize or a change in its own size.
+    const mutations = typeof MutationObserver === "undefined" ? null : new MutationObserver(wake);
+    mutations?.observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ["style", "class", "hidden"] });
+    const movers = ["transitionrun", "transitionend", "animationstart", "animationend"] as const;
+    for (const type of movers) document.addEventListener(type, wake, true);
     const observer = element && typeof ResizeObserver !== "undefined" ? new ResizeObserver(wake) : null;
     if (element) observer?.observe(element);
     return () => {
@@ -154,6 +160,8 @@ export function useTourSpotlight({ step, active, layerRef, timeout, hold, onMiss
       window.clearTimeout(timer);
       window.removeEventListener("scroll", wake, { capture: true });
       window.removeEventListener("resize", wake);
+      mutations?.disconnect();
+      for (const type of movers) document.removeEventListener(type, wake, true);
       observer?.disconnect();
     };
   }, [key, element, layerRef]);

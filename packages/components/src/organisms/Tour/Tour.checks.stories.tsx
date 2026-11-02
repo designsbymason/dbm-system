@@ -436,17 +436,25 @@ export const InForcedColoursTheSpotlightIsOutlined: Story = {
 };
 
 export const UnderReducedMotionTheSpotlightJumps: Story = {
-  name: "Under reduced motion the spotlight moves without easing",
+  name: "The spotlight eases between steps, and under reduced motion it moves without easing",
   render: () => <Demo />,
   play: async () => {
-    await startTour();
+    const dialog = await startTour();
     const ring = ringOf() as HTMLElement;
+    // At rest it follows its element with no easing, so a scroll or an animation is not trailed.
+    await expect(getComputedStyle(ring).transitionDuration).toBe("0s");
+    within(dialog).getByRole("button", { name: "Next" }).click();
+    await waitFor(() => expect(ring).toHaveAttribute("data-easing"));
     await expect(getComputedStyle(ring).transitionDuration).not.toBe("0s");
+    await settled();
     await emulate("prefers-reduced-motion", "reduce");
     try {
       await sleep(300);
       await expect(window.matchMedia("(prefers-reduced-motion: reduce)").matches).toBe(true);
+      within(body.getByRole("dialog")).getByRole("button", { name: "Back" }).click();
+      await waitFor(() => expect(ring).toHaveAttribute("data-easing"));
       await expect(getComputedStyle(ring).transitionDuration).toBe("0s");
+      await settled();
     } finally {
       await clearEmulation();
     }
@@ -671,6 +679,81 @@ export const TheProgressBarIsToldApartInForcedColours: Story = {
       const rect = button.getBoundingClientRect();
       await expect(rect.height).toBeGreaterThanOrEqual(24);
     }
+    await closeWithEscape();
+  },
+};
+
+const sampleFrames = async (frames: number, read: () => number) => {
+  const values: number[] = [];
+  for (let frame = 0; frame < frames; frame += 1) {
+    await nextFrame();
+    values.push(read());
+  }
+  return values;
+};
+
+export const TheSpotlightFollowsContentInsertedAbove: Story = {
+  name: "Content inserted above the element, with no scroll or resize, moves the spotlight within a third of a second",
+  render: () => <Demo />,
+  play: async () => {
+    await startTour();
+    const stage = await body.findByTestId("stage");
+    await sleep(900);
+    const spacer = document.createElement("div");
+    spacer.style.blockSize = "3rem";
+    spacer.style.flex = "none";
+    stage.insertBefore(spacer, stage.firstChild);
+    const started = performance.now();
+    const padding = parseFloat(getComputedStyle(ringOf() as HTMLElement).paddingLeft);
+    const aligned = () => Math.abs((ringOf() as HTMLElement).getBoundingClientRect().top - (demoElement("search").getBoundingClientRect().top - padding)) < 1.5;
+    while (!aligned() && performance.now() - started < 1500) await nextFrame();
+    await expect(performance.now() - started).toBeLessThan(400);
+    spacer.remove();
+    await closeWithEscape();
+  },
+};
+
+export const TheSpotlightFollowsACssAnimation: Story = {
+  name: "An element moved by a CSS animation keeps the spotlight on it while it moves",
+  render: () => <Demo />,
+  play: async () => {
+    await startTour();
+    await sleep(900);
+    const style = document.createElement("style");
+    style.textContent = "@keyframes tour-test-slide { from { translate: 0 0; } to { translate: 0 60px; } } .tour-test-slide { animation: tour-test-slide 800ms linear forwards; }";
+    document.head.append(style);
+    const element = demoElement("search");
+    element.classList.add("tour-test-slide");
+    await sleep(350);
+    const padding = parseFloat(getComputedStyle(ringOf() as HTMLElement).paddingLeft);
+    const off = Math.abs((ringOf() as HTMLElement).getBoundingClientRect().top - (element.getBoundingClientRect().top - padding));
+    await expect(off).toBeLessThan(12);
+    element.classList.remove("tour-test-slide");
+    style.remove();
+    await closeWithEscape();
+  },
+};
+
+export const TheCardKeepsUpWithTheSpotlightBetweenSteps: Story = {
+  name: "While the spotlight eases to the next step the card never strays far from it",
+  render: () => <Demo steps={(find) => [
+    { id: "search", target: () => find("search"), title: "Search", side: "bottom" },
+    { id: "status", target: () => find("status"), title: "Status", side: "bottom" },
+  ]} />,
+  play: async () => {
+    const dialog = await startTour();
+    const gap = () => {
+      const card = body.queryByRole("dialog")?.getBoundingClientRect();
+      const ring = ringOf()?.getBoundingClientRect();
+      return card && ring ? card.top - ring.bottom : Number.NaN;
+    };
+    const resting = gap();
+    within(dialog).getByRole("button", { name: "Next" }).click();
+    const samples = await sampleFrames(40, gap);
+    const worst = Math.max(...samples.filter((value) => !Number.isNaN(value)).map((value) => Math.abs(value - resting)));
+    await expect(worst).toBeLessThan(40);
+    await settled();
+    await expect(Math.abs(gap() - resting)).toBeLessThan(2);
     await closeWithEscape();
   },
 };
