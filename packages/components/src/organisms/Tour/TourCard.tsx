@@ -1,6 +1,7 @@
 import { cx } from "@dbm-system/utils";
 import { forwardRef } from "react";
 import type { ComponentPropsWithoutRef, KeyboardEvent, ReactNode } from "react";
+import { CaretRightIcon } from "@dbm-system/icons";
 import { Button } from "../../atoms/Button";
 import { ButtonGroupReset } from "../../atoms/Button/buttonGroupContext";
 import { Heading } from "../../atoms/Heading";
@@ -123,16 +124,6 @@ export const TourCard = forwardRef<HTMLDivElement, TourCardProps>(
                     {labels.skip}
                   </Button>
                 )}
-                {!last && dismissals.includes("later") && (
-                  <Button variant="tertiary" size="sm" data-tour-action="later" onClick={() => onAction("later")}>
-                    {labels.later}
-                  </Button>
-                )}
-                {!last && dismissals.includes("never") && (
-                  <Button variant="tertiary" size="sm" data-tour-action="never" onClick={() => onAction("never")}>
-                    {labels.never}
-                  </Button>
-                )}
                 <span className={styles.spacer} />
                 {index > 0 && (
                   <Button variant="secondary" size="sm" data-tour-action="back" onClick={() => onAction("back")}>
@@ -145,6 +136,20 @@ export const TourCard = forwardRef<HTMLDivElement, TourCardProps>(
               </>
             )}
           </div>
+          {!last && dismissals.length > 0 && (
+            <div className={styles.dismissals}>
+              {dismissals.includes("later") && (
+                <Button variant="tertiary" size="xs" trailingIcon={CaretRightIcon} data-tour-action="later" onClick={() => onAction("later")}>
+                  {labels.later}
+                </Button>
+              )}
+              {dismissals.includes("never") && (
+                <Button variant="tertiary" size="xs" trailingIcon={CaretRightIcon} data-tour-action="never" onClick={() => onAction("never")}>
+                  {labels.never}
+                </Button>
+              )}
+            </div>
+          )}
         </ButtonGroupReset>
         {arrow}
       </div>

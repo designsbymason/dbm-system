@@ -1,6 +1,6 @@
 # 0169 — `Tour` steps can advance on their element's events, run a hook before they are shown, skip a missing element, and offer "later" and "never", over leaving each to the app
 
-**Status:** Accepted · **Date:** 2026-11-01
+**Status:** Accepted · **Date:** 2026-11-01 · **Amended 2026-11-02** — where the two buttons are drawn and which steps show them; the decision itself is unchanged
 
 ## Context
 [ADR-0165](./0165-tour-is-a-prop-driven-overlay-over-a-steps-array-with-a-step-id-as-its-value-and-no-trigger-over-a-compound-of-step-parts-or-a-built-in-start-button.md)
@@ -14,8 +14,8 @@ the same wiring: a step that moves on when its element is used, a step that must
   reported (once, in development) and the step is shown anyway.
 - **`missingTarget` (the tour, and per step) is `"center"` (the default) or `"skip"`.** Skipping goes the way the person was going, so Back does not land on the same missing step; a last (or first) step
   that is missing stays centred rather than ending the tour.
-- **`dismissals={["later", "never"]}`** adds "Remind me later" and "Don't show again" beside Skip, on every step but the last, and reports the reasons `"later"` and `"never"`.
-  What each remembers is the app's (the `usePersistentDismiss` recipe, `expiresAfter` for "later"). Their text is `labels.later` and `labels.never`.
+- **`dismissals={["later", "never"]}`** adds "Remind me later" and "Don't show again" as two quiet buttons on one centred row in the card's footer, a strip under a line across its full width, each with a trailing caret (Skip stays at the start of the main row on every step but the last), on every step but the last (`dismissalsOn="first"` limits them to the first step), and reports the reasons `"later"` and `"never"`.
+  What each remembers is the app's (the `usePersistentDismiss` recipe, `expiresAfter` for "later"). Their text is `labels.later` and `labels.never`. *(Amended 2026-11-02: they were first drawn in the main row beside Skip, where three text buttons and Next wrapped into a pile, and then on a line of their own, then in a footer strip side by side, then behind a "more" menu in the title row. The menu worked but hid two choices behind a click and needed the card's focus trap to stand down for it; the footer keeps them visible and apart from the card's own buttons.)*
 - **A step may carry `media`, a `footer` and its own `actions`** (a node, or a function handed the controller, in place of Skip, Back and Next), and the progress may be a bar of
   segments (`progress="bar"`, with the step still named in text for a screen reader, or `"both"`).
 - **`scrollOffset`** keeps room at the top and bottom of the screen when an element is scrolled into view, for a sticky header or footer, as the element's `scroll-margin` for that call.

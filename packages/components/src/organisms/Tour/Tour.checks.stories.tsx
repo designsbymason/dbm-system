@@ -661,6 +661,50 @@ export const ATourRunsInsideAModalDialog: Story = {
   },
 };
 
+export const TheDismissalsAreACentredFooterRow: Story = {
+  name: "The dismissals are a footer under the buttons, on one centred row, each with a trailing caret; Skip is at the start of the main row",
+  render: () => <Demo dismissals={["later", "never"]} />,
+  play: async () => {
+    const dialog = await startTour();
+    const later = within(dialog).getByRole("button", { name: "Remind me later" });
+    const never = within(dialog).getByRole("button", { name: "Don't show again" });
+    const skip = within(dialog).getByRole("button", { name: "Skip tour" });
+    const next = within(dialog).getByRole("button", { name: "Next" });
+    const a = later.getBoundingClientRect();
+    const b = never.getBoundingClientRect();
+    // One row: the same line, side by side, both under the main row.
+    await expect(Math.abs(a.top - b.top)).toBeLessThan(1);
+    await expect(b.left).toBeGreaterThanOrEqual(a.right);
+    await expect(a.top).toBeGreaterThanOrEqual(next.getBoundingClientRect().bottom);
+    // Centred: the pair sits in the middle of the card.
+    const card = dialog.getBoundingClientRect();
+    await expect(Math.abs((a.left + b.right) / 2 - (card.left + card.width / 2))).toBeLessThan(2);
+    // The footer runs the full width of the card, under a line.
+    const footer = later.closest('[class*="_dismissals_"]') as HTMLElement;
+    await expect(Math.abs(footer.getBoundingClientRect().width - card.width)).toBeLessThan(3);
+    await expect(getComputedStyle(footer).borderBlockStartWidth).not.toBe("0px");
+    // The caret follows the text.
+    const caret = later.querySelector("svg") as SVGElement;
+    await expect(caret.getBoundingClientRect().left).toBeGreaterThanOrEqual(a.left + a.width / 2);
+    await expect(a.height).toBeGreaterThanOrEqual(24);
+    // Skip is at the start of the main row, with Back and Next at the end.
+    const s = skip.getBoundingClientRect();
+    await expect(s.left - card.left).toBeLessThan(card.width / 4);
+    await expect(s.right).toBeLessThanOrEqual(next.getBoundingClientRect().left);
+    await expect(Math.abs(s.top - next.getBoundingClientRect().top)).toBeLessThan(8);
+    await expect(within(dialog).queryByRole("button", { name: "Back" })).toBeNull();
+    // It stays on the next step, where Back sits beside Next.
+    await userEvent.click(next);
+    await waitFor(() => expect(body.getByRole("dialog")).toHaveAccessibleName("Start something new"));
+    await expect(body.getByRole("button", { name: "Skip tour" })).toBeInTheDocument();
+    await expect(body.getByRole("button", { name: "Back" })).toBeInTheDocument();
+    // The card is drawn afresh for the next step, so its buttons are looked up again.
+    await userEvent.click(await body.findByRole("button", { name: "Remind me later" }));
+    await waitFor(() => expect(body.queryByRole("dialog")).toBeNull());
+    await waitFor(() => expect(layerOf()).toBeNull());
+  },
+};
+
 export const TheProgressBarIsToldApartInForcedColours: Story = {
   name: "In forced colours a reached progress segment differs from one not reached",
   render: () => <Demo progress="bar" dismissals={["later", "never"]} />,
@@ -677,6 +721,7 @@ export const TheProgressBarIsToldApartInForcedColours: Story = {
     }
     for (const button of within(dialog).getAllByRole("button")) {
       const rect = button.getBoundingClientRect();
+      await expect(rect.width).toBeGreaterThanOrEqual(24);
       await expect(rect.height).toBeGreaterThanOrEqual(24);
     }
     await closeWithEscape();

@@ -34,6 +34,7 @@ import { useTourState } from "./useTourState";
  */
 const CARD_OFFSET = 12;
 const COLLISION_PADDING = 8;
+const NO_DISMISSALS: never[] = [];
 
 /**
  * A guided tour of a page that is already on screen: a sequence of steps, each dimming the page except one element (the
@@ -76,6 +77,7 @@ export const Tour = forwardRef<HTMLDivElement, TourProps>(
       presentation = "anchored",
       progress = "text",
       dismissals = [],
+      dismissalsOn = "all",
       missingTarget = "center",
       scrollOffset,
       scrimOpacity,
@@ -286,6 +288,8 @@ export const Tour = forwardRef<HTMLDivElement, TourProps>(
       [visible],
     );
     const onCardFocus = (event: FocusEvent<HTMLDivElement>) => {
+      // Content of the card drawn in a portal (a menu in a step's own text) reaches this handler through React, not the DOM.
+      if (!event.currentTarget.contains(event.target)) return;
       const action = (event.target as HTMLElement).getAttribute("data-tour-action") as TourAction | null;
       focusState.current = { inside: true, action };
     };
@@ -345,6 +349,8 @@ export const Tour = forwardRef<HTMLDivElement, TourProps>(
 
     const onKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
       if (event.defaultPrevented || event.altKey || event.ctrlKey || event.metaKey) return;
+      // Keys pressed in something the card's content draws in a portal reach this handler through React; they are not the card's.
+      if (!event.currentTarget.contains(event.target as Node)) return;
       const inField = (event.target as HTMLElement).closest("input, textarea, select, [contenteditable='true']");
       if (!interactive && !inField && (event.key === "ArrowRight" || event.key === "ArrowLeft")) {
         event.preventDefault();
@@ -421,7 +427,7 @@ export const Tour = forwardRef<HTMLDivElement, TourProps>(
         total={total}
         labels={labels}
         progress={progress}
-        dismissals={dismissals}
+        dismissals={dismissalsOn === "first" && index > 0 ? NO_DISMISSALS : dismissals}
         dir={dir}
         placement={placement}
         interactive={interactive}

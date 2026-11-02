@@ -96,7 +96,17 @@ describe("Tour — steps", () => {
     expect(onOpenChange).toHaveBeenCalledWith(false, { reason: "finish", stepId: "three" });
   });
 
-  it("skips from any earlier step", async () => {
+  it("offers Skip on every step but the last", async () => {
+    const user = userEvent.setup();
+    render(<Harness />);
+    await card();
+    expect(screen.getByRole("button", { name: "Skip tour" })).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Next" }));
+    await waitFor(() => expect(screen.getByRole("dialog")).toHaveAccessibleName("Second"));
+    expect(screen.getByRole("button", { name: "Skip tour" })).toBeInTheDocument();
+  });
+
+  it("skips from an earlier step", async () => {
     const user = userEvent.setup();
     const onOpenChange = vi.fn();
     render(<Harness onOpenChange={onOpenChange} />);
@@ -144,7 +154,7 @@ describe("Tour — steps", () => {
     await card();
     await user.click(screen.getByRole("button", { name: "Next" }));
     await waitFor(() => expect(screen.getByRole("dialog")).toHaveAccessibleName("Second"));
-    await user.click(screen.getByRole("button", { name: "Skip tour" }));
+    await user.keyboard("{Escape}");
     await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
     await user.click(screen.getByRole("button", { name: "Start" }));
     expect(await screen.findByRole("dialog")).toHaveAccessibleName("First");

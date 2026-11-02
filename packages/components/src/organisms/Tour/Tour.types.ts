@@ -76,9 +76,9 @@ export interface TourLabels {
   skip: string;
   /** The Next button's text on the last step. @default 'Finish' */
   finish: string;
-  /** The "remind me later" button's text. @default 'Remind me later' */
+  /** The "remind me later" item's text. @default 'Remind me later' */
   later: string;
-  /** The "don't show again" button's text. @default "Don't show again" */
+  /** The "don't show again" item's text. @default "Don't show again" */
   never: string;
   /** The progress text, written from the plain numbers. @default 'Step 2 of 5' */
   stepOf: (current: number, total: number) => string;
@@ -204,10 +204,16 @@ export interface TourProps
    */
   progress?: TourProgress;
   /**
-   * Extra ways out beside Skip, shown on every step but the last: `"later"` and `"never"`, reported as those reasons to
+   * Extra ways out beside Skip, two quiet buttons in a footer strip across the bottom of the card, on one centred row (see `dismissalsOn`): `"later"` and `"never"`, reported as those reasons to
    * `onOpenChange` so the app can remember them differently (see the `usePersistentDismiss` recipe).
    */
   dismissals?: TourDismissal[];
+  /**
+   * Which steps show the `dismissals`: every one but the last (`"all"`), or only the first (`"first"`), when a person
+   * decides whether they want the tour at all.
+   * @default 'all'
+   */
+  dismissalsOn?: "all" | "first";
   /**
    * What a step does when its element never appears, unless the step says otherwise.
    * @default 'center'

@@ -24,8 +24,9 @@ export const tourSnippets = {
     | "both" | "none" */}
 ${tour(['progress="both"'])}`,
 
-  dismissals: `{/* dismissals: extra ways out beside Skip, reported as the reasons "later" and "never" */}
-${tour(['dismissals={["later", "never"]}'])}`,
+  dismissals: `{/* dismissals: a footer of extra ways out, on one centred row under the buttons, reported as the reasons "later" and "never".
+    dismissalsOn: "all" (default) — every step but the last | "first" — only the first */}
+${tour(['dismissals={["later", "never"]}', 'dismissalsOn="first"'])}`,
 
   richer: `{/* media: a picture above the progress. footer: content above the buttons.
     actions: your own buttons in place of Skip, Back and Next, handed the controller. */}

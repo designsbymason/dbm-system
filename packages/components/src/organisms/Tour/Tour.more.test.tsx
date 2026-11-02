@@ -32,7 +32,7 @@ describe("Tour — progress", () => {
 });
 
 describe("Tour — dismissals", () => {
-  it("offers remind me later and don't show again, reporting each reason, on every step but the last", async () => {
+  it("offers remind me later and don't show again in the footer, reporting each reason", async () => {
     const user = userEvent.setup();
     const onOpenChange = vi.fn();
     const { unmount } = render(<Harness dismissals={["later", "never"]} onOpenChange={onOpenChange} />);
@@ -44,6 +44,41 @@ describe("Tour — dismissals", () => {
     await card();
     await user.click(screen.getByRole("button", { name: "Don't show again" }));
     expect(onOpenChange).toHaveBeenLastCalledWith(false, { reason: "never", stepId: "one" });
+  });
+
+  it("draws them in the footer, a caret-right icon trailing each, and not among the main buttons", async () => {
+    render(<Harness dismissals={["later", "never"]} />);
+    const dialog = await card();
+    const later = within(dialog).getByRole("button", { name: "Remind me later" });
+    const never = within(dialog).getByRole("button", { name: "Don't show again" });
+    const footer = later.closest('[class*="dismissals"]');
+    expect(footer).not.toBeNull();
+    expect(footer).toContainElement(never);
+    expect(footer).not.toContainElement(within(dialog).getByRole("button", { name: "Next" }));
+    expect(later.querySelector("svg")).not.toBeNull();
+    expect(never.querySelector("svg")).not.toBeNull();
+  });
+
+  it("offers only the dismissals asked for, and none by default", async () => {
+    const { unmount } = render(<Harness dismissals={["never"]} />);
+    await card();
+    expect(screen.getByRole("button", { name: "Don't show again" })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Remind me later" })).toBeNull();
+    unmount();
+    render(<Harness />);
+    await card();
+    expect(screen.queryByRole("button", { name: "Don't show again" })).toBeNull();
+  });
+
+  it("can show them on the first step only", async () => {
+    const user = userEvent.setup();
+    render(<Harness dismissals={["later", "never"]} dismissalsOn="first" />);
+    await card();
+    expect(screen.getByRole("button", { name: "Remind me later" })).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Next" }));
+    await name("Second");
+    expect(screen.queryByRole("button", { name: "Remind me later" })).toBeNull();
+    expect(screen.queryByRole("button", { name: "Don't show again" })).toBeNull();
   });
 
   it("does not offer them on the last step", async () => {

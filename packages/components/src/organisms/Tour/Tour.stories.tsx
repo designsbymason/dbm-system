@@ -24,6 +24,7 @@ const noControls = {
   progress: { control: false },
   missingTarget: { control: false },
   dismissals: { control: false },
+  dismissalsOn: { control: false },
   scrollOffset: { control: false },
   scrimOpacity: { control: false },
   closeOnOutsidePress: { control: false },
@@ -68,7 +69,14 @@ const meta: Meta<PlaygroundArgs> = {
     },
     dismissals: {
       control: false,
-      description: 'Extra ways out beside Skip, shown on every step but the last: "later" (Remind me later) and "never" (Don\'t show again), reported as those reasons to onOpenChange.',
+      description:
+        "Extra ways out beside Skip, two quiet buttons in a footer strip across the bottom of the card, on one centred row, each with a caret (not on the last step): \"later\" (Remind me later) and \"never\" (Don't show again), reported as those reasons to onOpenChange.",
+    },
+    dismissalsOn: {
+      control: "select",
+      options: ["all", "first"],
+      description: "Which steps show the dismissals: every one but the last, or only the first.",
+      table: { defaultValue: { summary: '"all"' } },
     },
     missingTarget: {
       control: "select",
@@ -150,7 +158,7 @@ export const ProgressBar: Story = {
 export const Dismissals: Story = {
   argTypes: noControls,
   parameters: { docs: { source: { code: tourSnippets.dismissals } } },
-  render: () => <Demo dismissals={["later", "never"]} />,
+  render: () => <Demo dismissals={["later", "never"]} dismissalsOn="first" />,
 };
 
 export const RicherCards: Story = {

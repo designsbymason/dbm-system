@@ -156,6 +156,23 @@
   margin-block-start: var(--dbm-space-2);
 }
 
+/* "Remind me later" and "Don't show again": the card's footer, a strip across its full width under a line, on one row and
+   centred, quieter than the card's own choices. It runs out to the card's edges (against its padding) and takes the card's
+   lower corners; the card cannot clip it, since the arrow sits outside the card's box. */
+.dismissals {
+  align-items: center;
+  border-block-start: var(--dbm-border-width-1) solid var(--dbm-border-default);
+  border-end-end-radius: calc(var(--dbm-radius-md) - var(--dbm-border-width-1));
+  border-end-start-radius: calc(var(--dbm-radius-md) - var(--dbm-border-width-1));
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--dbm-space-2);
+  justify-content: center;
+  margin-block: var(--dbm-space-2) calc(-1 * var(--dbm-space-4));
+  margin-inline: calc(-1 * var(--dbm-space-4));
+  padding: var(--dbm-space-2) var(--dbm-space-4);
+}
+
 .spacer {
   flex: 1;
 }
