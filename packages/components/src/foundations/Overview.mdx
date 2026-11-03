@@ -35,9 +35,9 @@ DBM's tokens are organized in three layers, each with a distinct job:
 1. **Primitive** — raw values with no meaning attached: a color scale's 600th step, `16px`, a
    cubic-bezier curve. Primitives don't say what they're *for*, only what they *are*. Source:
    `packages/tokens/src/primitive/*.json`.
-2. **Semantic** — contextual meaning, expressed by referencing a primitive: `bg.brand` currently
-   points at `purple.600`, but the token consumers reference is `bg.brand`, not `purple.600`
-   itself. This indirection is what lets the same token name resolve to a different actual color
+2. **Semantic** — contextual meaning, expressed by referencing a primitive: in Purple Light,
+   `bg.brand` points at `purple.600` (`purple.300` in Purple Dark, `emerald.700` in Emerald Light),
+   but the token consumers reference is `bg.brand`, not any one of those itself. This indirection is what lets the same token name resolve to a different actual color
    per brand/mode (below) — **one semantic layer file per theme**. Source:
    `packages/tokens/src/semantic/{brand}-{mode}.json`.
 3. **Component** — a dimension/size value a specific component's design needs that has no home on
@@ -52,8 +52,8 @@ DBM's tokens are organized in three layers, each with a distinct job:
 
 **Components reference semantic tokens only, never primitives directly.** This is the rule that
 makes the rest of this work: a component written as `color: var(--dbm-text-primary)` doesn't need
-to know or care that `text.primary` happens to resolve to `gray.900` in light mode and a
-different, lighter gray in dark mode — the indirection is already baked in one layer up. Reaching
+to know or care that `text.primary` happens to resolve to `gray.900` in light mode and
+`gray.50` in dark mode — the indirection is already baked in one layer up. Reaching
 into a component and writing `var(--dbm-color-gray-900)` directly would silently break dark mode,
 since that literal value never changes with the active theme the way `text.primary` does.
 
@@ -69,14 +69,19 @@ built on the same `var(--dbm-*)` custom properties the active theme's stylesheet
 Adding a third brand later means adding one more pair of semantic JSON files with the same token
 names pointing at a new primitive color scale — no component code changes, by construction.
 
+To apply a theme in an app, wrap it in `ThemeProvider`; the [Theming guide](?path=/docs/guides-theming--docs)
+covers that, what the provider does and does not do, and the stylesheets each theme needs.
+
 ## Naming and usage
 
 Every token resolves to a CSS custom property prefixed `--dbm-`, with dots in the token's
 dot-notation name replaced by hyphens: `bg.brand` → `--dbm-bg-brand`, `space.4` → `--dbm-space-4`.
 Reference it directly in CSS Modules: `padding: var(--dbm-space-4);`. There is no build step or
 JS import required to use a token inside a component's own `.module.css` file — the custom
-properties are already globally available once the token stylesheets are loaded (handled once, at
-the app root, by `@dbm-system/tokens/css/*.css`).
+properties are already globally available once the token stylesheets (`primitives.css`,
+`component-tokens.css` and one file per theme in use, from `@dbm-system/tokens/css/`) are loaded,
+once, for the whole app. How a consuming app loads them is not settled yet; the Installation section of
+[Getting started](?path=/docs/getting-started--docs) will say when it is.
 
 ## What's covered here
 
@@ -91,8 +96,10 @@ packages/tokens/
 │   │                   radius.json, shadow.json, breakpoint.json, motion.json, other.json
 │   ├── semantic/       One file per theme — purple-light.json, purple-dark.json,
 │   │                   emerald-light.json, emerald-dark.json
-│   └── component/      One file per component that needs one — avatar.json, badge.json
-├── build/css/          Generated CSS custom properties (what components actually load)
+│   └── component/      One file per component that needs one — avatar.json, badge.json,
+│                       data-table.json, and so on
+├── build/css/          Generated CSS custom properties (what components actually load):
+│                       primitives.css, component-tokens.css and one file per theme
 └── build/ts/           Generated JS/TS objects (what these Foundations pages read from,
                         via `@dbm-system/tokens`, so every value shown here is
                         always the real, current, built value)

@@ -3,8 +3,10 @@ import type { ReactNode } from "react";
 /**
  * Docs-page-only "Related components" card — a small live rendering of the
  * related component (passed as `children`) plus its name/description/link,
- * instead of a plain list of markdown links. Not part of the published
- * package.
+ * instead of a plain list of markdown links. The whole card is the link: the
+ * one `<a>` keeps the name and description, and a stretched `::after` covers
+ * the card (the preview is `inert`, so it cannot take a press), and the border
+ * changes colour on hover. Not part of the published package.
  */
 export function RelatedCard({
   name,
@@ -30,14 +32,10 @@ export function RelatedCard({
     // name/description keeps a real, fully keyboard-accessible navigation
     // link (native `<a>`, not a hand-rolled ARIA button) while leaving the
     // preview slot a plain, non-interactive container that any live
-    // component's own interactive elements can render into safely.
-    <div
-      style={{
-        border: "var(--dbm-border-width-1) solid var(--dbm-border-default)",
-        borderRadius: "var(--dbm-radius-md)",
-        padding: "var(--dbm-space-4)",
-      }}
-    >
+    // component's own interactive elements can render into safely. The
+    // link's `::after` (docs.css) stretches over the whole card, so the card
+    // is still one click target without nesting an anchor in an anchor.
+    <div className="dbm-related-card">
       {/* Explicit reactive `color` (2026-08-10) — some previewed
           components (e.g. `CloseButton`) deliberately have no color of
           their own, inheriting `currentColor` from context by design (see
@@ -112,6 +110,7 @@ export function RelatedCard({
         {children}
       </div>
       <a
+        className="dbm-related-card__link"
         href={href}
         style={{ color: "inherit", display: "block", textDecoration: "none" }}
       >

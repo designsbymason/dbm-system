@@ -1109,8 +1109,18 @@
   padding: var(--dbm-space-2);
 }
 
+.dbm-icon-gallery__cell {
+  transition: border-color var(--dbm-motion-duration-fast) var(--dbm-motion-easing-standard);
+}
+
 .dbm-icon-gallery__cell:hover {
-  background: var(--dbm-bg-neutral-subtle);
+  border-color: var(--dbm-border-brand);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dbm-icon-gallery__cell {
+    transition: none;
+  }
 }
 
 .dbm-icon-gallery__cell:focus-visible {
@@ -1212,4 +1222,41 @@
 .dbm-related-links.dbm-related-links--columns {
   gap: var(--dbm-space-4) var(--dbm-space-6);
   grid-template-columns: repeat(auto-fill, minmax(13rem, 1fr));
+}
+
+/* A RelatedCard: the whole card is the link (the one <a> keeps its name and description, and its
+   ::after is stretched over the card), and the border takes the brand colour on hover. The link's focus ring is drawn
+   around the card. */
+.dbm-related-card {
+  border: var(--dbm-border-width-1) solid var(--dbm-border-default);
+  border-radius: var(--dbm-radius-md);
+  padding: var(--dbm-space-4);
+  position: relative;
+  transition: border-color var(--dbm-motion-duration-fast) var(--dbm-motion-easing-standard);
+}
+
+.dbm-related-card:hover {
+  border-color: var(--dbm-border-brand);
+}
+
+.dbm-related-card .dbm-related-card__link::after {
+  border-radius: inherit;
+  content: "";
+  inset: 0;
+  position: absolute;
+}
+
+.dbm-related-card:has(.dbm-related-card__link:focus-visible) {
+  outline: var(--dbm-border-width-2) solid var(--dbm-border-focus);
+  outline-offset: var(--dbm-space-1);
+}
+
+.dbm-related-card .dbm-related-card__link:focus-visible {
+  outline: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dbm-related-card {
+    transition: none;
+  }
 }
