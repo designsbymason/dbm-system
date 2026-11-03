@@ -1,5 +1,5 @@
 import { Meta } from "@storybook/addon-docs/blocks";
-import { Callout, RelatedCard } from "../../.storybook/blocks";
+import { Callout, ReferenceTable, RelatedLinks } from "../../.storybook/blocks";
 import { ThemeSync } from "../../.storybook/blocks/foundations";
 import { VisuallyHidden } from "../atoms/VisuallyHidden";
 
@@ -13,27 +13,33 @@ import { VisuallyHidden } from "../atoms/VisuallyHidden";
 
 There is no responsive mode and no right-to-left mode. Every component works across the whole
 breakpoint scale and in both text directions from the start. This page covers how to use that in your
-own layouts, and the one place direction is still passed by hand.
+own layouts, and the places where direction is still passed by hand.
 
 ## Breakpoints
 
 The scale is mobile first: a value applies from its breakpoint **up**, and `base` is everything below
 the first breakpoint.
 
-| Breakpoint | Starts at | Typical use |
-|---|---|---|
-| `base` | 0 | Phones |
-| `sm` | 640px | Small tablets, large phones in landscape |
-| `md` | 768px | Tablets |
-| `lg` | 1024px | Small laptops |
-| `xl` | 1280px | Standard desktop |
-| `2xl` | 1536px | Large desktop |
-| `3xl` | 1920px | Large external monitors |
+<ReferenceTable
+  columns={["Breakpoint", "Starts at", "Typical use"]}
+  rows={[
+    ["base", "0", "Phones"],
+    ["sm", "640px", "Small tablets, large phones in landscape"],
+    ["md", "768px", "Tablets"],
+    ["lg", "1024px", "Small laptops"],
+    ["xl", "1280px", "Standard desktop"],
+    ["2xl", "1536px", "Large desktop"],
+    ["3xl", "1920px", "Large external monitors"],
+  ]}
+/>
+
+Type and spacing are fluid between breakpoints (`clamp()`-based tokens), so most text and gaps resize
+smoothly without a breakpoint at all.
 
 ## Responsive props
 
-A prop typed `Responsive<T>` takes either one value or a map keyed by breakpoint. A map only needs
-the breakpoints where the value changes.
+A prop typed `Responsive<T>` takes either one value or a map keyed by breakpoint. A map only needs the
+breakpoints where the value changes.
 
 ```tsx
 import { Stack } from "@dbm-system/components";
@@ -45,52 +51,59 @@ import { Stack } from "@dbm-system/components";
 </Stack>
 ```
 
-`Stack` takes it for `direction`, `gap`, `align`, `justify` and `wrap`, `ToggleGroup` for
-`orientation`, and `CommandPalette` for `fullScreen`. Check a component's Properties table for the
-props typed `Responsive`.
+<ReferenceTable
+  plainFirstColumn
+  columns={["Kind", "Props", "Components"]}
+  rows={[
+    ["Layout", "`direction`, `gap`, `align`, `justify`, `wrap`, `columns`, `span`, `colSpan`, `paddingInline`, `spacing`", "`Stack`, `Grid`, `GridItem`, `Container`, `FieldGroup`, `DescriptionList`, `List`, `Form`"],
+    ["Orientation", "`orientation`", "`Tabs`, `ToggleGroup`, `ButtonGroup`, `Toolbar`, `Splitter`, `Stepper`, `Timeline`, `Divider`, `Card`, `EditorTabs`, `FieldGroup`"],
+    ["Size and count", "`size`, `slidesPerView`, `numberOfMonths`", "`Avatar`, `AvatarGroup`, `Carousel`, `DateRangePicker`"],
+    ["Phone presentation", "`presentation`, `fullScreen`, `menuPresentation`", "`Menu`, `ContextMenu`, `Combobox`, `MultiSelect`, `DatePicker`, `DateRangePicker`, `ColorPicker`, `NavigationMenu`, `Tour`, `Dialog`, `CommandPalette`, `EditorTabs`"],
+    ["Placement", "`side`, `placement`, `stack`, `timePlacement`", "`Drawer`, `Menu`, `Popover`, `HoverCard`, `Toast`, `Timeline`"],
+  ]}
+/>
 
-<div className="dbm-do-dont-grid">
-<Callout tone="success" title="Do">
-
-- Design the phone layout first and add to it at each breakpoint.
-- Reference the `breakpoint.*` tokens, or a component's responsive prop, for a change in layout.
-- Check the real width with the viewport toolbar in Storybook, not only the narrowest and widest.
-
-</Callout>
-<Callout tone="danger" title="Don't">
-
-- Don't hardcode a pixel width in a media query.
-- Don't hide a control at a narrow width without a way to reach what it did.
-- Don't assume a hover. A phone has none, so anything that appears on hover needs a tap or focus path.
-
-</Callout>
-</div>
+The phone presentation props are the ones that change a component's whole shape. A `Menu` can be a floating
+menu or a **sheet** across the bottom of the screen with larger rows, a `Combobox` or `DatePicker` can open
+under its field or across the whole visible screen, and a `Dialog` or `CommandPalette` can fill the screen.
+Pass a map to choose per breakpoint, for example `fullScreen={{ base: true, sm: false }}`. Check a
+component's Properties table for the props typed `Responsive`.
 
 ## Right-to-left
 
 Directional CSS in the components uses **logical properties** (`margin-inline-start`,
-`inset-inline-end`, `padding-block`) instead of left and right, so a layout mirrors when the
-document direction is `rtl`. Do the same in your own CSS.
+`inset-inline-end`, `padding-block`) instead of left and right, so a layout mirrors when the document
+direction is `rtl`. Do the same in your own CSS.
 
 ```css
 /* Mirrors automatically in right-to-left */
 .panel { padding-inline: var(--dbm-space-4); border-inline-start: 1px solid var(--dbm-border-default); }
 ```
 
-Two things follow:
-
 - **Mirroring is a per-component judgment.** Most things mirror (arrows, a sidebar's edge, an
-  alignment). Some do not, because the thing they show is not directional (a badge's anchor position,
-  a number). A component's page says which it does.
-- **Icons with a direction** do not mirror by themselves. Set the `Icon` atom's `mirrored` prop on an arrow or chevron whose meaning should follow reading order.
+  alignment). Some do not, because what they show is not directional: a badge's anchor position, a
+  number, the segments of a date field, which are always drawn left to right.
+- **Icons with a direction** do not mirror by themselves. Set the `Icon` atom's `mirrored` prop on an
+  arrow or chevron whose meaning should follow reading order.
+- **Text a component supplies** comes from one optional `labels` object, and any number it shows goes
+  through an optional `formatNumber`. Pass translated strings and a locale-aware formatter there.
+  Components do not bundle translations.
 
-### The `dir` prop on Radix-based components
+## The dir prop
 
-`Tabs`, `Accordion`, `RadioGroup`, `Slider`, `RangeSlider` and `Toast.Provider` take an explicit
-`dir?: "ltr" | "rtl"`, pass it to the primitive underneath, and **default to left-to-right**. They do
-not read the page's direction. Reading it needs JavaScript and can flash left-to-right on a
-server-rendered page, and it is one decision for every component of this kind together, which is not
-made yet. Until it is, a right-to-left app passes `dir="rtl"` to each of them.
+Most components that behave differently in right-to-left take an explicit `dir?: "ltr" | "rtl"`. It
+decides which side things sit on and which arrow key moves forward. It **defaults to left-to-right and is
+not read from the page**. Reading it needs JavaScript and can flash left-to-right on a server-rendered
+page, and it is one decision for every component together, which is not made yet. Until it is, a
+right-to-left app passes `dir="rtl"` to each of these.
+
+<ReferenceTable
+  columns={["Behaviour", "Components"]}
+  rows={[
+    ["Takes `dir`, default left-to-right", "`Accordion`, `Calendar`, `Carousel`, `ColorPicker`, `Combobox`, `CommandPalette`, `DataTable`, `DatePicker`, `DateRangePicker`, `Dialog`, `Drawer`, `EditorTabs`, `ImageViewer`, `Menu`, `Menubar`, `MultiSelect`, `RadioGroup`, `RangeSlider`, `RatingInput`, `ScrollArea`, `Select`, `Slider`, `Splitter`, `Stepper`, `Tabs`, `Toast`, `ToggleGroup`, `Tour`, `Tree`"],
+    ["Native `dir` attribute, inherited from the page", "`Alert`, `Breadcrumb`"],
+  ]}
+/>
 
 ```tsx
 <Tabs dir="rtl" defaultValue="overview">
@@ -98,15 +111,48 @@ made yet. Until it is, a right-to-left app passes `dir="rtl"` to each of them.
 </Tabs>
 ```
 
-<Callout tone="info" title="Text a component supplies">
+Components that only draw layout and text, such as `Stack`, `Card` and `Text`, need no prop: they follow the
+page's direction through CSS.
 
-A component that must draw its own text takes one optional `labels` object, and any number it shows
-goes through an optional `formatNumber`. Pass translated strings and a locale-aware formatter there.
-Components do not bundle translations.
+## Usage guidelines
+
+<div className="dbm-do-dont-grid">
+<Callout tone="success" title="Do">
+
+- Design the phone layout first and add to it at each breakpoint.
+- Reference the `breakpoint.*` tokens, or a component's responsive prop, for a change in layout.
+- Check the real width with the viewport toolbar in Storybook, not only the narrowest and widest.
+- Write your own CSS with logical properties (`inline`, `block`, `start`, `end`).
+- Pass `dir="rtl"` to every component in the table above in a right-to-left app, and `mirrored` to a
+  directional icon.
+- Test a right-to-left page in a real browser, with long text and the keyboard.
 
 </Callout>
+<Callout tone="danger" title="Don't">
 
-<div className="dbm-card-grid">
-<RelatedCard name="Foundations: Breakpoints" description="The scale and how to reference it" href="/?path=/docs/foundations-breakpoints--docs"></RelatedCard>
-<RelatedCard name="Stack" description="Responsive direction, gap and alignment" href="/?path=/docs/atoms-layout-stack--docs"></RelatedCard>
+- Don't hardcode a pixel width in a media query.
+- Don't hide a control at a narrow width without a way to reach what it did.
+- Don't assume a hover. A phone has none, so anything that appears on hover needs a tap or focus path.
+- Don't use `left`, `right`, `margin-left` or `padding-right` in new CSS.
+- Don't rely on the page's `dir` alone to flip a component that takes the prop.
+- Don't mirror an icon that is not directional, such as a clock or a check.
+
+</Callout>
 </div>
+
+## Related pages
+
+<RelatedLinks
+  items={[
+    {
+      name: "Foundations: Breakpoints",
+      description: "The scale and how to reference it.",
+      href: "/?path=/docs/foundations-breakpoints--docs",
+    },
+    {
+      name: "Stack",
+      description: "Responsive direction, gap and alignment.",
+      href: "/?path=/docs/atoms-layout-stack--docs",
+    },
+  ]}
+/>
