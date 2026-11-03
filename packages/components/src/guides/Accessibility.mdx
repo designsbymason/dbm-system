@@ -1,5 +1,5 @@
 import { Meta } from "@storybook/addon-docs/blocks";
-import { Callout, RelatedCard } from "../../.storybook/blocks";
+import { Callout, ReferenceTable, RelatedLinks } from "../../.storybook/blocks";
 import { ThemeSync } from "../../.storybook/blocks/foundations";
 import { VisuallyHidden } from "../atoms/VisuallyHidden";
 
@@ -11,23 +11,38 @@ import { VisuallyHidden } from "../atoms/VisuallyHidden";
 
 # Accessibility
 
-Accessibility is not a variant or a mode in DBM. Every component is built to **WCAG 2.2 AA** and
-checked, not assumed. This page is what that means in practice: what the system guarantees, how it
-is verified, and what is still your responsibility when you compose components into a page.
+Accessibility is not a variant or a mode in DBM. The system targets **WCAG 2.2 AA**. This page says what
+the components guarantee, the known places where a measured value falls short of that target, how it is
+checked, and what stays your responsibility when you compose components into a page. Each component's
+review file records what was checked and what was not, and is the authority for that component.
 
 ## What every component guarantees
 
-- **Contrast.** Text meets **4.5:1** and non-text elements that identify a control or its state
-  (icons, borders, focus rings) meet **3:1**, in all four themes. Each pairing is measured, not
-  eyeballed. Error and critical-alert text aims higher, for **AAA (7:1)**.
+These come from the checklist a component passes before it is Finalized. They hold except where
+**Known exceptions** below says otherwise.
+
+- **Contrast.** Text is designed to meet **4.5:1**, and non-text elements that identify a control or its
+  state (icons, borders, focus rings) to meet **3:1**, in all four themes. Each pairing is measured, not
+  eyeballed, and the exceptions are listed below. Error and critical-alert text aims higher, for **AAA
+  (7:1)**. A disabled control is exempt, as WCAG allows.
 - **Keyboard.** Every interaction works from the keyboard, with the focus model the pattern calls
   for: a roving tab stop in toolbars, tabs and trees, a single tab stop with arrow keys in radio
   groups and menus, `Escape` to close, and focus returned to where it came from.
 - **Focus you can see.** A focus ring appears for keyboard focus (`:focus-visible`) and not for a
   mouse press, and meets the non-text contrast floor.
+- **Focus that stays put.** A modal dialog or drawer holds focus inside it and gives it back when it
+  closes. A responsive change never removes the control that has keyboard focus, so a person does not
+  lose their place when the layout changes under them.
 - **Names, roles and states.** Interactive parts have an accessible name, and state (expanded,
   selected, invalid, busy) is exposed through ARIA that matches the element's real role. Relationships
-  between parts, such as a field's label, hint and error, are wired by id for you.
+  between parts, such as a field's label, hint and error, are wired by id for you. An icon-only button
+  requires an `aria-label` in its types.
+- **Names that match what you see.** A control's accessible name contains its visible text as whole
+  words, in order (WCAG 2.5.3, Label in Name), so a person who says "Delete" to a voice-control tool
+  reaches the button that shows "Delete".
+- **Announcements.** Components whose content changes on its own, such as `Pagination`, `Toast` and
+  `Stepper`, announce the change through a live region that is already on the page before its text
+  changes, so a screen reader hears it once and not on first appearance.
 - **Target size.** Every interactive target is at least **24 × 24 CSS pixels**, at every size step.
   Where a control must look smaller, only its hit area is extended.
 - **Motion.** Looping animation (spinners, skeleton pulses) respects `prefers-reduced-motion`:
@@ -39,18 +54,49 @@ is verified, and what is still your responsibility when you compose components i
   control lost at a narrow width and directional CSS written with logical properties. See the
   [responsive and right-to-left guide](?path=/docs/guides-responsive-and-right-to-left--docs).
 
+## Known exceptions
+
+These are measured values that fall below the target, as recorded in the token spec. Some are accepted
+positions, for example that a decorative border does not identify a control, which a strict reading of
+WCAG 1.4.11 could dispute. They are listed so you can judge them for your own product.
+
+<ReferenceTable
+  plainFirstColumn
+  columns={["Where", "Measured", "Status"]}
+  rows={[
+    ["Tracks of `ProgressBar`, `ProgressCircle`, `Switch`, `Slider`, `RangeSlider` and the `ScrollArea` scrollbar (`bg.track`)", "1.35:1 light, 2.05:1 dark on `bg.surface`", "Documented exception (ADR-0016). The thumb, fill or handle carries the boundary and state, not the track."],
+    ["`Switch` unchecked hover and `Indicators`' inactive dot (`bg.track-strong`)", "1.72:1 light, about 3.00:1 dark on `bg.surface`", "Light does not clear 3:1. Recorded as an open question for `Indicators`, whose dot is clickable."],
+    ["Resting borders of `Input`, `Textarea`, `Select`, `Checkbox`, `Button` secondary and `IconButton` (`border.neutral`)", "2.32:1 light, 3.00:1 dark on `bg.surface`", "A position in the token spec: treated as not state-identifying, so 3:1 is not required. A strict reading of 1.4.11 may differ."],
+    ["Default borders (`border.default`)", "about 1.4:1 to 1.5:1 on `bg.surface` and `bg.canvas`", "Treated as decorative. Recorded as an accepted gap."],
+    ["Decorative accents and subtle fills (`border.brand-subtle`, `border.danger-subtle`, the `-subtle` backgrounds)", "about 1.0:1 to 1.3:1", "Decorative, not used to identify a control or a state."],
+    ["`skeleton` placeholders", "about 1.35:1 light, 1.11:1 dark on `bg.surface`", "Decorative and hidden from assistive technology."],
+    ["`icon.highlight` and `border.highlight` in light mode, on `bg.canvas` and `bg.highlight-subtle-hover`", "2.84:1 to 2.87:1 on those surfaces (3.23:1 on `bg.surface`)", "Not used on those surfaces."],
+    ["`text.tertiary` on `bg.canvas`", "4.13:1 light, 2.96:1 dark", "Fails. Never place it there."],
+    ["`text.info` on `bg.info-subtle`", "4.5068:1 light", "Passes narrowly. Flagged to revisit if the colour scale is regenerated."],
+  ]}
+/>
+
+If your own controls must meet 1.4.11 strictly, `border.neutral-strong` clears 3:1 (4.70:1 light, 6.08:1
+dark) and is the border to use for a boundary that identifies a control.
+
 ## How it is verified
 
-| Check | What it catches |
-|---|---|
-| `jest-axe` in each component's unit tests | Missing names, bad ARIA, invalid structure |
-| Storybook's Accessibility panel, run as a test (`a11y.test: "error"`) | The same rules against every rendered story, failing the build |
-| Real-browser checks (Chromium) | What a simulated DOM cannot judge: `:focus-visible`, layout and measurement, `:dir(rtl)`, computed colours, forced colours |
-| A contrast check per new colour pairing | The ratios documented per token in the token spec |
-| A review pass before a component is Finalized | Everything above, plus keyboard walk-throughs with real key presses |
+<ReferenceTable
+  plainFirstColumn
+  columns={["Check", "What it catches"]}
+  rows={[
+    ["`jest-axe` in each component's unit tests", "Missing names, bad ARIA, invalid structure"],
+    ["Storybook's Accessibility panel, run as a test (`a11y.test: \"error\"`)", "The same rules against every rendered story, failing the build"],
+    ["Real-browser checks (Chromium)", "What a simulated DOM cannot judge: `:focus-visible`, layout and measurement, `:dir(rtl)`, computed colours, forced colours"],
+    ["A contrast check per new colour pairing", "The ratios documented per token in the token spec"],
+    ["A review pass before a component is Finalized", "Everything above, plus keyboard walk-throughs with real key presses"],
+  ]}
+/>
 
-Each Finalized component's review lists what was checked and, under "Not verified", what was not
-(typically a real screen reader, Safari and Firefox, and a real phone).
+Each Finalized component's review lists what was checked and, under "Not verified", what was not.
+Typical gaps are a real screen reader, Safari and Firefox, a real phone, and Windows high contrast on a
+real machine. A guarantee above is a checklist item a component passed, so for one component, read its
+review.
 
 <Callout tone="info" title="Automated checks are the floor">
 
@@ -64,25 +110,32 @@ run as the start of checking your own page, not the end.
 
 Components cannot know your page. When you compose them:
 
-- **Page structure.** One `h1`, headings in order, and landmarks (`header`, `nav`, `main`) so a
-  screen-reader user can jump around. Components provide parts of a page, not its outline.
-- **Visible labels and names.** Give every field a label and every icon-only button an accessible name
-  (`aria-label`).
-- **Meaningful link and button text.** "Read the pricing details", not "Click here".
-- **Announcements for changes the user didn't cause.** When your app updates content on its own
-  (a saved list, a loaded page), tell assistive technology, for example with a visually hidden
-  `role="status"` region that is already on the page before its text changes. Components that change
-  on their own, such as `Pagination` and `Toast`, announce for you.
-- **Colour is never the only signal.** If you mark state with colour, add text, an icon or a shape.
-- **Real content at real sizes.** Long names, 200% zoom and a translated string reach places a demo
-  does not.
+<ReferenceTable
+  plainFirstColumn
+  columns={["Area", "What to do"]}
+  rows={[
+    ["Page structure", "One `h1`, headings in order, and landmarks (`header`, `nav`, `main`) so a screen-reader user can jump around. Components provide parts of a page, not its outline."],
+    ["Labels and names", "Give every field a visible label and every icon-only button an accessible name. Use `FormField` and `FieldLabel` for fields."],
+    ["Link and button text", "Say where a link goes or what a button does (\"Read the pricing details\"), not \"Click here\"."],
+    ["Errors", "Say what to do (\"Enter an email address\"), not \"Invalid\". `Form` links its summary to each field."],
+    ["Changes you cause", "When your app updates content on its own (a saved list, a loaded page), tell assistive technology, for example with a visually hidden `role=\"status\"` region that is already on the page before its text changes."],
+    ["Colour", "Never the only signal. If you mark state with colour, add text, an icon or a shape."],
+    ["Language", "Set `lang` on the page, and on a passage in another language, so a screen reader pronounces it correctly."],
+    ["Real content", "Long names, 200% zoom and a translated string reach places a demo does not."],
+  ]}
+/>
+
+## Usage guidelines
 
 <div className="dbm-do-dont-grid">
 <Callout tone="success" title="Do">
 
 - Pass a visible label to every field through `FormField`, and wire errors with `FieldError`.
+- Give every icon-only button an `aria-label`.
 - Use the component's own `labels` prop to supply translated text for its built-in strings.
+- Keep the visible text inside a control's accessible name if you override it.
 - Test the finished page with the keyboard alone, then with a screen reader.
+- Check a new colour pairing in all four themes before you ship it.
 
 </Callout>
 <Callout tone="danger" title="Don't">
@@ -90,13 +143,26 @@ Components cannot know your page. When you compose them:
 - Don't remove or override a focus ring. Restyle it with tokens if you must.
 - Don't rely on placeholder text as a label.
 - Don't make a `div` clickable. Use `Button` or `Link` so the role, keyboard and focus come with it.
+- Don't put `text.tertiary` text on `bg.canvas`: it falls below 4.5:1 in both modes.
+- Don't remove a control that has focus when something changes, or move focus without a reason.
+- Don't read a clean axe run as "accessible". It is the floor.
 
 </Callout>
 </div>
 
-## Reference
+## Related pages
 
-<div className="dbm-card-grid">
-<RelatedCard name="Foundations: Color" description="Every colour token and the contrast ratio behind each pairing" href="/?path=/docs/foundations-color--docs"></RelatedCard>
-<RelatedCard name="Foundations: Motion" description="Durations, easing and how reduced motion is handled" href="/?path=/docs/foundations-motion--docs"></RelatedCard>
-</div>
+<RelatedLinks
+  items={[
+    {
+      name: "Foundations: Color",
+      description: "Every colour token and the contrast ratio behind each pairing.",
+      href: "/?path=/docs/foundations-color--docs",
+    },
+    {
+      name: "Foundations: Motion",
+      description: "Durations, easing and how reduced motion is handled.",
+      href: "/?path=/docs/foundations-motion--docs",
+    },
+  ]}
+/>

@@ -1188,3 +1188,11 @@
   white-space: nowrap;
   width: 1%;
 }
+
+/* A ReferenceTable whose first column is prose (plainFirstColumn) wraps it like any other column, in a share of the
+   width, instead of keeping it to one line the way a column of names does. */
+.dbm-proptable.dbm-reftable-prose th:nth-child(1),
+.dbm-proptable.dbm-reftable-prose td:nth-child(1) {
+  white-space: normal;
+  width: 30%;
+}

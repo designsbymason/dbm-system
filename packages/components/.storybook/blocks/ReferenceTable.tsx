@@ -30,7 +30,7 @@ export function ReferenceTable({
 }) {
   return (
     <div style={{ overflowX: "auto" }}>
-      <table className="dbm-proptable dbm-reftable">
+      <table className={plainFirstColumn ? "dbm-proptable dbm-reftable dbm-reftable-prose" : "dbm-proptable dbm-reftable"}>
         <thead>
           <tr>
             {columns.map((column) => (
