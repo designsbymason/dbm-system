@@ -203,7 +203,7 @@ through `formatNumber`.
 ## Best practices
 
 - **Say where it ends.** The card shows "Step 2 of 5" so a person knows how long it is, and the last step says Finish. Keep the count small.
-- **Make a person's way out obvious.** Skip is on every step but the last, and Escape closes the tour. Don't remove either; offer `dismissals` for "later" and "never".
+- **Make a person's way out obvious.** Skip is a small button at the end of the progress row on every step but the last, and Escape closes the tour. Don't remove either; offer `dismissals` for "later" and "never".
 - **Point at things that stay put.** A step whose element isn't on the page yet waits up to `targetTimeout`, then shows its card in the middle of the screen; handle `onTargetMissing` if a missing step should be skipped instead.
 - **Dock the card on a phone.** `presentation={{ base: "docked", md: "anchored" }}` keeps the card out of the way of a full-width element.
 - **Keep the page the same.** The tour doesn't change the page, so if a step needs a menu open or a tab selected, do it in `onValueChange` before the step's element is looked for.
@@ -228,7 +228,7 @@ the card's last button.
 | `Escape` | Closes the tour, reported with the reason `"escape"`. It is not passed on, so a tour inside a dialog does not close the dialog too |
 
 Every control is at least 24 × 24 CSS pixels. The spotlight and card animate unless the person prefers reduced motion, when they
-move without easing and the page scrolls without smoothing. The `dismissals` are two ordinary buttons in the card's footer, in the card's tab order after Next. A docked card keeps clear of a phone's home indicator and of an
+move without easing and the page scrolls without smoothing. The `dismissals` are the items of a menu opened by a "more" button right after Skip: its items take focus while it is open, Escape closes only the menu, and the arrow keys belong to it. A docked card keeps clear of a phone's home indicator and of an
 on-screen keyboard. In forced-colours mode the dim is gone, since a shadow is not drawn, and
 the element is told from the page by an outline in the system highlight colour.
 

@@ -130,6 +130,8 @@ export const Tour = forwardRef<HTMLDivElement, TourProps>(
     const cardRef = useMemo(() => mergeRefs(ref, setCard, cardNode), [ref]);
 
     // A step's `onEnter` runs before its element is looked for; the card waits for it.
+    // While the dismissals menu is open it holds focus, and the card's own trap stands down so the two do not fight over it.
+    const [menuOpen, setMenuOpen] = useState(false);
     const [entered, setEntered] = useState<string | null>(null);
     const latestStep = useRef(step);
     useEffect(() => {
@@ -288,7 +290,7 @@ export const Tour = forwardRef<HTMLDivElement, TourProps>(
       [visible],
     );
     const onCardFocus = (event: FocusEvent<HTMLDivElement>) => {
-      // Content of the card drawn in a portal (a menu in a step's own text) reaches this handler through React, not the DOM.
+      // A menu opened from the card is drawn in a portal and its focus reaches this handler through React, not the DOM.
       if (!event.currentTarget.contains(event.target)) return;
       const action = (event.target as HTMLElement).getAttribute("data-tour-action") as TourAction | null;
       focusState.current = { inside: true, action };
@@ -304,12 +306,14 @@ export const Tour = forwardRef<HTMLDivElement, TourProps>(
       if (!visible) return undefined;
       const onKeyDown = (event: globalThis.KeyboardEvent) => {
         if (event.key !== "Escape" || event.isComposing) return;
+        // An open menu (the dismissals) takes the key first, and closes alone.
+        if (menuOpen) return;
         event.stopPropagation();
         requestClose("escape");
       };
       window.addEventListener("keydown", onKeyDown, true);
       return () => window.removeEventListener("keydown", onKeyDown, true);
-    }, [visible, requestClose]);
+    }, [visible, requestClose, menuOpen]);
 
     // On a step that lets the page be used, Tab moves between the card and the element's own controls, both ways.
     const targetElement = spot.element;
@@ -349,7 +353,7 @@ export const Tour = forwardRef<HTMLDivElement, TourProps>(
 
     const onKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
       if (event.defaultPrevented || event.altKey || event.ctrlKey || event.metaKey) return;
-      // Keys pressed in something the card's content draws in a portal reach this handler through React; they are not the card's.
+      // Keys pressed in the dismissals menu, drawn in a portal, reach this handler through React; they are the menu's.
       if (!event.currentTarget.contains(event.target as Node)) return;
       const inField = (event.target as HTMLElement).closest("input, textarea, select, [contenteditable='true']");
       if (!interactive && !inField && (event.key === "ArrowRight" || event.key === "ArrowLeft")) {
@@ -439,6 +443,7 @@ export const Tour = forwardRef<HTMLDivElement, TourProps>(
           ) : undefined
         }
         onAction={onAction}
+        onMenuOpenChange={setMenuOpen}
         onKeyDown={onKeyDown}
         onFocus={onCardFocus}
         onBlur={onCardBlur}
@@ -480,7 +485,7 @@ export const Tour = forwardRef<HTMLDivElement, TourProps>(
             {cardElement && (
               <FocusTrap
                 asChild
-                trapped={visible && !interactive}
+                trapped={visible && !interactive && !menuOpen}
                 loop={!interactive}
                 onMountAutoFocus={onMountAutoFocus}
                 onUnmountAutoFocus={(event) => event.preventDefault()}

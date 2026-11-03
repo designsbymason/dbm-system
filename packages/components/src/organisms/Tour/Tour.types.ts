@@ -76,6 +76,8 @@ export interface TourLabels {
   skip: string;
   /** The Next button's text on the last step. @default 'Finish' */
   finish: string;
+  /** The accessible name of the button that opens the dismissals menu. @default 'More options' */
+  more: string;
   /** The "remind me later" item's text. @default 'Remind me later' */
   later: string;
   /** The "don't show again" item's text. @default "Don't show again" */
@@ -204,7 +206,7 @@ export interface TourProps
    */
   progress?: TourProgress;
   /**
-   * Extra ways out beside Skip, two quiet buttons in a footer strip across the bottom of the card, on one centred row (see `dismissalsOn`): `"later"` and `"never"`, reported as those reasons to
+   * Extra ways out beside Skip, the items of a menu opened by a "more" icon button after Skip, in the progress row (see `dismissalsOn`): `"later"` and `"never"`, reported as those reasons to
    * `onOpenChange` so the app can remember them differently (see the `usePersistentDismiss` recipe).
    */
   dismissals?: TourDismissal[];

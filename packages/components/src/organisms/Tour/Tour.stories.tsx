@@ -70,7 +70,7 @@ const meta: Meta<PlaygroundArgs> = {
     dismissals: {
       control: false,
       description:
-        "Extra ways out beside Skip, two quiet buttons in a footer strip across the bottom of the card, on one centred row, each with a caret (not on the last step): \"later\" (Remind me later) and \"never\" (Don't show again), reported as those reasons to onOpenChange.",
+        "Extra ways out beside Skip, the items of a menu opened by a \"more\" icon button after Skip, in the progress row (not on the last step): \"later\" (Remind me later) and \"never\" (Don't show again), reported as those reasons to onOpenChange.",
     },
     dismissalsOn: {
       control: "select",

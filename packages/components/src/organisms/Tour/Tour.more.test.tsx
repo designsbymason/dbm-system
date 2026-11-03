@@ -32,60 +32,81 @@ describe("Tour — progress", () => {
 });
 
 describe("Tour — dismissals", () => {
-  it("offers remind me later and don't show again in the footer, reporting each reason", async () => {
+  it("offers remind me later and don't show again in a menu, reporting each reason", async () => {
     const user = userEvent.setup();
     const onOpenChange = vi.fn();
     const { unmount } = render(<Harness dismissals={["later", "never"]} onOpenChange={onOpenChange} />);
     await card();
-    await user.click(screen.getByRole("button", { name: "Remind me later" }));
+    await user.click(screen.getByRole("button", { name: "More options" }));
+    await user.click(await screen.findByRole("menuitem", { name: "Remind me later" }));
     expect(onOpenChange).toHaveBeenLastCalledWith(false, { reason: "later", stepId: "one" });
     unmount();
     render(<Harness dismissals={["later", "never"]} onOpenChange={onOpenChange} />);
     await card();
-    await user.click(screen.getByRole("button", { name: "Don't show again" }));
+    await user.click(screen.getByRole("button", { name: "More options" }));
+    await user.click(await screen.findByRole("menuitem", { name: "Don't show again" }));
     expect(onOpenChange).toHaveBeenLastCalledWith(false, { reason: "never", stepId: "one" });
   });
 
-  it("draws them in the footer, a caret-right icon trailing each, and not among the main buttons", async () => {
-    render(<Harness dismissals={["later", "never"]} />);
-    const dialog = await card();
-    const later = within(dialog).getByRole("button", { name: "Remind me later" });
-    const never = within(dialog).getByRole("button", { name: "Don't show again" });
-    const footer = later.closest('[class*="dismissals"]');
-    expect(footer).not.toBeNull();
-    expect(footer).toContainElement(never);
-    expect(footer).not.toContainElement(within(dialog).getByRole("button", { name: "Next" }));
-    expect(later.querySelector("svg")).not.toBeNull();
-    expect(never.querySelector("svg")).not.toBeNull();
-  });
-
-  it("offers only the dismissals asked for, and none by default", async () => {
+  it("puts the button right after Skip, in the progress row, and draws none without dismissals", async () => {
     const { unmount } = render(<Harness dismissals={["never"]} />);
-    await card();
-    expect(screen.getByRole("button", { name: "Don't show again" })).toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: "Remind me later" })).toBeNull();
+    const dialog = await card();
+    const skip = within(dialog).getByRole("button", { name: "Skip tour" });
+    const more = within(dialog).getByRole("button", { name: "More options" });
+    expect(more.closest('[class*="topRow"]')).toContainElement(skip);
+    expect(skip.compareDocumentPosition(more) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
     unmount();
     render(<Harness />);
-    await card();
-    expect(screen.queryByRole("button", { name: "Don't show again" })).toBeNull();
+    expect(within(await card()).queryByRole("button", { name: "More options" })).toBeNull();
   });
 
-  it("can show them on the first step only", async () => {
+  it("offers only the dismissals asked for", async () => {
+    const user = userEvent.setup();
+    render(<Harness dismissals={["never"]} />);
+    await card();
+    await user.click(screen.getByRole("button", { name: "More options" }));
+    expect(await screen.findByRole("menuitem", { name: "Don't show again" })).toBeInTheDocument();
+    expect(screen.queryByRole("menuitem", { name: "Remind me later" })).toBeNull();
+  });
+
+  it("closes only the menu on Escape, then the tour on the next", async () => {
+    const user = userEvent.setup();
+    const onOpenChange = vi.fn();
+    render(<Harness dismissals={["later"]} onOpenChange={onOpenChange} />);
+    await card();
+    await user.click(screen.getByRole("button", { name: "More options" }));
+    await screen.findByRole("menuitem", { name: "Remind me later" });
+    await user.keyboard("{Escape}");
+    await waitFor(() => expect(screen.queryByRole("menu")).toBeNull());
+    expect(onOpenChange).not.toHaveBeenCalled();
+    await user.keyboard("{Escape}");
+    expect(onOpenChange).toHaveBeenCalledWith(false, { reason: "escape", stepId: "one" });
+  });
+
+  it("does not move the step when an arrow key is pressed inside the menu", async () => {
+    const user = userEvent.setup();
+    render(<Harness dismissals={["later", "never"]} />);
+    await card();
+    await user.click(screen.getByRole("button", { name: "More options" }));
+    await screen.findByRole("menuitem", { name: "Remind me later" });
+    await user.keyboard("{ArrowRight}{ArrowLeft}{ArrowDown}");
+    expect(screen.getByRole("dialog", { hidden: true })).toHaveAccessibleName("First");
+  });
+
+  it("can show it on the first step only", async () => {
     const user = userEvent.setup();
     render(<Harness dismissals={["later", "never"]} dismissalsOn="first" />);
     await card();
-    expect(screen.getByRole("button", { name: "Remind me later" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "More options" })).toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: "Next" }));
     await name("Second");
-    expect(screen.queryByRole("button", { name: "Remind me later" })).toBeNull();
-    expect(screen.queryByRole("button", { name: "Don't show again" })).toBeNull();
+    expect(screen.queryByRole("button", { name: "More options" })).toBeNull();
   });
 
-  it("does not offer them on the last step", async () => {
+  it("does not offer it on the last step", async () => {
     render(<Harness dismissals={["later", "never"]} defaultValue="three" />);
     await card();
-    expect(screen.queryByRole("button", { name: "Remind me later" })).toBeNull();
-    expect(screen.queryByRole("button", { name: "Don't show again" })).toBeNull();
+    expect(screen.queryByRole("button", { name: "More options" })).toBeNull();
   });
 });
 

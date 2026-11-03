@@ -1,12 +1,14 @@
 import { cx } from "@dbm-system/utils";
 import { forwardRef } from "react";
 import type { ComponentPropsWithoutRef, KeyboardEvent, ReactNode } from "react";
-import { CaretRightIcon } from "@dbm-system/icons";
+import { DotsThreeIcon } from "@dbm-system/icons";
 import { Button } from "../../atoms/Button";
 import { ButtonGroupReset } from "../../atoms/Button/buttonGroupContext";
 import { Heading } from "../../atoms/Heading";
+import { IconButton } from "../../atoms/IconButton";
 import { Text } from "../../atoms/Text";
 import { VisuallyHidden } from "../../atoms/VisuallyHidden";
+import { Menu } from "../Menu";
 import type { TourDismissal, TourLabels, TourProgress } from "./Tour.types";
 import styles from "./Tour.module.css";
 
@@ -35,6 +37,8 @@ interface TourCardProps
   /** The pointer arrow, drawn inside the card when it is beside an element. */
   arrow?: ReactNode;
   onAction: (action: TourAction) => void;
+  /** Told when the dismissals menu opens and closes: the card's focus trap stands down while it is open. */
+  onMenuOpenChange: (open: boolean) => void;
   onKeyDown: (event: KeyboardEvent<HTMLDivElement>) => void;
 }
 
@@ -65,6 +69,7 @@ export const TourCard = forwardRef<HTMLDivElement, TourCardProps>(
       interactive,
       arrow,
       onAction,
+      onMenuOpenChange,
       onKeyDown,
       className,
       ...rest
@@ -98,10 +103,34 @@ export const TourCard = forwardRef<HTMLDivElement, TourCardProps>(
             ))}
           </div>
         )}
-        {showText && (
-          <Text size="xs" color="secondary" className={styles.progress}>
-            {labels.stepOf(index + 1, total)}
-          </Text>
+        {(showText || !last) && (
+          <div className={styles.topRow}>
+            {showText ? (
+              <Text size="xs" color="secondary" className={styles.progress}>
+                {labels.stepOf(index + 1, total)}
+              </Text>
+            ) : (
+              <span />
+            )}
+            {!last && (
+              <div className={styles.topActions}>
+                <Button variant="tertiary" size="xs" data-tour-action="skip" onClick={() => onAction("skip")}>
+                  {labels.skip}
+                </Button>
+                {dismissals.length > 0 && (
+                  <Menu onOpenChange={onMenuOpenChange}>
+                    <Menu.Trigger asChild>
+                      <IconButton icon={DotsThreeIcon} variant="ghost" tone="brand" size="xs" aria-label={labels.more} />
+                    </Menu.Trigger>
+                    <Menu.Content align="end" size="sm">
+                      {dismissals.includes("later") && <Menu.Item onSelect={() => onAction("later")}>{labels.later}</Menu.Item>}
+                      {dismissals.includes("never") && <Menu.Item onSelect={() => onAction("never")}>{labels.never}</Menu.Item>}
+                    </Menu.Content>
+                  </Menu>
+                )}
+              </div>
+            )}
+          </div>
         )}
         {progress === "bar" && <VisuallyHidden>{labels.stepOf(index + 1, total)}</VisuallyHidden>}
         <Heading level={2} size="md" id={titleId} className={styles.title}>
@@ -119,11 +148,6 @@ export const TourCard = forwardRef<HTMLDivElement, TourCardProps>(
               actions
             ) : (
               <>
-                {!last && (
-                  <Button variant="tertiary" size="sm" data-tour-action="skip" onClick={() => onAction("skip")}>
-                    {labels.skip}
-                  </Button>
-                )}
                 <span className={styles.spacer} />
                 {index > 0 && (
                   <Button variant="secondary" size="sm" data-tour-action="back" onClick={() => onAction("back")}>
@@ -136,20 +160,6 @@ export const TourCard = forwardRef<HTMLDivElement, TourCardProps>(
               </>
             )}
           </div>
-          {!last && dismissals.length > 0 && (
-            <div className={styles.dismissals}>
-              {dismissals.includes("later") && (
-                <Button variant="tertiary" size="xs" trailingIcon={CaretRightIcon} data-tour-action="later" onClick={() => onAction("later")}>
-                  {labels.later}
-                </Button>
-              )}
-              {dismissals.includes("never") && (
-                <Button variant="tertiary" size="xs" trailingIcon={CaretRightIcon} data-tour-action="never" onClick={() => onAction("never")}>
-                  {labels.never}
-                </Button>
-              )}
-            </div>
-          )}
         </ButtonGroupReset>
         {arrow}
       </div>

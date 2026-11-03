@@ -13,6 +13,7 @@ export function defaultLabelsFor(
     back: "Back",
     skip: "Skip tour",
     finish: "Finish",
+    more: "More options",
     later: "Remind me later",
     never: "Don't show again",
     stepOf: progress,
