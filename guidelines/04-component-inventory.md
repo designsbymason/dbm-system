@@ -182,14 +182,56 @@ Non-visual/structural helpers other components are built from.
 
 ## Templates (page-level composition, deferred to v1.5/v2)
 
-Not individual components, but composed patterns — worth planning for since a template meaningfully reduces time-to-first-app for a common structure (a dashboard shell, an auth flow) versus composing it from scratch every time, but these should come **after** the underlying components exist, not before.
+Not individual components, but composed patterns — worth planning for since a template meaningfully reduces time-to-first-app for a common structure (a dashboard shell, an auth flow) versus composing it from scratch every time, but these should come **after** the underlying components exist, not before. They exist now: every component below is built.
 
-| Template | Priority | Notes |
+**Status:** none built, and none started without the maintainer's confirmation. A couple are built before Phase 8 (`01-vision-and-goals.md` §13), and which ones is not decided. The rest follow publishing. Whether templates ship in the package or stay Storybook-only examples, and the `Templates` tier in the sidebar (`07-storybook-and-documentation-standards.md` §3), are undecided and want an ADR before the first one is built.
+
+This is the working list of page-level templates apps commonly need. The first four were planned from the start; the rest were added as candidates, and a candidate is built only when an app needs it. Priority follows the legend above. Nothing here is counted in the summary below.
+
+**Application shells**
+
+| Template | Priority | Composes |
 |---|---|---|
-| Dashboard shell (Sidebar + Navbar + content area) | 🟡 | |
-| Settings page (nav + form sections) | ⚪ | |
-| Auth flow (login/signup/forgot-password) | ⚪ | |
-| Data-table-driven list page (Table + Toolbar + Pagination) | ⚪ | |
+| Dashboard shell (Sidebar + Navbar + content area) | 🟡 | `Sidebar`, `Navbar`, `Drawer` on a phone, `Breadcrumb` |
+| Top-nav app shell | ⚪ | `Navbar` or `NavigationMenu`, `Container`, a footer; for an app with no sidebar |
+| Marketing or public page shell | ⚪ | `NavigationMenu`, a footer, `Container`, `BackToTop` |
+| Docs or content shell | ⚪ | `Sidebar`, `TableOfContents`, `Breadcrumb`, a content column |
+
+**Authentication**
+
+| Template | Priority | Composes |
+|---|---|---|
+| Auth flow (login/signup/forgot-password), with reset-password and verify-code variants | ⚪ | `Card`, `Form`, `FormField`, `PasswordInput`, `PinInput`, `Alert`, `Link` |
+| Onboarding or setup wizard | ⚪ | `Stepper`, `Form`, `Card`, `ProgressBar` |
+
+**Data pages**
+
+| Template | Priority | Composes |
+|---|---|---|
+| Data-table-driven list page (Table + Toolbar + Pagination) | ⚪ | `DataTable`, `TableToolbar`, `Pagination`, `Menu` for row actions, `EmptyState` |
+| Detail page | ⚪ | `Breadcrumb`, `Tabs`, `DescriptionList`, `Card`, `Timeline` for activity |
+| Dashboard or overview page | ⚪ | `Stat`, `Card`, `Grid`, `DataTable`, `Timeline` |
+| Create or edit form page | ⚪ | `Form`, `FieldGroup`, `Card` sections, a sticky action bar, `ConfirmDialog` for discard |
+| Master-detail (inbox style) | ⚪ | `Splitter`, `List`, `ScrollArea`, a detail pane |
+
+**Settings and account**
+
+| Template | Priority | Composes |
+|---|---|---|
+| Settings page (nav + form sections) | ⚪ | `Sidebar` or `Tabs`, `Form` sections, `Switch`, `Alert`, `ConfirmDialog` for destructive actions |
+| Profile or account page | ⚪ | `Avatar`, `FileUpload`, `Form`, `DescriptionList` |
+| Billing or plans page | ⚪ | `Card`, `Stat`, `Table`, `Badge`, a plan-comparison grid |
+| Team or members page | ⚪ | `DataTable`, `Avatar`, `Menu`, `Dialog` for an invite |
+
+**System and utility pages**
+
+| Template | Priority | Composes |
+|---|---|---|
+| Error pages (404, 403, 500) | ⚪ | `EmptyState`, `Button`, `Link` |
+| Empty or first-run state | ⚪ | `EmptyState`, `Button` |
+| Search results page | ⚪ | `SearchInput`, `Tabs`, `List`, `Pagination` |
+| Maintenance or status page | ⚪ | `EmptyState` or `Alert`, `Timeline` for incident history |
+| Notifications or activity feed | ⚪ | `Timeline`, `Tabs`, `Badge`, `EmptyState` |
 
 ---
 
