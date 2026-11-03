@@ -36,7 +36,7 @@ import {
   XIcon,
 } from "@dbm-system/icons";
 import type { Icon as PhosphorIcon, IconWeight } from "@dbm-system/icons";
-import { useState } from "react";
+import { Fragment, useState } from "react";
 import { Button } from "../../src/atoms/Button";
 import { Icon } from "../../src/atoms/Icon";
 import { VisuallyHidden } from "../../src/atoms/VisuallyHidden";
@@ -98,14 +98,10 @@ const MOST_USED: [string, PhosphorIcon][] = [
  */
 export function IconGallery() {
   const [weight, setWeight] = useState<IconWeight>("bold");
-  const [copied, setCopied] = useState("");
 
+  // Copying is silent on purpose: the press has no message to show.
   const copy = (name: string) => {
-    const line = `import { ${name} } from "@dbm-system/icons";`;
-    navigator.clipboard
-      .writeText(line)
-      .then(() => setCopied(`Copied ${name}`))
-      .catch(() => setCopied(line));
+    navigator.clipboard.writeText(`import { ${name} } from "@dbm-system/icons";`).catch(() => undefined);
   };
 
   return (
@@ -128,15 +124,20 @@ export function IconGallery() {
           ))}
         </ToggleGroup>
       </div>
-      <p className="dbm-icon-gallery__status" role="status">
-        {copied !== "" ? `${copied}. ` : ""}Press an icon to copy its import.
-      </p>
+      <p className="dbm-icon-gallery__status">Press an icon to copy its import.</p>
       <ul className="dbm-icon-gallery__grid">
         {MOST_USED.map(([name, glyph]) => (
           <li key={name}>
             <button className="dbm-icon-gallery__cell" onClick={() => copy(name)} type="button">
-              <Icon icon={glyph} size="xl" tone="default" weight={weight} />
-              <span className="dbm-icon-gallery__name">{name}</span>
+              <Icon icon={glyph} size="lg" tone="default" weight={weight} />
+              <span className="dbm-icon-gallery__name">
+                {name.split(/(?=[A-Z])/).map((part, index) => (
+                  <Fragment key={index}>
+                    {index > 0 && <wbr />}
+                    {part}
+                  </Fragment>
+                ))}
+              </span>
             </button>
           </li>
         ))}

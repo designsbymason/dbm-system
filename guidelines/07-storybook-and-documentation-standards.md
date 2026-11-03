@@ -378,7 +378,7 @@ Two more kinds of page sit in the sidebar besides the component tiers and `Found
 | Responsive and right-to-left | The breakpoint scale, `Responsive` props, logical properties, the `dir` prop on Radix-based components |
 | Hooks and utilities | `usePersistentDismiss`, `useRecentCommands`, `formatRelativeTime` and the shared types; the rest of `utils` is internal |
 | Composition patterns | Live confirm-then-toast and row-menu patterns (`.storybook/blocks/CompositionDemos.tsx`) |
-| Icons | The 35 icons the components import most, in equal square tiles with a weight switch and copy-the-import (`.storybook/blocks/IconGallery.tsx`), a button that opens the full Phosphor set in a new tab, and `Icon`'s props |
+| Icons | Sections Weights (the 35 icons the components import most, in equal square tiles with a weight switch and a silent copy-the-import, `.storybook/blocks/IconGallery.tsx`, and a button that opens the full Phosphor set in a new tab), Properties (a `FieldsTable`), Usage guidelines (Do and Don't) and Related pages (stacked links, `.storybook/blocks/RelatedLinks.tsx`) |
 
 The Icons gallery's list is a hand-kept snapshot (counted as the component source files that import each icon, leaving out stories, tests, snippets and the demo kits), imported by name so the rest of the icon set stays out of the bundle: a gallery that imported the whole set added a 5MB chunk and tripped the bundle-size check in §10. Recount it when a component adopts an icon that belongs in the top 35.
 

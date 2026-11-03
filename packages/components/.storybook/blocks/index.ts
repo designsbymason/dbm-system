@@ -11,4 +11,5 @@ export { PlaygroundCanvas } from "./PlaygroundCanvas";
 export { PlaygroundControls } from "./PlaygroundControls";
 export { PropertiesTable } from "./PropertiesTable";
 export { RelatedCard } from "./RelatedCard";
+export { RelatedLinks } from "./RelatedLinks";
 export { TokenRow } from "./TokenRow";

@@ -1070,7 +1070,7 @@
 .dbm-icon-gallery__grid {
   display: grid;
   gap: var(--dbm-space-3);
-  grid-template-columns: repeat(auto-fill, minmax(7.5rem, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(6.5rem, 1fr));
   list-style: none;
   margin: 0 0 var(--dbm-space-4);
   padding: 0;
@@ -1110,7 +1110,7 @@
 .dbm-icon-gallery__name {
   color: var(--dbm-text-secondary);
   font-size: var(--dbm-font-size-xs);
-  overflow-wrap: anywhere;
+  overflow-wrap: break-word;
   text-align: center;
 }
 
@@ -1135,4 +1135,30 @@
 
 .dbm-composition-rows li + li {
   border-block-start: var(--dbm-border-width-1) solid var(--dbm-border-default);
+}
+
+/* Guide pages' "Related pages": stacked links, each with its description under it. */
+.dbm-related-links {
+  display: grid;
+  gap: var(--dbm-space-3);
+  list-style: none;
+  margin: 0 0 var(--dbm-space-4);
+  padding: 0;
+}
+
+.dbm-related-links li {
+  display: grid;
+  gap: var(--dbm-space-1);
+  margin: 0;
+  padding: 0;
+}
+
+.dbm-related-links a {
+  color: var(--dbm-text-link);
+  font-weight: var(--dbm-font-weight-semibold);
+  inline-size: fit-content;
+}
+
+.dbm-related-links span {
+  color: var(--dbm-text-secondary);
 }

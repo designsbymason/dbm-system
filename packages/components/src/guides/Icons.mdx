@@ -1,5 +1,5 @@
 import { Meta } from "@storybook/addon-docs/blocks";
-import { Callout, IconGallery, RelatedCard } from "../../.storybook/blocks";
+import { Callout, FieldsTable, IconGallery, RelatedLinks } from "../../.storybook/blocks";
 import { ThemeSync } from "../../.storybook/blocks/foundations";
 import { VisuallyHidden } from "../atoms/VisuallyHidden";
 
@@ -23,47 +23,121 @@ import { WalletIcon } from "@dbm-system/icons";
 <Icon icon={WalletIcon} size="lg" tone="brand" label="Wallet" />
 ```
 
-## Most used in DBM
+## Weights
 
-The 35 icons the components themselves import the most, most used first: the close, caret, check and
-warning glyphs behind every dismiss button, select, menu and alert. Choose a weight, and press an icon
-to copy its import line. Names end in `Icon`, which is the form DBM code uses. Every icon comes in six
-weights.
+Every icon comes in six weights: `thin`, `light`, `regular`, `bold`, `fill` and `duotone`. Pass one
+with the `weight` prop of `Icon`. DBM's default is `bold`, which is what the components draw their own
+icons at. Below are the 35 icons the components import most, most used first; choose a weight to
+see them all in it, and press an icon to copy its import line. Names end in `Icon`, which is the form
+DBM code uses.
 
 <IconGallery />
 
-Phosphor has well over a thousand more. The button below the grid opens its full, searchable set in a new tab;
-whichever you pick, import it by name from `@dbm-system/icons`.
+Phosphor has well over a thousand more. The button below the grid opens its full, searchable set in
+a new tab; whichever you pick, import it by name from `@dbm-system/icons`.
 
-## Using an icon well
+## Properties
 
-| Prop | Values | Notes |
-|---|---|---|
-| `size` | `xs`, `sm`, `md`, `lg`, `xl`, `2xl`, `3xl` | A step of the icon-size scale (see Foundations) |
-| `weight` | `thin`, `light`, `regular`, `bold`, `fill`, `duotone` | `bold` is the default |
-| `tone` | A semantic tone such as `default`, `brand`, `danger` | Maps to the `--dbm-icon-*` tokens. Leave it out to inherit `currentColor` |
-| `label` | A string | Gives the icon an accessible name. Left out, the icon is decorative and hidden from assistive technology |
-| `mirrored` | `boolean` | Flips the glyph horizontally. Set it on a directional icon (an arrow, a chevron) in a right-to-left layout; it is never automatic |
+`Icon` also accepts any other native `<svg>` attribute beyond what is listed here (such as `onClick`
+or `title`), passed straight through to the underlying element.
+
+<FieldsTable
+  rows={[
+    {
+      name: "icon",
+      required: true,
+      description:
+        "The icon to draw, as a component imported from `@dbm-system/icons`. Never a string name, which is what keeps unused icons out of the bundle.",
+    },
+    {
+      name: "size",
+      options: ["xs", "sm", "md", "lg", "xl", "2xl", "3xl"],
+      description: "A step of the icon-size scale (see Foundations).",
+      defaultValue: "md",
+    },
+    {
+      name: "weight",
+      options: ["thin", "light", "regular", "bold", "fill", "duotone"],
+      description: "How heavy the strokes are.",
+      defaultValue: "bold",
+    },
+    {
+      name: "tone",
+      options: [
+        "default",
+        "secondary",
+        "brand",
+        "disabled",
+        "danger",
+        "warning",
+        "success",
+        "info",
+        "highlight",
+        "on-brand",
+        "on-danger",
+        "on-warning",
+        "on-success",
+        "on-info",
+        "on-highlight",
+        "on-neutral",
+        "white",
+      ],
+      description:
+        "A semantic colour, mapped to the `--dbm-icon-*` tokens. Left out, the icon inherits `currentColor` from its surroundings.",
+    },
+    {
+      name: "label",
+      description:
+        "An accessible name. Left out, the icon is decorative and hidden from assistive technology.",
+    },
+    {
+      name: "mirrored",
+      options: ["true", "false"],
+      description:
+        "Flips the glyph horizontally. Set it on a directional icon (an arrow, a chevron) in a right-to-left layout; it is never automatic.",
+      defaultValue: "false",
+    },
+  ]}
+/>
+
+## Usage guidelines
 
 <div className="dbm-do-dont-grid">
 <Callout tone="success" title="Do">
 
+- Import the icons you use, by name, from `@dbm-system/icons`.
 - Put a `label` on an icon that carries meaning on its own, and leave it off when text next to it
   already says the same thing.
 - Give an icon-only button an `aria-label`, since the icon inside it is decorative.
-- Pick a tone from the icon tokens so the icon follows the theme.
+- Pick a `tone` so the icon follows the theme, or leave it unset to inherit the text colour around it.
+- Keep to the default `bold` weight unless there is a named reason to change it, such as a `duotone`
+  illustration or a `fill` state for a selected item.
 
 </Callout>
 <Callout tone="danger" title="Don't">
 
+- Don't pass a string icon name. `icon` is always a component.
+- Don't import the whole icon set into a bundle you ship.
 - Don't use an icon as the only signal of a state. Add text or a shape as well.
-- Don't import the whole set into a bundle you ship. Import the icons you use, by name.
-- Don't set a colour on an icon by hand. Use `tone`.
+- Don't set a colour on an icon by hand with `style`. Use `tone`.
+- Don't mix weights in one row of icons without a reason. Mixed stroke weights read as a mistake.
 
 </Callout>
 </div>
 
-<div className="dbm-card-grid">
-<RelatedCard name="Foundations: Icon sizes" description="The size scale every icon uses" href="/?path=/docs/foundations-iconsizes--docs"></RelatedCard>
-<RelatedCard name="Icon" description="Props, tones and the Playground" href="/?path=/docs/atoms-media-icon--docs"></RelatedCard>
-</div>
+## Related pages
+
+<RelatedLinks
+  items={[
+    {
+      name: "Foundations: Icon sizes",
+      description: "The size scale every icon uses.",
+      href: "/?path=/docs/foundations-iconsizes--docs",
+    },
+    {
+      name: "Icon",
+      description: "The atom: props, tones, the Playground and accessibility notes.",
+      href: "/?path=/docs/atoms-media-icon--docs",
+    },
+  ]}
+/>
