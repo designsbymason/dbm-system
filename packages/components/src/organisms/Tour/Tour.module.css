@@ -147,15 +147,20 @@
   gap: var(--dbm-space-1);
 }
 
+/* A segment not yet reached is hollow, in the strong border colour (at least 3:1 against the card in every theme); one reached is
+   filled. The difference is a shape as well as a colour, and the unreached ones stay visible, so the number of steps is too. */
 .segment {
-  background-color: var(--dbm-bg-neutral-subtle);
+  background-color: transparent;
   block-size: var(--dbm-space-1);
+  border: var(--dbm-border-width-1) solid var(--dbm-border-strong);
   border-radius: var(--dbm-radius-full);
+  box-sizing: border-box;
   flex: 1;
 }
 
 .segment[data-reached] {
   background-color: var(--dbm-bg-brand);
+  border-color: var(--dbm-bg-brand);
 }
 
 .title {
@@ -207,12 +212,13 @@
 /* Forced colours drops a shadow, so the dim is gone: the element is told from the page by an outline in a system colour. */
 @media (forced-colors: active) {
   .segment {
-    background-color: GrayText;
+    border-color: GrayText;
     forced-color-adjust: none;
   }
 
   .segment[data-reached] {
     background-color: Highlight;
+    border-color: Highlight;
   }
 
   .ring {

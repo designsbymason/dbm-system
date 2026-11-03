@@ -29,7 +29,7 @@ ${tour(['progress="both"'])}`,
 ${tour(['dismissals={["later", "never"]}', 'dismissalsOn="first"'])}`,
 
   richer: `{/* media: a picture above the progress. footer: content above the buttons.
-    actions: your own buttons in place of Skip, Back and Next, handed the controller. */}
+    actions: your own buttons in place of Back and Next (Skip stays), handed the controller. */}
 <Tour
   open={open}
   onOpenChange={setOpen}
@@ -155,6 +155,8 @@ export interface TourPlaygroundSnippetArgs {
   targetTimeout?: number;
   dir?: "ltr" | "rtl";
   "aria-label"?: string;
+  showDismissals?: boolean;
+  dismissalsOn?: "all" | "first";
 }
 
 /** Only what differs from the defaults, around a small real tour. */
@@ -162,6 +164,10 @@ export function tourPlaygroundSnippet(args: TourPlaygroundSnippetArgs): string {
   const attributes: string[] = [];
   if (args.presentation && args.presentation !== "anchored") attributes.push(`presentation="${args.presentation}"`);
   if (args.progress && args.progress !== "text") attributes.push(`progress="${args.progress}"`);
+  if (args.showDismissals) {
+    attributes.push('dismissals={["later", "never"]}');
+    if (args.dismissalsOn === "first") attributes.push('dismissalsOn="first"');
+  }
   if (args.missingTarget && args.missingTarget !== "center") attributes.push(`missingTarget="${args.missingTarget}"`);
   if (typeof args.scrimOpacity === "number" && args.scrimOpacity !== 0.6) attributes.push(`scrimOpacity={${args.scrimOpacity}}`);
   if (args.closeOnOutsidePress) attributes.push("closeOnOutsidePress");

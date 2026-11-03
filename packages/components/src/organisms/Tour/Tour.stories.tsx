@@ -14,6 +14,11 @@ interface PlaygroundArgs extends DemoProps {
   targetTimeout: number;
   dir: "ltr" | "rtl";
   "aria-label": string;
+  dismissalsOn: "all" | "first";
+  /** Playground only: shows the dismissals menu (`dismissals`). */
+  showDismissals: boolean;
+  /** Playground only: puts a step whose element is not on the page into the tour. */
+  missingStep: boolean;
   container?: TourProps["container"];
 }
 
@@ -140,13 +145,40 @@ export const Playground: Story = {
     targetTimeout: 1000,
     dir: "ltr",
     "aria-label": "",
+    showDismissals: false,
+    dismissalsOn: "all",
+    missingStep: false,
+  },
+  // Playground-only choices: a control for something the page has to be set up for, shown only once it is switched on, so no
+  // control in the panel does nothing (07 §4.1).
+  argTypes: {
+    showDismissals: {
+      control: "boolean",
+      description: "Playground only: draws the dismissals menu, with `dismissals={[\"later\", \"never\"]}`.",
+      table: { disable: true },
+    },
+    dismissalsOn: { if: { arg: "showDismissals", truthy: true } },
+    missingStep: {
+      control: "boolean",
+      description: "Playground only: puts a step into the tour whose element is not on the page, so `missingTarget` and `targetTimeout` can be tried.",
+      table: { disable: true },
+    },
+    missingTarget: { if: { arg: "missingStep", truthy: true } },
+    targetTimeout: { if: { arg: "missingStep", truthy: true } },
   },
   parameters: {
     docs: {
       source: { type: "dynamic", transform: (_code: string, context: { args: PlaygroundArgs }) => tourPlaygroundSnippet(context.args) },
     },
   },
-  render: ({ "aria-label": ariaLabel, ...args }) => <Demo {...args} aria-label={ariaLabel || undefined} />,
+  render: ({ "aria-label": ariaLabel, showDismissals, missingStep, ...args }) => (
+    <Demo
+      {...args}
+      steps={missingStep ? missingSteps : undefined}
+      dismissals={showDismissals ? ["later", "never"] : undefined}
+      aria-label={ariaLabel || undefined}
+    />
+  ),
 };
 
 export const ProgressBar: Story = {

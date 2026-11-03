@@ -336,3 +336,37 @@ describe("Tour — controller and accessibility with the new parts", () => {
     expect(await axe(document.body)).toHaveNoViolations();
   });
 });
+
+describe("Tour — native handlers", () => {
+  it("calls a caller's onKeyDown, onFocus and onBlur as well as its own", async () => {
+    const user = userEvent.setup();
+    const onKeyDown = vi.fn();
+    const onFocus = vi.fn();
+    const onBlur = vi.fn();
+    render(<Harness onKeyDown={onKeyDown} onFocus={onFocus} onBlur={onBlur} />);
+    const dialog = await card();
+    await waitFor(() => expect(dialog).toHaveFocus());
+    await user.keyboard("a");
+    expect(onKeyDown).toHaveBeenCalled();
+    expect(onFocus).toHaveBeenCalled();
+    within(dialog).getByRole("button", { name: "Next" }).focus();
+    (document.getElementById("target-one") as HTMLElement).focus();
+    expect(onBlur).toHaveBeenCalled();
+  });
+
+  it("lets a caller's onKeyDown claim an arrow key before the tour moves", async () => {
+    const user = userEvent.setup();
+    render(<Harness onKeyDown={(event) => event.preventDefault()} />);
+    await card();
+    await user.keyboard("{ArrowRight}");
+    expect(screen.getByRole("dialog")).toHaveAccessibleName("First");
+  });
+
+  it("keeps its own keys working with a handler passed", async () => {
+    const user = userEvent.setup();
+    render(<Harness onKeyDown={() => {}} />);
+    await card();
+    await user.keyboard("{ArrowRight}");
+    await name("Second");
+  });
+});

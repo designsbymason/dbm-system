@@ -150,7 +150,7 @@ export interface TourStep {
   /** Extra content between the step's text and its buttons. */
   footer?: ReactNode;
   /**
-   * The step's own buttons, in place of Skip, Back and Next: a node, or a function that is handed the tour's controller
+   * The step's own buttons, in place of Back and Next (Skip, in the progress row, stays): a node, or a function that is handed the tour's controller
    * (`next()`, `back()`, `goTo()`, `close()`). Escape and the arrow keys still work.
    */
   actions?: ReactNode | ((controller: TourController) => ReactNode);

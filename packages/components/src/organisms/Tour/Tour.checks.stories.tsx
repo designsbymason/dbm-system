@@ -794,3 +794,64 @@ export const TheCardKeepsUpWithTheSpotlightBetweenSteps: Story = {
     await closeWithEscape();
   },
 };
+
+const rgbOf = (color: string) => (color.match(/[\d.]+/g) ?? []).slice(0, 3).map(Number) as [number, number, number];
+const luminance = ([r, g, b]: [number, number, number]) => {
+  const channel = (value: number) => {
+    const v = value / 255;
+    return v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4;
+  };
+  return 0.2126 * channel(r) + 0.7152 * channel(g) + 0.0722 * channel(b);
+};
+const contrast = (a: string, b: string) => {
+  const x = luminance(rgbOf(a));
+  const y = luminance(rgbOf(b));
+  return (Math.max(x, y) + 0.05) / (Math.min(x, y) + 0.05);
+};
+
+export const EverySegmentOfTheProgressBarIsSeenAgainstTheCard: Story = {
+  name: "Progress segments, reached and not, are each at least 3:1 against the card, and not reached ones are hollow",
+  render: () => <Demo progress="bar" />,
+  play: async () => {
+    const dialog = await startTour();
+    const segments = dialog.querySelectorAll<HTMLElement>('[class*="_segment_"]');
+    const surface = getComputedStyle(dialog).backgroundColor;
+    const reached = getComputedStyle(segments[0] as HTMLElement);
+    const unreached = getComputedStyle(segments[3] as HTMLElement);
+    await expect(contrast(reached.backgroundColor, surface)).toBeGreaterThanOrEqual(3);
+    // Not reached: no fill, an outline that is seen.
+    await expect(unreached.backgroundColor).toBe("rgba(0, 0, 0, 0)");
+    await expect(parseFloat(unreached.borderTopWidth)).toBeGreaterThan(0);
+    await expect(contrast(unreached.borderTopColor, surface)).toBeGreaterThanOrEqual(3);
+    await closeWithEscape();
+  },
+};
+
+export const OnAPhoneAResponsiveMapDocksTheCard: Story = {
+  name: "On a phone, presentation { base: docked, md: anchored } docks the card across the bottom, clear of the element",
+  globals: { viewport: { value: "mobile1", isRotated: false } },
+  render: () => <Demo presentation={{ base: "docked", md: "anchored" }} />,
+  play: async () => {
+    // The viewport really is below the breakpoint, or the check would pass for the wrong reason.
+    await expect(window.innerWidth).toBeLessThan(768);
+    const dialog = await startTour();
+    await expect(dialog).toHaveAttribute("data-placement", "docked");
+    const stage = (await body.findByTestId("stage")).getBoundingClientRect();
+    const card = dialog.getBoundingClientRect();
+    await expect(card.width).toBeGreaterThan(stage.width * 0.8);
+    await expect(card.bottom).toBeLessThanOrEqual(stage.bottom);
+    await expect(card.top).toBeGreaterThanOrEqual(demoElement("search").getBoundingClientRect().bottom);
+    await closeWithEscape();
+  },
+};
+
+export const OnADesktopTheSameMapAnchorsTheCard: Story = {
+  name: "On a desktop, the same map anchors the card beside the element",
+  render: () => <Demo presentation={{ base: "docked", md: "anchored" }} />,
+  play: async () => {
+    await expect(window.innerWidth).toBeGreaterThanOrEqual(768);
+    const dialog = await startTour();
+    await expect(dialog).toHaveAttribute("data-placement", "anchored");
+    await closeWithEscape();
+  },
+};

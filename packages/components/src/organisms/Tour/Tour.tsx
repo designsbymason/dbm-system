@@ -94,6 +94,9 @@ export const Tour = forwardRef<HTMLDivElement, TourProps>(
       "aria-label": ariaLabel,
       "aria-labelledby": ariaLabelledBy,
       "aria-describedby": ariaDescribedBy,
+      onKeyDown: consumerKeyDown,
+      onFocus: consumerFocus,
+      onBlur: consumerBlur,
       ...rest
     },
     ref,
@@ -290,12 +293,14 @@ export const Tour = forwardRef<HTMLDivElement, TourProps>(
       [visible],
     );
     const onCardFocus = (event: FocusEvent<HTMLDivElement>) => {
+      consumerFocus?.(event);
       // A menu opened from the card is drawn in a portal and its focus reaches this handler through React, not the DOM.
       if (!event.currentTarget.contains(event.target)) return;
       const action = (event.target as HTMLElement).getAttribute("data-tour-action") as TourAction | null;
       focusState.current = { inside: true, action };
     };
     const onCardBlur = (event: FocusEvent<HTMLDivElement>) => {
+      consumerBlur?.(event);
       const to = event.relatedTarget as Node | null;
       // A blur to nowhere is what removing the focused card looks like; only a move to another element leaves it.
       if (to && !event.currentTarget.contains(to)) focusState.current = { inside: false, action: null };
@@ -352,6 +357,8 @@ export const Tour = forwardRef<HTMLDivElement, TourProps>(
     );
 
     const onKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
+      // The caller's own handler first; one that handled the key has it.
+      consumerKeyDown?.(event);
       if (event.defaultPrevented || event.altKey || event.ctrlKey || event.metaKey) return;
       // Keys pressed in the dismissals menu, drawn in a portal, reach this handler through React; they are the menu's.
       if (!event.currentTarget.contains(event.target as Node)) return;

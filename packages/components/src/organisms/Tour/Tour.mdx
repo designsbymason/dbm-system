@@ -39,6 +39,8 @@ export const propOrder = [
   "data-testid",
 ];
 
+export const playgroundOrder = ["presentation", "progress", "showDismissals", "dismissalsOn", "missingStep", "missingTarget", "scrimOpacity", "closeOnOutsidePress", "targetTimeout", "dir", "aria-label"];
+
 export const stepFields = [
   { name: "id", required: true, description: "A name for the step, unique among the steps. It is the tour's `value`." },
   { name: "title", required: true, description: "The step's heading, and the card's name." },
@@ -54,7 +56,7 @@ export const stepFields = [
   { name: "missingTarget", options: ["center", "skip"], description: "What to do when this step's element never appears, over the tour's `missingTarget`." },
   { name: "media", description: "A picture or illustration drawn at the top of the card, above the progress." },
   { name: "footer", description: "Extra content between the step's text and its buttons." },
-  { name: "actions", description: "The step's own buttons in place of Skip, Back and Next: a node, or a function handed the controller (`next()`, `back()`, `goTo()`, `close()`)." },
+  { name: "actions", description: "The step's own buttons in place of Back and Next (Skip, in the progress row, stays): a node, or a function handed the controller (`next()`, `back()`, `goTo()`, `close()`)." },
   { name: "labels", description: "This step's own button text (`next`, `back`, `skip`, `finish`, `later`, `never`), over the tour's `labels`." },
 ];
 
@@ -92,7 +94,7 @@ import { Tour } from "@dbm-system/components";
 <Canvas of={TourStories.Playground} />
 
 </div>
-<PlaygroundControls of={TourStories.Playground} order={propOrder} exclude={["steps", "open", "defaultOpen", "onOpenChange", "value", "defaultValue", "onValueChange", "onTargetMissing", "container", "labels", "formatNumber", "controllerRef", "aria-labelledby", "aria-describedby", "className", "style", "id", "data-testid"]} />
+<PlaygroundControls of={TourStories.Playground} order={playgroundOrder} exclude={["steps", "open", "defaultOpen", "onOpenChange", "value", "defaultValue", "onValueChange", "onTargetMissing", "container", "labels", "formatNumber", "controllerRef", "aria-labelledby", "aria-describedby", "className", "style", "id", "data-testid"]} />
 
 Every demo on this page draws its tour inside the box above it, so the dimmed layer covers the box and not the page; in your app
 the tour covers the screen. Each starts closed: press **Start the tour**.
@@ -100,7 +102,7 @@ the tour covers the screen. Each starts closed: press **Start the tour**.
 ## Properties
 
 `ref`, `className`, `style`, `id` and `data-testid` go on the card, the element with `role="dialog"`. The tour draws nothing else
-that takes props. Also accepts any other native `<div>` attribute beyond what's listed here (e.g. `title`, `lang`): it is
+that takes props. Also accepts any other native `<div>` attribute beyond what's listed here (e.g. `lang`, `onKeyDown`): it is
 passed straight through to the card.
 
 <PropertiesTable of={TourStories} order={propOrder} />
@@ -300,15 +302,15 @@ const done = usePersistentDismiss("product-tour");
 
 ```tsx
 {/* A native <div> attribute on the card, and the tour drawn into your own container */}
-<Tour lang="de" title="Produkttour" container={appRoot} steps={steps} />
+<Tour lang="de" data-tour="product" container={appRoot} steps={steps} />
 ```
 
 ## Design tokens used
 
 <TokenRow token="bg.overlay" usage="the dimmed page around the spotlight, at the scrim's opacity" />
 <TokenRow token="opacity.60" usage="how dark the dimmed page is, until scrimOpacity says otherwise" />
-<TokenRow token="bg.brand" usage="a reached segment of the progress bar" />
-<TokenRow token="bg.neutral-subtle" usage="a segment of the progress bar not yet reached" />
+<TokenRow token="bg.brand" usage="a reached segment of the progress bar, filled" />
+<TokenRow token="border.strong" usage="the outline of a progress segment not yet reached, hollow, so the steps still to come stay visible" />
 <TokenRow token="bg.surface" usage="the card's background, and the arrow's fill" />
 <TokenRow token="border.default" usage="the card's border, and the arrow's stroke" />
 <TokenRow token="text.primary" usage="the card's text" />
