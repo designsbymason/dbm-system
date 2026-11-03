@@ -1,0 +1,88 @@
+import { Meta } from "@storybook/addon-docs/blocks";
+import { Callout, ComponentIndex, FoundationsCards, RelatedLinks } from "../../.storybook/blocks";
+import { ThemeSync } from "../../.storybook/blocks/foundations";
+import { VisuallyHidden } from "../atoms/VisuallyHidden";
+
+<Meta title="Getting started" />
+
+<ThemeSync />
+
+<VisuallyHidden asChild><h2>Intro</h2></VisuallyHidden>
+
+# Getting started
+
+Welcome to the DBM System documentation.
+
+DBM System is a React component library for building accessible web and enterprise applications. It is
+built on a small set of design tokens, so the same components carry two brands, **Purple** and
+**Emerald**, each in light and dark. It depends on very little, only Radix UI primitives for
+interaction and Phosphor for icons, and it is written to be read by people and by AI coding agents alike:
+every component has full types, a hand-written snippet for each example, and checks for accessibility,
+responsive layout and right-to-left text.
+
+The sections below run from installing the library, through the guides and the tokens behind it, to the
+components themselves.
+
+## Installation
+
+<Callout tone="info" title="In active development, not yet published">
+
+The package is not on npm yet. It will be published under the `@dbm-system` scope, and the steps to
+install it, load the stylesheet and tokens, choose a theme and load the fonts will appear here when it is.
+
+</Callout>
+
+## Guides
+
+<RelatedLinks
+  items={[
+    {
+      name: "Theming",
+      description: "Switch brand and mode, and how the token families and the provider work.",
+      href: "/?path=/docs/guides-theming--docs",
+    },
+    {
+      name: "Accessibility",
+      description: "What the components guarantee, the known exceptions, and what stays your job.",
+      href: "/?path=/docs/guides-accessibility--docs",
+    },
+    {
+      name: "Responsive and right-to-left",
+      description: "Breakpoints, responsive props, logical CSS and the dir prop.",
+      href: "/?path=/docs/guides-responsive-and-right-to-left--docs",
+    },
+    {
+      name: "Hooks and utilities",
+      description: "Every hook and helper the package exports, with options and returns.",
+      href: "/?path=/docs/guides-hooks-and-utilities--docs",
+    },
+    {
+      name: "Composition patterns",
+      description: "Live arrangements of components that come up in nearly every app.",
+      href: "/?path=/docs/guides-composition-patterns--docs",
+    },
+    {
+      name: "Icons",
+      description: "The icons the components use, their weights, and the full Phosphor set.",
+      href: "/?path=/docs/guides-icons--docs",
+    },
+  ]}
+/>
+
+## Foundations
+
+The design tokens behind every component: each is a named value, read live from the token package. Start with the [Foundations overview](?path=/docs/foundations-overview--docs).
+
+<FoundationsCards />
+
+<ComponentIndex />
+
+## For AI agents
+
+<Callout tone="info" title="In active development, not yet published">
+
+A machine-readable manifest of every component (its props, variants and constraints as JSON) and a usage
+guide written for coding agents are planned, followed by an MCP server. Until they ship, every
+component page has full types and a snippet for each example.
+
+</Callout>

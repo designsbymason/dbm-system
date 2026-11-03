@@ -11,7 +11,7 @@ export type ComponentTier = "Atom" | "Molecule" | "Organism" | "Template";
  * `Template` takes `brand` rather than `danger`, since a red badge would read as
  * an error rather than a category.
  */
-const toneForTier: Record<ComponentTier, BadgeTone> = {
+export const toneForTier: Record<ComponentTier, BadgeTone> = {
   Atom: "info",
   Molecule: "warning",
   Organism: "success",
@@ -58,7 +58,9 @@ export function ComponentHeader({
        * previously needed here since no title had hit this length yet.
        */}
       <h1 style={{ margin: 0, minWidth: 0, overflowWrap: "break-word" }}>{title}</h1>
-      <Badge tone={toneForTier[tier]}>{tier}</Badge>
+      <Badge tone={toneForTier[tier]} variant="subtle">
+        {tier}
+      </Badge>
     </div>
   );
 }

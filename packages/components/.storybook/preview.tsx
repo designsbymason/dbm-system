@@ -98,12 +98,10 @@ const preview: Preview = {
         // annotated for the same reason `a`/`b` above can't be.
         // @ts-expect-error — `title` can't be typed; see comment above
         const topLevelGroup = (title) => title.split("/")[0] ?? title;
-        // Components (the index) first, then the written guides, then the
-        // token reference, then the tiers (Atoms, then Molecules and
-        // Organisms alphabetically). "Getting started" is listed ahead of
-        // Guides for the Installation page, which waits on the consumer-CSS
-        // decision; an absent group costs nothing here.
-        const groupPriority = ["Components", "Getting started", "Guides", "Foundations", "Atoms"];
+        // Getting started (the welcome page, with the component index) first,
+        // then the written guides, then the token reference, then the tiers
+        // (Atoms, then Molecules and Organisms alphabetically).
+        const groupPriority = ["Getting started", "Guides", "Foundations", "Atoms"];
         const guidesOrder = [
           "Guides/Theming",
           "Guides/Accessibility",

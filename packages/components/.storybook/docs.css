@@ -918,140 +918,151 @@
   box-shadow: var(--dbm-shadow-dark-md);
 }
 
-/* Components overview page: the index of every component. Names run
-   alphabetically down CSS multi-column columns (4 to 5 wide on a desktop
-   Docs page, fewer as it narrows, 1 on a phone) with no breakpoint to keep
-   in sync. A tier is marked by a shape as well as a colour, so the colour
-   is never the only signal: atom a circle, molecule a square, organism a
-   diamond, template a rounded square. Marks use `icon.*` tokens, the
-   non-text colours, each checked against the page in all four themes. */
-.dbm-component-index {
+/* Getting started page: the Components and Templates sections. Each section title is a plain docs h2, the intro is
+   prose, and the toolbar and the table are the library's own. Nothing on the page changes size while a filter is
+   chosen: the two filter buttons, the search box and the result count have fixed widths, the table's columns are
+   fixed shares of its width, and the table keeps one height whether it has 115 rows or none. */
+.dbm-getting-started {
   color: var(--dbm-text-primary);
 }
 
-.dbm-component-index__legend {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--dbm-space-2) var(--dbm-space-6);
-  list-style: none;
-  margin: 0 0 var(--dbm-space-4);
-  padding: 0;
+.dbm-getting-started__lede {
+  color: var(--dbm-text-secondary);
+  font-size: var(--dbm-font-size-base);
+  line-height: var(--dbm-line-height-relaxed);
+  margin-block: 0 var(--dbm-space-4);
 }
 
-.dbm-component-index__legend li {
-  align-items: center;
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--dbm-space-2);
-  margin: 0;
-  padding: 0;
-}
-
-.dbm-component-index__legend span:last-child {
+.dbm-getting-started__note {
   color: var(--dbm-text-secondary);
 }
 
-.dbm-component-index__controls {
+.dbm-getting-started__panel {
   display: grid;
-  gap: var(--dbm-space-3);
-  margin-block-end: var(--dbm-space-3);
+  gap: var(--dbm-space-2);
+  min-inline-size: 11rem;
 }
 
-.dbm-component-index__filter {
+/* The table keeps one height (the toolbar and the 34rem of rows) whether 115 rows or none match, and its scroll area
+   always reserves room for the scrollbar, so nothing below it moves and no column narrows when one appears. */
+.dbm-getting-started__table {
+  min-block-size: 37.5rem;
+}
+
+.dbm-getting-started__table div[class*="_container_"] {
+  scrollbar-gutter: stable;
+}
+
+/* The two filter buttons and the result count have fixed widths, so a longer choice ("Tier: Organisms") cannot move
+   anything beside it; the search box takes what is left. */
+.dbm-getting-started__filtergroup {
   align-items: center;
   display: flex;
+  flex: none;
+  gap: var(--dbm-space-2);
+}
+
+.dbm-getting-started__filterlabel {
+  color: var(--dbm-text-secondary);
+  white-space: nowrap;
+}
+
+/* The choice on the left, the chevron on the right. The Button's own rule centres its content and is loaded after this
+   file, so the selector is made one class more specific to win. */
+.dbm-getting-started__filtergroup .dbm-getting-started__filter {
+  flex: none;
+  gap: var(--dbm-space-2);
+  justify-content: space-between;
+  min-inline-size: 0;
+  padding-inline: var(--dbm-space-3);
+  text-align: start;
+}
+
+/* The toolbar is three columns: the count on the left (it hugs its text, with a floor as wide as its longest, so it
+   never changes width), the search box in the middle taking all the room that is left, and the filters on the right,
+   24px between the columns and 16px between the filters. Narrower than 45rem the search box drops to its own line. */
+.dbm-getting-started__table {
+  container-type: inline-size;
+}
+
+.dbm-getting-started__table [class*="_row_"] {
+  align-items: center;
+  column-gap: var(--dbm-space-6);
+  display: flex;
   flex-wrap: wrap;
-  gap: var(--dbm-space-2) var(--dbm-space-3);
+  row-gap: var(--dbm-space-3);
 }
 
-.dbm-component-index__filter {
-  align-items: flex-start;
+.dbm-getting-started__summary {
+  flex: none;
+  min-inline-size: 9.5rem;
+  text-align: start;
+  white-space: nowrap;
 }
 
-.dbm-component-index__filter > :last-child {
-  flex: 1 1 0;
+.dbm-getting-started__table [class*="_search_"] {
+  flex: 1 1 6rem;
   min-inline-size: 0;
 }
 
-.dbm-component-index__filter-label {
-  color: var(--dbm-text-secondary);
-  font-weight: var(--dbm-font-weight-semibold);
-  min-inline-size: 4.5rem;
-  padding-block: var(--dbm-space-1);
-}
-
-.dbm-component-index__count,
-.dbm-component-index__empty {
-  color: var(--dbm-text-secondary);
-}
-
-.dbm-component-index__columns {
-  column-gap: var(--dbm-space-6);
-  column-width: 11rem;
-}
-
-.dbm-component-index__group {
-  display: contents;
-}
-
-.dbm-component-index__letter {
-  break-after: avoid;
-  color: var(--dbm-text-secondary);
-  font-size: var(--dbm-font-size-sm);
-  margin: var(--dbm-space-3) 0 var(--dbm-space-1);
-}
-
-.dbm-component-index__list {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-}
-
-.dbm-component-index__list li {
-  break-inside: avoid;
-  margin: 0;
-  padding: 0;
-}
-
-.dbm-component-index__link {
-  align-items: center;
-  color: var(--dbm-text-link);
-  display: inline-flex;
-  gap: var(--dbm-space-2);
-  padding-block: var(--dbm-space-1);
-}
-
-.dbm-component-index__mark {
-  block-size: 0.625rem;
-  display: inline-block;
+.dbm-getting-started__table .dbm-getting-started__filters {
   flex: none;
-  inline-size: 0.625rem;
 }
 
-.dbm-component-index__mark[data-tier="Atoms"] {
-  background: var(--dbm-icon-brand);
-  border-radius: 50%;
+/* The gap between the two filters is the toolbar element inside the frame (it owns the 4px the Toolbar draws). */
+.dbm-getting-started__table .dbm-getting-started__filters [role="toolbar"] {
+  gap: var(--dbm-space-4);
 }
 
-.dbm-component-index__mark[data-tier="Molecules"] {
-  background: var(--dbm-icon-highlight);
-}
-
-.dbm-component-index__mark[data-tier="Organisms"] {
-  background: var(--dbm-icon-secondary);
-  transform: rotate(45deg) scale(0.85);
-}
-
-.dbm-component-index__mark[data-tier="Templates"] {
-  background: var(--dbm-icon-default);
-  border-radius: var(--dbm-radius-sm);
-}
-
-@media (forced-colors: active) {
-  .dbm-component-index__mark {
-    background: CanvasText;
-    forced-color-adjust: none;
+@container (max-width: 45rem) {
+  .dbm-getting-started__table .dbm-getting-started__summary {
+    margin-inline-start: 0;
   }
+
+  .dbm-getting-started__table .dbm-getting-started__filters {
+    flex: 1 1 100%;
+    order: 2;
+  }
+
+  /* The two filters stack, each as wide as the row, so neither is cut off. */
+  .dbm-getting-started__table .dbm-getting-started__filters [role="toolbar"] {
+    align-items: stretch;
+    flex-direction: column;
+    gap: var(--dbm-space-3);
+    inline-size: 100%;
+  }
+
+  .dbm-getting-started__filtergroup {
+    inline-size: 100%;
+  }
+
+  .dbm-getting-started__filtergroup .dbm-getting-started__filter {
+    flex: 1 1 auto;
+    inline-size: auto !important;
+  }
+
+  .dbm-getting-started__table [class*="_search_"] {
+    flex: 1 1 100%;
+    order: 3;
+  }
+}
+
+.dbm-getting-started__link {
+  color: var(--dbm-text-link);
+  font-weight: var(--dbm-font-weight-semibold);
+  text-decoration: none;
+}
+
+.dbm-getting-started__link:hover {
+  text-decoration: underline;
+}
+
+/* A fixed table layout takes each column's width from its header, so the empty-state row (which spans every column)
+   cannot nudge a column by a pixel or two. The table is never narrower than 40rem: on a phone it scrolls sideways
+   inside its box instead of squeezing four columns into the width of the screen. */
+.dbm-getting-started__table table {
+  min-inline-size: 40rem;
+  table-layout: fixed;
 }
 
 /* Icons guide: the searchable gallery. `auto-fill` with a real minimum fits
@@ -1195,4 +1206,10 @@
 .dbm-proptable.dbm-reftable-prose td:nth-child(1) {
   white-space: normal;
   width: 30%;
+}
+
+/* A long list of related links laid out in as many columns as fit. */
+.dbm-related-links.dbm-related-links--columns {
+  gap: var(--dbm-space-4) var(--dbm-space-6);
+  grid-template-columns: repeat(auto-fill, minmax(13rem, 1fr));
 }

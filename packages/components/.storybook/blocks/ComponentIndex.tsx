@@ -1,8 +1,16 @@
-import { useEffect, useMemo, useState } from "react";
-import { Button } from "../../src/atoms/Button";
-import { VisuallyHidden } from "../../src/atoms/VisuallyHidden";
-import { ToggleGroup } from "../../src/molecules/ToggleGroup";
+import { useEffect, useId, useMemo, useState } from "react";
+import type { ReactNode } from "react";
+import { Badge } from "../../src/atoms/Badge";
+import { Checkbox } from "../../src/atoms/Checkbox";
+import { CheckboxGroup } from "../../src/molecules/CheckboxGroup";
 import { SearchInput } from "../../src/molecules/SearchInput";
+import { TableToolbar } from "../../src/molecules/TableToolbar";
+import { Toolbar } from "../../src/molecules/Toolbar";
+import { DataTable } from "../../src/organisms/DataTable";
+import type { DataTableColumn } from "../../src/organisms/DataTable";
+import { componentDescriptions } from "../../src/componentDescriptions";
+import { toneForTier } from "./ComponentHeader";
+import type { ComponentTier } from "./ComponentHeader";
 
 type Tier = "Atoms" | "Molecules" | "Organisms" | "Templates";
 
@@ -19,19 +27,12 @@ interface RawEntry {
   type: string;
 }
 
-/** The singular label for each tier, used in the legend and in the hidden text after each name. */
-const TIER_LABEL: Record<Tier, string> = {
+/** The singular label of each tier, which is also the key of the badge tone `ComponentHeader` draws it with. */
+const TIER_LABEL: Record<Tier, ComponentTier> = {
   Atoms: "Atom",
   Molecules: "Molecule",
   Organisms: "Organism",
   Templates: "Template",
-};
-
-/** What each tier means, shown in the legend. */
-const TIER_HINT: Record<Exclude<Tier, "Templates">, string> = {
-  Atoms: "A single building block",
-  Molecules: "A few atoms working together",
-  Organisms: "A complete, self-contained pattern",
 };
 
 const COMPONENT_TIERS: Exclude<Tier, "Templates">[] = ["Atoms", "Molecules", "Organisms"];
@@ -55,8 +56,8 @@ const isTier = (value: string | undefined): value is Tier =>
 /**
  * Turns Storybook's own index into rows. A component's Docs page is the entry whose type is `docs` and whose title is
  * `{Tier}/{Category}/{Component}` (§3), so a new component appears here with no edit to this page. A template is a
- * `Templates/{Template}` or `Templates/{Category}/{Template}` Docs page. Everything else (the Foundations pages, a
- * component's own checks) has a different top-level group or no Docs entry and is left out.
+ * `Templates/{Template}` or `Templates/{Category}/{Template}` Docs page. Everything else (the Foundations pages, the
+ * guides, a component's own checks) has a different top-level group or no Docs entry and is left out.
  */
 function toRows(entries: Record<string, RawEntry>): IndexRow[] {
   const rows: IndexRow[] = [];
@@ -82,51 +83,146 @@ function docsHref(id: string): string {
   return `${new URL("./", window.location.href).href}?path=/docs/${id}`;
 }
 
-function TierMark({ tier }: { tier: Tier }) {
-  return <span aria-hidden="true" className="dbm-component-index__mark" data-tier={tier} />;
+/** What a filter's button says: "All" while nothing is chosen, the choice while it is one, else a count. */
+function filterValue(chosen: string[]): string {
+  if (chosen.length === 0) return "All";
+  if (chosen.length === 1) return chosen[0] ?? "All";
+  return `${chosen.length} selected`;
 }
 
-function IndexList({ rows }: { rows: IndexRow[] }) {
-  const groups = useMemo(() => {
-    const byLetter = new Map<string, IndexRow[]>();
-    for (const row of rows) {
-      const letter = row.name.charAt(0).toUpperCase();
-      byLetter.set(letter, [...(byLetter.get(letter) ?? []), row]);
-    }
-    return [...byLetter.entries()];
-  }, [rows]);
-
+/**
+ * One toolbar filter: its name as plain text before the button ("Tier:"), and a button that shows only the choice,
+ * with the choice on the left and the chevron on the right. The panel is a list of checkboxes headed by "All". The
+ * button is named by both ("Tier: All"), which holds its visible text as whole words (WCAG 2.5.3).
+ */
+function ChoiceFilter({
+  name,
+  options,
+  chosen,
+  onChange,
+  width,
+}: {
+  name: string;
+  options: string[];
+  chosen: string[];
+  onChange: (next: string[]) => void;
+  width: string;
+}) {
+  const id = useId();
+  const labelId = `${id}-label`;
+  const buttonId = `${id}-button`;
   return (
-    <div className="dbm-component-index__columns">
-      {groups.map(([letter, group]) => (
-        <div key={letter} className="dbm-component-index__group">
-          <h3 aria-hidden="true" className="dbm-component-index__letter">
-            {letter}
-          </h3>
-          <ul className="dbm-component-index__list">
-            {group.map((row) => (
-              <li key={row.id}>
-                <a className="dbm-component-index__link" href={docsHref(row.id)} target="_top">
-                  <TierMark tier={row.tier} />
-                  {row.name}
-                  <VisuallyHidden>
-                    , {TIER_LABEL[row.tier].toLowerCase()}, {row.category}
-                  </VisuallyHidden>
-                </a>
-              </li>
+    <div className="dbm-getting-started__filtergroup">
+      <span className="dbm-getting-started__filterlabel" id={labelId}>
+        {name}:
+      </span>
+      <TableToolbar.Filter
+        id={buttonId}
+        aria-labelledby={`${labelId} ${buttonId}`}
+        label={filterValue(chosen)}
+        className="dbm-getting-started__filter"
+        style={{ inlineSize: width }}
+        labels={{ panel: () => `${name} filter` }}
+      >
+        <div className="dbm-getting-started__panel">
+          <Checkbox checked={chosen.length === 0} onCheckedChange={() => onChange([])}>
+            All
+          </Checkbox>
+          <CheckboxGroup aria-label={name} value={chosen} onValueChange={onChange}>
+            {options.map((option) => (
+              <Checkbox key={option} value={option}>
+                {option}
+              </Checkbox>
             ))}
-          </ul>
+          </CheckboxGroup>
         </div>
-      ))}
+      </TableToolbar.Filter>
+    </div>
+  );
+}
+
+/** The columns of both tables. Fixed shares of the width, so choosing a filter never moves a column. */
+const COLUMNS: DataTableColumn<IndexRow>[] = [
+  {
+    id: "name",
+    header: "Name",
+    accessor: (row) => row.name,
+    cell: (row) => (
+      <a className="dbm-getting-started__link" href={docsHref(row.id)} target="_top">
+        {row.name}
+      </a>
+    ),
+    sortable: true,
+    rowHeader: true,
+    width: "22%",
+  },
+  {
+    id: "tier",
+    header: "Tier",
+    accessor: (row) => TIER_LABEL[row.tier],
+    cell: (row) => (
+      <Badge tone={toneForTier[TIER_LABEL[row.tier]]} size="sm" variant="subtle">
+        {TIER_LABEL[row.tier]}
+      </Badge>
+    ),
+    sortable: true,
+    width: "16%",
+  },
+  {
+    id: "category",
+    header: "Category",
+    accessor: (row) => row.category,
+    sortable: true,
+    width: "17%",
+  },
+  {
+    id: "description",
+    header: "Description",
+    accessor: (row) => componentDescriptions[row.name] ?? "",
+    cell: (row) => componentDescriptions[row.name] ?? "—",
+    wrap: true,
+    width: "45%",
+  },
+];
+
+/** The shared table: brand header, striped, sortable on every column, a header that stays while the rows scroll. */
+function IndexTable({
+  rows,
+  label,
+  emptyState,
+  children,
+}: {
+  rows: IndexRow[];
+  label: string;
+  emptyState: string;
+  children?: ReactNode;
+}) {
+  return (
+    <div className="dbm-getting-started__table">
+      <DataTable
+        aria-label={label}
+        columns={COLUMNS}
+        data={rows}
+        getRowId={(row) => row.id}
+        tone="brand"
+        striped
+        stickyHeader
+        maxHeight="34rem"
+        defaultSort={[{ columnId: "name", direction: "ascending" }]}
+        emptyState={emptyState}
+      >
+        {children}
+      </DataTable>
     </div>
   );
 }
 
 /**
- * Docs-page-only index of every component, built live from Storybook's own `index.json` so it can never drift from
- * the sidebar: a leading mark per tier (a shape as well as a colour), a search box, and a tier and a category
- * filter that combine. Templates are listed in their own section below, empty until the first one exists. Not part
- * of the published package.
+ * Docs-page-only Components and Templates sections for the Getting started page, built live from Storybook's own
+ * `index.json` so they can never drift from the sidebar. The Components section has a count badge, and a toolbar of a
+ * search box and a Tier and a Category filter (each a panel of checkboxes, "All" until one is chosen) over a table of
+ * every component; its tier badges are the ones the component pages draw. Templates are listed in a section of their
+ * own, empty until the first one exists. Not part of the published package.
  */
 export function ComponentIndex() {
   const [entries, setEntries] = useState<IndexRow[] | null>(null);
@@ -168,109 +264,86 @@ export function ComponentIndex() {
       (needle === "" || row.name.toLowerCase().includes(needle)),
   );
   const filtering = needle !== "" || tiers.length > 0 || categories.length > 0;
-  const reset = () => {
-    setQuery("");
-    setTiers([]);
-    setCategories([]);
+
+  const summaryLabels = {
+    results: (count: number) => (count === 0 ? "No components" : `${count} ${count === 1 ? "component" : "components"}`),
+    resultsOf: (count: number, total: number) => `${count} of ${total} components`,
   };
 
-  if (failed) {
-    return (
-      <p>
-        The component list could not be loaded from Storybook&apos;s index. Use the sidebar to browse the components.
-      </p>
-    );
-  }
-  if (entries === null) {
-    return <p role="status">Loading the component list…</p>;
-  }
-
   return (
-    <div className="dbm-component-index sb-unstyled">
-      <ul className="dbm-component-index__legend" aria-label="Tier key">
-        {COMPONENT_TIERS.map((tier) => (
-          <li key={tier}>
-            <TierMark tier={tier} />
-            <strong>{TIER_LABEL[tier]}</strong>
-            <span>{TIER_HINT[tier]}</span>
-          </li>
-        ))}
-      </ul>
-
-      <div className="dbm-component-index__controls">
-        <SearchInput
-          aria-label="Search components"
-          placeholder="Search components"
-          value={query}
-          onChange={(event) => setQuery(event.target.value)}
-          onClear={() => setQuery("")}
-        />
-        <div className="dbm-component-index__filter">
-          <span className="dbm-component-index__filter-label" id="dbm-index-tier-label">
-            Tier
-          </span>
-          <ToggleGroup
-            aria-labelledby="dbm-index-tier-label"
-            type="multiple"
-            size="sm"
-            attached={false}
-            value={tiers}
-            onValueChange={setTiers}
-          >
-            {COMPONENT_TIERS.map((tier) => (
-              <ToggleGroup.Item key={tier} value={tier}>
-                {tier}
-              </ToggleGroup.Item>
-            ))}
-          </ToggleGroup>
-        </div>
-        <div className="dbm-component-index__filter">
-          <span className="dbm-component-index__filter-label" id="dbm-index-category-label">
-            Category
-          </span>
-          <ToggleGroup
-            aria-labelledby="dbm-index-category-label"
-            type="multiple"
-            size="sm"
-            attached={false}
-            value={categories}
-            onValueChange={setCategories}
-          >
-            {categoryOptions.map((category) => (
-              <ToggleGroup.Item key={category} value={category}>
-                {category}
-              </ToggleGroup.Item>
-            ))}
-          </ToggleGroup>
-        </div>
-      </div>
-
-      <p className="dbm-component-index__count" role="status">
-        {filtering ? `Showing ${shown.length} of ${components.length} components` : `${components.length} components`}
-        {filtering ? (
-          <>
-            {" "}
-            <Button variant="tertiary" size="sm" onClick={reset}>
-              Clear filters
-            </Button>
-          </>
-        ) : null}
+    <div className="dbm-getting-started sb-unstyled">
+      <h2 id="components">Components</h2>
+      <p className="dbm-getting-started__lede">
+        Every component opens its own page with a live Playground, props, usage guidance, accessibility notes and a
+        copyable snippet for each example. They come in three tiers: an{" "}
+        <Badge tone={toneForTier.Atom} size="sm" variant="subtle">
+          Atom
+        </Badge>{" "}
+        is a single building block, a{" "}
+        <Badge tone={toneForTier.Molecule} size="sm" variant="subtle">
+          Molecule
+        </Badge>{" "}
+        combines a few atoms into one working unit, and an{" "}
+        <Badge tone={toneForTier.Organism} size="sm" variant="subtle">
+          Organism
+        </Badge>{" "}
+        is a complete pattern. The list is read from Storybook itself, so it always matches the sidebar.
       </p>
 
-      {shown.length > 0 ? (
-        <IndexList rows={shown} />
+      {failed ? (
+        <p className="dbm-getting-started__note">
+          The component list could not be loaded from Storybook&apos;s index. Use the sidebar to browse the components.
+        </p>
+      ) : entries === null ? (
+        <p className="dbm-getting-started__note" role="status">
+          Loading the component list…
+        </p>
       ) : (
-        <p className="dbm-component-index__empty">No component matches. Try a shorter search or clear a filter.</p>
+        <IndexTable rows={shown} label="Components" emptyState="No component matches. Try a shorter search or clear a filter.">
+          <DataTable.Toolbar aria-label="Component list tools">
+            <TableToolbar.Row>
+              <TableToolbar.Summary
+                className="dbm-getting-started__summary"
+                count={shown.length}
+                total={filtering ? components.length : undefined}
+                labels={summaryLabels}
+              />
+              <TableToolbar.Search>
+                <SearchInput
+                  aria-label="Search components"
+                  placeholder="Search"
+                  value={query}
+                  onChange={(event) => setQuery(event.target.value)}
+                  onClear={() => setQuery("")}
+                />
+              </TableToolbar.Search>
+              <Toolbar aria-label="Filters" variant="secondary" className="dbm-getting-started__filters">
+                <Toolbar.Item>
+                  <ChoiceFilter name="Tier" options={COMPONENT_TIERS} chosen={tiers} onChange={setTiers} width="8.25rem" />
+                </Toolbar.Item>
+                <Toolbar.Item>
+                  <ChoiceFilter
+                    name="Category"
+                    options={categoryOptions}
+                    chosen={categories}
+                    onChange={setCategories}
+                    width="9.25rem"
+                  />
+                </Toolbar.Item>
+              </Toolbar>
+            </TableToolbar.Row>
+          </DataTable.Toolbar>
+        </IndexTable>
       )}
 
       <h2 id="templates">Templates</h2>
-      <p className="dbm-component-index__empty">
+      <p className="dbm-getting-started__lede">
         Templates are page-level compositions of the components above: a dashboard shell, an auth flow and so on.
       </p>
       {templates.length > 0 ? (
-        <IndexList rows={templates} />
+        <IndexTable rows={templates} label="Templates" emptyState="No templates yet." />
       ) : (
-        <p className="dbm-component-index__empty">No templates yet.</p>
+        <p className="dbm-getting-started__note">No templates yet.</p>
       )}
     </div>
   );
