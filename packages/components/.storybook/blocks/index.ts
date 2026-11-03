@@ -17,6 +17,7 @@ export type { FieldRow } from "./FieldsTable";
 export { PlaygroundCanvas } from "./PlaygroundCanvas";
 export { PlaygroundControls } from "./PlaygroundControls";
 export { PropertiesTable } from "./PropertiesTable";
+export { ReferenceTable } from "./ReferenceTable";
 export { RelatedCard } from "./RelatedCard";
 export { RelatedLinks } from "./RelatedLinks";
 export { TokenRow } from "./TokenRow";

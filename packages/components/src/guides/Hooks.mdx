@@ -1,5 +1,5 @@
 import { Meta } from "@storybook/addon-docs/blocks";
-import { Callout, RelatedCard } from "../../.storybook/blocks";
+import { FieldsTable, ReferenceTable } from "../../.storybook/blocks";
 import { ThemeSync } from "../../.storybook/blocks/foundations";
 import { VisuallyHidden } from "../atoms/VisuallyHidden";
 
@@ -12,17 +12,27 @@ import { VisuallyHidden } from "../atoms/VisuallyHidden";
 # Hooks and utilities
 
 A few helpers are part of the public API: a consumer is meant to call them, and one install of
-`@dbm-system/components` covers them. Everything else in the supporting `utils` package (the
-sortable, windowing, scroll-edge and live-region hooks) is internal to the components and may change
-without notice.
+`@dbm-system/components` covers them. Everything else in the supporting `utils` package (the sortable,
+windowing, scroll-edge and live-region hooks) is internal to the components and may change without
+notice.
 
-| Export | Kind | Use it to |
-|---|---|---|
-| `usePersistentDismiss` | Hook | Remember that a message was dismissed, across page loads |
-| `useRecentCommands` | Hook | Remember the commands a person ran most recently |
-| `formatRelativeTime` | Function | Write "2 hours ago" or "tomorrow" from a date |
-| `useTheme` | Hook | Read the active brand and mode (see the [theming guide](?path=/docs/guides-theming--docs)) |
-| `Responsive`, `SpaceValue`, `Breakpoint` | Types | Type your own props the way the components type theirs |
+<ReferenceTable
+  columns={["Export", "Kind", "Use it to"]}
+  rows={[
+    ["usePersistentDismiss", "Hook", "Remember that a message was dismissed, across page loads"],
+    ["useRecentCommands", "Hook", "Remember the commands a person ran most recently"],
+    ["formatRelativeTime", "Function", "Write \"2 hours ago\" or \"tomorrow\" from a date"],
+    ["useTheme", "Hook", "Read the active brand and mode"],
+    ["useToast, createToaster", "Hook, function", "Raise a toast from a component, or from code that has none"],
+    ["useFormState, useFormController", "Hooks", "Read what a form is doing, or drive it, from a part of your own inside it"],
+    ["useDataTable", "Hook", "Read and change a `DataTable`'s selection, sort, page and hidden columns"],
+    ["useSidebar", "Hook", "Read and change a `Sidebar`'s collapsed and phone-panel state"],
+    ["useCommandPaletteController, useContextMenuController, useMenubarController, useImageViewerController", "Hooks", "Open and close the nearest palette, context menu, menubar or image viewer from a part inside it"],
+    ["filterTree", "Function", "Narrow a `Tree`'s nodes to a search"],
+    ["registerCodeLanguage", "Function", "Teach every `CodeBlock` a language"],
+    ["Responsive, SpaceValue, Breakpoint", "Types", "Type your own props the way the components type theirs"],
+  ]}
+/>
 
 ## usePersistentDismiss
 
@@ -44,15 +54,34 @@ function SaleBanner() {
 }
 ```
 
-| Returns | Meaning |
-|---|---|
-| `ready` | `false` on the server and on the first render while a server-rendered page hydrates; `true` once the browser has been asked |
-| `dismissed` | Whether it has been dismissed, in this tab or, with `storage: "local"`, another one. `false` until `ready` |
-| `dismiss()` | Remembers the dismissal |
-| `reset()` | Forgets it, so the message shows again |
+The first argument is a key that names the message. The second is an options object:
 
-Options: `storage` is `"local"` (survives closing the browser, the default) or `"session"` (this tab
-only), and `expiresAfter` is how long a dismissal lasts in milliseconds.
+<FieldsTable
+  rows={[
+    {
+      name: "storage",
+      options: ["local", "session"],
+      description: "Where to remember it: `local` survives closing the browser, `session` lasts for this tab only.",
+      defaultValue: "local",
+    },
+    {
+      name: "expiresAfter",
+      description: "How long a dismissal lasts, in milliseconds; after that the message shows again. Left out, it lasts until `reset` is called or the browser's storage is cleared.",
+    },
+  ]}
+/>
+
+It returns:
+
+<ReferenceTable
+  columns={["Name", "Meaning"]}
+  rows={[
+    ["ready", "`false` on the server and on the first render while a server-rendered page hydrates; `true` once the browser has been asked."],
+    ["dismissed", "Whether it has been dismissed, in this tab or, with `storage: \"local\"`, another one. `false` until `ready`."],
+    ["dismiss", "Remembers the dismissal."],
+    ["reset", "Forgets it, so the message shows again."],
+  ]}
+/>
 
 - **Render nothing until `ready`.** Use `open={ready && !dismissed}`, or a message the reader already
   dismissed flashes on screen first. The cost is that it appears after the page loads, not in the
@@ -87,9 +116,38 @@ function Palette({ commands }) {
 }
 ```
 
-The first argument is a key that names the list. It returns `ready`, `recent` (most recent first, empty until `ready`), `add(value)`, `remove(value)` and
-`clear()`. Adding a value that is already there moves it to the front, and adding past `max` (default
-8) drops the oldest. The list is stored under `dbm-recent:<key>`, and it takes the same `storage` option as `usePersistentDismiss`. Store ids, never text a person typed.
+The first argument is a key that names the list. Options:
+
+<FieldsTable
+  rows={[
+    {
+      name: "storage",
+      options: ["local", "session"],
+      description: "Where to remember the list: `local` survives closing the browser, `session` lasts for this tab only.",
+      defaultValue: "local",
+    },
+    {
+      name: "max",
+      description: "The most values to keep. Adding past it drops the oldest.",
+      defaultValue: "8",
+    },
+  ]}
+/>
+
+It returns:
+
+<ReferenceTable
+  columns={["Name", "Meaning"]}
+  rows={[
+    ["ready", "Whether the browser has been asked yet. `recent` is empty until it is."],
+    ["recent", "The remembered values, most recent first. Pass it as `CommandPalette`'s `recent`."],
+    ["add", "Puts a value first, moving it up if it was already there, and drops the oldest past `max`."],
+    ["remove", "Forgets one value."],
+    ["clear", "Forgets every value."],
+  ]}
+/>
+
+Store ids, never text a person typed. The list is kept under `dbm-recent:<key>`.
 
 ## formatRelativeTime
 
@@ -102,24 +160,204 @@ formatRelativeTime(Date.now() - 2 * 60 * 60 * 1000); // "2 hours ago"
 formatRelativeTime(tomorrow, { locale: "fr" }); // "demain"
 ```
 
-| Option | Values | Default |
-|---|---|---|
-| `now` | The moment to measure from, for many values or a test | The current time |
-| `locale` | A BCP 47 tag such as `"fr"` | `"en"` |
-| `numeric` | `"auto"` writes "yesterday"; `"always"` writes "1 day ago" | `"auto"` |
-| `style` | `"long"`, `"short"` or `"narrow"` | `"long"` |
+<FieldsTable
+  rows={[
+    {
+      name: "now",
+      description: "The moment to measure from, for many values that must share one \"now\" or for a test.",
+      defaultValue: "the current time",
+    },
+    {
+      name: "locale",
+      description: "The language to write in, a BCP 47 tag such as `fr`. Never read from the browser, so a server render and the browser write the same words.",
+      defaultValue: "en",
+    },
+    {
+      name: "numeric",
+      options: ["auto", "always"],
+      description: "`auto` writes \"yesterday\" and \"tomorrow\" where a language has such words; `always` writes \"1 day ago\".",
+      defaultValue: "auto",
+    },
+    {
+      name: "style",
+      options: ["long", "short", "narrow"],
+      description: "How much to abbreviate.",
+      defaultValue: "long",
+    },
+  ]}
+/>
 
-- The locale is **never read from the browser**, so a server render and the browser write the same
-  words.
 - It writes one value once and **does not tick**. Render it where a few seconds' drift does not matter,
   or from an effect.
-- It returns `""` (with a warning in development) for a value that is not a valid date.
+- It returns an empty string (with a warning in development) for a value that is not a valid date.
+
+## useTheme
+
+Reads the brand and mode applied by the nearest `ThemeProvider`. It throws outside one. See the
+[theming guide](?path=/docs/guides-theming--docs) for the provider itself.
+
+<ReferenceTable
+  columns={["Name", "Meaning"]}
+  rows={[
+    ["brand", "The active brand palette: `purple` or `emerald`."],
+    ["mode", "The `mode` prop as it was passed: `light`, `dark` or `system`."],
+    ["resolvedMode", "The concrete `light` or `dark` that `system` currently means."],
+  ]}
+/>
+
+## useToast and createToaster
+
+`useToast()` gives a component the functions to raise and manage toasts. Call it anywhere under a
+`Toast.Provider`. `createToaster()` makes the same set of functions for code that has no component to
+call a hook from, such as an API client's error handler.
+
+```tsx
+const { toast } = useToast();
+toast({ tone: "success", title: "Saved" });
+
+// Outside React:
+export const toaster = createToaster();
+toaster.toast({ tone: "danger", title: "Could not reach the server" });
+// Once, near the root: <Toast.Provider toaster={toaster}><App /></Toast.Provider>
+```
+
+<ReferenceTable
+  columns={["Name", "Meaning"]}
+  rows={[
+    ["toast", "Shows a toast, or updates the one with the same `id`, and returns its id. A string is the same as `{ title }`. It is queued if the provider's `limit` are already showing."],
+    ["toast.promise", "Shows a loading toast, then replaces it with the success or error toast when a promise settles, and returns the promise."],
+    ["update", "Changes a toast that is showing or waiting."],
+    ["dismiss", "Closes the toast with an id, with the exit animation."],
+    ["dismissAll", "Closes every toast, and drops the ones still waiting."],
+  ]}
+/>
+
+Give each toaster to one provider only. Toasts raised before the provider mounts wait in it and show then.
+
+## useFormState and useFormController
+
+Two hooks for a part of your own inside a `Form`. Outside a form, `useFormState` reports an idle form with no
+errors, and `useFormController` does nothing and warns in development.
+
+```tsx
+function ErrorCount() {
+  const { errors } = useFormState();
+  return <Badge tone="danger">{Object.keys(errors).length}</Badge>;
+}
+
+function SaveShortcut() {
+  const form = useFormController();
+  // call form.submit() from your own shortcut handler
+  return null;
+}
+```
+
+<ReferenceTable
+  columns={["Hook", "Gives you"]}
+  rows={[
+    ["useFormState", "`pending`, `validating`, `disabled`, `errors` and `submitFailed`: what the form is doing and what it has found."],
+    ["useFormController", "`submit()`, `reset()`, `validate()`, `focusField(name)`, `setErrors()` and `clearErrors()`: one object for the form's life."],
+  ]}
+/>
+
+## useDataTable
+
+The state of the `DataTable` it is drawn inside: its selection, sort, page and hidden columns, and the
+functions that change them. Use it to build your own parts, such as a column menu or a "clear sort" button. It
+must be called inside the table's children (`DataTable.Toolbar`, `DataTable.Pagination`).
+
+```tsx
+function ColumnMenu() {
+  const { columns, hiddenColumns, setHiddenColumns } = useDataTable();
+  // one Menu.CheckboxItem per column, checked unless its id is in `hiddenColumns`
+}
+```
+
+## useSidebar
+
+The state of the nearest `Sidebar` or `Sidebar.Provider`, for a part of your own.
+
+<ReferenceTable
+  columns={["Name", "Meaning"]}
+  rows={[
+    ["collapsed", "Whether the sidebar you are inside is a rail of icons. Always `false` in the phone panel."],
+    ["setCollapsed, toggleCollapsed", "Collapse or expand it; reported through `onCollapsedChange`."],
+    ["inPanel", "Whether the part calling it is drawn in the phone panel and not on the page, so it can draw something different on a phone."],
+    ["menuOpen, setMenuOpen", "Whether the phone panel is open, and the function that opens or closes it."],
+  ]}
+/>
+
+## Controller hooks
+
+`CommandPalette`, `ContextMenu`, `Menubar` and `ImageViewer` each hand out a controller through a
+`controllerRef` prop. The matching hook gives the same object to a part rendered inside the component. Outside
+the component it controls nothing and warns in development.
+
+<ReferenceTable
+  columns={["Hook", "Gives you"]}
+  rows={[
+    ["useCommandPaletteController", "Open, close and toggle the palette."],
+    ["useContextMenuController", "Open the menu from an element (`openFrom`) or at a point (`openAt`), and close it."],
+    ["useMenubarController", "Open a menu by its `value` (`open`), and close it."],
+    ["useImageViewerController", "Open, close, step (`next`, `previous`, `goTo`) and zoom the viewer, and read its current `value`, for the `actions` you draw inside it."],
+  ]}
+/>
+
+```tsx
+function FileButton() {
+  const bar = useMenubarController();
+  return <Button onClick={() => bar.open("file")}>File…</Button>;
+}
+```
+
+## filterTree
+
+Narrows a tree to what matches a search, for `Tree`'s `nodes`. It also says which rows to open, since a match
+under a closed folder cannot be seen. It never changes the nodes it is given.
+
+```tsx
+const { nodes: shown, expandedIds } = filterTree(nodes, { query });
+<Tree aria-label="Files" nodes={shown} expandedIds={query ? expandedIds : open} highlightQuery={query} />
+```
+
+<FieldsTable
+  rows={[
+    {
+      name: "query",
+      description: "Text to find in each node's `label`, ignoring case. Nothing is filtered while it is empty.",
+    },
+    {
+      name: "match",
+      description: "Decides whether a node matches by itself, in place of `query`. It is called with each node, not with its parents.",
+    },
+    {
+      name: "keepDescendants",
+      options: ["true", "false"],
+      description: "Whether every row under a matching row is kept, so a matching folder still shows what is in it.",
+      defaultValue: "true",
+    },
+  ]}
+/>
+
+## registerCodeLanguage
+
+Teaches every `CodeBlock` a language, by its `name` and `aliases`, so `language="python"` then draws with it. A
+registered language takes over from a built-in one of the same name, which is how a fuller grammar replaces the
+approximate one. Call it once, when the app starts. It returns a function that undoes the registration, and a
+block already on the page redraws when a language is registered, so a grammar loaded later colours blocks that
+were drawn plain.
+
+```ts
+import { registerCodeLanguage } from "@dbm-system/components";
+
+const unregister = registerCodeLanguage(myLanguage); // a CodeLanguage: name, aliases, label, tokenizer…
+```
 
 ## Types
 
-`Responsive<T>` is a single value or a mobile-first map keyed by `Breakpoint`. `SpaceValue` is a step
-of the spacing scale, and `Breakpoint` is `"base" | "sm" | "md" | "lg" | "xl" | "2xl" | "3xl"`. Use
-them to give your own components the same responsive props as the library's.
+`Responsive<T>` is a single value or a mobile-first map keyed by `Breakpoint`. `SpaceValue` is a step of the
+spacing scale, and `Breakpoint` is `base`, `sm`, `md`, `lg`, `xl`, `2xl` or `3xl`. Use them to give your own
+components the same responsive props as the library's.
 
 ```tsx
 import type { Responsive, SpaceValue } from "@dbm-system/components";
@@ -128,8 +366,3 @@ interface SectionProps {
   gap?: Responsive<SpaceValue>; // gap={4} or gap={{ base: 2, md: 6 }}
 }
 ```
-
-<div className="dbm-card-grid">
-<RelatedCard name="Alert" description="The controlled open state that pairs with usePersistentDismiss" href="/?path=/docs/molecules-feedback-alert--docs"></RelatedCard>
-<RelatedCard name="CommandPalette" description="The recent prop that pairs with useRecentCommands" href="/?path=/docs/organisms-navigation-commandpalette--docs"></RelatedCard>
-</div>

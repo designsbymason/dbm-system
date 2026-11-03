@@ -1174,3 +1174,17 @@
   max-inline-size: 24rem;
   padding: var(--dbm-space-5);
 }
+
+/* ReferenceTable: the Properties table's look with columns sized by their content, so none of the fixed widths
+   meant for Name, Value options and Default apply. The first column holds names and is only as wide as its longest name
+   (`width: 1%` shrinks it to its content), and a name never breaks. */
+.dbm-proptable.dbm-reftable th,
+.dbm-proptable.dbm-reftable td {
+  width: auto;
+}
+
+.dbm-proptable.dbm-reftable th:nth-child(1),
+.dbm-proptable.dbm-reftable td:nth-child(1) {
+  white-space: nowrap;
+  width: 1%;
+}
