@@ -1,0 +1,102 @@
+import { Meta } from "@storybook/addon-docs/blocks";
+import { Callout, RelatedCard } from "../../.storybook/blocks";
+import { ThemeSync } from "../../.storybook/blocks/foundations";
+import { VisuallyHidden } from "../atoms/VisuallyHidden";
+
+<Meta title="Guides/Accessibility" />
+
+<ThemeSync />
+
+<VisuallyHidden asChild><h2>Intro</h2></VisuallyHidden>
+
+# Accessibility
+
+Accessibility is not a variant or a mode in DBM. Every component is built to **WCAG 2.2 AA** and
+checked, not assumed. This page is what that means in practice: what the system guarantees, how it
+is verified, and what is still your responsibility when you compose components into a page.
+
+## What every component guarantees
+
+- **Contrast.** Text meets **4.5:1** and non-text elements that identify a control or its state
+  (icons, borders, focus rings) meet **3:1**, in all four themes. Each pairing is measured, not
+  eyeballed. Error and critical-alert text aims higher, for **AAA (7:1)**.
+- **Keyboard.** Every interaction works from the keyboard, with the focus model the pattern calls
+  for: a roving tab stop in toolbars, tabs and trees, a single tab stop with arrow keys in radio
+  groups and menus, `Escape` to close, and focus returned to where it came from.
+- **Focus you can see.** A focus ring appears for keyboard focus (`:focus-visible`) and not for a
+  mouse press, and meets the non-text contrast floor.
+- **Names, roles and states.** Interactive parts have an accessible name, and state (expanded,
+  selected, invalid, busy) is exposed through ARIA that matches the element's real role. Relationships
+  between parts, such as a field's label, hint and error, are wired by id for you.
+- **Target size.** Every interactive target is at least **24 × 24 CSS pixels**, at every size step.
+  Where a control must look smaller, only its hit area is extended.
+- **Motion.** Looping animation (spinners, skeleton pulses) respects `prefers-reduced-motion`:
+  a spinner slows down rather than freezing, and a placeholder pulse stops.
+- **Forced colours.** Components are checked with `forced-colors: active` emulated in a real browser
+  (the mode Windows high contrast turns on), so borders and indicators that rely on colour alone
+  still show. A real Windows machine is listed as not verified in the reviews.
+- **Responsive and right-to-left.** Components work across the whole breakpoint scale, with no
+  control lost at a narrow width and directional CSS written with logical properties. See the
+  [responsive and right-to-left guide](?path=/docs/guides-responsive-and-right-to-left--docs).
+
+## How it is verified
+
+| Check | What it catches |
+|---|---|
+| `jest-axe` in each component's unit tests | Missing names, bad ARIA, invalid structure |
+| Storybook's Accessibility panel, run as a test (`a11y.test: "error"`) | The same rules against every rendered story, failing the build |
+| Real-browser checks (Chromium) | What a simulated DOM cannot judge: `:focus-visible`, layout and measurement, `:dir(rtl)`, computed colours, forced colours |
+| A contrast check per new colour pairing | The ratios documented per token in the token spec |
+| A review pass before a component is Finalized | Everything above, plus keyboard walk-throughs with real key presses |
+
+Each Finalized component's review lists what was checked and, under "Not verified", what was not
+(typically a real screen reader, Safari and Firefox, and a real phone).
+
+<Callout tone="info" title="Automated checks are the floor">
+
+Axe finds roughly the mechanical failures. It cannot tell whether a heading order makes sense,
+whether a focus move is surprising, or whether a screen reader reads a page well. Treat a clean axe
+run as the start of checking your own page, not the end.
+
+</Callout>
+
+## What stays your job
+
+Components cannot know your page. When you compose them:
+
+- **Page structure.** One `h1`, headings in order, and landmarks (`header`, `nav`, `main`) so a
+  screen-reader user can jump around. Components provide parts of a page, not its outline.
+- **Visible labels and names.** Give every field a label and every icon-only button an accessible name
+  (`aria-label`).
+- **Meaningful link and button text.** "Read the pricing details", not "Click here".
+- **Announcements for changes the user didn't cause.** When your app updates content on its own
+  (a saved list, a loaded page), tell assistive technology, for example with a visually hidden
+  `role="status"` region that is already on the page before its text changes. Components that change
+  on their own, such as `Pagination` and `Toast`, announce for you.
+- **Colour is never the only signal.** If you mark state with colour, add text, an icon or a shape.
+- **Real content at real sizes.** Long names, 200% zoom and a translated string reach places a demo
+  does not.
+
+<div className="dbm-do-dont-grid">
+<Callout tone="success" title="Do">
+
+- Pass a visible label to every field through `FormField`, and wire errors with `FieldError`.
+- Use the component's own `labels` prop to supply translated text for its built-in strings.
+- Test the finished page with the keyboard alone, then with a screen reader.
+
+</Callout>
+<Callout tone="danger" title="Don't">
+
+- Don't remove or override a focus ring. Restyle it with tokens if you must.
+- Don't rely on placeholder text as a label.
+- Don't make a `div` clickable. Use `Button` or `Link` so the role, keyboard and focus come with it.
+
+</Callout>
+</div>
+
+## Reference
+
+<div className="dbm-card-grid">
+<RelatedCard name="Foundations: Color" description="Every colour token and the contrast ratio behind each pairing" href="/?path=/docs/foundations-color--docs"></RelatedCard>
+<RelatedCard name="Foundations: Motion" description="Durations, easing and how reduced motion is handled" href="/?path=/docs/foundations-motion--docs"></RelatedCard>
+</div>

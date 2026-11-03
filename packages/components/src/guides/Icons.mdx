@@ -1,0 +1,69 @@
+import { Meta } from "@storybook/addon-docs/blocks";
+import { Callout, IconGallery, RelatedCard } from "../../.storybook/blocks";
+import { ThemeSync } from "../../.storybook/blocks/foundations";
+import { VisuallyHidden } from "../atoms/VisuallyHidden";
+
+<Meta title="Guides/Icons" />
+
+<ThemeSync />
+
+<VisuallyHidden asChild><h2>Intro</h2></VisuallyHidden>
+
+# Icons
+
+DBM draws icons from [Phosphor](https://phosphoricons.com), re-exported by `@dbm-system/icons`. Import
+an icon by name and pass the **component**, not a string, to `Icon` (or to the `icon` prop of
+`Button`, `IconButton`, `Menu.Item` and the other components that take one). Unused icons are dropped
+from the bundle, and a wrong name is a type error.
+
+```tsx
+import { Icon } from "@dbm-system/components";
+import { WalletIcon } from "@dbm-system/icons";
+
+<Icon icon={WalletIcon} size="lg" tone="brand" label="Wallet" />
+```
+
+## Most used in DBM
+
+The 35 icons the components themselves import the most, most used first: the close, caret, check and
+warning glyphs behind every dismiss button, select, menu and alert. Choose a weight, and press an icon
+to copy its import line. Names end in `Icon`, which is the form DBM code uses. Every icon comes in six
+weights.
+
+<IconGallery />
+
+Phosphor has well over a thousand more. The button below the grid opens its full, searchable set in a new tab;
+whichever you pick, import it by name from `@dbm-system/icons`.
+
+## Using an icon well
+
+| Prop | Values | Notes |
+|---|---|---|
+| `size` | `xs`, `sm`, `md`, `lg`, `xl`, `2xl`, `3xl` | A step of the icon-size scale (see Foundations) |
+| `weight` | `thin`, `light`, `regular`, `bold`, `fill`, `duotone` | `bold` is the default |
+| `tone` | A semantic tone such as `default`, `brand`, `danger` | Maps to the `--dbm-icon-*` tokens. Leave it out to inherit `currentColor` |
+| `label` | A string | Gives the icon an accessible name. Left out, the icon is decorative and hidden from assistive technology |
+| `mirrored` | `boolean` | Flips the glyph horizontally. Set it on a directional icon (an arrow, a chevron) in a right-to-left layout; it is never automatic |
+
+<div className="dbm-do-dont-grid">
+<Callout tone="success" title="Do">
+
+- Put a `label` on an icon that carries meaning on its own, and leave it off when text next to it
+  already says the same thing.
+- Give an icon-only button an `aria-label`, since the icon inside it is decorative.
+- Pick a tone from the icon tokens so the icon follows the theme.
+
+</Callout>
+<Callout tone="danger" title="Don't">
+
+- Don't use an icon as the only signal of a state. Add text or a shape as well.
+- Don't import the whole set into a bundle you ship. Import the icons you use, by name.
+- Don't set a colour on an icon by hand. Use `tone`.
+
+</Callout>
+</div>
+
+<div className="dbm-card-grid">
+<RelatedCard name="Foundations: Icon sizes" description="The size scale every icon uses" href="/?path=/docs/foundations-iconsizes--docs"></RelatedCard>
+<RelatedCard name="Icon" description="Props, tones and the Playground" href="/?path=/docs/atoms-media-icon--docs"></RelatedCard>
+</div>

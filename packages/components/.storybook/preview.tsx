@@ -98,7 +98,20 @@ const preview: Preview = {
         // annotated for the same reason `a`/`b` above can't be.
         // @ts-expect-error — `title` can't be typed; see comment above
         const topLevelGroup = (title) => title.split("/")[0] ?? title;
-        const groupPriority = ["Foundations", "Atoms"];
+        // Components (the index) first, then the written guides, then the
+        // token reference, then the tiers (Atoms, then Molecules and
+        // Organisms alphabetically). "Getting started" is listed ahead of
+        // Guides for the Installation page, which waits on the consumer-CSS
+        // decision; an absent group costs nothing here.
+        const groupPriority = ["Components", "Getting started", "Guides", "Foundations", "Atoms"];
+        const guidesOrder = [
+          "Guides/Theming",
+          "Guides/Accessibility",
+          "Guides/Responsive and right-to-left",
+          "Guides/Hooks and utilities",
+          "Guides/Composition patterns",
+          "Guides/Icons",
+        ];
         const foundationsOrder = [
           "Foundations/Overview",
           "Foundations/Color",
@@ -124,6 +137,9 @@ const preview: Preview = {
             );
           }
           return aGroup.localeCompare(bGroup, undefined, { numeric: true });
+        }
+        if (aGroup === "Guides") {
+          return guidesOrder.indexOf(a.title) - guidesOrder.indexOf(b.title);
         }
         if (aGroup === "Foundations") {
           return foundationsOrder.indexOf(a.title) - foundationsOrder.indexOf(b.title);

@@ -1,5 +1,8 @@
 export { Callout } from "./Callout";
+export { ConfirmThenToastDemo, RowMenuDemo } from "./CompositionDemos";
+export { ComponentIndex } from "./ComponentIndex";
 export type { CalloutTone } from "./Callout";
+export { IconGallery } from "./IconGallery";
 export { ComponentHeader } from "./ComponentHeader";
 export type { ComponentTier } from "./ComponentHeader";
 export { FieldsTable } from "./FieldsTable";

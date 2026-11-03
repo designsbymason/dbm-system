@@ -1,0 +1,121 @@
+import { Meta } from "@storybook/addon-docs/blocks";
+import { Callout, RelatedCard } from "../../.storybook/blocks";
+import { ThemeSync } from "../../.storybook/blocks/foundations";
+import { VisuallyHidden } from "../atoms/VisuallyHidden";
+
+<Meta title="Guides/Theming" />
+
+<ThemeSync />
+
+<VisuallyHidden asChild><h2>Intro</h2></VisuallyHidden>
+
+# Theming
+
+DBM ships two brands, **Purple** and **Emerald**, each in a **light** and a **dark** mode: four themes
+in all. A component is written once against token names such as `bg.brand` and never knows which
+theme is active, so changing the brand or the mode never touches component code. Use the **Brand**
+and **Mode** controls at the top of this page to switch the theme you are reading in.
+
+## Applying a theme
+
+Wrap the app in `ThemeProvider`. It sets `data-theme` on the document element (for example
+`data-theme="purple-light"`), which is what the token stylesheets are scoped to.
+
+```tsx
+import { ThemeProvider } from "@dbm-system/components";
+
+export function App() {
+  return (
+    <ThemeProvider brand="emerald" mode="system">
+      {/* the rest of the app */}
+    </ThemeProvider>
+  );
+}
+```
+
+| Prop | Values | Default |
+|---|---|---|
+| `brand` | `"purple"` or `"emerald"` | `"purple"` |
+| `mode` | `"light"`, `"dark"` or `"system"` | `"system"` |
+
+- **`mode="system"`** follows the operating system's `prefers-color-scheme` and updates live if it
+  changes while the app is open.
+- **The theme is document-wide**, not scoped to the provider's own element. A dialog, tooltip or
+  toast that mounts on `document.body` therefore picks it up too.
+- **Providers nest.** An inner provider takes over while it is mounted and hands control back to the
+  outer one when it unmounts.
+- **Changing the brand or mode after the first render fades** the themed colours over
+  `motion.duration.base`, and is skipped under `prefers-reduced-motion: reduce`. The first paint
+  never fades in.
+
+## Reading the theme
+
+`useTheme()` returns the brand, the `mode` as it was passed, and the `resolvedMode`: the concrete
+`"light"` or `"dark"` that `"system"` currently means. It throws outside a `ThemeProvider`.
+
+```tsx
+import { useTheme } from "@dbm-system/components";
+
+function ModeLabel() {
+  const { brand, resolvedMode } = useTheme();
+  return <span>{brand} / {resolvedMode}</span>;
+}
+```
+
+<Callout tone="info" title="System mode on a server-rendered page">
+
+`mode="system"` always renders **light** on the first render, so the server's HTML and the browser's
+first render agree, and corrects to the real preference just after mount and before the browser
+paints. On a server-rendered page the very first paint can show light for a moment. Avoiding that
+entirely needs a small blocking script ahead of hydration, which is outside what a component can do.
+Pass an explicit `mode` if that flash matters.
+
+</Callout>
+
+## The stylesheets
+
+The tokens are plain CSS custom properties in `@dbm-system/tokens`. A theme needs the shared files
+and one file per theme in use:
+
+| File | Holds |
+|---|---|
+| `primitives.css` | The raw scales (colour, spacing, type, radius, motion); the same in every theme |
+| `component-tokens.css` | Tokens specific to a component |
+| `purple-light.css`, `purple-dark.css`, `emerald-light.css`, `emerald-dark.css` | The semantic tokens, scoped to `:root[data-theme="…"]` |
+
+This Storybook imports all of them. A consuming app loads the ones for the themes it offers. How a
+consumer loads these files is not settled yet; this page will link to the Installation page when it
+exists.
+
+## Writing code that themes correctly
+
+<div className="dbm-do-dont-grid">
+<Callout tone="success" title="Do">
+
+- Reference a **semantic** token in your own CSS: `var(--dbm-bg-brand)`, `var(--dbm-text-primary)`.
+- Let a component's own props choose its colour (`tone`, `variant`) rather than styling it from
+  outside.
+- Check a new colour pairing in **all four themes**, not only the one you are looking at.
+
+</Callout>
+<Callout tone="danger" title="Don't">
+
+- Don't reference a primitive such as `color.purple.600` directly. It does not change with the
+  theme, so the page breaks in the other brand and in dark mode.
+- Don't hardcode a hex value, even one that matches a token today.
+- Don't branch on the theme in JavaScript to pick a colour. Pick a token and let the CSS resolve it.
+
+</Callout>
+</div>
+
+## Adding another brand
+
+The architecture allows a third brand, but none is built until a concrete need exists. It would take a
+new primitive colour scale, one semantic token file per mode (the same keys as the existing ones), a
+rebuild of the token CSS, a new value for the `brand` type, and a contrast check of every pairing in
+both modes. No component changes.
+
+<div className="dbm-card-grid">
+<RelatedCard name="Foundations: Color" description="Every primitive scale and semantic colour token, per theme" href="/?path=/docs/foundations-color--docs"></RelatedCard>
+<RelatedCard name="ThemeProvider" description="Props, behaviour and the Playground" href="/?path=/docs/atoms-utility-themeprovider--docs"></RelatedCard>
+</div>

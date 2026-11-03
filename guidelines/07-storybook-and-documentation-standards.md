@@ -14,7 +14,7 @@ Registered in `.storybook/main.ts`'s `addons` array: `@storybook/addon-a11y` (th
 
 ## 3. Sidebar taxonomy
 
-`04-component-inventory.md`'s nine functional categories are the source of truth. A story's `title` is `{Tier}/{Category}/{Component}`, where `{Tier}` is `Atoms`, `Molecules` or `Organisms` (and `Templates` later) and `{Category}` is one of these shortened labels:
+`04-component-inventory.md`'s nine functional categories are the source of truth. A story's `title` is `{Tier}/{Category}/{Component}`, where `{Tier}` is `Atoms`, `Molecules` or `Organisms` (and `Templates` later; see §11 for the other top-level groups) and `{Category}` is one of these shortened labels:
 
 | Inventory category | Title segment |
 |---|---|
@@ -356,47 +356,44 @@ Standing checks around the Storybook build. None of them changes what ships in `
 - **Storybook telemetry is disabled** (`core.disableTelemetry: true` in `main.ts`), matching the project's free/OSS-only, no-phone-home posture (`CLAUDE.md`).
 - **Foundations token-coverage check** (`packages/components/scripts/check-foundations-token-coverage.mjs`, run right after `pnpm build`) reads every semantic token (`bg.*`/`text.*`/`border.*`/`icon.*`) from the built `@dbm-system/tokens` package (unioned across all four brand/mode theme exports) and diffs it against every `token: "..."` in `Color.mdx`, failing with the exact missing or stale list. Only Color needs it (§7).
 
-## 11. Planned pages beyond the components and Foundations
+## 11. Pages beyond the components and Foundations
 
-The Storybook has two kinds of page today: the `Foundations` token pages (§7) and the component tiers. The pages below are planned, none is built, and none starts without the maintainer's confirmation. Each is a standalone MDX page like the Foundations ones, so `groupPriority` in `preview.tsx`'s `storySort` gains an entry for each new top-level group, and §3 and §7 are updated when the first one lands. Anything that shows a value or a list reads it from the source live and is never retyped, as §7 requires.
+Two more kinds of page sit in the sidebar besides the component tiers and `Foundations` (§7): a **Components** overview page and a **Guides** group. All are standalone MDX pages with no `of=` prop, kept in `packages/components/src/guides/`, each rendering `<ThemeSync />` and the visually hidden `Intro` heading like the Foundations pages. They are not components, so they stay out of the status table in §6.
 
-Proposed sidebar order: `Getting started`, `Guides`, `Foundations`, then the tiers (`Atoms`, `Molecules`, `Organisms`, and `Templates` once one exists). A newcomer meets what they need before the reference material.
+**Sidebar order**, forced by `groupPriority` in `preview.tsx`'s `storySort`: `Components`, `Getting started`, `Guides` (in the explicit `guidesOrder` array), `Foundations`, then the tiers. `Getting started` is listed ahead of `Guides` for the Installation page below; a group with no page costs nothing.
 
-**Components overview page** (top of the sidebar, titled "Components")
+**Components overview** (`Components.mdx`, title `Components`; the block is `.storybook/blocks/ComponentIndex.tsx`). An introduction, then a filterable index of every component linking to its Docs page, then a Templates section.
 
-An introductory paragraph, then a filterable index of every component with a link to its Docs page, then a separate Templates section below.
+- **Always in sync:** the list is built at runtime from Storybook's own `index.json`, fetched relative to the preview iframe, with tier and category read from each Docs page's `{Tier}/{Category}/{Component}` title (§3). A new component appears with no edit to the page. A failed fetch shows a message pointing at the sidebar.
+- **Layout:** CSS multi-column, so names run alphabetically down each column (`column-width`, so 3 to 5 columns on a desktop Docs page and 1 on a phone) with A–Z headings. Anything under the `Templates` top-level group is listed in its own section below, which shows "No templates yet." until one exists.
+- **Tier marker:** a leading shape per tier as well as a colour, so colour is never the only signal (atom a circle in `icon.brand`, molecule a square in `icon.highlight`, organism a diamond in `icon.secondary`, template a rounded square in `icon.default`), and visually hidden text after each name gives the tier and category. Each colour is at least 3:1 against `bg.surface` in all four themes (lowest 3.23:1, `icon.highlight` and `icon.secondary` in light). A legend sits above the list.
+- **Controls:** a search box, a multi-select tier filter and a multi-select category filter, built from `SearchInput` and `ToggleGroup`. They combine. A "Showing n of N" status is in a live region, with a "Clear filters" button. The filter state is not kept in the URL: the page runs inside the preview iframe, which cannot set the address of the Storybook shell.
 
-- **Always in sync:** the list is built at runtime from Storybook's own `index.json`, with tier and category read from each story's `{Tier}/{Category}/{Component}` title (§3). A new component appears with no edit to the page and no hand-kept list to drift. A failed fetch shows a message. Whether the Docs iframe can reach `index.json` in both `storybook dev` and the built site is untested and is checked first.
-- **Layout:** CSS multi-column, so the names run alphabetically down each column: 4–5 columns on desktop, 2 on a tablet and 1 on a phone, with small A–Z headings.
-- **Tier marker:** a leading dot per tier, in a semantic token colour that passes 3:1 against the page in all four themes, plus a different shape per tier or visually hidden text, so colour is never the only signal. A legend sits above the list. If no suitable semantic tokens exist, they are added to the token layer first.
-- **Controls:** a search box, a multi-select tier filter (atom, molecule, organism) and a multi-select category filter, built from the library's own components. A "Showing n of N" status in a live region, an `EmptyState` with a reset when nothing matches, and the filter state kept in the URL.
-- **Templates section:** a separate list below the components, with an empty state until the first template exists.
-- **Not yet decided:** the tier colour tokens, and whether the index-driven approach needs an ADR when it is built.
-
-**Getting started**
+**Guides** (`src/guides/*.mdx`, titles `Guides/…`)
 
 | Page | Covers |
 |---|---|
-| Installation | Loading the stylesheet, the tokens, one theme and the `Nunito` and `Lora` fonts. Closes the open consumer-CSS decision in `01-vision-and-goals.md` §12, so it waits on that decision. |
+| Theming | `ThemeProvider` and `useTheme`, the four themes, the token stylesheets, what adding a brand takes |
+| Accessibility | What every component guarantees, how it is verified, what stays the consumer's job |
+| Responsive and right-to-left | The breakpoint scale, `Responsive` props, logical properties, the `dir` prop on Radix-based components |
+| Hooks and utilities | `usePersistentDismiss`, `useRecentCommands`, `formatRelativeTime` and the shared types; the rest of `utils` is internal |
+| Composition patterns | Live confirm-then-toast and row-menu patterns (`.storybook/blocks/CompositionDemos.tsx`) |
+| Icons | The 35 icons the components import most, in equal square tiles with a weight switch and copy-the-import (`.storybook/blocks/IconGallery.tsx`), a button that opens the full Phosphor set in a new tab, and `Icon`'s props |
 
-**Guides**
+The Icons gallery's list is a hand-kept snapshot (counted as the component source files that import each icon, leaving out stories, tests, snippets and the demo kits), imported by name so the rest of the icon set stays out of the bundle: a gallery that imported the whole set added a 5MB chunk and tripped the bundle-size check in §10. Recount it when a component adopts an icon that belongs in the top 35.
 
-| Page | Covers |
-|---|---|
-| Theming | Switching brand (Purple, Emerald) and mode (light, dark) with `ThemeProvider`, and what a further brand would involve |
-| Accessibility | The WCAG AA floor, the AAA target for error text, keyboard and focus conventions, how contrast pairings are verified |
-| Responsive and right-to-left | The breakpoint scale in use, `Responsive` props, the `dir` prop on Radix wrappers and the undecided direction-reading question |
-| Hooks and utilities | `usePersistentDismiss`, `useRecentCommands`, `useAnnouncement`, `formatRelativeTime` and the `Responsive`, `SpaceValue` and `Breakpoint` types, one reference section each |
-| Composition patterns | Combining organisms in common arrangements (confirm before delete, a form that reports through a toast, a list with row menus); the bridge to templates |
-| Icons | A searchable gallery of the Phosphor wrapper's icons, sizes and weights; `Foundations/IconSizes` covers sizes only |
-| Agent usage and contributing | The consumer-facing usage guide from `01-vision-and-goals.md` §13.1, shown where a person looks for it |
-| Changelog and migration | Generated from Changesets once the release pipeline is wired (Phase 8) |
+A guide's code samples are fenced code in the MDX, so nothing compiles them: **check a sample against the real API before writing it** (a first draft of the hooks page had `useRecentCommands` without its `key` argument and `CommandPalette` with `items` instead of `commands`). A guide that shows a value or a list reads it from the source live, as §7 requires, and a live demo is built from the library's own components.
 
-**Templates** (a tier, not a guide)
+**Planned, not built.** None of these starts without the maintainer's confirmation.
 
-A `Templates` tier in the sidebar, with full-screen stories, once the first template is built. The tier, whether templates ship in the package or stay Storybook-only, and the page layout want an ADR first (`04-component-inventory.md`, Templates).
+| Page | Covers | Waits on |
+|---|---|---|
+| Getting started: Installation | Loading the stylesheet, the tokens, one theme and the `Nunito` and `Lora` fonts | The consumer-CSS decision in `01-vision-and-goals.md` §12 (Phase 8) |
+| Guides: Agent usage and contributing | The consumer-facing usage guide from `01-vision-and-goals.md` §13.1, shown where a person looks for it | The manifest and the published package (Phase 8) |
+| Guides: Changelog and migration | Generated from Changesets | The release pipeline (Phase 8) |
+| A `Templates` tier | Full-screen stories for page-level templates (`04-component-inventory.md`, Templates), with the tier listed in the overview | The first template, and an ADR on whether templates ship in the package or stay Storybook-only |
 
-**Standing checks these pages need:** keyboard operation, a real-browser check at phone width, right-to-left and forced colours, and the four-theme contrast check for any colour they introduce. These pages are not components, so they stay out of the per-component status table in §6; confirm that `check-guidelines` and the token-coverage check agree when the first one lands.
+**Standing checks for these pages:** keyboard operation, a real-browser check at phone width, dark mode (a block that sets no colour of its own inherits Storybook's near-black text, found on the overview's legend, so give a block an explicit `text.primary`), right-to-left and forced colours, and the four-theme contrast check for any colour a page introduces. Confirm that `check-guidelines` and the token-coverage check still agree when a new group is added.
 
 ## Related documents
 - `01-vision-and-goals.md` — where the public Storybook hosting and documentation site sit in the roadmap

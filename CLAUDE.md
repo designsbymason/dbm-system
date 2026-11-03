@@ -51,8 +51,9 @@ packages/
                      components package, so one install covers it
   icons/             Phosphor Icons wrapper
   components/        The actual DBM component library (published npm package) — also
-                     holds its own .storybook/ config and src/foundations/ (Storybook-only
-                     token reference pages, not shipped in the package)
+                     holds its own .storybook/ config, src/foundations/ (Storybook-only
+                     token reference pages) and src/guides/ (the Components overview and
+                     guide pages); neither is shipped in the package)
   manifest/          Build tool: generates the JSON component manifest from TS + JSDoc
   eslint-config/      Shared lint rules
   tsconfig/           Shared TypeScript configs

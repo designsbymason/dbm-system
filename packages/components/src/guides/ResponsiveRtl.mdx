@@ -1,0 +1,112 @@
+import { Meta } from "@storybook/addon-docs/blocks";
+import { Callout, RelatedCard } from "../../.storybook/blocks";
+import { ThemeSync } from "../../.storybook/blocks/foundations";
+import { VisuallyHidden } from "../atoms/VisuallyHidden";
+
+<Meta title="Guides/Responsive and right-to-left" />
+
+<ThemeSync />
+
+<VisuallyHidden asChild><h2>Intro</h2></VisuallyHidden>
+
+# Responsive and right-to-left
+
+There is no responsive mode and no right-to-left mode. Every component works across the whole
+breakpoint scale and in both text directions from the start. This page covers how to use that in your
+own layouts, and the one place direction is still passed by hand.
+
+## Breakpoints
+
+The scale is mobile first: a value applies from its breakpoint **up**, and `base` is everything below
+the first breakpoint.
+
+| Breakpoint | Starts at | Typical use |
+|---|---|---|
+| `base` | 0 | Phones |
+| `sm` | 640px | Small tablets, large phones in landscape |
+| `md` | 768px | Tablets |
+| `lg` | 1024px | Small laptops |
+| `xl` | 1280px | Standard desktop |
+| `2xl` | 1536px | Large desktop |
+| `3xl` | 1920px | Large external monitors |
+
+## Responsive props
+
+A prop typed `Responsive<T>` takes either one value or a map keyed by breakpoint. A map only needs
+the breakpoints where the value changes.
+
+```tsx
+import { Stack } from "@dbm-system/components";
+
+{/* A column on a phone, a row from md up, with a bigger gap on desktop */}
+<Stack direction={{ base: "column", md: "row" }} gap={{ base: 2, lg: 6 }}>
+  <Sidebar />
+  <Content />
+</Stack>
+```
+
+`Stack` takes it for `direction`, `gap`, `align`, `justify` and `wrap`, `ToggleGroup` for
+`orientation`, and `CommandPalette` for `fullScreen`. Check a component's Properties table for the
+props typed `Responsive`.
+
+<div className="dbm-do-dont-grid">
+<Callout tone="success" title="Do">
+
+- Design the phone layout first and add to it at each breakpoint.
+- Reference the `breakpoint.*` tokens, or a component's responsive prop, for a change in layout.
+- Check the real width with the viewport toolbar in Storybook, not only the narrowest and widest.
+
+</Callout>
+<Callout tone="danger" title="Don't">
+
+- Don't hardcode a pixel width in a media query.
+- Don't hide a control at a narrow width without a way to reach what it did.
+- Don't assume a hover. A phone has none, so anything that appears on hover needs a tap or focus path.
+
+</Callout>
+</div>
+
+## Right-to-left
+
+Directional CSS in the components uses **logical properties** (`margin-inline-start`,
+`inset-inline-end`, `padding-block`) instead of left and right, so a layout mirrors when the
+document direction is `rtl`. Do the same in your own CSS.
+
+```css
+/* Mirrors automatically in right-to-left */
+.panel { padding-inline: var(--dbm-space-4); border-inline-start: 1px solid var(--dbm-border-default); }
+```
+
+Two things follow:
+
+- **Mirroring is a per-component judgment.** Most things mirror (arrows, a sidebar's edge, an
+  alignment). Some do not, because the thing they show is not directional (a badge's anchor position,
+  a number). A component's page says which it does.
+- **Icons with a direction** do not mirror by themselves. Set the `Icon` atom's `mirrored` prop on an arrow or chevron whose meaning should follow reading order.
+
+### The `dir` prop on Radix-based components
+
+`Tabs`, `Accordion`, `RadioGroup`, `Slider`, `RangeSlider` and `Toast.Provider` take an explicit
+`dir?: "ltr" | "rtl"`, pass it to the primitive underneath, and **default to left-to-right**. They do
+not read the page's direction. Reading it needs JavaScript and can flash left-to-right on a
+server-rendered page, and it is one decision for every component of this kind together, which is not
+made yet. Until it is, a right-to-left app passes `dir="rtl"` to each of them.
+
+```tsx
+<Tabs dir="rtl" defaultValue="overview">
+  {/* … */}
+</Tabs>
+```
+
+<Callout tone="info" title="Text a component supplies">
+
+A component that must draw its own text takes one optional `labels` object, and any number it shows
+goes through an optional `formatNumber`. Pass translated strings and a locale-aware formatter there.
+Components do not bundle translations.
+
+</Callout>
+
+<div className="dbm-card-grid">
+<RelatedCard name="Foundations: Breakpoints" description="The scale and how to reference it" href="/?path=/docs/foundations-breakpoints--docs"></RelatedCard>
+<RelatedCard name="Stack" description="Responsive direction, gap and alignment" href="/?path=/docs/atoms-layout-stack--docs"></RelatedCard>
+</div>

@@ -1,0 +1,94 @@
+import { Meta } from "@storybook/addon-docs/blocks";
+import { Callout, ConfirmThenToastDemo, RelatedCard, RowMenuDemo } from "../../.storybook/blocks";
+import { ThemeSync } from "../../.storybook/blocks/foundations";
+import { VisuallyHidden } from "../atoms/VisuallyHidden";
+
+<Meta title="Guides/Composition patterns" />
+
+<ThemeSync />
+
+<VisuallyHidden asChild><h2>Intro</h2></VisuallyHidden>
+
+# Composition patterns
+
+The components are built to be combined. These are the arrangements that come up in nearly every
+application, each running live. They are the smallest real usage of the parts involved, so a page-level
+template is these patterns placed in a layout.
+
+## Confirm, then report the result
+
+Ask before anything that cannot be undone, then tell the person what happened. The `onConfirm` of
+`ConfirmDialog` returns a promise: the dialog stays open and busy until it settles, and closes when it
+resolves. The toast reports once it has closed.
+
+<ConfirmThenToastDemo />
+
+```tsx
+import { Button, ConfirmDialog, Toast, useToast } from "@dbm-system/components";
+
+function DeleteProject({ id }) {
+  const { toast } = useToast(); // inside a <Toast.Provider>
+  return (
+    <ConfirmDialog
+      trigger={<Button variant="destructive">Delete project</Button>}
+      tone="danger"
+      title="Delete project?"
+      description="This removes the project and all of its files for good. It cannot be undone."
+      labels={{ confirm: "Delete", cancel: "Keep it" }}
+      onConfirm={async () => {
+        await api.deleteProject(id);
+        toast({ tone: "success", title: "Project deleted" });
+      }}
+    />
+  );
+}
+```
+
+- Put one `Toast.Provider` near the root of the app, not around each use.
+- Focus starts on Cancel in a danger confirmation, so Enter does not delete by accident.
+- If the request fails, let `onConfirm` reject: the dialog stays open and announces the failure.
+
+## A list with a menu on every row
+
+Give each row an icon button that opens a `Menu`. An item that needs a confirmation opens one
+**controlled** `ConfirmDialog` for the whole list from its `onSelect`, instead of rendering a dialog per
+row.
+
+<RowMenuDemo />
+
+```tsx
+const [pending, setPending] = useState<string | null>(null);
+
+<Menu>
+  <Menu.Trigger asChild>
+    <IconButton icon={DotsThreeIcon} aria-label={`Actions for ${name}`} variant="ghost" />
+  </Menu.Trigger>
+  <Menu.Content>
+    <Menu.Item icon={TrashIcon} tone="danger" onSelect={() => setPending(name)}>Delete</Menu.Item>
+  </Menu.Content>
+</Menu>
+
+<ConfirmDialog
+  open={pending !== null}
+  onOpenChange={(open) => !open && setPending(null)}
+  tone="danger"
+  title={`Delete ${pending}?`}
+  onConfirm={() => remove(pending)}
+/>
+```
+
+- Name the trigger for its row (`Actions for Roadmap`), since a column of identical "Actions" buttons
+  is hard to tell apart with a screen reader.
+- For a table with sorting, filtering and pagination, use `DataTable`, which takes a row menu of its own.
+
+## Where these go next
+
+Combine patterns with a layout and you have a page: an app shell from `Sidebar` and `Navbar`, a list
+page from `DataTable` and `EmptyState`, a settings page from `Form` and `FieldGroup`. Those page-level
+templates are planned and are listed in the component inventory; none is built yet.
+
+<div className="dbm-card-grid">
+<RelatedCard name="ConfirmDialog" description="The prop-driven confirmation" href="/?path=/docs/organisms-overlay-confirmdialog--docs"></RelatedCard>
+<RelatedCard name="Toast" description="Provider, useToast and createToaster" href="/?path=/docs/organisms-feedback-toast--docs"></RelatedCard>
+<RelatedCard name="Menu" description="The dropdown menu" href="/?path=/docs/organisms-navigation-menu--docs"></RelatedCard>
+</div>

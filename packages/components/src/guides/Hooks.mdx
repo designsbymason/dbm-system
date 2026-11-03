@@ -1,0 +1,135 @@
+import { Meta } from "@storybook/addon-docs/blocks";
+import { Callout, RelatedCard } from "../../.storybook/blocks";
+import { ThemeSync } from "../../.storybook/blocks/foundations";
+import { VisuallyHidden } from "../atoms/VisuallyHidden";
+
+<Meta title="Guides/Hooks and utilities" />
+
+<ThemeSync />
+
+<VisuallyHidden asChild><h2>Intro</h2></VisuallyHidden>
+
+# Hooks and utilities
+
+A few helpers are part of the public API: a consumer is meant to call them, and one install of
+`@dbm-system/components` covers them. Everything else in the supporting `utils` package (the
+sortable, windowing, scroll-edge and live-region hooks) is internal to the components and may change
+without notice.
+
+| Export | Kind | Use it to |
+|---|---|---|
+| `usePersistentDismiss` | Hook | Remember that a message was dismissed, across page loads |
+| `useRecentCommands` | Hook | Remember the commands a person ran most recently |
+| `formatRelativeTime` | Function | Write "2 hours ago" or "tomorrow" from a date |
+| `useTheme` | Hook | Read the active brand and mode (see the [theming guide](?path=/docs/guides-theming--docs)) |
+| `Responsive`, `SpaceValue`, `Breakpoint` | Types | Type your own props the way the components type theirs |
+
+## usePersistentDismiss
+
+Remembers that a message was dismissed so it stays gone. Pair it with `Alert`'s controlled `open`, or
+with anything else a reader can close for good: a promotion, an announcement, a cookie notice.
+
+```tsx
+import { Alert, usePersistentDismiss } from "@dbm-system/components";
+
+function SaleBanner() {
+  const { ready, dismissed, dismiss } = usePersistentDismiss("summer-sale-2027", {
+    expiresAfter: 7 * 24 * 60 * 60 * 1000, // show again after a week
+  });
+  return (
+    <Alert banner dismissible open={ready && !dismissed} onOpenChange={(open) => !open && dismiss()}>
+      Summer sale ends Sunday.
+    </Alert>
+  );
+}
+```
+
+| Returns | Meaning |
+|---|---|
+| `ready` | `false` on the server and on the first render while a server-rendered page hydrates; `true` once the browser has been asked |
+| `dismissed` | Whether it has been dismissed, in this tab or, with `storage: "local"`, another one. `false` until `ready` |
+| `dismiss()` | Remembers the dismissal |
+| `reset()` | Forgets it, so the message shows again |
+
+Options: `storage` is `"local"` (survives closing the browser, the default) or `"session"` (this tab
+only), and `expiresAfter` is how long a dismissal lasts in milliseconds.
+
+- **Render nothing until `ready`.** Use `open={ready && !dismissed}`, or a message the reader already
+  dismissed flashes on screen first. The cost is that it appears after the page loads, not in the
+  server's HTML.
+- **The key names the message.** Change it (`"summer-sale-2028"`) to show a new message to people who
+  dismissed the last one.
+- **What is stored** is only a timestamp under `dbm-dismissed:<key>`: no message text and nothing about
+  the reader. Whether storing even that needs consent depends on where your readers are, and is yours
+  to decide.
+- If the browser's storage is blocked it falls back to memory, so a dismissal lasts until the page
+  reloads.
+
+## useRecentCommands
+
+Remembers the commands a person ran most recently, for `CommandPalette`'s `recent` prop.
+
+```tsx
+import { CommandPalette, useRecentCommands } from "@dbm-system/components";
+
+function Palette({ commands }) {
+  const { recent, add } = useRecentCommands("app-palette", { max: 5 });
+  return (
+    <CommandPalette
+      commands={commands}
+      recent={recent}
+      onSelect={(item) => {
+        add(item.value);
+        run(item);
+      }}
+    />
+  );
+}
+```
+
+The first argument is a key that names the list. It returns `ready`, `recent` (most recent first, empty until `ready`), `add(value)`, `remove(value)` and
+`clear()`. Adding a value that is already there moves it to the front, and adding past `max` (default
+8) drops the oldest. The list is stored under `dbm-recent:<key>`, and it takes the same `storage` option as `usePersistentDismiss`. Store ids, never text a person typed.
+
+## formatRelativeTime
+
+Writes a date as a phrase relative to now.
+
+```tsx
+import { formatRelativeTime } from "@dbm-system/components";
+
+formatRelativeTime(Date.now() - 2 * 60 * 60 * 1000); // "2 hours ago"
+formatRelativeTime(tomorrow, { locale: "fr" }); // "demain"
+```
+
+| Option | Values | Default |
+|---|---|---|
+| `now` | The moment to measure from, for many values or a test | The current time |
+| `locale` | A BCP 47 tag such as `"fr"` | `"en"` |
+| `numeric` | `"auto"` writes "yesterday"; `"always"` writes "1 day ago" | `"auto"` |
+| `style` | `"long"`, `"short"` or `"narrow"` | `"long"` |
+
+- The locale is **never read from the browser**, so a server render and the browser write the same
+  words.
+- It writes one value once and **does not tick**. Render it where a few seconds' drift does not matter,
+  or from an effect.
+- It returns `""` (with a warning in development) for a value that is not a valid date.
+
+## Types
+
+`Responsive<T>` is a single value or a mobile-first map keyed by `Breakpoint`. `SpaceValue` is a step
+of the spacing scale, and `Breakpoint` is `"base" | "sm" | "md" | "lg" | "xl" | "2xl" | "3xl"`. Use
+them to give your own components the same responsive props as the library's.
+
+```tsx
+import type { Responsive, SpaceValue } from "@dbm-system/components";
+
+interface SectionProps {
+  gap?: Responsive<SpaceValue>; // gap={4} or gap={{ base: 2, md: 6 }}
+}
+```
+
+<div className="dbm-card-grid">
+<RelatedCard name="Alert" description="The controlled open state that pairs with usePersistentDismiss" href="/?path=/docs/molecules-feedback-alert--docs"></RelatedCard>
+<RelatedCard name="CommandPalette" description="The recent prop that pairs with useRecentCommands" href="/?path=/docs/organisms-navigation-commandpalette--docs"></RelatedCard>
+</div>
