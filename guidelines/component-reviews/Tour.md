@@ -1,6 +1,6 @@
 # Tour — review findings
 
-**Status:** Built 2026-11-01 with the `06-engineering-standards.md` §9 checklist applied as it was written. **Not Finalized**: only the maintainer declares that. The items under "Not verified" are open.
+**Status:** Finalized 2026-11-02, declared by the maintainer after the final review pass below. Built 2026-11-01 with the `06-engineering-standards.md` §9 checklist applied as it was written. Open at finalization: the items under "Not verified" (a screen reader, Emerald in the browser, right-to-left `align`, a real phone, and the edge cases listed there).
 
 ## What was built
 
