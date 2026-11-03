@@ -1,5 +1,12 @@
 export { Callout } from "./Callout";
-export { ConfirmThenToastDemo, RowMenuDemo } from "./CompositionDemos";
+export {
+  ConfirmThenToastDemo,
+  EditInDialogDemo,
+  LoadingDemo,
+  RowMenuDemo,
+  SearchListDemo,
+  ValidatedFormDemo,
+} from "./CompositionDemos";
 export { ComponentIndex } from "./ComponentIndex";
 export type { CalloutTone } from "./Callout";
 export { IconGallery } from "./IconGallery";

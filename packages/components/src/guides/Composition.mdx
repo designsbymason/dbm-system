@@ -1,5 +1,12 @@
 import { Meta } from "@storybook/addon-docs/blocks";
-import { Callout, ConfirmThenToastDemo, RelatedCard, RowMenuDemo } from "../../.storybook/blocks";
+import {
+  ConfirmThenToastDemo,
+  EditInDialogDemo,
+  LoadingDemo,
+  RowMenuDemo,
+  SearchListDemo,
+  ValidatedFormDemo,
+} from "../../.storybook/blocks";
 import { ThemeSync } from "../../.storybook/blocks/foundations";
 import { VisuallyHidden } from "../atoms/VisuallyHidden";
 
@@ -13,13 +20,15 @@ import { VisuallyHidden } from "../atoms/VisuallyHidden";
 
 The components are built to be combined. These are the arrangements that come up in nearly every
 application, each running live. They are the smallest real usage of the parts involved, so a page-level
-template is these patterns placed in a layout.
+template is these patterns placed in a layout. The requests in the demos are simulated, so nothing is
+actually saved or deleted.
 
-## Confirm, then report the result
+## Confirm and notify
 
-Ask before anything that cannot be undone, then tell the person what happened. The `onConfirm` of
-`ConfirmDialog` returns a promise: the dialog stays open and busy until it settles, and closes when it
-resolves. The toast reports once it has closed.
+Ask before anything that cannot be undone, then tell the person what happened. Press **Delete project**
+to open a confirmation. Its **Delete** button starts a simulated request: the dialog stays open and busy
+until it finishes, then closes, and a toast reports the result. Its **Keep it** button closes the
+dialog and does nothing.
 
 <ConfirmThenToastDemo />
 
@@ -48,7 +57,7 @@ function DeleteProject({ id }) {
 - Focus starts on Cancel in a danger confirmation, so Enter does not delete by accident.
 - If the request fails, let `onConfirm` reject: the dialog stays open and announces the failure.
 
-## A list with a menu on every row
+## Row menus
 
 Give each row an icon button that opens a `Menu`. An item that needs a confirmation opens one
 **controlled** `ConfirmDialog` for the whole list from its `onSelect`, instead of rendering a dialog per
@@ -81,14 +90,147 @@ const [pending, setPending] = useState<string | null>(null);
   is hard to tell apart with a screen reader.
 - For a table with sorting, filtering and pagination, use `DataTable`, which takes a row menu of its own.
 
-## Where these go next
+## Validated form
 
-Combine patterns with a layout and you have a page: an app shell from `Sidebar` and `Navbar`, a list
-page from `DataTable` and `EmptyState`, a settings page from `Form` and `FieldGroup`. Those page-level
-templates are planned and are listed in the component inventory; none is built yet.
+A `Form` reads each field's own rules (`required`, `type="email"`, a `validate` function), shows the
+errors in place, and calls `onSubmit` only when everything is valid. While the promise it returns is
+running, the form is busy and cannot be submitted twice. Press **Create account** with the fields empty
+to see the errors, then fill them in.
 
-<div className="dbm-card-grid">
-<RelatedCard name="ConfirmDialog" description="The prop-driven confirmation" href="/?path=/docs/organisms-overlay-confirmdialog--docs"></RelatedCard>
-<RelatedCard name="Toast" description="Provider, useToast and createToaster" href="/?path=/docs/organisms-feedback-toast--docs"></RelatedCard>
-<RelatedCard name="Menu" description="The dropdown menu" href="/?path=/docs/organisms-navigation-menu--docs"></RelatedCard>
+<ValidatedFormDemo />
+
+```tsx
+<Form
+  aria-label="Create account"
+  onSubmit={async (values) => {
+    await api.createAccount(values);
+    toast({ tone: "success", title: "Account created" });
+  }}
+>
+  <FormField
+    label="Username"
+    name="username"
+    helperText="3 or more characters"
+    validate={(value) => (String(value).length < 3 ? "Use 3 or more characters" : undefined)}
+  >
+    {(field) => <Input {...field} />}
+  </FormField>
+  <FormField label="Email" name="email" required>
+    {(field) => <Input {...field} type="email" />}
+  </FormField>
+  <Form.Actions>
+    <Form.Submit>Create account</Form.Submit>
+  </Form.Actions>
+</Form>
+```
+
+- Spread `{...field}` onto the control so its label, hint and error are wired by id.
+- Say what to do in an error ("Use 3 or more characters"), not "Invalid".
+- Leave the submit button enabled. A person cannot learn what is missing from a button that is not there.
+
+## Edit in a dialog
+
+Put the `Form` inside the dialog. Hold the dialog open while the save runs with `busy`, and turn off
+`closeOnOutsideClick` so a stray click does not throw an edit away.
+
+<EditInDialogDemo />
+
+```tsx
+<Dialog open={open} onOpenChange={setOpen}>
+  <Dialog.Trigger asChild>
+    <Button>Edit profile</Button>
+  </Dialog.Trigger>
+  <Dialog.Content busy={saving} closeOnOutsideClick={false}>
+    <Form
+      aria-label="Edit profile"
+      onSubmit={async (values) => {
+        setSaving(true);
+        await api.saveProfile(values);
+        setSaving(false);
+        setOpen(false);
+        toast({ tone: "success", title: "Profile saved" });
+      }}
+    >
+      <Dialog.Header>
+        <Dialog.Title>Edit profile</Dialog.Title>
+        <Dialog.Description>Changes are saved to your account.</Dialog.Description>
+      </Dialog.Header>
+      <Dialog.Body>
+        <FormField label="Display name" name="displayName" required>
+          {(field) => <Input {...field} />}
+        </FormField>
+      </Dialog.Body>
+      <Dialog.Footer>
+        <Dialog.Close asChild>
+          <Button variant="secondary">Cancel</Button>
+        </Dialog.Close>
+        <Form.Submit>Save changes</Form.Submit>
+      </Dialog.Footer>
+    </Form>
+  </Dialog.Content>
+</Dialog>
+```
+
+- A form in a dialog belongs to the dialog, so it does not break the rule against a form inside a form.
+- Add `keepMounted` to the content for a long form someone may close by accident and come back to.
+
+## Search and empty state
+
+Filter a list as the person types, say how many results there are in a live region, and when nothing
+matches show an `EmptyState` with a way back, not a blank space. Try searching for "zzz".
+
+<SearchListDemo />
+
+```tsx
+const results = people.filter((name) => name.toLowerCase().includes(query.trim().toLowerCase()));
+
+<SearchInput aria-label="Search people" value={query} onChange={(e) => setQuery(e.target.value)} onClear={() => setQuery("")} />
+<VisuallyHidden role="status">{`${results.length} found`}</VisuallyHidden>
+{results.length > 0 ? (
+  <List>{results.map((name) => <ListItem key={name}>{name}</ListItem>)}</List>
+) : (
+  <EmptyState variant="dashed">
+    <EmptyState.Icon icon={MagnifyingGlassIcon} />
+    <EmptyState.Title>No one found</EmptyState.Title>
+    <EmptyState.Description>Nothing matches “{query}”.</EmptyState.Description>
+    <EmptyState.Actions>
+      <Button variant="secondary" onClick={() => setQuery("")}>Clear search</Button>
+    </EmptyState.Actions>
+  </EmptyState>
+)}
+```
+
+- Keep the live region on the page at all times, so a screen reader hears the count change.
+- For server-side search, `SearchInput`'s `onSearch` and `debounceMs` call you once typing pauses.
+
+## Loading state
+
+Show `Skeleton` placeholders in the shape of the content that is coming, mark the region
+`aria-busy` while it loads, and put the real content in the same place. Press **Reload** to see it again.
+
+<LoadingDemo />
+
+```tsx
+<div aria-busy={loading}>
+  {loading ? (
+    <Stack gap={2}>
+      <Skeleton variant="text" width="70%" />
+      <Skeleton variant="text" width="58%" />
+      <Skeleton variant="text" width="46%" />
+    </Stack>
+  ) : (
+    <List>{people.map((name) => <ListItem key={name}>{name}</ListItem>)}</List>
+  )}
 </div>
+```
+
+- Match the placeholder's shape to the content, so the page does not jump when it arrives.
+- A skeleton is hidden from assistive technology on its own. Use a `Spinner` with a label for a wait that has no shape.
+
+## Pages
+
+Combine these with a layout and you have a page: an app shell from `Sidebar` and `Navbar`, a list
+page from `DataTable` and `EmptyState`, a settings page from `Form` and `FieldGroup`. Page-level
+templates are planned and listed in the component inventory, and none is built yet. For other
+arrangements, see the `CommandPalette` page for recent commands, the `Stepper` page for a multi-step
+flow and the `DataTable` page for a filtered, paged table.

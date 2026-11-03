@@ -1162,3 +1162,15 @@
 .dbm-related-links span {
   color: var(--dbm-text-secondary);
 }
+
+/* Composition guide: a padded, bordered panel that holds a live form, narrow enough that its fields are not full
+   width. */
+.dbm-composition-panel {
+  background: var(--dbm-bg-surface);
+  border: var(--dbm-border-width-1) solid var(--dbm-border-default);
+  border-radius: var(--dbm-radius-md);
+  box-sizing: border-box;
+  margin-block-end: var(--dbm-space-4);
+  max-inline-size: 24rem;
+  padding: var(--dbm-space-5);
+}
