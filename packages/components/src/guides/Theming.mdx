@@ -1,5 +1,5 @@
 import { Meta } from "@storybook/addon-docs/blocks";
-import { Callout, RelatedCard } from "../../.storybook/blocks";
+import { Callout, FieldsTable, ReferenceTable, RelatedLinks } from "../../.storybook/blocks";
 import { ThemeSync } from "../../.storybook/blocks/foundations";
 import { VisuallyHidden } from "../atoms/VisuallyHidden";
 
@@ -15,6 +15,28 @@ DBM ships two brands, **Purple** and **Emerald**, each in a **light** and a **da
 in all. A component is written once against token names such as `bg.brand` and never knows which
 theme is active, so changing the brand or the mode never touches component code. Use the **Brand**
 and **Mode** controls at the top of this page to switch the theme you are reading in.
+
+## How it works
+
+Components read **semantic tokens**, which are CSS custom properties named `--dbm-<family>-<name>`. Each
+theme's stylesheet gives those properties their values, scoped to a `data-theme` attribute on the
+document element, so switching the attribute switches every component at once.
+
+<ReferenceTable
+  columns={["Family", "Holds", "Example", "Changes with the theme"]}
+  rows={[
+    ["bg", "Surfaces and fills", "`--dbm-bg-surface`, `--dbm-bg-brand`", "Yes"],
+    ["text", "Text colours", "`--dbm-text-primary`, `--dbm-text-link`", "Yes"],
+    ["border", "Borders and focus rings", "`--dbm-border-default`, `--dbm-border-focus`", "Yes"],
+    ["icon", "Icon colours", "`--dbm-icon-default`, `--dbm-icon-brand`", "Yes"],
+    ["space, radius, font, motion", "The raw scales: spacing, corner radius, type, durations", "`--dbm-space-4`, `--dbm-radius-md`", "No"],
+  ]}
+/>
+
+The **brand** decides the brand slots (`bg.brand`, `text.brand`, `icon.brand`, `border.focus` and their
+relatives). Status colours (success, warning, danger, info) are the same in both brands, so success is
+always green. The **mode** decides the surfaces and the text on them. See the
+[colour reference](?path=/docs/foundations-color--docs) for every token.
 
 ## Applying a theme
 
@@ -33,25 +55,52 @@ export function App() {
 }
 ```
 
-| Prop | Values | Default |
-|---|---|---|
-| `brand` | `"purple"` or `"emerald"` | `"purple"` |
-| `mode` | `"light"`, `"dark"` or `"system"` | `"system"` |
+<FieldsTable
+  rows={[
+    {
+      name: "brand",
+      options: ["purple", "emerald"],
+      description: "Which brand palette to apply.",
+      defaultValue: "purple",
+    },
+    {
+      name: "mode",
+      options: ["light", "dark", "system"],
+      description: "Which colour mode to apply. `system` follows the operating system's `prefers-color-scheme` and updates live if it changes while the app is open.",
+      defaultValue: "system",
+    },
+  ]}
+/>
 
-- **`mode="system"`** follows the operating system's `prefers-color-scheme` and updates live if it
-  changes while the app is open.
 - **The theme is document-wide**, not scoped to the provider's own element. A dialog, tooltip or
-  toast that mounts on `document.body` therefore picks it up too.
-- **Providers nest.** An inner provider takes over while it is mounted and hands control back to the
-  outer one when it unmounts.
+  toast that mounts on `document.body` therefore picks it up too. It also means a page shows **one
+  theme at a time**: there is no way to theme one section differently.
+- **Providers nest, but do not scope.** An inner provider takes over the document's theme while it is
+  mounted and hands it back to the outer one when it unmounts.
 - **Changing the brand or mode after the first render fades** the themed colours over
   `motion.duration.base`, and is skipped under `prefers-reduced-motion: reduce`. The first paint
   never fades in.
+- **The choice is not remembered.** The provider does not store it. Keep a person's preference in your
+  own state, and in storage if it should survive a reload.
+
+To let a person switch, hold the choice in state and pass it down:
+
+```tsx
+function App() {
+  const [mode, setMode] = useState<"light" | "dark" | "system">("system");
+  return (
+    <ThemeProvider brand="purple" mode={mode}>
+      <Button onClick={() => setMode(mode === "dark" ? "light" : "dark")}>Toggle mode</Button>
+    </ThemeProvider>
+  );
+}
+```
 
 ## Reading the theme
 
 `useTheme()` returns the brand, the `mode` as it was passed, and the `resolvedMode`: the concrete
-`"light"` or `"dark"` that `"system"` currently means. It throws outside a `ThemeProvider`.
+`"light"` or `"dark"` that `"system"` currently means. It throws outside a `ThemeProvider`. Use it to
+show the current choice or to pick an image, not to choose a colour.
 
 ```tsx
 import { useTheme } from "@dbm-system/components";
@@ -77,17 +126,21 @@ Pass an explicit `mode` if that flash matters.
 The tokens are plain CSS custom properties in `@dbm-system/tokens`. A theme needs the shared files
 and one file per theme in use:
 
-| File | Holds |
-|---|---|
-| `primitives.css` | The raw scales (colour, spacing, type, radius, motion); the same in every theme |
-| `component-tokens.css` | Tokens specific to a component |
-| `purple-light.css`, `purple-dark.css`, `emerald-light.css`, `emerald-dark.css` | The semantic tokens, scoped to `:root[data-theme="…"]` |
+<ReferenceTable
+  columns={["File", "Holds"]}
+  rows={[
+    ["primitives.css", "The raw scales (colour, spacing, type, radius, motion); the same in every theme"],
+    ["component-tokens.css", "Tokens specific to a component"],
+    ["purple-light.css, purple-dark.css, emerald-light.css, emerald-dark.css", "The semantic tokens, scoped to `:root[data-theme=\"…\"]`"],
+  ]}
+/>
 
-This Storybook imports all of them. A consuming app loads the ones for the themes it offers. How a
-consumer loads these files is not settled yet; this page will link to the Installation page when it
+This Storybook imports all of them. A consuming app loads the ones for the themes it offers. The token
+package names the `Nunito` and `Lora` font families but ships no font files, so load them yourself. How
+a consumer loads these files is not settled yet; this page will link to the Installation page when it
 exists.
 
-## Writing code that themes correctly
+## Usage guidelines
 
 <div className="dbm-do-dont-grid">
 <Callout tone="success" title="Do">
@@ -96,6 +149,8 @@ exists.
 - Let a component's own props choose its colour (`tone`, `variant`) rather than styling it from
   outside.
 - Check a new colour pairing in **all four themes**, not only the one you are looking at.
+- Keep the person's brand and mode choice in your own state or storage, and pass it to `ThemeProvider`.
+- Pass an explicit `mode` on a server-rendered page if a first-paint flash of light would matter.
 
 </Callout>
 <Callout tone="danger" title="Don't">
@@ -104,6 +159,8 @@ exists.
   theme, so the page breaks in the other brand and in dark mode.
 - Don't hardcode a hex value, even one that matches a token today.
 - Don't branch on the theme in JavaScript to pick a colour. Pick a token and let the CSS resolve it.
+- Don't expect to theme one section differently from the rest of the page. The theme is document-wide.
+- Don't assume the provider remembers a choice across reloads.
 
 </Callout>
 </div>
@@ -115,7 +172,19 @@ new primitive colour scale, one semantic token file per mode (the same keys as t
 rebuild of the token CSS, a new value for the `brand` type, and a contrast check of every pairing in
 both modes. No component changes.
 
-<div className="dbm-card-grid">
-<RelatedCard name="Foundations: Color" description="Every primitive scale and semantic colour token, per theme" href="/?path=/docs/foundations-color--docs"></RelatedCard>
-<RelatedCard name="ThemeProvider" description="Props, behaviour and the Playground" href="/?path=/docs/atoms-utility-themeprovider--docs"></RelatedCard>
-</div>
+## Related pages
+
+<RelatedLinks
+  items={[
+    {
+      name: "Foundations: Color",
+      description: "Every primitive scale and semantic colour token, per theme.",
+      href: "/?path=/docs/foundations-color--docs",
+    },
+    {
+      name: "ThemeProvider",
+      description: "Props, behaviour and the Playground.",
+      href: "/?path=/docs/atoms-utility-themeprovider--docs",
+    },
+  ]}
+/>
