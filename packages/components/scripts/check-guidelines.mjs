@@ -73,6 +73,10 @@ const indexDocs = [
   join(GUIDELINES, "README.md"),
   join(GUIDELINES, "adr/README.md"),
   join(GUIDELINES, "component-reviews/README.md"),
+  // The docs website's reference folder: a living reference like the numbered docs, so its links and line lengths are checked too.
+  ...readdirSync(join(GUIDELINES, "docs-site"))
+    .filter((name) => name.endsWith(".md"))
+    .map((name) => join(GUIDELINES, "docs-site", name)),
 ];
 const trackedDocs = [...numberedDocs, ...indexDocs];
 

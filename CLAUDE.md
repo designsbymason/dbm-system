@@ -23,7 +23,7 @@ An agentic, standalone React component library — built for AI coding agents (a
 ## Security practices
 - **Never commit secrets.** No API keys, tokens, `.env` files, or credentials in the repo, ever — including in commit history, code comments, test fixtures, or Storybook examples. Use `.env.example` with placeholder values to document what's needed.
 - **`.gitignore` must cover:** `.env`, `.env.*` (except `.env.example`), `node_modules`, build outputs (`dist`, `.turbo`, `build`), OS/editor cruft (`.DS_Store`, `.vscode/*` except shared settings), and any local credential/config files.
-- **Dependency security:** GitHub Dependabot alerts and security updates are enabled; version-update PRs are off (pull requests are disabled on this repo). Vulnerabilities are handled by hand (`guidelines/02-tech-stack-and-structure.md` §3.1), routine updates in a periodic manual refresh pass. `pnpm audit` runs in CI.
+- **Dependency security:** GitHub Dependabot alerts and security updates are enabled; version-update PRs are off (pull requests are enabled for collaborators only, [ADR-0172](guidelines/adr/0172-pull-requests-are-enabled-for-collaborators-only-and-issues-are-on-over-keeping-both-off-or-opening-contributions-to-everyone.md)). Vulnerabilities are handled by hand (`guidelines/02-tech-stack-and-structure.md` §3.1), routine updates in a periodic manual refresh pass. `pnpm audit` runs in CI.
 - **Secret scanning:** GitHub secret scanning + push protection (free for public repos) should be enabled at the repo level — flag this to me if it isn't, since it's a repo setting, not something committed in code.
 - **Static analysis:** GitHub CodeQL (free for public repos) as a CI job once there's real code to scan — catches common vulnerability patterns (XSS, injection) before merge.
 - **Component-level security:** no `dangerouslySetInnerHTML` without explicit sanitization (relevant for anything rendering user-provided content — `CodeBlock`, `Combobox`, rich text areas); no `eval` or dynamic `Function` construction; sanitize any component that accepts and renders external URLs or HTML.
@@ -81,6 +81,7 @@ Full rationale for each choice: `guidelines/02-tech-stack-and-structure.md`.
 | A component's props, file structure, or definition of done | `guidelines/05-component-api-conventions.md` |
 | Reviewing or finalizing a component, or how to work across sessions | `guidelines/06-engineering-standards.md` (§8 process rules, §9 review checklist) |
 | A Storybook story, Docs page, or a story's "Show code" snippet | `guidelines/07-storybook-and-documentation-standards.md` (§4 template, §4.2 snippets) |
+| The docs website (plan, structure, landing page, Storybook's role) | `guidelines/docs-site/` |
 | Understanding *why* a past architecture/API decision was made | `guidelines/adr/` |
 
 To start a session, run `/start <task>` (`.claude/commands/start.md`): it reads only the guidelines that task needs, verifies against the repo with `pnpm check-guidelines`, and reports before any work.
