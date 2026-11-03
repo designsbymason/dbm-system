@@ -89,16 +89,28 @@ DBM System exists to avoid both traps: a real, versioned, installable package �
 
 ## 7. Competitive landscape
 
-The closest existing system to what DBM is attempting — released in Beta in June 2026 — is React-based, dependency-light by design, and AI-agent-oriented (ships a CLI, an MCP server, and a JSON manifest for structured agent access), with 90–150+ components drawn from years of large-scale internal use. (Deliberately unnamed here — this repo never names another design system; see `06-engineering-standards.md` §8.)
+DBM is not positioned against any one system. Component libraries and design systems for the web are a mature field, and the common approaches share a few patterns that DBM deliberately handles differently. (This repo does not name other design systems; see `06-engineering-standards.md` §8.)
 
-DBM's points of differentiation from it:
-- **Styling approach:** that system is built on a compile-time CSS-in-JS solution that requires a bundler plugin; DBM uses CSS Custom Properties + CSS Modules for a true zero-build-step-requirement on the consumer side.
-- **Multi-brand theming as a first-class goal from v1**, rather than a broader multi-theme internal-tooling flavor.
-- **Explicit free/OSS-only tooling constraint** across the entire build/test/hosting pipeline.
-- **Deliberately sequenced agent tooling** — DBM ships strong types/JSDoc/manifest first and defers CLI/MCP server until the API is proven stable, rather than shipping full agent tooling at initial launch.
-- **Planned Figma library derived from the same token source**, tightening the design-to-code loop.
+**What the field commonly looks like**
+- **Styling is tied to a build step or a runtime:** a CSS-in-JS library, a compile-time plugin or a utility framework the consumer has to adopt and configure.
+- **The dependency footprint is large**, and a consumer inherits everything the library pulls in.
+- **Theming and brand variation are an afterthought**, added to a single default look.
+- **Accessibility is real but uneven:** strong where a component was designed with it first, thinner elsewhere.
+- **Documentation is written for people.** It is hard for an AI coding agent to read structured facts such as props, constraints and variants without parsing prose.
+- **Design files and code drift apart**, because the two are maintained separately.
 
-That system is worth continued reference (not imitation) as a live proof-of-concept that agent-oriented, dependency-conscious design systems are viable at scale.
+**Where DBM is strong**
+- **Zero build requirement for the consumer.** Styling is CSS Custom Properties plus CSS Modules, with no plugin, no runtime style engine and no framework to adopt.
+- **Very few dependencies.** The approved set is Radix UI Primitives for interaction and accessibility, and Phosphor Icons behind one wrapper. Animation is plain CSS driven by tokens, and every dependency has to be justified.
+- **Tokens are the single source of truth.** Components reference semantic tokens, never primitives or literal values, so multi-brand and light/dark theming works without touching component code. It is a first-class goal from v1, not a later add-on.
+- **Accessibility is verified, not assumed.** WCAG AA is the floor, with contrast checked per pairing, automated axe tests, and keyboard, focus and screen-reader behaviour exercised in a real browser (jsdom checks alone are not accepted for layout or focus). Error text targets AAA.
+- **Responsive and right-to-left by construction.** Every component works across the full breakpoint scale, directional CSS is logical, and right-to-left is checked in a real browser.
+- **Built to be legible to agents.** Full TypeScript types and JSDoc on every prop feed a planned JSON component manifest, with a hand-written snippet for every story. CLI and MCP tooling is deliberately sequenced after the API is proven stable, rather than shipped against a moving target.
+- **A documented, enforced process.** Every component passes one review checklist before it is called Finalized. Architecture decisions are recorded as ADRs. Bundle size is budgeted per component in CI, and guideline drift is flagged automatically.
+- **Free and open-source tooling only,** across the whole build, test and hosting pipeline.
+- **Design-to-code loop planned from the same tokens:** a Figma library derived from the token source, so the two cannot drift.
+
+DBM's goal is to be the system an agent or a developer can compose a real application from without negotiating a build step, a dependency tree or an accessibility gap, not to imitate any other system's feature list.
 
 ---
 
