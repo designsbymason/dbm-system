@@ -6,7 +6,17 @@
 
 ## 1. Executive summary
 
-DBM System is a standalone, dependency-light React component library built from first principles for the age of AI-assisted development. It is designed to be equally usable by human engineers and AI coding agents (like Claude Code) to build web and enterprise applications quickly, consistently, and accessibly. It will ship as a versioned npm package, backed by a token-driven multi-brand theming system, a Storybook workshop, and — later — a documentation website and a companion Figma component library derived from the same design tokens.
+DBM System is an **agentic** component library. The word means the library is built for AI coding agents as much as for people: every component has full TypeScript types and JSDoc, a hand-written snippet for each example, and a token-driven API, so an agent can work against a structured, predictable contract and a developer gets the same clarity. It is a standalone, dependency-light React library built from first principles for the age of AI-assisted development, to build web and enterprise applications quickly, consistently, and accessibly.
+
+**Canonical wording.** Other documents and pages quote these; change them here first.
+
+| Tier | Where it is used | Wording |
+|---|---|---|
+| Tagline | Website hero, page titles | The agentic component library for people and the AI agents that build with them. |
+| One sentence | Meta descriptions, the npm `description`, the lead of the Getting started page | An agentic React component library for building web and enterprise applications quickly, consistently and accessibly, with a typed, token-driven API that AI coding agents and developers can both rely on. |
+| Full definition | `README.md`, the GitHub repository description | An agentic, standalone React component library built for both AI coding agents and human developers to compose web and enterprise applications quickly, consistently, and accessibly. Token-driven, multi-brand, multi-theme (light/dark), and built with a strong TypeScript + JSDoc contract so AI agents can work against a structured, predictable API. |
+
+It will ship as a versioned npm package, backed by a token-driven multi-brand theming system, a Storybook workshop, and — later — a documentation website and a companion Figma component library derived from the same design tokens.
 
 The system is built and maintained using Claude Code, and its own component APIs, documentation, and metadata are being designed to be legible to AI agents from day one, not retrofitted for it later.
 

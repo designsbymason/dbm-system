@@ -12,7 +12,7 @@ A first visit should answer in a few seconds: **what DBM System is, why it is di
 
 The page says only what the repository supports (`01-vision-and-goals.md`):
 
-- A React component library for accessible web and enterprise applications.
+- **Agentic**: a React component library built for AI coding agents and developers alike, to build web and enterprise applications quickly, consistently and accessibly. The canonical tagline and one-sentence wording are in `01-vision-and-goals.md` §1.
 - Built on design tokens: two brands (Purple and Emerald), each in light and dark.
 - Very few dependencies: Radix UI primitives for interaction and Phosphor for icons.
 - Built to be read by people and agents: full types, a snippet for each example, a planned manifest.
@@ -25,7 +25,7 @@ No invented metrics, testimonials, logos, download counts or comparisons. No oth
 
 | # | Section | What it does |
 |---|---|---|
-| 1 | **Hero** | The tagline, "A design system for people and the agents that build with them.", and a sentence of support; an install snippet that says it is not published yet; calls to action to Get started, Components and Storybook. A quiet, high-quality visual built from real DBM components and tokens. |
+| 1 | **Hero** | The tagline, "The agentic component library for people and the AI agents that build with them.", and a sentence of support; an install snippet that says it is not published yet; calls to action to Get started, Components and Storybook. A quiet, high-quality visual built from real DBM components and tokens. |
 | 2 | **Live component showcase** | Real components on the page, in a composed, designed arrangement (a form, a data table, a toast, a command palette), themed by the reader's mode. Interactive, not screenshots. |
 | 3 | **Theming and accessibility** | The token story: one semantic layer, four themes, no component changes. The accessibility claim with the known exceptions, linked. **The two brands are shown side by side with live Storybook stories, one frame per brand** (Storybook takes the brand in its URL, for example `/storybook/iframe.html?id=<story>&globals=brand:emerald`), loaded lazily so they cost nothing until scrolled to. |
 | 4 | **Built for agents** | The manifest, `llms.txt` and `AGENTS.md`, each labelled in development. Why an agent-legible system matters. |

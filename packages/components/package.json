@@ -1,7 +1,7 @@
 {
   "name": "@dbm-system/components",
   "version": "0.0.0",
-  "description": "The DBM System React component library.",
+  "description": "An agentic React component library for building web and enterprise applications quickly, consistently and accessibly, with a typed, token-driven API that AI coding agents and developers can both rely on.",
   "license": "MIT",
   "repository": {
     "type": "git",

@@ -4,7 +4,7 @@
 
 ## 1. Goals
 
-1. A **front door** for DBM System at `dbm-system.com` that makes a first impression worthy of the system: premium, fast, accessible, and honest about what is and is not published yet.
+1. A **front door** for DBM System at `dbm-system.com` that makes a first impression worthy of the system, and says plainly what it is (an agentic component library for people and AI agents): premium, fast, accessible, and honest about what is and is not published yet.
 2. A **complete reference** for a person or an agent who wants to adopt it: install, theme, guides, every component and template, the changelog.
 3. **Agent legibility**: the manifest, `llms.txt`, `llms-full.txt` and a consumer `AGENTS.md` at stable URLs (`01-vision-and-goals.md` §13.1).
 4. A site that **uses DBM itself**: its chrome is DBM components and tokens, so the docs site is the system's largest real test.

@@ -1,6 +1,7 @@
 {
   "name": "dbm-system",
   "private": true,
+  "description": "An agentic React component library for building web and enterprise applications quickly, consistently and accessibly, with a typed, token-driven API that AI coding agents and developers can both rely on.",
   "license": "MIT",
   "packageManager": "pnpm@11.14.0",
   "engines": {

@@ -29,7 +29,8 @@ Recorded here so they are not re-asked; the detail is in the file named.
 | Showing two brands | Side by side, with live Storybook stories, one frame per brand (Storybook takes the brand in its URL) | [03-landing-page-brief.md](./03-landing-page-brief.md) §3 |
 | Old Storybook guide links | A short "this page has moved" page at each old address, linking to the new one | [04-content-inventory.md](./04-content-inventory.md) §4 |
 | Search engines and `/storybook/` | Not indexed | [02-structure.md](./02-structure.md) §10 |
-| Tagline | "A design system for people and the agents that build with them." | [03-landing-page-brief.md](./03-landing-page-brief.md) §3 |
+| Tagline | "The agentic component library for people and the AI agents that build with them." | [03-landing-page-brief.md](./03-landing-page-brief.md) §3 |
+| Site description (meta) | The one-sentence wording in [01-vision-and-goals.md](../01-vision-and-goals.md) §1, trimmed to about 155 characters at build | The first landing review |
 | Phase A before Phase 8 | Yes, with the unpublished sections labelled "in active development, not yet published" | [01-plan.md](./01-plan.md) |
 | GSAP's licence | Read at adoption: free including commercial use, ScrollTrigger included, not described as open source (the recorded exception); pin the version, because terms can change for newer versions | [02-structure.md](./02-structure.md) §8 |
 | Node and pnpm | The repository's: Node 24 from `.nvmrc` and the pinned pnpm, which CI already reads | [02-structure.md](./02-structure.md) §3 |
@@ -41,7 +42,6 @@ All of these wait on work that has not started, and each is decided when that wo
 
 | Question | Waits on |
 |---|---|
-| The site's description (the one-sentence meta description) | The first landing review; a starting point is "A React component library for accessible web and enterprise applications, built on design tokens, for people and AI coding agents." |
 | How social images are generated | The social-image build step; the tool is chosen when it is built |
 | Component page layout | The manifest schema (Phase 8) |
 | How the changelog page reads Changesets | The release pipeline (Phase 8) |
