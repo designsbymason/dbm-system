@@ -48,3 +48,6 @@ apps/docs/public/llms-full.txt
 
 # Private notes: anything personal, private or sensitive (guidelines/docs-site/06-gitignore-and-private-notes.md)
 .local/
+
+# Claude Code: personal permission settings stay local (the shared .claude/commands and launch.json are tracked)
+.claude/settings.local.json

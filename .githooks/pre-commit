@@ -1,0 +1,48 @@
+#!/bin/sh
+# Blocks a commit that stages private or credential material. Plain shell, no dependency.
+# Turn it on once per clone:   git config core.hooksPath .githooks
+# (`git commit --no-verify` skips it, and CI does not run it. GitHub secret scanning and push protection are the
+# backstop for recognised tokens.) What it checks is in guidelines/docs-site/06-gitignore-and-private-notes.md.
+
+fail=0
+say() { printf 'pre-commit: %s\n' "$1" >&2; fail=1; }
+
+# 1. Paths that must never be committed.
+staged=$(git diff --cached --name-only --diff-filter=ACMR)
+for path in $staged; do
+  case "$path" in
+    .local/*) say "$path is in the private notes folder (.local/)." ;;
+    .env|.env.*|*/.env|*/.env.*) [ "${path##*/}" = ".env.example" ] || say "$path is an environment file." ;;
+    *.pem|*.key|*.p12|*.keystore|.npmrc|*/.npmrc|*id_rsa*|.claude/settings.local.json) say "$path is a credential or local settings file." ;;
+  esac
+done
+
+# 2. Credential-shaped text in the added lines (this hook and the lockfile are skipped).
+added=$(git diff --cached -U0 --no-color -- . ':!.githooks' ':!pnpm-lock.yaml' | grep -E '^\+[^+]' || true)
+pattern='gh[pousr]_[A-Za-z0-9]{30,}|github_pat_[A-Za-z0-9_]{20,}|npm_[A-Za-z0-9]{30,}|AKIA[0-9A-Z]{16}|-----BEGIN [A-Z ]*PRIVATE KEY|xox[baprs]-[A-Za-z0-9-]{10,}|sk-[A-Za-z0-9]{20,}|AIza[0-9A-Za-z_-]{35}|_authToken|Bearer [A-Za-z0-9._-]{25,}'
+if printf '%s\n' "$added" | grep -Eq "$pattern"; then
+  say "an added line looks like a credential (token, key or auth header)."
+fi
+
+# 3. Your own list of strings that must never appear (kept in .local/, so the list itself is never committed).
+list=".local/blocked-strings.txt"
+if [ -f "$list" ]; then
+  while IFS= read -r needle; do
+    case "$needle" in ''|'#'*) continue ;; esac
+    if printf '%s\n' "$added" | grep -Fqi -- "$needle"; then
+      say "an added line contains a string from $list."
+    fi
+  done < "$list"
+fi
+
+# 4. The commit's author must be the GitHub no-reply address, so a personal or machine email never lands in history.
+email=$(git var GIT_AUTHOR_IDENT | sed -n 's/.*<\(.*\)>.*/\1/p')
+case "$email" in
+  *@users.noreply.github.com) ;;
+  *) say "the author email '$email' is not a GitHub no-reply address. Run: git config user.email <id>+<name>@users.noreply.github.com" ;;
+esac
+
+if [ "$fail" -ne 0 ]; then
+  printf 'pre-commit: commit blocked. Fix the above, or skip once with --no-verify if you are sure.\n' >&2
+  exit 1
+fi

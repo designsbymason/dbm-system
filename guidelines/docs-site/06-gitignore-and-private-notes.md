@@ -25,6 +25,7 @@ Added for the docs website:
 | `apps/docs/public/pagefind/` | The search index, rebuilt on every deploy |
 | `apps/docs/public/manifest.json`, `apps/docs/public/llms.txt`, `apps/docs/public/llms-full.txt` | Generated at build from the manifest and the content, so a committed copy would go stale |
 | `.local/` | The private notes folder (below) |
+| `.claude/settings.local.json` | One person's Claude Code permission settings. The shared `.claude/commands/` and `launch.json` stay tracked. It was ignored only by a personal global gitignore, so it is listed here for every clone |
 
 `apps/docs/public/` also holds committed files (favicons, the logo, the web app manifest). Only the generated ones are ignored, by name.
 
@@ -55,7 +56,22 @@ Suggested layout, by file. A file holds only what its name says:
 
 The folder and a starter file exist locally; nothing in them is committed.
 
-## 4. Before every commit
+## 4. The pre-commit guard
+
+`.githooks/pre-commit` is a plain shell script (no dependency) that refuses a commit when it finds any of these:
+
+| Check | Blocks |
+|---|---|
+| Paths | A staged file under `.local/`, an `.env` file (not `.env.example`), a `.pem`, `.key`, `.p12`, `.keystore`, `.npmrc`, `id_rsa` file, or `.claude/settings.local.json` |
+| Credential-shaped text | An added line that looks like a GitHub, npm, AWS, Slack, OpenAI-style or Google key, a private key header, an npm auth-token setting or a long bearer token |
+| Your blocked strings | An added line containing any string from `.local/blocked-strings.txt`, a private, gitignored list of things that must never be committed (a personal email address, a hostname). The list is never committed, so the strings are not in the repository |
+| Author email | A commit whose author email is not a GitHub no-reply address, so a personal or machine address never lands in history |
+
+**Turn it on once per clone:** `git config core.hooksPath .githooks`. A new clone does not have it until you run that.
+
+**Limits:** `git commit --no-verify` skips it, and CI does not run it. GitHub secret scanning and push protection (both on) are the backstop for recognised tokens. A string that is not on your list and does not look like a credential gets through, so the checklist below still matters.
+
+## 5. Before every commit
 
 1. `git status` shows no `.local/` path and no `.env` file.
 2. No new file contains a token, a key, a login, an account number, a private email address or a name that is not already public.
