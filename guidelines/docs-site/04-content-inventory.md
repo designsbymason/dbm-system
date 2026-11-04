@@ -50,4 +50,4 @@ These are in `packages/components/.storybook/blocks/` and depend on Storybook's 
 
 ## 4. Old links
 
-When a guide moves, its Storybook address (`/storybook/?path=/docs/guides-…`) stops working. Whether to leave a stub that points to the new page is an open item ([05-open-items.md](./05-open-items.md)).
+When a guide moves, its Storybook address (`/storybook/?path=/docs/guides-…`) stops working. **Each old address keeps a short "this page has moved" page that links to the new one**, because static Pages cannot redirect. The stubs are written when a guide moves and removed when the guides have been at their new addresses long enough that nobody is arriving at the old ones.

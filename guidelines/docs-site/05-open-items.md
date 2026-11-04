@@ -18,26 +18,34 @@ These are done on GitHub or at the domain's providers. Nothing here is a secret;
 | DNS records | The apex and `www` pointed at GitHub Pages as GitHub's current documentation says | Done: four A and four AAAA records on the apex, a `www` CNAME; the email forwarding records are untouched |
 | npm organisation | The `dbm-system` organisation exists, with two-factor authentication on its owner (`01` §13 Phase 8) | Done: the organisation exists, and two-factor is on for the account and required for the organisation |
 
-## 2. Assumptions to confirm
+## 2. Settled
 
-- **The site's one brand is Purple**, in light, dark and system mode. Only mode is a reader control.
-- **Which guardrails the landing page keeps.** Reduced motion and content-before-script are required. No scroll-jacking, a script and weight budget, and lighter effects on phones were offered and not adopted; with no budget in CI, the page's weight is a hand review.
-- **Phase A starts before Phase 8**, with the Installation and For AI agents sections labelled "in active development, not yet published".
-- **GSAP's current licence terms** fit the project's use. Re-read them before the first release.
+Recorded here so they are not re-asked; the detail is in the file named.
+
+| Item | Decision | Where |
+|---|---|---|
+| The site's brand | Purple, in light, dark and system mode; only mode is a reader control | [02-structure.md](./02-structure.md) §5 |
+| Landing-page guardrails | Reduced motion (a static, complete page) and content before script are required; nothing else is. Weight and motion are judged in review | [03-landing-page-brief.md](./03-landing-page-brief.md) §5 |
+| Showing two brands | Side by side, with live Storybook stories, one frame per brand (Storybook takes the brand in its URL) | [03-landing-page-brief.md](./03-landing-page-brief.md) §3 |
+| Old Storybook guide links | A short "this page has moved" page at each old address, linking to the new one | [04-content-inventory.md](./04-content-inventory.md) §4 |
+| Search engines and `/storybook/` | Not indexed | [02-structure.md](./02-structure.md) §10 |
+| Tagline | "A design system for people and the agents that build with them." | [03-landing-page-brief.md](./03-landing-page-brief.md) §3 |
+| Phase A before Phase 8 | Yes, with the unpublished sections labelled "in active development, not yet published" | [01-plan.md](./01-plan.md) |
+| GSAP's licence | Read at adoption: free including commercial use, ScrollTrigger included, not described as open source (the recorded exception); pin the version, because terms can change for newer versions | [02-structure.md](./02-structure.md) §8 |
+| Node and pnpm | The repository's: Node 24 from `.nvmrc` and the pinned pnpm, which CI already reads | [02-structure.md](./02-structure.md) §3 |
+| `/templates` before a template exists | Moot: Phase 7 builds the first templates before the docs site | [01-plan.md](./01-plan.md) |
 
 ## 3. Questions not yet decided
 
-| Question | Notes |
+All of these wait on work that has not started, and each is decided when that work does.
+
+| Question | Waits on |
 |---|---|
-| **How the landing page shows two brands** when the reader only controls mode | The theme is document-wide, so two brands cannot appear together without a scoped demo, pre-rendered images or a frame. Decide in the first landing review. |
-| **Old Storybook guide links** after the guides move | A stub that points to the new page, or let them break. |
-| **Whether `/storybook/` is indexed** by search engines | Both are the same project; Storybook's own pages are numerous and thin. |
-| **The site's name, description and tagline** | Used in metadata and the social images. |
-| **How social images are generated** | A build step in `apps/docs/scripts`; the tool is chosen when it is built. |
-| **The Node and pnpm versions** the docs build uses | Match the repository's; the workflow declares them. |
-| **Whether `/templates` exists before a template does** | A placeholder page, or hide it until the first template. |
-| **Component page layout** | The sections of a page, and which come from the manifest. Decided when the manifest schema exists. |
-| **How the changelog page reads Changesets** | Decided when the release pipeline is wired. |
+| The site's description (the one-sentence meta description) | The first landing review; a starting point is "A React component library for accessible web and enterprise applications, built on design tokens, for people and AI coding agents." |
+| How social images are generated | The social-image build step; the tool is chosen when it is built |
+| Component page layout | The manifest schema (Phase 8) |
+| How the changelog page reads Changesets | The release pipeline (Phase 8) |
+| The hero's visual concept and the page's length | The first landing review |
 
 ## 4. Gaps this plan depends on
 

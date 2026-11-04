@@ -51,7 +51,7 @@ Generated files (`apps/docs/dist/`, `apps/docs/.astro/`, the Pagefind index, the
 
 One GitHub Actions workflow, run on every push to `main` while the packages are 0.x:
 
-1. Install with pnpm and build the packages the docs need (`tokens`, `utils`, `icons`, `components`, and later `manifest`) through Turborepo.
+1. Install with pnpm (the repository's pinned version) on the Node version in `.nvmrc` (Node 24), as CI already does, and build the packages the docs need (`tokens`, `utils`, `icons`, `components`, and later `manifest`) through Turborepo.
 2. Build Storybook (`pnpm build-storybook`) to `storybook-static`.
 3. Build the docs app: copy the manifest, write `llms.txt` and `llms-full.txt`, generate the pages, build the Pagefind index, generate the social images.
 4. Assemble one artifact: the docs build at the root and `storybook-static` in a `storybook/` folder.
@@ -69,7 +69,7 @@ Pull requests get the build and the gates (they run for collaborators); only `ma
 | What is it for? | The workshop: a Playground, controls and tests for every component |
 | Where is it? | `https://dbm-system.com/storybook/` |
 | What does its sidebar keep? | Foundations, the component pages and Templates, plus a short Getting started page that points to the docs website and keeps the component index |
-| What moves out? | The guides and the long Getting started content ([04-content-inventory.md](./04-content-inventory.md)) |
+| What moves out? | The guides and the long Getting started content ([04-content-inventory.md](./04-content-inventory.md)); each old address keeps a short "this page has moved" page that links to the new one |
 | How does the docs site link to it? | Each component page has "Open in Storybook", linking to `/storybook/?path=/docs/<tier>-<category>-<name>--docs` |
 | Does it work under a subpath? | Its static build uses relative assets and the Getting started page reads `index.json` with a relative URL. **To be verified in the combined artifact** (Phase A). |
 | Does the docs site embed it? | No. Components render in the page. |
@@ -79,7 +79,7 @@ Pull requests get the build and the gates (they run for collaborators); only `ma
 - **Facts** (props, variants, tier, category) come from the manifest. A page for a component the manifest lacks cannot be built, which is the coverage gate.
 - **Prose** is MDX in `src/content`, one file per page; a component page's prose can add sections the manifest cannot know (usage guidance, accessibility notes, examples).
 - **Live demos** are React islands that import the built `@dbm-system/components`, so they take the site's theme. An island loads only on a page that needs it.
-- **Theme:** one brand (Purple) in light, dark and system mode, chosen by the reader, remembered in the browser, defaulting to the system. Components and tokens come from DBM; the site writes no hardcoded colour, spacing or type.
+- **Theme:** one brand, Purple, in light, dark and system mode, chosen by the reader, remembered in the browser, defaulting to the system. Components and tokens come from DBM; the site writes no hardcoded colour, spacing or type.
 
 ## 6. Search
 
@@ -108,7 +108,7 @@ The docs app is not published, so the packages' runtime budget does not apply, b
 | `react`, `react-dom` | Required by the islands and by DBM | Open source |
 | `@dbm-system/tokens`, `utils`, `icons`, `components` | The system the site is built from | MIT |
 | `pagefind` | Static search, no service | Open source |
-| `gsap` with ScrollTrigger | Scroll-driven choreography on the landing page | **Free of charge but not OSI open source; the recorded exception. Re-read the terms before the first release.** |
+| `gsap` with ScrollTrigger | Scroll-driven choreography on the landing page | **Free of charge including commercial use, ScrollTrigger included (the GSAP Standard License); not described as open source, so it is the recorded exception. It may not be used inside a visual animation builder that competes with Webflow's, which this site is not. Pin the version: the owner can change the terms for newer versions, and an earlier version keeps its original terms.** |
 | A link checker and an accessibility scanner (CI only) | The two quality gates | Open source |
 
 ## 9. Quality gates
@@ -123,7 +123,7 @@ Not adopted: a Lighthouse or page-weight budget. The landing page's weight and m
 
 ## 10. SEO and sharing
 
-`sitemap.xml`, `robots.txt`, a canonical URL and page metadata on every page, a generated social preview image per page, a web app manifest and favicons derived from the existing dbM logo. No structured data at launch.
+`sitemap.xml`, `robots.txt`, a canonical URL and page metadata on every page; **`/storybook/` is kept out of search results** (a `Disallow` in `robots.txt`, and a `noindex` tag in Storybook's `preview-head.html` for a page reached by a link), so results show the docs website's component pages and not the thin Storybook pages that duplicate them; a generated social preview image per page, a web app manifest and favicons derived from the existing dbM logo. No structured data at launch.
 
 ## 11. Community and repository files
 

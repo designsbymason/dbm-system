@@ -25,9 +25,9 @@ No invented metrics, testimonials, logos, download counts or comparisons. No oth
 
 | # | Section | What it does |
 |---|---|---|
-| 1 | **Hero** | The pitch in one sentence and a sentence of support; an install snippet that says it is not published yet; calls to action to Get started, Components and Storybook. A quiet, high-quality visual built from real DBM components and tokens. |
+| 1 | **Hero** | The tagline, "A design system for people and the agents that build with them.", and a sentence of support; an install snippet that says it is not published yet; calls to action to Get started, Components and Storybook. A quiet, high-quality visual built from real DBM components and tokens. |
 | 2 | **Live component showcase** | Real components on the page, in a composed, designed arrangement (a form, a data table, a toast, a command palette), themed by the reader's mode. Interactive, not screenshots. |
-| 3 | **Theming and accessibility** | The token story: one semantic layer, four themes, no component changes. The accessibility claim with the known exceptions, linked. A demonstration of the brands (see [05-open-items.md](./05-open-items.md)). |
+| 3 | **Theming and accessibility** | The token story: one semantic layer, four themes, no component changes. The accessibility claim with the known exceptions, linked. **The two brands are shown side by side with live Storybook stories, one frame per brand** (Storybook takes the brand in its URL, for example `/storybook/iframe.html?id=<story>&globals=brand:emerald`), loaded lazily so they cost nothing until scrolled to. |
 | 4 | **Built for agents** | The manifest, `llms.txt` and `AGENTS.md`, each labelled in development. Why an agent-legible system matters. |
 | 5 | **Where to next** | Docs, Components, Templates, Storybook, GitHub. A calm closing call to action. |
 | 6 | **Footer** | Navigation, the licence (MIT), the repository, Issues, the accessibility statement. |
@@ -55,7 +55,7 @@ GSAP with ScrollTrigger for scroll-driven choreography, loaded only on this page
 1. **Reduced motion gives a static, complete page.** With `prefers-reduced-motion: reduce` nothing animates, and every piece of content and every control is present and usable.
 2. **Content is in the HTML before any script runs.** Animation enhances a page that already works; nothing is hidden until JavaScript reveals it.
 
-**Recommended, not adopted as requirements** ([05-open-items.md](./05-open-items.md)): no scroll-jacking (the page scrolls natively), a script and weight budget, and lighter effects on phones. They are reviewed by hand each round, because nothing in CI enforces them.
+**Nothing else is required.** No scroll-jacking rule, no script or weight ceiling and no lighter phone experience were adopted, so weight and motion are judged in review each round and are not enforced anywhere.
 
 ## 6. Accessibility of the page itself
 
@@ -69,4 +69,4 @@ The landing page meets the same bar as the system: WCAG 2.2 AA contrast in both 
 
 ## 8. Open design questions
 
-The hero's visual concept, the page's length, and the demonstration of the brands are decided in the first review round, not here.
+The hero's visual concept and the page's length are decided in the first review round, not here.

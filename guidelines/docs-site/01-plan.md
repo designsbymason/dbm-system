@@ -22,6 +22,8 @@ The phases here are the docs website's own. They sit inside the roadmap's Phase 
 
 ### Phase A — skeleton, landing page and pipeline (starts now; needs nothing unbuilt)
 
+**Order within it:** the repository settings, the community files and a minimal Pages deployment come first (they prove the pipeline and settle the subpath and redirect checks). **Roadmap Phase 7, the first templates, then runs before the landing page**, because the live showcase should be built from real compositions such as a dashboard shell (`01-vision-and-goals.md` §13). The `apps/docs` skeleton and the landing page follow it.
+
 | Deliverable | Done when |
 |---|---|
 | Repository settings | Pull requests limited to collaborators, Issues on, private vulnerability reporting on (`05-open-items.md`) |
@@ -34,7 +36,7 @@ The phases here are the docs website's own. They sit inside the roadmap's Phase 
 | Docs shell pages | Placeholders with honest "in active development, not yet published" states for Installation and For AI agents |
 | Search | Pagefind index built and wired into the layout |
 | Quality gates | Link check and an accessibility scan of the key pages run in CI |
-| Storybook trimmed | Getting started becomes a pointer to the docs website; the guides move (the move waits until their pages exist on the site) |
+| Storybook trimmed | Getting started becomes a pointer to the docs website; the guides move (the move waits until their pages exist on the site), each leaving a "moved" page; `/storybook/` is marked not to be indexed |
 
 ### Phase B — after Phase 8 (manifest and first publish)
 
