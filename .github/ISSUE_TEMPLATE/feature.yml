@@ -1,0 +1,20 @@
+name: Feature request
+description: Suggest a component, a prop, a token or a template.
+labels: [enhancement]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: The problem
+      description: What are you trying to build that you cannot today?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: What you would like
+      description: If you have an API or behaviour in mind, describe it. Check `guidelines/04-component-inventory.md` first, as it may already be planned.
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: What you do instead for now

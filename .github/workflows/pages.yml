@@ -1,0 +1,67 @@
+# Combined Pages deployment (ADR-0170): the site at / and Storybook at /storybook/.
+# Until apps/docs exists, / is the placeholder in .github/pages/. The custom domain
+# (dbm-system.com) is set in the repository's Pages settings, not by a CNAME file.
+name: Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# Only the newest deployment matters; never cancel one that is already publishing.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v6
+
+      - name: Setup Node
+        uses: actions/setup-node@v7
+        with:
+          node-version-file: ".nvmrc"
+          cache: "pnpm"
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build workspace packages
+        run: pnpm build
+
+      - name: Build Storybook
+        run: pnpm --filter @dbm-system/components build-storybook
+
+      - name: Assemble the site
+        run: |
+          mkdir -p _site
+          cp -R .github/pages/. _site/
+          cp -R packages/components/storybook-static _site/storybook
+
+      - name: Upload the site
+        uses: actions/upload-pages-artifact@v5
+        with:
+          path: _site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v5

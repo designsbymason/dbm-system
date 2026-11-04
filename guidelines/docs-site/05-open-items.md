@@ -9,11 +9,11 @@ These are done on GitHub or at the domain's providers. Nothing here is a secret;
 | Setting | Wanted state | Status |
 |---|---|---|
 | Pull-request creation | Limited to collaborators ([ADR-0172](../adr/0172-pull-requests-are-enabled-for-collaborators-only-and-issues-are-on-over-keeping-both-off-or-opening-contributions-to-everyone.md)) | Done (pull requests on, creation `collaborators_only`) |
-| Issues | On, with the templates | Setting done; the templates are Phase A files, not yet written |
+| Issues | On, with the templates | Done: setting on; templates (bug, feature, docs problem) written in `.github/ISSUE_TEMPLATE/` |
 | Private vulnerability reporting | On | Done |
 | Workflows from forks | Approval required, no secrets available to them | Checked: approval is required for all outside contributors |
 | Pages source | GitHub Actions | Done |
-| Pages custom domain | `dbm-system.com`, HTTPS enforced | Done: the certificate covers the apex and `www`, HTTPS is enforced, and `www` redirects to the apex. `http://dbm-system.com` still answered 404 with nothing deployed, so check that it redirects to HTTPS after the first deployment |
+| Pages custom domain | `dbm-system.com`, HTTPS enforced | Done: the certificate covers the apex and `www`, HTTPS is enforced, and `www` redirects to the apex. `http://dbm-system.com` still answered 404 with nothing deployed, so check that it redirects to HTTPS after the first deployment of `.github/workflows/pages.yml` (which publishes a placeholder at `/` and Storybook at `/storybook/`; Storybook was checked under a `/storybook/` subpath locally, the live check is still to do) |
 | Domain verification | Verified on the GitHub account with a DNS TXT record | Done |
 | DNS records | The apex and `www` pointed at GitHub Pages as GitHub's current documentation says | Done: four A and four AAAA records on the apex, a `www` CNAME; the email forwarding records are untouched |
 | npm organisation | The `dbm-system` organisation exists, with two-factor authentication on its owner (`01` §13 Phase 8) | Done: the organisation exists, and two-factor is on for the account and required for the organisation |

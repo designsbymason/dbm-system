@@ -27,4 +27,4 @@ MIT — see [`LICENSE`](./LICENSE).
 
 ## Contributing
 
-This is a solo-maintained project. See [`CONTRIBUTING.md`](./CONTRIBUTING.md) — external pull requests are not accepted, though the code is free to use and fork under the MIT license.
+This is a solo-maintained project. Issues are open; pull requests are by invitation for now. See [`CONTRIBUTING.md`](./CONTRIBUTING.md). The code is free to use and fork under the MIT license.

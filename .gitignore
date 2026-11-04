@@ -51,3 +51,6 @@ apps/docs/public/llms-full.txt
 
 # Claude Code: personal permission settings stay local (the shared .claude/commands and launch.json are tracked)
 .claude/settings.local.json
+
+# Assembled Pages site (built by .github/workflows/pages.yml)
+_site/
