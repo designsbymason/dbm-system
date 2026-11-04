@@ -74,8 +74,8 @@ Dark mode's representative background, `bg.surface`, and several dependent token
 | `surface` | `neutral.white` | `gray.900` | `text.primary` — / 13.53:1; `text.secondary` — / 10.47:1; `text.tertiary` — / 8.21:1 | AA (dark verified explicitly; light is the base case, comfortably higher-margin). Sits at `gray.900` in dark ([ADR-0011](adr/0011-darker-dark-mode-representative-background.md)); the token's own `$description` lists the side effects |
 | `danger` | `red.600` | `red.300` | vs `bg.surface`: 5.10:1 / 7.94:1 | AA |
 | `danger-hover` | `red.700` | `red.200` | `text.on-danger`: — / 10.68:1 | AA |
-| `danger-subtle` | `red.50` | `red.950` | `text.danger`: 7.05:1 / 10.32:1 | AA (light also clears AAA) |
-| `danger-subtle-hover` | `red.100` | `red.900` | `text.danger`: 6.43:1 / 8.22:1 | AA |
+| `danger-subtle` | `red.50` | `red.950` | `text.danger`: 4.86:1 / 10.32:1 | AA light, AAA dark ([ADR-0178](adr/0178-light-mode-error-text-stays-at-aa-on-red-600-over-splitting-the-text-token-to-reach-the-aaa-target.md)) |
+| `danger-subtle-hover` | `red.100` | `red.900` | `text.danger`: **4.44:1** / 8.22:1 | Light is under the 4.5:1 floor for `text.danger` text; components keep `text.danger` off this fill (`IconButton`'s labelled destructive toggle). Dark clears AAA |
 | `on-danger` | `neutral.white` | `red.900` | label (`text.danger`): 5.10:1 / 8.22:1; vs `bg.danger`: 5.10:1 / 8.22:1 | AA |
 | `warning` | `amber.600` | `amber.300` | vs `bg.surface`: 4.78:1 / 8.12:1 | AA |
 | `warning-hover` | `amber.700` | `amber.200` | `text.on-warning`: 6.96:1 / 10.54:1 | AA |
@@ -154,7 +154,7 @@ Dark mode's representative background, `bg.surface`, and several dependent token
 | `syntax-deleted` | `red.700` | `red.300` | the lower of `bg.code-block` and `bg.code-highlight`: 6.5:1 / 5.7:1 | AA |
 | `white` | `neutral.white` | `neutral.white` (deliberately doesn't flip, see own `$description`) | vs `bg.overlay` at `opacity.80` over the whitest content: 12.6:1 | Exempt, like `icon.white`: for text on a surface that is dark in every theme (the `ImageViewer` stage) |
 
-`text.danger`/`text.on-danger`'s full AA-vs-AAA numbers (the policy this whole methodology is built around) are in `guidelines/adr/0002`, not restated here.
+`text.danger`/`text.on-danger`'s full AA-vs-AAA numbers (the policy this whole methodology is built around) are in `guidelines/adr/0002` and, for the current light-mode figures, [ADR-0178](adr/0178-light-mode-error-text-stays-at-aa-on-red-600-over-splitting-the-text-token-to-reach-the-aaa-target.md).
 
 ### `border.*`
 

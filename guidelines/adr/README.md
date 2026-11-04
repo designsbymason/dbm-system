@@ -231,6 +231,7 @@ A superseded ADR's `Status` line becomes: `Status: Superseded by [NNNN](./NNNN-n
 | [0175](./0175-a-consumer-imports-an-explicit-stylesheet-and-one-bundled-theme-file-and-supplies-the-fonts-over-implicit-css-or-shipped-fonts.md) | A consumer imports an explicit stylesheet and one bundled theme file and supplies the fonts, over implicit CSS imports or shipped fonts | Accepted |
 | [0176](./0176-releases-use-the-changesets-version-packages-pull-request-with-npm-provenance-over-a-manual-or-fully-automatic-publish.md) | Releases use the Changesets "Version Packages" pull request with npm provenance, over a manual or fully automatic publish | Accepted |
 | [0177](./0177-an-optional-direction-provider-sets-the-text-direction-for-a-subtree-over-reading-the-page-direction-automatically.md) | An optional direction provider sets the text direction for a subtree, over reading the page direction automatically | Accepted |
+| [0178](./0178-light-mode-error-text-stays-at-aa-on-red-600-over-splitting-the-text-token-to-reach-the-aaa-target.md) | Light-mode error text stays at AA on red.600, over splitting the text token to reach the AAA target | Accepted |
 
 *(Extracted from `01-vision-and-goals.md`/`02-tech-stack-and-structure.md`/`03-token-system-spec.md`/`04-component-inventory.md`/`05-component-api-conventions.md`/`06-engineering-standards.md` during the guidelines retrofit pass, 2026-08-31 — more get added the same way, file by file, as the retrofit continues.)*
 
