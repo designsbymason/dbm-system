@@ -24,19 +24,19 @@ The phases here are the docs website's own. They sit inside the roadmap's Phase 
 
 **Order within it:** the repository settings, the community files and a minimal Pages deployment come first (they prove the pipeline and settle the subpath and redirect checks). **Roadmap Phase 7, the first templates, then runs before the landing page**, because the live showcase should be built from real compositions such as a dashboard shell (`01-vision-and-goals.md` §13). The `apps/docs` skeleton and the landing page follow it.
 
-| Deliverable | Done when |
-|---|---|
-| Repository settings | Pull requests limited to collaborators, Issues on, private vulnerability reporting on (`05-open-items.md`) |
-| Community files | Issue templates, `SECURITY.md`, `CONTRIBUTING.md`, `CODE_OF_CONDUCT.md` exist |
-| Domain on GitHub Pages | `https://dbm-system.com` serves a Pages site over HTTPS, `www` redirects to the apex, the domain is verified |
-| `apps/docs` skeleton | An Astro app with the React and MDX integrations builds, with the layout, the navigation and light, dark and system mode, using DBM components and tokens |
-| Combined Pages workflow | One workflow builds the docs site and `storybook-static` and publishes docs at `/` and Storybook at `/storybook/` on every push to `main` |
-| Storybook subpath check | Storybook works under `/storybook/`: assets, the iframe, the Getting started page's index fetch, deep links |
-| Landing page | Built from the brief in [03-landing-page-brief.md](./03-landing-page-brief.md) over several review rounds, with the not-yet-published states labelled |
-| Docs shell pages | Placeholders with honest "in active development, not yet published" states for Installation and For AI agents |
-| Search | Pagefind index built and wired into the layout |
-| Quality gates | Link check and an accessibility scan of the key pages run in CI |
-| Storybook trimmed | Getting started becomes a pointer to the docs website; the guides move (the move waits until their pages exist on the site), each leaving a "moved" page; `/storybook/` is marked not to be indexed |
+| Deliverable | Done when | Status |
+|---|---|---|
+| Repository settings | Pull requests limited to collaborators, Issues on, private vulnerability reporting on (`05-open-items.md`) | Done |
+| Community files | Issue templates, `SECURITY.md`, `CONTRIBUTING.md`, `CODE_OF_CONDUCT.md` exist | Done |
+| Domain on GitHub Pages | `https://dbm-system.com` serves a Pages site over HTTPS, `www` redirects to the apex, the domain is verified | Done (placeholder page live) |
+| `apps/docs` skeleton | An Astro app with the React and MDX integrations builds, with the layout, the navigation and light, dark and system mode, using DBM components and tokens | Not started |
+| Combined Pages workflow | One workflow builds the docs site and `storybook-static` and publishes docs at `/` and Storybook at `/storybook/` on every push to `main` | Partly: Storybook and a placeholder are published; the docs build joins when the skeleton exists |
+| Storybook subpath check | Storybook works under `/storybook/`: assets, the iframe, the Getting started page's index fetch, deep links | Done for assets, the index fetch and the HTTP to HTTPS redirect; deep links to check once the docs site links in |
+| Landing page | Built from the brief in [03-landing-page-brief.md](./03-landing-page-brief.md) over several review rounds, with the not-yet-published states labelled | Not started |
+| Docs shell pages | Placeholders with honest "in active development, not yet published" states for Installation and For AI agents | Not started |
+| Search | Pagefind index built and wired into the layout | Not started |
+| Quality gates | Link check and an accessibility scan of the key pages run in CI | Not started |
+| Storybook trimmed | Getting started becomes a pointer to the docs website; the guides move (the move waits until their pages exist on the site), each leaving a "moved" page; `/storybook/` is marked not to be indexed | Not started |
 
 ### Phase B — after Phase 8 (manifest and first publish)
 

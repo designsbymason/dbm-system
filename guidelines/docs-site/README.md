@@ -2,7 +2,7 @@
 
 The plan, structure and supporting references for the DBM System documentation website, `https://dbm-system.com`, and for how Storybook sits beside it at `/storybook/`. These files are a **current-state reference, not a changelog**, like the numbered docs in `guidelines/`. A real fork in the road is recorded as an ADR in `../adr/` and linked from here, not narrated here.
 
-**Status:** planned, not started. `apps/docs` is a placeholder. The first work is the skeleton, the landing page and the Pages pipeline (`01-plan.md`, Phase A); component pages follow the manifest (Phase 8).
+**Status:** Phase A is under way (`01-plan.md`). Done: the repository settings, the community files and issue templates, the domain, and a combined Pages deployment that publishes a placeholder page at `https://dbm-system.com` and Storybook at `/storybook/`. Not started: the `apps/docs` skeleton (still a placeholder), Phase 7 templates, the landing page. Component pages follow the manifest (Phase 8).
 
 ## Files
 
