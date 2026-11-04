@@ -13,7 +13,7 @@ These are done on GitHub or at the domain's providers. Nothing here is a secret;
 | Private vulnerability reporting | On | Done |
 | Workflows from forks | Approval required, no secrets available to them | Checked: approval is required for all outside contributors |
 | Pages source | GitHub Actions | Done |
-| Pages custom domain | `dbm-system.com`, HTTPS enforced | Done: the certificate covers the apex and `www`, HTTPS is enforced, and `www` redirects to the apex. `http://dbm-system.com` still answered 404 with nothing deployed, so check that it redirects to HTTPS after the first deployment of `.github/workflows/pages.yml` (which publishes a placeholder at `/` and Storybook at `/storybook/`; Storybook was checked under a `/storybook/` subpath locally, the live check is still to do) |
+| Pages custom domain | `dbm-system.com`, HTTPS enforced | Done: the certificate covers the apex and `www`, HTTPS is enforced, and `www` redirects to the apex. Checked live after the first deployment (2026-11-04): `http://` redirects to HTTPS on the apex and on `/storybook/`, `www` redirects to the apex, `/storybook/` and its `index.json` serve, unknown paths return 404 |
 | Domain verification | Verified on the GitHub account with a DNS TXT record | Done |
 | DNS records | The apex and `www` pointed at GitHub Pages as GitHub's current documentation says | Done: four A and four AAAA records on the apex, a `www` CNAME; the email forwarding records are untouched |
 | npm organisation | The `dbm-system` organisation exists, with two-factor authentication on its owner (`01` §13 Phase 8) | Done: the organisation exists, and two-factor is on for the account and required for the organisation |
