@@ -1,6 +1,6 @@
 # 0171 — Docs website content comes from the manifest for facts and MDX for prose, and the guides move out of Storybook, which keeps the component pages, over reusing Storybook's MDX, a separate copy, or keeping both
 
-**Status:** Accepted · **Date:** 2026-11-03
+**Status:** Accepted · **Date:** 2026-11-03 · **Amended 2026-11-03** — Foundations stay in Storybook only, and the docs website has one overview page that links to them; the decision itself is unchanged
 
 ## Context
 Storybook already holds a Docs page per component, a Foundations group, a Getting started page and six guides (Theming, Accessibility, Responsive and right-to-left, Hooks and utilities, Composition patterns, Icons). Those pages are written with Storybook-only blocks. A docs website needs a home for concepts and guides, a front door, and component references that stay correct as components change.
@@ -11,7 +11,7 @@ Storybook already holds a Docs page per component, a Foundations group, a Gettin
 - **The guides move to the docs website.** Getting started, Theming, Accessibility, Responsive and right-to-left, Hooks and utilities, Composition patterns and Icons become docs pages. Storybook keeps Foundations, the component pages and Templates, plus a short Getting started page that points to the docs website and keeps the component index (which reads Storybook's own `index.json`).
 - **Components are rendered in the page**, not embedded as Storybook iframes.
 - **Each docs component page links to its Storybook page** ("Open in Storybook", at `/storybook/?path=/docs/…`) for the Playground, controls and tests.
-- **Foundations** stay in Storybook and are also presented on the docs website, read from the tokens package by both, so neither copy is typed by hand.
+- **Foundations** stay in Storybook, which is their one home. The docs website has a single Foundations overview page (what tokens are, the three layers, naming) with a card linking to each Storybook page, and does not copy the ten pages. They are theme-specific (they show the active brand and mode, switched by Storybook's toolbar), and the docs website offers only a mode control on one brand, so it could not show them fully. *(Amended 2026-11-03: this originally said the pages are also presented on the docs website, read from the tokens package by both, with the prose in two places. Choosing one home removes the drift risk and the port of the Foundations blocks.)*
 - **Component URLs are flat**: `/components/button`. Tier and category are filters on the index, so moving a component never changes its address.
 
 ## Alternatives considered
@@ -22,8 +22,8 @@ Storybook already holds a Docs page per component, a Foundations group, a Gettin
 - **Embed the Storybook Playground in each docs page.** Heavy, and hard to size and theme.
 
 ## Consequences
-- The guides and the Foundations pages must be ported off Storybook-only blocks (`ReferenceTable`, `FieldsTable`, `RelatedLinks`, `Callout`, `IconGallery`, `CompositionDemos`, `FoundationsCards`). The port list is in `guidelines/docs-site/04-content-inventory.md`.
-- Foundations exist in two places by this decision. They share their data source, but their prose does not; whether to keep both is an open item.
+- The guides must be ported off Storybook-only blocks (`ReferenceTable`, `FieldsTable`, `RelatedLinks`, `Callout`, `IconGallery`, `CompositionDemos`, `FoundationsCards`). The Foundations pages are not ported. The port list is in `guidelines/docs-site/04-content-inventory.md`.
+- Readers leave the docs website's chrome to read the Foundations pages, and the site's search does not index them (Storybook has its own search). If the pages are ever moved onto the site, that needs a layout that shows all four themes and is a new decision.
 - Component pages on the docs website wait for the manifest.
 - Storybook's sidebar gets smaller, and `07` §11 describes today's Getting started and Guides until they move.
 

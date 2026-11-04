@@ -11,7 +11,7 @@ The site is `https://dbm-system.com` (the apex is canonical; `www` redirects). T
 | `/` | The landing page | MDX and Astro, from [03-landing-page-brief.md](./03-landing-page-brief.md) |
 | `/docs/getting-started` | Getting started, with Installation | MDX; Installation waits on Phase 8 |
 | `/docs/guides/theming`, `accessibility`, `responsive-and-rtl`, `hooks-and-utilities`, `composition-patterns`, `icons` | The guides | MDX, ported from Storybook |
-| `/docs/foundations/…` | The token pages (overview, colour, typography, spacing, radius, shadows, motion, icon sizes, miscellaneous, breakpoints) | MDX, values read from `@dbm-system/tokens` |
+| `/docs/foundations` | One overview page: what tokens are, the three layers, naming, and a card for each of the ten token pages, each linking to its Storybook page (`/storybook/?path=/docs/foundations-<name>--docs`) | MDX; the token pages themselves stay in Storybook |
 | `/docs/for-ai-agents` | The manifest, `llms.txt`, `AGENTS.md` explained | MDX; waits on Phase 8 |
 | `/docs/changelog` | The release history | Generated from Changesets |
 | `/docs/accessibility-statement` | The WCAG target, the known exceptions, supported browsers | MDX |
@@ -31,7 +31,7 @@ apps/
   docs/                    The Astro app (the docs website)
     src/
       pages/               Routes: the landing page, /docs, /components, /templates, 404
-      content/             MDX for the guides, Foundations prose, Getting started, statement pages
+      content/             MDX for the guides, the Foundations overview, Getting started, statement pages
       components/          The site's own React islands and Astro components, built on DBM
       layouts/             The page shells, the navigation, the footer
       styles/              Site-only CSS that uses DBM tokens (never hardcoded values)

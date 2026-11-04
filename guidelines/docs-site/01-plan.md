@@ -12,7 +12,7 @@
 
 ## 2. Scope of the first release
 
-In: the landing page, the Docs section (Getting started and Installation, Guides, Foundations, For AI agents, Changelog, Accessibility statement and browser support), the Components index and pages, the Templates index, a 404, search, light and dark and system mode, the community files, the quality gates.
+In: the landing page, the Docs section (Getting started and Installation, Guides, a Foundations overview that links into Storybook, For AI agents, Changelog, Accessibility statement and browser support), the Components index and pages, the Templates index, a 404, search, light and dark and system mode, the community files, the quality gates.
 
 Out for now: a blog, analytics, a brand switcher or a text-direction switch on the site, versioned docs (from 1.0), a Figma library, an MCP server.
 
@@ -67,7 +67,6 @@ Versioned docs under `/v1/`, `/v2/` and so on; a build that deploys from release
 | The guides are ported badly (Storybook-only blocks) | The port list in [04-content-inventory.md](./04-content-inventory.md) and a visual check of each page |
 | The docs promise things that are not published | Every unpublished item is labelled in the page itself; the accessibility page states the known exceptions |
 | GSAP's licence terms change | Re-read before the first release; the fallback is Motion with CSS ([ADR-0173](../adr/0173-the-docs-apps-dependencies-are-each-justified-in-a-list-and-the-landing-page-may-use-gsap-over-holding-it-to-the-packages-budget-or-leaving-it-unrestricted.md)) |
-| Foundations drift between Storybook and the site | Both read the tokens package; the duplication is an open item |
 | One maintainer | Keep the pipeline small and the content mostly generated; every gate is automated |
 
 ## 6. How the work is run

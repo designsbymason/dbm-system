@@ -29,7 +29,6 @@ These are done on GitHub or at the domain's providers. Nothing here is a secret;
 
 | Question | Notes |
 |---|---|
-| **Foundations in two places.** The ten pages stay in Storybook and are also on the docs website. | They share their data, not their prose. Keep both, or point the docs website at Storybook's pages? |
 | **How the landing page shows two brands** when the reader only controls mode | The theme is document-wide, so two brands cannot appear together without a scoped demo, pre-rendered images or a frame. Decide in the first landing review. |
 | **Old Storybook guide links** after the guides move | A stub that points to the new page, or let them break. |
 | **Whether `/storybook/` is indexed** by search engines | Both are the same project; Storybook's own pages are numerous and thin. |

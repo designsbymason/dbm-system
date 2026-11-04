@@ -15,7 +15,7 @@ Storybook sources are in `packages/components/src/guides/` and `packages/compone
 | Guides / Hooks and utilities | `/docs/guides/hooks-and-utilities` | Port; recheck the export list against the package index files |
 | Guides / Composition patterns | `/docs/guides/composition-patterns` | Port; the six demos become islands (a `Toast.Provider` and the simulated requests) |
 | Guides / Icons | `/docs/guides/icons` | Port; the gallery is a hand-kept snapshot of the 35 most-used icons |
-| Foundations (ten pages) | Stay in Storybook, and are presented on `/docs/foundations/…` | Both read `@dbm-system/tokens`; the prose is duplicated (see [05-open-items.md](./05-open-items.md)) |
+| Foundations (ten pages) | Stay in Storybook, their one home; `/docs/foundations` is a short overview with cards linking to them | They are theme-specific and read `@dbm-system/tokens` through Storybook's Brand and Mode toolbar, which the docs website does not have |
 | Components (115 Docs pages) | Storybook keeps them; `/components/<name>` pages are built from the manifest | Each links to its Storybook page |
 | Templates | `/templates` | None built yet |
 
@@ -27,12 +27,12 @@ These are in `packages/components/.storybook/blocks/` and depend on Storybook's 
 |---|---|---|
 | `Callout` | Do and Don't and info panels | A DBM-based component or a simple MDX component |
 | `ReferenceTable`, `FieldsTable`, `PropertiesTable` | The guide tables and each component's props | `PropertiesTable` is replaced by the manifest-driven table; the others become one table component |
-| `RelatedLinks`, `RelatedCard`, `FoundationsCards` | Related pages and the Foundations cards | Port, including the whole-card link |
+| `RelatedLinks`, `RelatedCard`, `FoundationsCards` | Related pages and the Foundations cards | Port, including the whole-card link; the Foundations cards on the overview page point into Storybook |
 | `IconGallery` | The Icons guide | Port as an island |
 | `CompositionDemos` | The Composition guide | Port as islands |
 | `ComponentIndex` | Getting started's component tables | Replaced by the manifest-driven `/components` index |
 | `ComponentHeader`, `TokenRow`, `PlaygroundControls`, `PlaygroundCanvas` | Component Docs pages | Storybook only; not ported |
-| The Foundations blocks (colour grids, scales, type specimen, token tables) | The token pages | Port, reading the tokens package |
+| The Foundations blocks (colour grids, scales, type specimen, token tables) | The token pages | Storybook only; not ported |
 | `ThemeSync` | Making a Docs page take the toolbar's theme | Storybook only |
 
 ## 3. Pages to write new
