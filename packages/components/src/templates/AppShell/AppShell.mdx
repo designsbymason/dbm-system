@@ -4,6 +4,8 @@ import { VisuallyHidden } from "../../atoms/VisuallyHidden";
 import * as AppShellStories from "./AppShell.stories";
 import * as AppShellAsideStories from "./AppShellAside.stories";
 import * as AppShellAsideToggleStories from "./AppShellAsideToggle.stories";
+import * as AppShellBannerStories from "./AppShellBanner.stories";
+import * as AppShellContentStories from "./AppShellContent.stories";
 import * as AppShellFooterStories from "./AppShellFooter.stories";
 import * as AppShellHeaderStories from "./AppShellHeader.stories";
 import * as AppShellMainStories from "./AppShellMain.stories";
@@ -17,6 +19,7 @@ export const propOrder = [
   "sidebarSide",
   "asideCollapseBelow",
   "asideCollapseTo",
+  "railBelow",
   "dir",
   "collapseBelow",
   "defaultCollapsed",
@@ -25,11 +28,16 @@ export const propOrder = [
   "defaultMenuOpen",
   "menuOpen",
   "onMenuOpenChange",
+  "persistKey",
+  "defaultSidebarWidth",
+  "sidebarWidth",
+  "onSidebarWidthChange",
   "defaultAsideOpen",
   "asideOpen",
   "onAsideOpenChange",
   "pageKey",
   "pageTitle",
+  "scrolledEdge",
   "labels",
   "style",
   "className",
@@ -37,7 +45,7 @@ export const propOrder = [
   "data-testid",
 ];
 
-export const playgroundOrder = ["scroll", "headerSpan", "showAside", "asideCollapseBelow", "asideCollapseTo", "sidebarSide", "dir", "collapseBelow", "defaultCollapsed"];
+export const playgroundOrder = ["scroll", "headerSpan", "showAside", "asideCollapseBelow", "asideCollapseTo", "railBelow", "scrolledEdge", "sidebarSide", "dir", "collapseBelow", "defaultCollapsed"];
 
 <Meta of={AppShellStories} />
 
@@ -59,7 +67,9 @@ page for a menu button and a slide-in panel, and its column disappears so the ma
 whole width. The aside does the same below `asideCollapseBelow`: it becomes a drawer opened from a
 toggle button, or disappears if you ask for that. The shell keeps a notch or a home indicator clear,
 can run its header over the sidebar, and, given the router's page, moves focus to the new page and
-announces it. On this page the live examples sit in a framed box 36rem tall, which is wider than a
+announces it. It can collapse the sidebar to a rail by itself on tablet widths, take a banner above the
+header, remember the reader's layout, let the reader resize the sidebar, keep a bar of actions at the
+bottom, and show the header's shadow once the content has scrolled. On this page the live examples sit in a framed box 36rem tall, which is wider than a
 phone; open a story from the sidebar on its own and narrow the window to see the phone layout.
 
 ### Import
@@ -79,7 +89,7 @@ Drive the shell's props live; the sidebar, header and page it is filled with sta
 </div>
 <PlaygroundControls
   of={AppShellStories.Playground}
-  exclude={["children", "collapsed", "onCollapsedChange", "menuOpen", "defaultMenuOpen", "onMenuOpenChange", "asideOpen", "defaultAsideOpen", "onAsideOpenChange", "pageKey", "pageTitle", "labels", "className", "style", "id", "data-testid"]}
+  exclude={["children", "collapsed", "onCollapsedChange", "menuOpen", "defaultMenuOpen", "onMenuOpenChange", "asideOpen", "defaultAsideOpen", "onAsideOpenChange", "persistKey", "sidebarWidth", "defaultSidebarWidth", "onSidebarWidthChange", "pageKey", "pageTitle", "labels", "className", "style", "id", "data-testid"]}
   order={playgroundOrder}
 />
 
@@ -96,6 +106,12 @@ Drive the shell's props live; the sidebar, header and page it is filled with sta
 
 <PropertiesTable of={AppShellSkipLinkStories} order={["children", "href", "labels", "style", "className", "id", "data-testid"]} />
 
+### AppShell.Banner properties
+
+`AppShell.Banner` also accepts any other native `<div>` attribute.
+
+<PropertiesTable of={AppShellBannerStories} order={["children", "sticky", "style", "className", "id", "data-testid"]} />
+
 ### AppShell.Header properties
 
 `AppShell.Header` also accepts any other native `<div>` attribute.
@@ -106,13 +122,22 @@ Drive the shell's props live; the sidebar, header and page it is filled with sta
 
 `AppShell.Sidebar` also accepts any other native `<div>` attribute.
 
-<PropertiesTable of={AppShellSidebarStories} order={["children", "style", "className", "id", "data-testid"]} />
+<PropertiesTable
+  of={AppShellSidebarStories}
+  order={["children", "resizable", "minWidth", "maxWidth", "labels", "style", "className", "id", "data-testid"]}
+/>
 
 ### AppShell.Main properties
 
 `AppShell.Main` also accepts any other native `<main>` attribute.
 
 <PropertiesTable of={AppShellMainStories} order={["children", "id", "style", "className", "data-testid"]} />
+
+### AppShell.Content properties
+
+`AppShell.Content` also accepts any other native `<div>` attribute.
+
+<PropertiesTable of={AppShellContentStories} order={["children", "size", "paddingInline", "paddingBlock", "style", "className", "id", "data-testid"]} />
 
 ### AppShell.Aside properties
 
@@ -136,7 +161,7 @@ Drive the shell's props live; the sidebar, header and page it is filled with sta
 
 `AppShell.Footer` also accepts any other native `<footer>` attribute.
 
-<PropertiesTable of={AppShellFooterStories} order={["children", "style", "className", "id", "data-testid"]} />
+<PropertiesTable of={AppShellFooterStories} order={["children", "sticky", "style", "className", "id", "data-testid"]} />
 
 ## Variants
 
@@ -196,6 +221,48 @@ property) is how far down to stick a bar inside the main area.
 
 <Canvas of={AppShellStories.StickyBar} />
 
+### A rail between phone and desktop
+
+With `railBelow="xl"` the shell collapses the sidebar to a rail below 1280px and expands it above. The
+reader's own toggle holds until the window crosses the step again. Narrow the window and widen it to see
+it change.
+
+<Canvas of={AppShellStories.AutoRail} />
+
+### A banner above the header
+
+<Canvas of={AppShellStories.WithBanner} />
+
+### A banner that stays in view
+
+With `scroll="page"` a `sticky` banner stays at the top of the window and the header sticks below it.
+
+<Canvas of={AppShellStories.StickyBanner} />
+
+### Content kept to a readable width
+
+`AppShell.Content` centres the page, limits its width on the `Container` steps and pads it.
+
+<Canvas of={AppShellStories.ContentWidth} />
+
+### A bar of actions at the bottom
+
+A `sticky` footer stays at the bottom of the window while the page scrolls.
+
+<Canvas of={AppShellStories.StickyFooter} />
+
+### A sidebar the reader can resize
+
+Drag the handle on the sidebar's inner edge, or focus it and use the arrow keys.
+
+<Canvas of={AppShellStories.ResizableSidebar} />
+
+### A layout the shell remembers
+
+Resize or collapse the sidebar, then reload the page: with `persistKey` the shell restores it.
+
+<Canvas of={AppShellStories.RememberedLayout} />
+
 ## Usage guidelines
 
 <div className="dbm-do-dont-grid">
@@ -217,6 +284,10 @@ property) is how far down to stick a bar inside the main area.
   the window.
 - Pass `pageKey` (the router's pathname) and `pageTitle` so a screen-reader user and a keyboard user
   are told about a page change that no browser navigation announces.
+- Leave `width` off a `Sidebar` inside a `resizable` `AppShell.Sidebar`: the shell sets the width, and a
+  `width` of its own would win (a development warning says so).
+- Use a `sticky` footer for a few actions that must stay in reach (Save and Cancel), not for a footer of
+  links.
 
 </Callout>
 <Callout tone="danger" title="Don't">
@@ -227,6 +298,8 @@ property) is how far down to stick a bar inside the main area.
   a `Navbar` draws its own `<header>`, and the two would nest.
 - Don't wrap the shell in an element with its own height: with `scroll="content"` it already fits
   the window, and a parent shorter than that clips it.
+- Don't keep a tall banner `sticky` on a phone: it takes screen height permanently. A short notice, or
+  one that scrolls away, is kinder.
 - Don't put important content only in an aside that is `hidden` on a phone: use the default drawer so
   a phone can still reach it.
 - Don't put an `AppShell` inside another `Sidebar.Provider` and expect the outer one to drive its
@@ -257,6 +330,13 @@ property) is how far down to stick a bar inside the main area.
   `panelWidth` for the drawer it becomes on a phone, if it should differ (`<Sidebar width="16rem"
   panelWidth="20rem">`). The aside's width is its own `width` prop, or the `app-shell.aside-width`
   token. Neither drawer is ever wider than the window less a sliver of the page that stays showing.
+- Use `railBelow` when the sidebar's labels would crowd a tablet: below the step the shell collapses it
+  to a rail and the reader can still open it. Pick a step wider than the sidebar's own `collapseBelow`,
+  or the rail never shows.
+- Use `persistKey` (or the controlled `collapsed` and `sidebarWidth` props, to store the layout in a user
+  profile) so a reader's layout survives a reload.
+- Put the page in `AppShell.Content` when it should be a readable column; leave it out for a full-bleed
+  table or a dashboard that fills the area.
 - Read `useAppShell()` for anything that must know the shell's state, such as a bar that sticks below
   the header, rather than measuring the header yourself.
 
@@ -290,6 +370,15 @@ own header slot is a plain `div` by default so that a `Navbar` is never wrapped 
 - When `pageKey` changes, focus moves to `AppShell.Main` and, with `pageTitle`, the new title is
   announced politely. Neither happens on the first render, so the page's own load is not announced
   twice, and nothing happens while `pageKey` is left out.
+- The resize handle is a `separator` (`aria-orientation="vertical"`) that takes focus and reports its
+  width and its bounds (`aria-valuenow`, `aria-valuemin`, `aria-valuemax`). The arrow keys move it (Shift
+  moves it four times as far, Home and End go to the least and the most), so a keyboard user can resize
+  without a pointer. It is not drawn while the sidebar is a rail or in its phone panel.
+- The scrolled-edge cue (a shadow under the header, a line over the footer) is not the only way to tell
+  that a page scrolls, and forced colours, which drop shadows, get a line instead. Motion on it respects
+  `prefers-reduced-motion`.
+- The banner is not a landmark: put a role or an `aria-label` on it only if it is important enough to be
+  navigated to, and an `Alert` inside it already speaks for itself.
 - A notch or a home indicator never covers the shell: the frame leaves a device's safe-area inset clear
   on every side (zero on a page that does not draw under them), and the skip link is drawn below it.
 - The shell adds no colour pairing of its own: the page background is the surface colour, and text
@@ -354,6 +443,29 @@ own header slot is a plain `div` by default so that a `Navbar` is never wrapped 
 ```
 
 ```tsx
+// A banner, a rail on tablets, a resizable sidebar and a remembered layout
+<AppShell railBelow="xl" persistKey="my-app">
+  <AppShell.Banner sticky>
+    <Alert tone="warning">
+      <Alert.Description>Your trial ends in 3 days.</Alert.Description>
+    </Alert>
+  </AppShell.Banner>
+  <AppShell.Header>…</AppShell.Header>
+  <AppShell.Sidebar resizable minWidth="14rem" maxWidth="26rem">
+    <Sidebar>…</Sidebar>
+  </AppShell.Sidebar>
+  <AppShell.Main>
+    <AppShell.Content size="xl">
+      <h1>Billing</h1>
+    </AppShell.Content>
+  </AppShell.Main>
+  <AppShell.Footer sticky>
+    <Button>Save changes</Button>
+  </AppShell.Footer>
+</AppShell>
+```
+
+```tsx
 // A header that is not a Navbar, and a sticky bar that reads the header's height
 function Filters() {
   const { headerHeight } = useAppShell();
@@ -375,21 +487,25 @@ function Filters() {
 <TokenRow token="bg.surface" usage="the frame's background: the page colour behind the header, the sidebar, the main area and the aside; the skip link's fill" />
 <TokenRow token="text.primary" usage="the colour of text inside the frame that sets none of its own, and of the skip link" />
 <TokenRow token="font-family.primary" usage="the typeface of the frame, inherited by everything inside it" />
-<TokenRow token="border.default" usage="the line along the aside's inner edge, and the skip link's border" />
-<TokenRow token="border-width.1" usage="the thickness of those lines" />
+<TokenRow token="border.default" usage="the line along the aside's inner edge, the line over the footer while there is more below, and the skip link's border" />
+<TokenRow token="border-width.1" usage="the thickness of those lines, and of the line over the footer" />
 <TokenRow token="border-focus" usage="the focus ring drawn inside the main area and a scrolling aside while the keyboard has focused it, and around the skip link" />
 <TokenRow token="border-width.2" usage="the thickness of that ring, and how far it is drawn inside the edge" />
 <TokenRow token="z-index.sticky" usage="keeps the header, the sidebar and the aside above the page's content as it scrolls (scroll=&quot;page&quot;)" />
 <TokenRow token="z-index.fixed" usage="keeps the skip link above everything while it is focused" />
+<TokenRow token="bg.brand" usage="the resize handle's line while it is hovered or dragged" />
+<TokenRow token="motion-duration.base" usage="how long the header's shadow, the footer's line and the resize handle's line take to appear" />
+<TokenRow token="motion-easing.standard" usage="the easing of those transitions" />
+<TokenRow token="z-index.base" usage="keeps the resize handle above the main area beside it" />
 <TokenRow token="space.px" usage="the skip link's hidden size, until it takes focus" />
-<TokenRow token="space.2" usage="how far the skip link sits from the top edge; padding above and below its words" />
+<TokenRow token="space.2" usage="how far the skip link sits from the top edge; padding above and below its words; the resize handle's width" />
 <TokenRow token="space.4" usage="how far the skip link sits from the start edge; padding beside its words" />
-<TokenRow token="space.1" usage="the gap between the skip link and its focus ring" />
+<TokenRow token="space.1" usage="the gap between the skip link and its focus ring; how far the resize handle reaches past the sidebar's edge" />
 <TokenRow token="radius.md" usage="the skip link's corners" />
 <TokenRow token="font-size.sm" usage="the skip link's text size" />
 <TokenRow token="font-weight.medium" usage="the skip link's text weight" />
-<TokenRow token="shadow.light-md" usage="the skip link's elevation in the light themes" />
-<TokenRow token="shadow.dark-md" usage="the skip link's elevation in the dark themes" />
+<TokenRow token="shadow.light-md" usage="the skip link's elevation, and the header's shadow while the content is scrolled, in the light themes" />
+<TokenRow token="shadow.dark-md" usage="the same two, in the dark themes" />
 
 ## Related components
 
@@ -407,6 +523,13 @@ function Filters() {
   href="/?path=/docs/organisms-navigation-navbar--docs"
 >
   <span aria-hidden="true">Navbar</span>
+</RelatedCard>
+<RelatedCard
+  name="Alert"
+  description="What goes in AppShell.Banner: a notice with a tone"
+  href="/?path=/docs/molecules-feedback-alert--docs"
+>
+  <span aria-hidden="true">Alert</span>
 </RelatedCard>
 <RelatedCard
   name="Drawer"

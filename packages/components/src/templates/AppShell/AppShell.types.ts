@@ -1,7 +1,8 @@
-import type { Breakpoint } from "@dbm-system/utils";
+import type { Breakpoint, Responsive, SpaceValue } from "@dbm-system/utils";
 import type { Icon as PhosphorIcon } from "@dbm-system/icons";
 import type { ComponentPropsWithoutRef, CSSProperties, ReactNode } from "react";
 import type { ButtonSize, ButtonTone, ButtonVariant } from "../../atoms/Button";
+import type { ContainerSize } from "../../atoms/Container";
 import type { SidebarStateProps } from "../../organisms/Sidebar";
 
 /**
@@ -34,6 +35,18 @@ export type AppShellAsideCollapseBelow = Exclude<Breakpoint, "base"> | "never";
  * `Drawer`) or `hidden` (not drawn at all, and out of the accessibility tree).
  */
 export type AppShellAsideCollapseTo = "drawer" | "hidden";
+
+/**
+ * The width below which the sidebar is a rail of icons on its own: a breakpoint step, or `"never"` to leave the rail to the reader. Between this
+ * and the width where the sidebar leaves the page for a drawer (`collapseBelow`) the shell collapses it, and above it expands it again.
+ */
+export type AppShellRailBelow = Exclude<Breakpoint, "base"> | "never";
+
+/** The text `AppShell.Sidebar`'s resize handle supplies itself, translatable through its `labels`. */
+export interface AppShellSidebarLabels {
+  /** The resize handle's accessible name. @default 'Resize sidebar' */
+  resize: string;
+}
 
 /** The element `AppShell.Header` renders: a plain `div`, or a real `<header>` for a header that does not hold a `Navbar`. */
 export type AppShellHeaderElement = "div" | "header";
@@ -68,6 +81,25 @@ export interface AppShellState {
    * sticky element inside the main area that must stick below the header (`top: var(--app-shell-header-height, 0px)`).
    */
   headerHeight: number;
+  /** The banner's height in pixels while `scroll="page"` and a banner is on the page, and `0` otherwise. Also `--app-shell-banner-height`. */
+  bannerHeight: number;
+  /**
+   * The footer's height in pixels while `scroll="page"` and a sticky footer is on the page, and `0` otherwise. Also `--app-shell-footer-height`,
+   * for a bar in the main area that must stop above it.
+   */
+  footerHeight: number;
+  /** Whether the sidebar is collapsed to a rail, whoever collapsed it: the reader, `railBelow`, or what was remembered. */
+  collapsed: boolean;
+  /** Collapses the sidebar to a rail, or expands it. Reports through `onCollapsedChange`. */
+  setCollapsed: (collapsed: boolean) => void;
+  /** The sidebar's width in pixels once it has been resized (or given one), and `undefined` while it is at its own width. */
+  sidebarWidth: number | undefined;
+  /** Sets the sidebar's width in pixels, or `undefined` to give it back its own width. Reports through `onSidebarWidthChange`. */
+  setSidebarWidth: (width: number | undefined) => void;
+  /** Whether the content (`scroll="content"`: the main area; `scroll="page"`: the page) has been scrolled down from its top. */
+  scrolled: boolean;
+  /** Whether there is more content below what is in view. */
+  moreBelow: boolean;
   /** Whether the aside's drawer is open. Always `false` while the aside is on the page. */
   asideOpen: boolean;
   /** Opens or closes the aside's drawer. Reports through `onAsideOpenChange`. */
@@ -94,7 +126,7 @@ export interface AppShellProps
     Omit<ComponentPropsWithoutRef<"div">, "dir" | "children">,
     AppShellPartBase {
   /**
-   * The shell's slots: `AppShell.SkipLink`, `AppShell.Header`, `AppShell.Sidebar`, `AppShell.Main`, `AppShell.Aside` and `AppShell.Footer`. The shell places each in its own area, so
+   * The shell's slots: `AppShell.SkipLink`, `AppShell.Banner`, `AppShell.Header`, `AppShell.Sidebar`, `AppShell.Main` (holding an optional `AppShell.Content`), `AppShell.Aside` and `AppShell.Footer`. The shell places each in its own area, so
    * the markup order does not change the layout, but it is the keyboard's tab order: put `AppShell.Header` first, so the skip link is the
    * first stop and the sidebar's links come after it. Only `AppShell.Main` is needed.
    */
@@ -147,6 +179,35 @@ export interface AppShellProps
    */
   pageTitle?: string;
   /**
+   * The width below which the shell collapses the sidebar to a rail of icons by itself, between the phone's drawer (`collapseBelow`) and the
+   * desktop: a breakpoint step, or `"never"` to leave it to the reader. Above the step it expands the sidebar again. The reader's own toggle
+   * still works anywhere and holds until the window crosses the step again. Changes the sidebar's collapsed state only, so `collapsed` and
+   * `onCollapsedChange` report it like any other change.
+   * @default 'never'
+   */
+  railBelow?: AppShellRailBelow;
+  /**
+   * Remembers the reader's layout, the collapsed state and the sidebar's width, in `localStorage` under this key, and restores it after the
+   * page loads. Only the part you leave uncontrolled is stored (a `collapsed` or `sidebarWidth` you pass is yours to keep). The saved layout
+   * is applied once the page is on screen, so a server render and the first client render agree. Storage that is unavailable is ignored.
+   */
+  persistKey?: string;
+  /**
+   * The sidebar's width in pixels (controlled), for a sidebar with `resizable`. Pair with `onSidebarWidthChange`. `undefined` leaves the
+   * sidebar at its own width.
+   */
+  sidebarWidth?: number;
+  /** The sidebar's width in pixels to start at (uncontrolled), for a sidebar with `resizable`. */
+  defaultSidebarWidth?: number;
+  /** Called with the new width in pixels when the reader resizes the sidebar, and with `undefined` when they reset it. */
+  onSidebarWidthChange?: (width: number | undefined) => void;
+  /**
+   * Shows a shadow under the header while the content is scrolled down from its top, and over the footer while there is more below, so
+   * the reader can see that the page continues. A line is always drawn between them and the content. Off, the shadows are not drawn.
+   * @default true
+   */
+  scrolledEdge?: boolean;
+  /**
    * The reading direction of everything inside. Not read from the page: pass `"rtl"` on a right-to-left page. Components with their own `dir`
    * prop (`Sidebar`, `Menu`, `Tabs`) still need it passed to them.
    * @default 'ltr'
@@ -157,6 +218,26 @@ export interface AppShellProps
 export interface AppShellSidebarProps extends Omit<ComponentPropsWithoutRef<"div">, "children">, AppShellPartBase {
   /** The `Sidebar`. The column is as wide as the sidebar and is absent from the page while the sidebar is in its phone panel. */
   children?: ReactNode;
+  /**
+   * Puts a handle on the column's inner edge that the reader drags, or moves with the arrow keys, to set the sidebar's width (Home and End jump
+   * to the least and the most, a double press gives it back its own width). The width is the shell's (`sidebarWidth`, `persistKey`), set on the
+   * column as `--sidebar-width`, so leave `width` off the `Sidebar` inside: its own `width` would win. There is no handle while the sidebar is
+   * a rail or in its phone panel.
+   * @default false
+   */
+  resizable?: boolean;
+  /**
+   * The least width a resize reaches: a number of pixels or a CSS length in `rem` or `px`.
+   * @default '12rem'
+   */
+  minWidth?: number | string;
+  /**
+   * The most width a resize reaches: a number of pixels or a CSS length in `rem` or `px`.
+   * @default '28rem'
+   */
+  maxWidth?: number | string;
+  /** Text the resize handle supplies itself, namely its accessible name. Merged over the English defaults. */
+  labels?: Partial<AppShellSidebarLabels>;
 }
 
 export interface AppShellHeaderProps extends Omit<ComponentPropsWithoutRef<"div">, "children">, AppShellPartBase {
@@ -184,6 +265,12 @@ export interface AppShellMainProps extends Omit<ComponentPropsWithoutRef<"main">
 }
 
 export interface AppShellFooterProps extends Omit<ComponentPropsWithoutRef<"footer">, "children">, AppShellPartBase {
+  /**
+   * Keeps the footer at the bottom of the window while the page scrolls (`scroll="page"`), for a bar of actions that must stay in reach, such as
+   * Save and Cancel. It clears a home indicator. Nothing changes with `scroll="content"`, where the footer is already outside the scrolling.
+   * @default false
+   */
+  sticky?: boolean;
   /** The page's footer: the `contentinfo` landmark, below the main area and outside its scrolling. */
   children?: ReactNode;
 }
@@ -271,4 +358,35 @@ export interface AppShellSkipLinkProps extends Omit<ComponentPropsWithoutRef<"a"
    * Rendered as the DOM `data-testid` attribute; has no visual or behavioral effect.
    */
   "data-testid"?: string;
+}
+
+export interface AppShellBannerProps extends Omit<ComponentPropsWithoutRef<"div">, "children">, AppShellPartBase {
+  /** The banner's content: an announcement, a maintenance notice, a trial reminder. Usually an `Alert`. */
+  children?: ReactNode;
+  /**
+   * Keeps the banner at the top of the window while the page scrolls (`scroll="page"`); the header sticks below it. Off, the banner scrolls away
+   * and the header sticks at the top. Nothing changes with `scroll="content"`, where the banner is always in view above the header.
+   * @default false
+   */
+  sticky?: boolean;
+}
+
+export interface AppShellContentProps extends Omit<ComponentPropsWithoutRef<"div">, "children">, AppShellPartBase {
+  /** The page's content. */
+  children?: ReactNode;
+  /**
+   * The widest the content gets, on the same steps as `Container`, centred in the main area. `full` is no limit.
+   * @default 'full'
+   */
+  size?: ContainerSize;
+  /**
+   * Padding at the start and end, on the spacing scale: one step, or a map keyed by breakpoint (`{ base: 4, md: 6, lg: 8 }`).
+   * @default { base: 4, md: 6, lg: 8 }
+   */
+  paddingInline?: Responsive<SpaceValue>;
+  /**
+   * Padding above and below, on the spacing scale.
+   * @default 6
+   */
+  paddingBlock?: SpaceValue;
 }

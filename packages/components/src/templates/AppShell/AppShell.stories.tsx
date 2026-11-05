@@ -47,6 +47,30 @@ const meta: Meta<PlaygroundArgs> = {
       description: "What the aside becomes below asideCollapseBelow: a drawer opened from AppShell.AsideToggle, or nothing at all.",
       table: { defaultValue: { summary: "'drawer'" } },
     },
+    railBelow: {
+      control: "select",
+      options: ["sm", "md", "lg", "xl", "2xl", "3xl", "never"],
+      description:
+        "The width below which the shell collapses the sidebar to a rail by itself, between the phone's drawer and the desktop, and expands it again above it. The reader's own toggle holds until the window crosses the step again.",
+      table: { defaultValue: { summary: "'never'" } },
+    },
+    persistKey: {
+      control: false,
+      description:
+        "Remembers the reader's collapsed state and the sidebar's width in localStorage under this key, and restores them after the page loads. Only the part you leave uncontrolled is stored.",
+    },
+    sidebarWidth: { control: false, description: "The sidebar's width in pixels (controlled), for a sidebar with resizable. Pair with onSidebarWidthChange." },
+    defaultSidebarWidth: { control: false, description: "The sidebar's width in pixels to start at (uncontrolled), for a sidebar with resizable." },
+    onSidebarWidthChange: {
+      control: false,
+      description: "Called with the new width in pixels when the reader resizes the sidebar, and with undefined when they reset it.",
+    },
+    scrolledEdge: {
+      control: "boolean",
+      description:
+        "Shows a shadow under the header while the content is scrolled down from its top, and a line over the footer while there is more below. Off, neither is drawn.",
+      table: { defaultValue: { summary: "true" } },
+    },
     asideOpen: { control: false, description: "Whether the aside's drawer is open (controlled). Pair with onAsideOpenChange." },
     defaultAsideOpen: {
       control: false,
@@ -109,6 +133,8 @@ const meta: Meta<PlaygroundArgs> = {
     showAside: false,
     asideCollapseBelow: "lg",
     asideCollapseTo: "drawer",
+    railBelow: "never",
+    scrolledEdge: true,
     sidebarSide: "start",
     dir: "ltr",
     collapseBelow: "md",
@@ -126,6 +152,8 @@ const noControls = {
   showAside: { control: false },
   asideCollapseBelow: { control: false },
   asideCollapseTo: { control: false },
+  railBelow: { control: false },
+  scrolledEdge: { control: false },
   sidebarSide: { control: false },
   dir: { control: false },
   collapseBelow: { control: false },
@@ -221,4 +249,53 @@ export const StickyBar: Story = {
   parameters: { docs: { source: { code: appShellSnippets.stickyBar } } },
   argTypes: { ...noControls },
   render: (_args, context) => <DemoStickyBarShell framed={context.viewMode === "docs"} />,
+};
+
+export const AutoRail: Story = {
+  name: "A rail between phone and desktop",
+  parameters: { docs: { source: { code: appShellSnippets.autoRail } } },
+  argTypes: { ...noControls },
+  render: (_args, context) => <DemoShell railBelow="xl" framed={context.viewMode === "docs"} />,
+};
+
+export const WithBanner: Story = {
+  name: "A banner above the header",
+  parameters: { docs: { source: { code: appShellSnippets.banner } } },
+  argTypes: { ...noControls },
+  render: (_args, context) => <DemoShell banner framed={context.viewMode === "docs"} />,
+};
+
+export const StickyBanner: Story = {
+  name: "A banner that stays in view",
+  parameters: { docs: { source: { code: appShellSnippets.stickyBanner } } },
+  argTypes: { ...noControls },
+  render: (_args, context) => <DemoShell scroll="page" banner="sticky" framed={context.viewMode === "docs"} />,
+};
+
+export const ContentWidth: Story = {
+  name: "Content kept to a readable width",
+  parameters: { docs: { source: { code: appShellSnippets.content } } },
+  argTypes: { ...noControls },
+  render: (_args, context) => <DemoShell contentWrapper framed={context.viewMode === "docs"} />,
+};
+
+export const StickyFooter: Story = {
+  name: "A bar of actions at the bottom",
+  parameters: { docs: { source: { code: appShellSnippets.stickyFooter } } },
+  argTypes: { ...noControls },
+  render: (_args, context) => <DemoShell scroll="page" stickyFooter framed={context.viewMode === "docs"} />,
+};
+
+export const ResizableSidebar: Story = {
+  name: "A sidebar the reader can resize",
+  parameters: { docs: { source: { code: appShellSnippets.resizable } } },
+  argTypes: { ...noControls },
+  render: (_args, context) => <DemoShell resizable framed={context.viewMode === "docs"} />,
+};
+
+export const RememberedLayout: Story = {
+  name: "A layout the shell remembers",
+  parameters: { docs: { source: { code: appShellSnippets.remembered } } },
+  argTypes: { ...noControls },
+  render: (_args, context) => <DemoShell resizable persistKey="storybook-demo" framed={context.viewMode === "docs"} />,
 };

@@ -4,6 +4,7 @@ import type {
   AppShellAsideCollapseBelow,
   AppShellAsideCollapseTo,
   AppShellDirection,
+  AppShellSidebarSide,
   AppShellState,
 } from "./AppShell.types";
 
@@ -11,7 +12,13 @@ import type {
 export interface AppShellContextValue extends AppShellState {
   /** Called by `AppShell.Header` with its height in pixels (and with `0` when it unmounts), so the shell can keep it in view. */
   setHeaderHeight: (height: number) => void;
+  /** Called by `AppShell.Banner` (and `AppShell.Footer`, when sticky) with its height, as the header does. */
+  setBannerHeight: (height: number) => void;
+  setFooterHeight: (height: number) => void;
+  /** Whether a banner is on the page, and whether it is sticky: the header sticks below it only then. */
+  setBannerSticky: (sticky: boolean) => void;
   dir: AppShellDirection;
+  sidebarSide: AppShellSidebarSide;
   asideCollapseBelow: AppShellAsideCollapseBelow;
   asideCollapseTo: AppShellAsideCollapseTo;
   /** The shell's `<main>`, set by `AppShell.Main`, for moving focus to it on a page change. */
@@ -25,10 +32,22 @@ export interface AppShellContextValue extends AppShellState {
 const fallback: AppShellContextValue = {
   scroll: "content",
   headerHeight: 0,
+  bannerHeight: 0,
+  footerHeight: 0,
+  collapsed: false,
+  setCollapsed: () => {},
+  sidebarWidth: undefined,
+  setSidebarWidth: () => {},
+  scrolled: false,
+  moreBelow: false,
   asideOpen: false,
   setAsideOpen: () => {},
   setHeaderHeight: () => {},
+  setBannerHeight: () => {},
+  setFooterHeight: () => {},
+  setBannerSticky: () => {},
   dir: "ltr",
+  sidebarSide: "start",
   asideCollapseBelow: "lg",
   asideCollapseTo: "drawer",
   mainRef: { current: null },
@@ -53,7 +72,8 @@ export function useAppShellContext(): AppShellContextValue {
  * ```
  */
 export function useAppShell(): AppShellState {
-  const { inShell, scroll, headerHeight, asideOpen, setAsideOpen } = useContext(AppShellContext);
+  const { inShell, scroll, headerHeight, bannerHeight, footerHeight, collapsed, setCollapsed, sidebarWidth, setSidebarWidth, scrolled, moreBelow, asideOpen, setAsideOpen } =
+    useContext(AppShellContext);
   if (!inShell) throw new Error("useAppShell must be used inside an AppShell.");
-  return { scroll, headerHeight, asideOpen, setAsideOpen };
+  return { scroll, headerHeight, bannerHeight, footerHeight, collapsed, setCollapsed, sidebarWidth, setSidebarWidth, scrolled, moreBelow, asideOpen, setAsideOpen };
 }

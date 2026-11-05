@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { expect, userEvent, waitFor, within } from "storybook/test";
 import { send } from "../../molecules/CodeBlock/browserProtocol";
+import { AppShell } from "./AppShell";
 import { DemoNavigationShell, DemoPlainHeaderShell, DemoShell, DemoStickyBarShell } from "./AppShellStoryKit";
 
 // Hidden real-browser checks (guidelines/adr/0013): what jsdom can't do (layout, a breakpoint, scrolling, forced colours). They run in the
@@ -644,5 +645,328 @@ export const StickyBarFollowsTheHeaderHeight: Story = {
       Math.abs(bar.getBoundingClientRect().top - height),
     ).toBeLessThan(1.5);
     window.scrollTo(0, 0);
+  },
+};
+
+// --- The rail, the banner, the content wrapper, the sticky footer, the resizable sidebar, the remembered layout and the scrolled-edge cue ---
+
+/** A real mouse drag from one point to another, through the Chrome DevTools Protocol, mapped through the test iframe's scale. */
+async function realDrag(element: Element, deltaX: number, during?: () => Promise<void> | void) {
+  const rect = element.getBoundingClientRect();
+  const frame = window.frameElement?.getBoundingClientRect();
+  const scale = frame ? frame.width / window.innerWidth : 1;
+  const x = (frame?.left ?? 0) + (rect.left + rect.width / 2) * scale;
+  const y = (frame?.top ?? 0) + (rect.top + rect.height / 2) * scale;
+  await send("Input.dispatchMouseEvent", { type: "mouseMoved", x, y });
+  await send("Input.dispatchMouseEvent", { type: "mousePressed", x, y, button: "left", clickCount: 1 });
+  for (let step = 1; step <= 6; step += 1) {
+    await send("Input.dispatchMouseEvent", { type: "mouseMoved", x: x + (deltaX * scale * step) / 6, y, button: "left", buttons: 1 });
+    if (step === 3) await during?.();
+  }
+  await send("Input.dispatchMouseEvent", { type: "mouseReleased", x: x + deltaX * scale, y, button: "left", clickCount: 1 });
+}
+
+/** A token's length in pixels: the spacing and breakpoint tokens are in rem or px. */
+function tokenPx(name: string): number {
+  const value = getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+  return value.endsWith("rem") ? px(value) * rootRem() : px(value);
+}
+
+const sidebarColumn = (canvasElement: HTMLElement) => {
+  const { shell } = slots(canvasElement);
+  return slotOf(shell, within(canvasElement).getByRole("navigation", { name: "Main" }));
+};
+
+export const RailBelowTheStep: Story = {
+  name: "With railBelow the sidebar is a rail below the step and expanded above it, and the reader's toggle holds — layout test",
+  globals: { viewport: { value: "tablet", isRotated: false } },
+  render: () => (
+    <>
+      <div data-testid="railed">
+        <DemoShell railBelow="lg" />
+      </div>
+    </>
+  ),
+  play: async ({ canvasElement }) => {
+    // the tablet is wider than the drawer's step (md) and narrower than the rail's (lg)
+    await expect(window.innerWidth).toBeGreaterThanOrEqual(768);
+    await expect(window.innerWidth).toBeLessThan(1024);
+    const column = sidebarColumn(canvasElement);
+    // the window may reach this width a moment after the story mounts, and the shell follows it
+    await waitFor(() => expect(column.getBoundingClientRect().width).toBeLessThan(100));
+    const canvas = within(canvasElement);
+    await userEvent.click(canvas.getByRole("button", { name: "Expand sidebar" }));
+    await waitFor(() => expect(Math.round(column.getBoundingClientRect().width)).toBe(Math.round(16 * rootRem())));
+    // the reader's choice holds while the window stays where it is
+    await nextFrame();
+    await expect(Math.round(column.getBoundingClientRect().width)).toBe(Math.round(16 * rootRem()));
+  },
+};
+
+export const RailIsExpandedWhereThereIsRoom: Story = {
+  name: "With railBelow the sidebar is expanded in a window wider than the step — layout test",
+  render: () => <DemoShell railBelow="md" />,
+  play: async ({ canvasElement }) => {
+    await expect(window.innerWidth).toBeGreaterThanOrEqual(768);
+    await expect(Math.round(sidebarColumn(canvasElement).getBoundingClientRect().width)).toBe(Math.round(16 * rootRem()));
+  },
+};
+
+export const BannerSitsAboveTheHeader: Story = {
+  name: "The banner runs across the top, above the header and the sidebar, which start under it — layout test",
+  render: () => <DemoShell banner aside />,
+  play: async ({ canvasElement }) => {
+    const { shell, header, main } = slots(canvasElement);
+    const banner = slotOf(shell, within(canvasElement).getByText(/Scheduled maintenance/));
+    const box = banner.getBoundingClientRect();
+    await expect(Math.abs(box.top)).toBeLessThan(1);
+    await expect(Math.abs(box.width - window.innerWidth)).toBeLessThan(1);
+    await expect(header.getBoundingClientRect().top).toBeGreaterThanOrEqual(box.bottom - 1);
+    await expect(Math.abs(slotOf(shell, within(canvasElement).getByRole("navigation", { name: "Main" })).getBoundingClientRect().top - box.bottom)).toBeLessThan(1);
+    await expect(Math.abs(main.getBoundingClientRect().top - header.getBoundingClientRect().bottom)).toBeLessThan(1);
+    // the frame is still exactly the window
+    await expect(Math.round(shell.getBoundingClientRect().height)).toBe(window.innerHeight);
+  },
+};
+
+export const StickyBannerStaysAndTheHeaderSticksBelowIt: Story = {
+  name: "A sticky banner stays at the top of the window and the header, the sidebar and the aside stick below it — layout test",
+  render: () => <DemoShell scroll="page" banner="sticky" headerSpan="full" aside />,
+  play: async ({ canvasElement }) => {
+    const { shell, header } = slots(canvasElement);
+    await waitFor(() => expect(shell).toHaveAttribute("data-banner-measured"));
+    await waitFor(() => expect(shell).toHaveAttribute("data-header-measured"));
+    const banner = slotOf(shell, within(canvasElement).getByText(/Scheduled maintenance/));
+    const headerSlot = slotOf(shell, header);
+    const sidebar = slotOf(shell, within(canvasElement).getByRole("navigation", { name: "Main" }));
+    window.scrollTo(0, 600);
+    await waitFor(() => expect(window.scrollY).toBeGreaterThan(0));
+    // the heights are read as they are now, not once: a font or a line of wrapped text settles after the page is up, and the shell follows it
+    await waitFor(() => expect(Math.abs(banner.getBoundingClientRect().top)).toBeLessThan(1));
+    await waitFor(() => expect(Math.abs(headerSlot.getBoundingClientRect().top - banner.getBoundingClientRect().height)).toBeLessThan(1));
+    for (const column of [sidebar, asideOf(canvasElement)]) {
+      await waitFor(() =>
+        expect(Math.abs(column.getBoundingClientRect().top - (banner.getBoundingClientRect().height + headerSlot.getBoundingClientRect().height))).toBeLessThan(1.5),
+      );
+    }
+    window.scrollTo(0, 0);
+  },
+};
+
+export const BannerScrollsAwayAndTheHeaderSticksAtTheTop: Story = {
+  name: "A banner that is not sticky scrolls away and the header sticks at the top of the window — layout test",
+  render: () => <DemoShell scroll="page" banner />,
+  play: async ({ canvasElement }) => {
+    const { shell, header } = slots(canvasElement);
+    await waitFor(() => expect(shell).toHaveAttribute("data-header-measured"));
+    const banner = slotOf(shell, within(canvasElement).getByText(/Scheduled maintenance/));
+    await waitFor(() => expect(banner.getBoundingClientRect().height).toBeGreaterThan(20));
+    const bannerHeight = banner.getBoundingClientRect().height;
+    window.scrollTo(0, 600);
+    await nextFrame();
+    await expect(banner.getBoundingClientRect().bottom).toBeLessThanOrEqual(1);
+    await expect(Math.abs(slotOf(shell, header).getBoundingClientRect().top)).toBeLessThan(1);
+    await expect(bannerHeight).toBeGreaterThan(20);
+    window.scrollTo(0, 0);
+  },
+};
+
+export const ContentIsKeptToAWidthAndPadded: Story = {
+  name: "AppShell.Content centres the page at the width asked for and pads it on the spacing scale — layout test",
+  render: () => (
+    <DemoShell>
+      <AppShell.Content size="sm" paddingInline={4} paddingBlock={8} data-testid="content">
+        <p>Narrow content</p>
+      </AppShell.Content>
+    </DemoShell>
+  ),
+  play: async ({ canvasElement }) => {
+    const { main } = slots(canvasElement);
+    const content = within(canvasElement).getByTestId("content");
+    const box = content.getBoundingClientRect();
+    // `sm` is the breakpoint.sm token's width, centred in the main area
+    await expect(Math.abs(box.width - tokenPx("--dbm-breakpoint-sm"))).toBeLessThan(1);
+    const mainBox = main.getBoundingClientRect();
+    await expect(Math.abs(box.left - mainBox.left - (mainBox.right - box.right))).toBeLessThan(1);
+    await expect(Math.abs(px(getComputedStyle(content).paddingTop) - tokenPx("--dbm-space-8"))).toBeLessThan(0.5);
+    await expect(Math.abs(px(getComputedStyle(content).paddingInlineStart) - tokenPx("--dbm-space-4"))).toBeLessThan(0.5);
+  },
+};
+
+export const StickyFooterStaysAtTheBottom: Story = {
+  name: "A sticky footer stays at the bottom of the window while the page scrolls, and the end of the page is not hidden under it — layout test",
+  render: () => <DemoShell scroll="page" stickyFooter />,
+  play: async ({ canvasElement }) => {
+    const { shell, footer } = slots(canvasElement);
+    await waitFor(() => expect(shell).toHaveAttribute("data-footer-measured"));
+    const slot = slotOf(shell, footer);
+    await expect(Math.abs(slot.getBoundingClientRect().bottom - window.innerHeight)).toBeLessThan(1);
+    window.scrollTo(0, 400);
+    await nextFrame();
+    await expect(Math.abs(slot.getBoundingClientRect().bottom - window.innerHeight)).toBeLessThan(1);
+    await expect(getComputedStyle(slot).position).toBe("sticky");
+    // at the very end of the page the last of the content is above the footer, not under it
+    window.scrollTo(0, document.documentElement.scrollHeight);
+    await nextFrame();
+    const main = within(canvasElement).getByRole("main");
+    await expect(main.getBoundingClientRect().bottom).toBeLessThanOrEqual(slot.getBoundingClientRect().top + 1);
+    window.scrollTo(0, 0);
+  },
+};
+
+export const ResizeHandleByMouseAndKeyboard: Story = {
+  name: "A resizable sidebar follows a real mouse drag and the arrow, Home, End and double press keys, within its bounds — layout test",
+  render: () => <DemoShell resizable />,
+  play: async ({ canvasElement }) => {
+    window.localStorage.clear();
+    const column = sidebarColumn(canvasElement);
+    const handle = within(canvasElement).getByRole("separator", { name: "Resize sidebar" });
+    const start = Math.round(column.getBoundingClientRect().width);
+    await expect(start).toBe(Math.round(16 * rootRem()));
+    await expect(handle).toHaveAttribute("aria-valuenow", String(start));
+    // the handle sits on the column's inner edge
+    await expect(Math.abs(handle.getBoundingClientRect().left + handle.getBoundingClientRect().width / 2 - column.getBoundingClientRect().right)).toBeLessThan(2);
+
+    // a real mouse, 80px toward the content; while it drags the sidebar follows at once, with no width transition to lag behind the pointer
+    await realDrag(handle, 80, async () => {
+      await expect(getComputedStyle(column.firstElementChild as HTMLElement).transitionDuration).toBe("0s");
+    });
+    await waitFor(() => expect(Math.round(column.getBoundingClientRect().width)).toBe(start + 80));
+    await expect(handle).toHaveAttribute("aria-valuenow", String(start + 80));
+
+    // real keys
+    handle.focus();
+    await send("Input.dispatchKeyEvent", { type: "keyDown", key: "ArrowRight", code: "ArrowRight", windowsVirtualKeyCode: 39 });
+    await send("Input.dispatchKeyEvent", { type: "keyUp", key: "ArrowRight", code: "ArrowRight", windowsVirtualKeyCode: 39 });
+    await waitFor(() => expect(Math.round(column.getBoundingClientRect().width)).toBe(start + 80 + Math.round(rootRem())));
+    await send("Input.dispatchKeyEvent", { type: "keyDown", key: "End", code: "End", windowsVirtualKeyCode: 35 });
+    await send("Input.dispatchKeyEvent", { type: "keyUp", key: "End", code: "End", windowsVirtualKeyCode: 35 });
+    await waitFor(() => expect(Math.round(column.getBoundingClientRect().width)).toBe(Math.round(28 * rootRem())));
+    await send("Input.dispatchKeyEvent", { type: "keyDown", key: "Home", code: "Home", windowsVirtualKeyCode: 36 });
+    await send("Input.dispatchKeyEvent", { type: "keyUp", key: "Home", code: "Home", windowsVirtualKeyCode: 36 });
+    await waitFor(() => expect(Math.round(column.getBoundingClientRect().width)).toBe(Math.round(12 * rootRem())));
+    // a drag past the bounds stops at them
+    await realDrag(handle, -400);
+    await waitFor(() => expect(Math.round(column.getBoundingClientRect().width)).toBe(Math.round(12 * rootRem())));
+    // a double press gives the sidebar its own width back
+    await userEvent.dblClick(handle);
+    await waitFor(() => expect(Math.round(column.getBoundingClientRect().width)).toBe(start));
+  },
+};
+
+export const ResizeHandleInRightToLeftInteraction: Story = {
+  name: "In right to left the handle is on the sidebar's left edge and a drag toward the content widens it — layout test",
+  render: () => <DemoShell resizable dir="rtl" />,
+  play: async ({ canvasElement }) => {
+    window.localStorage.clear();
+    const column = sidebarColumn(canvasElement);
+    const handle = within(canvasElement).getByRole("separator", { name: "Resize sidebar" });
+    const start = Math.round(column.getBoundingClientRect().width);
+    await expect(Math.abs(handle.getBoundingClientRect().left + handle.getBoundingClientRect().width / 2 - column.getBoundingClientRect().left)).toBeLessThan(2);
+    // toward the content is to the left here
+    await realDrag(handle, -60);
+    await waitFor(() => expect(Math.round(column.getBoundingClientRect().width)).toBe(start + 60));
+  },
+};
+
+export const ResizeHandleIsNotThereOnARail: Story = {
+  name: "There is no resize handle while the sidebar is a rail — layout test",
+  render: () => <DemoShell resizable defaultCollapsed />,
+  play: async ({ canvasElement }) => {
+    await expect(within(canvasElement).queryByRole("separator", { name: "Resize sidebar" })).toBeNull();
+  },
+};
+
+export const RememberedLayoutIsRestored: Story = {
+  name: "A remembered layout is in place once the page is up: the width and the rail the reader left — layout test",
+  loaders: [
+    async () => {
+      window.localStorage.setItem("dbm-app-shell:check-restore", JSON.stringify({ collapsed: false, width: 320 }));
+      return {};
+    },
+  ],
+  render: () => <DemoShell resizable persistKey="check-restore" />,
+  play: async ({ canvasElement }) => {
+    const column = sidebarColumn(canvasElement);
+    await waitFor(() => expect(Math.round(column.getBoundingClientRect().width)).toBe(320));
+    // and a change the reader makes is remembered
+    const handle = within(canvasElement).getByRole("separator", { name: "Resize sidebar" });
+    await realDrag(handle, 40);
+    await waitFor(() => expect(JSON.parse(window.localStorage.getItem("dbm-app-shell:check-restore") ?? "{}").width).toBe(360));
+    window.localStorage.removeItem("dbm-app-shell:check-restore");
+  },
+};
+
+export const ScrolledEdgeCue: Story = {
+  name: "The header casts a shadow once the main area is scrolled and the footer shows a line while there is more below — layout test",
+  render: () => <DemoShell />,
+  play: async ({ canvasElement }) => {
+    const { shell, main, header, footer } = slots(canvasElement);
+    const headerSlot = slotOf(shell, header);
+    const footerSlot = slotOf(shell, footer);
+    await waitFor(() => expect(main.scrollHeight).toBeGreaterThan(main.clientHeight));
+    // at the top: no shadow, and the footer shows its line (there is more below)
+    await expect(getComputedStyle(headerSlot).boxShadow).toBe("none");
+    await waitFor(() => expect(shell).toHaveAttribute("data-more-below"));
+    await waitFor(() => expect(getComputedStyle(footerSlot).borderTopColor).not.toBe("rgba(0, 0, 0, 0)"));
+    main.scrollTop = 120;
+    await waitFor(() => expect(shell).toHaveAttribute("data-scrolled"));
+    await waitFor(() => expect(getComputedStyle(headerSlot).boxShadow).not.toBe("none"));
+    // at the end: no line over the footer
+    main.scrollTop = main.scrollHeight;
+    await waitFor(() => expect(shell).not.toHaveAttribute("data-more-below"));
+    await waitFor(() => expect(getComputedStyle(footerSlot).borderTopColor).toBe("rgba(0, 0, 0, 0)"));
+    main.scrollTop = 0;
+    await waitFor(() => expect(shell).not.toHaveAttribute("data-scrolled"));
+    await waitFor(() => expect(getComputedStyle(headerSlot).boxShadow).toBe("none"));
+  },
+};
+
+export const ScrolledEdgeCueWhenThePageScrolls: Story = {
+  name: "With scroll page the cue follows the page's own scrolling — layout test",
+  render: () => <DemoShell scroll="page" />,
+  play: async ({ canvasElement }) => {
+    const { shell, header } = slots(canvasElement);
+    await waitFor(() => expect(shell).toHaveAttribute("data-header-measured"));
+    const headerSlot = slotOf(shell, header);
+    await expect(getComputedStyle(headerSlot).boxShadow).toBe("none");
+    window.scrollTo(0, 300);
+    await waitFor(() => expect(shell).toHaveAttribute("data-scrolled"));
+    await waitFor(() => expect(getComputedStyle(headerSlot).boxShadow).not.toBe("none"));
+    window.scrollTo(0, 0);
+    await waitFor(() => expect(getComputedStyle(headerSlot).boxShadow).toBe("none"));
+  },
+};
+
+export const ScrolledEdgeCueCanBeTurnedOff: Story = {
+  name: "With scrolledEdge off the header casts no shadow and the footer shows no line — layout test",
+  render: () => <DemoShell scrolledEdge={false} />,
+  play: async ({ canvasElement }) => {
+    const { shell, main, header, footer } = slots(canvasElement);
+    main.scrollTop = 120;
+    await waitFor(() => expect(shell).toHaveAttribute("data-scrolled"));
+    await expect(getComputedStyle(slotOf(shell, header)).boxShadow).toBe("none");
+    await expect(getComputedStyle(slotOf(shell, footer)).borderTopColor).toBe("rgba(0, 0, 0, 0)");
+    main.scrollTop = 0;
+  },
+};
+
+export const ScrolledEdgeCueInForcedColours: Story = {
+  name: "In forced colours the scrolled header gets a line of its own, since shadows are dropped — forced colours test",
+  render: () => <DemoShell />,
+  play: async ({ canvasElement }) => {
+    const { shell, main, header } = slots(canvasElement);
+    const emulate = (value: "active" | "none") => send("Emulation.setEmulatedMedia", { features: [{ name: "forced-colors", value }] });
+    await emulate("active");
+    try {
+      await waitFor(() => expect(window.matchMedia("(forced-colors: active)").matches).toBe(true));
+      main.scrollTop = 120;
+      await waitFor(() => expect(shell).toHaveAttribute("data-scrolled"));
+      await waitFor(() => expect(px(getComputedStyle(slotOf(shell, header)).borderBottomWidth)).toBeGreaterThan(0));
+    } finally {
+      main.scrollTop = 0;
+      // Clear the emulation by sending an empty feature list, not the default value, so it cannot leak into the next story.
+      await send("Emulation.setEmulatedMedia", { features: [] });
+    }
   },
 };

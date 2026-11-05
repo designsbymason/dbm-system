@@ -2,8 +2,10 @@ import { ListIcon, UsersIcon, WalletIcon } from "@dbm-system/icons";
 import { useState } from "react";
 import type { CSSProperties, ReactNode } from "react";
 import { Badge } from "../../atoms/Badge";
+import { Button } from "../../atoms/Button";
 import { Heading } from "../../atoms/Heading";
 import { Text } from "../../atoms/Text";
+import { Alert } from "../../molecules/Alert";
 import { Breadcrumb } from "../../molecules/Breadcrumb";
 import { Card } from "../../molecules/Card";
 import { Grid } from "../../molecules/Grid";
@@ -34,9 +36,9 @@ const rows = [
 ];
 
 /** The page a demo shell shows in its main area: a breadcrumb, a heading, three statistics and a table wide enough to scroll on a phone. */
-export function DemoPage() {
+export function DemoPage({ padded = true }: { padded?: boolean }) {
   return (
-    <div style={{ display: "grid", gap: "var(--dbm-space-6)", padding: "var(--dbm-space-6)" }}>
+    <div style={{ display: "grid", gap: "var(--dbm-space-6)", padding: padded ? "var(--dbm-space-6)" : undefined }}>
       <Breadcrumb>
         <Breadcrumb.Item>
           <Breadcrumb.Link href="#" onClick={preventNavigation}>
@@ -121,6 +123,10 @@ export function DemoShell({
   children,
   framed = false,
   aside = false,
+  banner,
+  resizable = false,
+  contentWrapper = false,
+  stickyFooter = false,
   ...props
 }: AppShellProps & {
   children?: ReactNode;
@@ -128,11 +134,26 @@ export function DemoShell({
   framed?: boolean;
   /** Adds an `AppShell.Aside` with a detail pane, and the toggle that opens it as a drawer below its collapse step. */
   aside?: boolean;
+  /** Adds an `AppShell.Banner` with a notice: `"sticky"` keeps it in view while the page scrolls. */
+  banner?: boolean | "sticky";
+  /** Makes the sidebar column resizable. */
+  resizable?: boolean;
+  /** Puts the page in an `AppShell.Content`, kept to a readable width. */
+  contentWrapper?: boolean;
+  /** Makes the footer a bar of actions that stays at the bottom of the window while the page scrolls. */
+  stickyFooter?: boolean;
 }) {
   const side = props.sidebarSide ?? "start";
   const dir = props.dir ?? "ltr";
   const shell = (
     <AppShell {...props} style={framed ? framedStyle(props.scroll) : undefined}>
+      {banner && (
+        <AppShell.Banner sticky={banner === "sticky"}>
+          <Alert tone="info">
+            <Alert.Description>Scheduled maintenance tonight at 22:00 UTC. Saving may be unavailable for a few minutes.</Alert.Description>
+          </Alert>
+        </AppShell.Banner>
+      )}
       <AppShell.Header>
         <Navbar dir={dir}>
           {/* In an app a router handles the link; here the click moves focus to the main area itself and keeps the preview's address unchanged. */}
@@ -151,22 +172,38 @@ export function DemoShell({
           </Navbar.Actions>
         </Navbar>
       </AppShell.Header>
-      <AppShell.Sidebar>
+      <AppShell.Sidebar resizable={resizable}>
         {/* The phone drawer is wider than the column on the page (`panelWidth`); it is capped at the window less a sliver of the page. */}
         <DemoSidebar side={side} dir={dir} toggle panelWidth="20rem" />
       </AppShell.Sidebar>
-      <AppShell.Main>{children ?? <DemoPage />}</AppShell.Main>
+      <AppShell.Main>
+        {children ??
+          (contentWrapper ? (
+            <AppShell.Content size="xl">
+              <DemoPage padded={false} />
+            </AppShell.Content>
+          ) : (
+            <DemoPage />
+          ))}
+      </AppShell.Main>
       {aside && (
         <AppShell.Aside aria-label="Order details">
           <DemoAside />
         </AppShell.Aside>
       )}
-      <AppShell.Footer>
-        <div style={{ padding: "var(--dbm-space-3) var(--dbm-space-6)", borderBlockStart: "var(--dbm-border-width-1) solid var(--dbm-border-default)" }}>
-          <Text size="sm" color="secondary">
-            © dbM Cloud
-          </Text>
-        </div>
+      <AppShell.Footer sticky={stickyFooter}>
+        {stickyFooter ? (
+          <div style={{ display: "flex", justifyContent: "flex-end", gap: "var(--dbm-space-3)", padding: "var(--dbm-space-3) var(--dbm-space-6)" }}>
+            <Button variant="secondary">Cancel</Button>
+            <Button>Save changes</Button>
+          </div>
+        ) : (
+          <div style={{ padding: "var(--dbm-space-3) var(--dbm-space-6)" }}>
+            <Text size="sm" color="secondary">
+              © dbM Cloud
+            </Text>
+          </div>
+        )}
       </AppShell.Footer>
     </AppShell>
   );

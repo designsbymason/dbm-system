@@ -118,6 +118,107 @@ ${shell('headerSpan="full"', [header, sidebar(), main])}`,
   </AppShell.Main>
 </AppShell>`,
 
+  autoRail: `{/* railBelow: below 1280px ("xl") the shell collapses the sidebar to a rail, and above it expands it again. The reader's own toggle
+    holds until the window crosses the step. Below collapseBelow the sidebar is a drawer, as ever. */}
+${shell('railBelow="xl"', [header, sidebar(), main])}`,
+
+  banner: `{/* AppShell.Banner is a strip above the header: an announcement, a maintenance notice, a trial reminder. */}
+<AppShell>
+  <AppShell.Banner>
+    <Alert tone="info">
+      <Alert.Description>Scheduled maintenance tonight at 22:00 UTC.</Alert.Description>
+    </Alert>
+  </AppShell.Banner>
+  <AppShell.Header>
+    <Navbar>
+      <Navbar.SkipLink />
+      <Navbar.Brand href="/">dbM Cloud</Navbar.Brand>
+    </Navbar>
+  </AppShell.Header>
+  <AppShell.Main>
+    <h1>Billing</h1>
+  </AppShell.Main>
+</AppShell>`,
+
+  stickyBanner: `{/* With scroll="page" a sticky banner stays at the top of the window and the header sticks below it. Without sticky it scrolls away
+    and the header sticks at the top. */}
+<AppShell scroll="page">
+  <AppShell.Banner sticky>
+    <Alert tone="warning">
+      <Alert.Description>Your trial ends in 3 days.</Alert.Description>
+    </Alert>
+  </AppShell.Banner>
+  <AppShell.Header>
+    <Navbar>
+      <Navbar.Brand href="/">dbM Cloud</Navbar.Brand>
+    </Navbar>
+  </AppShell.Header>
+  <AppShell.Main>
+    <h1>Billing</h1>
+  </AppShell.Main>
+</AppShell>`,
+
+  content: `{/* AppShell.Content centres the page, keeps it to a width (the Container steps) and pads it on the spacing scale. The main area adds none. */}
+<AppShell>
+  <AppShell.Main>
+    <AppShell.Content size="xl" paddingBlock={8}>
+      <h1>Billing</h1>
+    </AppShell.Content>
+  </AppShell.Main>
+</AppShell>`,
+
+  stickyFooter: `{/* A sticky footer stays at the bottom of the window while the page scrolls: a bar of actions that must stay in reach. With
+    scroll="content" the footer is already outside the scrolling. */}
+<AppShell scroll="page">
+  <AppShell.Main>
+    <h1>Edit profile</h1>
+  </AppShell.Main>
+  <AppShell.Footer sticky>
+    <Button variant="secondary">Cancel</Button>
+    <Button>Save changes</Button>
+  </AppShell.Footer>
+</AppShell>`,
+
+  resizable: `{/* resizable puts a handle on the column's inner edge: drag it, or use the arrow keys (Shift for bigger steps, Home and End for the
+    least and the most, a double press to reset). Leave width off the Sidebar inside: the shell sets the width. */}
+<AppShell>
+  <AppShell.Sidebar resizable minWidth="14rem" maxWidth="26rem">
+    <Sidebar>
+      <Sidebar.Content>
+        <Sidebar.Nav aria-label="Main">
+          <Sidebar.Item href="/" current>Home</Sidebar.Item>
+        </Sidebar.Nav>
+      </Sidebar.Content>
+      <Sidebar.Footer>
+        <Sidebar.Toggle />
+      </Sidebar.Footer>
+    </Sidebar>
+  </AppShell.Sidebar>
+  <AppShell.Main>
+    <h1>Billing</h1>
+  </AppShell.Main>
+</AppShell>`,
+
+  remembered: `{/* persistKey remembers the reader's collapsed state and the sidebar's width in localStorage and restores them after the page loads.
+    Only what you leave uncontrolled is stored; pass collapsed or sidebarWidth to keep it somewhere else yourself. */}
+<AppShell persistKey="my-app">
+  <AppShell.Sidebar resizable>
+    <Sidebar>
+      <Sidebar.Content>
+        <Sidebar.Nav aria-label="Main">
+          <Sidebar.Item href="/" current>Home</Sidebar.Item>
+        </Sidebar.Nav>
+      </Sidebar.Content>
+      <Sidebar.Footer>
+        <Sidebar.Toggle />
+      </Sidebar.Footer>
+    </Sidebar>
+  </AppShell.Sidebar>
+  <AppShell.Main>
+    <h1>Billing</h1>
+  </AppShell.Main>
+</AppShell>`,
+
   rightToLeft: `{/* dir sets the reading direction of the shell; pass it to the Sidebar too, which has its own dir prop */}
 ${shell('dir="rtl"', [header, sidebar('dir="rtl"'), main])}`,
 } as const;
@@ -127,6 +228,8 @@ export interface AppShellPlaygroundSnippetArgs {
   headerSpan?: AppShellHeaderSpan;
   asideCollapseBelow?: string;
   asideCollapseTo?: "drawer" | "hidden";
+  railBelow?: string;
+  scrolledEdge?: boolean;
   /** Storybook only — whether the demo has an aside. */
   showAside?: boolean;
   sidebarSide?: AppShellSidebarSide;
@@ -141,6 +244,8 @@ export function appShellPlaygroundSnippet(args: AppShellPlaygroundSnippetArgs): 
   if (args.scroll && args.scroll !== "content") attributes.push(`scroll="${args.scroll}"`);
   if (args.headerSpan && args.headerSpan !== "content") attributes.push(`headerSpan="${args.headerSpan}"`);
   if (args.sidebarSide && args.sidebarSide !== "start") attributes.push(`sidebarSide="${args.sidebarSide}"`);
+  if (args.railBelow && args.railBelow !== "never") attributes.push(`railBelow="${args.railBelow}"`);
+  if (args.scrolledEdge === false) attributes.push("scrolledEdge={false}");
   if (args.showAside) {
     if (args.asideCollapseBelow && args.asideCollapseBelow !== "lg") attributes.push(`asideCollapseBelow="${args.asideCollapseBelow}"`);
     if (args.asideCollapseTo && args.asideCollapseTo !== "drawer") attributes.push(`asideCollapseTo="${args.asideCollapseTo}"`);

@@ -1,9 +1,10 @@
-/* The frame is a three-column grid: the sidebar's column (as wide as the sidebar, none at all while the sidebar is in its phone panel), a column
-   for the main area, and the aside's (as wide as the aside, none at all while it is a drawer or hidden). The header, main and footer stack
-   in the middle; the sidebar spans the rows beside them and the aside the main and footer rows. `minmax(0, 1fr)` lets the middle column shrink
-   below its content, so a wide table scrolls inside the main area and does not push the frame wider than the window. Areas are placed by
-   name, so the order of the slots in the markup does not matter; `sidebarSide="end"` puts the sidebar after the aside, and
-   `headerSpan="full"` runs the header across every column. */
+/* The frame is a three-column, four-row grid: the sidebar's column (as wide as the sidebar, none at all while the sidebar is in its phone
+   panel), a column for the main area, and the aside's (as wide as the aside, none at all while it is a drawer or hidden). The banner takes the
+   top row across every column (none at all with no banner); the header, main and footer stack in the middle; the sidebar spans the rows
+   beside them and the aside the main and footer rows. `minmax(0, 1fr)` lets the middle column shrink below its content, so a wide table
+   scrolls inside the main area and does not push the frame wider than the window. Areas are placed by name, so the order of the slots in the
+   markup does not matter; `sidebarSide="end"` puts the sidebar after the aside, and `headerSpan="full"` runs the header across every column.
+   A row is its own height unless the page scrolls and its part is kept in view, when it is that part's measured height (see below). */
 .root {
   /* A notch or a home indicator is kept clear: each custom property is the device's inset on that side (zero where a page does not draw under
      them). The names are physical because the device's are (a notch is on the left whatever the reading direction). */
@@ -14,11 +15,12 @@
 
   display: grid;
   grid-template-areas:
+    "banner banner banner"
     "sidebar header header"
     "sidebar main aside"
     "sidebar footer aside";
   grid-template-columns: auto minmax(0, 1fr) auto;
-  grid-template-rows: auto minmax(0, 1fr) auto;
+  grid-template-rows: var(--app-shell-banner-row, auto) var(--app-shell-header-row, auto) minmax(0, 1fr) var(--app-shell-footer-row, auto);
   box-sizing: border-box;
   inline-size: 100%;
   padding-bottom: var(--app-shell-safe-bottom);
@@ -31,6 +33,7 @@
 
 .root[data-header-span="full"] {
   grid-template-areas:
+    "banner banner banner"
     "header header header"
     "sidebar main aside"
     "sidebar footer aside";
@@ -38,6 +41,7 @@
 
 .root[data-sidebar-side="end"] {
   grid-template-areas:
+    "banner banner banner"
     "header header sidebar"
     "main aside sidebar"
     "footer aside sidebar";
@@ -46,6 +50,7 @@
 
 .root[data-sidebar-side="end"][data-header-span="full"] {
   grid-template-areas:
+    "banner banner banner"
     "header header header"
     "main aside sidebar"
     "footer aside sidebar";
@@ -60,54 +65,97 @@
 }
 
 /* `scroll="page"`: at least the window's height, and as tall as its content beyond that; the page scrolls. `--app-shell-viewport-size` is how
-   tall "the window" is, for a demo that draws the shell in a frame; left unset it is the window. The top inset belongs to the header, which is
-   what is at the top of the window as the page scrolls (and to the frame when there is no header). */
+   tall "the window" is, for a demo that draws the shell in a frame; left unset it is the window. The top inset belongs to what is at the top of
+   the window as the page scrolls: the banner, else the header, else the frame. */
 .root[data-scroll="page"] {
   min-block-size: 100vh;
   min-block-size: var(--app-shell-viewport-size, 100dvh);
 }
 
-.root[data-scroll="page"]:not(:has(> .header)) {
+.root[data-scroll="page"]:not(:has(> .header)):not(:has(> .banner)) {
   padding-top: var(--app-shell-safe-top);
 }
 
-/* The sidebar and the aside stay in view while the page scrolls: each sticks below the header (nothing, until the header's height is known),
-   and is as tall as the rest of the window, so its own content scrolls. */
+.root[data-scroll="page"] .banner {
+  padding-top: var(--app-shell-safe-top);
+}
+
+/* The sidebar and the aside stay in view while the page scrolls: each sticks below the banner (when the banner stays) and the header, and is
+   as tall as the rest of the window, so its own content scrolls. */
 .root[data-scroll="page"] .sidebar,
 .root[data-scroll="page"] .aside {
   align-self: start;
-  block-size: calc(var(--app-shell-viewport-size, 100dvh) - var(--app-shell-header-height, 0px));
-  inset-block-start: var(--app-shell-header-height, 0px);
+  block-size: calc(var(--app-shell-viewport-size, 100dvh) - var(--app-shell-banner-stick, 0px) - var(--app-shell-header-height, 0px));
+  inset-block-start: calc(var(--app-shell-banner-stick, 0px) + var(--app-shell-header-height, 0px));
   position: sticky;
   z-index: var(--dbm-z-index-sticky);
 }
 
-/* With the header spanning only the content, the sidebar spans the header's row too and sticks at the very top, as tall as the window. */
+/* With the header spanning only the content, the sidebar spans the header's row too and sticks at the top (below the banner), as tall as the
+   window less the banner. */
 .root[data-scroll="page"][data-header-span="content"] .sidebar {
-  block-size: var(--app-shell-viewport-size, 100dvh);
-  inset-block-start: 0;
+  block-size: calc(var(--app-shell-viewport-size, 100dvh) - var(--app-shell-banner-stick, 0px));
+  inset-block-start: var(--app-shell-banner-stick, 0px);
 }
 
-/* The header stays in view too, which a sticky box can only do inside an area as tall as the shell. Once the header's height is known
-   (`AppShell` measures it) the first row is that tall and the header spans every row from the top, so its area is the whole shell; until
-   then it is an ordinary first row and scrolls away. */
+/* A part kept in view can only stay there inside an area as tall as the shell. Once its height is known (`AppShell` measures it) its row is
+   that tall and it spans every row beyond its own, so its area is the whole shell; until then it is an ordinary row and scrolls away. The
+   header does this always; the banner and the footer only when they are `sticky`. */
+.root[data-banner-measured] {
+  --app-shell-banner-row: var(--app-shell-banner-height);
+}
+
 .root[data-scroll="page"][data-header-measured] {
-  grid-template-rows: var(--app-shell-header-height) minmax(0, 1fr) auto;
+  --app-shell-header-row: var(--app-shell-header-height);
 }
 
-.root[data-scroll="page"][data-header-measured] .header {
+.root[data-footer-measured] {
+  --app-shell-footer-row: var(--app-shell-footer-height);
+  padding-bottom: 0;
+}
+
+.root[data-scroll="page"][data-banner-measured] .banner {
+  background-color: var(--dbm-bg-surface);
   align-self: start;
   grid-row: 1 / -1;
   inset-block-start: 0;
   position: sticky;
-  padding-top: var(--app-shell-safe-top);
+  z-index: calc(var(--dbm-z-index-sticky) + 1);
+}
+
+.root[data-scroll="page"][data-header-measured] .header {
+  background-color: var(--dbm-bg-surface);
+  align-self: start;
+  grid-row: 2 / -1;
+  inset-block-start: var(--app-shell-banner-stick, 0px);
+  position: sticky;
   z-index: var(--dbm-z-index-sticky);
+}
+
+.root[data-scroll="page"][data-header-measured]:not(:has(> .banner)) .header {
+  padding-top: var(--app-shell-safe-top);
+}
+
+.root[data-scroll="page"][data-footer-measured] .footer {
+  background-color: var(--dbm-bg-surface);
+  align-self: end;
+  grid-row: 1 / -1;
+  inset-block-end: 0;
+  padding-block-end: var(--app-shell-safe-bottom);
+  position: sticky;
+  z-index: var(--dbm-z-index-sticky);
+}
+
+.banner {
+  grid-area: banner;
+  min-inline-size: 0;
 }
 
 .sidebar {
   grid-area: sidebar;
   display: flex;
   min-block-size: 0;
+  position: relative;
 }
 
 /* The sidebar fills its column's height; a floating one keeps its own inset. */
@@ -151,6 +199,116 @@
 .footer {
   grid-area: footer;
   min-inline-size: 0;
+  /* The line over the footer is always there (transparent) so nothing moves when it shows, and shows only while there is more below. */
+  border-block-start: var(--dbm-border-width-1) solid transparent;
+}
+
+/* --- The scrolled-edge cue --- */
+.header {
+  transition: box-shadow var(--dbm-motion-duration-base) var(--dbm-motion-easing-standard);
+}
+
+.footer {
+  transition: border-color var(--dbm-motion-duration-base) var(--dbm-motion-easing-standard);
+}
+
+/* While the content is scrolled down from its top the header casts a shadow on it (`position: relative` lifts it over the main area that follows
+   it; with the page scrolling it is already sticky). While there is more below the footer shows a line. */
+.root[data-scroll="content"][data-scrolled-edge][data-scrolled] .header {
+  position: relative;
+}
+
+.root[data-scrolled-edge][data-scrolled] .header {
+  box-shadow: var(--dbm-shadow-light-md);
+}
+
+[data-theme$="-dark"] .root[data-scrolled-edge][data-scrolled] .header {
+  box-shadow: var(--dbm-shadow-dark-md);
+}
+
+.root[data-scrolled-edge][data-more-below] .footer {
+  border-block-start-color: var(--dbm-border-default);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .header,
+  .footer {
+    transition: none;
+  }
+}
+
+/* Forced colours drop shadows, so the header gets a line of its own while scrolled. */
+@media (forced-colors: active) {
+  .root[data-scrolled-edge][data-scrolled] .header {
+    border-block-end: var(--dbm-border-width-1) solid CanvasText;
+  }
+
+  .footer {
+    border-block-start-color: Canvas;
+  }
+
+  .root[data-scrolled-edge][data-more-below] .footer {
+    border-block-start-color: CanvasText;
+  }
+}
+
+/* --- The sidebar's resize handle --- */
+/* A strip along the column's inner edge, a little wider than its line so it is easy to grab; the line shows on hover, while dragging and on focus. */
+.resizeHandle {
+  position: absolute;
+  inset-block: 0;
+  inline-size: var(--dbm-space-2);
+  cursor: col-resize;
+  touch-action: none;
+  z-index: var(--dbm-z-index-base);
+}
+
+.sidebar[data-side="start"] .resizeHandle {
+  inset-inline-end: calc(-1 * var(--dbm-space-1));
+}
+
+.sidebar[data-side="end"] .resizeHandle {
+  inset-inline-start: calc(-1 * var(--dbm-space-1));
+}
+
+/* While the reader drags, the sidebar follows the pointer at once (its own width transition would lag behind it), and on load a restored width or
+   an automatic rail is there from the first frame. */
+.sidebar[data-dragging] > *,
+.root[data-restoring] .sidebar > * {
+  transition: none;
+}
+
+.resizeHandle::after {
+  content: "";
+  position: absolute;
+  inset-block: 0;
+  inset-inline-start: calc(50% - var(--dbm-border-width-1));
+  inline-size: var(--dbm-border-width-2);
+  background-color: transparent;
+  transition: background-color var(--dbm-motion-duration-base) var(--dbm-motion-easing-standard);
+}
+
+.resizeHandle:hover::after,
+.sidebar[data-dragging] .resizeHandle::after {
+  background-color: var(--dbm-bg-brand);
+}
+
+.resizeHandle:focus-visible {
+  outline: var(--dbm-border-width-2) solid var(--dbm-border-focus);
+  outline-offset: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .resizeHandle::after {
+    transition: none;
+  }
+}
+
+@media (forced-colors: active) {
+  .resizeHandle:hover::after,
+  .sidebar[data-dragging] .resizeHandle::after {
+    background-color: Highlight;
+  }
 }
 
 /* --- The aside below its collapse step ---

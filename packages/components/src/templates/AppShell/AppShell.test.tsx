@@ -2,7 +2,7 @@ import { act, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { axe } from "jest-axe";
 import { createRef, StrictMode } from "react";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { Navbar } from "../../organisms/Navbar";
 import { Sidebar } from "../../organisms/Sidebar";
 import { AppShell } from "./AppShell";
@@ -572,3 +572,457 @@ describe("AppShell's page changes (pageKey and pageTitle)", () => {
   });
 });
 
+// --- The rail, the remembered layout, the resizable sidebar, the banner, the content wrapper, the sticky footer and the scrolled-edge cue ---
+
+/** A media query the test controls: `matches` is read when it is asked, and `cross` fires its change listeners. */
+function stubMediaQuery(initial: boolean) {
+  const query = {
+    matches: initial,
+    listeners: [] as Array<() => void>,
+    addEventListener: (_: string, listener: () => void) => query.listeners.push(listener),
+    removeEventListener: (_: string, listener: () => void) => {
+      query.listeners = query.listeners.filter((fn) => fn !== listener);
+    },
+    cross(matches: boolean) {
+      query.matches = matches;
+      act(() => query.listeners.forEach((fn) => fn()));
+    },
+  };
+  const original = window.matchMedia;
+  window.matchMedia = vi.fn().mockReturnValue(query) as unknown as typeof window.matchMedia;
+  return { query, restore: () => void (window.matchMedia = original) };
+}
+
+function Railed(props: Partial<React.ComponentProps<typeof AppShell>> & { sidebarProps?: Partial<React.ComponentProps<typeof AppShell.Sidebar>> }) {
+  const { sidebarProps, ...shell } = props;
+  return (
+    <AppShell collapseBelow="never" data-testid="shell" {...shell}>
+      <AppShell.Sidebar data-testid="slot" {...sidebarProps}>
+        <Sidebar collapseBelow="never">
+          <Sidebar.Content>
+            <Sidebar.Nav>
+              <Sidebar.Item href="/">Home</Sidebar.Item>
+            </Sidebar.Nav>
+          </Sidebar.Content>
+          <Sidebar.Footer>
+            <Sidebar.Toggle />
+          </Sidebar.Footer>
+        </Sidebar>
+      </AppShell.Sidebar>
+      <AppShell.Main>Main</AppShell.Main>
+    </AppShell>
+  );
+}
+
+const railState = () => (screen.queryByRole("button", { name: "Expand sidebar" }) ? "rail" : "expanded");
+
+describe("AppShell's rail (railBelow)", () => {
+  afterEach(() => window.localStorage.clear());
+
+  it("collapses the sidebar to a rail below the step and expands it above, on load and each time the window crosses it", () => {
+    const media = stubMediaQuery(false);
+    try {
+      render(<Railed railBelow="lg" />);
+      expect(railState()).toBe("rail");
+      media.query.cross(true);
+      expect(railState()).toBe("expanded");
+      media.query.cross(false);
+      expect(railState()).toBe("rail");
+    } finally {
+      media.restore();
+    }
+  });
+
+  it("starts expanded on a window wide enough, and does nothing with railBelow never", () => {
+    const wide = stubMediaQuery(true);
+    try {
+      const { unmount } = render(<Railed railBelow="lg" />);
+      expect(railState()).toBe("expanded");
+      unmount();
+    } finally {
+      wide.restore();
+    }
+    const narrow = stubMediaQuery(false);
+    try {
+      render(<Railed railBelow="never" />);
+      expect(railState()).toBe("expanded");
+    } finally {
+      narrow.restore();
+    }
+  });
+
+  it("lets the reader's own toggle hold until the window crosses the step again", async () => {
+    const user = userEvent.setup();
+    const media = stubMediaQuery(false);
+    try {
+      render(<Railed railBelow="lg" />);
+      expect(railState()).toBe("rail");
+      await user.click(screen.getByRole("button", { name: "Expand sidebar" }));
+      expect(railState()).toBe("expanded");
+      media.query.cross(true);
+      expect(railState()).toBe("expanded");
+      media.query.cross(false);
+      expect(railState()).toBe("rail");
+    } finally {
+      media.restore();
+    }
+  });
+
+  it("reports the automatic changes through onCollapsedChange, and is the app's to apply when collapsed is controlled", () => {
+    const media = stubMediaQuery(false);
+    const changes: boolean[] = [];
+    try {
+      const { rerender } = render(<Railed railBelow="lg" collapsed={false} onCollapsedChange={(next) => changes.push(next)} />);
+      expect(changes).toEqual([true]);
+      // controlled: the sidebar stays as the app says until the app says otherwise
+      expect(railState()).toBe("expanded");
+      rerender(<Railed railBelow="lg" collapsed onCollapsedChange={(next) => changes.push(next)} />);
+      expect(railState()).toBe("rail");
+    } finally {
+      media.restore();
+    }
+  });
+});
+
+describe("AppShell's remembered layout (persistKey)", () => {
+  const key = "dbm-app-shell:layout";
+  afterEach(() => {
+    window.localStorage.clear();
+    vi.restoreAllMocks();
+  });
+
+  it("restores the collapsed state and the width the reader left, once the page is up", () => {
+    window.localStorage.setItem(key, JSON.stringify({ collapsed: true, width: 300 }));
+    render(<Railed persistKey="layout" />);
+    expect(railState()).toBe("rail");
+    expect(screen.getByTestId("slot").style.getPropertyValue("--sidebar-width")).toBe("300px");
+  });
+
+  it("remembers the reader's toggle, and not the shell's own automatic changes", async () => {
+    const user = userEvent.setup();
+    const media = stubMediaQuery(false);
+    try {
+      render(<Railed persistKey="layout" railBelow="lg" />);
+      // the rail below the step was the shell's doing, so nothing was written
+      expect(window.localStorage.getItem(key)).toBeNull();
+      await user.click(screen.getByRole("button", { name: "Expand sidebar" }));
+      expect(JSON.parse(window.localStorage.getItem(key) ?? "{}")).toEqual({ collapsed: false });
+    } finally {
+      media.restore();
+    }
+  });
+
+  it("lets what was remembered win over railBelow for the first frame", () => {
+    window.localStorage.setItem(key, JSON.stringify({ collapsed: false }));
+    const media = stubMediaQuery(false);
+    try {
+      render(<Railed persistKey="layout" railBelow="lg" />);
+      expect(railState()).toBe("expanded");
+      // and the first crossing of the step wins back
+      media.query.cross(true);
+      media.query.cross(false);
+      expect(railState()).toBe("rail");
+    } finally {
+      media.restore();
+    }
+  });
+
+  it("leaves a collapsed state or a width the app controls alone", () => {
+    window.localStorage.setItem(key, JSON.stringify({ collapsed: true, width: 300 }));
+    render(<Railed persistKey="layout" collapsed={false} sidebarWidth={220} />);
+    expect(railState()).toBe("expanded");
+    expect(screen.getByTestId("slot").style.getPropertyValue("--sidebar-width")).toBe("220px");
+  });
+
+  it("ignores storage that is broken, wrong or unavailable", () => {
+    window.localStorage.setItem(key, "{not json");
+    expect(() => render(<Railed persistKey="layout" />)).not.toThrow();
+    expect(railState()).toBe("expanded");
+    vi.spyOn(Storage.prototype, "getItem").mockImplementation(() => {
+      throw new Error("blocked");
+    });
+    vi.spyOn(Storage.prototype, "setItem").mockImplementation(() => {
+      throw new Error("full");
+    });
+    expect(() => render(<Railed persistKey="other" />)).not.toThrow();
+  });
+
+  it("does nothing with storage without a key", async () => {
+    const user = userEvent.setup();
+    render(<Railed />);
+    await user.click(screen.getByRole("button", { name: "Collapse sidebar" }));
+    expect(window.localStorage.length).toBe(0);
+  });
+});
+
+describe("AppShell.Sidebar's resize handle", () => {
+  // jsdom lays nothing out, so the column is given a width.
+  beforeEach(() => {
+    vi.spyOn(HTMLElement.prototype, "getBoundingClientRect").mockImplementation(function (this: HTMLElement) {
+      const width = this.dataset.testid === "slot" ? 256 : 0;
+      return { width, height: 0, top: 0, left: 0, right: width, bottom: 0, x: 0, y: 0, toJSON: () => ({}) };
+    });
+  });
+  afterEach(() => {
+    window.localStorage.clear();
+    vi.restoreAllMocks();
+  });
+
+  const handle = () => screen.getByRole("separator", { name: "Resize sidebar" });
+
+  it("is a named vertical separator with the column's width, and its bounds, when the sidebar is resizable", () => {
+    render(<Railed sidebarProps={{ resizable: true }} />);
+    expect(handle()).toHaveAttribute("aria-orientation", "vertical");
+    expect(handle()).toHaveAttribute("aria-valuenow", "256");
+    expect(handle()).toHaveAttribute("aria-valuemin", "192");
+    expect(handle()).toHaveAttribute("aria-valuemax", "448");
+    expect(handle()).toHaveAttribute("tabindex", "0");
+  });
+
+  it("is not drawn without resizable, and not while the sidebar is a rail", () => {
+    const { rerender } = render(<Railed />);
+    expect(screen.queryByRole("separator")).not.toBeInTheDocument();
+    rerender(<Railed sidebarProps={{ resizable: true }} collapsed />);
+    expect(screen.queryByRole("separator")).not.toBeInTheDocument();
+  });
+
+  it("is widened by ArrowRight and narrowed by ArrowLeft, a rem each (four with Shift), and the width is set on the column", async () => {
+    const user = userEvent.setup();
+    const widths: Array<number | undefined> = [];
+    render(<Railed sidebarProps={{ resizable: true }} onSidebarWidthChange={(width) => widths.push(width)} />);
+    handle().focus();
+    await user.keyboard("{ArrowRight}");
+    expect(screen.getByTestId("slot").style.getPropertyValue("--sidebar-width")).toBe("272px");
+    await user.keyboard("{ArrowLeft}{ArrowLeft}");
+    expect(screen.getByTestId("slot").style.getPropertyValue("--sidebar-width")).toBe("240px");
+    await user.keyboard("{Shift>}{ArrowRight}{/Shift}");
+    expect(screen.getByTestId("slot").style.getPropertyValue("--sidebar-width")).toBe("304px");
+    expect(widths).toEqual([272, 256, 240, 304]);
+  });
+
+  it("jumps to the least and the most with Home and End, and never passes them", async () => {
+    const user = userEvent.setup();
+    render(<Railed sidebarProps={{ resizable: true, minWidth: 200, maxWidth: "20rem" }} />);
+    handle().focus();
+    await user.keyboard("{Home}");
+    expect(screen.getByTestId("slot").style.getPropertyValue("--sidebar-width")).toBe("200px");
+    await user.keyboard("{ArrowLeft}");
+    expect(screen.getByTestId("slot").style.getPropertyValue("--sidebar-width")).toBe("200px");
+    await user.keyboard("{End}");
+    expect(screen.getByTestId("slot").style.getPropertyValue("--sidebar-width")).toBe("320px");
+    await user.keyboard("{ArrowRight}");
+    expect(screen.getByTestId("slot").style.getPropertyValue("--sidebar-width")).toBe("320px");
+  });
+
+  it("gives the sidebar its own width back with a double press, and reports undefined", async () => {
+    const user = userEvent.setup();
+    const widths: Array<number | undefined> = [];
+    render(<Railed sidebarProps={{ resizable: true }} defaultSidebarWidth={300} onSidebarWidthChange={(width) => widths.push(width)} />);
+    expect(screen.getByTestId("slot").style.getPropertyValue("--sidebar-width")).toBe("300px");
+    await user.dblClick(handle());
+    expect(widths).toEqual([undefined]);
+    expect(screen.getByTestId("slot").style.getPropertyValue("--sidebar-width")).toBe("");
+  });
+
+  it("flips the arrows for the end side and for right to left, where wider is the other way", async () => {
+    const user = userEvent.setup();
+    const { rerender } = render(<Railed sidebarSide="end" sidebarProps={{ resizable: true }} />);
+    handle().focus();
+    await user.keyboard("{ArrowLeft}");
+    expect(screen.getByTestId("slot").style.getPropertyValue("--sidebar-width")).toBe("272px");
+    rerender(<Railed dir="rtl" sidebarSide="end" sidebarProps={{ resizable: true }} sidebarWidth={256} />);
+    handle().focus();
+    await user.keyboard("{ArrowRight}");
+    expect(screen.getByTestId("slot").style.getPropertyValue("--sidebar-width")).toBe("256px");
+  });
+
+  it("remembers the width through persistKey, and forgets it when it is given back", async () => {
+    const user = userEvent.setup();
+    render(<Railed persistKey="resize" sidebarProps={{ resizable: true }} />);
+    handle().focus();
+    await user.keyboard("{ArrowRight}");
+    expect(JSON.parse(window.localStorage.getItem("dbm-app-shell:resize") ?? "{}")).toEqual({ width: 272 });
+    await user.dblClick(handle());
+    expect(JSON.parse(window.localStorage.getItem("dbm-app-shell:resize") ?? "{}")).toEqual({});
+  });
+
+  it("warns in development when the Sidebar inside has a width of its own, which would win over the handle", () => {
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+    render(
+      <AppShell>
+        <AppShell.Sidebar resizable>
+          <Sidebar width="16rem" collapseBelow="never">
+            <Sidebar.Content>x</Sidebar.Content>
+          </Sidebar>
+        </AppShell.Sidebar>
+        <AppShell.Main>x</AppShell.Main>
+      </AppShell>,
+    );
+    expect(warn).toHaveBeenCalledWith(expect.stringContaining("Leave `width` off"));
+  });
+
+  it("takes its name through labels, and an undefined override keeps the default", () => {
+    render(<Railed sidebarProps={{ resizable: true, labels: { resize: "Redimensionner" } }} />);
+    expect(screen.getByRole("separator", { name: "Redimensionner" })).toBeInTheDocument();
+  });
+});
+
+describe("AppShell.Banner, AppShell.Content and a sticky AppShell.Footer", () => {
+  it("draws the banner in its own area, and says on the shell whether it is sticky", () => {
+    const { rerender } = render(
+      <AppShell data-testid="shell">
+        <AppShell.Banner data-testid="banner">Maintenance tonight</AppShell.Banner>
+        <AppShell.Main>x</AppShell.Main>
+      </AppShell>,
+    );
+    expect(screen.getByTestId("banner")).toHaveTextContent("Maintenance tonight");
+    expect(screen.getByTestId("shell")).not.toHaveAttribute("data-banner-sticky");
+    rerender(
+      <AppShell data-testid="shell">
+        <AppShell.Banner data-testid="banner" sticky>
+          Maintenance tonight
+        </AppShell.Banner>
+        <AppShell.Main>x</AppShell.Main>
+      </AppShell>,
+    );
+    expect(screen.getByTestId("shell")).toHaveAttribute("data-banner-sticky");
+    expect(screen.getByTestId("banner")).toHaveAttribute("data-sticky");
+  });
+
+  it("forgets the banner is sticky when it goes", () => {
+    const { rerender } = render(
+      <AppShell data-testid="shell">
+        <AppShell.Banner sticky>x</AppShell.Banner>
+        <AppShell.Main>x</AppShell.Main>
+      </AppShell>,
+    );
+    expect(screen.getByTestId("shell")).toHaveAttribute("data-banner-sticky");
+    rerender(
+      <AppShell data-testid="shell">
+        <AppShell.Main>x</AppShell.Main>
+      </AppShell>,
+    );
+    expect(screen.getByTestId("shell")).not.toHaveAttribute("data-banner-sticky");
+  });
+
+  it("marks a sticky footer, and leaves the default one alone", () => {
+    render(
+      <AppShell>
+        <AppShell.Main>x</AppShell.Main>
+        <AppShell.Footer data-testid="plain">a</AppShell.Footer>
+        <AppShell.Footer data-testid="sticky" sticky>
+          b
+        </AppShell.Footer>
+      </AppShell>,
+    );
+    expect(screen.getByTestId("plain")).not.toHaveAttribute("data-sticky");
+    expect(screen.getByTestId("sticky")).toHaveAttribute("data-sticky");
+  });
+
+  it("pads the content on the spacing scale, with no limit on its width unless given one", () => {
+    const { rerender } = render(
+      <AppShell>
+        <AppShell.Main>
+          <AppShell.Content data-testid="content">x</AppShell.Content>
+        </AppShell.Main>
+      </AppShell>,
+    );
+    const content = screen.getByTestId("content");
+    expect(content.style.paddingBlock).toBe("var(--dbm-space-6)");
+    expect(content.style.getPropertyValue("--container-padding-base")).toBe("var(--dbm-space-4)");
+    expect(content.style.getPropertyValue("--container-padding-md")).toBe("var(--dbm-space-6)");
+    expect(content.style.getPropertyValue("--container-padding-lg")).toBe("var(--dbm-space-8)");
+    rerender(
+      <AppShell>
+        <AppShell.Main>
+          <AppShell.Content data-testid="content" size="lg" paddingBlock={10} paddingInline={2} style={{ color: "red" }}>
+            x
+          </AppShell.Content>
+        </AppShell.Main>
+      </AppShell>,
+    );
+    expect(screen.getByTestId("content").style.paddingBlock).toBe("var(--dbm-space-10)");
+    expect(screen.getByTestId("content").style.getPropertyValue("--container-padding-base")).toBe("var(--dbm-space-2)");
+    expect(screen.getByTestId("content").style.color).toBe("red");
+  });
+});
+
+describe("AppShell's scrolled-edge cue and state", () => {
+  function Probe() {
+    const state = useAppShell();
+    return (
+      <p data-testid="probe">
+        {String(state.scrolled)}|{String(state.moreBelow)}|{String(state.collapsed)}|{String(state.sidebarWidth)}
+      </p>
+    );
+  }
+  function stubScroller(main: HTMLElement, sizes: { scrollTop: number; scrollHeight: number; clientHeight: number }) {
+    Object.defineProperty(main, "scrollTop", { configurable: true, writable: true, value: sizes.scrollTop });
+    Object.defineProperty(main, "scrollHeight", { configurable: true, value: sizes.scrollHeight });
+    Object.defineProperty(main, "clientHeight", { configurable: true, value: sizes.clientHeight });
+  }
+
+  it("says the content is scrolled and that there is more below, once the main area scrolls", () => {
+    render(
+      <AppShell data-testid="shell">
+        <AppShell.Header data-testid="header">head</AppShell.Header>
+        <AppShell.Main data-testid="main">
+          <Probe />
+        </AppShell.Main>
+      </AppShell>,
+    );
+    const shell = screen.getByTestId("shell");
+    const main = screen.getByTestId("main");
+    expect(shell).not.toHaveAttribute("data-scrolled");
+    stubScroller(main, { scrollTop: 40, scrollHeight: 1000, clientHeight: 400 });
+    act(() => void main.dispatchEvent(new Event("scroll")));
+    expect(shell).toHaveAttribute("data-scrolled");
+    expect(shell).toHaveAttribute("data-more-below");
+    expect(screen.getByTestId("probe")).toHaveTextContent("true|true|false|undefined");
+    stubScroller(main, { scrollTop: 600, scrollHeight: 1000, clientHeight: 400 });
+    act(() => void main.dispatchEvent(new Event("scroll")));
+    expect(shell).not.toHaveAttribute("data-more-below");
+    stubScroller(main, { scrollTop: 0, scrollHeight: 1000, clientHeight: 400 });
+    act(() => void main.dispatchEvent(new Event("scroll")));
+    expect(shell).not.toHaveAttribute("data-scrolled");
+  });
+
+  it("shows the cue by default and not with scrolledEdge off, while the state is still reported", () => {
+    const { rerender } = render(
+      <AppShell data-testid="shell">
+        <AppShell.Main>x</AppShell.Main>
+      </AppShell>,
+    );
+    expect(screen.getByTestId("shell")).toHaveAttribute("data-scrolled-edge");
+    rerender(
+      <AppShell data-testid="shell" scrolledEdge={false}>
+        <AppShell.Main>x</AppShell.Main>
+      </AppShell>,
+    );
+    expect(screen.getByTestId("shell")).not.toHaveAttribute("data-scrolled-edge");
+  });
+
+  it("gives the app the collapsed state and the width, and lets it change them", async () => {
+    const user = userEvent.setup();
+    function Controls() {
+      const { setCollapsed, setSidebarWidth } = useAppShell();
+      return (
+        <>
+          <button onClick={() => setCollapsed(true)}>collapse</button>
+          <button onClick={() => setSidebarWidth(300)}>widen</button>
+        </>
+      );
+    }
+    render(
+      <AppShell>
+        <AppShell.Main>
+          <Probe />
+          <Controls />
+        </AppShell.Main>
+      </AppShell>,
+    );
+    await user.click(screen.getByRole("button", { name: "collapse" }));
+    await user.click(screen.getByRole("button", { name: "widen" }));
+    expect(screen.getByTestId("probe")).toHaveTextContent("false|false|true|300");
+  });
+});

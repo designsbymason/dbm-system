@@ -1,7 +1,8 @@
 import { SidebarSimpleIcon } from "@dbm-system/icons";
 import { cx, mergeDefined, mergeRefs, useAnnouncement, useIsScrollable } from "@dbm-system/utils";
-import { Children, forwardRef, isValidElement, useCallback, useEffect, useMemo, useRef, useState } from "react";
-import type { CSSProperties } from "react";
+import { Children, forwardRef, isValidElement, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import type { CSSProperties, KeyboardEvent as ReactKeyboardEvent, PointerEvent as ReactPointerEvent } from "react";
+import { Container } from "../../atoms/Container";
 import { IconButton } from "../../atoms/IconButton";
 import { VisuallyHidden } from "../../atoms/VisuallyHidden";
 import { Drawer } from "../../organisms/Drawer";
@@ -15,10 +16,13 @@ import type {
   AppShellAsideProps,
   AppShellAsideToggleLabels,
   AppShellAsideToggleProps,
+  AppShellBannerProps,
+  AppShellContentProps,
   AppShellFooterProps,
   AppShellHeaderProps,
   AppShellMainProps,
   AppShellProps,
+  AppShellSidebarLabels,
   AppShellSidebarProps,
   AppShellSkipLinkLabels,
   AppShellSkipLinkProps,
@@ -27,10 +31,62 @@ import type {
 const defaultAsideLabels: AppShellAsideLabels = { title: "Details", close: "Close" };
 const defaultAsideToggleLabels: AppShellAsideToggleLabels = { open: "Show details" };
 const defaultSkipLinkLabels: AppShellSkipLinkLabels = { skipToContent: "Skip to content" };
+const defaultSidebarLabels: AppShellSidebarLabels = { resize: "Resize sidebar" };
+
+// Before paint where there is a browser, so a remembered layout or a rail is in place on the first frame and nothing jumps; the plain effect on
+// the server, where a layout effect warns in React 18 and does nothing useful.
+const useBeforePaint = typeof window === "undefined" ? useEffect : useLayoutEffect;
+
+/** The shell's own storage entry: the reader's collapsed state and the sidebar's width. Anything unreadable is ignored. */
+interface StoredLayout {
+  collapsed?: boolean;
+  width?: number;
+}
+
+function readLayout(key: string): StoredLayout {
+  try {
+    const raw = window.localStorage.getItem(`dbm-app-shell:${key}`);
+    if (raw === null) return {};
+    const parsed: unknown = JSON.parse(raw);
+    if (typeof parsed !== "object" || parsed === null) return {};
+    const { collapsed, width } = parsed as Record<string, unknown>;
+    return {
+      ...(typeof collapsed === "boolean" ? { collapsed } : {}),
+      ...(typeof width === "number" && Number.isFinite(width) && width > 0 ? { width } : {}),
+    };
+  } catch {
+    return {};
+  }
+}
+
+function writeLayout(key: string, patch: StoredLayout & { clearWidth?: boolean }) {
+  try {
+    const { clearWidth, ...rest } = patch;
+    const next = { ...readLayout(key), ...rest };
+    if (clearWidth) delete next.width;
+    window.localStorage.setItem(`dbm-app-shell:${key}`, JSON.stringify(next));
+  } catch {
+    // storage is full, blocked or disabled: the layout is just not remembered
+  }
+}
+
+/** The page's `rem` in pixels (16 where the browser reports nothing, as a test document does). */
+function rootFontSize(): number {
+  return Number.parseFloat(getComputedStyle(document.documentElement).fontSize) || 16;
+}
+
+/** A length in pixels from a number or a `rem` or `px` string, or `fallback` when it is none of those. */
+function toPixels(value: number | string | undefined, fallback: number): number {
+  if (typeof value === "number") return value;
+  const match = typeof value === "string" ? /^\s*([\d.]+)\s*(rem|px)\s*$/.exec(value) : null;
+  if (match === null) return fallback;
+  const amount = Number.parseFloat(match[1] as string);
+  return match[2] === "rem" ? amount * rootFontSize() : amount;
+}
 
 // The widths the aside's collapse steps stand for: the literal values of the breakpoint tokens (a media query can't read a custom property),
 // as `Sidebar` and `Drawer` write them.
-const collapseQueries: Record<Exclude<AppShellAsideCollapseBelow, "never">, string> = {
+const breakpointQueries: Record<Exclude<AppShellAsideCollapseBelow, "never">, string> = {
   sm: "(min-width: 40rem)",
   md: "(min-width: 48rem)",
   lg: "(min-width: 64rem)",
@@ -92,6 +148,12 @@ const AppShellRoot = forwardRef<HTMLDivElement, AppShellProps>(
       scroll = "content",
       sidebarSide = "start",
       headerSpan = "content",
+      railBelow = "never",
+      persistKey,
+      sidebarWidth: sidebarWidthProp,
+      defaultSidebarWidth,
+      onSidebarWidthChange,
+      scrolledEdge = true,
       asideCollapseBelow = "lg",
       asideCollapseTo = "drawer",
       asideOpen: asideOpenProp,
@@ -100,7 +162,7 @@ const AppShellRoot = forwardRef<HTMLDivElement, AppShellProps>(
       pageKey,
       pageTitle,
       dir = "ltr",
-      collapsed,
+      collapsed: collapsedProp,
       defaultCollapsed,
       onCollapsedChange,
       menuOpen,
@@ -114,10 +176,124 @@ const AppShellRoot = forwardRef<HTMLDivElement, AppShellProps>(
     },
     ref,
   ) => {
-    // With `scroll="page"` the header can only stay in view if its grid area is as tall as the whole shell, so the shell needs its height
-    // to keep the first row that size. Zero (the server render, the first client render) leaves the header in its own row, unstuck.
+    // With `scroll="page"` a header, a banner or a footer can only stay in view if its grid area is as tall as the whole shell, so the shell needs
+    // their heights to keep their rows that size. Zero (the server render, the first client render) leaves each in its own row, unstuck.
     const [headerHeight, setHeaderHeight] = useState(0);
+    const [bannerHeight, setBannerHeight] = useState(0);
+    const [footerHeight, setFooterHeight] = useState(0);
+    const [bannerSticky, setBannerSticky] = useState(false);
     const measured = scroll === "page" && headerHeight > 0;
+    const bannerMeasured = scroll === "page" && bannerHeight > 0;
+    const footerMeasured = scroll === "page" && footerHeight > 0;
+
+    // The sidebar's collapsed state is the shell's, controlled by `collapsed` or held here, so the shell can also collapse it by itself (`railBelow`)
+    // and restore it (`persistKey`). Whoever changes it is told through `onCollapsedChange`; only the reader's own changes are remembered.
+    const [collapsedState, setCollapsedState] = useState(defaultCollapsed ?? false);
+    const collapsed = collapsedProp ?? collapsedState;
+    const collapsedRef = useRef(collapsed);
+    collapsedRef.current = collapsed;
+    const persistKeyRef = useRef(persistKey);
+    persistKeyRef.current = persistKey;
+    const changeCollapsed = useCallback(
+      (next: boolean, source: "reader" | "auto" | "restore") => {
+        if (next === collapsedRef.current) return;
+        if (collapsedProp === undefined) setCollapsedState(next);
+        else if (source === "restore") return; // a collapsed state the app holds is the app's to restore
+        collapsedRef.current = next;
+        onCollapsedChange?.(next);
+        if (source === "reader" && persistKeyRef.current !== undefined) writeLayout(persistKeyRef.current, { collapsed: next });
+      },
+      [collapsedProp, onCollapsedChange],
+    );
+    const setCollapsed = useCallback((next: boolean) => changeCollapsed(next, "reader"), [changeCollapsed]);
+
+    // The sidebar's width in pixels, once resized: controlled by `sidebarWidth` or held here.
+    const [widthState, setWidthState] = useState<number | undefined>(defaultSidebarWidth);
+    const sidebarWidth = sidebarWidthProp ?? widthState;
+    const setSidebarWidth = useCallback(
+      (next: number | undefined) => {
+        if (sidebarWidthProp === undefined) setWidthState(next);
+        onSidebarWidthChange?.(next);
+        if (persistKeyRef.current !== undefined) {
+          if (next === undefined) writeLayout(persistKeyRef.current, { clearWidth: true });
+          else writeLayout(persistKeyRef.current, { width: next });
+        }
+      },
+      [sidebarWidthProp, onSidebarWidthChange],
+    );
+
+    // The remembered layout, applied once on the page (so the server's render and the first client render agree), before paint. A width the app
+    // controls is not touched. What was remembered wins over `railBelow` for the first frame; the first crossing of the step after that wins back.
+    const rememberedCollapsed = useRef<boolean | undefined>(undefined);
+    // Until the first frames have been drawn the sidebar's own width transition is off, so a restored width or an automatic rail is just there
+    // on load and does not slide into place.
+    const [settled, setSettled] = useState(persistKey === undefined && railBelow === "never");
+    useEffect(() => {
+      if (settled) return undefined;
+      let second = 0;
+      const first = requestAnimationFrame(() => {
+        second = requestAnimationFrame(() => setSettled(true));
+      });
+      return () => {
+        cancelAnimationFrame(first);
+        cancelAnimationFrame(second);
+      };
+    }, [settled]);
+    useBeforePaint(() => {
+      if (persistKey === undefined) return;
+      const stored = readLayout(persistKey);
+      rememberedCollapsed.current = stored.collapsed;
+      if (stored.collapsed !== undefined) changeCollapsed(stored.collapsed, "restore");
+      if (stored.width !== undefined && sidebarWidthProp === undefined) setWidthState(stored.width);
+    }, []);
+
+    // `railBelow`: the sidebar is a rail below the step and expanded above it, set when the page loads (unless a layout was remembered) and each
+    // time the window crosses the step. In between the reader's own toggle holds.
+    const changeCollapsedRef = useRef(changeCollapsed);
+    changeCollapsedRef.current = changeCollapsed;
+    useBeforePaint(() => {
+      if (railBelow === "never" || typeof window === "undefined" || typeof window.matchMedia !== "function") return undefined;
+      const query = window.matchMedia(breakpointQueries[railBelow]);
+      if (rememberedCollapsed.current === undefined) changeCollapsedRef.current(!query.matches, "auto");
+      const onChange = () => changeCollapsedRef.current(!query.matches, "auto");
+      query.addEventListener?.("change", onChange);
+      return () => query.removeEventListener?.("change", onChange);
+    }, [railBelow]);
+
+    // The header's and the main area's scrolling: whether the content is scrolled down from its top, and whether there is more below.
+    const mainRef = useRef<HTMLElement | null>(null);
+    const [scrolled, setScrolled] = useState(false);
+    const [moreBelow, setMoreBelow] = useState(false);
+    useEffect(() => {
+      if (typeof window === "undefined") return undefined;
+      const main = mainRef.current;
+      const read = () => {
+        if (scroll === "content" && main !== null) {
+          setScrolled(main.scrollTop > 0.5);
+          setMoreBelow(main.scrollTop + main.clientHeight < main.scrollHeight - 1);
+        } else if (scroll === "page") {
+          const page = document.documentElement;
+          setScrolled(window.scrollY > 0.5);
+          setMoreBelow(window.scrollY + window.innerHeight < page.scrollHeight - 1);
+        }
+      };
+      read();
+      const target: HTMLElement | Window = scroll === "content" && main !== null ? main : window;
+      target.addEventListener("scroll", read, { passive: true });
+      window.addEventListener("resize", read);
+      const observer = typeof ResizeObserver === "undefined" ? null : new ResizeObserver(read);
+      if (scroll === "content" && main !== null) {
+        observer?.observe(main);
+        if (main.firstElementChild) observer?.observe(main.firstElementChild);
+      } else {
+        observer?.observe(document.documentElement);
+      }
+      return () => {
+        target.removeEventListener("scroll", read);
+        window.removeEventListener("resize", read);
+        observer?.disconnect();
+      };
+    }, [scroll]);
 
     // The aside's drawer: controlled by `asideOpen` or held here, and only ever open while the aside is a drawer.
     const [asideOpenState, setAsideOpenState] = useState(defaultAsideOpen);
@@ -130,7 +306,6 @@ const AppShellRoot = forwardRef<HTMLDivElement, AppShellProps>(
       [asideOpenProp, onAsideOpenChange],
     );
 
-    const mainRef = useRef<HTMLElement | null>(null);
     const asideToggleRef = useRef<HTMLElement | null>(null);
 
     // Moving to another page: focus goes to the main area (so the keyboard starts at the new page's top, and a screen reader is told where
@@ -157,17 +332,46 @@ const AppShellRoot = forwardRef<HTMLDivElement, AppShellProps>(
       () => ({
         scroll,
         headerHeight: scroll === "page" ? headerHeight : 0,
+        bannerHeight: scroll === "page" ? bannerHeight : 0,
+        footerHeight: scroll === "page" ? footerHeight : 0,
+        collapsed,
+        setCollapsed,
+        sidebarWidth,
+        setSidebarWidth,
+        scrolled,
+        moreBelow,
         asideOpen,
         setAsideOpen,
         setHeaderHeight,
+        setBannerHeight,
+        setFooterHeight,
+        setBannerSticky,
         dir,
+        sidebarSide,
         asideCollapseBelow,
         asideCollapseTo,
         mainRef,
         asideToggleRef,
         inShell: true,
       }),
-      [scroll, headerHeight, asideOpen, setAsideOpen, dir, asideCollapseBelow, asideCollapseTo],
+      [
+        scroll,
+        headerHeight,
+        bannerHeight,
+        footerHeight,
+        collapsed,
+        setCollapsed,
+        sidebarWidth,
+        setSidebarWidth,
+        scrolled,
+        moreBelow,
+        asideOpen,
+        setAsideOpen,
+        dir,
+        sidebarSide,
+        asideCollapseBelow,
+        asideCollapseTo,
+      ],
     );
 
     useEffect(() => {
@@ -182,11 +386,18 @@ const AppShellRoot = forwardRef<HTMLDivElement, AppShellProps>(
       }
     }, [children]);
 
+    const rootStyle = {
+      ...(measured ? { "--app-shell-header-height": `${headerHeight}px` } : undefined),
+      ...(bannerMeasured ? { "--app-shell-banner-height": `${bannerHeight}px` } : undefined),
+      // What the header, the sidebar and the aside stick below: the banner, but only while the banner itself stays in view.
+      ...(bannerMeasured && bannerSticky ? { "--app-shell-banner-stick": `${bannerHeight}px` } : undefined),
+      ...(footerMeasured ? { "--app-shell-footer-height": `${footerHeight}px` } : undefined),
+    } as CSSProperties;
+
     return (
       <Sidebar.Provider
         collapsed={collapsed}
-        defaultCollapsed={defaultCollapsed}
-        onCollapsedChange={onCollapsedChange}
+        onCollapsedChange={(next) => changeCollapsed(next, "reader")}
         menuOpen={menuOpen}
         defaultMenuOpen={defaultMenuOpen}
         onMenuOpenChange={onMenuOpenChange}
@@ -204,8 +415,15 @@ const AppShellRoot = forwardRef<HTMLDivElement, AppShellProps>(
             data-aside-collapse={asideCollapseBelow}
             data-aside-to={asideCollapseTo}
             data-header-measured={measured ? "" : undefined}
+            data-banner-measured={bannerMeasured ? "" : undefined}
+            data-banner-sticky={bannerSticky ? "" : undefined}
+            data-footer-measured={footerMeasured ? "" : undefined}
+            data-restoring={settled ? undefined : ""}
+            data-scrolled-edge={scrolledEdge ? "" : undefined}
+            data-scrolled={scrolled ? "" : undefined}
+            data-more-below={moreBelow ? "" : undefined}
             className={cx(styles.root, className)}
-            style={{ ...(measured ? ({ "--app-shell-header-height": `${headerHeight}px` } as CSSProperties) : undefined), ...style }}
+            style={{ ...rootStyle, ...style }}
           >
             {children}
             {pageKey !== undefined && <VisuallyHidden role="status">{announcement}</VisuallyHidden>}
@@ -217,11 +435,146 @@ const AppShellRoot = forwardRef<HTMLDivElement, AppShellProps>(
 );
 AppShellRoot.displayName = "AppShell";
 
-/** The column that holds the `Sidebar`. It takes the width of the sidebar and none at all while the sidebar is in its phone panel. */
-const AppShellSidebar = forwardRef<HTMLDivElement, AppShellSidebarProps>(({ className, ...props }, ref) => (
-  <div {...props} ref={ref} className={cx(styles.sidebar, className)} />
-));
+/**
+ * The column that holds the `Sidebar`. It takes the width of the sidebar and none at all while the sidebar is in its phone panel. With
+ * `resizable` the reader can drag its inner edge, or use the arrow keys, to set the width.
+ */
+const AppShellSidebar = forwardRef<HTMLDivElement, AppShellSidebarProps>(
+  ({ resizable = false, minWidth, maxWidth, labels: labelsProp, className, style, children, ...props }, ref) => {
+    const { sidebarWidth, setSidebarWidth, collapsed, dir, sidebarSide } = useAppShellContext();
+    const labels = mergeDefined(defaultSidebarLabels, labelsProp);
+    const slotRef = useRef<HTMLDivElement>(null);
+    const [slotWidth, setSlotWidth] = useState(0);
+    const [dragging, setDragging] = useState(false);
+
+    // How wide the column is on the page: nothing while the sidebar is in its phone panel, so there is no handle to drag there.
+    useEffect(() => {
+      const slot = slotRef.current;
+      if (!resizable || slot === null) return undefined;
+      const read = () => setSlotWidth(slot.getBoundingClientRect().width);
+      read();
+      if (typeof ResizeObserver === "undefined") return undefined;
+      const observer = new ResizeObserver(read);
+      observer.observe(slot);
+      return () => observer.disconnect();
+    }, [resizable]);
+
+    useEffect(() => {
+      if (process.env.NODE_ENV === "production" || !resizable) return;
+      if (Children.toArray(children).some((child) => isValidElement(child) && (child.props as { width?: unknown }).width !== undefined)) {
+        console.warn("AppShell: `AppShell.Sidebar` is `resizable`, so its width is the shell's. A `width` on the `Sidebar` inside wins over it and the handle seems to do nothing. Leave `width` off.");
+      }
+    }, [resizable, children]);
+
+    // The handle's bounds, read when it is used (rem is the page's font size).
+    const bounds = () => {
+      const min = toPixels(minWidth, toPixels("12rem", 192));
+      const max = Math.max(min, toPixels(maxWidth, toPixels("28rem", 448)));
+      return { min, max };
+    };
+    const clamp = (width: number) => {
+      const { min, max } = bounds();
+      return Math.round(Math.min(max, Math.max(min, width)));
+    };
+    // Which way is wider: toward the content. A start-side sidebar in left-to-right text is widened by moving right, and each of the other
+    // three arrangements flips it.
+    const growsRightward = (sidebarSide === "start") === (dir === "ltr");
+
+    const onPointerDown = (event: ReactPointerEvent<HTMLDivElement>) => {
+      if (event.button !== 0) return;
+      event.preventDefault();
+      try {
+        // The drag keeps hearing the pointer when it leaves the handle. A pointer that has already ended, or a synthetic one (a test's), cannot be
+        // captured, and the drag works without it for as long as the pointer is over the handle.
+        event.currentTarget.setPointerCapture(event.pointerId);
+      } catch {
+        /* see above */
+      }
+      setDragging(true);
+    };
+    const onPointerMove = (event: ReactPointerEvent<HTMLDivElement>) => {
+      if (!dragging || slotRef.current === null) return;
+      const rect = slotRef.current.getBoundingClientRect();
+      setSidebarWidth(clamp(growsRightward ? event.clientX - rect.left : rect.right - event.clientX));
+    };
+    const endDrag = (event: ReactPointerEvent<HTMLDivElement>) => {
+      if (!dragging) return;
+      setDragging(false);
+      try {
+        if (event.currentTarget.hasPointerCapture(event.pointerId)) event.currentTarget.releasePointerCapture(event.pointerId);
+      } catch {
+        /* the capture was never taken, or is already gone */
+      }
+    };
+    const onKeyDown = (event: ReactKeyboardEvent<HTMLDivElement>) => {
+      const { min, max } = bounds();
+      const current = sidebarWidth ?? slotWidth;
+      const step = rootFontSize() * (event.shiftKey ? 4 : 1);
+      let next: number | undefined;
+      if (event.key === "ArrowRight") next = current + (growsRightward ? step : -step);
+      else if (event.key === "ArrowLeft") next = current + (growsRightward ? -step : step);
+      else if (event.key === "Home") next = min;
+      else if (event.key === "End") next = max;
+      else return;
+      event.preventDefault();
+      setSidebarWidth(clamp(next));
+    };
+
+    const showHandle = resizable && !collapsed && slotWidth > 0;
+    const { min, max } = showHandle ? bounds() : { min: 0, max: 0 };
+    return (
+      <div
+        {...props}
+        ref={mergeRefs(slotRef, ref)}
+        data-side={sidebarSide}
+        data-resizable={resizable ? "" : undefined}
+        data-dragging={dragging ? "" : undefined}
+        className={cx(styles.sidebar, className)}
+        style={{ ...(sidebarWidth !== undefined ? ({ "--sidebar-width": `${sidebarWidth}px` } as CSSProperties) : undefined), ...style }}
+      >
+        {children}
+        {showHandle && (
+          // A separator that takes focus and reports a value is the WAI-ARIA window splitter, an interactive widget; the lint rules know it as plain.
+          // eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions
+          <div
+            role="separator"
+            aria-orientation="vertical"
+            aria-label={labels.resize}
+            aria-valuenow={Math.round(slotWidth)}
+            aria-valuemin={Math.round(min)}
+            aria-valuemax={Math.round(max)}
+            // eslint-disable-next-line jsx-a11y/no-noninteractive-tabindex
+            tabIndex={0}
+            className={styles.resizeHandle}
+            onPointerDown={onPointerDown}
+            onPointerMove={onPointerMove}
+            onPointerUp={endDrag}
+            onPointerCancel={endDrag}
+            onKeyDown={onKeyDown}
+            onDoubleClick={() => setSidebarWidth(undefined)}
+          />
+        )}
+      </div>
+    );
+  },
+);
 AppShellSidebar.displayName = "AppShell.Sidebar";
+
+/**
+ * A strip above everything, the header included: an announcement, a maintenance notice, a trial reminder (usually an `Alert`). It scrolls away
+ * with the page unless it is `sticky`, in which case the header sticks below it. With `scroll="content"` it is always in view.
+ */
+const AppShellBanner = forwardRef<HTMLDivElement, AppShellBannerProps>(({ sticky = false, className, ...props }, ref) => {
+  const { scroll, setBannerHeight, setBannerSticky } = useAppShellContext();
+  const innerRef = useRef<HTMLDivElement>(null);
+  useElementHeight(scroll === "page" && sticky, innerRef, setBannerHeight);
+  useBeforePaint(() => {
+    setBannerSticky(sticky);
+    return () => setBannerSticky(false);
+  }, [sticky, setBannerSticky]);
+  return <div {...props} ref={mergeRefs(innerRef, ref)} data-sticky={sticky ? "" : undefined} className={cx(styles.banner, className)} />;
+});
+AppShellBanner.displayName = "AppShell.Banner";
 
 /**
  * The band above the main area, for the `Navbar`. It does not scroll with the main area. A `div` unless `as="header"`, since a `Navbar` draws the
@@ -287,7 +640,7 @@ const AppShellAside = forwardRef<HTMLElement, AppShellAsideProps>(
     // Past the width where the aside is back on the page, a drawer left open would sit over a column already on show.
     useEffect(() => {
       if (!asDrawer || !asideOpen || typeof window === "undefined" || typeof window.matchMedia !== "function") return undefined;
-      const query = window.matchMedia(collapseQueries[asideCollapseBelow as Exclude<AppShellAsideCollapseBelow, "never">]);
+      const query = window.matchMedia(breakpointQueries[asideCollapseBelow as Exclude<AppShellAsideCollapseBelow, "never">]);
       const close = () => {
         if (query.matches) setAsideOpen(false);
       };
@@ -371,17 +724,42 @@ const AppShellAsideToggle = forwardRef<HTMLButtonElement, AppShellAsideTogglePro
 );
 AppShellAsideToggle.displayName = "AppShell.AsideToggle";
 
-/** The band below the main area, outside its scrolling. */
-const AppShellFooter = forwardRef<HTMLElement, AppShellFooterProps>(({ className, ...props }, ref) => (
-  <footer {...props} ref={ref} className={cx(styles.footer, className)} />
-));
+/**
+ * The band below the main area, outside its scrolling. With `sticky` it stays at the bottom of the window while the page scrolls
+ * (`scroll="page"`), for a bar of actions that must stay in reach.
+ */
+const AppShellFooter = forwardRef<HTMLElement, AppShellFooterProps>(({ sticky = false, className, ...props }, ref) => {
+  const { scroll, setFooterHeight } = useAppShellContext();
+  const innerRef = useRef<HTMLElement>(null);
+  useElementHeight(scroll === "page" && sticky, innerRef, setFooterHeight);
+  return <footer {...props} ref={mergeRefs(innerRef, ref)} data-sticky={sticky ? "" : undefined} className={cx(styles.footer, className)} />;
+});
 AppShellFooter.displayName = "AppShell.Footer";
+
+/**
+ * The page's content in the main area, kept to a readable width and padded on the spacing scale: a `Container` with padding above and below
+ * as well. Put it inside `AppShell.Main`, which adds none of its own.
+ */
+const AppShellContent = forwardRef<HTMLDivElement, AppShellContentProps>(
+  ({ size = "full", paddingInline = { base: 4, md: 6, lg: 8 }, paddingBlock = 6, style, ...props }, ref) => (
+    <Container
+      {...props}
+      ref={ref}
+      size={size}
+      paddingInline={paddingInline}
+      style={{ paddingBlock: `var(--dbm-space-${paddingBlock})`, ...style }}
+    />
+  ),
+);
+AppShellContent.displayName = "AppShell.Content";
 
 type AppShellComponent = typeof AppShellRoot & {
   SkipLink: typeof AppShellSkipLink;
+  Banner: typeof AppShellBanner;
   Sidebar: typeof AppShellSidebar;
   Header: typeof AppShellHeader;
   Main: typeof AppShellMain;
+  Content: typeof AppShellContent;
   Aside: typeof AppShellAside;
   AsideToggle: typeof AppShellAsideToggle;
   Footer: typeof AppShellFooter;
@@ -389,9 +767,11 @@ type AppShellComponent = typeof AppShellRoot & {
 
 export const AppShell: AppShellComponent = Object.assign(AppShellRoot, {
   SkipLink: AppShellSkipLink,
+  Banner: AppShellBanner,
   Sidebar: AppShellSidebar,
   Header: AppShellHeader,
   Main: AppShellMain,
+  Content: AppShellContent,
   Aside: AppShellAside,
   AsideToggle: AppShellAsideToggle,
   Footer: AppShellFooter,
