@@ -395,7 +395,7 @@ A guide's code samples are fenced code in the MDX, so nothing compiles them: **c
 | The Installation section's content (a placeholder today) | Loading the stylesheet, the tokens, one theme and the `Nunito` and `Lora` fonts | The consumer-CSS decision in `01-vision-and-goals.md` §12 (Phase 8) |
 | Guides: Agent usage and contributing | The consumer-facing usage guide from `01-vision-and-goals.md` §13.1, shown where a person looks for it | The manifest and the published package (Phase 8) |
 | Guides: Changelog and migration | Generated from Changesets | The release pipeline (Phase 8) |
-| A `Templates` tier | Full-screen stories for page-level templates (`04-component-inventory.md`, Templates), with the tier listed in the overview | The first template, and an ADR on whether templates ship in the package or stay Storybook-only |
+| A `Templates` tier | A top-level `Templates` group titled `Templates/{Group}/{Name}`, sorted after the other tiers, with full-screen stories and a Docs page that embeds a framed preview ([ADR-0179](adr/0179-templates-ship-as-composable-shells-in-the-components-package-with-story-only-example-pages-over-shipping-finished-pages-or-keeping-all-templates-storybook-only.md)) | The first template (the dashboard shell), to add the `storySort` handling |
 
 **Standing checks for these pages:** keyboard operation, a real-browser check at phone width, dark mode (a block that sets no colour of its own inherits Storybook's near-black text, found on the overview's legend, so give a block an explicit `text.primary`), right-to-left and forced colours, and the four-theme contrast check for any colour a page introduces. Confirm that `check-guidelines` and the token-coverage check still agree when a new group is added.
 
