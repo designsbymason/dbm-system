@@ -292,6 +292,7 @@ const SidebarRoot = forwardRef<HTMLDivElement, SidebarProps>(
       currentPath,
       rounded = false,
       width,
+      panelWidth,
       side = "start",
       peek = false,
       exclusive = false,
@@ -462,7 +463,9 @@ const SidebarRoot = forwardRef<HTMLDivElement, SidebarProps>(
       ...style,
     } as CSSProperties;
 
-    const panelWidth = width !== undefined ? toLength(width) : "var(--dbm-sidebar-width)";
+    // The phone panel is its own width when given one, else the column's, else the token: a panel and a column that match unless asked not to.
+    const drawerSize =
+      panelWidth !== undefined ? toLength(panelWidth) : width !== undefined ? toLength(width) : "var(--dbm-sidebar-width)";
 
     // The phone panel hands focus back to the menu button that opened it, wherever that button is; it is not the Drawer's own trigger.
     const returnFocus = (event: Event) => {
@@ -544,7 +547,7 @@ const SidebarRoot = forwardRef<HTMLDivElement, SidebarProps>(
             <Drawer open={state.menuOpen} onOpenChange={changeMenu} onOpenChangeComplete={onMenuOpenChangeComplete}>
               <Drawer.Content
                 side={side}
-                size={panelWidth}
+                size={drawerSize}
                 dir={dir}
                 container={menuContainer}
                 labels={{ close: resolvedLabels.close }}

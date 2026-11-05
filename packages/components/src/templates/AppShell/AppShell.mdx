@@ -158,6 +158,10 @@ Drive the shell's props live; the sidebar, header and page it is filled with sta
   a full-bleed table or a centred reading column are both possible.
 - Give each `Sidebar.Nav` and each `Navbar.Links` its own name when there is more than one, so the
   navigation landmarks are told apart.
+- Set the width of the sidebar on the `Sidebar` itself: `width` for the column on the page, and
+  `panelWidth` for the drawer it becomes on a phone, if it should differ (`<Sidebar width="16rem"
+  panelWidth="20rem">`). The shell has no width of its own to set. The drawer is never wider than the
+  window less a sliver of the page that stays showing.
 
 ## Accessibility
 

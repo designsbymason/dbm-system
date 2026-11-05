@@ -114,6 +114,32 @@ describe("Sidebar", () => {
     expect(ref.current?.style.color).toBe("red");
   });
 
+  describe("the phone panel's width", () => {
+    const panelSize = () => screen.getByRole("dialog", { hidden: true }).style.getPropertyValue("--drawer-size");
+
+    it("is the sidebar.width token when neither width is given", () => {
+      render(<Basic collapseBelow="md" defaultMenuOpen />);
+      expect(panelSize()).toBe("var(--dbm-sidebar-width)");
+    });
+
+    it("follows `width`, so the panel and the column match", () => {
+      render(<Basic collapseBelow="md" defaultMenuOpen width="18rem" />);
+      expect(panelSize()).toBe("18rem");
+    });
+
+    it("is `panelWidth` when given, whatever `width` is, and leaves the column's width alone", () => {
+      render(<Basic collapseBelow="md" defaultMenuOpen data-testid="sidebar" width="14rem" panelWidth="22rem" />);
+      expect(panelSize()).toBe("22rem");
+      expect(screen.getByTestId("sidebar").style.getPropertyValue("--sidebar-width")).toBe("14rem");
+    });
+
+    it("takes a number as pixels, and `panelWidth` without a `width` leaves the column at the token", () => {
+      render(<Basic collapseBelow="md" defaultMenuOpen data-testid="sidebar" panelWidth={320} />);
+      expect(panelSize()).toBe("320px");
+      expect(screen.getByTestId("sidebar").style.getPropertyValue("--sidebar-width")).toBe("");
+    });
+  });
+
   it("applies the width prop as the sidebar's width", () => {
     const { rerender } = render(<Basic data-testid="sidebar" width={288} />);
     expect(screen.getByTestId("sidebar").style.getPropertyValue("--sidebar-width")).toBe("288px");

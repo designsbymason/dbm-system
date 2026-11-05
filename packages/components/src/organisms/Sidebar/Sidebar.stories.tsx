@@ -40,6 +40,7 @@ interface PlaygroundArgs {
   currentPath?: string;
   rounded: boolean;
   width: string;
+  panelWidth: string;
   side: SidebarSide;
   peek: boolean;
   collapsed?: boolean;
@@ -75,6 +76,7 @@ const editableArgs = [
   "currentVariant",
   "rounded",
   "width",
+  "panelWidth",
   "side",
   "peek",
   "defaultCollapsed",
@@ -149,6 +151,12 @@ const meta: Meta<PlaygroundArgs> = {
       description:
         "The expanded width, a CSS length such as 18rem (a number in code is pixels). Empty leaves the sidebar.width token. The rail's width does not change with it.",
       table: { defaultValue: { summary: "the sidebar.width token" } },
+    },
+    panelWidth: {
+      control: "text",
+      description:
+        "The width of the phone panel alone, below collapseBelow: a CSS length such as 20rem (a number in code is pixels). Empty leaves it the same as width. The panel is never wider than the window less a sliver of the page.",
+      table: { defaultValue: { summary: "width" } },
     },
     side: {
       control: "radio",
@@ -237,6 +245,7 @@ const meta: Meta<PlaygroundArgs> = {
     currentPath: undefined,
     rounded: false,
     width: "",
+    panelWidth: "",
     side: "start",
     peek: false,
     collapsed: undefined,
@@ -260,11 +269,11 @@ const meta: Meta<PlaygroundArgs> = {
     "data-testid": undefined,
   },
   // (an empty text control means "not set": it must not reach the sidebar as `id=""` or `width=""`)
-  render: ({ id, width, ...args }) => (
+  render: ({ id, width, panelWidth, ...args }) => (
     <SidebarStage minBlockSize="34rem">
       {(menuContainer) => (
         <SidebarFrame height="32rem">
-          <DemoSidebar {...args} width={width || undefined} id={id || undefined} menuContainer={menuContainer} />
+          <DemoSidebar {...args} width={width || undefined} panelWidth={panelWidth || undefined} id={id || undefined} menuContainer={menuContainer} />
         </SidebarFrame>
       )}
     </SidebarStage>
@@ -988,6 +997,25 @@ export const Panel: Story = {
           <div style={{ inlineSize: "100%", alignSelf: "stretch", display: "grid", gridTemplateRows: "auto 1fr" }}>
             <DemoTopBar />
             <DemoSidebar menuContainer={menuContainer} />
+          </div>
+        </Sidebar.Provider>
+      )}
+    </SidebarStage>
+  ),
+};
+
+export const PanelWidth: Story = {
+  name: "The phone panel at its own width",
+  parameters: { docs: { source: { code: sidebarSnippets.panelWidth } } },
+  argTypes: { ...noControls },
+  render: () => (
+    // The column on the page is 14rem and the phone panel 22rem: the panel is its own width (`panelWidth`), the column's is `width`.
+    <SidebarStage minBlockSize="34rem">
+      {(menuContainer) => (
+        <Sidebar.Provider collapseBelow="3xl">
+          <div style={{ inlineSize: "100%", alignSelf: "stretch", display: "grid", gridTemplateRows: "auto 1fr" }}>
+            <DemoTopBar />
+            <DemoSidebar width="14rem" panelWidth="22rem" menuContainer={menuContainer} />
           </div>
         </Sidebar.Provider>
       )}

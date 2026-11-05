@@ -50,6 +50,13 @@ const meta: Meta<typeof Sidebar> = {
         "The expanded width, a CSS length such as 18rem (a number in code is pixels). Empty leaves the sidebar.width token. The rail's width does not change with it.",
       table: { defaultValue: { summary: "the sidebar.width token" } },
     },
+    panelWidth: {
+      control: "text",
+      placeholder: "20rem",
+      description:
+        "The width of the phone panel alone, below collapseBelow: a CSS length such as 20rem (a number in code is pixels). Empty leaves it the same as width. The panel is never wider than the window less a sliver of the page.",
+      table: { defaultValue: { summary: "width" } },
+    },
     side: {
       control: "radio",
       options: ["start", "end"],

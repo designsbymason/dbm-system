@@ -166,6 +166,12 @@ export interface SidebarProps extends SidebarStateProps, Omit<ComponentPropsWith
    */
   width?: number | string;
   /**
+   * The width of the phone panel alone, below `collapseBelow`: a number of pixels or any CSS length (`"20rem"`). Left out it is `width`, so the
+   * panel and the column on the page match. The drawer keeps a sliver of the page showing on a narrow phone, so the panel is never wider than
+   * the window less that.
+   */
+  panelWidth?: number | string;
+  /**
    * Which edge of the page the sidebar sits against: it sets which edge its line is on and which side the phone panel slides in from.
    * @default 'start'
    */

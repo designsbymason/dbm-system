@@ -467,6 +467,47 @@ export const PanelFromAWideWindow: Story = {
   },
 };
 
+export const PanelWidthIsItsOwn: Story = {
+  name: "The phone panel is `panelWidth` wide while the column on the page stays `width` wide, and the panel never passes the window less the sliver",
+  render: () => (
+    <SidebarStage minBlockSize="30rem">
+      {(menuContainer) => (
+        <div style={{ display: "grid", gap: "var(--dbm-space-4)" }}>
+          <div data-testid="column-frame" style={{ display: "flex" }}>
+            <Sidebar collapseBelow="never" width="14rem" panelWidth="22rem" aria-label="Column">
+              <Sidebar.Content>
+                <Sidebar.Nav aria-label="Column">
+                  <Sidebar.Item href="/">Home</Sidebar.Item>
+                </Sidebar.Nav>
+              </Sidebar.Content>
+            </Sidebar>
+          </div>
+          <Sidebar.Provider collapseBelow="3xl">
+            <div style={{ inlineSize: "100%", alignSelf: "start" }}>
+              <Sidebar.MenuButton />
+              <DemoSidebar width="14rem" panelWidth="22rem" menuContainer={menuContainer} navLabel="Panel width" />
+            </div>
+          </Sidebar.Provider>
+        </div>
+      )}
+    </SidebarStage>
+  ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    // the column on the page is `width`, not `panelWidth`
+    const column = within(canvas.getByTestId("column-frame")).getByRole("navigation", { name: "Column" }).closest("[data-variant]") as HTMLElement;
+    expect(Math.round(column.getBoundingClientRect().width)).toBe(Math.round(14 * px(getComputedStyle(document.documentElement).fontSize)));
+    // the panel is `panelWidth`
+    await userEvent.click(canvas.getByRole("button", { name: "Menu" }));
+    const panel = await canvas.findByRole("dialog", { name: "Menu" });
+    await settled(panel);
+    const wanted = 22 * px(getComputedStyle(document.documentElement).fontSize);
+    expect(Math.round(panel.getBoundingClientRect().width)).toBe(Math.min(Math.round(wanted), Math.round(panel.offsetParent!.getBoundingClientRect().width)));
+    await userEvent.keyboard("{Escape}");
+    await waitFor(() => expect(canvas.queryByRole("dialog")).not.toBeInTheDocument());
+  },
+};
+
 export const OnAPhone: Story = {
   name: "On a phone the sidebar is off the page, the menu button shows and the toggle goes, and the panel fits the window",
   globals: { viewport: { value: "mobile1", isRotated: false } },

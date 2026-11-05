@@ -26,6 +26,7 @@ export const propOrder = [
   "currentPath",
   "rounded",
   "width",
+  "panelWidth",
   "side",
   "peek",
   "collapsed",
@@ -54,6 +55,7 @@ export const playgroundOrder = [
   "currentVariant",
   "rounded",
   "width",
+  "panelWidth",
   "side",
   "peek",
   "defaultCollapsed",
@@ -501,6 +503,14 @@ This demo collapses below the widest step so the menu button shows on any window
 opens the panel with `useSidebar().setMenuOpen(true)`. The panel is never a rail.
 
 <Canvas of={SidebarStories.Panel} />
+
+### The phone panel at its own width
+
+`width` sets the column on the page, and the phone panel is as wide unless `panelWidth` says otherwise. Here the column is `14rem`
+and the panel `22rem`. The panel is never wider than the window less a sliver of the page that stays showing, so a very large
+`panelWidth` on a narrow phone is capped there.
+
+<Canvas of={SidebarStories.PanelWidth} />
 
 ### In a page, with the controls outside
 

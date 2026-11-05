@@ -420,6 +420,22 @@ ${sidebar('side="end"')}
 {/* dir="rtl": the sidebar sits at the right, indents and arrows mirror, and side="start" is the right edge. */}
 ${sidebar('dir="rtl" labels={{ collapse: "طي الشريط الجانبي", expand: "توسيع الشريط الجانبي", menu: "القائمة", navigation: "الرئيسية", close: "إغلاق" }}')}`,
 
+  panelWidth: `{/* width is the column on the page; panelWidth is the phone panel below collapseBelow. Left out, the panel is as wide as width.
+    The panel is never wider than the window less a sliver of the page that stays showing. */}
+{/* HouseIcon and ChartBarIcon come from @dbm-system/icons */}
+<Sidebar width="14rem" panelWidth="22rem">
+  <Sidebar.Content>
+    <Sidebar.Nav aria-label="Main">
+      <Sidebar.Item href="/" icon={HouseIcon} current>
+        Home
+      </Sidebar.Item>
+      <Sidebar.Item href="/reports" icon={ChartBarIcon}>
+        Reports
+      </Sidebar.Item>
+    </Sidebar.Nav>
+  </Sidebar.Content>
+</Sidebar>`,
+
   panel: `{/* Below collapseBelow ("md" = 768px) the sidebar leaves the page and a Sidebar.MenuButton opens it in a side panel. The same children are drawn
     in both, so give the items no id. The panel is never a rail. A button of your own can open it with useSidebar().setMenuOpen(true). This demo
     collapses below the widest step ("3xl") so the menu button shows on any window narrower than 1920px. */}
@@ -463,6 +479,7 @@ export interface SidebarPlaygroundSnippetArgs {
   currentVariant?: SidebarCurrentVariant;
   rounded?: boolean;
   width?: string;
+  panelWidth?: string;
   side?: SidebarSide;
   peek?: boolean;
   defaultCollapsed?: boolean;
@@ -488,6 +505,7 @@ export function sidebarPlaygroundSnippet(args: SidebarPlaygroundSnippetArgs): st
   if (args.currentVariant && args.currentVariant !== "subtle") attributes.push(`currentVariant="${args.currentVariant}"`);
   if (args.rounded) attributes.push("rounded");
   if (args.width) attributes.push(`width=${quote(args.width)}`);
+  if (args.panelWidth) attributes.push(`panelWidth=${quote(args.panelWidth)}`);
   if (args.side && args.side !== "start") attributes.push(`side="${args.side}"`);
   if (args.peek) attributes.push("peek");
   if (args.defaultCollapsed) attributes.push("defaultCollapsed");
