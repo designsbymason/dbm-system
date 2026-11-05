@@ -1,0 +1,9 @@
+{
+  "app-shell": {
+    "aside-width": {
+      "$type": "dimension",
+      "$value": "20rem",
+      "$description": "New token (2026-11-05), added for AppShell's `AppShell.Aside` — the width of the end-edge column beside the main area, and the default for its `width` prop and for the drawer it becomes below its collapse step. Wider than `sidebar.width` (16rem) because an aside holds content, such as a detail pane or a table of contents, where the sidebar holds a list of short labels, and the spacing scale tops out at 8rem."
+    }
+  }
+}

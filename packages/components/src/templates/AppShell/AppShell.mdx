@@ -2,15 +2,21 @@ import { Canvas, Meta } from "@storybook/addon-docs/blocks";
 import { Callout, ComponentHeader, PlaygroundControls, PropertiesTable, RelatedCard, TokenRow } from "../../../.storybook/blocks";
 import { VisuallyHidden } from "../../atoms/VisuallyHidden";
 import * as AppShellStories from "./AppShell.stories";
+import * as AppShellAsideStories from "./AppShellAside.stories";
+import * as AppShellAsideToggleStories from "./AppShellAsideToggle.stories";
 import * as AppShellFooterStories from "./AppShellFooter.stories";
 import * as AppShellHeaderStories from "./AppShellHeader.stories";
 import * as AppShellMainStories from "./AppShellMain.stories";
 import * as AppShellSidebarStories from "./AppShellSidebar.stories";
+import * as AppShellSkipLinkStories from "./AppShellSkipLink.stories";
 
 export const propOrder = [
   "children",
   "scroll",
+  "headerSpan",
   "sidebarSide",
+  "asideCollapseBelow",
+  "asideCollapseTo",
   "dir",
   "collapseBelow",
   "defaultCollapsed",
@@ -19,12 +25,19 @@ export const propOrder = [
   "defaultMenuOpen",
   "menuOpen",
   "onMenuOpenChange",
+  "defaultAsideOpen",
+  "asideOpen",
+  "onAsideOpenChange",
+  "pageKey",
+  "pageTitle",
   "labels",
   "style",
   "className",
   "id",
   "data-testid",
 ];
+
+export const playgroundOrder = ["scroll", "headerSpan", "showAside", "asideCollapseBelow", "asideCollapseTo", "sidebarSide", "dir", "collapseBelow", "defaultCollapsed"];
 
 <Meta of={AppShellStories} />
 
@@ -33,8 +46,9 @@ export const propOrder = [
 <ComponentHeader title="AppShell" tier="Template" />
 
 The page frame of an application: a navigation column on one side, a header across the top, a main
-area for the page's content and an optional footer. It is **layout and wiring only**. You put your
-own [`Sidebar`](/docs/organisms-navigation-sidebar--docs) and
+area for the page's content, an optional aside at the other edge and an optional footer. It is
+**layout and wiring only**. You put your own
+[`Sidebar`](/docs/organisms-navigation-sidebar--docs) and
 [`Navbar`](/docs/organisms-navigation-navbar--docs) in its slots and keep every prop they have; the
 shell adds the grid they sit in, the page's one `<main>` landmark, the skip link's target, and the
 shared state that lets a menu button in the header open the sidebar's panel on a phone.
@@ -42,13 +56,16 @@ shared state that lets a menu button in the header open the sidebar's panel on a
 By default the frame is exactly as tall as the window and only the main area scrolls, so the
 sidebar and the header never move. Below the sidebar's `collapseBelow` width the sidebar leaves the
 page for a menu button and a slide-in panel, and its column disappears so the main area takes the
-whole width. On this page the live examples sit in a framed box 36rem tall, which is wider than a
+whole width. The aside does the same below `asideCollapseBelow`: it becomes a drawer opened from a
+toggle button, or disappears if you ask for that. The shell keeps a notch or a home indicator clear,
+can run its header over the sidebar, and, given the router's page, moves focus to the new page and
+announces it. On this page the live examples sit in a framed box 36rem tall, which is wider than a
 phone; open a story from the sidebar on its own and narrow the window to see the phone layout.
 
 ### Import
 
 ```tsx
-import { AppShell, Navbar, Sidebar } from "@dbm-system/components";
+import { AppShell, Navbar, Sidebar, useAppShell } from "@dbm-system/components";
 ```
 
 ## Playground
@@ -62,8 +79,8 @@ Drive the shell's props live; the sidebar, header and page it is filled with sta
 </div>
 <PlaygroundControls
   of={AppShellStories.Playground}
-  exclude={["children", "collapsed", "onCollapsedChange", "menuOpen", "defaultMenuOpen", "onMenuOpenChange", "labels", "className", "style", "id", "data-testid"]}
-  order={propOrder}
+  exclude={["children", "collapsed", "onCollapsedChange", "menuOpen", "defaultMenuOpen", "onMenuOpenChange", "asideOpen", "defaultAsideOpen", "onAsideOpenChange", "pageKey", "pageTitle", "labels", "className", "style", "id", "data-testid"]}
+  order={playgroundOrder}
 />
 
 ## Properties
@@ -73,11 +90,17 @@ Drive the shell's props live; the sidebar, header and page it is filled with sta
 
 <PropertiesTable of={AppShellStories} order={propOrder} />
 
+### AppShell.SkipLink properties
+
+`AppShell.SkipLink` also accepts any other native `<a>` attribute.
+
+<PropertiesTable of={AppShellSkipLinkStories} order={["children", "href", "labels", "style", "className", "id", "data-testid"]} />
+
 ### AppShell.Header properties
 
 `AppShell.Header` also accepts any other native `<div>` attribute.
 
-<PropertiesTable of={AppShellHeaderStories} order={["children", "style", "className", "id", "data-testid"]} />
+<PropertiesTable of={AppShellHeaderStories} order={["children", "as", "style", "className", "id", "data-testid"]} />
 
 ### AppShell.Sidebar properties
 
@@ -90,6 +113,24 @@ Drive the shell's props live; the sidebar, header and page it is filled with sta
 `AppShell.Main` also accepts any other native `<main>` attribute.
 
 <PropertiesTable of={AppShellMainStories} order={["children", "id", "style", "className", "data-testid"]} />
+
+### AppShell.Aside properties
+
+`AppShell.Aside` also accepts any other native `<aside>` attribute.
+
+<PropertiesTable
+  of={AppShellAsideStories}
+  order={["children", "width", "aria-label", "aria-labelledby", "labels", "drawerContainer", "style", "className", "id", "data-testid"]}
+/>
+
+### AppShell.AsideToggle properties
+
+`AppShell.AsideToggle` also accepts any other native `<button>` attribute.
+
+<PropertiesTable
+  of={AppShellAsideToggleStories}
+  order={["icon", "variant", "tone", "size", "aria-label", "labels", "style", "className", "id", "data-testid"]}
+/>
 
 ### AppShell.Footer properties
 
@@ -115,30 +156,79 @@ Drive the shell's props live; the sidebar, header and page it is filled with sta
 
 <Canvas of={AppShellStories.RightToLeft} />
 
+### An aside beside the main area
+
+`AppShell.Aside` is a column at the end edge. Narrow the window below `asideCollapseBelow` (1024px by
+default) and it leaves the page: the toggle in the header opens the same content in a drawer.
+
+<Canvas of={AppShellStories.WithAside} />
+
+### An aside that is hidden on a phone
+
+With `asideCollapseTo="hidden"` the aside simply is not drawn below its collapse width, and there is no
+toggle. It suits content a phone can do without, such as a table of contents.
+
+<Canvas of={AppShellStories.AsideHidden} />
+
+### The header runs over the sidebar
+
+`headerSpan="full"` runs the header across the top of the shell, over the sidebar, which starts below it.
+
+<Canvas of={AppShellStories.HeaderOverSidebar} />
+
+### A header that is not a Navbar
+
+`AppShell.SkipLink` is the skip link, and `as="header"` makes the header the page's `<header>` banner.
+
+<Canvas of={AppShellStories.PlainHeader} />
+
+### Moving to another page
+
+Press a sidebar item: the page's key and title go to the shell, which moves focus to the main area,
+scrolls it back to the top and announces the new title.
+
+<Canvas of={AppShellStories.PageChange} />
+
+### A bar that sticks below the header
+
+With `scroll="page"`, `useAppShell().headerHeight` (also the `--app-shell-header-height` custom
+property) is how far down to stick a bar inside the main area.
+
+<Canvas of={AppShellStories.StickyBar} />
+
 ## Usage guidelines
 
 <div className="dbm-do-dont-grid">
 <Callout tone="success" title="Do">
 
-- Put `AppShell.Header` first in the markup. The shell places each slot in its own area, so the
-  order does not change the layout, but it is the keyboard's tab order: a header first makes the
-  skip link the first stop and the sidebar's links come after it.
-- Put `Navbar.SkipLink` first in the `Navbar`. It links to `#main`, which is `AppShell.Main`'s `id`.
+- Put `AppShell.SkipLink` (if you use it) and `AppShell.Header` first in the markup. The shell places
+  each slot in its own area, so the order does not change the layout, but it is the keyboard's tab
+  order: a skip link and a header first make the skip link the first stop and the sidebar's links come
+  after it.
+- Use `Navbar.SkipLink` inside a `Navbar`, and `AppShell.SkipLink` when the header is not a `Navbar`.
+  Both link to `#main`, which is `AppShell.Main`'s `id`.
+- Name the aside with `aria-label` when the page has another complementary landmark ("Details", "On
+  this page"); the name is also the drawer's title.
 - Set the sidebar's own `side` to match `sidebarSide`, so its line and its phone panel are on the
   same edge, and pass the same `dir` to the shell, the `Sidebar` and the `Navbar` on a right-to-left
   page.
 - Keep a wide table or a long code block inside `AppShell.Main` in a component that scrolls on its
   own (`Table`, `CodeBlock`); the main area scrolls vertically and never pushes the frame wider than
   the window.
+- Pass `pageKey` (the router's pathname) and `pageTitle` so a screen-reader user and a keyboard user
+  are told about a page change that no browser navigation announces.
 
 </Callout>
 <Callout tone="danger" title="Don't">
 
 - Don't use `AppShell` for a page with no navigation column or header of its own; a plain
   [`Container`](/docs/atoms-layout-container--docs) with `as="main"` is the page there.
-- Don't put a second `<main>` or a second banner inside it. The shell owns the page's landmarks.
+- Don't put a second `<main>` inside it, and don't wrap a `Navbar` in `AppShell.Header as="header"`:
+  a `Navbar` draws its own `<header>`, and the two would nest.
 - Don't wrap the shell in an element with its own height: with `scroll="content"` it already fits
   the window, and a parent shorter than that clips it.
+- Don't put important content only in an aside that is `hidden` on a phone: use the default drawer so
+  a phone can still reach it.
 - Don't put an `AppShell` inside another `Sidebar.Provider` and expect the outer one to drive its
   sidebar. The shell renders its own provider, which replaces the outer one for everything inside it.
 - Don't pass `collapsed`, `menuOpen` or their change handlers to the `Sidebar` itself. The shell's
@@ -152,54 +242,72 @@ Drive the shell's props live; the sidebar, header and page it is filled with sta
 - Choose `scroll="content"` for an application whose pages are long lists or tables, so the
   navigation is always in reach. Choose `scroll="page"` for a page that reads like a document: the
   page scrolls as a whole, and the shell keeps the header and the sidebar in view as it does.
+- Choose `headerSpan="full"` when the header carries the product's brand and global actions and the
+  sidebar belongs to the page below it; keep the default when the sidebar is the product's spine and
+  the header belongs to the content.
 - Put the collapse button (`Sidebar.Toggle`) in the sidebar's footer and the phone menu button
   (`Sidebar.MenuButton`) in the header: the shell's provider connects them to the same sidebar.
+  `AppShell.AsideToggle` goes in the header the same way, and shows only below the aside's collapse
+  width.
 - Let the page set its own padding and maximum width inside `AppShell.Main`; the shell adds none, so
   a full-bleed table or a centred reading column are both possible.
 - Give each `Sidebar.Nav` and each `Navbar.Links` its own name when there is more than one, so the
   navigation landmarks are told apart.
 - Set the width of the sidebar on the `Sidebar` itself: `width` for the column on the page, and
   `panelWidth` for the drawer it becomes on a phone, if it should differ (`<Sidebar width="16rem"
-  panelWidth="20rem">`). The shell has no width of its own to set. The drawer is never wider than the
-  window less a sliver of the page that stays showing.
+  panelWidth="20rem">`). The aside's width is its own `width` prop, or the `app-shell.aside-width`
+  token. Neither drawer is ever wider than the window less a sliver of the page that stays showing.
+- Read `useAppShell()` for anything that must know the shell's state, such as a bar that sticks below
+  the header, rather than measuring the header yourself.
 
 ## Accessibility
 
-<Callout tone="info" title="The shell owns the page's landmarks">
+<Callout tone="info" title="Who provides which landmark">
 
-The `Navbar` is the page's `banner` (`<header>`), each `Sidebar.Nav` a named `navigation` (`<nav>`),
-`AppShell.Main` the one `main` and `AppShell.Footer` the `contentinfo` (`<footer>`). All four are
-real elements, not roles on divs.
+The shell supplies `AppShell.Main` (the one `main`) and `AppShell.Footer` (the `contentinfo`) and
+`AppShell.Aside` (a `complementary`, named by you). The banner `<header>` comes from the `Navbar` in
+the header slot, or from `AppShell.Header as="header"` for a header built without one; each
+`Sidebar.Nav` is a named `navigation`. All of them are real elements, not roles on divs. The shell's
+own header slot is a plain `div` by default so that a `Navbar` is never wrapped in a second banner.
 
 </Callout>
 
 | Key | Behaviour |
 |---|---|
-| `Tab` | Moves through the header first (the skip link is the first stop), then the sidebar, then the main area's content, in markup order. |
-| `Enter` on the skip link | Moves focus to `AppShell.Main`, past the header and the sidebar. |
+| `Tab` | Moves through the skip link and the header first, then the sidebar, then the main area's content, then the aside, in markup order. |
+| `Enter` on a skip link | Moves focus to `AppShell.Main`, past the header and the sidebar. |
+| `Escape` in the aside's drawer | Closes it and returns focus to `AppShell.AsideToggle`. |
 
 - `AppShell.Main` takes focus from the skip link (`tabindex="-1"`). While it scrolls
   (`scroll="content"` and more content than room) it is also a tab stop, so a keyboard user can scroll
   a page that has nothing focusable in it with the arrow and page keys; a page that fits, or one that
   scrolls as a whole, gets no extra stop. Whenever the keyboard has focused it, a focus ring is drawn
-  just inside its edge.
-- Below the `collapseBelow` width the sidebar's links are in a dialog opened from the menu button,
-  with the focus handling `Drawer` provides, and are not on the page at all.
+  just inside its edge. A scrolling aside follows the same rule.
+- Below the `collapseBelow` width the sidebar's links are in a dialog opened from the menu button, and
+  below `asideCollapseBelow` the aside's content is in one opened from the toggle, with the focus
+  handling `Drawer` provides. The toggle is a button with `aria-haspopup="dialog"` and `aria-expanded`.
+  The drawer's copy is not a second complementary landmark.
+- When `pageKey` changes, focus moves to `AppShell.Main` and, with `pageTitle`, the new title is
+  announced politely. Neither happens on the first render, so the page's own load is not announced
+  twice, and nothing happens while `pageKey` is left out.
+- A notch or a home indicator never covers the shell: the frame leaves a device's safe-area inset clear
+  on every side (zero on a page that does not draw under them), and the skip link is drawn below it.
 - The shell adds no colour pairing of its own: the page background is the surface colour, and text
   inside uses the primary text colour (at least 4.5:1 on it in every theme).
-- With `scroll="page"` the header and the sidebar stay in view as the page scrolls. The shell measures
-  the header's height once it is on the page, so on the server and for the first paint the header is an
-  ordinary first row and scrolls away; it sticks from then on.
+- With `scroll="page"` the header, the sidebar and the aside stay in view as the page scrolls. The
+  shell measures the header's height once it is on the page, so on the server and for the first paint
+  the header is an ordinary first row and scrolls away; it sticks from then on.
 
 ## Code examples
 
 ```tsx
-<AppShell>
+<AppShell pageKey={pathname} pageTitle={title}>
+  <AppShell.SkipLink />
   <AppShell.Header>
     <Navbar>
-      <Navbar.SkipLink />
       <Navbar.Brand href="/">Acme</Navbar.Brand>
       <Navbar.Actions>
+        <AppShell.AsideToggle />
         <Sidebar.MenuButton />
       </Navbar.Actions>
     </Navbar>
@@ -220,6 +328,9 @@ real elements, not roles on divs.
   <AppShell.Main>
     <h1>Billing</h1>
   </AppShell.Main>
+  <AppShell.Aside aria-label="Order details" width="24rem">
+    <h2>Order #1042</h2>
+  </AppShell.Aside>
 </AppShell>
 ```
 
@@ -231,20 +342,54 @@ real elements, not roles on divs.
 ```
 
 ```tsx
-// Controlled: keep the sidebar's collapsed state in your own store
-<AppShell collapsed={collapsed} onCollapsedChange={setCollapsed}>
+// Controlled: keep the sidebar's collapsed state and the aside's drawer in your own store
+<AppShell
+  collapsed={collapsed}
+  onCollapsedChange={setCollapsed}
+  asideOpen={detailsOpen}
+  onAsideOpenChange={setDetailsOpen}
+>
   …
+</AppShell>
+```
+
+```tsx
+// A header that is not a Navbar, and a sticky bar that reads the header's height
+function Filters() {
+  const { headerHeight } = useAppShell();
+  return <div style={{ position: "sticky", top: "var(--app-shell-header-height, 0px)" }}>{headerHeight}px</div>;
+}
+
+<AppShell scroll="page">
+  <AppShell.SkipLink />
+  <AppShell.Header as="header">Acme</AppShell.Header>
+  <AppShell.Main>
+    <Filters />
+  </AppShell.Main>
 </AppShell>
 ```
 
 ## Design tokens used
 
-<TokenRow token="border-focus" usage="the focus ring drawn inside the main area while the keyboard has focused it" />
-<TokenRow token="border-width-2" usage="the thickness of that ring, and how far it is drawn inside the edge" />
-<TokenRow token="z-index-sticky" usage="keeps the header and the sidebar above the page's content as it scrolls (scroll=&quot;page&quot;)" />
-<TokenRow token="bg.surface" usage="the frame's background: the page colour behind the header, the sidebar and the main area" />
-<TokenRow token="text.primary" usage="the colour of text inside the frame that sets none of its own" />
+<TokenRow token="app-shell.aside-width" usage="the width of the aside, and of the drawer it becomes, when `width` is not given" />
+<TokenRow token="bg.surface" usage="the frame's background: the page colour behind the header, the sidebar, the main area and the aside; the skip link's fill" />
+<TokenRow token="text.primary" usage="the colour of text inside the frame that sets none of its own, and of the skip link" />
 <TokenRow token="font-family.primary" usage="the typeface of the frame, inherited by everything inside it" />
+<TokenRow token="border.default" usage="the line along the aside's inner edge, and the skip link's border" />
+<TokenRow token="border-width.1" usage="the thickness of those lines" />
+<TokenRow token="border-focus" usage="the focus ring drawn inside the main area and a scrolling aside while the keyboard has focused it, and around the skip link" />
+<TokenRow token="border-width.2" usage="the thickness of that ring, and how far it is drawn inside the edge" />
+<TokenRow token="z-index.sticky" usage="keeps the header, the sidebar and the aside above the page's content as it scrolls (scroll=&quot;page&quot;)" />
+<TokenRow token="z-index.fixed" usage="keeps the skip link above everything while it is focused" />
+<TokenRow token="space.px" usage="the skip link's hidden size, until it takes focus" />
+<TokenRow token="space.2" usage="how far the skip link sits from the top edge; padding above and below its words" />
+<TokenRow token="space.4" usage="how far the skip link sits from the start edge; padding beside its words" />
+<TokenRow token="space.1" usage="the gap between the skip link and its focus ring" />
+<TokenRow token="radius.md" usage="the skip link's corners" />
+<TokenRow token="font-size.sm" usage="the skip link's text size" />
+<TokenRow token="font-weight.medium" usage="the skip link's text weight" />
+<TokenRow token="shadow.light-md" usage="the skip link's elevation in the light themes" />
+<TokenRow token="shadow.dark-md" usage="the skip link's elevation in the dark themes" />
 
 ## Related components
 
@@ -262,6 +407,13 @@ real elements, not roles on divs.
   href="/?path=/docs/organisms-navigation-navbar--docs"
 >
   <span aria-hidden="true">Navbar</span>
+</RelatedCard>
+<RelatedCard
+  name="Drawer"
+  description="The panel the aside and the sidebar become on a phone"
+  href="/?path=/docs/organisms-overlay-drawer--docs"
+>
+  <span aria-hidden="true">Drawer</span>
 </RelatedCard>
 <RelatedCard
   name="Container"

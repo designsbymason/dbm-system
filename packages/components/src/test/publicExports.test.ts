@@ -30,9 +30,10 @@ describe("the components package's entry", () => {
   });
 
   // A shipped template is public API like a component: the shell and its slots are exported.
-  it("exports AppShell with its four slots", () => {
+  it("exports AppShell with its slots and the useAppShell hook", () => {
     expect(typeof library.AppShell).toBe("object");
-    for (const slot of ["Sidebar", "Header", "Main", "Footer"] as const) expect(library.AppShell[slot]).toBeDefined();
+    for (const slot of ["SkipLink", "Sidebar", "Header", "Main", "Aside", "AsideToggle", "Footer"] as const) expect(library.AppShell[slot]).toBeDefined();
+    expect(typeof library.useAppShell).toBe("function");
   });
 
   // A component with a `size` names its steps in a type consumers can import, as every other one does.

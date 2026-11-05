@@ -47,4 +47,30 @@ describe("AppShell on the server", () => {
     expect(html).toContain("<footer");
     expect(html).toContain("Hello");
   });
+
+  it("renders the skip link, the header as a real banner, the aside and the page-change region without a DOM", () => {
+    const html = onTheServer(() =>
+      renderToString(
+        <AppShell pageKey="/orders" pageTitle="Orders" headerSpan="full" asideCollapseTo="drawer" defaultAsideOpen>
+          <AppShell.SkipLink />
+          <AppShell.Header as="header">
+            <AppShell.AsideToggle />
+          </AppShell.Header>
+          <AppShell.Main>Hello</AppShell.Main>
+          <AppShell.Aside aria-label="Details" width="24rem">
+            Aside
+          </AppShell.Aside>
+        </AppShell>,
+      ),
+    );
+    expect(html).toContain('href="#main"');
+    expect(html).toContain("<header");
+    expect(html).toContain("<aside");
+    expect(html).toContain('aria-label="Details"');
+    expect(html).toContain("--app-shell-aside-size:24rem");
+    expect(html).toContain('data-header-span="full"');
+    expect(html).toContain('data-aside-collapse="lg"');
+    // the live region for a page change is in the first server render, empty, so a later announcement is a change
+    expect(html).toContain('role="status"');
+  });
 });

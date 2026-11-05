@@ -13,7 +13,9 @@ export function useElementHeight(enabled: boolean, ref: RefObject<HTMLElement | 
     measure();
     if (typeof ResizeObserver === "undefined") return () => report(0);
     const observer = new ResizeObserver(measure);
-    observer.observe(element);
+    // The border box, not the default content box: the header's top padding is the device's safe-area inset, which changes when a phone turns,
+    // and a change in padding alone leaves the content box (and so the observer) unchanged.
+    observer.observe(element, { box: "border-box" });
     return () => {
       observer.disconnect();
       report(0);

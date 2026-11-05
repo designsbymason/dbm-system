@@ -1,5 +1,7 @@
 import { ListIcon, UsersIcon, WalletIcon } from "@dbm-system/icons";
+import { useState } from "react";
 import type { CSSProperties, ReactNode } from "react";
+import { Badge } from "../../atoms/Badge";
 import { Heading } from "../../atoms/Heading";
 import { Text } from "../../atoms/Text";
 import { Breadcrumb } from "../../molecules/Breadcrumb";
@@ -11,6 +13,7 @@ import { Navbar } from "../../organisms/Navbar";
 import { Sidebar } from "../../organisms/Sidebar";
 import { DemoSidebar, preventNavigation } from "../../organisms/Sidebar/SidebarStoryKit";
 import { AppShell } from "./AppShell";
+import { useAppShell } from "./AppShellContext";
 import type { AppShellProps } from "./AppShell.types";
 
 // Storybook-only: the page every AppShell story fills the slots with. Built from the library's own components, no hardcoded values.
@@ -117,11 +120,14 @@ const frameHeight = "36rem";
 export function DemoShell({
   children,
   framed = false,
+  aside = false,
   ...props
 }: AppShellProps & {
   children?: ReactNode;
   /** Draws the shell in a box of its own, for a Docs page, where a shell as tall as the window would fill the page. */
   framed?: boolean;
+  /** Adds an `AppShell.Aside` with a detail pane, and the toggle that opens it as a drawer below its collapse step. */
+  aside?: boolean;
 }) {
   const side = props.sidebarSide ?? "start";
   const dir = props.dir ?? "ltr";
@@ -140,6 +146,7 @@ export function DemoShell({
             dbM Cloud
           </Navbar.Brand>
           <Navbar.Actions>
+            {aside && <AppShell.AsideToggle />}
             <Sidebar.MenuButton />
           </Navbar.Actions>
         </Navbar>
@@ -149,6 +156,11 @@ export function DemoShell({
         <DemoSidebar side={side} dir={dir} toggle panelWidth="20rem" />
       </AppShell.Sidebar>
       <AppShell.Main>{children ?? <DemoPage />}</AppShell.Main>
+      {aside && (
+        <AppShell.Aside aria-label="Order details">
+          <DemoAside />
+        </AppShell.Aside>
+      )}
       <AppShell.Footer>
         <div style={{ padding: "var(--dbm-space-3) var(--dbm-space-6)", borderBlockStart: "var(--dbm-border-width-1) solid var(--dbm-border-default)" }}>
           <Text size="sm" color="secondary">
@@ -170,5 +182,149 @@ export function DemoShell({
     >
       {shell}
     </div>
+  );
+}
+
+/** What an `AppShell.Aside` holds in the demos: a small detail pane. */
+export function DemoAside() {
+  return (
+    <div style={{ display: "grid", gap: "var(--dbm-space-3)", padding: "var(--dbm-space-6)" }}>
+      <Heading level={2} size="lg">
+        Order #1042
+      </Heading>
+      <div>
+        <Badge tone="success">Paid</Badge>
+      </div>
+      <Text color="secondary">Northwind Traders</Text>
+      <Text>Two seats of the Team plan, billed monthly, renewing on the 1st.</Text>
+      <Text size="sm" color="secondary">
+        Last updated by John Doe
+      </Text>
+    </div>
+  );
+}
+
+/** A shell whose header is not a `Navbar`: a skip link of the shell's own, and a header that is the page's real banner. */
+export function DemoPlainHeaderShell({ framed = false }: { framed?: boolean }) {
+  const shell = (
+    <AppShell style={framed ? framedStyle("content") : undefined}>
+      {/* In an app a router handles the link; here the click moves focus to the main area itself and keeps the preview's address unchanged. */}
+      <AppShell.SkipLink
+        onClick={(event) => {
+          event.preventDefault();
+          document.getElementById("main")?.focus();
+        }}
+      />
+      <AppShell.Header as="header" data-testid="plain-header">
+        <div style={{ padding: "var(--dbm-space-4) var(--dbm-space-6)", borderBlockEnd: "var(--dbm-border-width-1) solid var(--dbm-border-default)" }}>
+          <Text weight="bold">dbM Cloud</Text>
+        </div>
+      </AppShell.Header>
+      <AppShell.Main>
+        <DemoPage />
+      </AppShell.Main>
+    </AppShell>
+  );
+  if (!framed) return shell;
+  return <div style={framedBox}>{shell}</div>;
+}
+
+const framedBox: CSSProperties = {
+  blockSize: frameHeight,
+  overflow: "auto",
+  border: "var(--dbm-border-width-1) solid var(--dbm-border-default)",
+  borderRadius: "var(--dbm-radius-lg)",
+};
+
+const pages = {
+  home: { title: "Home", intro: "Welcome back." },
+  reports: { title: "Reports", intro: "Every report, newest first." },
+  settings: { title: "Settings", intro: "Preferences for your workspace." },
+} as const;
+type PageId = keyof typeof pages;
+
+/**
+ * A shell that changes page when a sidebar item is pressed, the way a router would: the page's key and title go to the shell, which moves focus
+ * to the main area, scrolls it back to the top and announces the new title.
+ */
+export function DemoNavigationShell({ framed = false }: { framed?: boolean }) {
+  const [page, setPage] = useState<PageId>("home");
+  const item = (id: PageId) => ({
+    href: `#${id}`,
+    current: page === id,
+    onClick: (event: React.MouseEvent) => {
+      event.preventDefault();
+      setPage(id);
+    },
+  });
+  const shell = (
+    <AppShell pageKey={page} pageTitle={pages[page].title} style={framed ? framedStyle("content") : undefined}>
+      <AppShell.Header>
+        <Navbar>
+          <Navbar.Brand href="#" onClick={preventNavigation}>
+            dbM Cloud
+          </Navbar.Brand>
+          <Navbar.Actions>
+            <Sidebar.MenuButton />
+          </Navbar.Actions>
+        </Navbar>
+      </AppShell.Header>
+      <AppShell.Sidebar>
+        <Sidebar>
+          <Sidebar.Content>
+            <Sidebar.Nav aria-label="Pages">
+              <Sidebar.Item {...item("home")}>Home</Sidebar.Item>
+              <Sidebar.Item {...item("reports")}>Reports</Sidebar.Item>
+              <Sidebar.Item {...item("settings")}>Settings</Sidebar.Item>
+            </Sidebar.Nav>
+          </Sidebar.Content>
+        </Sidebar>
+      </AppShell.Sidebar>
+      <AppShell.Main>
+        <div style={{ display: "grid", gap: "var(--dbm-space-4)", padding: "var(--dbm-space-6)" }}>
+          <Heading level={1} size="2xl">
+            {pages[page].title}
+          </Heading>
+          <Text color="secondary">{pages[page].intro}</Text>
+          {Array.from({ length: 40 }, (_, index) => (
+            <Text key={index}>
+              Paragraph {index + 1} of the {pages[page].title.toLowerCase()} page: long enough that the page has to scroll.
+            </Text>
+          ))}
+        </div>
+      </AppShell.Main>
+    </AppShell>
+  );
+  if (!framed) return shell;
+  return <div style={framedBox}>{shell}</div>;
+}
+
+/** A bar inside the main area that sticks below the header, positioned by the header's height from `useAppShell()`. */
+function StickyBar() {
+  const { headerHeight } = useAppShell();
+  return (
+    <div
+      data-testid="sticky-bar"
+      style={{
+        position: "sticky",
+        insetBlockStart: "var(--app-shell-header-height, 0px)",
+        zIndex: "var(--dbm-z-index-base)",
+        padding: "var(--dbm-space-3) var(--dbm-space-6)",
+        background: "var(--dbm-bg-surface)",
+        borderBlockEnd: "var(--dbm-border-width-1) solid var(--dbm-border-default)",
+      }}
+    >
+      <Text weight="medium">Filters · the header is {Math.round(headerHeight)}px tall</Text>
+    </div>
+  );
+}
+
+/** A page-scrolling shell with a bar in the main area that sticks below the header. */
+export function DemoStickyBarShell({ framed = false }: { framed?: boolean }) {
+  return (
+    <DemoShell scroll="page" framed={framed}>
+      <StickyBar />
+      <DemoPage />
+    </DemoShell>
   );
 }

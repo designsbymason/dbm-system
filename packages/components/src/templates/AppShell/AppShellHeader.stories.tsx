@@ -7,7 +7,16 @@ const meta: Meta<typeof AppShell.Header> = {
   component: AppShell.Header,
   tags: ["!dev"],
   argTypes: {
-    children: { control: false, description: "The Navbar, which is the page's banner landmark and holds the skip link and the menu button." },
+    as: {
+      control: false,
+      description:
+        "The element to render. A plain div by default, since a Navbar draws the page's header banner itself and a second one around it would nest two. Pass \"header\" for a header built without a Navbar.",
+      table: { defaultValue: { summary: "'div'" } },
+    },
+    children: {
+      control: false,
+      description: "The header's content: usually a Navbar, which draws the page's banner landmark itself and holds the menu button.",
+    },
     id: { control: false, description: "Standard DOM id." },
     className: { control: false, description: "Additional CSS classes for customization." },
     style: { control: false, description: "Inline styles, merged onto the component's own internal styles." },

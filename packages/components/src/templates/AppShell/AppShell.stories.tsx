@@ -1,11 +1,15 @@
 import type { Meta, StoryContext, StoryObj } from "@storybook/react-vite";
 import { AppShell } from "./AppShell";
+import type { AppShellProps } from "./AppShell.types";
 import { appShellPlaygroundSnippet, appShellSnippets } from "./AppShell.snippets";
-import { DemoShell } from "./AppShellStoryKit";
+import { DemoNavigationShell, DemoPlainHeaderShell, DemoShell, DemoStickyBarShell } from "./AppShellStoryKit";
 
 // A template is a whole page, so every story fills the window (`layout: "fullscreen"`) and the shell is as tall as the window
 // (`scroll="content"`). On a Docs page the shell sits in a frame instead (see AppShell.mdx).
-const meta: Meta<typeof AppShell> = {
+/** The shell's props, and the one Storybook-only control (whether the demo has an aside). */
+type PlaygroundArgs = AppShellProps & { showAside: boolean };
+
+const meta: Meta<PlaygroundArgs> = {
   title: "Templates/Application shells/AppShell",
   component: AppShell,
   subcomponents: {},
@@ -13,12 +17,51 @@ const meta: Meta<typeof AppShell> = {
   argTypes: {
     children: {
       control: false,
-      description: "The shell's slots: AppShell.Header (first, so the skip link is the first tab stop), AppShell.Sidebar, AppShell.Main and AppShell.Footer. Only AppShell.Main is needed.",
+      description: "The shell's slots: AppShell.SkipLink and AppShell.Header (first, so the skip link is the first tab stop), AppShell.Sidebar, AppShell.Main, AppShell.Aside and AppShell.Footer. Only AppShell.Main is needed.",
     },
     scroll: {
       control: "radio",
       options: ["content", "page"],
       description: "What scrolls: only the main area while the sidebar and header stay put, or the page as a whole.",
+    },
+    headerSpan: {
+      control: "radio",
+      options: ["content", "full"],
+      description: "How far the header reaches: content stops at the sidebar (a full-height sidebar beside it), full runs across the top over the sidebar, which starts below it.",
+      table: { defaultValue: { summary: "'content'" } },
+    },
+    showAside: {
+      control: "boolean",
+      description: "Storybook only — not an AppShell prop. Adds an AppShell.Aside with a detail pane, and the toggle that opens it as a drawer.",
+      table: { disable: true },
+    },
+    asideCollapseBelow: {
+      control: "select",
+      options: ["sm", "md", "lg", "xl", "2xl", "3xl", "never"],
+      description: "The width below which AppShell.Aside leaves the page, or 'never' to keep it at every width. AppShell.AsideToggle shows below the same width.",
+      table: { defaultValue: { summary: "'lg'" } },
+    },
+    asideCollapseTo: {
+      control: "radio",
+      options: ["drawer", "hidden"],
+      description: "What the aside becomes below asideCollapseBelow: a drawer opened from AppShell.AsideToggle, or nothing at all.",
+      table: { defaultValue: { summary: "'drawer'" } },
+    },
+    asideOpen: { control: false, description: "Whether the aside's drawer is open (controlled). Pair with onAsideOpenChange." },
+    defaultAsideOpen: {
+      control: false,
+      description: "Whether the aside's drawer starts open (uncontrolled).",
+      table: { defaultValue: { summary: "false" } },
+    },
+    onAsideOpenChange: { control: false, description: "Called when the aside's drawer opens or closes, with the new value." },
+    pageKey: {
+      control: false,
+      description:
+        "A value that changes when the reader goes to another page, such as the router's pathname. When it changes after the first render the shell moves focus to AppShell.Main, scrolls it back to the top and, with pageTitle, announces the new page. Never on the first render.",
+    },
+    pageTitle: {
+      control: false,
+      description: "The new page's title, announced politely to a screen reader when pageKey changes. Left out, the focus still moves and nothing is said.",
     },
     sidebarSide: {
       control: "radio",
@@ -62,6 +105,10 @@ const meta: Meta<typeof AppShell> = {
   },
   args: {
     scroll: "content",
+    headerSpan: "content",
+    showAside: false,
+    asideCollapseBelow: "lg",
+    asideCollapseTo: "drawer",
     sidebarSide: "start",
     dir: "ltr",
     collapseBelow: "md",
@@ -71,10 +118,14 @@ const meta: Meta<typeof AppShell> = {
 
 export default meta;
 
-type Story = StoryObj<typeof AppShell>;
+type Story = StoryObj<PlaygroundArgs>;
 
 const noControls = {
   scroll: { control: false },
+  headerSpan: { control: false },
+  showAside: { control: false },
+  asideCollapseBelow: { control: false },
+  asideCollapseTo: { control: false },
   sidebarSide: { control: false },
   dir: { control: false },
   collapseBelow: { control: false },
@@ -94,12 +145,12 @@ export const Playground: Story = {
   // The shell remounts when the props the sidebar reads once (its start state) change, so every control is live.
   decorators: [
     (Story, context) => (
-      <div key={`${String(context.args.defaultCollapsed)}-${context.args.sidebarSide}-${context.args.dir}`}>
+      <div key={`${String(context.args.defaultCollapsed)}-${context.args.sidebarSide}-${context.args.dir}-${String(context.args.showAside)}`}>
         <Story />
       </div>
     ),
   ],
-  render: (args, context) => <DemoShell {...args} framed={context.viewMode === "docs"} />,
+  render: ({ showAside, ...args }, context) => <DemoShell {...args} aside={showAside} framed={context.viewMode === "docs"} />,
 };
 
 export const Rail: Story = {
@@ -128,4 +179,46 @@ export const RightToLeft: Story = {
   parameters: { docs: { source: { code: appShellSnippets.rightToLeft } } },
   argTypes: { ...noControls },
   render: (_args, context) => <DemoShell dir="rtl" framed={context.viewMode === "docs"} />,
+};
+
+export const WithAside: Story = {
+  name: "An aside beside the main area",
+  parameters: { docs: { source: { code: appShellSnippets.aside } } },
+  argTypes: { ...noControls },
+  render: (_args, context) => <DemoShell aside framed={context.viewMode === "docs"} />,
+};
+
+export const AsideHidden: Story = {
+  name: "An aside that is hidden on a phone",
+  parameters: { docs: { source: { code: appShellSnippets.asideHidden } } },
+  argTypes: { ...noControls },
+  render: (_args, context) => <DemoShell aside asideCollapseTo="hidden" framed={context.viewMode === "docs"} />,
+};
+
+export const HeaderOverSidebar: Story = {
+  name: "The header runs over the sidebar",
+  parameters: { docs: { source: { code: appShellSnippets.headerSpan } } },
+  argTypes: { ...noControls },
+  render: (_args, context) => <DemoShell headerSpan="full" aside framed={context.viewMode === "docs"} />,
+};
+
+export const PlainHeader: Story = {
+  name: "A header that is not a Navbar",
+  parameters: { docs: { source: { code: appShellSnippets.plainHeader } } },
+  argTypes: { ...noControls },
+  render: (_args, context) => <DemoPlainHeaderShell framed={context.viewMode === "docs"} />,
+};
+
+export const PageChange: Story = {
+  name: "Moving to another page",
+  parameters: { docs: { source: { code: appShellSnippets.pageChange } } },
+  argTypes: { ...noControls },
+  render: (_args, context) => <DemoNavigationShell framed={context.viewMode === "docs"} />,
+};
+
+export const StickyBar: Story = {
+  name: "A bar that sticks below the header",
+  parameters: { docs: { source: { code: appShellSnippets.stickyBar } } },
+  argTypes: { ...noControls },
+  render: (_args, context) => <DemoStickyBarShell framed={context.viewMode === "docs"} />,
 };

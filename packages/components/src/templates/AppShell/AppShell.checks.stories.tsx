@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { expect, userEvent, waitFor, within } from "storybook/test";
 import { send } from "../../molecules/CodeBlock/browserProtocol";
-import { DemoShell } from "./AppShellStoryKit";
+import { DemoNavigationShell, DemoPlainHeaderShell, DemoShell, DemoStickyBarShell } from "./AppShellStoryKit";
 
 // Hidden real-browser checks (guidelines/adr/0013): what jsdom can't do (layout, a breakpoint, scrolling, forced colours). They run in the
 // `storybook` (Chromium) project; the test window is 1200px wide unless a story pins another.
@@ -261,5 +261,388 @@ export const ForcedColoursInteraction: Story = {
       // Clear the emulation by sending an empty feature list, not the default value, so it cannot leak into the next story.
       await send("Emulation.setEmulatedMedia", { features: [] });
     }
+  },
+};
+
+// --- The aside, the header's reach, the safe-area insets, a page change and the standalone skip link ---
+
+const px = (value: string) => Number.parseFloat(value);
+/** The main area of a shell that has no footer. */
+const mainOf = (canvasElement: HTMLElement) => within(canvasElement).getByRole("main");
+const rootRem = () => px(getComputedStyle(document.documentElement).fontSize);
+const asideOf = (canvasElement: HTMLElement) =>
+  within(canvasElement).getByRole("complementary", { name: "Order details" });
+
+/** The slot (a direct child of the shell) that holds an element: where the grid places it. */
+function slotOf(shell: HTMLElement, element: HTMLElement): HTMLElement {
+  let slot = element;
+  while (slot.parentElement !== shell) slot = slot.parentElement!;
+  return slot;
+}
+
+export const AsideOnADesktop: Story = {
+  name: "On a desktop the aside is a column at the end edge, as wide as its token, beside the main area and under the header — layout test",
+  render: () => <DemoShell aside />,
+  play: async ({ canvasElement }) => {
+    await expect(window.innerWidth).toBeGreaterThanOrEqual(1024);
+    const { shell, main, header, footer } = slots(canvasElement);
+    const aside = asideOf(canvasElement);
+    const box = aside.getBoundingClientRect();
+    await expect(Math.abs(box.right - window.innerWidth)).toBeLessThan(1);
+    await expect(Math.abs(box.width - 20 * rootRem())).toBeLessThan(1);
+    // beside the main area, not above or below it
+    await expect(box.left).toBeGreaterThanOrEqual(
+      main.getBoundingClientRect().right - 1,
+    );
+    // the header runs over both the main area and the aside (the default `headerSpan="content"`), and the aside starts under it
+    await expect(
+      Math.abs(header.getBoundingClientRect().right - box.right),
+    ).toBeLessThan(1);
+    await expect(box.top).toBeGreaterThanOrEqual(
+      header.getBoundingClientRect().bottom - 1,
+    );
+    // the aside runs down beside the footer too
+    await expect(
+      Math.abs(box.bottom - footer.getBoundingClientRect().bottom),
+    ).toBeLessThan(1);
+    // a line along its inner edge, and its own scroller
+    await expect(getComputedStyle(aside).borderInlineStartWidth).not.toBe(
+      "0px",
+    );
+    await expect(getComputedStyle(aside).overflowY).toBe("auto");
+    // the toggle is there for the drawer, and hidden while the aside is on the page
+    await expect(
+      getComputedStyle(
+        shell.querySelector<HTMLElement>('button[aria-label="Show details"]')!,
+      ).display,
+    ).toBe("none");
+  },
+};
+
+export const AsideDrawerOnATablet: Story = {
+  name: "Below its collapse width the aside leaves the page, and the toggle opens the same content in a drawer that gives focus back — layout test",
+  globals: { viewport: { value: "tablet", isRotated: false } },
+  render: () => <DemoShell aside />,
+  play: async ({ canvasElement }) => {
+    await expect(window.innerWidth).toBeLessThan(1024);
+    const { shell, main } = slots(canvasElement);
+    // the aside is out of the page (and the accessibility tree), and the main area has its room
+    const aside = shell.querySelector<HTMLElement>("aside")!;
+    await expect(getComputedStyle(aside).display).toBe("none");
+    await expect(within(canvasElement).queryByRole("complementary")).toBeNull();
+    const toggle = within(canvasElement).getByRole("button", {
+      name: "Show details",
+    });
+    await expect(getComputedStyle(toggle).display).not.toBe("none");
+    await expect(toggle).toHaveAttribute("aria-expanded", "false");
+    await expect(main.getBoundingClientRect().right).toBeLessThanOrEqual(
+      window.innerWidth + 1,
+    );
+
+    await userEvent.click(toggle);
+    const drawer = await within(document.body).findByRole("dialog", {
+      name: "Order details",
+    });
+    await waitFor(() =>
+      expect(
+        drawer
+          .getAnimations()
+          .every((animation) => animation.playState === "finished"),
+      ).toBe(true),
+    );
+    await expect(within(drawer).getByText("Order #1042")).toBeVisible();
+    // as wide as the token, from the end edge
+    await expect(
+      Math.abs(drawer.getBoundingClientRect().width - 20 * rootRem()),
+    ).toBeLessThan(1);
+    await expect(
+      Math.abs(drawer.getBoundingClientRect().right - window.innerWidth),
+    ).toBeLessThan(1);
+    await expect(toggle).toHaveAttribute("aria-expanded", "true");
+
+    await userEvent.keyboard("{Escape}");
+    await waitFor(() =>
+      expect(within(document.body).queryByRole("dialog")).toBeNull(),
+    );
+    await waitFor(() => expect(toggle).toHaveFocus());
+  },
+};
+
+export const AsideHiddenOnAPhone: Story = {
+  name: "With asideCollapseTo hidden the aside is gone below its collapse width and there is no toggle — layout test",
+  globals: { viewport: { value: "mobile1", isRotated: false } },
+  render: () => <DemoShell aside asideCollapseTo="hidden" />,
+  play: async ({ canvasElement }) => {
+    await expect(window.innerWidth).toBeLessThan(768);
+    const { shell, main } = slots(canvasElement);
+    await expect(
+      getComputedStyle(shell.querySelector<HTMLElement>("aside")!).display,
+    ).toBe("none");
+    await expect(
+      getComputedStyle(
+        shell.querySelector<HTMLElement>('button[aria-label="Show details"]')!,
+      ).display,
+    ).toBe("none");
+    await expect(Math.round(main.getBoundingClientRect().width)).toBe(
+      window.innerWidth,
+    );
+    await expect(within(document.body).queryByRole("dialog")).toBeNull();
+  },
+};
+
+export const AsideInRightToLeftInteraction: Story = {
+  name: "In right to left the aside is at the left edge and the sidebar at the right — layout test",
+  render: () => <DemoShell aside dir="rtl" />,
+  play: async ({ canvasElement }) => {
+    const { main } = slots(canvasElement);
+    const aside = asideOf(canvasElement);
+    const nav = within(canvasElement).getByRole("navigation", { name: "Main" });
+    await expect(Math.abs(aside.getBoundingClientRect().left)).toBeLessThan(1);
+    await expect(aside.getBoundingClientRect().right).toBeLessThanOrEqual(
+      main.getBoundingClientRect().left + 1,
+    );
+    await expect(nav.getBoundingClientRect().left).toBeGreaterThanOrEqual(
+      main.getBoundingClientRect().right - 1,
+    );
+  },
+};
+
+export const HeaderOverTheSidebar: Story = {
+  name: "With headerSpan full the header runs across the top, over the sidebar, which starts under it — layout test",
+  render: () => <DemoShell headerSpan="full" aside />,
+  play: async ({ canvasElement }) => {
+    const { shell, main, header } = slots(canvasElement);
+    const nav = within(canvasElement).getByRole("navigation", { name: "Main" });
+    const sidebarSlot = slotOf(shell, nav);
+    const bar = header.getBoundingClientRect();
+    await expect(
+      Math.abs(bar.left - shell.getBoundingClientRect().left),
+    ).toBeLessThan(1);
+    await expect(Math.abs(bar.right - window.innerWidth)).toBeLessThan(1);
+    await expect(
+      Math.abs(sidebarSlot.getBoundingClientRect().top - bar.bottom),
+    ).toBeLessThan(1);
+    await expect(
+      Math.abs(asideOf(canvasElement).getBoundingClientRect().top - bar.bottom),
+    ).toBeLessThan(1);
+    await expect(
+      Math.abs(main.getBoundingClientRect().top - bar.bottom),
+    ).toBeLessThan(1);
+    // with the default the sidebar spans the header's row too
+  },
+};
+
+export const HeaderOverTheSidebarEndSide: Story = {
+  name: "With headerSpan full and the sidebar at the end edge the header still runs across the whole top — layout test",
+  render: () => <DemoShell headerSpan="full" sidebarSide="end" aside />,
+  play: async ({ canvasElement }) => {
+    const { shell, header } = slots(canvasElement);
+    const nav = within(canvasElement).getByRole("navigation", { name: "Main" });
+    await expect(
+      Math.abs(header.getBoundingClientRect().right - window.innerWidth),
+    ).toBeLessThan(1);
+    await expect(
+      Math.abs(
+        header.getBoundingClientRect().left -
+          shell.getBoundingClientRect().left,
+      ),
+    ).toBeLessThan(1);
+    await expect(nav.getBoundingClientRect().top).toBeGreaterThanOrEqual(
+      header.getBoundingClientRect().bottom - 1,
+    );
+  },
+};
+
+export const PageScrollWithAsideAndFullHeader: Story = {
+  name: "With scroll page the sidebar and the aside stick below the header, as tall as the rest of the window — layout test",
+  render: () => <DemoShell scroll="page" headerSpan="full" aside />,
+  play: async ({ canvasElement }) => {
+    const { shell, header } = slots(canvasElement);
+    await waitFor(() => expect(shell).toHaveAttribute("data-header-measured"));
+    const nav = within(canvasElement).getByRole("navigation", { name: "Main" });
+    const sidebarSlot = slotOf(shell, nav);
+    const aside = asideOf(canvasElement);
+    const height = header.getBoundingClientRect().height;
+    window.scrollTo(0, 500);
+    await nextFrame();
+    await expect(window.scrollY).toBeGreaterThan(0);
+    await expect(Math.abs(header.getBoundingClientRect().top)).toBeLessThan(1);
+    for (const column of [sidebarSlot, aside]) {
+      await expect(
+        Math.abs(column.getBoundingClientRect().top - height),
+      ).toBeLessThan(1);
+      await expect(
+        Math.abs(
+          column.getBoundingClientRect().height - (window.innerHeight - height),
+        ),
+      ).toBeLessThan(1.5);
+    }
+    window.scrollTo(0, 0);
+  },
+};
+
+export const SafeAreaInsetsKeepTheFrameClear: Story = {
+  name: "The frame leaves the device's safe-area insets clear on every side, and the stylesheet asks the device for them — layout test",
+  render: () => <DemoShell aside />,
+  play: async ({ canvasElement }) => {
+    const { shell, header, footer } = slots(canvasElement);
+    // The stylesheet reads each side from the device's own inset...
+    const rules = Array.from(document.styleSheets).flatMap((sheet) => {
+      try {
+        return Array.from(sheet.cssRules).map((rule) => rule.cssText);
+      } catch {
+        return []; // a sheet from another origin (a font) can't be read, and has nothing of ours
+      }
+    });
+    const source = rules.join("\n");
+    for (const side of ["top", "right", "bottom", "left"])
+      await expect(source).toContain(`env(safe-area-inset-${side}`);
+    // ...and a desktop has none, so stand one in through the custom properties it is read into (the way the drawer's check does).
+    const before = {
+      header: header.getBoundingClientRect().top,
+      footer: footer.getBoundingClientRect().bottom,
+    };
+    await expect(Math.abs(before.header)).toBeLessThan(1);
+    shell.style.setProperty("--app-shell-safe-top", "30px");
+    shell.style.setProperty("--app-shell-safe-right", "12px");
+    shell.style.setProperty("--app-shell-safe-bottom", "20px");
+    shell.style.setProperty("--app-shell-safe-left", "10px");
+    await nextFrame();
+    await expect(
+      Math.abs(header.getBoundingClientRect().top - 30),
+    ).toBeLessThan(1);
+    await expect(
+      Math.abs(
+        footer.getBoundingClientRect().bottom - (window.innerHeight - 20),
+      ),
+    ).toBeLessThan(1);
+    const nav = within(canvasElement).getByRole("navigation", { name: "Main" });
+    await expect(
+      Math.abs(slotOf(shell, nav).getBoundingClientRect().left - 10),
+    ).toBeLessThan(1);
+    await expect(
+      Math.abs(
+        asideOf(canvasElement).getBoundingClientRect().right -
+          (window.innerWidth - 12),
+      ),
+    ).toBeLessThan(1);
+    // the frame is still exactly the window (the insets are inside it)
+    await expect(Math.round(shell.getBoundingClientRect().height)).toBe(
+      window.innerHeight,
+    );
+  },
+};
+
+export const SafeAreaTopBelongsToTheHeaderWhenThePageScrolls: Story = {
+  name: "With scroll page the top inset is the header's own padding, so the header covers the strip under a notch — layout test",
+  render: () => <DemoShell scroll="page" />,
+  play: async ({ canvasElement }) => {
+    const { shell, header } = slots(canvasElement);
+    await waitFor(() => expect(shell).toHaveAttribute("data-header-measured"));
+    // Let the page finish laying out (a late font would re-measure the header and hide a missed padding change), then change the inset alone.
+    await document.fonts.ready;
+    await nextFrame();
+    await nextFrame();
+    shell.style.setProperty("--app-shell-safe-top", "30px");
+    await nextFrame();
+    const slot = slotOf(shell, header);
+    await expect(px(getComputedStyle(slot).paddingTop)).toBe(30);
+    // the measured height includes it, so the first row and the sticky header agree
+    await waitFor(() =>
+      expect(
+        Math.abs(
+          slot.getBoundingClientRect().height -
+            px(
+              getComputedStyle(shell).getPropertyValue(
+                "--app-shell-header-height",
+              ),
+            ),
+        ) < 1,
+      ).toBe(true),
+    );
+    window.scrollTo(0, 400);
+    await nextFrame();
+    await expect(Math.abs(slot.getBoundingClientRect().top)).toBeLessThan(1);
+    window.scrollTo(0, 0);
+  },
+};
+
+export const PageChangeMovesFocusAndAnnounces: Story = {
+  name: "Moving to another page moves focus to the main area, scrolls it back to the top and announces the new title — keyboard test",
+  render: () => <DemoNavigationShell />,
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const main = mainOf(canvasElement);
+    // not on the first render
+    await expect(main).not.toHaveFocus();
+    await waitFor(() =>
+      expect(main.scrollHeight).toBeGreaterThan(main.clientHeight),
+    );
+    main.scrollTop = 400;
+    await expect(main.scrollTop).toBeGreaterThan(0);
+    await userEvent.click(canvas.getByRole("link", { name: "Reports" }));
+    await waitFor(() => expect(main).toHaveFocus());
+    await expect(main.scrollTop).toBe(0);
+    await expect(
+      within(main).getByRole("heading", { name: "Reports", level: 1 }),
+    ).toBeVisible();
+    await waitFor(
+      () =>
+        expect(within(canvasElement).getByRole("status")).toHaveTextContent(
+          "Reports",
+        ),
+      { timeout: 2000 },
+    );
+    // and again for another page
+    main.scrollTop = 300;
+    await userEvent.click(canvas.getByRole("link", { name: "Settings" }));
+    await waitFor(() => expect(main).toHaveFocus());
+    await expect(main.scrollTop).toBe(0);
+  },
+};
+
+export const StandaloneSkipLinkAndRealHeader: Story = {
+  name: "AppShell.SkipLink is the first tab stop, appears on screen while focused and moves focus to the main area; as header is the banner — keyboard test",
+  render: () => <DemoPlainHeaderShell />,
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const main = mainOf(canvasElement);
+    await expect(canvas.getByRole("banner")).toBe(
+      canvas.getByTestId("plain-header"),
+    );
+    await expect(canvas.getByTestId("plain-header").tagName).toBe("HEADER");
+    const link = canvas.getByRole("link", { name: "Skip to content" });
+    // hidden until focused: no larger than a pixel
+    await expect(link.getBoundingClientRect().width).toBeLessThanOrEqual(2);
+    await press("Tab", 9);
+    await waitFor(() => expect(link).toHaveFocus());
+    const box = link.getBoundingClientRect();
+    await expect(box.width).toBeGreaterThan(20);
+    await expect(box.top).toBeGreaterThanOrEqual(0);
+    await expect(box.left).toBeGreaterThanOrEqual(0);
+    await expect(getComputedStyle(link).position).toBe("fixed");
+    await expect(link).toHaveAttribute("href", "#main");
+    await userEvent.keyboard("{Enter}");
+    await waitFor(() => expect(main).toHaveFocus());
+  },
+};
+
+export const StickyBarFollowsTheHeaderHeight: Story = {
+  name: "A bar that sticks at the header's height stays just below the header, and useAppShell reports that height — layout test",
+  render: () => <DemoStickyBarShell />,
+  play: async ({ canvasElement }) => {
+    const { shell, header } = slots(canvasElement);
+    await waitFor(() => expect(shell).toHaveAttribute("data-header-measured"));
+    const bar = within(canvasElement).getByTestId("sticky-bar");
+    const height = slotOf(shell, header).getBoundingClientRect().height;
+    await expect(bar).toHaveTextContent(
+      `the header is ${Math.round(height)}px tall`,
+    );
+    window.scrollTo(0, 600);
+    await nextFrame();
+    await expect(
+      Math.abs(bar.getBoundingClientRect().top - height),
+    ).toBeLessThan(1.5);
+    window.scrollTo(0, 0);
   },
 };

@@ -1,11 +1,12 @@
-import { render, screen, within } from "@testing-library/react";
+import { act, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { axe } from "jest-axe";
-import { createRef } from "react";
+import { createRef, StrictMode } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { Navbar } from "../../organisms/Navbar";
 import { Sidebar } from "../../organisms/Sidebar";
 import { AppShell } from "./AppShell";
+import { useAppShell } from "./AppShellContext";
 import type { AppShellProps } from "./AppShell.types";
 
 // jsdom matches no media query, so below its `collapseBelow` width the sidebar is `display: none` as on a phone. These tests of the page's
@@ -268,3 +269,306 @@ describe("AppShell", () => {
     expect(await axe(container)).toHaveNoViolations();
   });
 });
+
+describe("AppShell.SkipLink", () => {
+  it("is a link to #main with its own words, first in the tab order when it is first in the shell", async () => {
+    const user = userEvent.setup();
+    render(
+      <AppShell>
+        <AppShell.SkipLink />
+        <AppShell.Header>
+          <a href="/">Home</a>
+        </AppShell.Header>
+        <AppShell.Main>x</AppShell.Main>
+      </AppShell>,
+    );
+    const link = screen.getByRole("link", { name: "Skip to content" });
+    expect(link).toHaveAttribute("href", "#main");
+    await user.tab();
+    expect(link).toHaveFocus();
+  });
+
+  it("takes its own text, its own words through `labels`, and another target", () => {
+    render(
+      <AppShell>
+        <AppShell.SkipLink href="#content">Skip to the page</AppShell.SkipLink>
+        <AppShell.SkipLink labels={{ skipToContent: "Aller au contenu" }} />
+        <AppShell.SkipLink labels={{ skipToContent: undefined }} data-testid="undefined-label" />
+        <AppShell.Main>x</AppShell.Main>
+      </AppShell>,
+    );
+    expect(screen.getByRole("link", { name: "Skip to the page" })).toHaveAttribute("href", "#content");
+    expect(screen.getByRole("link", { name: "Aller au contenu" })).toBeInTheDocument();
+    // an override that is `undefined` keeps the default words, not a blank link
+    expect(screen.getByTestId("undefined-label")).toHaveTextContent("Skip to content");
+  });
+});
+
+describe("AppShell.Header's element", () => {
+  it("is a plain div by default, so a Navbar's own banner is not wrapped in a second one", () => {
+    render(
+      <AppShell>
+        <AppShell.Header data-testid="header">x</AppShell.Header>
+        <AppShell.Main>x</AppShell.Main>
+      </AppShell>,
+    );
+    expect(screen.getByTestId("header").tagName).toBe("DIV");
+    expect(screen.queryByRole("banner")).not.toBeInTheDocument();
+  });
+
+  it("is the page's banner landmark with as=\"header\"", () => {
+    const ref = createRef<HTMLElement>();
+    render(
+      <AppShell>
+        <AppShell.Header as="header" ref={ref} data-testid="header">
+          x
+        </AppShell.Header>
+        <AppShell.Main>x</AppShell.Main>
+      </AppShell>,
+    );
+    expect(screen.getByRole("banner")).toBe(screen.getByTestId("header"));
+    expect(ref.current?.tagName).toBe("HEADER");
+  });
+});
+
+describe("AppShell's layout attributes", () => {
+  it("records how far the header reaches and what the aside does, and says what they default to", () => {
+    const { rerender } = render(
+      <AppShell data-testid="shell">
+        <AppShell.Main>x</AppShell.Main>
+      </AppShell>,
+    );
+    const root = screen.getByTestId("shell");
+    expect(root).toHaveAttribute("data-header-span", "content");
+    expect(root).toHaveAttribute("data-aside-collapse", "lg");
+    expect(root).toHaveAttribute("data-aside-to", "drawer");
+    rerender(
+      <AppShell data-testid="shell" headerSpan="full" asideCollapseBelow="md" asideCollapseTo="hidden">
+        <AppShell.Main>x</AppShell.Main>
+      </AppShell>,
+    );
+    expect(root).toHaveAttribute("data-header-span", "full");
+    expect(root).toHaveAttribute("data-aside-collapse", "md");
+    expect(root).toHaveAttribute("data-aside-to", "hidden");
+  });
+});
+
+describe("AppShell.Aside", () => {
+  function WithAside(props: Partial<React.ComponentProps<typeof AppShell>> & { asideProps?: Partial<React.ComponentProps<typeof AppShell.Aside>> }) {
+    const { asideProps, ...shell } = props;
+    return (
+      <AppShell {...shell}>
+        <AppShell.Header>
+          <AppShell.AsideToggle data-testid="toggle" />
+        </AppShell.Header>
+        <AppShell.Main>Main</AppShell.Main>
+        <AppShell.Aside aria-label="Order details" data-testid="aside" {...asideProps}>
+          <p>The aside content</p>
+        </AppShell.Aside>
+      </AppShell>
+    );
+  }
+
+  it("is a named complementary landmark holding its children, and a width through a custom property", () => {
+    render(<WithAside asideProps={{ width: 360 }} />);
+    const aside = screen.getByRole("complementary", { name: "Order details" });
+    expect(aside).toHaveTextContent("The aside content");
+    expect(aside.style.getPropertyValue("--app-shell-aside-size")).toBe("360px");
+  });
+
+  it("opens the same content in a drawer from the toggle, titled by the aside's name, and gives focus back to the toggle", async () => {
+    const user = userEvent.setup();
+    render(<WithAside />);
+    const toggle = screen.getByRole("button", { name: "Show details" });
+    expect(toggle).toHaveAttribute("aria-expanded", "false");
+    await user.click(toggle);
+    const drawer = await screen.findByRole("dialog", { name: "Order details" });
+    expect(within(drawer).getByText("The aside content")).toBeInTheDocument();
+    // the drawer's copy is not a second complementary landmark
+    expect(within(drawer).queryByRole("complementary")).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Show details", hidden: true })).toHaveAttribute("aria-expanded", "true");
+    await user.keyboard("{Escape}");
+    await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
+    await waitFor(() => expect(toggle).toHaveFocus());
+  });
+
+  it("takes its drawer's title and close name, and the toggle's name, through `labels`", async () => {
+    const user = userEvent.setup();
+    render(
+      <AppShell>
+        <AppShell.AsideToggle labels={{ open: "Détails" }} />
+        <AppShell.Main>x</AppShell.Main>
+        <AppShell.Aside labels={{ title: "Détails de la commande", close: "Fermer" }}>x</AppShell.Aside>
+      </AppShell>,
+    );
+    await user.click(screen.getByRole("button", { name: "Détails" }));
+    const drawer = await screen.findByRole("dialog", { name: "Détails de la commande" });
+    expect(within(drawer).getByRole("button", { name: "Fermer" })).toBeInTheDocument();
+  });
+
+  it("reports the drawer opening and closing, and can be held open by the app", async () => {
+    const user = userEvent.setup();
+    const changes: boolean[] = [];
+    const { rerender } = render(<WithAside asideOpen={false} onAsideOpenChange={(open) => changes.push(open)} />);
+    await user.click(screen.getByRole("button", { name: "Show details" }));
+    expect(changes).toEqual([true]);
+    // controlled: it stays shut until the app says so
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    rerender(<WithAside asideOpen onAsideOpenChange={(open) => changes.push(open)} />);
+    await screen.findByRole("dialog", { name: "Order details" });
+    await user.keyboard("{Escape}");
+    expect(changes).toEqual([true, false]);
+  });
+
+  it("starts open with defaultAsideOpen", async () => {
+    render(<WithAside defaultAsideOpen />);
+    expect(await screen.findByRole("dialog", { name: "Order details" })).toBeInTheDocument();
+  });
+
+  it("has no drawer, and never opens one, with asideCollapseTo=\"hidden\"", async () => {
+    // the toggle is hidden by the stylesheet (`display: none`), which would stop a real press, so the pointer check is off
+    const user = userEvent.setup({ pointerEventsCheck: 0 });
+    render(<WithAside asideCollapseTo="hidden" />);
+    // the toggle is hidden by the stylesheet (`display: none`), so it is found by its test id; pressing it still opens nothing
+    await user.click(screen.getByTestId("toggle"));
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+  });
+
+  it("has no drawer with asideCollapseBelow=\"never\", since the aside is always on the page", () => {
+    render(<WithAside asideCollapseBelow="never" defaultAsideOpen />);
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+  });
+
+  it("closes the drawer once the window is wide enough for the aside to be back on the page", async () => {
+    const user = userEvent.setup();
+    const listeners: Array<() => void> = [];
+    const query = { matches: false, addEventListener: (_: string, fn: () => void) => listeners.push(fn), removeEventListener: () => {} };
+    const original = window.matchMedia;
+    window.matchMedia = vi.fn().mockReturnValue(query) as unknown as typeof window.matchMedia;
+    try {
+      render(<WithAside />);
+      await user.click(screen.getByRole("button", { name: "Show details" }));
+      await screen.findByRole("dialog");
+      query.matches = true;
+      act(() => listeners.forEach((fn) => fn()));
+      await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
+    } finally {
+      window.matchMedia = original;
+    }
+  });
+
+  it("has no accessibility violations, in the drawer and on the page", async () => {
+    const { container } = render(<WithAside defaultAsideOpen headerSpan="full" />);
+    await screen.findByRole("dialog");
+    expect(await axe(container)).toHaveNoViolations();
+  });
+});
+
+describe("useAppShell", () => {
+  function Probe() {
+    const state = useAppShell();
+    return (
+      <p data-testid="probe">
+        {state.scroll}|{state.headerHeight}|{String(state.asideOpen)}
+      </p>
+    );
+  }
+
+  it("gives the app the shell's state, and lets it open the aside's drawer", async () => {
+    const user = userEvent.setup();
+    function Opener() {
+      const { setAsideOpen } = useAppShell();
+      return <button onClick={() => setAsideOpen(true)}>open</button>;
+    }
+    render(
+      <AppShell scroll="page">
+        <AppShell.Main>
+          <Probe />
+          <Opener />
+        </AppShell.Main>
+        <AppShell.Aside aria-label="Details">x</AppShell.Aside>
+      </AppShell>,
+    );
+    // jsdom measures every box as zero, so the header's height is zero
+    expect(screen.getByTestId("probe")).toHaveTextContent("page|0|false");
+    await user.click(screen.getByRole("button", { name: "open" }));
+    await screen.findByRole("dialog", { name: "Details" });
+  });
+
+  it("throws a plain message outside a shell", () => {
+    vi.spyOn(console, "error").mockImplementation(() => {});
+    expect(() => render(<Probe />)).toThrow("useAppShell must be used inside an AppShell.");
+  });
+});
+
+describe("AppShell's page changes (pageKey and pageTitle)", () => {
+  function Page({ pageKey, pageTitle }: { pageKey?: string; pageTitle?: string }) {
+    return (
+      <AppShell pageKey={pageKey} pageTitle={pageTitle}>
+        <AppShell.Main data-testid="main">
+          <button>Inside</button>
+        </AppShell.Main>
+      </AppShell>
+    );
+  }
+
+  it("moves focus to the main area when the key changes, and not on the first render", () => {
+    const { rerender } = render(<Page pageKey="/a" pageTitle="A" />);
+    expect(screen.getByTestId("main")).not.toHaveFocus();
+    rerender(<Page pageKey="/b" pageTitle="B" />);
+    expect(screen.getByTestId("main")).toHaveFocus();
+  });
+
+  it("does not move focus when the key stays the same, or when the title alone changes", () => {
+    const { rerender } = render(<Page pageKey="/a" pageTitle="A" />);
+    rerender(<Page pageKey="/a" pageTitle="A, renamed" />);
+    expect(screen.getByTestId("main")).not.toHaveFocus();
+  });
+
+  it("does nothing at all while the key is left out, and draws no live region", () => {
+    const { rerender } = render(<Page pageTitle="A" />);
+    rerender(<Page pageTitle="B" />);
+    expect(screen.getByTestId("main")).not.toHaveFocus();
+    expect(screen.queryByRole("status")).not.toBeInTheDocument();
+  });
+
+  it("scrolls a scrolling main area back to the top", () => {
+    const { rerender } = render(<Page pageKey="/a" />);
+    const main = screen.getByTestId("main");
+    main.scrollTop = 300;
+    rerender(<Page pageKey="/b" />);
+    expect(main.scrollTop).toBe(0);
+  });
+
+  it("announces the new page's title politely, and only after a change", async () => {
+    const { rerender } = render(<Page pageKey="/a" pageTitle="Orders" />);
+    const region = screen.getByRole("status");
+    expect(region).toHaveTextContent("");
+    rerender(<Page pageKey="/b" pageTitle="Invoices" />);
+    await waitFor(() => expect(region).toHaveTextContent("Invoices"), { timeout: 1000 });
+  });
+
+  it("moves focus without announcing when there is no title", async () => {
+    const { rerender } = render(<Page pageKey="/a" />);
+    rerender(<Page pageKey="/b" />);
+    expect(screen.getByTestId("main")).toHaveFocus();
+    await new Promise((resolve) => setTimeout(resolve, 250));
+    expect(screen.getByRole("status")).toHaveTextContent("");
+  });
+
+  it("does not move focus on mount under StrictMode, which mounts every effect twice", () => {
+    render(
+      <StrictMode>
+        <Page pageKey="/a" pageTitle="A" />
+      </StrictMode>,
+    );
+    expect(screen.getByTestId("main")).not.toHaveFocus();
+  });
+
+  it("treats a key that arrives later as the first one, not as a page change", () => {
+    const { rerender } = render(<Page />);
+    rerender(<Page pageKey="/a" />);
+    expect(screen.getByTestId("main")).not.toHaveFocus();
+  });
+});
+

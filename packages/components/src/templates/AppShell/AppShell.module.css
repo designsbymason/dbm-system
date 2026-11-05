@@ -1,51 +1,91 @@
-/* The frame is a two-column grid: the sidebar's column (as wide as the sidebar, none at all while the sidebar is in its phone panel) and a
-   column for everything else. The header, main and footer stack in the second column; the sidebar spans all three rows. `minmax(0, 1fr)`
-   lets the second column shrink below its content, so a wide table scrolls inside the main area and does not push the frame wider than the
-   window. Areas are placed by name, so the order of the slots in the markup does not matter, and `sidebarSide="end"` swaps the columns. */
+/* The frame is a three-column grid: the sidebar's column (as wide as the sidebar, none at all while the sidebar is in its phone panel), a column
+   for the main area, and the aside's (as wide as the aside, none at all while it is a drawer or hidden). The header, main and footer stack
+   in the middle; the sidebar spans the rows beside them and the aside the main and footer rows. `minmax(0, 1fr)` lets the middle column shrink
+   below its content, so a wide table scrolls inside the main area and does not push the frame wider than the window. Areas are placed by
+   name, so the order of the slots in the markup does not matter; `sidebarSide="end"` puts the sidebar after the aside, and
+   `headerSpan="full"` runs the header across every column. */
 .root {
+  /* A notch or a home indicator is kept clear: each custom property is the device's inset on that side (zero where a page does not draw under
+     them). The names are physical because the device's are (a notch is on the left whatever the reading direction). */
+  --app-shell-safe-top: env(safe-area-inset-top, 0px);
+  --app-shell-safe-right: env(safe-area-inset-right, 0px);
+  --app-shell-safe-bottom: env(safe-area-inset-bottom, 0px);
+  --app-shell-safe-left: env(safe-area-inset-left, 0px);
+
   display: grid;
   grid-template-areas:
-    "sidebar header"
-    "sidebar main"
-    "sidebar footer";
-  grid-template-columns: auto minmax(0, 1fr);
+    "sidebar header header"
+    "sidebar main aside"
+    "sidebar footer aside";
+  grid-template-columns: auto minmax(0, 1fr) auto;
   grid-template-rows: auto minmax(0, 1fr) auto;
   box-sizing: border-box;
   inline-size: 100%;
+  padding-bottom: var(--app-shell-safe-bottom);
+  padding-left: var(--app-shell-safe-left);
+  padding-right: var(--app-shell-safe-right);
   background-color: var(--dbm-bg-surface);
   color: var(--dbm-text-primary);
   font-family: var(--dbm-font-family-primary);
 }
 
-.root[data-sidebar-side="end"] {
+.root[data-header-span="full"] {
   grid-template-areas:
-    "header sidebar"
-    "main sidebar"
-    "footer sidebar";
-  grid-template-columns: minmax(0, 1fr) auto;
+    "header header header"
+    "sidebar main aside"
+    "sidebar footer aside";
 }
 
-/* `scroll="content"`: the frame is the height of the window (`dvh` follows a phone's collapsing address bar) and only the main area scrolls. */
+.root[data-sidebar-side="end"] {
+  grid-template-areas:
+    "header header sidebar"
+    "main aside sidebar"
+    "footer aside sidebar";
+  grid-template-columns: minmax(0, 1fr) auto auto;
+}
+
+.root[data-sidebar-side="end"][data-header-span="full"] {
+  grid-template-areas:
+    "header header header"
+    "main aside sidebar"
+    "footer aside sidebar";
+}
+
+/* `scroll="content"`: the frame is the height of the window (`dvh` follows a phone's collapsing address bar) and only the main area scrolls. The
+   top inset is the frame's own, since the header is not always there. */
 .root[data-scroll="content"] {
   block-size: 100vh;
   block-size: 100dvh;
+  padding-top: var(--app-shell-safe-top);
 }
 
 /* `scroll="page"`: at least the window's height, and as tall as its content beyond that; the page scrolls. `--app-shell-viewport-size` is how
-   tall "the window" is, for a demo that draws the shell in a frame; left unset it is the window. */
+   tall "the window" is, for a demo that draws the shell in a frame; left unset it is the window. The top inset belongs to the header, which is
+   what is at the top of the window as the page scrolls (and to the frame when there is no header). */
 .root[data-scroll="page"] {
   min-block-size: 100vh;
   min-block-size: var(--app-shell-viewport-size, 100dvh);
 }
 
-/* The sidebar stays in view while the page scrolls: it spans every row, so its area is as tall as the shell, it sticks at the top, and it
-   is as tall as the window so its own content scrolls. */
-.root[data-scroll="page"] .sidebar {
+.root[data-scroll="page"]:not(:has(> .header)) {
+  padding-top: var(--app-shell-safe-top);
+}
+
+/* The sidebar and the aside stay in view while the page scrolls: each sticks below the header (nothing, until the header's height is known),
+   and is as tall as the rest of the window, so its own content scrolls. */
+.root[data-scroll="page"] .sidebar,
+.root[data-scroll="page"] .aside {
   align-self: start;
-  block-size: var(--app-shell-viewport-size, 100dvh);
-  inset-block-start: 0;
+  block-size: calc(var(--app-shell-viewport-size, 100dvh) - var(--app-shell-header-height, 0px));
+  inset-block-start: var(--app-shell-header-height, 0px);
   position: sticky;
   z-index: var(--dbm-z-index-sticky);
+}
+
+/* With the header spanning only the content, the sidebar spans the header's row too and sticks at the very top, as tall as the window. */
+.root[data-scroll="page"][data-header-span="content"] .sidebar {
+  block-size: var(--app-shell-viewport-size, 100dvh);
+  inset-block-start: 0;
 }
 
 /* The header stays in view too, which a sticky box can only do inside an area as tall as the shell. Once the header's height is known
@@ -60,6 +100,7 @@
   grid-row: 1 / -1;
   inset-block-start: 0;
   position: sticky;
+  padding-top: var(--app-shell-safe-top);
   z-index: var(--dbm-z-index-sticky);
 }
 
@@ -87,16 +128,145 @@
 
 /* `main` takes focus from the skip link, and from the keyboard while it scrolls. Its ring is drawn inside it, since `overflow: auto` would clip
    one drawn outside. */
-.main:focus-visible {
+.main:focus-visible,
+.aside:focus-visible {
   outline: var(--dbm-border-width-2) solid var(--dbm-border-focus);
   outline-offset: calc(-1 * var(--dbm-border-width-2));
 }
 
-.root[data-scroll="content"] .main {
+.root[data-scroll="content"] .main,
+.root[data-scroll="content"] .aside {
   overflow: auto;
+}
+
+/* The aside: a column at the end of the content, as wide as its `width` (or the token), with a line along its inner edge. */
+.aside {
+  grid-area: aside;
+  box-sizing: border-box;
+  inline-size: var(--app-shell-aside-size, var(--dbm-app-shell-aside-width));
+  min-block-size: 0;
+  border-inline-start: var(--dbm-border-width-1) solid var(--dbm-border-default);
 }
 
 .footer {
   grid-area: footer;
   min-inline-size: 0;
+}
+
+/* --- The aside below its collapse step ---
+   Below the step the aside is out of the page (and the accessibility tree), and the toggle that opens its drawer shows; at and above it the
+   reverse. `hidden` has no drawer, so no toggle. Media queries can't read a custom property, so each width is the literal value of the
+   matching breakpoint token (sm 640px, md 768px, lg 1024px, xl 1280px, 2xl 1536px, 3xl 1920px, in rem), as `Sidebar` and `Drawer` write them. */
+.root[data-aside-to="hidden"] button.asideToggle,
+.root[data-aside-collapse="never"] button.asideToggle {
+  display: none;
+}
+
+@media not all and (min-width: 40rem) {
+  .root[data-aside-collapse="sm"] .aside {
+    display: none;
+  }
+}
+
+@media (min-width: 40rem) {
+  .root[data-aside-collapse="sm"] button.asideToggle {
+    display: none;
+  }
+}
+
+@media not all and (min-width: 48rem) {
+  .root[data-aside-collapse="md"] .aside {
+    display: none;
+  }
+}
+
+@media (min-width: 48rem) {
+  .root[data-aside-collapse="md"] button.asideToggle {
+    display: none;
+  }
+}
+
+@media not all and (min-width: 64rem) {
+  .root[data-aside-collapse="lg"] .aside {
+    display: none;
+  }
+}
+
+@media (min-width: 64rem) {
+  .root[data-aside-collapse="lg"] button.asideToggle {
+    display: none;
+  }
+}
+
+@media not all and (min-width: 80rem) {
+  .root[data-aside-collapse="xl"] .aside {
+    display: none;
+  }
+}
+
+@media (min-width: 80rem) {
+  .root[data-aside-collapse="xl"] button.asideToggle {
+    display: none;
+  }
+}
+
+@media not all and (min-width: 96rem) {
+  .root[data-aside-collapse="2xl"] .aside {
+    display: none;
+  }
+}
+
+@media (min-width: 96rem) {
+  .root[data-aside-collapse="2xl"] button.asideToggle {
+    display: none;
+  }
+}
+
+@media not all and (min-width: 120rem) {
+  .root[data-aside-collapse="3xl"] .aside {
+    display: none;
+  }
+}
+
+@media (min-width: 120rem) {
+  .root[data-aside-collapse="3xl"] button.asideToggle {
+    display: none;
+  }
+}
+
+/* The skip link: out of sight until it takes keyboard focus, then drawn over the top corner of the page, above everything. */
+.skipLink {
+  position: absolute;
+  inline-size: var(--dbm-space-px);
+  block-size: var(--dbm-space-px);
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.skipLink:focus-visible {
+  position: fixed;
+  inset-block-start: calc(var(--dbm-space-2) + var(--app-shell-safe-top, 0px));
+  inset-inline-start: var(--dbm-space-4);
+  z-index: var(--dbm-z-index-fixed);
+  inline-size: auto;
+  block-size: auto;
+  overflow: visible;
+  clip-path: none;
+  padding-block: var(--dbm-space-2);
+  padding-inline: var(--dbm-space-4);
+  border: var(--dbm-border-width-1) solid var(--dbm-border-default);
+  border-radius: var(--dbm-radius-md);
+  background-color: var(--dbm-bg-surface);
+  color: var(--dbm-text-primary);
+  font-size: var(--dbm-font-size-sm);
+  font-weight: var(--dbm-font-weight-medium);
+  text-decoration: none;
+  outline: var(--dbm-border-width-2) solid var(--dbm-border-focus);
+  outline-offset: var(--dbm-space-1);
+  box-shadow: var(--dbm-shadow-light-md);
+}
+
+[data-theme$="-dark"] .skipLink:focus-visible {
+  box-shadow: var(--dbm-shadow-dark-md);
 }
