@@ -45,10 +45,16 @@ describe("Tour — server render and hydration", () => {
     host.innerHTML = renderToString(tree);
     document.body.appendChild(host);
     const errors: unknown[] = [];
+    let root: ReturnType<typeof hydrateRoot> | undefined;
     await act(async () => {
-      hydrateRoot(host, tree, { onRecoverableError: (error) => errors.push(error) });
+      root = hydrateRoot(host, tree, { onRecoverableError: (error) => errors.push(error) });
     });
-    expect(errors).toEqual([]);
-    await vi.waitFor(() => expect(document.querySelector('[role="dialog"]')).not.toBeNull());
+    try {
+      expect(errors).toEqual([]);
+      await vi.waitFor(() => expect(document.querySelector('[role="dialog"]')).not.toBeNull());
+    } finally {
+      // Unmount before the environment is torn down, so React's scheduler has no work left to run after it.
+      await act(async () => root?.unmount());
+    }
   });
 });
