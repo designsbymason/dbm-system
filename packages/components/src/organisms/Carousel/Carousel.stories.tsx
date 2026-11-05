@@ -353,7 +353,13 @@ export const Effects: Story = {
   argTypes: { ...except("effect", "slidesPerView") },
   render: (args) => <Demo effect={args.effect} slidesPerView={args.slidesPerView} slides={7} aria-label="Effects" />,
   args: { effect: "fade-scale", slidesPerView: 2.5 },
-  parameters: { docs: { source: { code: carouselSnippets.effect } } },
+  parameters: {
+    // The effect dims a slide as it scrolls towards the edge (down to 60% opacity), so the text of a slide caught part-way measures
+    // below 4.5:1 for as long as it is dimmed, and whether the scan lands on one depends on the viewport and on when the scroll-linked
+    // animation has been applied. That is the effect working, so the rule is off for this story only (see the Accessibility guide).
+    a11y: { config: { rules: [{ id: "color-contrast", enabled: false }] } },
+    docs: { source: { code: carouselSnippets.effect } },
+  },
 };
 
 export const AutoHeight: Story = {

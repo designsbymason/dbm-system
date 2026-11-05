@@ -64,9 +64,13 @@ describe("NavigationMenu", () => {
     expect(screen.getByRole("navigation", { name: "Main" })).toBeInTheDocument();
   });
 
+  // `delayDuration` is long in the two tests that press Escape just after a click: `user.click` moves the pointer onto the trigger, which
+  // arms the primitive's hover-open timer, and Escape does not cancel it, so on a slow machine it fires after the close and reopens the panel.
+  const NO_HOVER_OPEN = 60_000;
+
   it("opens a panel on a press, wiring aria-expanded and aria-controls, and closes it with Escape, returning focus", async () => {
     const user = userEvent.setup();
-    render(<Basic />);
+    render(<Basic delayDuration={NO_HOVER_OPEN} />);
     const trigger = screen.getByRole("button", { name: "Products" });
     await user.click(trigger);
     await waitFor(() => expect(trigger).toHaveAttribute("aria-expanded", "true"));
@@ -118,7 +122,7 @@ describe("NavigationMenu", () => {
       const [value, setValue] = useState("");
       return (
         <>
-          <Basic value={value} onValueChange={setValue} />
+          <Basic value={value} onValueChange={setValue} delayDuration={NO_HOVER_OPEN} />
           <output>{value}</output>
         </>
       );

@@ -74,6 +74,7 @@ WCAG 1.4.11 could dispute. They are listed so you can judge them for your own pr
     ["`text.tertiary` on `bg.canvas`", "4.13:1 light, 2.96:1 dark", "Fails. Never place it there."],
     ["`text.danger` and `text.on-danger` in light mode, the error and critical-alert text that aims for 7:1", "5.10:1 on `bg.surface`, 4.86:1 on `bg.danger-subtle`; `text.on-danger` on `bg.danger` 5.10:1", "Meets AA, short of the AAA target. Dark mode clears 7:1 (7.94:1 to 10.32:1). Accepted (ADR-0178)."],
     ["`text.danger` on `bg.danger-subtle-hover`", "4.44:1 light", "Fails AA in light. Components keep danger text off that fill."],
+    ["Text on a `Carousel` slide dimmed by the `fade` or `fade-scale` effect", "Down to 60% opacity at the edge of the view; about 3.9:1 measured part-way for the default slide text", "Below 4.5:1 while a slide is dimmed. The effect is optional and off by default; do not use it where the edge slides must stay readable."],
     ["`text.info` on `bg.info-subtle`", "4.5068:1 light", "Passes narrowly. Flagged to revisit if the colour scale is regenerated."],
   ]}
 />
