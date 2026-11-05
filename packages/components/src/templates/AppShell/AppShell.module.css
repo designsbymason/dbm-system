@@ -1,0 +1,70 @@
+/* The frame is a two-column grid: the sidebar's column (as wide as the sidebar, none at all while the sidebar is in its phone panel) and a
+   column for everything else. The header, main and footer stack in the second column; the sidebar spans all three rows. `minmax(0, 1fr)`
+   lets the second column shrink below its content, so a wide table scrolls inside the main area and does not push the frame wider than the
+   window. Areas are placed by name, so the order of the slots in the markup does not matter, and `sidebarSide="end"` swaps the columns. */
+.root {
+  display: grid;
+  grid-template-areas:
+    "sidebar header"
+    "sidebar main"
+    "sidebar footer";
+  grid-template-columns: auto minmax(0, 1fr);
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  box-sizing: border-box;
+  inline-size: 100%;
+  background-color: var(--dbm-bg-surface);
+  color: var(--dbm-text-primary);
+  font-family: var(--dbm-font-family-primary);
+}
+
+.root[data-sidebar-side="end"] {
+  grid-template-areas:
+    "header sidebar"
+    "main sidebar"
+    "footer sidebar";
+  grid-template-columns: minmax(0, 1fr) auto;
+}
+
+/* `scroll="content"`: the frame is the height of the window (`dvh` follows a phone's collapsing address bar) and only the main area scrolls. */
+.root[data-scroll="content"] {
+  block-size: 100vh;
+  block-size: 100dvh;
+}
+
+/* `scroll="page"`: at least the window's height, and as tall as its content beyond that; the page scrolls. */
+.root[data-scroll="page"] {
+  min-block-size: 100vh;
+  min-block-size: 100dvh;
+}
+
+.sidebar {
+  grid-area: sidebar;
+  display: flex;
+  min-block-size: 0;
+}
+
+/* The sidebar fills its column's height; a floating one keeps its own inset. */
+.sidebar > * {
+  min-block-size: 0;
+}
+
+.header {
+  grid-area: header;
+  min-inline-size: 0;
+}
+
+.main {
+  grid-area: main;
+  min-inline-size: 0;
+  min-block-size: 0;
+  outline: none;
+}
+
+.root[data-scroll="content"] .main {
+  overflow: auto;
+}
+
+.footer {
+  grid-area: footer;
+  min-inline-size: 0;
+}

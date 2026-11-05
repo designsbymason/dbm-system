@@ -18,6 +18,10 @@ import "./docs.css";
 const withTheme: Decorator = (Story, context) => {
   const { brand, mode } = context.globals;
   document.documentElement.dataset.theme = `${brand}-${mode}`;
+  // A page-level template (`parameters.fullBleed`) fills the window with no padding and no minimum height of its own, since it is the page.
+  // Opt-in: `layout: "fullscreen"` alone keeps the padding that the stories already using it rely on. On a Docs page the padding stays, as the
+  // template is drawn in a frame there.
+  const fullBleed = context.parameters.fullBleed === true && context.viewMode !== "docs";
   return (
     <div
       style={{
@@ -31,8 +35,8 @@ const withTheme: Decorator = (Story, context) => {
         // every preview into a huge box with mostly empty space below the
         // actual content — this lets Docs previews hug their content
         // while standalone story views keep the full-height background.
-        minHeight: context.viewMode === "docs" ? undefined : "100vh",
-        padding: "var(--dbm-space-6)",
+        minHeight: context.viewMode === "docs" || fullBleed ? undefined : "100vh",
+        padding: fullBleed ? 0 : "var(--dbm-space-6)",
       }}
     >
       <Story />
@@ -100,7 +104,8 @@ const preview: Preview = {
         const topLevelGroup = (title) => title.split("/")[0] ?? title;
         // Getting started (the welcome page, with the component index) first,
         // then the written guides, then the token reference, then the tiers
-        // (Atoms, then Molecules and Organisms alphabetically).
+        // (Atoms, then Molecules, Organisms and Templates alphabetically; the template groups come out in the
+        // inventory's own order, Application shells first).
         const groupPriority = ["Getting started", "Guides", "Foundations", "Atoms"];
         const guidesOrder = [
           "Guides/Theming",

@@ -1,0 +1,50 @@
+import { renderToString } from "react-dom/server";
+import { describe, expect, it, vi } from "vitest";
+import { Navbar } from "../../organisms/Navbar";
+import { Sidebar } from "../../organisms/Sidebar";
+import { AppShell } from "./AppShell";
+
+// Server rendering. The unit project runs in jsdom, where `window` and `document` exist, so the server render is done with both
+// removed: what it proves is that nothing touches them while rendering.
+function onTheServer<T>(render: () => T): T {
+  vi.stubGlobal("window", undefined);
+  vi.stubGlobal("document", undefined);
+  try {
+    return render();
+  } finally {
+    vi.unstubAllGlobals();
+  }
+}
+
+describe("AppShell on the server", () => {
+  it("renders every slot and its landmarks without a DOM", () => {
+    const html = onTheServer(() =>
+      renderToString(
+        <AppShell>
+          <AppShell.Header>
+            <Navbar>
+              <Navbar.SkipLink />
+              <Navbar.Brand href="/">Acme</Navbar.Brand>
+            </Navbar>
+          </AppShell.Header>
+          <AppShell.Sidebar>
+            <Sidebar>
+              <Sidebar.Content>
+                <Sidebar.Nav>
+                  <Sidebar.Item href="/">Home</Sidebar.Item>
+                </Sidebar.Nav>
+              </Sidebar.Content>
+            </Sidebar>
+          </AppShell.Sidebar>
+          <AppShell.Main>Hello</AppShell.Main>
+          <AppShell.Footer>Foot</AppShell.Footer>
+        </AppShell>,
+      ),
+    );
+    expect(html).toContain("<main");
+    expect(html).toContain('id="main"');
+    expect(html).toContain("<header");
+    expect(html).toContain("<footer");
+    expect(html).toContain("Hello");
+  });
+});

@@ -29,6 +29,12 @@ describe("the components package's entry", () => {
     expectTypeOf<Responsive<number>>().toEqualTypeOf<utilTypes.Responsive<number>>();
   });
 
+  // A shipped template is public API like a component: the shell and its slots are exported.
+  it("exports AppShell with its four slots", () => {
+    expect(typeof library.AppShell).toBe("object");
+    for (const slot of ["Sidebar", "Header", "Main", "Footer"] as const) expect(library.AppShell[slot]).toBeDefined();
+  });
+
   // A component with a `size` names its steps in a type consumers can import, as every other one does.
   it("exports CodeBlock's size type", () => {
     expectTypeOf<CodeBlockSize>().toEqualTypeOf<"xs" | "sm" | "md" | "lg" | "xl">();

@@ -14,7 +14,7 @@ Registered in `.storybook/main.ts`'s `addons` array: `@storybook/addon-a11y` (th
 
 ## 3. Sidebar taxonomy
 
-`04-component-inventory.md`'s nine functional categories are the source of truth. A story's `title` is `{Tier}/{Category}/{Component}`, where `{Tier}` is `Atoms`, `Molecules` or `Organisms` (and `Templates` later; see §11 for the other top-level groups) and `{Category}` is one of these shortened labels:
+`04-component-inventory.md`'s nine functional categories are the source of truth. A story's `title` is `{Tier}/{Category}/{Component}`, where `{Tier}` is `Atoms`, `Molecules` or `Organisms` (and `Templates`; see §11 for the other top-level groups) and `{Category}` is one of these shortened labels:
 
 | Inventory category | Title segment |
 |---|---|
@@ -28,7 +28,7 @@ Registered in `.storybook/main.ts`'s `addons` array: `@storybook/addon-a11y` (th
 | 8. Media | `Media` |
 | 9. Utility | `Utility` |
 
-There is no catch-all group: every component's category segment matches exactly one inventory category. A top-level **`Foundations`** group (§7) sorts before the tiers via the `groupPriority` array in `preview.tsx`'s `storySort`, since top-level group order isn't alphabetical by default.
+There is no catch-all group: every component's category segment matches exactly one inventory category. A template's story `title` is `Templates/{Group}/{Name}`, where the group is one of the Templates headings in the inventory (`Application shells`, `Authentication`, `Data pages`, `Settings and account`, `System and utility pages`); they come out in that order and after the other tiers, since the default order is alphabetical. A template story sets `parameters: { layout: "fullscreen", fullBleed: true }`: `fullBleed` is opt-in and removes the preview's own padding and minimum height (every story has them otherwise), because the template is the page. On its Docs page (`viewMode === "docs"`) the padding stays and the template is drawn in a frame instead. A top-level **`Foundations`** group (§7) sorts before the tiers via the `groupPriority` array in `preview.tsx`'s `storySort`, since top-level group order isn't alphabetical by default.
 
 ## 4. The Docs page template
 
@@ -295,6 +295,7 @@ Foundational components first (prove the template before mass-applying it), then
 | ImageViewer | Organism | Media | ✅ | ✅ 2026-10-31 | [ImageViewer.md](component-reviews/ImageViewer.md) |
 | ColorPicker | Organism | Inputs & Forms | ✅ | ✅ 2026-10-31 | [ColorPicker.md](component-reviews/ColorPicker.md) |
 | Tour | Organism | Overlay | ✅ | ✅ 2026-11-02 | [Tour.md](component-reviews/Tour.md) |
+| AppShell | Template | Application shells | ✅ | built 2026-11-04, review pending | [AppShell.md](component-reviews/AppShell.md) |
 
 Components not yet built are listed in `04-component-inventory.md`'s build orders, and a row is added here once a component is built, and its Finalized cell is filled when its review pass is declared done. A Docs page is one deliverable inside each component's full `06-engineering-standards.md` §9 review pass, not a separate sweep; components are reviewed one at a time. Tier membership follows [ADR-0012](adr/0012-item-components-are-atom-tier-even-when-their-container-is-a-molecule.md) (`GridItem` and `ListItem` are atoms, `Grid` and `List` are molecules).
 
@@ -395,7 +396,6 @@ A guide's code samples are fenced code in the MDX, so nothing compiles them: **c
 | The Installation section's content (a placeholder today) | Loading the stylesheet, the tokens, one theme and the `Nunito` and `Lora` fonts | The consumer-CSS decision in `01-vision-and-goals.md` §12 (Phase 8) |
 | Guides: Agent usage and contributing | The consumer-facing usage guide from `01-vision-and-goals.md` §13.1, shown where a person looks for it | The manifest and the published package (Phase 8) |
 | Guides: Changelog and migration | Generated from Changesets | The release pipeline (Phase 8) |
-| A `Templates` tier | A top-level `Templates` group titled `Templates/{Group}/{Name}`, sorted after the other tiers, with full-screen stories and a Docs page that embeds a framed preview ([ADR-0179](adr/0179-templates-ship-as-composable-shells-in-the-components-package-with-story-only-example-pages-over-shipping-finished-pages-or-keeping-all-templates-storybook-only.md)) | The first template (the dashboard shell), to add the `storySort` handling |
 
 **Standing checks for these pages:** keyboard operation, a real-browser check at phone width, dark mode (a block that sets no colour of its own inherits Storybook's near-black text, found on the overview's legend, so give a block an explicit `text.primary`), right-to-left and forced colours, and the four-theme contrast check for any colour a page introduces. Confirm that `check-guidelines` and the token-coverage check still agree when a new group is added.
 

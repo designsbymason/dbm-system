@@ -85,6 +85,7 @@ import { statPlaygroundSnippet } from "./molecules/Stat/Stat.snippets";
 import { tablePlaygroundSnippet } from "./molecules/Table/Table.snippets";
 import { tabsPlaygroundSnippet } from "./molecules/Tabs/Tabs.snippets";
 import { toggleGroupPlaygroundSnippet } from "./molecules/ToggleGroup/ToggleGroup.snippets";
+import { appShellPlaygroundSnippet } from "./templates/AppShell/AppShell.snippets";
 
 // Guards the code shown under "Show code" on Docs pages
 // (`07-storybook-and-documentation-standards.md` §4.2). A story's own source is
@@ -1176,6 +1177,19 @@ describe("Playground snippets for the ten layout atoms", () => {
   it("Center gives a block-level one the height it needs, and an inline one none", () => {
     expect(centerPlaygroundSnippet({ as: "div", inline: false, children: "x" })).toBe('<Center style={{ height: "12rem" }}>x</Center>');
     expect(centerPlaygroundSnippet({ as: "span", inline: true, children: "x" })).toBe('<Center as="span" inline>x</Center>');
+  });
+
+  it.each([{}, { scroll: "page", sidebarSide: "end", dir: "rtl", collapseBelow: "lg", defaultCollapsed: true }, { sidebarSide: "end" }])(
+    "AppShell %j is a real snippet",
+    (args) => {
+      expect(problemsIn(appShellPlaygroundSnippet(args as Parameters<typeof appShellPlaygroundSnippet>[0]))).toEqual([]);
+    },
+  );
+
+  it("AppShell writes only what differs from its defaults", () => {
+    expect(appShellPlaygroundSnippet({})).toMatch(/^<AppShell>\n/);
+    expect(appShellPlaygroundSnippet({ scroll: "page", sidebarSide: "end" })).toContain('<AppShell scroll="page" sidebarSide="end">');
+    expect(appShellPlaygroundSnippet({ sidebarSide: "end" })).toContain('<Sidebar side="end">');
   });
 
   it.each([{}, { size: "sm", as: "main", paddingInline: 8 }, { size: "full" }])("Container %j is a real snippet", (args) => {

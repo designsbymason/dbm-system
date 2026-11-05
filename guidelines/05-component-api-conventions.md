@@ -7,7 +7,7 @@ This is the contract every component follows, regardless of which build phase or
 ## 1. File structure (one folder per component)
 
 ```
-packages/components/src/{tier}/{ComponentName}/
+packages/components/src/{tier}/{ComponentName}/   # tier: atoms, molecules, organisms or templates
 ├── ComponentName.tsx          # implementation
 ├── ComponentName.module.css   # scoped styles, tokens only
 ├── ComponentName.types.ts     # exported prop types/interfaces
