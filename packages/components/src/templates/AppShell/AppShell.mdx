@@ -139,6 +139,8 @@ Drive the shell's props live; the sidebar, header and page it is filled with sta
 - Don't put a second `<main>` or a second banner inside it. The shell owns the page's landmarks.
 - Don't wrap the shell in an element with its own height: with `scroll="content"` it already fits
   the window, and a parent shorter than that clips it.
+- Don't put an `AppShell` inside another `Sidebar.Provider` and expect the outer one to drive its
+  sidebar. The shell renders its own provider, which replaces the outer one for everything inside it.
 - Don't pass `collapsed`, `menuOpen` or their change handlers to the `Sidebar` itself. The shell's
   provider holds that state and the sidebar ignores the ones set on it, with a development warning.
 
@@ -148,8 +150,8 @@ Drive the shell's props live; the sidebar, header and page it is filled with sta
 ## Best practices
 
 - Choose `scroll="content"` for an application whose pages are long lists or tables, so the
-  navigation is always in reach. Choose `scroll="page"` for a page that reads like a document, and
-  stick the parts you want to stay (`Navbar`'s and `Sidebar`'s own `sticky`).
+  navigation is always in reach. Choose `scroll="page"` for a page that reads like a document: the
+  page scrolls as a whole, and the shell keeps the header and the sidebar in view as it does.
 - Put the collapse button (`Sidebar.Toggle`) in the sidebar's footer and the phone menu button
   (`Sidebar.MenuButton`) in the header: the shell's provider connects them to the same sidebar.
 - Let the page set its own padding and maximum width inside `AppShell.Main`; the shell adds none, so
@@ -172,15 +174,18 @@ real elements, not roles on divs.
 | `Tab` | Moves through the header first (the skip link is the first stop), then the sidebar, then the main area's content, in markup order. |
 | `Enter` on the skip link | Moves focus to `AppShell.Main`, past the header and the sidebar. |
 
-- `AppShell.Main` has `tabindex="-1"`, so the skip link can move focus to it. It is not a tab stop on
-  its own and draws no focus ring, since it is not a control.
+- `AppShell.Main` takes focus from the skip link (`tabindex="-1"`). While it scrolls
+  (`scroll="content"` and more content than room) it is also a tab stop, so a keyboard user can scroll
+  a page that has nothing focusable in it with the arrow and page keys; a page that fits, or one that
+  scrolls as a whole, gets no extra stop. Whenever the keyboard has focused it, a focus ring is drawn
+  just inside its edge.
 - Below the `collapseBelow` width the sidebar's links are in a dialog opened from the menu button,
   with the focus handling `Drawer` provides, and are not on the page at all.
 - The shell adds no colour pairing of its own: the page background is the surface colour, and text
   inside uses the primary text colour (at least 4.5:1 on it in every theme).
-- With `scroll="content"` the main area is a scrollable region. A keyboard user scrolls it with the
-  arrow and page keys once focus is inside it, and a region that holds focusable content can be
-  reached with `Tab`.
+- With `scroll="page"` the header and the sidebar stay in view as the page scrolls. The shell measures
+  the header's height once it is on the page, so on the server and for the first paint the header is an
+  ordinary first row and scrolls away; it sticks from then on.
 
 ## Code examples
 
@@ -215,6 +220,13 @@ real elements, not roles on divs.
 ```
 
 ```tsx
+// A native attribute in use: name the main landmark by the page's own heading
+<AppShell.Main aria-labelledby="page-title">
+  <h1 id="page-title">Billing</h1>
+</AppShell.Main>
+```
+
+```tsx
 // Controlled: keep the sidebar's collapsed state in your own store
 <AppShell collapsed={collapsed} onCollapsedChange={setCollapsed}>
   …
@@ -223,6 +235,9 @@ real elements, not roles on divs.
 
 ## Design tokens used
 
+<TokenRow token="border-focus" usage="the focus ring drawn inside the main area while the keyboard has focused it" />
+<TokenRow token="border-width-2" usage="the thickness of that ring, and how far it is drawn inside the edge" />
+<TokenRow token="z-index-sticky" usage="keeps the header and the sidebar above the page's content as it scrolls (scroll=&quot;page&quot;)" />
 <TokenRow token="bg.surface" usage="the frame's background: the page colour behind the header, the sidebar and the main area" />
 <TokenRow token="text.primary" usage="the colour of text inside the frame that sets none of its own" />
 <TokenRow token="font-family.primary" usage="the typeface of the frame, inherited by everything inside it" />

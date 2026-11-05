@@ -3,8 +3,8 @@ import type { SidebarStateProps } from "../../organisms/Sidebar";
 
 /**
  * What scrolls. `content` fits the shell to the height of the window, so the sidebar and the header never move and only `AppShell.Main`
- * scrolls. `page` lets the page scroll as a whole: the shell is at least as tall as the window, and a part that should stay in view sticks
- * itself (`Navbar`'s and `Sidebar`'s own `sticky` props).
+ * scrolls. `page` lets the page scroll as a whole: the shell is at least as tall as the window, and it keeps the header and the sidebar in
+ * view as the page scrolls (so they need no `sticky` of their own).
  */
 export type AppShellScroll = "content" | "page";
 
@@ -69,7 +69,10 @@ export interface AppShellHeaderProps extends Omit<ComponentPropsWithoutRef<"div"
 }
 
 export interface AppShellMainProps extends Omit<ComponentPropsWithoutRef<"main">, "children">, AppShellPartBase {
-  /** The page's content. The one `<main>` landmark, and the target of the skip link. */
+  /**
+   * The page's content. The one `<main>` landmark, and the target of the skip link. With `scroll="content"` it scrolls on its own, and
+   * while it does it is a tab stop (with a focus ring) so the keyboard can scroll it.
+   */
   children?: ReactNode;
   /**
    * The id the skip link points at: `Navbar.SkipLink` links to `#main` unless you give it another `href`.

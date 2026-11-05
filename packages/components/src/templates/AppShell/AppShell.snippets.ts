@@ -44,21 +44,8 @@ ${shell("defaultCollapsed", [header, sidebar(), main])}`,
     are on the same edge */}
 ${shell('sidebarSide="end"', [header, sidebar('side="end"'), main])}`,
 
-  pageScroll: `{/* scroll="page": the page scrolls as a whole. A part that should stay in view sticks itself,
-    here the Navbar */}
-<AppShell scroll="page">
-  <AppShell.Header>
-    <Navbar sticky>
-      <Navbar.SkipLink />
-      <Navbar.Brand href="/">dbM Cloud</Navbar.Brand>
-      <Navbar.Actions>
-        <Sidebar.MenuButton />
-      </Navbar.Actions>
-    </Navbar>
-  </AppShell.Header>
-${sidebar("sticky")}
-${main}
-</AppShell>`,
+  pageScroll: `{/* scroll="page": the page scrolls as a whole, and the shell keeps the header and the sidebar in view */}
+${shell('scroll="page"', [header, sidebar(), main])}`,
 
   rightToLeft: `{/* dir sets the reading direction of the shell; pass it to the Sidebar too, which has its own dir prop */}
 ${shell('dir="rtl"', [header, sidebar('dir="rtl"'), main])}`,

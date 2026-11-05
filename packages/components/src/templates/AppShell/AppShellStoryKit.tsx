@@ -1,5 +1,5 @@
-import { ListIcon, UsersIcon } from "@dbm-system/icons";
-import type { ReactNode } from "react";
+import { ListIcon, UsersIcon, WalletIcon } from "@dbm-system/icons";
+import type { CSSProperties, ReactNode } from "react";
 import { Heading } from "../../atoms/Heading";
 import { Text } from "../../atoms/Text";
 import { Breadcrumb } from "../../molecules/Breadcrumb";
@@ -50,18 +50,20 @@ export function DemoPage() {
         </Heading>
         <Text color="secondary">Invoices and usage for the current period.</Text>
       </div>
-      <Grid columns={{ base: 1, lg: 3 }} gap={4}>
-        <Stat variant="outlined">
+      {/* `minChildWidth` fits as many columns as the main area has room for (the sidebar takes some of the window), where `columns` follows the window. */}
+      <Grid minChildWidth="16rem" gap={4}>
+        <Stat variant="outlined" tone="brand">
           <Stat.Icon icon={UsersIcon} />
           <Stat.Label>Active seats</Stat.Label>
           <Stat.Value>248</Stat.Value>
         </Stat>
-        <Stat variant="outlined">
+        <Stat variant="outlined" tone="brand">
           <Stat.Icon icon={ListIcon} />
           <Stat.Label>Open invoices</Stat.Label>
           <Stat.Value>14</Stat.Value>
         </Stat>
-        <Stat variant="outlined">
+        <Stat variant="outlined" tone="brand">
+          <Stat.Icon icon={WalletIcon} />
           <Stat.Label>Balance due</Stat.Label>
           <Stat.Value>$9,851.50</Stat.Value>
         </Stat>
@@ -73,7 +75,7 @@ export function DemoPage() {
           </Heading>
         </Card.Header>
         <Card.Body>
-          <Table aria-label="Recent invoices" style={{ minInlineSize: "40rem" }}>
+          <Table aria-label="Recent invoices" tone="brand" style={{ minInlineSize: "40rem" }}>
             <Table.Header>
               <Table.Row>
                 <Table.HeaderCell>Invoice</Table.HeaderCell>
@@ -99,6 +101,15 @@ export function DemoPage() {
   );
 }
 
+/** The shell's own style inside the Docs frame: as tall as the frame, or (page scroll) at least that tall with the frame scrolling it. */
+function framedStyle(scroll: AppShellProps["scroll"]): CSSProperties {
+  return scroll === "page"
+    ? ({ minBlockSize: "100%", "--app-shell-viewport-size": frameHeight } as CSSProperties)
+    : { blockSize: "100%", minBlockSize: 0 };
+}
+
+const frameHeight = "36rem";
+
 /**
  * A whole shell filled in: a sidebar, a `Navbar` with a skip link, the phone menu button and the sidebar toggle, the demo page and a footer.
  * Pass `sidebarSide="end"` and the sidebar and its line move together.
@@ -115,9 +126,9 @@ export function DemoShell({
   const side = props.sidebarSide ?? "start";
   const dir = props.dir ?? "ltr";
   const shell = (
-    <AppShell {...props} style={framed ? { blockSize: "100%", minBlockSize: 0 } : undefined}>
+    <AppShell {...props} style={framed ? framedStyle(props.scroll) : undefined}>
       <AppShell.Header>
-        <Navbar sticky={props.scroll === "page"} dir={dir}>
+        <Navbar dir={dir}>
           {/* In an app a router handles the link; here the click moves focus to the main area itself and keeps the preview's address unchanged. */}
           <Navbar.SkipLink
             onClick={(event) => {
@@ -150,7 +161,7 @@ export function DemoShell({
   return (
     <div
       style={{
-        blockSize: "36rem",
+        blockSize: frameHeight,
         overflow: "auto",
         border: "var(--dbm-border-width-1) solid var(--dbm-border-default)",
         borderRadius: "var(--dbm-radius-lg)",

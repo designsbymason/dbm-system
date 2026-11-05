@@ -17,6 +17,12 @@ type Story = StoryObj;
 
 const nextFrame = () => new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
 
+/** A real key press through the Chrome DevTools Protocol: a synthetic one neither sets `:focus-visible` nor scrolls anything. */
+async function press(key: "Tab" | "ArrowDown", windowsVirtualKeyCode: number) {
+  await send("Input.dispatchKeyEvent", { type: "keyDown", key, code: key, windowsVirtualKeyCode });
+  await send("Input.dispatchKeyEvent", { type: "keyUp", key, code: key, windowsVirtualKeyCode });
+}
+
 /** The shell, its slots and the page that scrolls. */
 function slots(canvasElement: HTMLElement) {
   const shell = canvasElement.querySelector<HTMLElement>("[data-scroll]")!;
@@ -135,8 +141,12 @@ export const SkipLinkInteraction: Story = {
     await expect(skip).toHaveAttribute("href", `#${main.id}`);
     await userEvent.keyboard("{Enter}");
     await waitFor(() => expect(main).toHaveFocus());
-    // The main area is focused programmatically and draws no ring of its own.
-    await expect(getComputedStyle(main).outlineStyle).toBe("none");
+    // The keyboard moved focus here, so the ring is drawn, inside the edge (an outer one would be clipped by the scrolling box).
+    await expect(main.matches(":focus-visible")).toBe(true);
+    const ring = getComputedStyle(main);
+    await expect(ring.outlineStyle).toBe("solid");
+    await expect(Number.parseFloat(ring.outlineWidth)).toBeGreaterThan(0);
+    await expect(Number.parseFloat(ring.outlineOffset)).toBeLessThan(0);
     await userEvent.tab();
     await expect(main.contains(document.activeElement)).toBe(true);
   },
@@ -150,6 +160,81 @@ export const PageScrollLayout: Story = {
     await expect(shell.getBoundingClientRect().height).toBeGreaterThan(window.innerHeight);
     await expect(document.documentElement.scrollHeight).toBeGreaterThan(window.innerHeight);
     await expect(getComputedStyle(main).overflowY).toBe("visible");
+    // Not a tab stop: the page scrolls, so the main area has nothing of its own to scroll.
+    await expect(main).toHaveAttribute("tabindex", "-1");
+  },
+};
+
+export const PageScrollStickyInteraction: Story = {
+  name: "With scroll page, the header and the sidebar stay in view while the page scrolls — layout test",
+  render: () => <DemoShell scroll="page" />,
+  play: async ({ canvasElement }) => {
+    const { shell, main, header } = slots(canvasElement);
+    const nav = within(canvasElement).getByRole("navigation", { name: "Main" });
+    // The header is measured after the first paint; the shell flags it once it is.
+    await waitFor(() => expect(shell).toHaveAttribute("data-header-measured"));
+    const headerHeight = header.getBoundingClientRect().height;
+    // The main area starts exactly where the header ends, though the header now spans every row.
+    await expect(Math.abs(main.getBoundingClientRect().top - headerHeight)).toBeLessThan(1);
+
+    window.scrollTo(0, 400);
+    await nextFrame();
+    await expect(window.scrollY).toBeGreaterThan(0);
+    await expect(Math.abs(header.getBoundingClientRect().top)).toBeLessThan(1);
+    // The sidebar's column: the slot that holds it, a direct child of the shell.
+    let sidebarSlot: HTMLElement = nav;
+    while (sidebarSlot.parentElement !== shell) sidebarSlot = sidebarSlot.parentElement!;
+    await expect(Math.abs(sidebarSlot.getBoundingClientRect().top)).toBeLessThan(1);
+    // It is as tall as the window, not as tall as the page, so its own content scrolls and its footer is in view.
+    await expect(Math.round(sidebarSlot.getBoundingClientRect().height)).toBe(window.innerHeight);
+    // The header is above the page's content as it passes under.
+    let headerSlot: HTMLElement = header;
+    while (headerSlot.parentElement !== shell) headerSlot = headerSlot.parentElement!;
+    await expect(getComputedStyle(headerSlot).position).toBe("sticky");
+    await expect(Number(getComputedStyle(headerSlot).zIndex)).toBeGreaterThan(0);
+    window.scrollTo(0, 0);
+  },
+};
+
+export const TextOnlyMainInteraction: Story = {
+  name: "A scrolling main area with nothing focusable in it is a tab stop that the keyboard can scroll, with a visible ring — keyboard test",
+  render: () => (
+    <DemoShell>
+      <h1>Text only</h1>
+      {Array.from({ length: 80 }, (_, index) => (
+        <p key={index}>Paragraph {index + 1} of plain text with no links or controls in it.</p>
+      ))}
+    </DemoShell>
+  ),
+  play: async ({ canvasElement }) => {
+    const { main } = slots(canvasElement);
+    await waitFor(() => expect(main).toHaveAttribute("tabindex", "0"));
+    // Tab from the last control before it (the sidebar's collapse button) lands on the main area.
+    const toggle = within(canvasElement).getByRole("button", { name: "Collapse sidebar" });
+    toggle.focus();
+    await press("Tab", 9);
+    await waitFor(() => expect(main).toHaveFocus());
+    await expect(main.matches(":focus-visible")).toBe(true);
+    await expect(getComputedStyle(main).outlineStyle).toBe("solid");
+    // The arrow keys scroll it.
+    for (let step = 0; step < 3; step += 1) await press("ArrowDown", 40);
+    await waitFor(() => expect(main.scrollTop).toBeGreaterThan(0));
+    main.scrollTop = 0;
+  },
+};
+
+export const FittingMainInteraction: Story = {
+  name: "A main area whose content fits is not a tab stop — keyboard test",
+  render: () => (
+    <DemoShell>
+      <h1>Short</h1>
+      <p>Nothing to scroll.</p>
+    </DemoShell>
+  ),
+  play: async ({ canvasElement }) => {
+    const { main } = slots(canvasElement);
+    await expect(main.scrollHeight).toBeLessThanOrEqual(main.clientHeight);
+    await expect(main).toHaveAttribute("tabindex", "-1");
   },
 };
 

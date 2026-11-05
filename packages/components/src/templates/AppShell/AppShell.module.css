@@ -31,10 +31,36 @@
   block-size: 100dvh;
 }
 
-/* `scroll="page"`: at least the window's height, and as tall as its content beyond that; the page scrolls. */
+/* `scroll="page"`: at least the window's height, and as tall as its content beyond that; the page scrolls. `--app-shell-viewport-size` is how
+   tall "the window" is, for a demo that draws the shell in a frame; left unset it is the window. */
 .root[data-scroll="page"] {
   min-block-size: 100vh;
-  min-block-size: 100dvh;
+  min-block-size: var(--app-shell-viewport-size, 100dvh);
+}
+
+/* The sidebar stays in view while the page scrolls: it spans every row, so its area is as tall as the shell, it sticks at the top, and it
+   is as tall as the window so its own content scrolls. */
+.root[data-scroll="page"] .sidebar {
+  align-self: start;
+  block-size: var(--app-shell-viewport-size, 100dvh);
+  inset-block-start: 0;
+  position: sticky;
+  z-index: var(--dbm-z-index-sticky);
+}
+
+/* The header stays in view too, which a sticky box can only do inside an area as tall as the shell. Once the header's height is known
+   (`AppShell` measures it) the first row is that tall and the header spans every row from the top, so its area is the whole shell; until
+   then it is an ordinary first row and scrolls away. */
+.root[data-scroll="page"][data-header-measured] {
+  grid-template-rows: var(--app-shell-header-height) minmax(0, 1fr) auto;
+}
+
+.root[data-scroll="page"][data-header-measured] .header {
+  align-self: start;
+  grid-row: 1 / -1;
+  inset-block-start: 0;
+  position: sticky;
+  z-index: var(--dbm-z-index-sticky);
 }
 
 .sidebar {
@@ -57,7 +83,13 @@
   grid-area: main;
   min-inline-size: 0;
   min-block-size: 0;
-  outline: none;
+}
+
+/* `main` takes focus from the skip link, and from the keyboard while it scrolls. Its ring is drawn inside it, since `overflow: auto` would clip
+   one drawn outside. */
+.main:focus-visible {
+  outline: var(--dbm-border-width-2) solid var(--dbm-border-focus);
+  outline-offset: calc(-1 * var(--dbm-border-width-2));
 }
 
 .root[data-scroll="content"] .main {

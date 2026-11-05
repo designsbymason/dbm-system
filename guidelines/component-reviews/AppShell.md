@@ -5,10 +5,10 @@ First template, built 2026-11-04 under [ADR-0179](../adr/0179-templates-ship-as-
 ## Decisions
 - Compound `AppShell` with `AppShell.Header`, `.Sidebar`, `.Main` and `.Footer`; layout and wiring only. The `Sidebar` and `Navbar` go in the slots with every prop they already have, so nothing is duplicated or hidden.
 - A two-column CSS grid placed by named areas, so the markup order does not change the layout. The sidebar's column is `auto`, and the sidebar is `display: none` below its own `collapseBelow` step, so its column vanishes on a phone with no media query in the shell. `sidebarSide="end"` swaps the columns.
-- `scroll="content"` (default) fits the frame to `100dvh` and scrolls only `<main>`; `scroll="page"` lets the page scroll and leaves sticking to `Navbar`'s and `Sidebar`'s own `sticky`.
+- `scroll="content"` (default) fits the frame to `100dvh` and scrolls only `<main>`; `scroll="page"` lets the page scroll as a whole and the shell keeps the header and the sidebar in view itself. A sticky box can only stay in view inside a grid area as tall as the shell, so the sidebar's slot (which spans every row) sticks in pure CSS, and the header measures its own height (`ResizeObserver`, only once mounted) so the first row can be that tall while the header spans every row. Until it is measured (the server render, the first paint) the header is an ordinary first row.
 - The shell renders the `Sidebar.Provider`, so its state props (`collapsed`, `menuOpen`, `collapseBelow`, `labels` and the handlers) are the shell's, and a `Sidebar.MenuButton` in the header reaches the sidebar's panel.
-- `<main id="main" tabindex="-1">`, matching `Navbar.SkipLink`'s default `#main`. No ring is drawn on it, since it is not a control.
-- No new token: `bg.surface`, `text.primary` and `font-family.primary`.
+- `<main id="main">`, matching `Navbar.SkipLink`'s default `#main`. `tabindex="-1"` so the skip link can focus it, and `0` while `scroll="content"` and it overflows (`useIsScrollable`, as `ScrollArea` and `Table` do), so a keyboard user can scroll a page with nothing focusable in it. A focus ring is drawn inside its edge (`overflow: auto` clips an outer one).
+- No new token: `bg.surface`, `text.primary`, `font-family.primary`, `border-focus`, `border-width-2` and `z-index-sticky`.
 
 ## What was found while building it
 - **The preview wraps every story in padding, `fullscreen` or not.** The global decorator in `preview.tsx` pads every story by `space-6` with a 100vh minimum, so a page-level template could never fill the window (a real-browser check measured the document 48px taller than the window and the main area 48px narrower than a phone). Fixed with an opt-in `parameters.fullBleed`, which every existing story ignores.
@@ -18,16 +18,28 @@ First template, built 2026-11-04 under [ADR-0179](../adr/0179-templates-ship-as-
 - **A docs-only frame is needed.** On a Docs page a shell as tall as the window would fill the page, so the demo draws it in a 36rem box when `viewMode` is `docs`. The Docs page's contents list was checked: the demo page's own headings do not enter it.
 - **ADR-0179 said the shell would take its own `labels`.** It draws no text, so it has none; the `labels` it accepts are the sidebar's. The ADR's detail is amended in place.
 
+## Review pass (2026-11-04)
+Found by reading the code, running the checks and reproducing in the preview with real input; all fixed.
+- **A text-only page could not be scrolled by keyboard.** `tabindex="-1"` on a scrolling `main` made Tab skip it (a real Tab wrapped back to the skip link), where without the attribute the browser makes a scroller a tab stop. It is now `0` while the main area scrolls.
+- **The focus ring on `main` was hidden** (`outline: none`, with `:focus-visible` true after the skip link and once it was a tab stop). Replaced by an inset ring from the focus tokens.
+- **`scroll="page"` did not keep the header or the sidebar in view** (a real wheel scroll of 663px moved the banner to -663). The demo's `Navbar sticky` could only stick inside a slot as tall as the bar. The shell now owns it (see Decisions); the page-scroll story, snippet and Docs text were changed to match.
+- **The Properties table's Default column was blank** for `collapseBelow`, `defaultCollapsed` and `defaultMenuOpen`; explicit `table.defaultValue` entries added.
+- **The Code examples had no native-prop example**; one added (`aria-labelledby` on the main area).
+- **The header-first rule had no guard.** A development warning now fires when `AppShell.Sidebar` comes before `AppShell.Header` in the markup.
+- **A nested provider was untested.** A test now shows the shell's provider replacing an outer `Sidebar.Provider`, and the Docs page says so.
+- **Checks that had never failed were broken on purpose**: the end-edge rule, the direction attribute, a sidebar column kept on a phone, a main area that cannot take focus, one that is never a tab stop, a removed ring, and a header and a sidebar that do not stick. Every one failed the check that guards it, and each file was restored byte for byte.
+- **Not an AppShell change:** `Stat` (`variant="outlined"`, `tone="brand"`) has a border that is nearly invisible in the Emerald dark theme (measured `rgb(11,55,49)` on `rgb(44,42,52)`). Left to the maintainer's three-question test for a Finalized component.
+
 ## Checks run
 - Unit and axe (jsdom): landmarks once each, the skip link and the focus target, a custom main id, a main-only shell, the data attributes, the menu button opening the panel through the shell's provider, the controlled collapsed handler, refs and passthrough, axe on the default and on the page-scroll, end-edge and right-to-left variants; a server render with `window` and `document` removed.
-- Real browser (Chromium, hidden checks): desktop, tablet and phone layouts at pinned viewports (which assert the window width first), the sidebar at the end edge, right to left, the skip link by real keys, the page-scroll mode, and forced colours (system `Canvas`, same scroll behaviour). Breaking the stylesheet (main no longer scrolling) failed the desktop and forced-colours checks.
-- Real input in the browser pane: Tab then Enter on the skip link focuses `<main>` with no ring and no page scroll; a real click on the phone menu button opens the panel.
+- Real browser (Chromium, hidden checks): desktop, tablet and phone layouts at pinned viewports (which assert the window width first), the sidebar at the end edge, right to left, the skip link and the ring, a text-only main area reached and scrolled with real keys (Chrome DevTools Protocol), a fitting one that is not a tab stop, the page-scroll mode (the frame grows, the header and the sidebar stay at the top, as tall as the window), and forced colours (system `Canvas`, same scroll behaviour).
+- Real input in the browser pane: Tab then Enter on the skip link focuses `<main>`; a real click on the phone menu button opens the panel; a real wheel scroll of the page-scroll story leaves the header and the sidebar at the top; real Tab and arrow keys reach and scroll a text-only main area, which shows its ring. All four themes and the Docs page (Default column, "Show code" on every story, the framed page-scroll canvas) were looked at.
 - The whole package's lint, type checks (components and Storybook), unit tests, build, Storybook tests and the Storybook bundle size budget. The one Storybook failure, `FieldFocusRing` > `Textarea`, is the known local flake and passes alone.
 
 ## Not verified
-- **The native fragment jump.** The skip link was exercised through the demo's handler; a real `href="#main"` navigation moving focus to `<main>` was not run in a browser.
-- **A real phone.** The phone width was emulated in Chromium. The address bar's collapsing on iOS and Android, which is what `dvh` is for, was not tried on a device or in Safari or Firefox.
-- **Dark mode and the Emerald brand** were not looked at; the shell adds one pairing, `text.primary` on `bg.surface`, which the token spec already measures.
-- **`scroll="page"` with sticky parts** is checked for its layout (the frame grows and the page scrolls) but not for a sticky `Navbar` and `Sidebar` together staying in place through a long scroll.
+- **The native fragment jump.** The skip link was exercised through the demo's handler; a real `href="#main"` navigation moving focus to `<main>` was not run in a browser (pressing Enter on it closes the test browser).
+- **A real phone, Safari and Firefox.** Everything was run in Chromium, with the phone width emulated. The address bar's collapsing on iOS and Android, which is what `dvh` is for, and Safari's and Firefox's handling of a sticky box in a grid area, were not tried.
+- **Axe on a text-only scrolling main area in a real browser.** The keyboard behaviour is checked and the cause of the old `scrollable-region-focusable` risk removed, but the rule itself was not run on that page.
+- **Other layouts:** the `collapseBelow` steps other than `md`, `3xl` and `never`; `Sidebar variant="floating"` in the slot; page scroll, the end edge and right to left at phone width; the header's height changing while the page is scrolled.
 - **Right to left was measured, not read**: the check asserts which edge each part is on; nobody has looked at it.
-- **A wide table's push on the frame** is not caught by removing `minmax(0, 1fr)`, because `min-inline-size: 0` on the slots covers the same case; the two guards are redundant by design.
+- **The snippets were not typechecked as a file** against the real components; `storySnippets.test.ts` checks that each is valid TSX and uses only exports that exist.

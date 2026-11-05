@@ -2,7 +2,7 @@ import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { axe } from "jest-axe";
 import { createRef } from "react";
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { Navbar } from "../../organisms/Navbar";
 import { Sidebar } from "../../organisms/Sidebar";
 import { AppShell } from "./AppShell";
@@ -40,6 +40,10 @@ function Shell(props: AppShellProps) {
     </AppShell>
   );
 }
+
+afterEach(() => {
+  vi.restoreAllMocks();
+});
 
 describe("AppShell", () => {
   it("draws the page's landmarks once each: banner, navigation, main and contentinfo", () => {
@@ -167,6 +171,91 @@ describe("AppShell", () => {
     expect(main.current).toBe(screen.getByTestId("m"));
     expect(main.current).toHaveClass("m");
     expect(footer.current?.tagName).toBe("FOOTER");
+  });
+
+  it("is a skip target but not a tab stop in jsdom, which lays nothing out and so never sees the main area scroll", () => {
+    const { rerender } = render(
+      <AppShell>
+        <AppShell.Main>x</AppShell.Main>
+      </AppShell>,
+    );
+    expect(screen.getByRole("main")).toHaveAttribute("tabindex", "-1");
+    rerender(
+      <AppShell scroll="page">
+        <AppShell.Main>x</AppShell.Main>
+      </AppShell>,
+    );
+    expect(screen.getByRole("main")).toHaveAttribute("tabindex", "-1");
+  });
+
+  it("warns in development when the sidebar comes before the header in the markup", () => {
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+    render(
+      <AppShell>
+        <AppShell.Sidebar>side</AppShell.Sidebar>
+        <AppShell.Header>head</AppShell.Header>
+        <AppShell.Main>x</AppShell.Main>
+      </AppShell>,
+    );
+    expect(warn).toHaveBeenCalledWith(expect.stringContaining("`AppShell.Sidebar` comes before `AppShell.Header`"));
+  });
+
+  it("does not warn for the header first, or when there is no sidebar", () => {
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+    render(
+      <AppShell>
+        <AppShell.Header>head</AppShell.Header>
+        <AppShell.Sidebar>side</AppShell.Sidebar>
+        <AppShell.Main>x</AppShell.Main>
+      </AppShell>,
+    );
+    render(
+      <AppShell>
+        <AppShell.Main>x</AppShell.Main>
+        <AppShell.Header>head</AppShell.Header>
+      </AppShell>,
+    );
+    expect(warn).not.toHaveBeenCalled();
+  });
+
+  it("measures the header only while the page scrolls, and leaves the grid alone until it has a height", () => {
+    render(
+      <AppShell scroll="page" data-testid="shell">
+        <AppShell.Header>head</AppShell.Header>
+        <AppShell.Main>x</AppShell.Main>
+      </AppShell>,
+    );
+    // jsdom measures every box as zero, so the header is not reported as stuck and the root carries no measured flag.
+    expect(screen.getByTestId("shell")).not.toHaveAttribute("data-header-measured");
+    expect(screen.getByTestId("shell").style.getPropertyValue("--app-shell-header-height")).toBe("");
+  });
+
+  it("keeps its own sidebar state inside an outer Sidebar.Provider: the shell's provider replaces it for everything inside", async () => {
+    const user = userEvent.setup();
+    const outer: boolean[] = [];
+    const inner: boolean[] = [];
+    render(
+      <Sidebar.Provider collapseBelow="never" onCollapsedChange={(collapsed) => outer.push(collapsed)}>
+        <AppShell collapseBelow="never" onCollapsedChange={(collapsed) => inner.push(collapsed)}>
+          <AppShell.Sidebar>
+            <Sidebar collapseBelow="never">
+              <Sidebar.Content>
+                <Sidebar.Nav>
+                  <Sidebar.Item href="/">Home</Sidebar.Item>
+                </Sidebar.Nav>
+              </Sidebar.Content>
+              <Sidebar.Footer>
+                <Sidebar.Toggle />
+              </Sidebar.Footer>
+            </Sidebar>
+          </AppShell.Sidebar>
+          <AppShell.Main>x</AppShell.Main>
+        </AppShell>
+      </Sidebar.Provider>,
+    );
+    await user.click(screen.getByRole("button", { name: "Collapse sidebar" }));
+    expect(inner).toEqual([true]);
+    expect(outer).toEqual([]);
   });
 
   it("has no accessibility violations", async () => {

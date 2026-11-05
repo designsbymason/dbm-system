@@ -1,7 +1,10 @@
-import { cx } from "@dbm-system/utils";
-import { forwardRef } from "react";
+import { cx, mergeRefs, useIsScrollable } from "@dbm-system/utils";
+import { Children, forwardRef, isValidElement, useEffect, useMemo, useRef, useState } from "react";
+import type { CSSProperties } from "react";
 import { Sidebar } from "../../organisms/Sidebar";
 import styles from "./AppShell.module.css";
+import { AppShellContext, useAppShell } from "./AppShellContext";
+import { useElementHeight } from "./useElementHeight";
 import type {
   AppShellFooterProps,
   AppShellHeaderProps,
@@ -16,7 +19,7 @@ import type {
  * the shell adds the grid, the one `<main>`, and the `Sidebar.Provider` that lets the `Navbar`'s menu button open the sidebar's phone panel.
  *
  * Slots: `AppShell.Header` (first in the markup, so the skip link is the first tab stop), `AppShell.Sidebar`, `AppShell.Main` and `AppShell.Footer`. By default the frame is as tall as the window and only
- * `AppShell.Main` scrolls (`scroll="content"`); with `scroll="page"` the page scrolls as a whole. Below the sidebar's `collapseBelow` width the
+ * `AppShell.Main` scrolls (`scroll="content"`); with `scroll="page"` the page scrolls as a whole and the header and sidebar stay in view. Below the sidebar's `collapseBelow` width the
  * sidebar leaves the page and its column disappears, so the main area takes the full width.
  *
  * Landmarks: the `Navbar` is the `<header>` banner, each `Sidebar.Nav` a named `<nav>`, `AppShell.Main` the one `<main>` and `AppShell.Footer`
@@ -59,32 +62,57 @@ const AppShellRoot = forwardRef<HTMLDivElement, AppShellProps>(
       collapseBelow,
       labels,
       className,
+      style,
       ...props
     },
     ref,
-  ) => (
-    <Sidebar.Provider
-      collapsed={collapsed}
-      defaultCollapsed={defaultCollapsed}
-      onCollapsedChange={onCollapsedChange}
-      menuOpen={menuOpen}
-      defaultMenuOpen={defaultMenuOpen}
-      onMenuOpenChange={onMenuOpenChange}
-      collapseBelow={collapseBelow}
-      labels={labels}
-    >
-      <div
-        {...props}
-        ref={ref}
-        dir={dir}
-        data-scroll={scroll}
-        data-sidebar-side={sidebarSide}
-        className={cx(styles.root, className)}
+  ) => {
+    // With `scroll="page"` the header can only stay in view if its grid area is as tall as the whole shell, so the shell needs its height
+    // to keep the first row that size. Zero (the server render, the first client render) leaves the header in its own row, unstuck.
+    const [headerHeight, setHeaderHeight] = useState(0);
+    const context = useMemo(() => ({ scroll, setHeaderHeight }), [scroll]);
+    const measured = scroll === "page" && headerHeight > 0;
+
+    useEffect(() => {
+      if (process.env.NODE_ENV === "production") return;
+      const slots = Children.toArray(children).filter(isValidElement);
+      const header = slots.findIndex((slot) => slot.type === AppShellHeader);
+      const sidebar = slots.findIndex((slot) => slot.type === AppShellSidebar);
+      if (header !== -1 && sidebar !== -1 && sidebar < header) {
+        console.warn(
+          "AppShell: `AppShell.Sidebar` comes before `AppShell.Header` in the markup. The layout is the same, but the keyboard follows the markup, so the sidebar's links come before the skip link. Put `AppShell.Header` first.",
+        );
+      }
+    }, [children]);
+
+    return (
+      <Sidebar.Provider
+        collapsed={collapsed}
+        defaultCollapsed={defaultCollapsed}
+        onCollapsedChange={onCollapsedChange}
+        menuOpen={menuOpen}
+        defaultMenuOpen={defaultMenuOpen}
+        onMenuOpenChange={onMenuOpenChange}
+        collapseBelow={collapseBelow}
+        labels={labels}
       >
-        {children}
-      </div>
-    </Sidebar.Provider>
-  ),
+        <AppShellContext.Provider value={context}>
+          <div
+            {...props}
+            ref={ref}
+            dir={dir}
+            data-scroll={scroll}
+            data-sidebar-side={sidebarSide}
+            data-header-measured={measured ? "" : undefined}
+            className={cx(styles.root, className)}
+            style={{ ...(measured ? ({ "--app-shell-header-height": `${headerHeight}px` } as CSSProperties) : undefined), ...style }}
+          >
+            {children}
+          </div>
+        </AppShellContext.Provider>
+      </Sidebar.Provider>
+    );
+  },
 );
 AppShellRoot.displayName = "AppShell";
 
@@ -95,16 +123,23 @@ const AppShellSidebar = forwardRef<HTMLDivElement, AppShellSidebarProps>(({ clas
 AppShellSidebar.displayName = "AppShell.Sidebar";
 
 /** The band above the main area, for the `Navbar`. It does not scroll with the main area. */
-const AppShellHeader = forwardRef<HTMLDivElement, AppShellHeaderProps>(({ className, ...props }, ref) => (
-  <div {...props} ref={ref} className={cx(styles.header, className)} />
-));
+const AppShellHeader = forwardRef<HTMLDivElement, AppShellHeaderProps>(({ className, ...props }, ref) => {
+  const { scroll, setHeaderHeight } = useAppShell();
+  const innerRef = useRef<HTMLDivElement>(null);
+  useElementHeight(scroll === "page", innerRef, setHeaderHeight);
+  return <div {...props} ref={mergeRefs(innerRef, ref)} className={cx(styles.header, className)} />;
+});
 AppShellHeader.displayName = "AppShell.Header";
 
 /** The page's one `<main>`. It scrolls on its own when the shell is `scroll="content"`, and is the skip link's target. */
-const AppShellMain = forwardRef<HTMLElement, AppShellMainProps>(({ id = "main", className, ...props }, ref) => (
-  // `tabIndex={-1}` lets the skip link move keyboard focus here; `main` is not a control, so it is not a tab stop and draws no ring.
-  <main {...props} ref={ref} id={id} tabIndex={-1} className={cx(styles.main, className)} />
-));
+const AppShellMain = forwardRef<HTMLElement, AppShellMainProps>(({ id = "main", className, ...props }, ref) => {
+  const { scroll } = useAppShell();
+  const innerRef = useRef<HTMLElement>(null);
+  const scrolls = useIsScrollable(innerRef, "y");
+  // The skip link needs `main` to take focus (`-1`). While it scrolls it is also a tab stop (`0`), so a keyboard user can scroll a page with
+  // nothing focusable in it; one that fits, or a page that scrolls as a whole, gets no extra stop.
+  return <main {...props} ref={mergeRefs(innerRef, ref)} id={id} tabIndex={scroll === "content" && scrolls ? 0 : -1} className={cx(styles.main, className)} />;
+});
 AppShellMain.displayName = "AppShell.Main";
 
 /** The band below the main area, outside its scrolling. */
