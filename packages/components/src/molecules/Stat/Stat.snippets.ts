@@ -96,6 +96,13 @@ ${iconNote}
   <Stat.Value>12,480</Stat.Value>
 </Stat>`,
 
+  fitValue: `{/* fitValue shrinks the value's font size, only as far as it takes, so it always fits inside the stat's border (and
+    grows back as the stat gets wider). Without it a value keeps the full size of its size and overflows a narrow stat */}
+<Stat variant="outlined" tone="brand" fitValue>
+  <Stat.Label>Balance due</Stat.Label>
+  <Stat.Value>$9,851.50</Stat.Value>
+</Stat>`,
+
   announce: `{/* announce tells a screen reader when the value (and trend) change after this stat is
     already on the page — a live dashboard. The very first value shown is never announced. */}
 <Stat announce>
@@ -147,6 +154,7 @@ export interface StatPlaygroundSnippetArgs {
   size?: StatSize;
   orientation?: StatOrientation;
   announce?: boolean;
+  fitValue?: boolean;
   /** Storybook only — whether the demo shows a `Stat.Trend` inside `Stat.Value`. */
   trend?: boolean;
 }
@@ -163,6 +171,7 @@ export function statPlaygroundSnippet(args: StatPlaygroundSnippetArgs): string {
   if (args.size && args.size !== "md") attributes.push(`size="${args.size}"`);
   if (args.orientation && args.orientation !== "vertical") attributes.push(`orientation="${args.orientation}"`);
   if (args.announce) attributes.push("announce");
+  if (args.fitValue) attributes.push("fitValue");
 
   const value = args.trend === false ? "    12,480" : "    12,480\n    <Stat.Trend value={4.2} />";
   const parts = `  <Stat.Icon icon={UsersIcon} />

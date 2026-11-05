@@ -16,6 +16,7 @@ export const rootPropOrder = [
   "size",
   "orientation",
   "announce",
+  "fitValue",
   "role",
   "aria-label",
   "aria-labelledby",
@@ -27,7 +28,7 @@ export const rootPropOrder = [
 ];
 // The Playground also has one Storybook-only control, which sits last: `trend`
 // (whether the demo shows a `Stat.Trend` inside `Stat.Value`).
-export const playgroundPropOrder = ["variant", "tone", "size", "orientation", "announce", "trend"];
+export const playgroundPropOrder = ["variant", "tone", "size", "orientation", "announce", "fitValue", "trend"];
 export const iconPropOrder = ["icon", "label", "id", "className", "style", "data-testid"];
 export const labelPropOrder = ["children", "id", "className", "style", "data-testid"];
 export const valuePropOrder = ["children", "id", "className", "style", "data-testid"];
@@ -51,7 +52,8 @@ fill), a `tone` colours `Stat.Icon` and `Stat.Label` together (plus the border o
 surface on `filled`), and `orientation` puts the icon above the content or beside it.
 `Stat.Trend` colours and points its icon from a plain signed number — an increase or a decrease, and whether
 that particular direction is an improvement or a regression for this metric. `announce` tells a screen reader
-about a value that changes after this stat is already on the page — a live dashboard.
+about a value that changes after this stat is already on the page — a live dashboard. `fitValue` shrinks the value
+sooner than letting it overflow a stat that is too narrow for it.
 
 ### Import
 
@@ -163,6 +165,10 @@ solid tone fill (read against with a matching `icon.on-{tone}` token) instead of
 
 <Canvas of={StatStories.Grid} />
 
+### A value that fits its container
+
+<Canvas of={StatStories.FitValue} />
+
 ### A value that updates in place
 
 `announce` tells a screen reader when the value (and trend) change after this stat is already on the page —
@@ -189,6 +195,10 @@ the very first value shown is never announced, only a later change. Click the bu
   with no wrapping `Card`.
 - Match `size` to the room: `xs` or `sm` for a dense grid of many stats; `lg` or `xl` for one stat that is a
   card's whole content.
+- Set `fitValue` on a stat whose width you do not control (a grid cell, a card, a narrow column), or whose
+  value can be long (a currency amount, a count in the millions): the value shrinks just enough to stay
+  inside the border and grows back as there is room. Leave it off when the stat has room, so every stat in
+  a row keeps the same size.
 - Set `announce` on a stat whose value a live process updates in place, so a screen-reader user is told about a
   later change without needing to keep re-visiting it.
 - Use `Stat.Description` for what the number is being compared to ("vs. last month", "as of today") rather than

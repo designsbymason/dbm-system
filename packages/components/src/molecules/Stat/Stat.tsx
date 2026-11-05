@@ -8,6 +8,7 @@ import { Text } from "../../atoms/Text";
 import type { TextColor, TextSize } from "../../atoms/Text/Text.types";
 import { VisuallyHidden } from "../../atoms/VisuallyHidden";
 import styles from "./Stat.module.css";
+import { fitProperty, useFitValue } from "./useFitValue";
 import type {
   StatDescriptionProps,
   StatIconProps,
@@ -49,6 +50,9 @@ const toneClass: Record<StatTone, string | undefined> = {
 // Text) take font-size/icon-size props a stylesheet can't reach. The default is
 // what a part used outside a root would get.
 const StatSizeContext = createContext<StatSize>("md");
+
+// Whether the value fits itself to the stat (`fitValue`). Outside a root: no.
+const StatFitContext = createContext(false);
 
 const iconSize: Record<StatSize, IconSize> = {
   xs: "sm",
@@ -165,6 +169,7 @@ const StatRoot = forwardRef<HTMLDivElement, StatProps>((statProps, ref) => {
     size = "md",
     orientation = "vertical",
     announce = false,
+    fitValue = false,
     className,
     style,
     id,
@@ -259,18 +264,20 @@ const StatRoot = forwardRef<HTMLDivElement, StatProps>((statProps, ref) => {
 
   return (
     <StatSizeContext.Provider value={size}>
-      <div
-        {...rest}
-        ref={mergedRef}
-        id={id}
-        style={style}
-        data-testid={dataTestId}
-        data-orientation={orientation}
-        className={cx(styles.root, variantClass[variant], sizeClass[size], toneClass[tone], className)}
-      >
-        {content}
-        {announce && <VisuallyHidden role="status">{announcement}</VisuallyHidden>}
-      </div>
+      <StatFitContext.Provider value={fitValue}>
+        <div
+          {...rest}
+          ref={mergedRef}
+          id={id}
+          style={style}
+          data-testid={dataTestId}
+          data-orientation={orientation}
+          className={cx(styles.root, variantClass[variant], sizeClass[size], toneClass[tone], className)}
+        >
+          {content}
+          {announce && <VisuallyHidden role="status">{announcement}</VisuallyHidden>}
+        </div>
+      </StatFitContext.Provider>
     </StatSizeContext.Provider>
   );
 });
@@ -310,11 +317,25 @@ const StatLabel = forwardRef<HTMLParagraphElement, StatLabelProps>(({ className,
 });
 StatLabel.displayName = "Stat.Label";
 
-/** The metric itself, bold and large, sized to the stat's `size`. Lays out a following `Stat.Trend` beside it on the same line. */
-const StatValue = forwardRef<HTMLParagraphElement, StatValueProps>(({ className, ...props }, ref) => {
+/**
+ * The metric itself, bold and large, sized to the stat's `size`. Lays out a following `Stat.Trend` beside it on the same line. It keeps
+ * that size and never wraps, unless the stat has `fitValue`, which shrinks it just enough to fit inside the stat's border.
+ */
+const StatValue = forwardRef<HTMLParagraphElement, StatValueProps>(({ className, style, ...props }, ref) => {
   const size = useContext(StatSizeContext);
+  const fit = useContext(StatFitContext);
+  const valueRef = useRef<HTMLParagraphElement>(null);
+  useFitValue(fit, valueRef, `.${styles.root}`);
   return (
-    <Text {...props} ref={ref} size={valueSize[size]} weight="bold" className={cx(styles.value, className)} />
+    <Text
+      {...props}
+      ref={mergeRefs(ref, valueRef)}
+      size={valueSize[size]}
+      weight="bold"
+      className={cx(styles.value, className)}
+      // The fit is a scale on the full size (`--stat-value-fit`, set while measuring); unset it is 1, so the size is the one `size` gives.
+      style={fit ? { fontSize: `calc(var(--dbm-font-size-${valueSize[size]}) * var(${fitProperty}, 1))`, ...style } : style}
+    />
   );
 });
 StatValue.displayName = "Stat.Value";

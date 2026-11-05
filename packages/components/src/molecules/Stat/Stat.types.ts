@@ -119,6 +119,14 @@ export interface StatProps
    */
   announce?: boolean;
   /**
+   * Shrinks `Stat.Value`'s font size, only as far as it takes, so the value (with any `Stat.Trend` beside it) always fits inside the stat's
+   * border, and grows it back as the stat gets wider. A stat's value is otherwise a fixed size for its `size` and never wraps, so a number
+   * wider than the room overflows the border. Measured from the stat's own width, not the window's, so it suits a stat in a grid or a
+   * card whose width you do not control. Off, nothing changes: the value keeps the full size of its `size`.
+   * @default false
+   */
+  fitValue?: boolean;
+  /**
    * The ARIA role. Unset by default: a stat is static content and adds no
    * role of its own. To have a screen reader announce a value that changes
    * after mount, use `announce` rather than a role here.

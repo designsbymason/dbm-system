@@ -22,6 +22,7 @@ interface PlaygroundArgs {
   orientation: StatOrientation;
   trend: boolean;
   announce: boolean;
+  fitValue: boolean;
   role: string;
   "aria-label": string;
   "aria-labelledby": string;
@@ -56,6 +57,7 @@ const noControls: Record<keyof PlaygroundArgs, { control: false }> = {
   orientation: { control: false },
   trend: { control: false },
   announce: { control: false },
+  fitValue: { control: false },
   role: { control: false },
   "aria-label": { control: false },
   "aria-labelledby": { control: false },
@@ -109,6 +111,12 @@ const meta: Meta<PlaygroundArgs> = {
         "Announces the value (and trend) to screen readers whenever their text changes after this stat is already on the page. The very first value shown is never announced. Nothing changes visually.",
       table: { defaultValue: { summary: "false" } },
     },
+    fitValue: {
+      control: "boolean",
+      description:
+        "Shrinks Stat.Value's font size, only as far as it takes, so the value (with any Stat.Trend beside it) always fits inside the stat's border, and grows it back as the stat gets wider. Off, the value keeps the full size of its size and overflows a stat that is too narrow for it.",
+      table: { defaultValue: { summary: "false" } },
+    },
     role: {
       control: false,
       description:
@@ -152,10 +160,18 @@ const meta: Meta<PlaygroundArgs> = {
     orientation: "vertical",
     trend: true,
     announce: false,
+    fitValue: false,
   },
   render: (args) => (
     <div style={demoContainerStyle}>
-      <Stat variant={args.variant} tone={args.tone} size={args.size} orientation={args.orientation} announce={args.announce}>
+      <Stat
+        variant={args.variant}
+        tone={args.tone}
+        size={args.size}
+        orientation={args.orientation}
+        announce={args.announce}
+        fitValue={args.fitValue}
+      >
         <Stat.Icon icon={UsersIcon} />
         <Stat.Label>Active users</Stat.Label>
         <Stat.Value>
@@ -447,6 +463,34 @@ export const Grid: Story = {
           <Stat.Trend value={-12} goodDirection="decrease" />
         </Stat.Value>
       </Stat>
+    </div>
+  ),
+};
+
+export const FitValue: Story = {
+  name: "A value that fits its container (fitValue)",
+  argTypes: noControls,
+  parameters: { docs: { source: { code: statSnippets.fitValue } } },
+  render: () => (
+    <div style={{ display: "flex", flexWrap: "wrap", alignItems: "flex-start", gap: "var(--dbm-space-4)" }}>
+      {["9rem", "13rem", "18rem"].map((width) => (
+        <div key={width} style={{ inlineSize: width }}>
+          <Stat variant="outlined" tone="brand" fitValue>
+            <Stat.Label>Balance due</Stat.Label>
+            <Stat.Value>$9,851.50</Stat.Value>
+          </Stat>
+        </div>
+      ))}
+      {/* A box the reader can drag wider or narrower: the value follows its width. */}
+      <div style={{ inlineSize: "13rem", minInlineSize: "9rem", maxInlineSize: "100%", resize: "horizontal", overflow: "hidden", padding: "var(--dbm-space-2)" }}>
+        <Stat variant="outlined" tone="brand" fitValue>
+          <Stat.Label>Drag the corner</Stat.Label>
+          <Stat.Value>
+            $9,851.50
+            <Stat.Trend value={4.2} />
+          </Stat.Value>
+        </Stat>
+      </div>
     </div>
   ),
 };

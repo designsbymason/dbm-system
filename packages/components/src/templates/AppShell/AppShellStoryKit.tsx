@@ -50,19 +50,19 @@ export function DemoPage() {
         </Heading>
         <Text color="secondary">Invoices and usage for the current period.</Text>
       </div>
-      {/* `minChildWidth` fits as many columns as the main area has room for (the sidebar takes some of the window), where `columns` follows the window. */}
+      {/* `minChildWidth` fits as many columns as the main area has room for (the sidebar takes some of the window), where `columns` follows the window; `fitValue` keeps a long value inside its stat. */}
       <Grid minChildWidth="16rem" gap={4}>
-        <Stat variant="outlined" tone="brand">
+        <Stat variant="outlined" tone="brand" fitValue>
           <Stat.Icon icon={UsersIcon} />
           <Stat.Label>Active seats</Stat.Label>
           <Stat.Value>248</Stat.Value>
         </Stat>
-        <Stat variant="outlined" tone="brand">
+        <Stat variant="outlined" tone="brand" fitValue>
           <Stat.Icon icon={ListIcon} />
           <Stat.Label>Open invoices</Stat.Label>
           <Stat.Value>14</Stat.Value>
         </Stat>
-        <Stat variant="outlined" tone="brand">
+        <Stat variant="outlined" tone="brand" fitValue>
           <Stat.Icon icon={WalletIcon} />
           <Stat.Label>Balance due</Stat.Label>
           <Stat.Value>$9,851.50</Stat.Value>

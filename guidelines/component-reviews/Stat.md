@@ -377,6 +377,15 @@ real-browser (7) suites.
 
 **Declared Finalized by the user, 2026-09-27.**
 
+## `fitValue`, added after Finalized (2026-11-04)
+Authorized by the maintainer. A value is `white-space: nowrap` at a fixed size per `size` step, so a number wider than its stat overflowed the border (found in the `AppShell` demo, where a currency amount ran out of a card in a grid whose columns follow the main area, not the window). **Additive: an opt-in `fitValue` prop on `Stat`, default off, so nothing that already existed renders differently** and `Stat` stays Finalized, with a scoped pass on the new surface.
+- The value measures itself and shrinks by just enough to fit the stat's content box (its width less the padding and border), and grows back as the stat gets wider. Measured, not estimated: no guessed digit-width ratio, and it tracks the stat's own width, not the window's. One custom property (`--stat-value-fit`) scales the value's inline `font-size` from the full token size; set on the element, with no state and no render.
+- The first pass runs before paint (so a value that does not fit is never drawn overflowing) and again after every render of the value; a `ResizeObserver` on the stat refits when its **width** changes. The refit waits a frame, because changing the height inside the observer's own callback makes the browser report a resize loop (found by the runner's log). A trend beside the number keeps its own size, so the width is a line in the scale: the pass takes a proportional step and then a secant step, which settles it exactly.
+- **Found while writing it:** the value cannot read the stat's element through a ref the stat sets, because a child's layout effect runs before its parent's ref is attached (the unit test failed on mount). It finds the stat with `closest`, as `announce` already does.
+- A consumer's own `font-size` in `style` wins; a stat with no room at all (a hidden one) is left alone.
+- Checks: 9 unit tests (layout stubbed, jsdom has none), 4 hidden real-browser checks (every width from 7rem to a roomy box keeps the value inside its border and no larger than at the next width up; fit off still overflows; every `size` with a trend; it grows back and shrinks again as the box is dragged), and the break-once proof (the fit not applied, no refit on resize, and the full size not restored before measuring each failed a check).
+- Not verified: a very long value at `xl` in a narrow stat in other browsers; Safari's and Firefox's layout of the inline-flex value; the scale reading in a right-to-left stat.
+
 ## Not verified
 
 No real screen reader (VoiceOver, NVDA, JAWS) was run against it; `Stat.Trend`'s `role="img"` announcement and `announce`'s own status region
