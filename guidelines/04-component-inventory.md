@@ -185,7 +185,7 @@ Non-visual/structural helpers other components are built from.
 
 Not individual components, but composed patterns — worth planning for since a template meaningfully reduces time-to-first-app for a common structure (a dashboard shell, an auth flow) versus composing it from scratch every time, but these should come **after** the underlying components exist, not before. They exist now: every component below is built.
 
-**Status:** one built, `AppShell` (the dashboard shell, in `packages/components/src/templates/`), built and Finalized ([AppShell.md](component-reviews/AppShell.md)); none other is started without the maintainer's confirmation. Phase 7 builds a few before Phase 8 (`01-vision-and-goals.md` §13), one at a time, then, in the maintainer's order of interest, the data-table list page, the auth flow, the dashboard or overview page and the settings page. An **application shell** ships from the components package as a compound component with slots, and every other template is a story-only example page that an app copies ([ADR-0179](adr/0179-templates-ship-as-composable-shells-in-the-components-package-with-story-only-example-pages-over-shipping-finished-pages-or-keeping-all-templates-storybook-only.md)).
+**Status:** one built, `AppShell` (the dashboard shell, in `packages/components/src/templates/`), built and Finalized ([AppShell.md](component-reviews/AppShell.md)); none other is started without the maintainer's confirmation. Phase 7 builds a few before Phase 8 (`01-vision-and-goals.md` §13), one at a time, then, in the maintainer's order of interest, the data-table list page, the auth flow, the dashboard or overview page and the settings page (the full order is at the end of this section). An **application shell** ships from the components package as a compound component with slots, and every other template is a story-only example page that an app copies ([ADR-0179](adr/0179-templates-ship-as-composable-shells-in-the-components-package-with-story-only-example-pages-over-shipping-finished-pages-or-keeping-all-templates-storybook-only.md)).
 
 This is the working list of page-level templates apps commonly need. The first four were planned from the start; the rest were added as candidates, and a candidate is built only when an app needs it. Priority follows the legend above. Nothing here is counted in the summary below.
 
@@ -234,6 +234,29 @@ This is the working list of page-level templates apps commonly need. The first f
 | Maintenance or status page | ⚪ | `EmptyState` or `Alert`, `Timeline` for incident history |
 | Notifications or activity feed | ⚪ | `Timeline`, `Tabs`, `Badge`, `EmptyState` |
 
+### Template build order, itemized
+
+Nothing in the list depends on another template, and every component they compose is built, so the order is about what each one proves and what the next one can reuse, not about blocking. **1 is built, and 2–5 are the maintainer's order of interest; 6 onwards is a proposed sequence** that the maintainer can reorder. One template at a time, each planned first and started only on the maintainer's confirmation ([ADR-0179](adr/0179-templates-ship-as-composable-shells-in-the-components-package-with-story-only-example-pages-over-shipping-finished-pages-or-keeping-all-templates-storybook-only.md)). Application shells ship (API to keep stable); every page is a story-only example.
+
+| # | Template | Kind | Why here | Status |
+|---|---|---|---|---|
+| 1 | Dashboard shell | Shell (ships) | Fixes the pattern every page sits in | Built and Finalized: `AppShell` ([review](component-reviews/AppShell.md)) |
+| 2 | Data-table-driven list page | Page | Heaviest composition (`DataTable`, `TableToolbar`, `Pagination`, row menus, `EmptyState`); tests `AppShell` with large content; later data pages reuse its parts | Planned, next |
+| 3 | Auth flow (with reset-password and verify-code variants) | Page | Standalone, outside `AppShell`: tests a centred-card layout with `Form`, `PasswordInput`, `PinInput`, `Alert` | Planned |
+| 4 | Dashboard or overview page | Page | Reuses 2's `DataTable` and adds `Stat`, `Card`, `Grid`, `Timeline` | Planned |
+| 5 | Settings page | Page | Form sections in a nav (`Sidebar` or `Tabs`), `Switch`, `ConfirmDialog` for destructive actions; 9 and 10 reuse its pattern | Planned |
+| 6 | Detail page | Page | A row of 2 opens it: `Breadcrumb`, `Tabs`, `DescriptionList`, `Timeline` | Planned |
+| 7 | Create or edit form page | Page | Reuses 5's form patterns, plus `AppShell.Footer` as the sticky action bar and `ConfirmDialog` to discard | Planned |
+| 8 | Team or members page | Page | A variant of 2 with `Avatar`, `Menu` and an invite `Dialog` | Planned |
+| 9 | Profile or account page | Page | A variant of 5 with `Avatar`, `FileUpload`, `DescriptionList` | Planned |
+| 10 | Billing or plans page | Page | `Card`, `Stat`, `Table`, `Badge` and a plan-comparison grid | Planned |
+| 11–12 | Error pages (404, 403, 500); Empty or first-run state | Page | Small, `EmptyState`-based; quick wins that can move earlier | Planned |
+| 13 | Search results page | Page | `SearchInput`, `Tabs`, `List`, `Pagination` | Planned |
+| 14–15 | Notifications or activity feed; Maintenance or status page | Page | Both lean on `Timeline` and `EmptyState` | Planned |
+| 16 | Master-detail (inbox style) | Page | Layout-heavy (`Splitter`, `List`, `ScrollArea`); independent of the rest | Planned |
+| 17 | Onboarding or setup wizard | Page | Needs flow decisions (`Stepper`, `Form`, `ProgressBar`); follows 3 | Planned |
+| 18–20 | Top-nav app shell; Docs or content shell; Marketing or public page shell | Shell (ships) | Public API, so built when an app (or the docs site, `docs-site/`) needs one; order among them is open | Planned, on demand |
+
 ---
 
 ## Rough count summary
@@ -264,7 +287,7 @@ Not alphabetical, not category-by-category: build in **dependency order**, since
 7. Navigation core (Tabs, Breadcrumb, Navbar, Sidebar)
 8. Feedback (Alert, Toast, ProgressBar, Spinner)
 9. Everything tagged 🟡, in the same dependency-aware order
-10. Templates, once enough organisms exist to compose them meaningfully
+10. Templates, now that every component they compose is built; their order is itemized at the end of the Templates section
 
 ### Molecule-tier build order, itemized
 
