@@ -13,7 +13,7 @@ const meta: Meta<typeof DirectionProvider> = {
   parameters: { layout: "padded" },
   argTypes: {
     dir: {
-      control: "inline-radio",
+      control: "select",
       options: ["ltr", "rtl"],
       description:
         "The reading direction for everything inside. A direction-aware component given no `dir` of its own uses this one; a `dir` on the component itself still wins.",

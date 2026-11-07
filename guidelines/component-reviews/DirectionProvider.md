@@ -1,6 +1,6 @@
 # DirectionProvider
 
-**Tier:** Atom · **Category:** Utility · **Finalized:** ❌ (built 2026-11-06, review pending)
+**Tier:** Atom · **Category:** Utility · **Finalized:** ✅ 2026-11-06
 
 Built as part of the AppShell work ([ADR-0182](../adr/0182-appshell-grows-a-busy-main-a-whole-page-state-and-a-layer-ladder-and-direction-reaches-the-shell-sidebar-and-navbar-through-a-provider.md), implementing [ADR-0177](../adr/0177-an-optional-direction-provider-sets-the-text-direction-for-a-subtree-over-reading-the-page-direction-automatically.md) in part).
 
@@ -10,7 +10,7 @@ Built as part of the AppShell work ([ADR-0182](../adr/0182-appshell-grows-a-busy
 - Stories (Playground, whole app, own `dir` wins), snippets (checked by `storySnippets.test.ts`), Docs page, description, inventory row.
 
 ## Review pass (2026-11-06)
-A `06` §9 pass, at explicit direction; not declared Finalized. Nine findings, all fixed:
+A `06` §9 pass, at explicit direction. Nine findings, all fixed; declared Finalized by the owner on 2026-11-06:
 1. **An invalid `dir`** (`"RTL"`, `"auto"`, `""` from untyped configuration) was accepted silently and read as left to right while the value stayed in context. `DirectionProvider` now refuses it with a once-per-value development warning and provides `"ltr"`; two tests, each broken once.
 2. **A guard test** (`DirectionProvider.coverage.test.ts`) reads the source and fails any `*.types.ts` that declares a `dir` with no component beside it calling `useDirection(` or `useProvidedDirection(`. **It found a real miss on its first run: `NavigationMenu`** had a `dir` and ignored the provider (the earlier searches had looked for `dir = "ltr"` and it spells the default differently). Fixed, with a table case; breaking it fails both.
 3. `useProvidedDirection` now has direct tests (undefined outside a provider, the nearest provider's value, the outer one outside the inner).
@@ -23,7 +23,7 @@ A `06` §9 pass, at explicit direction; not declared Finalized. Nine findings, a
 
 **Checked:** eslint, both typechecks, the unit and Storybook suites for the atom, the Docs page (no render error), the Languages story in purple light and emerald dark and at phone width (no overflow), the Playground's `dir` control by URL arg.
 
-**Not done:** purple dark and emerald light were not viewed; the "Show code" panels were not looked at live after settling; the Controls panel was driven by URL argument, not by hand; no screen reader, Safari or Firefox. Contrast, forced colours and keyboard checks do not apply: it draws nothing.
+**Theming:** the Languages story was viewed in all four of purple and emerald, light and dark (2026-11-06). **Not done:** a screen reader, Safari and Firefox. Contrast, forced colours and keyboard checks do not apply: it draws nothing. The Playground's Show code and its `dir` select were checked live on the Docs page.
 
 ## The Drawer body defect, followed up (2026-11-06)
 The `Drawer` and `Dialog` body is a `ScrollArea`, which batch 1 wired, so a right-to-left provider reaches it. A real-browser check on `AppShell` (`PhonePanelIsRightToLeftFromTheShellAlone`, at phone width, with `dir="rtl"` on the shell and none on the `Sidebar` or `Drawer`) confirms the menu panel and the links in its body read right to left; breaking either `ScrollArea`'s wiring or the shell's provider made it fail. What remains by design ([ADR-0177](../adr/0177-an-optional-direction-provider-sets-the-text-direction-for-a-subtree-over-reading-the-page-direction-automatically.md)): a page that sets only `<html dir="rtl">`, with no provider and no `dir` on the body, still gets a left-to-right body. The Docs for `Dialog`, `Drawer` and this provider say so.
@@ -33,3 +33,8 @@ Added `Accordion`, `Tabs`, `RadioGroup`, `Alert`, `Breadcrumb`, `ColorPicker`. `
 
 ## Batch 5 (2026-11-06)
 The portalled overlays that have no `dir` prop: `Dialog`, `Drawer`, `AlertDialog` (so `ConfirmDialog`), `Popover`, `Tooltip` and `HoverCard`. Measured first, with only a right-to-left provider: a `Dialog`'s body was right to left, but its header and footer were left to right, and `Popover` content was left to right, because a portal puts the panel under `<body>`. Each content part now sets `dir` from `useProvidedDirection` after `{...props}` (so its own `dir` still wins); with no provider the attribute stays off and nothing changes. 6 unit cases (plus a `ConfirmDialog` test) and 5 real-browser checks cover the panel, the header, body and footer, and the `Popover`'s `align="start"`, which lands on the trigger's right edge once the content reads right to left; breaking the wiring in each content part made exactly its test and check fail. Documented, not changed: the `Portal` atom draws no element, so content an app portals itself takes the page's direction (give it a `dir`). `Pagination` needs nothing: it flips with `:dir(rtl)`, which follows the DOM.
+
+## Docs page follow-ups (2026-11-06)
+- The Playground's `dir` control is a `select`. It was declared `inline-radio`, which the Playground controls block does not draw (it handles `select` and `radio`), so it fell through to a text field. The cause was in the Playground controls block, not the story: it drew `select` and `radio` and let `inline-radio` fall through to a text field, which also hit the `Menu` and `ContextMenu` Playgrounds (`dir` and `presentation`). The block now draws `inline-radio` like `select`, and `src/storybookControls.test.ts` fails any story that declares a control type the block does not draw. (`DataTable`'s one `inline-radio` is on a variant story with no Playground panel, so nothing changed there.)
+- Every snippet was typechecked as real code against the components (not only parsed), and the four Code examples on the page were added and typechecked the same way: the whole app, an own `dir` winning, `useDirection` in an app's own part, and content portaled by hand.
+- The page has no Related components section, by decision (`07` §4 item 10).

@@ -187,7 +187,7 @@ function ControlField({
         }}
       />
     );
-  } else if (controlType === "select" || controlType === "radio") {
+  } else if (controlType === "select" || controlType === "radio" || controlType === "inline-radio") {
     // Options aren't always strings — e.g. Affix's `offset` (a numeric
     // space scale) or Heading's `level` (1–6) — but `Select` only deals in
     // string values internally. Real, previously-shipped bug: comparing

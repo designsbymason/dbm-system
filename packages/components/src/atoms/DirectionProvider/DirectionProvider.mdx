@@ -1,8 +1,6 @@
 import { Canvas, Meta } from "@storybook/addon-docs/blocks";
-import { Callout, ComponentHeader, PlaygroundControls, PropertiesTable, RelatedCard } from "../../../.storybook/blocks";
-import { Text } from "../Text";
+import { Callout, ComponentHeader, PlaygroundControls, PropertiesTable } from "../../../.storybook/blocks";
 import { VisuallyHidden } from "../VisuallyHidden";
-import { Navbar } from "../../organisms/Navbar";
 import { DirectionProvider } from "./DirectionProvider";
 import * as DirectionProviderStories from "./DirectionProvider.stories";
 
@@ -105,6 +103,7 @@ with the provider's value.
 ## Code examples
 
 ```tsx
+// Wrap the app once; every component that takes a dir, and every overlay, follows it
 <DirectionProvider dir="rtl">
   <Navbar>
     <Navbar.Brand href="/">dbM</Navbar.Brand>
@@ -112,27 +111,38 @@ with the provider's value.
 </DirectionProvider>
 ```
 
+```tsx
+// A dir on a component itself wins, for one island that reads the other way
+<DirectionProvider dir="rtl">
+  <Tabs dir="ltr" defaultValue="overview">
+    <Tabs.List aria-label="Sections">
+      <Tabs.Trigger value="overview">Overview</Tabs.Trigger>
+    </Tabs.List>
+    <Tabs.Content value="overview">Overview text</Tabs.Content>
+  </Tabs>
+</DirectionProvider>
+```
+
+```tsx
+// Your own part follows the same rule: its own value, else the provider's, else "ltr"
+function Price({ dir, children }: { dir?: "ltr" | "rtl"; children: ReactNode }) {
+  const direction = useDirection(dir);
+  return <span dir={direction}>{children}</span>;
+}
+```
+
+```tsx
+// Content you portal yourself is outside the provider, so give it the direction
+function Note({ children }: { children: ReactNode }) {
+  const dir = useDirection();
+  return (
+    <Portal>
+      <div dir={dir}>{children}</div>
+    </Portal>
+  );
+}
+```
+
 ## Design tokens used
 
 `DirectionProvider` references **no tokens**: it renders nothing of its own.
-
-## Related components
-
-<div className="dbm-card-grid">
-<RelatedCard
-  name="Navbar"
-  description="Reads the provider's direction when it has no dir of its own"
-  href="/?path=/docs/organisms-navigation-navbar--docs"
->
-  <Navbar>
-    <Navbar.Brand href="/">dbM</Navbar.Brand>
-  </Navbar>
-</RelatedCard>
-<RelatedCard
-  name="AppShell"
-  description="Given a dir, it provides it to the Sidebar, Navbar and everything inside, and sets the page's direction on its own frame"
-  href="/?path=/docs/templates-application-shells-appshell--docs"
->
-  <Text size="sm" color="secondary">AppShell dir="rtl"</Text>
-</RelatedCard>
-</div>
