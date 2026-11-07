@@ -1044,3 +1044,22 @@ export const ParkedPageBarStaysInView: Story = {
     window.scrollTo(0, 0);
   },
 };
+
+export const PhonePanelIsRightToLeftFromTheShellAlone: Story = {
+  name: "On a phone in a right-to-left shell, the menu panel and its content read right to left with no dir on the sidebar or drawer — layout test",
+  globals: { viewport: { value: "mobile1", isRotated: false } },
+  render: () => <DemoShell dir="rtl" />,
+  play: async ({ canvasElement }) => {
+    await expect(window.innerWidth).toBeLessThan(768);
+    await userEvent.click(within(canvasElement).getByRole("button", { name: "Menu" }));
+    const panel = await within(document.body).findByRole("dialog");
+    const link = await within(panel).findByRole("link", { name: "Home" });
+    await waitFor(() => expect(link).toBeVisible());
+    // The panel itself, and the scrolling body that holds the links (a ScrollArea inside the Drawer), both read right to left.
+    await expect(getComputedStyle(panel).direction).toBe("rtl");
+    await expect(getComputedStyle(link).direction).toBe("rtl");
+    await expect(link.closest("[dir]")).toHaveAttribute("dir", "rtl");
+    await userEvent.keyboard("{Escape}");
+    await waitFor(() => expect(within(document.body).queryByRole("dialog")).toBeNull());
+  },
+};

@@ -28,6 +28,7 @@ import type {
   BreadcrumbSize,
   BreadcrumbTone,
 } from "./Breadcrumb.types";
+import { useProvidedDirection } from "../../atoms/DirectionProvider/DirectionProvider";
 
 interface BreadcrumbContextValue {
   size: BreadcrumbSize;
@@ -247,10 +248,13 @@ const BreadcrumbRoot = forwardRef<HTMLElement, BreadcrumbProps>(
       "aria-label": ariaLabel,
       "aria-labelledby": ariaLabelledBy,
       className,
+      dir: dirProp,
       ...props
     },
     ref,
   ) => {
+    const providedDir = useProvidedDirection();
+    const dir = dirProp ?? providedDir;
     const [expanded, setExpanded] = useState(false);
     // `maxItems="container"`: how many items are hidden right now, and whether the trail is fully collapsed and
     // still doesn't fit (so wrapping, or `truncate`, has to take over).
@@ -412,6 +416,7 @@ const BreadcrumbRoot = forwardRef<HTMLElement, BreadcrumbProps>(
       <BreadcrumbContext.Provider value={{ size, separator, tone, underline, truncate: truncating }}>
         <nav
           {...props}
+          dir={dir}
           ref={mergedRef}
           aria-label={ariaLabelledBy ? undefined : (ariaLabel ?? labels.navigation)}
           aria-labelledby={ariaLabelledBy}

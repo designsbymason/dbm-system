@@ -5,6 +5,7 @@ import { Button } from "../Button";
 import { send } from "../../molecules/CodeBlock/browserProtocol";
 import { Select } from "../../molecules/Select";
 import { ContextMenu } from "../../organisms/ContextMenu";
+import { ColorPicker } from "../../organisms/ColorPicker";
 import { DatePicker } from "../../organisms/DatePicker";
 import { Dialog } from "../../organisms/Dialog";
 import { Drawer } from "../../organisms/Drawer";
@@ -199,5 +200,26 @@ export const DatePickerCalendarIsMirrored: Story = {
     const heads = within(panel).getAllByRole("columnheader");
     await waitFor(() => expect(heads[0]!.getBoundingClientRect().left).toBeGreaterThan(heads[heads.length - 1]!.getBoundingClientRect().left));
     await nextFrame();
+  },
+};
+
+export const ColorPickerPanelIsRightToLeft: Story = {
+  name: "A ColorPicker given no dir opens a right-to-left panel under a provider",
+  render: () => (
+    <div style={{ padding: "var(--dbm-space-8)", minBlockSize: "34rem" }}>
+      <Rtl>
+        <ColorPicker aria-label="Brand color" defaultValue="#5548a4" />
+      </Rtl>
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(direction(canvas.getByRole("group", { name: "Brand color" }))).toBe("rtl");
+    const opener = canvas.getByRole("button", { name: "Choose color" });
+    await click(centreOf(opener).x, centreOf(opener).y, "left");
+    const hue = await body.findByRole("slider", { name: "Hue" });
+    // The hue slider is inside the portalled panel; it reads right to left.
+    await expect(direction(hue)).toBe("rtl");
+    await expect(hue.closest("[dir]")).toHaveAttribute("dir", "rtl");
   },
 };

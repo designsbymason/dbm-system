@@ -71,7 +71,7 @@ const meta: Meta<typeof RadioGroup> = {
       control: "select",
       options: ["ltr", "rtl"],
       description:
-        "Text direction, passed through to Radix RadioGroup. When omitted, defers to the nearest Radix DirectionProvider ancestor if the app has one (a React context, not the actual browser document/html[dir] attribute), else falls back to ltr.",
+        "Text direction, passed through to Radix RadioGroup. Left out, the nearest DirectionProvider's, then a Radix DirectionProvider's if the app has one, else left-to-right; not read from the page.",
     },
     loop: {
       control: "boolean",

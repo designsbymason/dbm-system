@@ -139,7 +139,7 @@ export interface BreadcrumbProps
   "aria-labelledby"?: string;
   /**
    * Text direction, a native attribute: `"rtl"` mirrors the trail — the first item sits at the right, and the
-   * chevron and the compact form's back arrow point the other way. Inherited from the page when left out.
+   * chevron and the compact form's back arrow point the other way. Left out, it follows the nearest `DirectionProvider`; with none, it is inherited from the page.
    */
   dir?: "ltr" | "rtl" | "auto";
   /** Standard DOM id, on the `<nav>`. */

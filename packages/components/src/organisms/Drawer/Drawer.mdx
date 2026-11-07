@@ -274,6 +274,9 @@ Escape and the scrim still work, so nothing needs the gesture.
 
 ## Best practices
 
+- In a right-to-left app wrap the app in a `DirectionProvider` (or use `AppShell`, which provides its direction). The body's text
+  and scrollbar then read right to left, in a drawer opened from anywhere. The system does not read the page's `dir`: an app that
+  only sets `<html dir="rtl">` also needs the provider, or `dir="rtl"` on `Drawer.Body`.
 - On a phone a side panel leaves a strip of the page showing, so there is always something to press to
   close it. Keep its content within what fits the remaining width.
 - A `bottom` sheet is as tall as its content, up to the `size` step, and its body scrolls past that.

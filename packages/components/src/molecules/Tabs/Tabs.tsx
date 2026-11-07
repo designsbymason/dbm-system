@@ -17,6 +17,7 @@ import type {
   TabsTriggerProps,
   TabsVariant,
 } from "./Tabs.types";
+import { useProvidedDirection } from "../../atoms/DirectionProvider/DirectionProvider";
 
 interface TabsContextValue {
   variant: TabsVariant;
@@ -179,13 +180,15 @@ const TabsRoot = forwardRef<HTMLDivElement, TabsProps>((props, ref) => {
     activationMode = "automatic",
     fullWidth = false,
     rounded = false,
-    dir,
+    dir: dirProp,
     className,
     style,
     id,
     "data-testid": dataTestId,
     ...rest
   } = props;
+  const providedDir = useProvidedDirection();
+  const dir = dirProp ?? providedDir;
 
   const orientation = useResolvedResponsiveValue<TabsOrientation>(orientationProp, "horizontal");
 

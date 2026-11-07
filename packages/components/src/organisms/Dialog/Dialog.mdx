@@ -264,6 +264,9 @@ other native `<button>` attribute beyond what's listed here.
 
 ## Best practices
 
+- In a right-to-left app wrap the app in a `DirectionProvider` (or use `AppShell`, which provides its direction). The body's text
+  and scrollbar then read right to left. The system does not read the page's `dir`: an app that only sets `<html dir="rtl">` also
+  needs the provider, or `dir="rtl"` on `Dialog.Body`.
 - Keep the header short (a title and at most one sentence of description). Put everything the person
   reads or fills in inside `Dialog.Body`, which scrolls on its own while the header and footer stay put.
 - Pick the smallest `size` that fits the content: `xs`/`sm` for a confirmation, `md` for most forms,

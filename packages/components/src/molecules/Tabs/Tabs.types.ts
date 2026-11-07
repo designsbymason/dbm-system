@@ -105,9 +105,7 @@ export interface TabsProps
   fullWidth?: boolean;
   /**
    * Text direction, passed through to Radix Tabs — flips which physical arrow key
-   * moves focus forward versus back in a horizontal list. When omitted, defers
-   * to the nearest Radix `DirectionProvider` ancestor, if the consuming app has
-   * one, falling back to `"ltr"` otherwise.
+   * moves focus forward versus back in a horizontal list. Left out, it follows the nearest `DirectionProvider`, then a Radix `DirectionProvider` if the app has one, else left-to-right; it is not read from the page.
    */
   dir?: "ltr" | "rtl";
   /** Additional CSS classes for customization. */

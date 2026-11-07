@@ -228,7 +228,7 @@ const meta: Meta<PlaygroundArgs> = {
     dir: {
       control: "select",
       options: ["ltr", "rtl"],
-      description: "Text direction, a native attribute: mirrors the layout, so the icon and the dismiss button swap sides.",
+      description: "Text direction, a native attribute: mirrors the layout, so the icon and the dismiss button swap sides. Left out, the nearest DirectionProvider's; with none, inherited from the page.",
     },
     "aria-label": { control: "text", description: "The alert's accessible name, when it needs one of its own." },
     "aria-labelledby": { control: false, description: "The id of an element that names the alert." },

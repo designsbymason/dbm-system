@@ -13,6 +13,7 @@ import type { ColorPickerLabels, ColorPickerProps, ColorPickerSize } from "./Col
 import { ColorPickerPanel } from "./ColorPickerPanel";
 import type { SwatchChoice } from "./ColorPickerPanel";
 import { useColorPickerValue } from "./useColorPickerValue";
+import { useProvidedDirection } from "../../atoms/DirectionProvider/DirectionProvider";
 
 const defaultLabels: ColorPickerLabels = {
   value: "Color value",
@@ -123,7 +124,7 @@ export const ColorPicker = forwardRef<HTMLDivElement, ColorPickerProps>(
       presentation = "anchored",
       container,
       autoFocus = false,
-      dir,
+      dir: dirProp,
       labels: labelOverrides,
       formatNumber = String,
       onFocus,
@@ -139,6 +140,8 @@ export const ColorPicker = forwardRef<HTMLDivElement, ColorPickerProps>(
     },
     ref,
   ) => {
+    const providedDir = useProvidedDirection();
+    const dir = dirProp ?? providedDir;
     const labels = mergeDefined(defaultLabels, labelOverrides);
     const direction = dir === "rtl" ? "rtl" : "ltr";
     const [heldFormat, setHeldFormat] = useState(defaultFormat);

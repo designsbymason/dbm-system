@@ -45,3 +45,6 @@ Eight findings, all fixed or settled:
 - The panel on a phone with an on-screen keyboard open, and a real finger dragging the area: the layout was checked at 375px in an emulated viewport only.
 - The Docs page in all four themes (two were looked at); the transparency checkerboard's two colors (`bg.track` and `bg.surface`) have not been contrast-checked as a pattern, only seen as a transparency cue.
 - The §5 sweep that drives every Controls-panel control of every story through the preview channel (the Playground's were driven).
+
+## Reads the nearest DirectionProvider (2026-11-06)
+Additive, at explicit direction ([ADR-0177](../adr/0177-an-optional-direction-provider-sets-the-text-direction-for-a-subtree-over-reading-the-page-direction-automatically.md), [ADR-0182](../adr/0182-appshell-grows-a-busy-main-a-whole-page-state-and-a-layer-ladder-and-direction-reaches-the-shell-sidebar-and-navbar-through-a-provider.md)): `dir` left out now follows the nearest `DirectionProvider`; with none, nothing changes (the page's direction, or a Radix `DirectionProvider`, still applies as before). The `dir` JSDoc, the Controls description and the Docs text say so; a test covers it. Finalized status is unchanged.

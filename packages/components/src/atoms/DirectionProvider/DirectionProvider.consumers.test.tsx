@@ -3,6 +3,12 @@ import type { ReactNode } from "react";
 import { describe, expect, it } from "vitest";
 import { DirectionProvider } from "./DirectionProvider";
 import { Combobox } from "../../organisms/Combobox";
+import { ColorPicker } from "../../organisms/ColorPicker";
+import { Alert } from "../../molecules/Alert";
+import { Breadcrumb } from "../../molecules/Breadcrumb";
+import { Radio } from "../Radio";
+import { RadioGroup } from "../../molecules/RadioGroup";
+import { Tabs } from "../../molecules/Tabs";
 import { ContextMenu } from "../../organisms/ContextMenu";
 import { DatePicker } from "../../organisms/DatePicker";
 import { DateRangePicker } from "../../organisms/DateRangePicker";
@@ -111,6 +117,46 @@ const cases: Case[] = [
   },
   { name: "DatePicker", draw: (dir) => <DatePicker aria-label="Start" dir={dir} />, find: () => screen.getByRole("group"), bare: null },
   { name: "DateRangePicker", draw: (dir) => <DateRangePicker aria-label="Stay" dir={dir} />, find: () => screen.getByRole("group", { name: "Stay" }), bare: null },
+  {
+    name: "Tabs",
+    draw: (dir) => (
+      <Tabs defaultValue="a" dir={dir} data-testid="target">
+        <Tabs.List aria-label="Sections">
+          <Tabs.Trigger value="a">One</Tabs.Trigger>
+        </Tabs.List>
+        <Tabs.Content value="a">Body</Tabs.Content>
+      </Tabs>
+    ),
+    find: () => screen.getByTestId("target"),
+  },
+  {
+    name: "RadioGroup",
+    draw: (dir) => (
+      <RadioGroup aria-label="Size" dir={dir}>
+        <Radio value="a">A</Radio>
+      </RadioGroup>
+    ),
+    find: () => screen.getByRole("radiogroup"),
+  },
+  {
+    name: "ColorPicker",
+    draw: (dir) => <ColorPicker aria-label="Colour" dir={dir} />,
+    find: () => screen.getByRole("group"),
+    bare: null,
+  },
+  { name: "Alert", draw: (dir) => <Alert dir={dir}>Saved</Alert>, find: () => screen.getByText("Saved").closest("[role]") ?? screen.getByText("Saved").parentElement, bare: null },
+  {
+    name: "Breadcrumb",
+    draw: (dir) => (
+      <Breadcrumb dir={dir}>
+        <Breadcrumb.Item>
+          <Breadcrumb.Link href="/">Home</Breadcrumb.Link>
+        </Breadcrumb.Item>
+      </Breadcrumb>
+    ),
+    find: () => screen.getByRole("navigation"),
+    bare: null,
+  },
 ];
 
 describe("components that take a dir read the nearest DirectionProvider", () => {

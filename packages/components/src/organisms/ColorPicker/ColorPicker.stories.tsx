@@ -173,7 +173,7 @@ const meta: Meta<typeof ColorPicker> = {
     dir: {
       control: "select",
       options: ["ltr", "rtl"],
-      description: "Text direction. rtl mirrors the field and the sliders (the arrow keys follow); the saturation and brightness area never mirrors.",
+      description: "Text direction. rtl mirrors the field and the sliders (the arrow keys follow); the saturation and brightness area never mirrors. Left out, the nearest DirectionProvider's; with none, the field takes the page's direction and the panel is left to right.",
       table: { defaultValue: { summary: '"ltr"' } },
     },
     labels: { control: false, description: "Text the component writes itself (accessible names, form messages, announcements); pass a partial object to translate any of it." },

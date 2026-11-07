@@ -14,6 +14,7 @@ import type {
   AccordionTriggerProps,
 } from "./Accordion.types";
 import type { IconSize } from "../../atoms/Icon";
+import { useProvidedDirection } from "../../atoms/DirectionProvider/DirectionProvider";
 
 type AccordionPrimitiveRootProps = ComponentPropsWithoutRef<typeof AccordionPrimitive.Root>;
 
@@ -110,7 +111,7 @@ const AccordionRoot = forwardRef<HTMLDivElement, AccordionProps>((props, ref) =>
     variant = "bordered",
     size = "md",
     orientation = "vertical",
-    dir,
+    dir: dirProp,
     headingLevel = 3,
     className,
     style,
@@ -131,6 +132,8 @@ const AccordionRoot = forwardRef<HTMLDivElement, AccordionProps>((props, ref) =>
     collapsible: _collapsible,
     ...rest
   } = props;
+  const providedDir = useProvidedDirection();
+  const dir = dirProp ?? providedDir;
 
   const hasWarnedCollapsibleUnderMultipleRef = useRef(false);
   if (process.env.NODE_ENV !== "production") {

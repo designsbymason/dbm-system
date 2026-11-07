@@ -6,7 +6,7 @@ import type { ReactElement, ReactNode } from "react";
 import { Icon } from "../../atoms/Icon";
 import styles from "./Select.module.css";
 import type { SelectOptionProps, SelectProps, SelectSize } from "./Select.types";
-import { useDirection } from "../../atoms/DirectionProvider";
+import { useProvidedDirection } from "../../atoms/DirectionProvider/DirectionProvider";
 
 const sizeClass: Record<SelectSize, string | undefined> = {
   xs: styles.sizeXs,
@@ -107,7 +107,8 @@ const SelectRoot = forwardRef<HTMLButtonElement, SelectProps>(
     },
     ref,
   ) => {
-    const dir = useDirection(dirProp);
+    const providedDir = useProvidedDirection();
+    const dir = dirProp ?? providedDir;
     const generatedId = useId();
     const selectId = id ?? generatedId;
     const triggerRef = useRef<HTMLButtonElement>(null);

@@ -139,7 +139,7 @@ const meta: Meta<PlaygroundArgs> = {
     dir: {
       control: false,
       description:
-        "Text direction, passed through to Radix Accordion — flips which physical arrow key moves focus forward versus back in horizontal orientation.",
+        "Text direction, passed through to Radix Accordion — flips which physical arrow key moves focus forward versus back in horizontal orientation. Left out, the nearest DirectionProvider's, then a Radix DirectionProvider's if the app has one, else left-to-right; not read from the page.",
     },
     id: {
       control: false,

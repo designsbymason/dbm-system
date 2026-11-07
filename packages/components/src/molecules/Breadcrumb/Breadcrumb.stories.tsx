@@ -199,7 +199,7 @@ const meta: Meta<PlaygroundArgs> = {
     dir: {
       control: "select",
       options: ["ltr", "rtl"],
-      description: "Text direction, a native attribute passed to the nav: mirrors the trail and flips the chevron.",
+      description: "Text direction, a native attribute passed to the nav: mirrors the trail and flips the chevron. Left out, the nearest DirectionProvider's; with none, inherited from the page.",
     },
     id: {
       control: false,

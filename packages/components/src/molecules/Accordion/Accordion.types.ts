@@ -65,9 +65,7 @@ interface AccordionSharedProps
   /**
    * Text direction, passed through to Radix Accordion — flips which
    * physical arrow key moves focus forward versus back in `"horizontal"`
-   * orientation. When omitted, defers to the nearest Radix
-   * `DirectionProvider` ancestor, if the consuming app has one, falling
-   * back to `"ltr"` otherwise.
+   * orientation. Left out, it follows the nearest `DirectionProvider`, then a Radix `DirectionProvider` if the app has one, else left-to-right; it is not read from the page.
    */
   dir?: "ltr" | "rtl";
   /**

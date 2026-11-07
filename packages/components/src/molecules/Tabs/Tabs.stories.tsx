@@ -140,7 +140,7 @@ const meta: Meta<PlaygroundArgs> = {
       control: "select",
       options: ["ltr", "rtl"],
       description:
-        "Text direction, passed through to Radix Tabs — flips which physical arrow key moves focus forward versus back in a horizontal list.",
+        "Text direction, passed through to Radix Tabs — flips which physical arrow key moves focus forward versus back in a horizontal list. Left out, the nearest DirectionProvider's, then a Radix DirectionProvider's if the app has one, else left-to-right; not read from the page.",
     },
     id: {
       control: false,

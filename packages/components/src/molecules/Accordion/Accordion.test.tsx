@@ -3,6 +3,7 @@ import userEvent from "@testing-library/user-event";
 import { axe } from "jest-axe";
 import { useState } from "react";
 import { describe, expect, it, vi } from "vitest";
+import { DirectionProvider } from "../../atoms/DirectionProvider";
 import { Accordion } from "./Accordion";
 import styles from "./Accordion.module.css";
 
@@ -519,5 +520,39 @@ describe("Accordion", () => {
       </Accordion>,
     );
     expect((await axe(container)).violations).toHaveLength(0);
+  });
+});
+
+describe("Accordion direction", () => {
+  const horizontal = (dir?: "ltr" | "rtl") => (
+    <Accordion type="single" collapsible orientation="horizontal" dir={dir}>
+      <BasicItems />
+      <Accordion.Item value="billing">
+        <Accordion.Trigger>Billing</Accordion.Trigger>
+        <Accordion.Content>Billing content</Accordion.Content>
+      </Accordion.Item>
+    </Accordion>
+  );
+
+  it("moves focus the other way under a DirectionProvider, and its own dir wins", async () => {
+    const user = userEvent.setup();
+    const first = () => screen.getByRole("button", { name: "Shipping" });
+    const second = () => screen.getByRole("button", { name: "Returns" });
+    const { unmount } = render(horizontal());
+    first().focus();
+    await user.keyboard("{ArrowRight}");
+    expect(second()).toHaveFocus();
+    unmount();
+
+    const rtl = render(<DirectionProvider dir="rtl">{horizontal()}</DirectionProvider>);
+    first().focus();
+    await user.keyboard("{ArrowLeft}");
+    expect(second()).toHaveFocus();
+    rtl.unmount();
+
+    render(<DirectionProvider dir="rtl">{horizontal("ltr")}</DirectionProvider>);
+    first().focus();
+    await user.keyboard("{ArrowRight}");
+    expect(second()).toHaveFocus();
   });
 });

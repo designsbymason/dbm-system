@@ -17,7 +17,7 @@ Says which way the app reads, once, near the root. A direction-aware component t
 own uses the nearest provider's direction, so a right-to-left app wraps its root instead of passing `dir` to
 every `Sidebar`, `Navbar` and part. It renders no element and changes no style; the layout itself follows the
 `dir` attribute of the page, which `AppShell` sets for you. Today `AppShell`, `Sidebar`, `Navbar`, `Slider`, `RangeSlider`, `ScrollArea`, `ToggleGroup`, `Stepper`, `Combobox`,
-`MultiSelect`, `Tree`, `CommandPalette`, `Calendar`, `RatingInput`, `Splitter`, `Carousel`, `ImageViewer`, `Tour`, `Toast`, `EditorTabs`, `Toolbar`, `Menubar`, `Menu`, `ContextMenu`, `Select`, `Dialog`, `Drawer`, `DatePicker`, `DateRangePicker` and `DataTable` (and so their portalled panels, which carry the direction themselves) read it; the other direction-aware components still take `dir` on their own and will follow.
+`MultiSelect`, `Tree`, `CommandPalette`, `Calendar`, `RatingInput`, `Splitter`, `Carousel`, `ImageViewer`, `Tour`, `Toast`, `EditorTabs`, `Toolbar`, `Menubar`, `Menu`, `ContextMenu`, `Select`, `Dialog`, `Drawer`, `DatePicker`, `DateRangePicker`, `DataTable`, `Accordion`, `Tabs`, `RadioGroup`, `Alert`, `Breadcrumb` and `ColorPicker` (and so their portalled panels, which carry the direction themselves) read it; every component that takes a `dir` reads it.
 
 ### Import
 
@@ -57,7 +57,8 @@ provider's, else `"ltr"`.
 <Callout tone="success" title="Do">
 
 - Wrap the app once, as high as the direction is known (the user's language setting).
-- Also set `dir` on the page (`<html dir="rtl">`), or use `AppShell`, which sets both.
+- Also set `dir` on the page (`<html dir="rtl">`), or use `AppShell`, which sets both. Setting only the page's `dir` is not enough for a
+  component with a portalled panel or a scrolling body (`Menu`, `Select`, `Dialog`, `Drawer`): they read the provider, not the page.
 - Give a component its own `dir` only for an island that reads the other way.
 
 </Callout>

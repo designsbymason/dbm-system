@@ -44,6 +44,7 @@ import type {
   AlertTone,
   AlertVariant,
 } from "./Alert.types";
+import { useProvidedDirection } from "../../atoms/DirectionProvider/DirectionProvider";
 
 const toneClass: Record<AlertTone, string | undefined> = {
   info: styles.toneInfo,
@@ -269,10 +270,13 @@ const AlertRoot = forwardRef<HTMLDivElement, AlertProps>(
       className,
       onFocus,
       onBlur,
+      dir: dirProp,
       ...props
     },
     ref,
   ) => {
+    const providedDir = useProvidedDirection();
+    const dir = dirProp ?? providedDir;
     const isControlled = openProp !== undefined;
     const [uncontrolledOpen, setUncontrolledOpen] = useState(defaultOpen);
     const open = isControlled ? openProp : uncontrolledOpen;
@@ -366,6 +370,7 @@ const AlertRoot = forwardRef<HTMLDivElement, AlertProps>(
         <div className={styles.inner}>
           <div
             {...props}
+            dir={dir}
             ref={mergeRefs(ref, rootRef)}
             // After `...props`, so a caller's own `role` can't replace the one the tone (or `role`) resolves to.
             role={resolvedRole === "none" ? undefined : resolvedRole}

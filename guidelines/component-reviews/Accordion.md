@@ -369,3 +369,6 @@ easy to miss) and said a real `Card` "isn't built yet". Every story now sets `pa
 the new `Accordion.snippets.ts`; the Playground builds its snippet from the live controls (`type="multiple"` turns the single default value
 into a one-element array, as the demo does). **The Ghost story now uses the real `Card`.** Typechecked against the real types. **Finalized
 status unchanged** — story-file and docs-only, no component code, props, or tokens touched.
+
+## Reads the nearest DirectionProvider (2026-11-06)
+Additive, at explicit direction ([ADR-0177](../adr/0177-an-optional-direction-provider-sets-the-text-direction-for-a-subtree-over-reading-the-page-direction-automatically.md), [ADR-0182](../adr/0182-appshell-grows-a-busy-main-a-whole-page-state-and-a-layer-ladder-and-direction-reaches-the-shell-sidebar-and-navbar-through-a-provider.md)): `dir` left out now follows the nearest `DirectionProvider`; with none, nothing changes (the page's direction, or a Radix `DirectionProvider`, still applies as before). The `dir` JSDoc, the Controls description and the Docs text say so; a test covers it. Finalized status is unchanged.

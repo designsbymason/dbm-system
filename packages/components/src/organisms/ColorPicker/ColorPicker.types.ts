@@ -302,7 +302,8 @@ export interface ColorPickerProps
   autoFocus?: boolean;
   /**
    * Text direction. `"rtl"` mirrors the field and the panel's sliders (the arrow keys follow); the saturation and
-   * brightness area never mirrors, since a color space is not text.
+   * brightness area never mirrors, since a color space is not text. Left out, the nearest `DirectionProvider`'s; with none, the field takes the page's direction and the
+   * panel is left to right.
    * @default 'ltr'
    */
   dir?: "ltr" | "rtl";

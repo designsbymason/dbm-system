@@ -78,11 +78,7 @@ export interface RadioGroupProps
   /**
    * Text direction, passed through to Radix RadioGroup — flips which
    * physical arrow key (`Left`/`Right`) moves focus forward versus back in
-   * `"horizontal"` orientation. When omitted, defers to the nearest Radix
-   * `DirectionProvider` ancestor, if the consuming app has one (a React
-   * context, not the actual browser `document`/`<html dir>` attribute —
-   * Radix never reads that), falling back to `"ltr"` if there's no such
-   * provider either.
+   * `"horizontal"` orientation. Left out, it follows the nearest `DirectionProvider`, then a Radix `DirectionProvider` if the app has one, else left-to-right; it is not read from the page.
    */
   dir?: "ltr" | "rtl";
   /**

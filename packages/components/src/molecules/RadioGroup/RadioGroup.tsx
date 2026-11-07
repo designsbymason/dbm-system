@@ -5,6 +5,7 @@ import * as RadioGroupPrimitive from "@radix-ui/react-radio-group";
 import { forwardRef, useRef } from "react";
 import styles from "./RadioGroup.module.css";
 import type { RadioGroupOrientation, RadioGroupProps } from "./RadioGroup.types";
+import { useProvidedDirection } from "../../atoms/DirectionProvider/DirectionProvider";
 
 const orientationClass: Record<RadioGroupOrientation, string | undefined> = {
   vertical: styles.orientationVertical,
@@ -55,7 +56,7 @@ export const RadioGroup = forwardRef<HTMLDivElement, RadioGroupProps>(
       name,
       form,
       orientation = "vertical",
-      dir,
+      dir: dirProp,
       loop = true,
       id,
       className,
@@ -63,6 +64,8 @@ export const RadioGroup = forwardRef<HTMLDivElement, RadioGroupProps>(
     },
     ref,
   ) => {
+    const providedDir = useProvidedDirection();
+    const dir = dirProp ?? providedDir;
     const hasWarnedNoAccessibleNameRef = useRef(false);
     if (process.env.NODE_ENV !== "production") {
       if (
