@@ -2,9 +2,15 @@
    scrolls sideways inside its own frame instead of overflowing the page —
    responsiveness is built in, not opt-in. `overflow: auto` also makes this
    the scroll container `position: sticky` resolves against for
-   `stickyHeader`, and clips the rounded corners of the bordered variant. */
+   `stickyHeader`, and clips the rounded corners of the bordered variant.
+   It is also the containing block of every absolutely positioned child of the
+   table (a visually hidden column name, whose static position is the table's
+   far edge): without it the child's containing block is outside the frame, so
+   the frame does not clip it and a table wider than the window made the page
+   scroll sideways by one pixel past the table's end. */
 .container {
   overflow: auto;
+  position: relative;
 }
 
 .containerBordered {

@@ -1,0 +1,142 @@
+/* The data-table list page's own layout: the page's rhythm and the toolbar's three columns. Everything else (colours, type, the
+   table, the buttons) is drawn by the components the page is made of. A story-only example, so an app copies this file with
+   the page. Each rule that has to beat a component's own single-class rule is written under `.toolbar` or `.table`, which
+   makes it more specific without an `!important`. */
+
+/* One column that may shrink below its content (`minmax(0, 1fr)`): a grid item is otherwise as wide as its widest content, and
+   the table's 40rem floor would push the whole page wider than the main area instead of scrolling inside its own frame. */
+.page {
+  display: grid;
+  gap: var(--dbm-space-6);
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.heading {
+  display: grid;
+  gap: var(--dbm-space-1);
+}
+
+.headingRow {
+  align-items: flex-start;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--dbm-space-4);
+  justify-content: space-between;
+}
+
+/* The table keeps one height (the toolbar's rows, a page of rows and the pager) whether a page is full, short or still
+   loading, so nothing below it moves. Its columns are fixed shares of the width (`table-layout: fixed`), so a longer value or a
+   sort never moves a column, and it never gets narrower than 40rem: on a phone it scrolls sideways inside its own frame. */
+.table {
+  min-block-size: 38rem;
+}
+
+.table table {
+  min-inline-size: 40rem;
+  table-layout: fixed;
+}
+
+/* The toolbar is three columns: the count on the left (it hugs its text, with a floor as wide as its longest, so it never
+   changes width), the search box in the middle taking all the room that is left, and the filters on the right, 24px between
+   the columns and 16px between the filters. Narrower than 45rem the filters and then the search box take a line each. */
+.toolbar {
+  container-type: inline-size;
+}
+
+.toolbar .row {
+  column-gap: var(--dbm-space-6);
+  row-gap: var(--dbm-space-3);
+}
+
+.toolbar .summary {
+  flex: none;
+  margin-inline-start: 0;
+  min-inline-size: 9.5rem;
+  text-align: start;
+}
+
+.toolbar .search {
+  flex: 1 1 6rem;
+  max-inline-size: none;
+}
+
+.toolbar .filters {
+  flex: none;
+}
+
+/* The gap between the filters is the toolbar element inside the frame (it owns the 4px the Toolbar draws). */
+.toolbar .filters [role="toolbar"] {
+  gap: var(--dbm-space-4);
+}
+
+/* A filter is its name as plain text, then a button of a fixed width that shows only the choice: the choice at the start, the
+   chevron at the end, so choosing something never changes the button's size or moves what is beside it. */
+.filterGroup {
+  align-items: center;
+  display: flex;
+  flex: none;
+  gap: var(--dbm-space-2);
+}
+
+.filterLabel {
+  color: var(--dbm-text-secondary);
+  white-space: nowrap;
+}
+
+.toolbar .filterGroup .filter {
+  flex: none;
+  gap: var(--dbm-space-2);
+  justify-content: space-between;
+  min-inline-size: 0;
+  padding-inline: var(--dbm-space-3);
+  text-align: start;
+}
+
+.panel {
+  display: grid;
+  gap: var(--dbm-space-2);
+  min-inline-size: 11rem;
+}
+
+/* The rows under the toolbar (the chips of the filters in force, and the bulk actions of the chosen rows) keep their place
+   when they have nothing to show: hidden from the page and from assistive technology, but still taking their height, so the
+   table below does not jump down when a filter or a row is chosen. */
+.toolbar .chips,
+.toolbar .bulk {
+  min-block-size: var(--dbm-space-8);
+}
+
+.toolbar .chips[hidden],
+.toolbar .bulk[hidden] {
+  display: flex;
+  visibility: hidden;
+}
+
+@container (max-width: 45rem) {
+  .toolbar .filters {
+    flex: 1 1 100%;
+    order: 2;
+  }
+
+  /* The filters stack, each as wide as the row, so neither is cut off. */
+  .toolbar .filters [role="toolbar"] {
+    align-items: stretch;
+    flex-direction: column;
+    gap: var(--dbm-space-3);
+    inline-size: 100%;
+  }
+
+  .filterGroup {
+    inline-size: 100%;
+  }
+
+  .toolbar .filterGroup .filter {
+    flex: 1 1 auto;
+    inline-size: auto !important;
+  }
+
+  .toolbar .search {
+    flex: 1 1 100%;
+    order: 3;
+  }
+}

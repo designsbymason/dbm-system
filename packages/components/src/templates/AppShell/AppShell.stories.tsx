@@ -210,13 +210,6 @@ export const PageScroll: Story = {
   render: (_args, context) => <DemoShell scroll="page" framed={context.viewMode === "docs"} />,
 };
 
-export const RightToLeft: Story = {
-  name: "Right to left",
-  parameters: { docs: { source: { code: appShellSnippets.rightToLeft } } },
-  argTypes: { ...noControls },
-  render: (_args, context) => <DemoShell dir="rtl" framed={context.viewMode === "docs"} />,
-};
-
 export const WithAside: Story = {
   name: "An aside beside the main area",
   parameters: { docs: { source: { code: appShellSnippets.aside } } },

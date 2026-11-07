@@ -36,7 +36,7 @@ Plain shared code goes to `internal/` at the second consumer too, rather than on
 
 The menu's item parts, its context and its stylesheet are in `internal/menu/`, extracted at the third consumer (`Menubar`, after `Menu` and `ContextMenu`); each of the three draws its own root, trigger and panel and provides the Radix parts its root needs through `MenuPrimitiveContext` ([ADR-0163](adr/0163-the-menu-item-parts-context-and-stylesheet-move-to-internal-menu-at-the-third-consumer-over-menubar-importing-them-from-menu.md)).
 
-`{tier}` is `atoms`, `molecules`, or `organisms` per `04-component-inventory.md`. Compound components (see §4) get one folder containing all their parts, not one folder per sub-part.
+`{tier}` is `atoms`, `molecules`, or `organisms` per `04-component-inventory.md`. A story-only template page is a folder in `templates/` with no `index.ts` and no export, and a story kit that holds the page ([ADR-0184](adr/0184-a-story-only-template-page-is-a-folder-of-stories-and-a-story-kit-in-templates-with-demo-controls-and-no-playground-over-a-shipped-component-or-a-separate-pages-tree.md)). Compound components (see §4) get one folder containing all their parts, not one folder per sub-part.
 
 ## 2. Naming conventions
 

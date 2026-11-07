@@ -1,0 +1,314 @@
+import { Canvas, Meta } from "@storybook/addon-docs/blocks";
+import { Callout, ComponentHeader, PlaygroundControls, ReferenceTable, RelatedCard, TokenRow } from "../../../.storybook/blocks";
+import { Button } from "../../atoms/Button";
+import { Checkbox } from "../../atoms/Checkbox";
+import { VisuallyHidden } from "../../atoms/VisuallyHidden";
+import { Badge } from "../../atoms/Badge";
+import { Pagination } from "../../molecules/Pagination";
+import { SearchInput } from "../../molecules/SearchInput";
+import * as DataTableListPageStories from "./DataTableListPage.stories";
+
+<Meta of={DataTableListPageStories} />
+
+<VisuallyHidden asChild><h2>Intro</h2></VisuallyHidden>
+
+<ComponentHeader title="Data table list page" tier="Template" />
+
+A page that lists records in a table: a people directory with a search box, filters, sorting, paging, chosen
+rows with bulk actions, a menu on each row and a confirmed removal. It is an **example page, not a component**.
+Nothing here is exported from the package: you copy the page into your app and replace the data, the columns
+and the words. What the page shows you is the part that is hard to get right, which is where the state lives
+and how it reaches the table. The search, the filters, the sort, the page, the page size and the chosen rows
+belong to your page; a request answers with one page of rows; and the table is driven entirely through its
+controlled props.
+
+It sits inside an [`AppShell`](/docs/templates-application-shells-appshell--docs), so the sidebar, the header
+and the page's one `<main>` come from the shell. On this page the live examples sit in a framed box 36rem tall;
+open a story from the sidebar on its own, and narrow the window, to see the phone layout.
+
+### Import
+
+```tsx
+import {
+  AppShell, Breadcrumb, Button, ConfirmDialog, DataTable, EmptyState, Heading, IconButton, Menu,
+  SearchInput, TableToolbar, Toast, Toolbar,
+} from "@dbm-system/components";
+```
+
+## Playground
+
+A page has no props to drive. The controls below change what the simulated server answers: how many people it
+holds, how long a request takes and whether it fails. Search, sort, filter, choose rows and remove someone to
+see each state.
+
+<div className="dbm-playground-canvas">
+
+<Canvas of={DataTableListPageStories.Default} />
+
+</div>
+<PlaygroundControls of={DataTableListPageStories.Default} order={["total", "latency", "fail"]} />
+
+## Properties
+
+A page is not a component, so it has no properties table. What it does have is state, and the table that state
+drives. This is what the page holds, and what it hands to `DataTable`.
+
+<ReferenceTable
+  columns={["State", "What it is and what changes it"]}
+  rows={[
+    ["query, statuses, departments", "The filters. Any change goes back to page 1 and drops the selection, since \"the rows I chose\" and \"every row\" meant the old filter."],
+    ["sort", "The ordering, as `DataTable` reports it. A new sort goes back to page 1."],
+    ["page, pageSize", "Which rows to ask for. A new page size goes back to page 1."],
+    ["selection, allSelected", "The ids of the chosen rows, or every row matching the filters (`allSelected`), which lists no ids."],
+    ["rows, matching, loading, error", "What the request answered with: this page's rows, how many people match, whether a request is in flight and whether the last one failed."],
+  ]}
+/>
+
+<ReferenceTable
+  columns={["DataTable prop", "How the page uses it"]}
+  rows={[
+    ["sortMode=\"manual\", sort, onSortChange", "The server sorts, so the table draws the rows as given and reports what was asked for."],
+    ["page, onPageChange, pageSize, onPageSizeChange, pageSizeOptions, totalCount", "The server pages, so the table needs the total to draw the page numbers and the \"1–10 of 137\" range."],
+    ["loading, loadingRows", "Placeholder rows of the table's own height while a request is in flight, so nothing jumps when the rows arrive."],
+    ["selectionMode=\"multiple\", selection, onSelectionChange, allSelected, onAllSelectedChange", "Chosen rows by id, and \"select all 137\" across pages without listing the ids."],
+    ["rowActions", "The menu at the end of each row. Removing asks first."],
+    ["emptyState", "What the table says when there is nothing to show, written differently for \"no one yet\" and \"no one matches\"."],
+  ]}
+/>
+
+## Variants
+
+### With filters in force
+
+Filters show as chips under the toolbar, and the count says how many people match. A chip's remove button, or
+"Clear all", takes them off and goes back to page 1.
+
+<Canvas of={DataTableListPageStories.WithFilters} />
+
+### With rows chosen
+
+The toolbar shows how many rows are chosen, offers to choose every matching row across pages, and holds the
+bulk actions. Removing asks first, says how many, and puts focus on the page's heading afterwards.
+
+<Canvas of={DataTableListPageStories.WithSelection} />
+
+### Loading
+
+The table keeps its height with placeholder rows, and the count says "Loading".
+
+<Canvas of={DataTableListPageStories.Loading} />
+
+### Nothing yet
+
+No one exists and no filter is in force: say what the page is for and offer the first step.
+
+<Canvas of={DataTableListPageStories.NothingYet} />
+
+### No results
+
+A filter is in force and nothing matches. This is a different state from the one above and it offers a different
+step: take the filters off.
+
+<Canvas of={DataTableListPageStories.NoResults} />
+
+### The request failed
+
+The table is replaced by a message and a retry, and the heading stays. The message is announced once. Turn
+"fail" off in the Playground above and press "Try again" to see the list come back.
+
+<Canvas of={DataTableListPageStories.Failed} />
+
+## Usage guidelines
+
+<div className="dbm-do-dont-grid">
+<Callout tone="success" title="Do">
+
+- Hold the filters, the sort, the page and the selection in your own state and give the table `sortMode="manual"`
+  and a `totalCount` when the server does the work. The table never guesses at rows it was not given.
+- Go back to page 1 and clear the selection whenever a filter changes. A page number or a chosen row that belonged to the
+  old filter is wrong for the new one.
+- Say which of the three empty cases you are in: no one yet (offer the first step), no one matching (offer to clear the
+  filters) and a failed request (offer to try again).
+- Ask before removing, say how many people, and name the person when it is one. Say what happened afterwards in a toast.
+- Put focus somewhere sensible when the thing that had it is gone: the page's heading, after a removal.
+- Use `Table`'s own scroll frame for a table that is wider than the window. The page never scrolls sideways.
+
+</Callout>
+<Callout tone="danger" title="Don't">
+
+- Don't copy this page's simulated request. It stands in for your own: a fetch, a router's search parameters or a query
+  library. Keep the page's state and replace where the rows come from.
+- Don't put the whole list in the table when the server holds thousands of people. Page it, as here, or use the
+  table's windowing for a long list that is not paged.
+- Don't hide the selection's size. "Select all 137" means every row matching the filters on every page, and the
+  confirmation has to say 137.
+- Don't use a toast for a failed request. The table has nothing to show, so the page says so, in place.
+- Don't remove straight away from a menu item. A removal that cannot be undone asks first.
+
+</Callout>
+</div>
+
+## Best practices
+
+- Lay the toolbar out in three columns: the count at the start, the search taking the room that is left, and the filters
+  at the end. A filter is its name as plain text, then a button of a fixed width that shows only the choice, so choosing
+  something never changes the button's size or moves what is beside it. Keep the chips' and the bulk actions' rows in
+  place when they are empty, and the table's columns fixed shares of its width, so nothing under the toolbar shifts.
+- Keep the toolbar's search, filters, count and bulk actions inside `DataTable.Toolbar`, and the pager inside
+  `DataTable.Pagination`. The table places them above and below itself and hands them its state, so a count or a
+  "select all" cannot disagree with the table.
+- Give every filter a chip. A person who has set three filters and sees an empty table needs to see why, and to take
+  one off without opening a panel.
+- Reserve the table's space while loading (`loadingRows` equal to the page size), so the pager and the footer do
+  not jump when the rows arrive.
+- Put the page's one `h1` in the main area, at the start. The shell already moves focus to it when the router's page
+  changes (`pageKey`, `pageTitle`); give the heading `tabIndex={-1}` if your page also moves focus to it itself, as this
+  one does after a removal.
+- Give each toolbar its own name (`People table tools`, `Filters`, `Bulk actions`), so a screen reader's list of
+  toolbars tells them apart.
+- Keep the header's primary action (here "Add person") visible on a phone, and let the table scroll sideways inside its
+  own frame rather than hiding columns.
+
+## Accessibility
+
+<Callout tone="info" title="One page, one main, one heading">
+
+The shell supplies the page's one `main`, the `Navbar` the banner and the `Sidebar` a named navigation. The page adds
+one `h1` and no other landmark. The table is named ("People"), the toolbars each have their own name, and the empty
+and error states use `h2`, so the heading order never skips a level.
+
+</Callout>
+
+| Key | Behaviour |
+|---|---|
+| `Tab` | Moves through the header, the sidebar, the page's button, the search, the filters, the table's header buttons, the rows' controls and the pager, in that order. |
+| `Enter` or `Space` on a filter | Opens its panel. `Escape` closes it and returns focus to the button. |
+| `Space` on a row's checkbox | Chooses the row. The toolbar then shows how many are chosen. |
+| `Enter` on a column heading's button | Sorts by it; `Shift`+`Enter` adds it to the sort. |
+| `Enter` on a row's menu button | Opens the menu. `Escape` closes it. |
+| `Escape` in the confirmation | Cancels it and leaves everything as it was. |
+
+- A chosen count, the filters in force and the number of results are announced politely as they change; a failed request is
+  announced once, when it appears. Nothing is announced the first time the page loads.
+- After a removal the row that had focus is gone, and so is the dialog's trigger, so focus goes to the page's heading, but
+  only if it has fallen to the page: a person who has moved on keeps their place.
+- Colour is never the only sign. A row is chosen when its checkbox is checked, a status is its word as well as its
+  badge, and a filter is a chip with a name. In forced colours the same marks remain.
+- The page adds no colour pairing of its own: every colour comes from the components it is built of.
+
+## Code examples
+
+```tsx
+{/* Your own state: the filters, the sort, the page, the selection, and what the request answered with */}
+<DataTable
+  aria-label="People"
+  columns={columns}
+  data={rows}
+  getRowId={(row) => row.id}
+  getRowLabel={(row) => row.name}
+  sortMode="manual"
+  sort={sort}
+  onSortChange={(next) => {
+    setSort(next);
+    setPage(1);
+  }}
+  page={page}
+  onPageChange={setPage}
+  pageSize={pageSize}
+  onPageSizeChange={setPageSize}
+  totalCount={matching}
+  loading={loading}
+  loadingRows={pageSize}
+  selectionMode="multiple"
+  selection={selection}
+  onSelectionChange={setSelection}
+  allSelected={allSelected}
+  onAllSelectedChange={setAllSelected}
+>
+  <DataTable.Toolbar aria-label="People table tools">
+    <TableToolbar.Row>
+      <TableToolbar.Search>
+        <SearchInput aria-label="Search people" onSearch={setQuery} />
+      </TableToolbar.Search>
+      <TableToolbar.Summary count={matching} loading={loading} />
+    </TableToolbar.Row>
+  </DataTable.Toolbar>
+  <DataTable.Pagination />
+</DataTable>
+```
+
+```tsx
+// Choosing every person matching the filters, across pages, and removing them after asking
+<DataTable.Selection>
+  <Toolbar aria-label="Bulk actions" variant="secondary">
+    <Toolbar.Button leadingIcon={TrashIcon} onClick={() => askToRemove(allSelected ? "all" : selection)}>
+      Remove
+    </Toolbar.Button>
+  </Toolbar>
+</DataTable.Selection>
+```
+
+```tsx
+// A native attribute in use: the page's heading takes focus from your own code, so it needs tabIndex
+<Heading level={1} tabIndex={-1} ref={headingRef}>People</Heading>
+```
+
+## Design tokens used
+
+The page is made of components, so almost every colour, size and radius comes from them. What it draws itself is
+spacing between its own pieces.
+
+<TokenRow token="space.1" usage="the gap between the heading and the sentence under it" />
+<TokenRow token="space.2" usage="the gap between a filter's name and its button, and between the checkboxes in its panel" />
+<TokenRow token="space.3" usage="the gap between the toolbar's lines when they wrap; the space inside a filter button at its start and end" />
+<TokenRow token="space.4" usage="the gap between the heading row's heading and its button when they wrap, and between the two filters" />
+<TokenRow token="space.6" usage="the gap between the breadcrumb, the heading row and the table, and between the toolbar's three columns" />
+<TokenRow token="space.8" usage="the height kept for the chips' row and the bulk actions' row while they are empty" />
+<TokenRow token="text.secondary" usage="the name in front of a filter's button" />
+
+## Related components
+
+<div className="dbm-card-grid">
+<RelatedCard
+  name="AppShell"
+  description="The frame the page sits in: the sidebar, the header, the main landmark and the skip link"
+  href="/?path=/docs/templates-application-shells-appshell--docs"
+>
+  <Button variant="secondary" size="sm">Open shell</Button>
+</RelatedCard>
+<RelatedCard
+  name="DataTable"
+  description="The table the page drives: sorting, paging, chosen rows and row actions"
+  href="/?path=/docs/organisms-data-display-datatable--docs"
+>
+  <Checkbox aria-label="Row" defaultChecked />
+</RelatedCard>
+<RelatedCard
+  name="TableToolbar"
+  description="The search, filters, chips, count and bulk actions above the table"
+  href="/?path=/docs/molecules-data-display-tabletoolbar--docs"
+>
+  <SearchInput aria-label="Search" size="sm" />
+</RelatedCard>
+<RelatedCard
+  name="Pagination"
+  description="The page numbers and the range under the table"
+  href="/?path=/docs/molecules-data-display-pagination--docs"
+>
+  <Pagination aria-label="Preview pages" pageCount={5} defaultValue={2} size="sm" />
+</RelatedCard>
+<RelatedCard
+  name="ConfirmDialog"
+  description="Asks before a removal that cannot be undone"
+  href="/?path=/docs/organisms-overlay-confirmdialog--docs"
+>
+  <Button variant="secondary" size="sm">Remove</Button>
+</RelatedCard>
+<RelatedCard
+  name="EmptyState"
+  description="What the table says when there is nothing to show"
+  href="/?path=/docs/molecules-data-display-emptystate--docs"
+>
+  <Badge tone="neutral">No results</Badge>
+</RelatedCard>
+</div>

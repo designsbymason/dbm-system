@@ -851,3 +851,28 @@ export const RowContextMenuWithARealPointer: Story = {
     await expect(target).toHaveAttribute("data-state", "closed");
   },
 };
+
+export const RowActionsHeadingStaysInsideTheScrollFrame: Story = {
+  name: "A table wider than the window with row actions does not make the page scroll sideways — layout test",
+  render: () => (
+    <div style={{ inlineSize: "40rem" }}>
+      <DataTable<Employee>
+        aria-label="Team"
+        columns={employeeColumns.map((column) => ({ ...column, width: undefined, minWidth: "20rem" }))}
+        data={employees.slice(0, 3)}
+        getRowLabel={(row) => row.name}
+        rowActions={(row) => <RowMenu row={row} />}
+      />
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    const table = within(canvasElement).getByRole("table");
+    const frame = table.parentElement as HTMLElement;
+    // The table is far wider than its box and the window, and scrolls inside its own frame.
+    await expect(table.getBoundingClientRect().width).toBeGreaterThan(window.innerWidth);
+    await expect(frame.scrollWidth).toBeGreaterThan(frame.clientWidth);
+    // The visually hidden name of the actions column sits at the table's far edge: it must be clipped by the frame, not hang off the page.
+    await expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(window.innerWidth);
+    await expect(getComputedStyle(frame).position).toBe("relative");
+  },
+};

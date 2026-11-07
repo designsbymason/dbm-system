@@ -477,3 +477,7 @@ caveat is recorded on the prop: a cell that spans columns isn't pinned and moves
 
 `DataTable` shipped, so the JSDoc on `Table` and its `hoverable` prop, and three lines of the Docs page, now say `DataTable` instead of "the future `DataTable`" and
 "when it ships". Wording only: no code, DOM, style or API changed, so by question 1 of the three-question test (`06-engineering-standards.md` §9) the component stays Finalized.
+
+## Defect fix: the scroll frame is the containing block of what is absolutely positioned inside it (2026-11-07, at explicit direction)
+
+Found while building the data-table list page. The visually hidden name of `DataTable`'s row-actions column is an absolutely positioned span at the table's far edge, and with no positioned ancestor its containing block was outside the scroll frame, so the frame did not clip it and a table wider than the window made the page scroll sideways by one pixel past the table's end (a 773px document in a 375px window, and a phone that expands its layout to fit). `.container` now has `position: relative`. A defect fix (question 2 of the three-question test, `06-engineering-standards.md` §9): the component stays Finalized. A real-browser check in `DataTable.checks.stories.tsx` fails without it.
