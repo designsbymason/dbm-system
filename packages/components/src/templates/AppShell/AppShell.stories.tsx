@@ -31,6 +31,63 @@ const meta: Meta<PlaygroundArgs> = {
       description: "How far the header reaches: content stops at the sidebar (a full-height sidebar beside it), full runs across the top over the sidebar, which starts below it.",
       table: { defaultValue: { summary: "'content'" } },
     },
+    sidebarSide: {
+      control: "radio",
+      options: ["start", "end"],
+      description: "Which edge of the page the sidebar column sits against. Set the sidebar's own side to match.",
+      table: { defaultValue: { summary: "'start'" } },
+    },
+    dir: {
+      control: "radio",
+      options: ["ltr", "rtl"],
+      description:
+        "The reading direction of everything inside. The shell sets it on its own element and provides it to the Sidebar, Navbar and everything inside, so none needs a dir of its own. Left out, the nearest DirectionProvider's, else left-to-right; not read from the page.",
+      table: { defaultValue: { summary: "the provider's, else 'ltr'" } },
+    },
+    scrolledEdge: {
+      control: "boolean",
+      description:
+        "Shows a shadow under the header while the content is scrolled down from its top, and a line over the footer while there is more below. Off, neither is drawn.",
+      table: { defaultValue: { summary: "true" } },
+    },
+    collapseBelow: {
+      control: "select",
+      options: ["sm", "md", "lg", "xl", "2xl", "3xl", "never"],
+      description: "The width below which the sidebar leaves the page for a menu button and a panel, or 'never' to keep the column at every width.",
+      table: { defaultValue: { summary: "'md'" } },
+    },
+    railBelow: {
+      control: "select",
+      options: ["sm", "md", "lg", "xl", "2xl", "3xl", "never"],
+      description:
+        "The width below which the shell collapses the sidebar to a rail by itself, between the phone's drawer and the desktop, and expands it again above it. The reader's own toggle holds until the window crosses the step again.",
+      table: { defaultValue: { summary: "'never'" } },
+    },
+    defaultCollapsed: {
+      control: "boolean",
+      description: "Whether the sidebar starts as a rail (uncontrolled).",
+      table: { defaultValue: { summary: "false" } },
+    },
+    collapsed: { control: false, description: "Whether the sidebar is collapsed to a rail of icons (controlled). Pair with onCollapsedChange." },
+    onCollapsedChange: { control: false, description: "Called with the new value when the collapse button is pressed." },
+    defaultMenuOpen: {
+      control: false,
+      description: "Whether the phone panel starts open (uncontrolled).",
+      table: { defaultValue: { summary: "false" } },
+    },
+    menuOpen: { control: false, description: "Whether the phone panel is open (controlled). Pair with onMenuOpenChange." },
+    onMenuOpenChange: { control: false, description: "Called when the phone panel opens or closes, with what caused it." },
+    persistKey: {
+      control: false,
+      description:
+        "Remembers the reader's collapsed state and the sidebar's width in localStorage under this key, and restores them after the page loads. Only the part you leave uncontrolled is stored.",
+    },
+    defaultSidebarWidth: { control: false, description: "The sidebar's width in pixels to start at (uncontrolled), for a sidebar with resizable." },
+    sidebarWidth: { control: false, description: "The sidebar's width in pixels (controlled), for a sidebar with resizable. Pair with onSidebarWidthChange." },
+    onSidebarWidthChange: {
+      control: false,
+      description: "Called with the new width in pixels when the reader resizes the sidebar, and with undefined when they reset it.",
+    },
     showAside: {
       control: "boolean",
       description: "Storybook only — not an AppShell prop. Adds an AppShell.Aside with a detail pane, and the toggle that opens it as a drawer.",
@@ -48,36 +105,12 @@ const meta: Meta<PlaygroundArgs> = {
       description: "What the aside becomes below asideCollapseBelow: a drawer opened from AppShell.AsideToggle, or nothing at all.",
       table: { defaultValue: { summary: "'drawer'" } },
     },
-    railBelow: {
-      control: "select",
-      options: ["sm", "md", "lg", "xl", "2xl", "3xl", "never"],
-      description:
-        "The width below which the shell collapses the sidebar to a rail by itself, between the phone's drawer and the desktop, and expands it again above it. The reader's own toggle holds until the window crosses the step again.",
-      table: { defaultValue: { summary: "'never'" } },
-    },
-    persistKey: {
-      control: false,
-      description:
-        "Remembers the reader's collapsed state and the sidebar's width in localStorage under this key, and restores them after the page loads. Only the part you leave uncontrolled is stored.",
-    },
-    sidebarWidth: { control: false, description: "The sidebar's width in pixels (controlled), for a sidebar with resizable. Pair with onSidebarWidthChange." },
-    defaultSidebarWidth: { control: false, description: "The sidebar's width in pixels to start at (uncontrolled), for a sidebar with resizable." },
-    onSidebarWidthChange: {
-      control: false,
-      description: "Called with the new width in pixels when the reader resizes the sidebar, and with undefined when they reset it.",
-    },
-    scrolledEdge: {
-      control: "boolean",
-      description:
-        "Shows a shadow under the header while the content is scrolled down from its top, and a line over the footer while there is more below. Off, neither is drawn.",
-      table: { defaultValue: { summary: "true" } },
-    },
-    asideOpen: { control: false, description: "Whether the aside's drawer is open (controlled). Pair with onAsideOpenChange." },
     defaultAsideOpen: {
       control: false,
       description: "Whether the aside's drawer starts open (uncontrolled).",
       table: { defaultValue: { summary: "false" } },
     },
+    asideOpen: { control: false, description: "Whether the aside's drawer is open (controlled). Pair with onAsideOpenChange." },
     onAsideOpenChange: { control: false, description: "Called when the aside's drawer opens or closes, with the new value." },
     pageKey: {
       control: false,
@@ -88,46 +121,13 @@ const meta: Meta<PlaygroundArgs> = {
       control: false,
       description: "The new page's title, announced politely to a screen reader when pageKey changes. Left out, the focus still moves and nothing is said.",
     },
-    sidebarSide: {
-      control: "radio",
-      options: ["start", "end"],
-      description: "Which edge of the page the sidebar column sits against. Set the sidebar's own side to match.",
-      table: { defaultValue: { summary: "'start'" } },
-    },
-    dir: {
-      control: "radio",
-      options: ["ltr", "rtl"],
-      description:
-        "The reading direction of everything inside. The shell sets it on its own element and provides it to the Sidebar, Navbar and everything inside, so none needs a dir of its own. Left out, the nearest DirectionProvider's, else left-to-right; not read from the page.",
-      table: { defaultValue: { summary: "the provider's, else 'ltr'" } },
-    },
-    collapseBelow: {
-      control: "select",
-      options: ["sm", "md", "lg", "xl", "2xl", "3xl", "never"],
-      description: "The width below which the sidebar leaves the page for a menu button and a panel, or 'never' to keep the column at every width.",
-      table: { defaultValue: { summary: "'md'" } },
-    },
-    collapsed: { control: false, description: "Whether the sidebar is collapsed to a rail of icons (controlled). Pair with onCollapsedChange." },
-    defaultCollapsed: {
-      control: "boolean",
-      description: "Whether the sidebar starts as a rail (uncontrolled).",
-      table: { defaultValue: { summary: "false" } },
-    },
-    onCollapsedChange: { control: false, description: "Called with the new value when the collapse button is pressed." },
-    menuOpen: { control: false, description: "Whether the phone panel is open (controlled). Pair with onMenuOpenChange." },
-    defaultMenuOpen: {
-      control: false,
-      description: "Whether the phone panel starts open (uncontrolled).",
-      table: { defaultValue: { summary: "false" } },
-    },
-    onMenuOpenChange: { control: false, description: "Called when the phone panel opens or closes, with what caused it." },
     labels: {
       control: false,
       description: "Text the sidebar and its menu button supply themselves, merged over the English defaults. The shell has no text of its own.",
       table: { defaultValue: { summary: "the Sidebar's English labels" } },
     },
-    className: { control: false, description: "Additional CSS classes, on the shell's root." },
     style: { control: false, description: "Inline styles, merged onto the component's own internal styles." },
+    className: { control: false, description: "Additional CSS classes, on the shell's root." },
     id: { control: false, description: "Standard DOM id, on the shell's root." },
     "data-testid": {
       control: false,
@@ -157,15 +157,15 @@ type Story = StoryObj<PlaygroundArgs>;
 const noControls = {
   scroll: { control: false },
   headerSpan: { control: false },
+  sidebarSide: { control: false },
+  dir: { control: false },
+  scrolledEdge: { control: false },
+  collapseBelow: { control: false },
+  railBelow: { control: false },
+  defaultCollapsed: { control: false },
   showAside: { control: false },
   asideCollapseBelow: { control: false },
   asideCollapseTo: { control: false },
-  railBelow: { control: false },
-  scrolledEdge: { control: false },
-  sidebarSide: { control: false },
-  dir: { control: false },
-  collapseBelow: { control: false },
-  defaultCollapsed: { control: false },
 } as const;
 
 /** Drive the shell's props live; the sidebar, navbar and page it is filled with stay fixed. */

@@ -5,7 +5,7 @@ import type { ButtonSize, ButtonTone, ButtonVariant } from "../../atoms/Button";
 import type { ContainerSize } from "../../atoms/Container";
 import type { Direction } from "../../atoms/DirectionProvider";
 import type { HeadingLevel } from "../../atoms/Heading/Heading.types";
-import type { SidebarStateProps } from "../../organisms/Sidebar";
+import type { SidebarCollapseBelow, SidebarLabels, SidebarMenuChangeDetails } from "../../organisms/Sidebar";
 
 /**
  * What scrolls. `content` fits the shell to the height of the window, so the sidebar and the header never move and only `AppShell.Main`
@@ -132,10 +132,9 @@ interface AppShellPartBase {
   "data-testid"?: string;
 }
 
-export interface AppShellProps
-  extends SidebarStateProps,
-    Omit<ComponentPropsWithoutRef<"div">, "dir" | "children">,
-    AppShellPartBase {
+// Every prop is declared here, in the order the Docs read, and not inherited from the sidebar's state props or the parts' shared base: the
+// Controls panel lists a type's inherited props before its own, and the escape-hatch props belong last.
+export interface AppShellProps extends Omit<ComponentPropsWithoutRef<"div">, "dir" | "children"> {
   /**
    * The shell's slots: `AppShell.SkipLink`, `AppShell.Banner`, `AppShell.Header`, `AppShell.Sidebar`, `AppShell.Main` (holding an optional `AppShell.Content`), `AppShell.Aside` and `AppShell.Footer`. The shell places each in its own area, so
    * the markup order does not change the layout, but it is the keyboard's tab order: put `AppShell.Header` first, so the skip link is the
@@ -148,17 +147,77 @@ export interface AppShellProps
    */
   scroll?: AppShellScroll;
   /**
+   * How far the header reaches: `content` stops at the sidebar (a full-height sidebar beside it), `full` runs across the top over the sidebar,
+   * which starts below it.
+   * @default 'content'
+   */
+  headerSpan?: AppShellHeaderSpan;
+  /**
    * Which edge of the page the sidebar column sits against. Set the sidebar's own `side` to match, so its line and its phone panel are on the
    * same edge.
    * @default 'start'
    */
   sidebarSide?: AppShellSidebarSide;
   /**
-   * How far the header reaches: `content` stops at the sidebar (a full-height sidebar beside it), `full` runs across the top over the sidebar,
-   * which starts below it.
-   * @default 'content'
+   * The reading direction of everything inside. The shell sets it on its own element (so logical CSS follows it) and provides it to everything
+   * inside through a `DirectionProvider`, so a `Sidebar`, a `Navbar` and the parts they hold follow it without a `dir` of their own. Left out, it
+   * is the nearest `DirectionProvider`'s direction, else left to right. Every component that takes a `dir` reads the provider, so one
+   * outside the shell's slots (in a portal of your own, say) is the only kind that still needs a `dir` of its own.
+   * @default 'ltr'
    */
-  headerSpan?: AppShellHeaderSpan;
+  dir?: AppShellDirection;
+  /**
+   * Shows a shadow under the header while the content is scrolled down from its top, and over the footer while there is more below, so
+   * the reader can see that the page continues. A line is always drawn between them and the content. Off, the shadows are not drawn.
+   * @default true
+   */
+  scrolledEdge?: boolean;
+  /**
+   * The width below which the sidebar leaves the page for a menu button and a panel (see `SidebarCollapseBelow`).
+   * @default 'md'
+   */
+  collapseBelow?: SidebarCollapseBelow;
+  /**
+   * The width below which the shell collapses the sidebar to a rail of icons by itself, between the phone's drawer (`collapseBelow`) and the
+   * desktop: a breakpoint step, or `"never"` to leave it to the reader. Above the step it expands the sidebar again. The reader's own toggle
+   * still works anywhere and holds until the window crosses the step again. Changes the sidebar's collapsed state only, so `collapsed` and
+   * `onCollapsedChange` report it like any other change.
+   * @default 'never'
+   */
+  railBelow?: AppShellRailBelow;
+  /**
+   * Whether the sidebar starts as a rail of icons (uncontrolled).
+   * @default false
+   */
+  defaultCollapsed?: boolean;
+  /** Whether the sidebar is collapsed to a rail of icons (controlled). Pair with `onCollapsedChange`. The phone panel is never a rail. */
+  collapsed?: boolean;
+  /** Called with the new value when the collapse button is pressed, `setCollapsed` is called, or `railBelow` changes it. */
+  onCollapsedChange?: (collapsed: boolean) => void;
+  /**
+   * Whether the phone panel starts open (uncontrolled).
+   * @default false
+   */
+  defaultMenuOpen?: boolean;
+  /** Whether the phone panel is open (controlled). Pair with `onMenuOpenChange`. */
+  menuOpen?: boolean;
+  /** Called when the phone panel opens or closes, with what caused it. */
+  onMenuOpenChange?: (open: boolean, details: SidebarMenuChangeDetails) => void;
+  /**
+   * Remembers the reader's layout, the collapsed state and the sidebar's width, in `localStorage` under this key, and restores it after the
+   * page loads. Only the part you leave uncontrolled is stored (a `collapsed` or `sidebarWidth` you pass is yours to keep). The saved layout
+   * is applied once the page is on screen, so a server render and the first client render agree. Storage that is unavailable is ignored.
+   */
+  persistKey?: string;
+  /** The sidebar's width in pixels to start at (uncontrolled), for a sidebar with `resizable`. */
+  defaultSidebarWidth?: number;
+  /**
+   * The sidebar's width in pixels (controlled), for a sidebar with `resizable`. Pair with `onSidebarWidthChange`. `undefined` leaves the
+   * sidebar at its own width.
+   */
+  sidebarWidth?: number;
+  /** Called with the new width in pixels when the reader resizes the sidebar, and with `undefined` when they reset it. */
+  onSidebarWidthChange?: (width: number | undefined) => void;
   /**
    * The width below which `AppShell.Aside` leaves the page: a breakpoint step, or `"never"` to keep it on the page at every width. The
    * `AppShell.AsideToggle` button shows below the same width.
@@ -170,13 +229,13 @@ export interface AppShellProps
    * @default 'drawer'
    */
   asideCollapseTo?: AppShellAsideCollapseTo;
-  /** Whether the aside's drawer is open (controlled). Pair with `onAsideOpenChange`. */
-  asideOpen?: boolean;
   /**
    * Whether the aside's drawer starts open (uncontrolled).
    * @default false
    */
   defaultAsideOpen?: boolean;
+  /** Whether the aside's drawer is open (controlled). Pair with `onAsideOpenChange`. */
+  asideOpen?: boolean;
   /** Called when the aside's drawer opens or closes, with the new value. */
   onAsideOpenChange?: (open: boolean) => void;
   /**
@@ -189,43 +248,19 @@ export interface AppShellProps
    * The new page's title, announced politely to a screen reader when `pageKey` changes. Left out, the focus still moves and nothing is said.
    */
   pageTitle?: string;
+  /** Text the sidebar and its menu button supply themselves, such as the collapse button's name. Merged over the English defaults. The shell has no text of its own. */
+  labels?: Partial<SidebarLabels>;
+  /** Inline styles, merged onto the component's own internal styles. */
+  style?: CSSProperties;
+  /** Additional CSS classes for customization. */
+  className?: string;
+  /** Standard DOM id. */
+  id?: string;
   /**
-   * The width below which the shell collapses the sidebar to a rail of icons by itself, between the phone's drawer (`collapseBelow`) and the
-   * desktop: a breakpoint step, or `"never"` to leave it to the reader. Above the step it expands the sidebar again. The reader's own toggle
-   * still works anywhere and holds until the window crosses the step again. Changes the sidebar's collapsed state only, so `collapsed` and
-   * `onCollapsedChange` report it like any other change.
-   * @default 'never'
+   * Test identifier for automated testing (e.g. Testing Library's `getByTestId`, Playwright/Cypress selectors).
+   * Rendered as the DOM `data-testid` attribute; has no visual or behavioral effect.
    */
-  railBelow?: AppShellRailBelow;
-  /**
-   * Remembers the reader's layout, the collapsed state and the sidebar's width, in `localStorage` under this key, and restores it after the
-   * page loads. Only the part you leave uncontrolled is stored (a `collapsed` or `sidebarWidth` you pass is yours to keep). The saved layout
-   * is applied once the page is on screen, so a server render and the first client render agree. Storage that is unavailable is ignored.
-   */
-  persistKey?: string;
-  /**
-   * The sidebar's width in pixels (controlled), for a sidebar with `resizable`. Pair with `onSidebarWidthChange`. `undefined` leaves the
-   * sidebar at its own width.
-   */
-  sidebarWidth?: number;
-  /** The sidebar's width in pixels to start at (uncontrolled), for a sidebar with `resizable`. */
-  defaultSidebarWidth?: number;
-  /** Called with the new width in pixels when the reader resizes the sidebar, and with `undefined` when they reset it. */
-  onSidebarWidthChange?: (width: number | undefined) => void;
-  /**
-   * Shows a shadow under the header while the content is scrolled down from its top, and over the footer while there is more below, so
-   * the reader can see that the page continues. A line is always drawn between them and the content. Off, the shadows are not drawn.
-   * @default true
-   */
-  scrolledEdge?: boolean;
-  /**
-   * The reading direction of everything inside. The shell sets it on its own element (so logical CSS follows it) and provides it to everything
-   * inside through a `DirectionProvider`, so a `Sidebar`, a `Navbar` and the parts they hold follow it without a `dir` of their own. Left out, it
-   * is the nearest `DirectionProvider`'s direction, else left to right. Every component that takes a `dir` reads the provider, so one
-   * outside the shell's slots (in a portal of your own, say) is the only kind that still needs a `dir` of its own.
-   * @default 'ltr'
-   */
-  dir?: AppShellDirection;
+  "data-testid"?: string;
 }
 
 export interface AppShellSidebarProps extends Omit<ComponentPropsWithoutRef<"div">, "children">, AppShellPartBase {
