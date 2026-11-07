@@ -58,3 +58,6 @@ The §9 pass (`/review-component DateRangePicker`) found five things, all docume
 Checks: `pnpm lint` clean; unit project 188 files, 10,345 tests; Chromium Storybook project 285 files, 2,208 tests; `check-guidelines` 0 warnings.
 
 **Not run at this pass:** a screen-reader pass, a real phone and finger, Windows high-contrast mode, Firefox and Safari, the live "Show code" read on the Docs page, purple dark and a tablet width by eye. Finalized by the maintainer after this pass.
+
+## Reads the nearest DirectionProvider (2026-11-06)
+Additive, at explicit direction ([ADR-0177](../adr/0177-an-optional-direction-provider-sets-the-text-direction-for-a-subtree-over-reading-the-page-direction-automatically.md), [ADR-0182](../adr/0182-appshell-grows-a-busy-main-a-whole-page-state-and-a-layer-ladder-and-direction-reaches-the-shell-sidebar-and-navbar-through-a-provider.md)): `dir` left out now follows the nearest `DirectionProvider`; with none, nothing changes. The `dir` JSDoc, the Controls description and the Docs text say so; a unit test and a real-browser check (`DirectionProvider.checks.stories.tsx`) set the direction only with a provider. Finalized status is unchanged.

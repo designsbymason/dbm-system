@@ -19,6 +19,7 @@ import { DateRangePickerPanel } from "./DateRangePickerPanel";
 import type { RangePresetChoice } from "./DateRangePickerPanel";
 import { laterOf, rangeProblem, wholeNumber } from "./dateRangeValue";
 import type { RangeRules } from "./dateRangeValue";
+import { useProvidedDirection } from "../../atoms/DirectionProvider/DirectionProvider";
 
 const defaultLabels = (formatNumber: (value: number) => string): DateRangePickerLabels => ({
   start: "Start date",
@@ -127,7 +128,7 @@ export const DateRangePicker = forwardRef<HTMLDivElement, DateRangePickerProps>(
       name,
       form,
       autoFocus = false,
-      dir,
+      dir: dirProp,
       labels: labelOverrides,
       formatNumber = String,
       id,
@@ -142,6 +143,8 @@ export const DateRangePicker = forwardRef<HTMLDivElement, DateRangePickerProps>(
     },
     ref,
   ) => {
+    const providedDir = useProvidedDirection();
+    const dir = dirProp ?? providedDir;
     const labels = mergeDefined(defaultLabels(formatNumber), labelOverrides);
     const granularity: "day" | "month" = granularityProp === "month" ? "month" : "day";
     const byMonth = granularity === "month";

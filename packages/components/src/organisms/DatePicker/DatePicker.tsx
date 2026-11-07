@@ -27,6 +27,7 @@ import { DatePickerPanel } from "./DatePickerPanel";
 import type { PresetChoice } from "./DatePickerPanel";
 import { reasonOf } from "./datePickerReason";
 import { useDatePickerValue } from "./useDatePickerValue";
+import { useProvidedDirection } from "../../atoms/DirectionProvider/DirectionProvider";
 
 const defaultLabels: DatePickerLabels = {
   day: "Day",
@@ -145,7 +146,7 @@ export const DatePicker = forwardRef<HTMLDivElement, DatePickerProps>(
       name,
       form,
       autoFocus = false,
-      dir,
+      dir: dirProp,
       labels: labelOverrides,
       formatNumber = String,
       id,
@@ -159,6 +160,8 @@ export const DatePicker = forwardRef<HTMLDivElement, DatePickerProps>(
     },
     ref,
   ) => {
+    const providedDir = useProvidedDirection();
+    const dir = dirProp ?? providedDir;
     const labels = mergeDefined(defaultLabels, labelOverrides);
     const granularity = granularityProp === "month" ? "month" : "day";
     const byMonth = granularity === "month";

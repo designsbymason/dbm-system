@@ -111,7 +111,7 @@ const meta: Meta<typeof Select> = {
     dir: {
       control: "select",
       options: ["ltr", "rtl"],
-      description: "Text direction, passed through to Radix Select.",
+      description: "Text direction, passed through to Radix Select. Left out, the nearest DirectionProvider's, else left-to-right; not read from the page.",
     },
     form: {
       control: "text",

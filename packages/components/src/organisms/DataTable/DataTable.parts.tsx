@@ -17,6 +17,7 @@ import type {
   DataTableToolbarProps,
 } from "./DataTable.types";
 import { rangeOf } from "./DataTable.page";
+import { useDirection } from "../../atoms/DirectionProvider";
 
 // Each number is wrapped in a bidirectional isolate (U+2068 … U+2069): in a script with right-to-left digits the dash between two
 // numbers joins their run and a left-to-right page reads "1–10" as "10-1" (`05-component-api-conventions.md` §3).
@@ -98,7 +99,7 @@ const DataTablePagination = forwardRef<HTMLDivElement, DataTablePaginationProps>
       labels: labelOverrides,
       paginationLabels,
       formatNumber = String,
-      dir = "ltr",
+      dir: dirProp,
       size = "sm",
       className,
       style,
@@ -108,6 +109,7 @@ const DataTablePagination = forwardRef<HTMLDivElement, DataTablePaginationProps>
     },
     ref,
   ) => {
+    const dir = useDirection(dirProp);
     const table = useContext(DataTableContext);
     if (!table) throw new Error("DataTable.Pagination must be used inside a DataTable, as one of its children.");
     const labels = mergeDefined(makePaginationLabels(formatNumber), labelOverrides);
@@ -185,9 +187,10 @@ const columnMenuLabels: DataTableColumnMenuLabels = {
  */
 const DataTableColumnMenu = forwardRef<HTMLButtonElement, DataTableColumnMenuProps>(
   (
-    { variant = "secondary", size = "md", icon = ColumnsIcon, align = "end", dir = "ltr", labels: labelOverrides, className, style, id, "data-testid": dataTestId },
+    { variant = "secondary", size = "md", icon = ColumnsIcon, align = "end", dir: dirProp, labels: labelOverrides, className, style, id, "data-testid": dataTestId },
     ref,
   ) => {
+    const dir = useDirection(dirProp);
     const table = useDataTable();
     const labels = mergeDefined(columnMenuLabels, labelOverrides);
     const shown = table.columns.filter((column) => !table.hiddenColumns.includes(column.id));

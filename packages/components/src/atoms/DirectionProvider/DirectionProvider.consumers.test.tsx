@@ -3,6 +3,11 @@ import type { ReactNode } from "react";
 import { describe, expect, it } from "vitest";
 import { DirectionProvider } from "./DirectionProvider";
 import { Combobox } from "../../organisms/Combobox";
+import { ContextMenu } from "../../organisms/ContextMenu";
+import { DatePicker } from "../../organisms/DatePicker";
+import { DateRangePicker } from "../../organisms/DateRangePicker";
+import { Menu } from "../../organisms/Menu";
+import { Select } from "../../molecules/Select";
 import { CommandPalette } from "../../organisms/CommandPalette";
 import { MultiSelect } from "../../organisms/MultiSelect";
 import { Basic } from "../../organisms/Stepper/stepperTestKit";
@@ -20,6 +25,8 @@ interface Case {
   /** Renders the component and returns the element that carries its `dir`. */
   draw: (dir: Dir) => ReactNode;
   find: () => Element | null;
+  /** The `dir` attribute without a provider or a `dir` of its own. `null` for a part that leaves the attribute off, and so inherits the page's direction. */
+  bare?: "ltr" | null;
 }
 
 const options = [
@@ -69,12 +76,48 @@ const cases: Case[] = [
     draw: (dir) => <CommandPalette defaultOpen dir={dir} commands={[{ value: "x", label: "Do x" }]} />,
     find: () => screen.getByRole("dialog"),
   },
+  {
+    name: "Menu",
+    draw: (dir) => (
+      <Menu defaultOpen modal={false} dir={dir}>
+        <Menu.Trigger>Open</Menu.Trigger>
+        <Menu.Content>
+          <Menu.Item>Rename</Menu.Item>
+        </Menu.Content>
+      </Menu>
+    ),
+    find: () => screen.getByRole("menu"),
+  },
+  {
+    name: "ContextMenu",
+    draw: (dir) => (
+      <ContextMenu defaultOpen modal={false} dir={dir}>
+        <ContextMenu.Trigger>Area</ContextMenu.Trigger>
+        <ContextMenu.Content>
+          <ContextMenu.Item>Rename</ContextMenu.Item>
+        </ContextMenu.Content>
+      </ContextMenu>
+    ),
+    find: () => screen.getByRole("menu"),
+  },
+  {
+    name: "Select",
+    draw: (dir) => (
+      <Select aria-label="Variant" dir={dir} defaultValue="a">
+        <Select.Option value="a">Alpha</Select.Option>
+      </Select>
+    ),
+    find: () => screen.getByRole("combobox"),
+  },
+  { name: "DatePicker", draw: (dir) => <DatePicker aria-label="Start" dir={dir} />, find: () => screen.getByRole("group"), bare: null },
+  { name: "DateRangePicker", draw: (dir) => <DateRangePicker aria-label="Stay" dir={dir} />, find: () => screen.getByRole("group", { name: "Stay" }), bare: null },
 ];
 
 describe("components that take a dir read the nearest DirectionProvider", () => {
-  it.each(cases)("$name: follows the provider, else left to right, and its own dir wins", ({ draw, find }) => {
+  it.each(cases)("$name: follows the provider, else left to right, and its own dir wins", ({ draw, find, bare: bareDir = "ltr" }) => {
     const bare = render(draw(undefined));
-    expect(find()).toHaveAttribute("dir", "ltr");
+    if (bareDir === null) expect(find()).not.toHaveAttribute("dir");
+    else expect(find()).toHaveAttribute("dir", bareDir);
     bare.unmount();
 
     const provided = render(<DirectionProvider dir="rtl">{draw(undefined)}</DirectionProvider>);

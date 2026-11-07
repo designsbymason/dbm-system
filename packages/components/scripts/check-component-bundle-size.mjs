@@ -101,7 +101,10 @@ const PER_COMPONENT_CSS_BUDGET_KB = 5;
 //   (the `Sidebar` is 21.87KB of JS and 10.12KB of CSS on its own), the `EmptyState`, `ProgressBar` and `Stat` of its busy bar and states, and
 //   the rail, resize, remembered-layout, banner and measuring code of its own: 27.10KB of JS and 12.30KB of CSS measured against the defaults
 //   of 10KB and 5KB. The budgets are 29KB and 13KB, a little above the `Sidebar`'s plus the shell's own code.
-const JS_BUDGET_OVERRIDES_KB = { AppShell: 29, Calendar: 12, ColorPicker: 15, CommandPalette: 18, DataTable: 32, DatePicker: 18, DateRangePicker: 22, EditorTabs: 16, FileUpload: 14, ImageViewer: 13, Menubar: 12, MultiSelect: 18, Navbar: 22, Sidebar: 22, TimeRangePicker: 12, Toolbar: 13, Tour: 16 };
+//   Carousel and ConfirmDialog (2026-11-06): each reads the nearest `DirectionProvider` for its `dir` (Carousel directly, ConfirmDialog through the
+//   `Dialog` body's `ScrollArea`), which adds the provider's context, about 0.2KB, and took both a hair over the default 10KB (10.00KB measured). The
+//   budget is 11KB for each.
+const JS_BUDGET_OVERRIDES_KB = { AppShell: 29, Calendar: 12, Carousel: 11, ConfirmDialog: 11, ColorPicker: 15, CommandPalette: 18, DataTable: 32, DatePicker: 18, DateRangePicker: 22, EditorTabs: 16, FileUpload: 14, ImageViewer: 13, Menubar: 12, MultiSelect: 18, Navbar: 22, Sidebar: 22, TimeRangePicker: 12, Toolbar: 13, Tour: 16 };
 
 // `EditorTabs`'s bundle holds `Tabs`, the `Menu` and `ContextMenu` its tab list and per-tab menus open, the `IconButton` and `Tooltip` of its
 // add button and tabs, the `Spinner`, and `useSortable`: 12.21KB measured first, 14.49KB with the tab menu, status, tooltips, shortcuts and the vertical strip,

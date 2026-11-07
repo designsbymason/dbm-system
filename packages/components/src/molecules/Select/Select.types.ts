@@ -63,7 +63,7 @@ export interface SelectProps
   defaultOpen?: boolean;
   /** Called whenever the dropdown opens or closes. */
   onOpenChange?: (open: boolean) => void;
-  /** Text direction, passed through to Radix Select. */
+  /** Text direction, passed through to Radix Select. Left out, the nearest `DirectionProvider`'s, else left-to-right. */
   dir?: "ltr" | "rtl";
   /** Associates the field with a `<form>` by id, for use outside one. */
   form?: string;

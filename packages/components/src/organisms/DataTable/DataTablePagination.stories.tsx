@@ -11,7 +11,7 @@ const meta: Meta<typeof DataTable.Pagination> = {
   argTypes: {
     showSummary: { control: false, description: "Shows \"1–10 of 47\" beside the page numbers.", table: { defaultValue: { summary: "true" } } },
     showPageSize: { control: false, description: "Shows a select for how many rows a page, from the table's pageSizeOptions.", table: { defaultValue: { summary: "true" } } },
-    dir: { control: false, description: "The direction of the page size select, which opens a Radix list that doesn't read the page's: pass rtl on a right-to-left page.", table: { defaultValue: { summary: "ltr" } } },
+    dir: { control: false, description: "The direction of the page size select, which opens a Radix list that doesn't read the page's. Left out, the nearest DirectionProvider's, else left-to-right.", table: { defaultValue: { summary: "ltr" } } },
     size: { control: false, description: "The size of the page controls and the page size select.", table: { defaultValue: { summary: "sm" } } },
     variant: { control: false, description: "The treatment of the page controls: ghost, outlined or filled.", table: { defaultValue: { summary: "ghost" } } },
     showLabel: { control: false, description: "Shows the words \"Previous\" and \"Next\" on the previous and next buttons, beside their arrows.", table: { defaultValue: { summary: "false" } } },

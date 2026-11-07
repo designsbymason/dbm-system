@@ -307,7 +307,8 @@ export interface DateRangePickerProps extends Omit<ComponentPropsWithoutRef<"div
   /** Associates the hidden form inputs with a `<form>` by id, when this is not inside it. */
   form?: string;
   /**
-   * Text direction of the calendar and the buttons. The segments are always drawn left to right.
+   * Text direction of the calendar and the buttons. Left out, the nearest `DirectionProvider`'s; with none, the buttons take the page's
+   * direction and the calendar is left to right. The segments are always drawn left to right.
    * @default 'ltr'
    */
   dir?: "ltr" | "rtl";

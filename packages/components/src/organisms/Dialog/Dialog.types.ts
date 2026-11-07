@@ -318,8 +318,8 @@ export interface DialogBodyProps extends ComponentPropsWithoutRef<"div"> {
   /** The main content. It scrolls inside the panel while the header and footer stay put. */
   children?: ReactNode;
   /**
-   * Text direction of the scroll region, which decides the side the scrollbar sits on. Defaults to left-to-right,
-   * like every Radix-based component here; pass `"rtl"` in a right-to-left app.
+   * Text direction of the scroll region, which decides the side the scrollbar sits on. Left out, it follows the
+   * nearest `DirectionProvider`, else left-to-right.
    * @default 'ltr'
    */
   dir?: "ltr" | "rtl";

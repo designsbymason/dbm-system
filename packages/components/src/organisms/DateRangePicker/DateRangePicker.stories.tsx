@@ -229,7 +229,7 @@ const meta: Meta<typeof DateRangePicker> = {
     dir: {
       control: "select",
       options: ["ltr", "rtl"],
-      description: "Text direction of the calendar and the buttons. The segments are always drawn left to right.",
+      description: "Text direction of the calendar and the buttons. Left out, the nearest DirectionProvider's; with none, the buttons take the page's direction and the calendar is left to right. The segments are always drawn left to right.",
       table: { defaultValue: { summary: '"ltr"' } },
     },
     labels: {

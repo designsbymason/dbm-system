@@ -28,6 +28,7 @@ import type {
   ContextMenuProps,
   ContextMenuTriggerProps,
 } from "./ContextMenu.types";
+import { useDirection } from "../../atoms/DirectionProvider";
 
 // Radix ContextMenu's item, group and submenu parts, which the shared parts draw with inside a `ContextMenu`'s panel.
 const primitiveKit: MenuPrimitiveKit = ContextMenuPrimitive;
@@ -78,11 +79,12 @@ function ContextMenuRoot({
   onOpenChange,
   onOpenChangeComplete,
   modal = true,
-  dir = "ltr",
+  dir: dirProp,
   presentation = "menu",
   labels: labelOverrides,
   controllerRef,
 }: ContextMenuProps) {
+  const dir = useDirection(dirProp);
   const [isOpen, setOpen] = useControllableState(open, defaultOpen, onOpenChange);
   const sheet = useResolvedResponsiveValue(presentation, "menu") === "sheet";
   const labels = useMemo(() => mergeDefined(DEFAULT_MENU_LABELS, labelOverrides), [labelOverrides]);

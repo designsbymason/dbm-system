@@ -38,6 +38,7 @@ import {
   MenuSizeContext,
   useControllableState,
 } from "../../internal/menu/MenuContext";
+import { useDirection } from "../../atoms/DirectionProvider";
 
 /**
  * A floating list of actions opened from a trigger, built on Radix DropdownMenu: the arrow keys, typeahead,
@@ -77,10 +78,11 @@ function MenuRoot({
   onOpenChange,
   onOpenChangeComplete,
   modal = true,
-  dir = "ltr",
+  dir: dirProp,
   presentation = "menu",
   labels: labelOverrides,
 }: MenuProps) {
+  const dir = useDirection(dirProp);
   const [isOpen, setOpen] = useControllableState(open, defaultOpen, onOpenChange);
   // Which presentation applies is a width question, answered in JS since it chooses what is drawn, not only how.
   const sheet = useResolvedResponsiveValue(presentation, "menu") === "sheet";

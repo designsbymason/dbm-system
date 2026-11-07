@@ -36,3 +36,13 @@ export function useDirection(own?: Direction): Direction {
   const provided = useContext(DirectionContext);
   return own ?? provided ?? "ltr";
 }
+
+/**
+ * The nearest provider's direction, or `undefined` when there is none. For internal parts that leave the `dir` attribute off (and so inherit the
+ * page's direction) unless an app has said otherwise. Not exported from the package: components use `useDirection`.
+ *
+ * @internal
+ */
+export function useProvidedDirection(): Direction | undefined {
+  return useContext(DirectionContext);
+}

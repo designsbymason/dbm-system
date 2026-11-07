@@ -468,8 +468,8 @@ export interface DataTablePaginationProps
    */
   showPageSize?: boolean;
   /**
-   * The direction of the page size select, which opens a Radix list that doesn't read the page's: pass `"rtl"` on a right-to-left
-   * page. The rest of the footer follows the page's own direction.
+   * The direction of the page size select, which opens a Radix list that doesn't read the page's. Left out, the nearest
+   * `DirectionProvider`'s, else left-to-right. The rest of the footer follows the page's own direction.
    * @default 'ltr'
    */
   dir?: "ltr" | "rtl";
@@ -517,7 +517,8 @@ export interface DataTableColumnMenuProps {
    */
   align?: "start" | "center" | "end";
   /**
-   * The direction of the menu, which is a Radix list that doesn't read the page's: pass `"rtl"` on a right-to-left page.
+   * The direction of the menu, which is a Radix list that doesn't read the page's. Left out, the nearest `DirectionProvider`'s, else
+   * left-to-right.
    * @default 'ltr'
    */
   dir?: "ltr" | "rtl";

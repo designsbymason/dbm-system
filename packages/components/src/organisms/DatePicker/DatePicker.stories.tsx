@@ -219,7 +219,7 @@ const meta: Meta<typeof DatePicker> = {
       control: "select",
       options: ["ltr", "rtl"],
       description:
-        "Text direction of the calendar and the field's buttons. The segments are always drawn left to right, since a date's numbers read in the order its format gives.",
+        "Text direction of the calendar and the field's buttons. Left out, the nearest DirectionProvider's; with none, the buttons take the page's direction and the calendar is left to right. The segments are always drawn left to right, since a date's numbers read in the order its format gives.",
       table: { defaultValue: { summary: '"ltr"' } },
     },
     labels: {

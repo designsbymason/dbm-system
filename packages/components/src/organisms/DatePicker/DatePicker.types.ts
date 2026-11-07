@@ -296,7 +296,8 @@ export interface DatePickerProps
   /** Associates the hidden form input with a `<form>` by id, when this is not inside it. */
   form?: string;
   /**
-   * Text direction of the calendar and the field's buttons. The segments are always drawn left to right,
+   * Text direction of the calendar and the field's buttons. Left out, the nearest `DirectionProvider`'s; with none, the field's
+   * buttons take the page's direction and the calendar is left to right. The segments are always drawn left to right,
    * whatever the page, since a date's numbers read in the order its format gives.
    * @default 'ltr'
    */

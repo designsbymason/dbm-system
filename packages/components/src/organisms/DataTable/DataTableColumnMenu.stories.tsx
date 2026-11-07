@@ -13,7 +13,7 @@ const meta: Meta<typeof DataTable.ColumnMenu> = {
     size: { control: false, description: "The button's size, on the shared scale. Say the same size as the toolbar's other controls.", table: { defaultValue: { summary: "md" } } },
     icon: { control: false, description: "The icon before the button's text, as a component reference. Pass null for none.", table: { defaultValue: { summary: "ColumnsIcon" } } },
     align: { control: false, description: "Where the menu lines up with the button.", table: { defaultValue: { summary: "end" } } },
-    dir: { control: false, description: "The direction of the menu, which doesn't read the page's: pass rtl on a right-to-left page.", table: { defaultValue: { summary: "ltr" } } },
+    dir: { control: false, description: "The direction of the menu, which doesn't read the page's. Left out, the nearest DirectionProvider's, else left-to-right.", table: { defaultValue: { summary: "ltr" } } },
     labels: { control: false, description: "Text written for the menu, replacing the English defaults one by one." },
     id: { control: false, description: "Standard DOM id, applied to the button." },
     className: { control: false, description: "Additional CSS classes for the button." },

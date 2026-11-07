@@ -8,6 +8,7 @@ import styles from "./DataTable.module.css";
 import { useDataTable } from "./DataTable.context";
 import type { DataTableColumn, DataTableProps, DataTableSort } from "./DataTable.types";
 import { TableToolbar } from "../../molecules/TableToolbar";
+import { DirectionProvider } from "../../atoms/DirectionProvider";
 
 afterEach(() => vi.restoreAllMocks());
 
@@ -561,6 +562,17 @@ describe("DataTable", () => {
       expect(screen.getByRole("combobox", { name: "Rows per page" })).toHaveAttribute("dir", "rtl");
     });
 
+    it("gives the page size select a DirectionProvider's direction", () => {
+      render(
+        <DirectionProvider dir="rtl">
+          <DataTable<Person> columns={columns} data={people} aria-label="People" defaultPageSize={2}>
+            <DataTable.Pagination compact="never" />
+          </DataTable>
+        </DirectionProvider>,
+      );
+      expect(screen.getByRole("combobox", { name: "Rows per page" })).toHaveAttribute("dir", "rtl");
+    });
+
     it("keeps the select left-to-right unless told otherwise", () => {
       render(
         <DataTable<Person> columns={columns} data={people} aria-label="People" defaultPageSize={2}>
@@ -790,6 +802,19 @@ describe("DataTable", () => {
       );
       await user.click(screen.getByRole("button", { name: "Colonnes" }));
       expect(await screen.findByRole("menu", { name: "Colonnes" })).toHaveAttribute("dir", "rtl");
+    });
+
+    it("gives the menu a DirectionProvider's direction", async () => {
+      const user = userEvent.setup();
+      render(
+        <DirectionProvider dir="rtl">
+          <DataTable<Person> columns={wide} data={people} aria-label="People">
+            <DataTable.ColumnMenu />
+          </DataTable>
+        </DirectionProvider>,
+      );
+      await user.click(screen.getByRole("button", { name: "Columns" }));
+      expect(await screen.findByRole("menu")).toHaveAttribute("dir", "rtl");
     });
   });
 

@@ -422,7 +422,7 @@ colours.
 ### Right to left
 
 Alignment and pinning are logical, so a page with `dir="rtl"` mirrors the table. The page size select opens a Radix list that
-doesn't read the page's direction, so give `DataTable.Pagination` `dir="rtl"` as well; the range's numbers are isolated, so
+doesn't read the page's direction, so wrap the app in a `DirectionProvider` (or give `DataTable.Pagination` `dir="rtl"`); the range's numbers are isolated, so
 "1–10 of 47" reads in order.
 
 <Canvas of={DataTableStories.RightToLeft} />

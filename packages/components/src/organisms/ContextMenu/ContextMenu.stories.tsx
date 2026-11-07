@@ -84,7 +84,7 @@ const meta: Meta<PlaygroundArgs> = {
       control: "inline-radio",
       options: ["ltr", "rtl"],
       description:
-        "The reading direction, passed to the menu and its submenus: it decides which side a submenu opens on and which arrow key opens and closes it.",
+        "The reading direction, passed to the menu and its submenus: it decides which side a submenu opens on and which arrow key opens and closes it. Left out, the nearest DirectionProvider's, else left-to-right; not read from the page.",
       table: { defaultValue: { summary: '"ltr"' } },
     },
     onOpenChange: {

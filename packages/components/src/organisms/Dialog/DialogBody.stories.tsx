@@ -14,7 +14,7 @@ const meta: Meta<typeof Dialog.Body> = {
     dir: {
       control: "select",
       options: ["ltr", "rtl"],
-      description: "Text direction of the scroll region, which decides the side the scrollbar sits on.",
+      description: "Text direction of the scroll region, which decides the side the scrollbar sits on. Left out, the nearest DirectionProvider's, else left-to-right; not read from the page.",
       table: { defaultValue: { summary: '"ltr"' } },
     },
     "aria-label": {

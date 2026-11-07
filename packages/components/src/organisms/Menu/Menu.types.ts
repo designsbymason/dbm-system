@@ -65,7 +65,7 @@ export interface MenuProps {
   modal?: boolean;
   /**
    * The reading direction, passed to the menu and its submenus: it decides which side a submenu opens on and which
-   * arrow key opens and closes it. Defaulted, not read from the page.
+   * arrow key opens and closes it. Left out, it follows the nearest `DirectionProvider`, else left-to-right; it is not read from the page.
    * @default 'ltr'
    */
   dir?: "ltr" | "rtl";
