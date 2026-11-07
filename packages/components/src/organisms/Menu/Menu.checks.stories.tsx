@@ -70,6 +70,19 @@ const stillRect = async (element: HTMLElement) => {
   }
   return last;
 };
+// A sheet is pinned to the bottom edge. Wait for it to be there (a slow runner can take many frames to start the entrance, so "has stopped
+// moving" alone can be true while it is still where it begins, or before it is placed at all), then for it to stop moving. The rectangle is in
+// the failure message, so a failure says where the sheet was, not only that it was not where it should be.
+const sheetAtTheBottom = async (element: HTMLElement) => {
+  await waitFor(
+    () => {
+      const rect = element.getBoundingClientRect();
+      expect(Math.abs(rect.bottom - window.innerHeight), `the sheet is at ${JSON.stringify(rect)} in a ${window.innerWidth}x${window.innerHeight} window`).toBeLessThan(1);
+    },
+    { timeout: 8000 },
+  );
+  return stillRect(element);
+};
 const trigger = (name: string) => body.getByRole("button", { name, hidden: true });
 const textLeft = (element: Element) => {
   const range = document.createRange();
@@ -966,7 +979,7 @@ export const SheetIsPinnedToTheBottomEdge: Story = {
   play: async () => {
     await realClick(trigger("Actions"));
     const menu = await openMenu();
-    const rect = await stillRect(menu);
+    const rect = await sheetAtTheBottom(menu);
     await expect(Math.abs(rect.left)).toBeLessThan(1);
     await expect(Math.abs(rect.right - window.innerWidth)).toBeLessThan(1);
     await expect(Math.abs(rect.bottom - window.innerHeight)).toBeLessThan(1);
@@ -992,11 +1005,12 @@ export const SheetSubmenuCoversTheMenu: Story = {
     const menu = await openMenu();
     const share = within(menu).getByRole("menuitem", { name: "Share" });
     await realClick(share);
-    const sub = (await body.findAllByRole("menu"))[1] as HTMLElement;
+    // The submenu is the menu that holds the Back row: not "the second menu in the document", which a slow runner can order or fill differently.
+    const sub = (await body.findByRole("menuitem", { name: "Back" })).closest<HTMLElement>('[role="menu"]')!;
     await settled(sub);
-    const rect = await stillRect(sub);
+    const rect = await sheetAtTheBottom(sub);
     await expect(Math.abs(rect.bottom - window.innerHeight)).toBeLessThan(1);
-    await expect(Math.abs(rect.right - window.innerWidth)).toBeLessThan(1);
+    await expect(Math.abs(rect.right - window.innerWidth), `the sheet is at ${JSON.stringify(rect)}`).toBeLessThan(1);
     // the menu it opened from is hidden and out of reach (inert), and focus was moved into the submenu first
     await expect(getComputedStyle(menu).opacity).toBe("0");
     await expect(menu).toHaveAttribute("inert");

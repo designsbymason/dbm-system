@@ -54,6 +54,20 @@ const stillRect = async (element: HTMLElement) => {
   }
   return last;
 };
+
+// A sheet is pinned to the bottom edge. Wait for it to be there (a slow runner can take many frames to start the entrance, so "has stopped
+// moving" alone can be true while it is still where it begins, or before it is placed at all), then for it to stop moving. The rectangle is in
+// the failure message, so a failure says where the sheet was.
+const sheetAtTheBottom = async (element: HTMLElement) => {
+  await waitFor(
+    () => {
+      const rect = element.getBoundingClientRect();
+      expect(Math.abs(rect.bottom - window.innerHeight), `the sheet is at ${JSON.stringify(rect)} in a ${window.innerWidth}x${window.innerHeight} window`).toBeLessThan(1);
+    },
+    { timeout: 8000 },
+  );
+  return stillRect(element);
+};
 const waitClosed = () => waitFor(() => expect(body.queryByRole("menu")).toBeNull());
 
 // A real mouse, through the Chrome DevTools Protocol: Storybook's `userEvent` sends synthetic events. The test page
@@ -524,9 +538,10 @@ export const SheetIsPinnedToTheBottomEdge: Story = {
     }
     // the submenu covers it under a Back row, and Back returns
     await leftClick(within(menu).getByRole("menuitem", { name: "Share" }));
-    const sub = (await body.findAllByRole("menu"))[1] as HTMLElement;
+    // The submenu is the menu that holds the Back row, not "the second menu in the document".
+    const sub = (await body.findByRole("menuitem", { name: "Back" })).closest<HTMLElement>('[role="menu"]')!;
     await settled(sub);
-    await expect(Math.abs((await stillRect(sub)).bottom - window.innerHeight)).toBeLessThan(1);
+    await sheetAtTheBottom(sub);
     await expect(getComputedStyle(menu).opacity).toBe("0");
     await leftClick(within(sub).getByRole("menuitem", { name: "Back" }));
     await waitFor(() => expect(body.queryByRole("menuitem", { name: "Email" })).toBeNull());
