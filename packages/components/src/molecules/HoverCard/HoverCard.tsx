@@ -12,6 +12,7 @@ import type {
   HoverCardTriggerProps,
 } from "./HoverCard.types";
 import { HoverCardProviderContext } from "./HoverCardProviderContext";
+import { useProvidedDirection } from "../../atoms/DirectionProvider/DirectionProvider";
 
 // Radix's arrow is 10 x 5 unless told otherwise, and it adds the arrow's height to
 // `sideOffset` when it places the card, so the gap to bridge is the two together.
@@ -205,6 +206,7 @@ const HoverCardContent = forwardRef<HTMLDivElement, HoverCardContentProps>(
     },
     ref,
   ) => {
+    const providedDir = useProvidedDirection();
     // Radix's `side` drives a real positioning computation, not a CSS
     // cascade, so a responsive map has to resolve to one value in JS first.
     const resolvedSide = useResolvedResponsiveValue(side, "top");
@@ -224,6 +226,7 @@ const HoverCardContent = forwardRef<HTMLDivElement, HoverCardContentProps>(
           // the offset, plus the arrow when there is one.
           style={{ "--hover-card-side-offset": `${sideOffset + (hideArrow ? 0 : ARROW_HEIGHT)}px`, ...style } as CSSProperties}
           {...props}
+          dir={props.dir ?? providedDir}
         >
           <ButtonGroupReset>{children}</ButtonGroupReset>
           {!hideArrow && (

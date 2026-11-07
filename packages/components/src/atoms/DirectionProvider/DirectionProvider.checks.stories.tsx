@@ -3,7 +3,11 @@ import type { ReactNode } from "react";
 import { expect, waitFor, within } from "storybook/test";
 import { Button } from "../Button";
 import { send } from "../../molecules/CodeBlock/browserProtocol";
+import { HoverCard } from "../../molecules/HoverCard";
+import { Popover } from "../../molecules/Popover";
 import { Select } from "../../molecules/Select";
+import { Tooltip } from "../Tooltip";
+import { AlertDialog } from "../../organisms/AlertDialog";
 import { ContextMenu } from "../../organisms/ContextMenu";
 import { ColorPicker } from "../../organisms/ColorPicker";
 import { DatePicker } from "../../organisms/DatePicker";
@@ -221,5 +225,121 @@ export const ColorPickerPanelIsRightToLeft: Story = {
     // The hue slider is inside the portalled panel; it reads right to left.
     await expect(direction(hue)).toBe("rtl");
     await expect(hue.closest("[dir]")).toHaveAttribute("dir", "rtl");
+  },
+};
+
+export const DialogPanelIsRightToLeft: Story = {
+  name: "A Dialog given no dir reads right to left in its header and footer under a provider, not only in its body",
+  render: () => (
+    <Rtl>
+      <Dialog defaultOpen>
+        <Dialog.Content aria-describedby={undefined}>
+          <Dialog.Header>
+            <Dialog.Title>Head</Dialog.Title>
+          </Dialog.Header>
+          <Dialog.Body>Body</Dialog.Body>
+          <Dialog.Footer>
+            <span>Foot</span>
+          </Dialog.Footer>
+        </Dialog.Content>
+      </Dialog>
+    </Rtl>
+  ),
+  play: async () => {
+    await expect(direction(await body.findByText("Head"))).toBe("rtl");
+    await expect(direction(await body.findByText("Body"))).toBe("rtl");
+    await expect(direction(await body.findByText("Foot"))).toBe("rtl");
+  },
+};
+
+export const DrawerPanelIsRightToLeft: Story = {
+  name: "A Drawer given no dir reads right to left in its header and footer under a provider",
+  render: () => (
+    <Rtl>
+      <Drawer defaultOpen>
+        <Drawer.Content aria-describedby={undefined}>
+          <Drawer.Header>
+            <Drawer.Title>Head</Drawer.Title>
+          </Drawer.Header>
+          <Drawer.Body>Body</Drawer.Body>
+          <Drawer.Footer>
+            <span>Foot</span>
+          </Drawer.Footer>
+        </Drawer.Content>
+      </Drawer>
+    </Rtl>
+  ),
+  play: async () => {
+    await expect(direction(await body.findByText("Head"))).toBe("rtl");
+    await expect(direction(await body.findByText("Foot"))).toBe("rtl");
+  },
+};
+
+export const AlertDialogPanelIsRightToLeft: Story = {
+  name: "An AlertDialog given no dir reads right to left under a provider",
+  render: () => (
+    <Rtl>
+      <AlertDialog defaultOpen>
+        <AlertDialog.Content>
+          <AlertDialog.Header>
+            <AlertDialog.Title>Delete?</AlertDialog.Title>
+            <AlertDialog.Description>Gone for good.</AlertDialog.Description>
+          </AlertDialog.Header>
+        </AlertDialog.Content>
+      </AlertDialog>
+    </Rtl>
+  ),
+  play: async () => {
+    await expect(direction(await body.findByText("Delete?"))).toBe("rtl");
+    await expect(direction(await body.findByRole("alertdialog"))).toBe("rtl");
+  },
+};
+
+export const PopoverIsRightToLeftAndAlignsToTheRightEdge: Story = {
+  name: "A Popover given no dir reads right to left under a provider, and align start lines up with the trigger's right edge",
+  render: () => (
+    <div style={{ display: "flex", justifyContent: "center", paddingBlock: "var(--dbm-space-8)" }}>
+      <Rtl>
+        <Popover defaultOpen>
+          <Popover.Trigger asChild>
+            <Button>Details</Button>
+          </Popover.Trigger>
+          <Popover.Content align="start" aria-label="Details" style={{ inlineSize: "20rem" }}>
+            <span data-testid="popover-text">Popover text</span>
+          </Popover.Content>
+        </Popover>
+      </Rtl>
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    const text = await body.findByTestId("popover-text");
+    await expect(direction(text)).toBe("rtl");
+    const panel = await body.findByRole("dialog");
+    const trigger = within(canvasElement).getByRole("button", { name: "Details" });
+    // Start is the right edge in right-to-left text: the panel's right edge sits on the trigger's right edge (it extends to the left).
+    await waitFor(() => expect(Math.abs(panel.getBoundingClientRect().right - trigger.getBoundingClientRect().right)).toBeLessThan(2));
+  },
+};
+
+export const HoverCardAndTooltipAreRightToLeft: Story = {
+  name: "A HoverCard and a Tooltip given no dir read right to left under a provider",
+  render: () => (
+    <div style={{ display: "flex", gap: "var(--dbm-space-12)", padding: "var(--dbm-space-12)" }}>
+      <Rtl>
+        <HoverCard defaultOpen>
+          <HoverCard.Trigger href="/jane">Jane</HoverCard.Trigger>
+          <HoverCard.Content>
+            <span data-testid="card-text">Card content</span>
+          </HoverCard.Content>
+        </HoverCard>
+        <Tooltip content={<span data-testid="tip-text">Save your changes</span>} defaultOpen>
+          <Button>Save</Button>
+        </Tooltip>
+      </Rtl>
+    </div>
+  ),
+  play: async () => {
+    await expect(direction(await body.findByTestId("card-text"))).toBe("rtl");
+    await expect(direction(await body.findByTestId("tip-text"))).toBe("rtl");
   },
 };

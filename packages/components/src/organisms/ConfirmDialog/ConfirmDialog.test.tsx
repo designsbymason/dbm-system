@@ -7,6 +7,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { TrashIcon } from "@dbm-system/icons";
 import { Button } from "../../atoms/Button";
 import { Dialog } from "../Dialog";
+import { DirectionProvider } from "../../atoms/DirectionProvider";
 import { ConfirmDialog } from "./ConfirmDialog";
 
 type Props = Partial<ComponentProps<typeof ConfirmDialog>>;
@@ -948,5 +949,19 @@ describe("ConfirmDialog", () => {
       await waitFor(() => expect(screen.queryByRole("alertdialog")).not.toBeInTheDocument());
       expect(screen.getByRole("button", { name: "Open from state" })).not.toHaveFocus();
     });
+  });
+});
+
+describe("ConfirmDialog direction", () => {
+  it("reads a DirectionProvider's direction, and leaves the attribute off without one", () => {
+    const bare = render(<Basic defaultOpen />);
+    expect(screen.getByRole("alertdialog")).not.toHaveAttribute("dir");
+    bare.unmount();
+    render(
+      <DirectionProvider dir="rtl">
+        <Basic defaultOpen />
+      </DirectionProvider>,
+    );
+    expect(screen.getByRole("alertdialog")).toHaveAttribute("dir", "rtl");
   });
 });

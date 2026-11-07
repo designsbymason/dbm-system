@@ -37,6 +37,7 @@ import type {
   DrawerTitleProps,
   DrawerTriggerProps,
 } from "./Drawer.types";
+import { useProvidedDirection } from "../../atoms/DirectionProvider/DirectionProvider";
 
 const defaultLabels: DrawerLabels = { close: "Close" };
 
@@ -257,6 +258,7 @@ const DrawerContent = forwardRef<HTMLDivElement, DrawerContentProps>(
     },
     ref,
   ) => {
+    const providedDir = useProvidedDirection();
     const drawer = useContext(DrawerContext);
     const open = drawer?.open ?? true;
     const modal = drawer?.modal ?? true;
@@ -301,6 +303,7 @@ const DrawerContent = forwardRef<HTMLDivElement, DrawerContentProps>(
       <DialogPrimitive.Content
         ref={mergeRefs(ref, attachHost, panelRef)}
         {...props}
+        dir={props.dir ?? providedDir}
         {...describedBy}
         aria-label={ariaLabel}
         // The attributes below are computed from the drawer's own state, so they come after `{...props}`: a

@@ -11,6 +11,7 @@ import type {
   PopoverProps,
   PopoverTriggerProps,
 } from "./Popover.types";
+import { useProvidedDirection } from "../../atoms/DirectionProvider/DirectionProvider";
 
 /**
  * A floating panel of arbitrary content anchored to a trigger, built on
@@ -121,6 +122,7 @@ const PopoverContent = forwardRef<HTMLDivElement, PopoverContentProps>(
     },
     ref,
   ) => {
+    const providedDir = useProvidedDirection();
     // Radix's own `side` needs one concrete value per render — it drives a
     // real positioning computation, not a CSS cascade, so a
     // `Responsive<PopoverSide>` map (side/left→top/bottom across a
@@ -162,6 +164,7 @@ const PopoverContent = forwardRef<HTMLDivElement, PopoverContentProps>(
           aria-label={ariaLabel}
           aria-labelledby={ariaLabelledBy}
           {...props}
+          dir={props.dir ?? providedDir}
         >
           {showCloseButton && (
             <PopoverPrimitive.Close asChild className={styles.closeButton}>

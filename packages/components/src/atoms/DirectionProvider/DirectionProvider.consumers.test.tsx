@@ -3,6 +3,12 @@ import type { ReactNode } from "react";
 import { describe, expect, it } from "vitest";
 import { DirectionProvider } from "./DirectionProvider";
 import { Combobox } from "../../organisms/Combobox";
+import { AlertDialog } from "../../organisms/AlertDialog";
+import { Dialog } from "../../organisms/Dialog";
+import { Drawer } from "../../organisms/Drawer";
+import { HoverCard } from "../../molecules/HoverCard";
+import { Popover } from "../../molecules/Popover";
+import { Tooltip } from "../Tooltip";
 import { ColorPicker } from "../../organisms/ColorPicker";
 import { Alert } from "../../molecules/Alert";
 import { Breadcrumb } from "../../molecules/Breadcrumb";
@@ -155,6 +161,83 @@ const cases: Case[] = [
       </Breadcrumb>
     ),
     find: () => screen.getByRole("navigation"),
+    bare: null,
+  },
+  {
+    name: "Dialog",
+    draw: (dir) => (
+      <Dialog defaultOpen>
+        <Dialog.Content aria-describedby={undefined} dir={dir}>
+          <Dialog.Header>
+            <Dialog.Title>Title</Dialog.Title>
+          </Dialog.Header>
+        </Dialog.Content>
+      </Dialog>
+    ),
+    find: () => screen.getByRole("dialog"),
+    bare: null,
+  },
+  {
+    name: "Drawer",
+    draw: (dir) => (
+      <Drawer defaultOpen>
+        <Drawer.Content aria-describedby={undefined} dir={dir}>
+          <Drawer.Header>
+            <Drawer.Title>Title</Drawer.Title>
+          </Drawer.Header>
+        </Drawer.Content>
+      </Drawer>
+    ),
+    find: () => screen.getByRole("dialog"),
+    bare: null,
+  },
+  {
+    name: "AlertDialog",
+    draw: (dir) => (
+      <AlertDialog defaultOpen>
+        <AlertDialog.Content dir={dir}>
+          <AlertDialog.Header>
+            <AlertDialog.Title>Delete?</AlertDialog.Title>
+            <AlertDialog.Description>Gone for good.</AlertDialog.Description>
+          </AlertDialog.Header>
+        </AlertDialog.Content>
+      </AlertDialog>
+    ),
+    find: () => screen.getByRole("alertdialog"),
+    bare: null,
+  },
+  {
+    name: "Popover",
+    draw: (dir) => (
+      <Popover defaultOpen>
+        <Popover.Trigger>Open</Popover.Trigger>
+        <Popover.Content aria-label="Details" dir={dir}>
+          Details
+        </Popover.Content>
+      </Popover>
+    ),
+    find: () => screen.getByRole("dialog"),
+    bare: null,
+  },
+  {
+    name: "HoverCard",
+    draw: (dir) => (
+      <HoverCard defaultOpen>
+        <HoverCard.Trigger href="/jane">Jane</HoverCard.Trigger>
+        <HoverCard.Content dir={dir}>Card content</HoverCard.Content>
+      </HoverCard>
+    ),
+    find: () => screen.getByText("Card content").closest("[data-side]"),
+    bare: null,
+  },
+  {
+    name: "Tooltip",
+    draw: (dir) => (
+      <Tooltip content="Save your changes" defaultOpen dir={dir}>
+        <button>Save</button>
+      </Tooltip>
+    ),
+    find: () => document.querySelector("[data-side][data-state]"),
     bare: null,
   },
 ];

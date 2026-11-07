@@ -36,6 +36,7 @@ import type {
   DialogTitleProps,
   DialogTriggerProps,
 } from "./Dialog.types";
+import { useProvidedDirection } from "../../atoms/DirectionProvider/DirectionProvider";
 
 const defaultLabels: DialogLabels = { close: "Close" };
 
@@ -233,6 +234,7 @@ const DialogContent = forwardRef<HTMLDivElement, DialogContentProps>(
     },
     ref,
   ) => {
+    const providedDir = useProvidedDirection();
     const dialog = useContext(DialogContext);
     const open = dialog?.open ?? true;
     const modal = dialog?.modal ?? true;
@@ -254,6 +256,7 @@ const DialogContent = forwardRef<HTMLDivElement, DialogContentProps>(
       <DialogPrimitive.Content
         ref={mergeRefs(ref, attachHost, panelRef)}
         {...props}
+        dir={props.dir ?? providedDir}
         {...describedBy}
         aria-label={ariaLabel}
         // The attributes below are computed from the dialog's own state, so they come after `{...props}`: a

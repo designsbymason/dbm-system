@@ -153,6 +153,9 @@ behaves correctly as this story's own, uncluttered page. See it standalone:
 
 ## Best practices
 
+- `Portal` renders no wrapper element, so it sets no direction: content portaled into `document.body` takes the page's. In a
+  right-to-left app that uses `DirectionProvider`, give your own portaled content a `dir` (`useDirection()` returns the provider's).
+  The overlay components (`Dialog`, `Popover`, `Menu` and the rest) handle this themselves.
 - Default to portaling into `document.body` (the default `container`) unless there's a specific
   reason to target somewhere else — a custom `container` is mainly useful for scoping portaled
   content to a specific region (e.g. keeping it inside a particular themed subtree).

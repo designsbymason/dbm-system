@@ -45,6 +45,7 @@ import type {
   AlertDialogTone,
   AlertDialogTriggerProps,
 } from "./AlertDialog.types";
+import { useProvidedDirection } from "../../atoms/DirectionProvider/DirectionProvider";
 
 // The panel and its sections are drawn with `Dialog`'s stylesheet: the two must look the same and change
 // together, as `RangeSlider` draws with `Slider`'s. This file's own module holds only what an alert adds (the tone
@@ -231,6 +232,7 @@ const AlertDialogContent = forwardRef<HTMLDivElement, AlertDialogContentProps>(
     },
     ref,
   ) => {
+    const providedDir = useProvidedDirection();
     const dialog = useContext(AlertDialogContext);
     const open = dialog?.open ?? true;
     const contentRef = useRef<HTMLDivElement | null>(null);
@@ -250,6 +252,7 @@ const AlertDialogContent = forwardRef<HTMLDivElement, AlertDialogContentProps>(
       <AlertDialogPrimitive.Content
         ref={mergeRefs(ref, contentRef)}
         {...props}
+        dir={props.dir ?? providedDir}
         // Computed from the dialog's own state, so after `{...props}`: a same-named consumer prop must not
         // replace the role or the state the exit animation is keyed to.
         role="alertdialog"

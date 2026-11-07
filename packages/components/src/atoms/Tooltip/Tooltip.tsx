@@ -5,6 +5,7 @@ import { TooltipProviderPresenceContext } from "./TooltipProviderContext";
 import { ButtonGroupReset } from "../Button/buttonGroupContext";
 import styles from "./Tooltip.module.css";
 import type { TooltipProps } from "./Tooltip.types";
+import { useProvidedDirection } from "../DirectionProvider/DirectionProvider";
 
 /**
  * A short, non-interactive hint shown on hover/focus of its trigger, built
@@ -42,6 +43,7 @@ export function Tooltip({
   className,
   ...props
 }: TooltipProps) {
+  const providedDir = useProvidedDirection();
   // Whether an ambient `TooltipProvider` already wraps this subtree — when
   // it does, skip rendering our own isolated `Provider` below and rely on
   // the shared one instead (see `TooltipProviderContext` for why this is
@@ -72,6 +74,7 @@ export function Tooltip({
           sideOffset={8}
           className={cx(styles.content, className)}
           {...props}
+          dir={props.dir ?? providedDir}
         >
           <ButtonGroupReset>{content}</ButtonGroupReset>
           {!hideArrow && <TooltipPrimitive.Arrow className={styles.arrow} />}
