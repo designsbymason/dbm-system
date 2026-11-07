@@ -1,15 +1,16 @@
 import { SidebarSimpleIcon, TrayIcon, WarningCircleIcon } from "@dbm-system/icons";
-import { cx, mergeDefined, mergeRefs, useAnnouncement, useIsScrollable } from "@dbm-system/utils";
+import { cx, mergeDefined, mergeRefs, useIsScrollable } from "@dbm-system/utils";
 import { Children, forwardRef, isValidElement, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import type { CSSProperties, KeyboardEvent as ReactKeyboardEvent, PointerEvent as ReactPointerEvent } from "react";
 import { Container } from "../../atoms/Container";
 import { DirectionProvider, useDirection } from "../../atoms/DirectionProvider";
 import { IconButton } from "../../atoms/IconButton";
-import { ProgressBar } from "../../atoms/ProgressBar";
 import { VisuallyHidden } from "../../atoms/VisuallyHidden";
 import { EmptyState } from "../../molecules/EmptyState";
 import { Drawer } from "../../organisms/Drawer";
 import { Sidebar } from "../../organisms/Sidebar";
+import { MainBusy } from "../../internal/MainBusy";
+import { usePageChange } from "../../internal/usePageChange";
 import styles from "./AppShell.module.css";
 import { AppShellContext, useAppShellContext } from "./AppShellContext";
 import { useElementHeight } from "./useElementHeight";
@@ -317,25 +318,9 @@ const AppShellRoot = forwardRef<HTMLDivElement, AppShellProps>(
 
     const asideToggleRef = useRef<HTMLElement | null>(null);
 
-    // Moving to another page: focus goes to the main area (so the keyboard starts at the new page's top, and a screen reader is told where
-    // it is), a scrolling main area goes back to its top, and the new page's title is announced. Not on the first render, which the page's own
-    // load already announced, and not while `pageKey` is left out. The key remembered here, not a flag, keeps it quiet under `StrictMode`.
-    const { message: announcement, announce } = useAnnouncement();
-    const previousKey = useRef(pageKey);
-    useEffect(() => {
-      if (pageKey === undefined || previousKey.current === undefined) {
-        previousKey.current = pageKey;
-        return;
-      }
-      if (previousKey.current === pageKey) return;
-      previousKey.current = pageKey;
-      const main = mainRef.current;
-      if (main !== null) {
-        main.focus({ preventScroll: true });
-        if (scroll === "content") main.scrollTop = 0;
-      }
-      if (pageTitle) announce(pageTitle);
-    }, [pageKey, pageTitle, scroll, announce]);
+    // Moving to another page: focus goes to the main area, a scrolling main area goes back to its top, and the new title is announced
+    // (`usePageChange`, shared with `TopNavShell`).
+    const announcement = usePageChange({ pageKey, pageTitle, mainRef, resetScroll: scroll === "content" });
 
     const context = useMemo(
       () => ({
@@ -620,14 +605,8 @@ const AppShellMain = forwardRef<HTMLElement, AppShellMainProps>(({ id = "main", 
       tabIndex={scroll === "content" && scrolls ? 0 : -1}
       className={cx(styles.main, className)}
     >
-      {busy && (
-        // Zero tall and stuck to the top, so the bar is along the main area's edge however far the content has scrolled, and takes no room.
-        <div className={styles.busyBar} aria-hidden="true">
-          <ProgressBar size="xs" tone="brand" label={labels.loading} />
-        </div>
-      )}
-      {/* The region is there before it has anything to say, so that "Loading" is a change a screen reader announces and not a first appearance. */}
-      {busy !== undefined && <VisuallyHidden role="status">{busy ? labels.loading : ""}</VisuallyHidden>}
+      {/* The bar is zero tall and stuck to the top, so it is along the main area's edge however far the content has scrolled, and takes no room. */}
+      <MainBusy busy={busy} label={labels.loading} barClassName={styles.busyBar} />
       {children}
     </main>
   );
