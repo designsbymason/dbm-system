@@ -199,6 +199,77 @@ check("the status table covers every built component", () => {
   for (const name of listed.keys()) if (!built.has(name)) warn(file, 0, `${name} has a status row but no component folder`);
 });
 
+check("every template has a status row, a review file and a place in the inventory", () => {
+  const file = join(GUIDELINES, "07-storybook-and-documentation-standards.md");
+  // A folder whose name starts with an underscore holds what several templates share (a story kit), not a template.
+  const folders = readdirSync(join(SRC, "templates")).filter((entry) => !entry.startsWith("_") && statSync(join(SRC, "templates", entry)).isDirectory());
+  const listed = new Map();
+  for (const [index, line] of lines(file).entries()) {
+    if (!line.startsWith("|")) continue;
+    const cells = line.slice(1, -1).split("|").map((cell) => cell.trim());
+    if (cells[1] !== "Template") continue;
+    // A page's row is named with spaces ("Data Table List Page"); its folder and review file without them.
+    listed.set(cells[0].replace(/[`\s]/g, ""), index + 1);
+  }
+  for (const folder of folders) {
+    if (!listed.has(folder)) warn(file, 0, `the template ${folder} is built but has no row in the status table (§6)`);
+    if (!existsSync(join(GUIDELINES, "component-reviews", `${folder}.md`))) warn(file, 0, `the template ${folder} has no component-reviews/${folder}.md`);
+  }
+  for (const [name, line] of listed) if (!folders.includes(name)) warn(file, line, `${name} has a status row but no templates/ folder`);
+  // The inventory's Templates section names each built template: by its folder in backticks (a shell, `AppShell`) or in words (a page,
+  // "Data Table List Page"), since a shell's row is named for what it is ("Dashboard shell") and a page's for itself.
+  const inventory = join(GUIDELINES, "04-component-inventory.md");
+  const text = read(inventory);
+  // Only the section's table rows count, not the prose around them (the naming rule quotes a page's name).
+  const section = text.slice(text.indexOf("## Templates"), text.indexOf("## Rough count summary")).split("\n").filter((line) => line.startsWith("|")).join("\n");
+  for (const folder of folders) {
+    const spaced = folder.replace(/([a-z])([A-Z])/g, "$1 $2");
+    if (!section.includes(`\`${folder}\``) && !section.includes(spaced)) warn(inventory, 0, `the template ${folder} is built but the inventory's Templates section does not name it (as \`${folder}\` or "${spaced}")`);
+  }
+});
+
+check("the commands' references resolve", () => {
+  const dir = join(REPO, ".claude/commands");
+  if (!existsSync(dir)) return;
+  // Paths a command may name before they exist (created when a second template needs one).
+  const optional = new Set(["src/templates/_shared/"]);
+  const sections = new Map();
+  for (const file of numberedDocs) {
+    const found = new Set();
+    for (const line of lines(file)) {
+      const match = /^#{2,4}\s+(\d+(?:\.\d+)?)[.\s]/.exec(line);
+      if (match) found.add(match[1]);
+    }
+    sections.set(basename(file).slice(0, 2), found);
+  }
+  const adrs = readdirSync(join(GUIDELINES, "adr")).map((name) => name.slice(0, 4));
+  for (const file of readdirSync(dir).filter((name) => name.endsWith(".md")).map((name) => join(dir, name))) {
+    lines(file).forEach((line, index) => {
+      // A backticked path (`guidelines/…`, `packages/…`, `.github/…`, `.claude/…`, `src/…` from the components package) exists.
+      for (const [, path] of line.matchAll(/`((?:guidelines|packages|\.github|\.claude|src)\/[A-Za-z0-9_./-]+)`/g)) {
+        if (optional.has(path)) continue;
+        const resolved = path.startsWith("src/") ? join(SRC, "..", path) : join(REPO, path);
+        if (!existsSync(resolved)) warn(file, index + 1, `names ${path}, which does not exist`);
+      }
+      // A numbered document named whole (`04-component-inventory.md`) exists.
+      for (const [, name] of line.matchAll(/`(0\d-[a-z0-9-]+\.md)`/g)) {
+        if (!existsSync(join(GUIDELINES, name))) warn(file, index + 1, `names ${name}, which does not exist`);
+      }
+      for (const [, number] of line.matchAll(/ADR-(\d{4})/g)) {
+        if (!adrs.includes(number)) warn(file, index + 1, `cites ADR-${number}, which does not exist`);
+      }
+      // The short form `06` §9, `05` §1 and §8: the section exists in that document.
+      for (const [, doc, run] of line.matchAll(/`(0\d)`\s*(§\s?\d+(?:\.\d+)?(?:\s*(?:,|and|&|–|-)\s*§?\s?\d+(?:\.\d+)?)*)/g)) {
+        const known = sections.get(doc);
+        if (!known) continue;
+        for (const [section] of run.matchAll(/\d+(?:\.\d+)?/g)) {
+          if (!known.has(section)) warn(file, index + 1, `cites ${doc} §${section}, which does not exist`);
+        }
+      }
+    });
+  }
+});
+
 check("the ADR index lists every record, in order", () => {
   const dir = join(GUIDELINES, "adr");
   const index = join(dir, "README.md");

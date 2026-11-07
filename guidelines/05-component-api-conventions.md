@@ -36,7 +36,7 @@ Plain shared code goes to `internal/` at the second consumer too, rather than on
 
 The menu's item parts, its context and its stylesheet are in `internal/menu/`, extracted at the third consumer (`Menubar`, after `Menu` and `ContextMenu`); each of the three draws its own root, trigger and panel and provides the Radix parts its root needs through `MenuPrimitiveContext` ([ADR-0163](adr/0163-the-menu-item-parts-context-and-stylesheet-move-to-internal-menu-at-the-third-consumer-over-menubar-importing-them-from-menu.md)).
 
-`{tier}` is `atoms`, `molecules`, or `organisms` per `04-component-inventory.md`. A story-only template page is a folder in `templates/` with no `index.ts` and no export, and a story kit that holds the page ([ADR-0184](adr/0184-a-story-only-template-page-is-a-folder-of-stories-and-a-story-kit-in-templates-with-demo-controls-and-no-playground-over-a-shipped-component-or-a-separate-pages-tree.md)). Compound components (see §4) get one folder containing all their parts, not one folder per sub-part.
+`{tier}` is `atoms`, `molecules`, or `organisms` per `04-component-inventory.md`. A story-only template page is a folder in `templates/` with no `index.ts` and no export, and a story kit that holds the page ([ADR-0184](adr/0184-a-story-only-template-page-is-a-folder-of-stories-and-a-story-kit-in-templates-with-demo-controls-and-no-playground-over-a-shipped-component-or-a-separate-pages-tree.md)). **A helper a second template needs moves out of the first one's story kit** (demo data, a state hook, a filter control, a footer): at the second consumer, not the first, it goes to `src/templates/_shared/`, a folder whose name starts with an underscore, which is not a template and which the template checks skip; until then it stays in its own page's kit. `DemoShell`, imported from `AppShell`'s kit by the page, is the one helper shared so far. Compound components (see §4) get one folder containing all their parts, not one folder per sub-part.
 
 ## 2. Naming conventions
 
@@ -153,6 +153,17 @@ A component isn't complete until all of these are true (the full review checklis
 - [ ] Any new color pairing introduced is contrast-checked (methodology in `03-token-system-spec.md`), not assumed
 - [ ] Exported from the package's public `index.ts`
 - [ ] No hardcoded values — everything traces to a token
+
+### Template definition of done
+
+A template (a shell or a page, [ADR-0179](adr/0179-templates-ship-as-composable-shells-in-the-components-package-with-story-only-example-pages-over-shipping-finished-pages-or-keeping-all-templates-storybook-only.md), [ADR-0184](adr/0184-a-story-only-template-page-is-a-folder-of-stories-and-a-story-kit-in-templates-with-demo-controls-and-no-playground-over-a-shipped-component-or-a-separate-pages-tree.md)) is done when the component list above holds where it applies, the template items of `06-engineering-standards.md` §9 pass, and it is registered in each place a guard looks:
+- [ ] Named in Title Case, a page ending in "Page", and not equal to a component's name (`04-component-inventory.md`)
+- [ ] A row in `07-storybook-and-documentation-standards.md` §6 and a `component-reviews/{Name}.md`
+- [ ] Its status and build-order row in `04-component-inventory.md`
+- [ ] A line in `src/componentDescriptions.ts` (the Getting started table)
+- [ ] A page carries `tags: ["example-page"]` on its stories and is not exported from `src/index.ts`; a shell is exported and has no tag
+- [ ] An ADR for a decision that constrains later templates
+- [ ] `pnpm check-storybook-bundle-size` run, and a budget change decided on, not drifted into
 
 ## 9. Commit & release convention
 

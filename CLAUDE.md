@@ -90,9 +90,9 @@ Full rationale for each choice: `guidelines/02-tech-stack-and-structure.md`.
 | The docs website (plan, structure, landing page, Storybook's role) | `guidelines/docs-site/` |
 | Understanding *why* a past architecture/API decision was made | `guidelines/adr/` |
 
-To start a session, run `/start <task>` (`.claude/commands/start.md`): it reads only the guidelines that task needs, verifies against the repo with `pnpm check-guidelines`, and reports before any work.
+To start a session, run `/start [task]` (`.claude/commands/start.md`): with no task it gives a general picture of where the project stands (phase, what is in flight, what is next, flakes and open decisions); with a task it reads only the guidelines that task needs. Either way it verifies against the repo with `pnpm check-guidelines` and reports before any work.
 
-Other project commands, in `.claude/commands/`: `/plan-component <Name>` (propose scope, API and tokens; writes nothing), `/review-component <Name>` (the §9 review as a prioritized list; no edits), `/refresh-deps` (the §3.2 dependency pass as a plan), and `/after-push` (classify the push, watch CI if it contained code, report per job).
+Other project commands, in `.claude/commands/`: `/plan-component <Name>` (propose scope, API and tokens; writes nothing), `/review-component <Name>` (the §9 review as a prioritized list; no edits), `/plan-template <Name>` and `/review-template <Name>` (the same two for a template, a shell or a page), `/refresh-deps` (the §3.2 dependency pass as a plan), and `/after-push` (classify the push, watch CI if it contained code, report per job).
 
 ## Component index (planned: auto-synced)
 Once `packages/manifest` exists and generates the JSON component manifest (see `01-vision-and-goals.md`, Phase 10), its build step should also write an up-to-date component index into this file — name, category, tier, and a one-line summary per shipped component, regenerated on every release rather than maintained by hand, so agents discover what's actually available instead of guessing or hallucinating a component that doesn't exist.

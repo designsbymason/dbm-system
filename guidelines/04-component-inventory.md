@@ -187,7 +187,7 @@ Not individual components, but composed patterns — worth planning for since a 
 
 **Status:** two built. `AppShell` (the dashboard shell, in `packages/components/src/templates/`) is built and Finalized ([AppShell.md](component-reviews/AppShell.md)); the data-table list page, the first story-only page, is built and awaits the maintainer's review ([DataTableListPage.md](component-reviews/DataTableListPage.md)). None other is started without the maintainer's confirmation. Phase 7 builds a few before Phase 8 (`01-vision-and-goals.md` §13), one at a time, then, in the maintainer's order of interest, the data-table list page, the auth flow, the dashboard or overview page and the settings page (the full order is at the end of this section). An **application shell** ships from the components package as a compound component with slots, and every other template is a story-only example page that an app copies ([ADR-0179](adr/0179-templates-ship-as-composable-shells-in-the-components-package-with-story-only-example-pages-over-shipping-finished-pages-or-keeping-all-templates-storybook-only.md)).
 
-This is the working list of page-level templates apps commonly need. The first four were planned from the start; the rest were added as candidates, and a candidate is built only when an app needs it. Priority follows the legend above. Nothing here is counted in the summary below.
+**A template is named in Title Case, and a page ends with the word "Page"** (`Data Table List Page`, `Auth Flow Page`): the Storybook title `Templates/{Group}/{Name}`, its folder (`DataTableListPage`), its files and its review file all use that name. An application shell keeps its component name (`AppShell`). A template's name must not equal a component's. The table below describes what each is in plain words. This is the working list of page-level templates apps commonly need. The first four were planned from the start; the rest were added as candidates, and a candidate is built only when an app needs it. Priority follows the legend above. Nothing here is counted in the summary below.
 
 **Application shells**
 
@@ -209,7 +209,7 @@ This is the working list of page-level templates apps commonly need. The first f
 
 | Template | Priority | Composes |
 |---|---|---|
-| Data-table-driven list page (Table + Toolbar + Pagination) | ⚪ | `DataTable`, `TableToolbar`, `Pagination`, `Menu` for row actions, `EmptyState` |
+| Data table list page (a table with its toolbar, filters, paging and row actions) | ⚪ | `DataTable`, `TableToolbar`, `Pagination`, `Menu` for row actions, `EmptyState` |
 | Detail page | ⚪ | `Breadcrumb`, `Tabs`, `DescriptionList`, `Card`, `Timeline` for activity |
 | Dashboard or overview page | ⚪ | `Stat`, `Card`, `Grid`, `DataTable`, `Timeline` |
 | Create or edit form page | ⚪ | `Form`, `FieldGroup`, `Card` sections, a sticky action bar, `ConfirmDialog` for discard |
@@ -241,7 +241,7 @@ Nothing in the list depends on another template, and every component they compos
 | # | Template | Kind | Why here | Status |
 |---|---|---|---|---|
 | 1 | Dashboard shell | Shell (ships) | Fixes the pattern every page sits in | Built and Finalized: `AppShell` ([review](component-reviews/AppShell.md)) |
-| 2 | Data-table-driven list page | Page | Heaviest composition (`DataTable`, `TableToolbar`, `Pagination`, row menus, `EmptyState`); tests `AppShell` with large content; later data pages reuse its parts | Built: [review](component-reviews/DataTableListPage.md), not yet Finalized ([ADR-0184](adr/0184-a-story-only-template-page-is-a-folder-of-stories-and-a-story-kit-in-templates-with-demo-controls-and-no-playground-over-a-shipped-component-or-a-separate-pages-tree.md)) |
+| 2 | Data Table List Page | Page | Heaviest composition (`DataTable`, `TableToolbar`, `Pagination`, row menus, `EmptyState`); tests `AppShell` with large content; later data pages reuse its parts | Built: [review](component-reviews/DataTableListPage.md), not yet Finalized ([ADR-0184](adr/0184-a-story-only-template-page-is-a-folder-of-stories-and-a-story-kit-in-templates-with-demo-controls-and-no-playground-over-a-shipped-component-or-a-separate-pages-tree.md)) |
 | 3 | Auth flow (with reset-password and verify-code variants) | Page | Standalone, outside `AppShell`: tests a centred-card layout with `Form`, `PasswordInput`, `PinInput`, `Alert` | Planned |
 | 4 | Dashboard or overview page | Page | Reuses 2's `DataTable` and adds `Stat`, `Card`, `Grid`, `Timeline` | Planned |
 | 5 | Settings page | Page | Form sections in a nav (`Sidebar` or `Tabs`), `Switch`, `ConfirmDialog` for destructive actions; 9 and 10 reuse its pattern | Planned |

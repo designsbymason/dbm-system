@@ -1,0 +1,20 @@
+---
+description: Run the full review pass on one template (shell or page) and report a prioritized list of what needs to change (reads and runs checks; makes no edits)
+argument-hint: <Template Name, e.g. Data Table List Page>
+---
+
+Review this DBM System template against the project's review checklist: $ARGUMENTS
+
+If no template is given, ask for one. Confirm it exists under `packages/components/src/templates`; if it is a component, use `/review-component` instead and stop. This is a read-and-verify step: make no code, test or guideline changes.
+
+1. Read `guidelines/06-engineering-standards.md` §9 in full (the template items too, and the "Reporting a review's findings" format and the Finalized rules), `guidelines/07-storybook-and-documentation-standards.md` §3–§6 and §11, `guidelines/05-component-api-conventions.md` §1 and §8, and ADR-0179 and ADR-0184.
+2. Read its row in `04-component-inventory.md`, its `guidelines/component-reviews/<Name>.md` (and the ADRs it links), so you don't re-report a finding already accepted or fixed. If it has a `## Decisions` section (the approved plan), check the build against it and report any departure from it as a finding.
+3. Read its folder (and `src/templates/_shared/` if it exists; a helper copied between two templates, instead of shared, is a finding): the story kit, stories, snippets, Docs page, stylesheet if any, unit, hydration and docs-token tests, and the hidden checks. For a page, also the components it composes where a finding might sit there (a defect in a Finalized one is a proposal that needs my go-ahead).
+4. Run what the repo can run, one after another (never the real-browser Storybook suite alongside other heavy jobs: overlap causes the flakes in my memory notes), and report real results: `pnpm exec eslint` on the folder, `pnpm vitest run --project unit` and `--project storybook` for it, `pnpm check-guidelines`, and the snippets typechecked as real code against the components (a throwaway file, with a planted bad prop to prove the check bites).
+5. Look at it, with the Storybook preview and real input where you can: phone, tablet and desktop widths in light and dark and both brands; every state in the states matrix; the primary task by real mouse and by real keys, and where focus lands; blank space, alignment and anything that shifts; the Docs page (Show code on every story, tables, Related cards). List what you could not do.
+6. **A shell ships as a component, so it also gets the component review:** apply every item of `06` §9 that applies at its tier (baseline correctness, standard prop patterns, compound sub-part completeness, accessibility, the Docs checklist and its token table), not only the template items. A page is not exported, so those items do not apply to it beyond what its Docs page and tests show.
+7. Apply the template checkpoints: no horizontal page overflow at phone and tablet; every input shows what the data shows after a programmatic reset; every announcement the Docs claim, and what an action stops announcing; the registrations (`07` §6 row, review file, `04` row, `componentDescriptions.ts`, `example-page` tag for a page); the Storybook bundle-size check; a name in Title Case that is not a component's.
+
+Reply with one prioritized, ordered list of exactly what needs to change (added, updated or removed), as §9 specifies: skip everything that already passes; a missing Docs page is always last; each item gives the checklist item it fails, the file and line, and a proposed fix. Then list the checks you could not run and why.
+
+Rules: don't name or link another design system in anything you write (`guidelines/06-engineering-standards.md` §8). If the template is Finalized, your findings are proposals that need my explicit go-ahead before any file is touched, and only I declare a template Finalized. Once the fixes I approve have landed, suggest `/verify` (everything CI runs, one step after another; `/verify quick` for lint, `check-guidelines` and the unit tests between edits) before any push. Then wait for my instruction.
