@@ -27,6 +27,7 @@ import { useKeyboardInset } from "./useKeyboardInset";
 import { useTourController } from "./useTourController";
 import { useTourSpotlight } from "./useTourSpotlight";
 import { useTourState } from "./useTourState";
+import { useDirection } from "../../atoms/DirectionProvider";
 
 /**
  * Pixels between the spotlight and the card. A layout distance handed to the positioning engine, like `Popover`'s
@@ -85,7 +86,7 @@ export const Tour = forwardRef<HTMLDivElement, TourProps>(
       targetTimeout = 1000,
       onTargetMissing,
       container,
-      dir = "ltr",
+      dir: dirProp,
       labels: labelsProp,
       formatNumber = String,
       controllerRef,
@@ -101,6 +102,7 @@ export const Tour = forwardRef<HTMLDivElement, TourProps>(
     },
     ref,
   ) => {
+    const dir = useDirection(dirProp);
     const state = useTourState({
       steps,
       openProp,

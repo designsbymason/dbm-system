@@ -342,7 +342,7 @@ const meta: Meta<PlaygroundArgs> = {
       control: "radio",
       options: ["ltr", "rtl"],
       description:
-        "The reading direction the calendar is drawn in. Passed on and defaulted, not read from the page: under rtl the first day of the week is at the right, the month buttons and their arrows swap sides, and the left and right arrow keys follow the picture.",
+        "The reading direction the calendar is drawn in. Left out, the nearest DirectionProvider's, else left-to-right; not read from the page. Under rtl the first day of the week is at the right, the month buttons and their arrows swap sides, and the left and right arrow keys follow the picture.",
       table: { defaultValue: { summary: "'ltr'" } },
     },
     labels: {

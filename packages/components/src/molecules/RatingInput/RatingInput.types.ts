@@ -103,8 +103,7 @@ export interface RatingInputProps
   required?: boolean;
   /**
    * The direction the rating reads in. `rtl` puts the first icon at the right, fills from the right and turns the
-   * arrow keys round, with the number, the count and the link in the same order. Set explicitly, like the other
-   * components built on a Radix primitive: it is not read from the page.
+   * arrow keys round, with the number, the count and the link in the same order. Left out, it follows the nearest `DirectionProvider`, else left-to-right; it is not read from the page.
    * @default "ltr"
    */
   dir?: "ltr" | "rtl";

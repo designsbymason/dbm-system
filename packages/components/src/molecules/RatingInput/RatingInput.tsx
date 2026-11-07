@@ -7,6 +7,7 @@ import type { IconProps } from "../../atoms/Icon";
 import type { InputSize } from "../../atoms/Input";
 import styles from "./RatingInput.module.css";
 import type { RatingInputLabels, RatingInputProps, RatingInputTone } from "./RatingInput.types";
+import { useDirection } from "../../atoms/DirectionProvider";
 
 const defaultMax = 5;
 const defaultFormatValue = (value: number) => (value > 0 ? value.toFixed(1) : "–");
@@ -85,7 +86,7 @@ export const RatingInput = forwardRef<HTMLDivElement, RatingInputProps>(
       hasError = false,
       disabled = false,
       required = false,
-      dir = "ltr",
+      dir: dirProp,
       name,
       showValue = false,
       valueNames,
@@ -107,6 +108,7 @@ export const RatingInput = forwardRef<HTMLDivElement, RatingInputProps>(
     },
     ref,
   ) => {
+    const dir = useDirection(dirProp);
     const max = resolveMax(maxProp);
     const step = precision === 0.5 ? 0.5 : 1;
     const uid = useId();

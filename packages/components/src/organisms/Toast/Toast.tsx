@@ -54,6 +54,7 @@ import type {
 } from "./Toast.types";
 import { ToastStore } from "./ToastStore";
 import type { ToastEntry } from "./ToastStore";
+import { useDirection } from "../../atoms/DirectionProvider";
 
 const toneClass: Record<ToastTone, string | undefined> = {
   info: styles.toneInfo,
@@ -762,7 +763,7 @@ const ToastProvider = forwardRef<HTMLOListElement, ToastProviderProps>(
       toaster,
       hotkey,
       swipeThreshold,
-      dir = "ltr",
+      dir: dirProp,
       container,
       labels: labelOverrides,
       className,
@@ -772,6 +773,7 @@ const ToastProvider = forwardRef<HTMLOListElement, ToastProviderProps>(
     },
     ref,
   ) => {
+    const dir = useDirection(dirProp);
     const viewportRef = useRef<HTMLOListElement | null>(null);
     const [ownStore] = useState(() => new ToastStore());
     // A toaster made with `createToaster()` brings its own store, and is the api `useToast()` hands out.

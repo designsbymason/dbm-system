@@ -70,7 +70,7 @@ export interface SplitterProps extends Omit<ComponentPropsWithoutRef<"div">, "ch
    */
   disabled?: boolean;
   /**
-   * The text direction, passed down rather than read from the page: in `rtl` the first pane is on the right and
+   * The text direction. Left out, it follows the nearest `DirectionProvider`, else left-to-right; it is not read from the page. In `rtl` the first pane is on the right and
    * the arrow keys follow.
    * @default 'ltr'
    */

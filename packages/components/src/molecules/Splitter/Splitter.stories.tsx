@@ -66,7 +66,7 @@ const meta: Meta<typeof Splitter> = {
     dir: {
       control: "select",
       options: ["ltr", "rtl"],
-      description: "The text direction, passed down rather than read from the page: in rtl the first pane is on the right and the arrow keys follow.",
+      description: "The text direction, left out, the nearest DirectionProvider's, else left-to-right; not read from the page. In rtl the first pane is on the right and the arrow keys follow.",
       table: { defaultValue: { summary: '"ltr"' } },
     },
     labels: { control: false, description: "Text the splitter supplies itself — the handle's name, its value text and the word for collapsed. Any you leave out keep their English default." },

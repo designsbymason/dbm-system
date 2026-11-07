@@ -6,6 +6,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { Tour } from "./Tour";
 import type { TourController, TourStep } from "./Tour.types";
 import { Harness, WithController } from "./tourTestKit";
+import { DirectionProvider } from "../../atoms/DirectionProvider";
 
 afterEach(() => {
   vi.restoreAllMocks();
@@ -133,6 +134,14 @@ describe("Tour — steps", () => {
     await waitFor(() => expect(screen.getByRole("dialog")).toHaveAccessibleName("Second"));
     await user.keyboard("{ArrowRight}");
     await waitFor(() => expect(screen.getByRole("dialog")).toHaveAccessibleName("First"));
+  });
+
+  it("mirrors the arrow keys under a DirectionProvider", async () => {
+    const user = userEvent.setup();
+    render(<DirectionProvider dir="rtl"><Harness /></DirectionProvider>);
+    await card();
+    await user.keyboard("{ArrowLeft}");
+    await waitFor(() => expect(screen.getByRole("dialog")).toHaveAccessibleName("Second"));
   });
 
   it("leaves the arrow keys to a field in the step's own content", async () => {

@@ -8,6 +8,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { Button } from "../../atoms/Button";
 import { ImageViewer, ImageViewerButton, useImageViewerController } from "./ImageViewer";
 import type { ImageViewerController, ImageViewerImage, ImageViewerProps } from "./ImageViewer.types";
+import { DirectionProvider } from "../../atoms/DirectionProvider";
 
 const images: ImageViewerImage[] = [
   { id: "a", src: "/a.jpg", alt: "First picture", caption: "Caption one" },
@@ -185,6 +186,14 @@ describe("ImageViewer navigation", () => {
     expect(counter()).toHaveTextContent("2 / 3");
     await user.keyboard("{ArrowRight}");
     expect(counter()).toHaveTextContent("1 / 3");
+  });
+
+  it("flips the arrow keys under a DirectionProvider", async () => {
+    render(<DirectionProvider dir="rtl"><Viewer /></DirectionProvider>);
+    const { user, dialog } = await open();
+    expect(dialog).toHaveAttribute("dir", "rtl");
+    await user.keyboard("{ArrowLeft}");
+    expect(counter()).toHaveTextContent("2 / 3");
   });
 
   it("draws no arrows, counter or thumbnails for one image", async () => {

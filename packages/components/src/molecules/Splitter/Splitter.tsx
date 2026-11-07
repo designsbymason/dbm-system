@@ -17,6 +17,7 @@ import {
   type ReactElement,
 } from "react";
 import styles from "./Splitter.module.css";
+import { useDirection } from "../../atoms/DirectionProvider";
 import {
   type PaneConstraints,
   adaptLayout,
@@ -226,7 +227,7 @@ const SplitterRoot = forwardRef<HTMLDivElement, SplitterProps>(
       variant = "line",
       keyboardStep = 5,
       disabled = false,
-      dir = "ltr",
+      dir: dirProp,
       labels,
       formatNumber = String,
       id,
@@ -235,6 +236,7 @@ const SplitterRoot = forwardRef<HTMLDivElement, SplitterProps>(
     },
     ref,
   ) => {
+    const dir = useDirection(dirProp);
     const baseId = useId();
     const rootRef = useRef<HTMLDivElement>(null);
     const resolvedOrientation = useResolvedResponsiveValue<SplitterOrientation>(orientation, "horizontal");

@@ -60,3 +60,6 @@ A full pass of `06` §9 found nine things, all fixed:
 - A real touch device, VoiceOver and a screen reader's announcement of the bar and its menus, Safari and Firefox (`focus({ focusVisible: false })` falls back to a ringed focus where unsupported), and Windows high contrast on a real machine (forced colours was emulated).
 - Purple dark and Emerald light by a look (covered by the contrast measurements and the tokens).
 - Known gaps, named and not built: an overflow menu for triggers that do not fit, and a sheet presentation for touch.
+
+## Reads the nearest DirectionProvider (2026-11-06)
+Additive, at explicit direction ([ADR-0177](../adr/0177-an-optional-direction-provider-sets-the-text-direction-for-a-subtree-over-reading-the-page-direction-automatically.md), [ADR-0182](../adr/0182-appshell-grows-a-busy-main-a-whole-page-state-and-a-layer-ladder-and-direction-reaches-the-shell-sidebar-and-navbar-through-a-provider.md)): `dir` left out now follows the nearest `DirectionProvider`, else left to right, as before; the prop and its own value are unchanged. The `dir` JSDoc, the Controls description and the Docs text say so. A unit test next to the existing right-to-left one wraps the same fixture in a provider. Finalized status is unchanged: nothing changes without a provider, and the existing right-to-left tests and checks were re-run.

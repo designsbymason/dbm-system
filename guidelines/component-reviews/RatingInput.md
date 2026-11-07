@@ -95,3 +95,5 @@ A full `06-engineering-standards.md` §9 pass over the finished component (re-re
 
 **Still not done:** a real touch device (tap-to-choose, no hover preview, the half-step targets above); a screen-reader listen (checked by structure and accessible names only).
 
+## Reads the nearest DirectionProvider (2026-11-06)
+Additive, at explicit direction ([ADR-0177](../adr/0177-an-optional-direction-provider-sets-the-text-direction-for-a-subtree-over-reading-the-page-direction-automatically.md), [ADR-0182](../adr/0182-appshell-grows-a-busy-main-a-whole-page-state-and-a-layer-ladder-and-direction-reaches-the-shell-sidebar-and-navbar-through-a-provider.md)): `dir` left out now follows the nearest `DirectionProvider`, else left to right, as before; the prop and its own value are unchanged. The `dir` JSDoc, the Controls description and the Docs text say so. A unit test next to the existing right-to-left one wraps the same fixture in a provider. Finalized status is unchanged: nothing changes without a provider, and the existing right-to-left tests and checks were re-run.

@@ -19,7 +19,7 @@ export const ratingInputSnippets = {
   rounded: `{/* roundTo: 1 | 0.5. The stars snap (3.3 draws three and a half); the number and the text alternative stay 3.3. */}
 <RatingInput aria-label="Average rating" readOnly value={3.3} roundTo={0.5} showValue />`,
 
-  rightToLeft: `{/* dir: "ltr" (default) | "rtl". Set explicitly; it is not read from the page. */}
+  rightToLeft: `{/* dir: "ltr" (default) | "rtl". Left out, it follows the nearest DirectionProvider; it is not read from the page. */}
 <RatingInput aria-label="Rating" dir="rtl" precision={0.5} defaultValue={3.5} />`,
 
   readOnly: `{/* An average: any value from 0 to max is drawn exactly. */}

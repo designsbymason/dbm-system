@@ -43,6 +43,7 @@ import { buildLabels } from "./calendarLabels";
 import { CalendarLegend } from "./CalendarLegend";
 import { CalendarPicker } from "./CalendarPicker";
 import type { CalendarMarker, CalendarMarkerTone, CalendarProps, CalendarSize } from "./Calendar.types";
+import { useDirection } from "../../atoms/DirectionProvider";
 
 const sizeClass: Record<CalendarSize, string | undefined> = {
   xs: styles.sizeXs,
@@ -139,7 +140,7 @@ export const Calendar = forwardRef<HTMLDivElement, CalendarProps>((calendarProps
     readOnly = false,
     autoFocus = false,
     announce = true,
-    dir = "ltr",
+    dir: dirProp,
     labels: labelOverrides,
     formatNumber = String,
     "aria-label": ariaLabel,
@@ -150,6 +151,7 @@ export const Calendar = forwardRef<HTMLDivElement, CalendarProps>((calendarProps
     "data-testid": dataTestId,
     ...rest
   } = calendarProps;
+  const dir = useDirection(dirProp);
   const isRange = calendarProps.mode === "range";
   const isMultiple = calendarProps.mode === "multiple";
   const isWeek = calendarProps.mode === "week";

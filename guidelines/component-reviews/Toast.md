@@ -68,3 +68,6 @@ Accepted as open; none changes the component.
 - **Forced colours** is asserted by a real-browser check (a system-colour border on every toast, none left to a shadow) and was not looked at.
 - **"Clear all" is read out when it appears** ("Notification, Clear all"), which is Radix always reading a toast's label.
 - **An action's size follows the toast's** and cannot be set on its own, as `Alert.Action`'s does.
+
+## Reads the nearest DirectionProvider (2026-11-06)
+Additive, at explicit direction ([ADR-0177](../adr/0177-an-optional-direction-provider-sets-the-text-direction-for-a-subtree-over-reading-the-page-direction-automatically.md), [ADR-0182](../adr/0182-appshell-grows-a-busy-main-a-whole-page-state-and-a-layer-ladder-and-direction-reaches-the-shell-sidebar-and-navbar-through-a-provider.md)): `dir` left out now follows the nearest `DirectionProvider`, else left to right, as before; the prop and its own value are unchanged. The `dir` JSDoc, the Controls description and the Docs text say so. A unit test next to the existing right-to-left one wraps the same fixture in a provider. Finalized status is unchanged: nothing changes without a provider, and the existing right-to-left tests and checks were re-run.

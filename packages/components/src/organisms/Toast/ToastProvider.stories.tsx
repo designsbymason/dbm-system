@@ -81,7 +81,7 @@ const meta: Meta<typeof Toast.Provider> = {
       control: "select",
       options: ["ltr", "rtl"],
       description:
-        "Text direction, which sets which way a swipe closes a toast. Left to right unless told otherwise, and not read from the page.",
+        "Text direction, which sets which way a swipe closes a toast. Left out, the nearest DirectionProvider's, else left-to-right; not read from the page.",
       table: { defaultValue: { summary: '"ltr"' } },
     },
     formatNumber: {

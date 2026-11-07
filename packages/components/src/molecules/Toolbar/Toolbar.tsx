@@ -17,6 +17,7 @@ import { ButtonGroup } from "../ButtonGroup";
 import { ToggleGroup } from "../ToggleGroup";
 import type { ToggleGroupItemProps, ToggleGroupProps } from "../ToggleGroup";
 import styles from "./Toolbar.module.css";
+import { useDirection } from "../../atoms/DirectionProvider";
 import {
   applyOverflow,
   overflowPartProps,
@@ -140,7 +141,7 @@ const ToolbarRoot = forwardRef<HTMLDivElement, ToolbarProps>(
       rounded = false,
       disabled = false,
       orientation = "horizontal",
-      dir = "ltr",
+      dir: dirProp,
       loop = true,
       fullWidth = false,
       align = "start",
@@ -158,6 +159,7 @@ const ToolbarRoot = forwardRef<HTMLDivElement, ToolbarProps>(
     },
     ref,
   ) => {
+    const dir = useDirection(dirProp);
     const resolvedOrientation = useResolvedResponsiveValue<ToolbarOrientation>(orientation, "horizontal");
     // The "more" menu is for a row: a column has no width to run out of, so it scrolls as it would without it.
     const isMenu = overflow === "menu" && resolvedOrientation === "horizontal";

@@ -8,6 +8,7 @@ import { HouseIcon } from "@dbm-system/icons";
 import { ContextMenu } from "../ContextMenu";
 import { EditorTabs } from "./EditorTabs";
 import type { EditorTab, EditorTabsController, EditorTabsProps } from "./EditorTabs.types";
+import { DirectionProvider } from "../../atoms/DirectionProvider";
 
 const FILES: EditorTab[] = [
   { id: "a", label: "index.ts" },
@@ -377,6 +378,15 @@ describe("EditorTabs — reordering with the keyboard", () => {
     const user = userEvent.setup();
     const onReorder = vi.fn();
     render(<Harness dir="rtl" onReorder={onReorder} />);
+    await user.tab();
+    await user.keyboard("{Alt>}{ArrowLeft}{/Alt}");
+    expect(onReorder).toHaveBeenCalledWith(0, 1, "keyboard");
+  });
+
+  it("flips the arrow keys under a DirectionProvider", async () => {
+    const user = userEvent.setup();
+    const onReorder = vi.fn();
+    render(<DirectionProvider dir="rtl"><Harness onReorder={onReorder} /></DirectionProvider>);
     await user.tab();
     await user.keyboard("{Alt>}{ArrowLeft}{/Alt}");
     expect(onReorder).toHaveBeenCalledWith(0, 1, "keyboard");

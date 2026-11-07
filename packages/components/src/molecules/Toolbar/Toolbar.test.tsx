@@ -15,6 +15,7 @@ import { Select } from "../Select";
 import { ButtonGroup } from "../ButtonGroup";
 import { Toolbar } from "./Toolbar";
 import styles from "./Toolbar.module.css";
+import { DirectionProvider } from "../../atoms/DirectionProvider";
 
 afterEach(() => {
   vi.restoreAllMocks();
@@ -196,6 +197,14 @@ describe("Toolbar", () => {
       expect(screen.getByRole("button", { name: "Italic" })).toHaveFocus();
       await user.keyboard("{ArrowRight}");
       expect(screen.getByRole("button", { name: "Bold" })).toHaveFocus();
+    });
+
+    it("reverses left and right under a DirectionProvider", async () => {
+      const user = userEvent.setup();
+      render(<DirectionProvider dir="rtl"><Bar /></DirectionProvider>);
+      await user.tab();
+      await user.keyboard("{ArrowLeft}");
+      expect(screen.getByRole("button", { name: "Italic" })).toHaveFocus();
     });
 
     it("skips a disabled item", async () => {

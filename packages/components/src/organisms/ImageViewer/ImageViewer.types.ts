@@ -361,7 +361,7 @@ export interface ImageViewerProps
   onKeyDown?: (event: KeyboardEvent<HTMLDivElement>) => void;
   /** An element to focus when the viewer opens, instead of the viewer itself (which keeps the keys working at once). */
   initialFocus?: RefObject<HTMLElement | null>;
-  /** The reading direction. It mirrors the arrows and the arrow keys, and is passed to the viewer, not read from the page. @default 'ltr' */
+  /** The reading direction. It mirrors the arrows and the arrow keys, and is passed to the viewer. Left out, it follows the nearest `DirectionProvider`, else left-to-right; it is not read from the page. @default 'ltr' */
   dir?: "ltr" | "rtl";
   /** Renders the viewer into a different DOM node than `document.body`, to keep an embedded demo inside its own box. */
   container?: HTMLElement | null;

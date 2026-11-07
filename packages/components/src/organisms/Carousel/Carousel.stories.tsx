@@ -217,7 +217,7 @@ const meta: Meta<PlaygroundArgs> = {
     dir: {
       control: "select",
       options: ["ltr", "rtl"],
-      description: "Text direction, passed to the root and defaulted rather than read from the page.",
+      description: "Text direction, passed to the root. Left out, the nearest DirectionProvider's, else left-to-right; not read from the page.",
       table: { defaultValue: { summary: '"ltr"' } },
     },
     "aria-label": { control: "text", description: "The accessible name of the carousel. Needs this or aria-labelledby." },

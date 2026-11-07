@@ -6,6 +6,7 @@ import { renderToString } from "react-dom/server";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { Splitter } from "./Splitter";
 import styles from "./Splitter.module.css";
+import { DirectionProvider } from "../../atoms/DirectionProvider";
 
 const two = (props: Partial<React.ComponentProps<typeof Splitter>> = {}, pane: Partial<React.ComponentProps<typeof Splitter.Pane>> = {}) => (
   <Splitter aria-label="Workspace" {...props}>
@@ -328,6 +329,14 @@ describe("Splitter", () => {
       withContainerWidth(1000);
       const onLayoutChange = vi.fn();
       render(two({ defaultLayout: [50, 50], onLayoutChange, dir: "rtl" }));
+      drag(first(), 500, 600);
+      expect(onLayoutChange).toHaveBeenLastCalledWith([40, 60]);
+    });
+
+    it("goes the other way under a DirectionProvider", () => {
+      withContainerWidth(1000);
+      const onLayoutChange = vi.fn();
+      render(<DirectionProvider dir="rtl">{two({ defaultLayout: [50, 50], onLayoutChange })}</DirectionProvider>);
       drag(first(), 500, 600);
       expect(onLayoutChange).toHaveBeenLastCalledWith([40, 60]);
     });

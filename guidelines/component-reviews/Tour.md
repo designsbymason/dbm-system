@@ -63,3 +63,6 @@ A full §9 pass before Finalizing found eight things, all fixed:
 - **A tour rendered beside a dialog** (outside its React tree) still dismisses it on a press; documented, not changed.
 - **`onEnter` that never settles** holds the card for ever; there is no timeout.
 - The Docs page shows an `h2` (the card's title) while a demo is open, which a table of contents built live would list for as long as it is open.
+
+## Reads the nearest DirectionProvider (2026-11-06)
+Additive, at explicit direction ([ADR-0177](../adr/0177-an-optional-direction-provider-sets-the-text-direction-for-a-subtree-over-reading-the-page-direction-automatically.md), [ADR-0182](../adr/0182-appshell-grows-a-busy-main-a-whole-page-state-and-a-layer-ladder-and-direction-reaches-the-shell-sidebar-and-navbar-through-a-provider.md)): `dir` left out now follows the nearest `DirectionProvider`, else left to right, as before; the prop and its own value are unchanged. The `dir` JSDoc, the Controls description and the Docs text say so. A unit test next to the existing right-to-left one wraps the same fixture in a provider. Finalized status is unchanged: nothing changes without a provider, and the existing right-to-left tests and checks were re-run.

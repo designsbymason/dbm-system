@@ -33,6 +33,7 @@ import { useEditorTabsController } from "./useEditorTabsController";
 import { useEditorTabsFlip } from "./useEditorTabsFlip";
 import { useEditorTabsHotkeys } from "./useEditorTabsHotkeys";
 import { useEditorTabsWarnings } from "./useEditorTabsWarnings";
+import { useDirection } from "../../atoms/DirectionProvider";
 
 function defaultLabels(formatNumber: (value: number) => string): EditorTabsLabels {
   const where = (position: number, total: number) => `${formatNumber(position)} of ${formatNumber(total)}`;
@@ -103,7 +104,7 @@ function EditorTabsInner<TTab extends EditorTab>(props: EditorTabsProps<TTab>, r
     variant = "underline",
     size = "md",
     rounded = false,
-    dir = "ltr",
+    dir: dirProp,
     labels: labelsProp,
     formatNumber = String,
     controllerRef,
@@ -116,6 +117,7 @@ function EditorTabsInner<TTab extends EditorTab>(props: EditorTabsProps<TTab>, r
     "data-testid": dataTestId,
     ...rest
   } = props;
+  const dir = useDirection(dirProp);
 
   // Kept the same between renders unless the words change, so the tabs (which take them) are not drawn again for nothing.
   const labels = useMemo(() => mergeDefined(defaultLabels(formatNumber), labelsProp), [formatNumber, labelsProp]);

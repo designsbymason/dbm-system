@@ -210,7 +210,7 @@ export interface CarouselProps extends Omit<ComponentPropsWithoutRef<"div">, "de
   labels?: Partial<CarouselLabels>;
   /** Receives the controls for code outside the carousel: `next()`, `previous()`, `goTo()` and the current `value`. */
   controllerRef?: Ref<CarouselController>;
-  /** Text direction. Passed to the carousel's root and defaulted, not read from the page. @default "ltr" */
+  /** Text direction, passed to the carousel's root. Left out, it follows the nearest `DirectionProvider`, else left-to-right; it is not read from the page. @default "ltr" */
   dir?: "ltr" | "rtl";
   /** The accessible name of the carousel. Needs this or `aria-labelledby`. */
   "aria-label"?: string;

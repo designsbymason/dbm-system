@@ -249,7 +249,7 @@ export interface EditorTabsProps<TTab extends EditorTab = EditorTab>
    */
   rounded?: boolean;
   /**
-   * The reading direction, which flips the arrow keys and the side a dragged tab is dropped on.
+   * The reading direction, which flips the arrow keys and the side a dragged tab is dropped on. Left out, it follows the nearest `DirectionProvider`, else left-to-right; it is not read from the page.
    * @default "ltr"
    */
   dir?: "ltr" | "rtl";

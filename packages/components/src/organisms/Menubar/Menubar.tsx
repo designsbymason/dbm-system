@@ -32,6 +32,7 @@ import {
   useMenubarOverflow,
 } from "./useMenubarOverflow";
 import { useMenubarHotkeys } from "./useMenubarHotkeys";
+import { useDirection } from "../../atoms/DirectionProvider";
 import type {
   MenubarController,
   MenubarLabels,
@@ -116,13 +117,14 @@ const MenubarRoot = forwardRef<HTMLDivElement, MenubarProps>(
       stickyOffset = 0,
       scrollContainerRef,
       loop = true,
-      dir = "ltr",
+      dir: dirProp,
       className,
       onFocus,
       ...props
     },
     ref,
   ) => {
+    const dir = useDirection(dirProp);
     const [value, setValueRaw] = useControllableState(
       valueProp,
       defaultValue,

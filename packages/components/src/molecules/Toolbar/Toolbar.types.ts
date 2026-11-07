@@ -65,8 +65,7 @@ export interface ToolbarProps extends Omit<ComponentPropsWithoutRef<"div">, "rol
    */
   orientation?: Responsive<ToolbarOrientation>;
   /**
-   * The reading direction, which decides which arrow key goes forwards in a row. Not read from the page: pass
-   * `"rtl"` on a right-to-left page.
+   * The reading direction, which decides which arrow key goes forwards in a row. Left out, it follows the nearest `DirectionProvider`, else left-to-right; it is not read from the page.
    * @default 'ltr'
    */
   dir?: ToolbarDirection;

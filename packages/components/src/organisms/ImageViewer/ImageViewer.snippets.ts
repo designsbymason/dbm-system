@@ -120,7 +120,7 @@ ${images}
   ]}
 />`,
 
-  rightToLeft: `{/* dir mirrors the arrows and the arrow keys; it is passed in, not read from the page. */}
+  rightToLeft: `{/* dir mirrors the arrows and the arrow keys; left out it follows the nearest DirectionProvider; it is never read from the page. */}
 ${viewer('  dir="rtl"')}`,
 
   labels: `{/* Every word the viewer supplies is a label. A label that takes numbers is a function of plain numbers. */}

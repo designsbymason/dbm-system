@@ -409,7 +409,7 @@ interface CalendarBaseProps
    */
   announce?: boolean;
   /**
-   * The reading direction the calendar is drawn in. It is passed on and defaulted, not read from the page: under
+   * The reading direction the calendar is drawn in. Left out, it follows the nearest `DirectionProvider`, else left-to-right; it is not read from the page. Under
    * `"rtl"` the first day of the week is at the right, the month buttons and their arrows swap sides, and the
    * left and right arrow keys follow the picture.
    * @default "ltr"

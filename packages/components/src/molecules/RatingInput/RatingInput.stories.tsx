@@ -112,7 +112,7 @@ const meta: Meta<typeof RatingInput> = {
       control: "select",
       options: ["ltr", "rtl"],
       description:
-        "The direction the rating reads in. rtl puts the first icon at the right, fills from the right and turns the arrow keys round, with the number, the count and the link in the same order. Set explicitly: not read from the page.",
+        "The direction the rating reads in. rtl puts the first icon at the right, fills from the right and turns the arrow keys round, with the number, the count and the link in the same order. Left out, the nearest DirectionProvider's, else left-to-right; not read from the page.",
       table: { defaultValue: { summary: "ltr" } },
     },
     showValue: {

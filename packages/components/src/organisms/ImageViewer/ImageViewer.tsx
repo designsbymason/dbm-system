@@ -35,6 +35,7 @@ export { ViewerButton as ImageViewerButton } from "./ImageViewerParts";
 import { ImageViewerStage } from "./ImageViewerStage";
 import type { ImageStatus } from "./ImageViewerStage";
 import type { ImageZoomApi } from "./useImageZoom";
+import { useDirection } from "../../atoms/DirectionProvider";
 
 /** How far an arrow key moves a zoomed image, in pixels. */
 const PAN_STEP = 80;
@@ -224,7 +225,7 @@ export const ImageViewer = forwardRef<HTMLDivElement, ImageViewerProps>(
       scrimOpacity = 90,
       scrimBlur = false,
       initialFocus,
-      dir = "ltr",
+      dir: dirProp,
       container,
       labels: labelOverrides,
       formatNumber = String,
@@ -242,6 +243,7 @@ export const ImageViewer = forwardRef<HTMLDivElement, ImageViewerProps>(
     }: ImageViewerProps,
     ref,
   ) => {
+    const dir = useDirection(dirProp);
     const labels = useMemo(() => mergeDefined(buildDefaultLabels(formatNumber), labelOverrides), [formatNumber, labelOverrides]);
     const count = images.length;
 

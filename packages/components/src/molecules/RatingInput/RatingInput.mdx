@@ -198,7 +198,7 @@ outermost box; `ref`, `id`, `data-testid` and the `aria-*` props go on the eleme
 - For a review summary, set `readOnly`, `showValue`, `count` and a `suffix` link: `4.2 ★★★★☆ (124) Read reviews`. The
   count and the link are for a summary; they are ignored on a rating a person can change.
 - A `readOnly` rating is not a form control: it has no tab stop. It still submits its value when it has a `name`.
-- The scale reads left to right by default, the way a number does. In a right-to-left app set `dir="rtl"` on each rating (it is not read from the page): the first icon is then at the right, it fills from the right, and the arrow keys follow the picture.
+- The scale reads left to right by default, the way a number does. In a right-to-left app wrap it in a `DirectionProvider`, or set `dir="rtl"` on each rating (it is not read from the page): the first icon is then at the right, it fills from the right, and the arrow keys follow the picture.
 - A read-only average draws exactly by default. Set `roundTo` to draw it to the nearest whole or half icon (3.3 as three and a half) while the number and the text alternative stay exact.
 
 ## Accessibility

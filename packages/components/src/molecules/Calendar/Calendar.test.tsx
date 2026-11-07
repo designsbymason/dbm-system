@@ -8,6 +8,7 @@ import buttonStyles from "../../atoms/Button/Button.module.css";
 import { Calendar } from "./Calendar";
 import styles from "./Calendar.module.css";
 import type { CalendarProps, CalendarRangeValue } from "./Calendar.types";
+import { DirectionProvider } from "../../atoms/DirectionProvider";
 
 afterEach(() => {
   vi.restoreAllMocks();
@@ -1794,6 +1795,12 @@ describe("Calendar", () => {
 
     it("goes the other way in right-to-left text", () => {
       render(<Calendar defaultMonth="2026-10" today="2026-10-14" dir="rtl" />);
+      swipe(250, 150);
+      expect(title()).toBe("September 2026");
+    });
+
+    it("goes the other way when a DirectionProvider says right to left", () => {
+      render(<DirectionProvider dir="rtl"><Calendar defaultMonth="2026-10" today="2026-10-14" /></DirectionProvider>);
       swipe(250, 150);
       expect(title()).toBe("September 2026");
     });

@@ -6,6 +6,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { createToaster, Toast, useToast } from "./Toast";
 import styles from "./Toast.module.css";
 import type { ToastApi, ToastProviderProps } from "./Toast.types";
+import { DirectionProvider } from "../../atoms/DirectionProvider";
 
 // Where the hook's functions are handed out, so a test can call them outside a click.
 const captured: { api: ToastApi } = { api: undefined as unknown as ToastApi };
@@ -82,6 +83,11 @@ describe("Toast.Provider", () => {
   it("lets a same-named prop not replace the direction or placement in effect", () => {
     render(<Provider placement="top" dir="rtl" data-testid="viewport" {...({ "data-placement": "bottom" } as object)} />);
     expect(screen.getByTestId("viewport")).toHaveAttribute("data-placement", "top");
+    expect(screen.getByTestId("viewport")).toHaveAttribute("dir", "rtl");
+  });
+
+  it("takes its direction from a DirectionProvider", () => {
+    render(<DirectionProvider dir="rtl"><Provider data-testid="viewport" /></DirectionProvider>);
     expect(screen.getByTestId("viewport")).toHaveAttribute("dir", "rtl");
   });
 

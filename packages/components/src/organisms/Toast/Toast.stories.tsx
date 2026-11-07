@@ -233,7 +233,7 @@ const meta: Meta<PlaygroundArgs> = {
     dir: {
       control: "select",
       options: ["ltr", "rtl"],
-      description: "Text direction, which sets which way a swipe closes a toast.",
+      description: "Text direction, which sets which way a swipe closes a toast. Left out, the nearest DirectionProvider's, else left-to-right.",
       table: { defaultValue: { summary: '"ltr"' } },
     },
     onOpenChange: {

@@ -5,6 +5,7 @@ import { createRef, StrictMode, useState } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { Dialog } from "../Dialog";
 import { Menubar } from "./Menubar";
+import { DirectionProvider } from "../../atoms/DirectionProvider";
 
 function Basic({
   root,
@@ -94,6 +95,11 @@ describe("Menubar", () => {
       const { rerender } = render(<Basic />);
       expect(screen.getByRole("menubar")).toHaveAttribute("dir", "ltr");
       rerender(<Basic root={{ dir: "rtl" }} />);
+      expect(screen.getByRole("menubar")).toHaveAttribute("dir", "rtl");
+    });
+
+    it("takes its direction from a DirectionProvider", () => {
+      render(<DirectionProvider dir="rtl"><Basic /></DirectionProvider>);
       expect(screen.getByRole("menubar")).toHaveAttribute("dir", "rtl");
     });
 

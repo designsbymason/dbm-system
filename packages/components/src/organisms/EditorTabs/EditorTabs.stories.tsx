@@ -148,7 +148,7 @@ const meta: Meta<PlaygroundArgs> = {
     dir: {
       control: "radio",
       options: ["ltr", "rtl"],
-      description: "The reading direction, which flips the arrow keys and the side a dragged tab is dropped on.",
+      description: "The reading direction, which flips the arrow keys and the side a dragged tab is dropped on. Left out, the nearest DirectionProvider's, else left-to-right.",
       table: { defaultValue: { summary: '"ltr"' } },
     },
     labels: { control: false, description: "The text the strip supplies itself (the list's name, the close and add buttons, the announcements), merged over the English defaults." },

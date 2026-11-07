@@ -326,7 +326,7 @@ same function.
   person can see that the day exists but isn't available.
 - Leave `today` out in the app: the calendar reads the real date once it has mounted. Pass it only in tests and
   screenshots, so the marked day doesn't change with the date they run.
-- Translate the text with `labels`, and pass `dir="rtl"` for a right-to-left language — it is not read from the page.
+- Translate the text with `labels`, and pass `dir="rtl"` for a right-to-left language, or wrap the app in a `DirectionProvider`; it is not read from the page.
 - Give each calendar on a page its own `aria-label` ("Departure", "Return") when there is more than one.
 
 </Callout>

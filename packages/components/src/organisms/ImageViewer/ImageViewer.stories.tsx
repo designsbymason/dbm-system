@@ -223,7 +223,7 @@ const meta: Meta<PlaygroundArgs> = {
     dir: {
       control: "radio",
       options: ["ltr", "rtl"],
-      description: "The reading direction. It mirrors the arrows and the arrow keys, and is passed in, not read from the page.",
+      description: "The reading direction. It mirrors the arrows and the arrow keys, and is passed in. Left out, the nearest DirectionProvider's, else left-to-right; not read from the page.",
       table: { defaultValue: { summary: '"ltr"' } },
     },
   },

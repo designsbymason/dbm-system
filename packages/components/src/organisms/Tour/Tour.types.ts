@@ -250,7 +250,7 @@ export interface TourProps
    */
   container?: HTMLElement | null;
   /**
-   * The text direction of the card and of `"start"`/`"end"`. Set, not read from the page.
+   * The text direction of the card and of `"start"`/`"end"`. Left out, it follows the nearest `DirectionProvider`, else left-to-right; it is not read from the page.
    * @default 'ltr'
    */
   dir?: "ltr" | "rtl";

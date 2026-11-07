@@ -135,7 +135,7 @@ export const calendarSnippets = {
     the number it shows. */}
 <Calendar formatNumber={new Intl.NumberFormat("ar-EG", { useGrouping: false }).format} />`,
 
-  rightToLeft: `{/* dir is passed on, not read from the page. Under "rtl" the first day of the week is at the right, the month
+  rightToLeft: `{/* dir left out follows the nearest DirectionProvider; it is never read from the page. Under "rtl" the first day of the week is at the right, the month
     buttons and their arrows swap sides, and the left and right arrow keys follow the picture. */}
 <Calendar dir="rtl" mode="range" weekStartsOn={6} />`,
 } as const;

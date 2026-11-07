@@ -116,7 +116,7 @@ const meta: Meta<PlaygroundArgs> = {
     dir: {
       control: "select",
       options: ["ltr", "rtl"],
-      description: 'The text direction of the card and of "start" and "end". Set, not read from the page.',
+      description: 'The text direction of the card and of "start" and "end". Left out, the nearest DirectionProvider, else left-to-right; not read from the page.',
       table: { defaultValue: { summary: '"ltr"' } },
     },
     labels: { control: false, description: "The text the tour writes itself: next, back, skip, finish, stepOf, announcement and dialog." },

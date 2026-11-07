@@ -88,7 +88,7 @@ const meta: Meta<ToolbarProps> = {
     dir: {
       control: "select",
       options: ["ltr", "rtl"],
-      description: "The reading direction, which decides which arrow key goes forwards in a row. Not read from the page.",
+      description: "The reading direction, which decides which arrow key goes forwards in a row. Left out, the nearest DirectionProvider's, else left-to-right; not read from the page.",
       table: { defaultValue: { summary: "ltr" } },
     },
     loop: {

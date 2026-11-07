@@ -5,6 +5,7 @@ import { StrictMode, createRef, useState } from "react";
 import { renderToString } from "react-dom/server";
 import { describe, expect, it, vi } from "vitest";
 import { RatingInput } from "./RatingInput";
+import { DirectionProvider } from "../../atoms/DirectionProvider";
 
 const radios = () => screen.getAllByRole("radio") as HTMLInputElement[];
 const checked = () => radios().find((radio) => radio.checked)?.value;
@@ -722,6 +723,13 @@ describe("RatingInput", () => {
       expect(container.firstElementChild).toHaveAttribute("dir", "ltr");
       rerender(<RatingInput aria-label="Rating" dir="rtl" />);
       expect(container.firstElementChild).toHaveAttribute("dir", "rtl");
+    });
+
+    it("follows a DirectionProvider, and its own dir wins", () => {
+      const { container, rerender } = render(<DirectionProvider dir="rtl"><RatingInput aria-label="Rating" /></DirectionProvider>);
+      expect(container.firstElementChild).toHaveAttribute("dir", "rtl");
+      rerender(<DirectionProvider dir="rtl"><RatingInput aria-label="Rating" dir="ltr" /></DirectionProvider>);
+      expect(container.firstElementChild).toHaveAttribute("dir", "ltr");
     });
 
     it("does not read the page's direction", () => {

@@ -169,7 +169,7 @@ const meta: Meta<MenubarStageArgs> = {
       control: "select",
       options: ["ltr", "rtl"],
       description:
-        "The reading direction of the bar and its menus: it lays the triggers out (from the right in rtl), decides which arrow key moves to the next trigger and which side a submenu opens on.",
+        "The reading direction of the bar and its menus: it lays the triggers out (from the right in rtl), decides which arrow key moves to the next trigger and which side a submenu opens on. Left out, the nearest DirectionProvider's, else left-to-right.",
       table: { defaultValue: { summary: '"ltr"' } },
     },
     "aria-label": {

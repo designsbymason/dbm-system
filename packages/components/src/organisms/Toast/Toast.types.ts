@@ -322,8 +322,7 @@ export interface ToastProviderProps
    */
   swipeThreshold?: number;
   /**
-   * Text direction, which sets which way a swipe closes a toast. Left to right unless told otherwise, and not read
-   * from the page, as for the Radix-based components (`05-component-api-conventions.md` §3).
+   * Text direction, which sets which way a swipe closes a toast. Left out, it follows the nearest `DirectionProvider`, else left-to-right; it is not read from the page.
    * @default 'ltr'
    */
   dir?: "ltr" | "rtl";

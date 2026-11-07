@@ -7,6 +7,7 @@ import { StarIcon } from "@dbm-system/icons";
 import { Carousel } from "./Carousel";
 import type { CarouselController } from "./Carousel.types";
 import { Slides } from "./carouselTestKit";
+import { DirectionProvider } from "../../atoms/DirectionProvider";
 
 afterEach(() => {
   vi.restoreAllMocks();
@@ -64,6 +65,13 @@ describe("Carousel — structure", () => {
     expect(screen.getByTestId("c")).toHaveAttribute("dir", "ltr");
     rerender(<Slides data-testid="c" dir="rtl" />);
     expect(screen.getByTestId("c")).toHaveAttribute("dir", "rtl");
+  });
+
+  it("follows a DirectionProvider, and its own dir wins", () => {
+    const { rerender } = render(<DirectionProvider dir="rtl"><Slides data-testid="c" /></DirectionProvider>);
+    expect(screen.getByTestId("c")).toHaveAttribute("dir", "rtl");
+    rerender(<DirectionProvider dir="rtl"><Slides data-testid="c" dir="ltr" /></DirectionProvider>);
+    expect(screen.getByTestId("c")).toHaveAttribute("dir", "ltr");
   });
 
   it("does not let a same-named prop replace the role or the roledescription", () => {

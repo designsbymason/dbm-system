@@ -35,6 +35,7 @@ import { useCarouselDrag } from "./useCarouselDrag";
 import { useCarouselScroll } from "./useCarouselScroll";
 import styles from "./Carousel.module.css";
 import type { CarouselProps, CarouselSlideProps } from "./Carousel.types";
+import { useDirection } from "../../atoms/DirectionProvider";
 
 /**
  * Whether a focus event is the kind that should hold automatic rotation: keyboard focus (or a text field), not a press that
@@ -109,7 +110,7 @@ const CarouselRoot = forwardRef<HTMLDivElement, CarouselProps>(
       formatNumber = String,
       labels: labelsProp,
       controllerRef,
-      dir = "ltr",
+      dir: dirProp,
       "aria-label": ariaLabel,
       "aria-labelledby": ariaLabelledBy,
       className,
@@ -122,6 +123,7 @@ const CarouselRoot = forwardRef<HTMLDivElement, CarouselProps>(
     },
     ref,
   ) => {
+    const dir = useDirection(dirProp);
     const labels = resolveLabels(formatNumber, labelsProp);
 
     const { slides, previousPart, nextPart, indicatorsPart, togglePart } = splitChildren(children);
