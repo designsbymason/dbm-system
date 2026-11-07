@@ -240,7 +240,7 @@ export interface TreeProps extends Omit<ComponentPropsWithoutRef<"div">, "childr
   maxHeight?: number | string;
   /** What to draw when there are no rows, in place of the words in `labels.empty`. `false` draws nothing. */
   empty?: ReactNode;
-  /** The direction the tree reads. Mirrors the indent, the arrows and the Left and Right keys. @default 'ltr' */
+  /** The direction the tree reads. Mirrors the indent, the arrows and the Left and Right keys. Left out, the nearest `DirectionProvider`'s, else left-to-right. @default 'ltr' */
   dir?: "ltr" | "rtl";
   /** Writes the digits in the text the tree supplies. @default String */
   formatNumber?: (value: number) => string;

@@ -341,7 +341,7 @@ export interface CommandPaletteProps
   /** Renders the palette into a different node than `document.body`, e.g. to keep an embedded demo inside its own box. */
   container?: HTMLElement | null;
   /**
-   * The reading direction of the palette. It is passed on, not read from the page.
+   * The reading direction of the palette. Left out, it follows the nearest `DirectionProvider`, else left-to-right; it is not read from the page.
    * @default 'ltr'
    */
   dir?: "ltr" | "rtl";

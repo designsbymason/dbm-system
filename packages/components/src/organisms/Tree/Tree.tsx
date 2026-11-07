@@ -32,6 +32,7 @@ import type {
 import { ancestorsOf, canExpand, checkStates, indexTree, sanitizeNodes, toggleChecked, visibleRows } from "./treeModel";
 import type { TreeRow } from "./treeModel";
 import { useTreeList } from "./useTreeList";
+import { useDirection } from "../../atoms/DirectionProvider";
 
 const sizeClass: Record<TreeSize, string | undefined> = {
   xs: styles.sizeXs,
@@ -140,7 +141,7 @@ export const Tree = forwardRef<HTMLDivElement, TreeProps>(
       windowed = "auto",
       maxHeight,
       empty,
-      dir = "ltr",
+      dir: dirProp,
       formatNumber = String,
       labels: labelsProp,
       controllerRef,
@@ -154,6 +155,7 @@ export const Tree = forwardRef<HTMLDivElement, TreeProps>(
     },
     ref,
   ) => {
+    const dir = useDirection(dirProp);
     const labels = mergeDefined(defaultLabels(formatNumber), labelsProp);
     // `nodes` is data on its way as often as not: what is not sound is left out, and development says so (once per kind).
     const clean = useMemo(() => sanitizeNodes(nodesProp), [nodesProp]);

@@ -133,9 +133,8 @@ export interface ScrollAreaProps
    */
   maxHeight?: CSSProperties["maxHeight"];
   /**
-   * Text direction, passed to the underlying Radix primitive and defaulted
-   * — not read from the page, matching `Slider`/`Tabs`/`Accordion`/
-   * `RadioGroup`'s own convention. Radix positions the vertical scrollbar
+   * Text direction, passed to the underlying Radix primitive. Left out, it follows
+   * the nearest `DirectionProvider`, else left-to-right; it is not read from the page. Radix positions the vertical scrollbar
    * and the corner on the correct side automatically; nothing else in this
    * component needs its own mirroring.
    * @default 'ltr'

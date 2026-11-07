@@ -121,7 +121,7 @@ export const toggleGroupSnippets = {
 </ToggleGroup>`,
 
   rtl: `{/* dir="rtl" mirrors the group: the first item at the right, and the arrow keys the other way round.
-    It is not read from the page — left out, the group stays left-to-right. */}
+    Left out, it follows the nearest DirectionProvider, else left-to-right; it is not read from the page. */}
 <ToggleGroup aria-label="Text alignment" dir="rtl" defaultValue="left">
   <ToggleGroup.Item value="left">Left</ToggleGroup.Item>
   <ToggleGroup.Item value="center">Centre</ToggleGroup.Item>

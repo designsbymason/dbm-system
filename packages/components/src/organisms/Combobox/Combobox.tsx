@@ -20,6 +20,7 @@ import { OptionListPanel } from "../../internal/optionList/OptionListPanel";
 import { useOptionListLayout } from "../../internal/optionList/useOptionListLayout";
 import { optionDomId, useOptionListWindow } from "../../internal/optionList/useOptionListWindow";
 import styles from "./Combobox.module.css";
+import { useDirection } from "../../atoms/DirectionProvider";
 import type {
   ComboboxInputChangeReason,
   ComboboxLabels,
@@ -133,7 +134,7 @@ export const Combobox = forwardRef<HTMLInputElement, ComboboxProps>(
       side = "bottom",
       align = "start",
       container,
-      dir = "ltr",
+      dir: dirProp,
       labels: labelOverrides,
       formatNumber = String,
       id,
@@ -149,6 +150,7 @@ export const Combobox = forwardRef<HTMLInputElement, ComboboxProps>(
     },
     ref,
   ) => {
+    const dir = useDirection(dirProp);
     const reactId = useId();
     const inputId = id ?? `${reactId}-input`;
     const listId = `${reactId}-list`;

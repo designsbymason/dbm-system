@@ -11,6 +11,7 @@ import type {
   CommandPaletteProps,
 } from "./CommandPalette.types";
 import { isApplePlatform, matchesHotkey, parseHotkey } from "../../internal/hotkey/hotkey";
+import { useDirection } from "../../atoms/DirectionProvider";
 
 const NO_COMMANDS: CommandItem[] = [];
 
@@ -106,7 +107,7 @@ export const CommandPalette = forwardRef<HTMLDivElement, CommandPaletteProps>(
       showCloseButton = false,
       scrimBlur = false,
       container,
-      dir = "ltr",
+      dir: dirProp,
       labels: labelOverrides,
       formatNumber = String,
       controllerRef,
@@ -116,6 +117,7 @@ export const CommandPalette = forwardRef<HTMLDivElement, CommandPaletteProps>(
     },
     ref,
   ) => {
+    const dir = useDirection(dirProp);
     const labels = useMemo(() => mergeDefined(buildDefaultLabels(formatNumber), labelOverrides), [formatNumber, labelOverrides]);
 
     // The open state. A palette that waits for a command (its promise is out) can't be closed.

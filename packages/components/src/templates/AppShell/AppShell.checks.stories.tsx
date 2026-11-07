@@ -1028,3 +1028,19 @@ export const LayersKeepTheShellAbovePageStickies: Story = {
     window.scrollTo(0, 0);
   },
 };
+
+export const ParkedPageBarStaysInView: Story = {
+  name: "A page's own sticky bar parked with the header's offset stays in view just below it — layout test",
+  render: () => <DemoLayersShell parked />,
+  play: async ({ canvasElement }) => {
+    const { shell, header } = slots(canvasElement);
+    await waitFor(() => expect(shell).toHaveAttribute("data-header-measured"));
+    const affix = canvasElement.querySelector<HTMLElement>("[data-testid=affix-bar]")!;
+    window.scrollTo(0, 600);
+    await waitFor(() => expect(shell).toHaveAttribute("data-scrolled"));
+    await waitFor(() => expect(Math.abs(affix.getBoundingClientRect().top - header.getBoundingClientRect().bottom)).toBeLessThanOrEqual(1.5));
+    const box = affix.getBoundingClientRect();
+    await expect(document.elementFromPoint(box.left + box.width / 2, box.top + box.height / 2)).toSatisfy((el: Element) => affix.contains(el));
+    window.scrollTo(0, 0);
+  },
+};

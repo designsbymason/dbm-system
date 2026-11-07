@@ -308,7 +308,7 @@ const meta: Meta<typeof MultiSelect> = {
     dir: {
       control: "radio",
       options: ["ltr", "rtl"],
-      description: "Text direction of the field and its list. It is not read from the page.",
+      description: "Text direction of the field and its list. Left out, the nearest `DirectionProvider`'s, else left-to-right; not read from the page.",
       table: { defaultValue: { summary: "ltr" } },
     },
     formatNumber: {

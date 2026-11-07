@@ -5,6 +5,7 @@ import type { FocusEvent, KeyboardEvent } from "react";
 import { Icon } from "../../atoms/Icon";
 import type { IconSize } from "../../atoms/Icon";
 import styles from "./ToggleGroup.module.css";
+import { useDirection } from "../../atoms/DirectionProvider";
 import type {
   ToggleGroupItemProps,
   ToggleGroupOrientation,
@@ -90,7 +91,7 @@ const ToggleGroupRoot = forwardRef<HTMLDivElement, ToggleGroupProps>((props, ref
     disabled = false,
     loop = true,
     rovingFocus = true,
-    dir = "ltr",
+    dir: dirProp,
     className,
     children,
     "aria-label": ariaLabel,
@@ -99,6 +100,7 @@ const ToggleGroupRoot = forwardRef<HTMLDivElement, ToggleGroupProps>((props, ref
     onBlur,
     ...rest
   } = props;
+  const dir = useDirection(dirProp);
 
   const resolvedOrientation = useResolvedResponsiveValue<ToggleGroupOrientation>(orientation, "horizontal");
 

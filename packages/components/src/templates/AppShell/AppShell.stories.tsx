@@ -308,10 +308,10 @@ export const ErrorPage: Story = {
 };
 
 export const Layers: Story = {
-  name: "A page's own sticky bar under the header",
+  name: "A page's own sticky bar below the header",
   parameters: { docs: { source: { code: appShellSnippets.layers } } },
   argTypes: { ...noControls },
-  render: (_args, context) => <DemoLayersShell framed={context.viewMode === "docs"} />,
+  render: (_args, context) => <DemoLayersShell parked framed={context.viewMode === "docs"} />,
 };
 
 export const ResizableSidebar: Story = {

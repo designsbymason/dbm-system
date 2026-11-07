@@ -262,7 +262,7 @@ export interface ComboboxProps
   side?: ComboboxSide;
   /** Alignment along the chosen `side`. @default 'start' */
   align?: ComboboxAlign;
-  /** Text direction of the list and its content. Not read from the page. @default 'ltr' */
+  /** Text direction of the list and its content. Left out, the nearest `DirectionProvider`'s, else left-to-right; not read from the page. @default 'ltr' */
   dir?: "ltr" | "rtl";
   /**
    * The text the field writes itself: names, messages and announcements. Only the ones you pass are replaced.

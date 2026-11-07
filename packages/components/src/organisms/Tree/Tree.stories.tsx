@@ -171,7 +171,7 @@ const meta: Meta<PlaygroundArgs> = {
     dir: {
       control: "select",
       options: ["ltr", "rtl"],
-      description: "The direction the tree reads. Mirrors the indent, the arrows and the Left and Right keys.",
+      description: "The direction the tree reads. Mirrors the indent, the arrows and the Left and Right keys. Left out, the nearest `DirectionProvider`'s, else left-to-right.",
       table: { defaultValue: { summary: "ltr" } },
     },
     formatNumber: { control: false, description: "Writes a digit for a number the component says. Callbacks keep plain numbers.", table: { defaultValue: { summary: "String" } } },

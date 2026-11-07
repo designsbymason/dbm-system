@@ -89,3 +89,6 @@ Chips that filled a line (three at the Playground's width) left an empty row und
 - A dragged chip is dimmed and a bar marks the drop; no copy of the chip follows the pointer and the others do not slide aside.
 - A chip being dragged takes no touch scroll: a finger that starts on a chip moves it, not the page.
 - "Select all" from the page only adds; there is no inverted "everything matching" state, so the value stays a plain list.
+
+## Reads the nearest DirectionProvider (2026-11-06)
+Additive, at explicit direction ([ADR-0177](../adr/0177-an-optional-direction-provider-sets-the-text-direction-for-a-subtree-over-reading-the-page-direction-automatically.md), [ADR-0182](../adr/0182-appshell-grows-a-busy-main-a-whole-page-state-and-a-layer-ladder-and-direction-reaches-the-shell-sidebar-and-navbar-through-a-provider.md)): `dir` left out now follows the nearest `DirectionProvider`, else left to right, as before; the prop and its own value are unchanged. The `dir` JSDoc, the Controls description and the Docs line say so. Covered by `DirectionProvider.consumers.test.tsx`. Finalized status is unchanged: no behaviour changes without a provider, and the existing right-to-left checks were re-run.

@@ -214,7 +214,7 @@ const meta: Meta<PlaygroundArgs> = {
     dir: {
       control: "radio",
       options: ["ltr", "rtl"],
-      description: "The reading direction of the palette. It is passed on, not read from the page.",
+      description: "The reading direction of the palette. Left out, it follows the nearest `DirectionProvider`, else left-to-right; it is not read from the page.",
       table: { defaultValue: { summary: '"ltr"' } },
     },
     labels: {

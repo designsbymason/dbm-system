@@ -12,6 +12,7 @@ import { useStepAnnouncement, useStepperValue } from "./useStepperState";
 import { useStepperController } from "./useStepperController";
 import { useStepperFocus } from "./useStepperFocus";
 import styles from "./Stepper.module.css";
+import { useDirection } from "../../atoms/DirectionProvider";
 import type {
   StepperCompact,
   StepperConnector,
@@ -115,7 +116,7 @@ const StepperRoot = forwardRef<HTMLElement, StepperProps>(
       formatNumber = String,
       labels: labelsProp,
       controllerRef,
-      dir = "ltr",
+      dir: dirProp,
       "aria-label": ariaLabel,
       "aria-labelledby": ariaLabelledBy,
       className,
@@ -125,6 +126,7 @@ const StepperRoot = forwardRef<HTMLElement, StepperProps>(
     },
     ref,
   ) => {
+    const dir = useDirection(dirProp);
     const labels = mergeDefined(defaultLabelsFor(formatNumber, labelsProp?.stepOf), labelsProp);
     const orientation = useResolvedResponsiveValue<StepperOrientation>(orientationProp, "horizontal");
     const vertical = orientation === "vertical";

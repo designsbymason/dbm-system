@@ -108,9 +108,8 @@ import { Slider } from "@dbm-system/components";
 
 `dir="rtl"` mirrors the slider for right-to-left languages: the minimum sits at the right, the filled range,
 thumb and tick marks run from there, the arrow keys move the other way (`ArrowLeft` raises the value), and the
-value and the min/max labels swap sides with them. It is passed through to the underlying Radix slider, as on
-`Tabs`, `Accordion` and `RadioGroup`, and it is not read from the page: with `dir` left out the slider stays
-left-to-right even in a right-to-left page, its labels included, so its parts always agree.
+value and the min/max labels swap sides with them. It is passed through to the underlying Radix slider. It is not read from the page: with `dir` left out the slider
+follows the nearest `DirectionProvider`, else left-to-right, so its parts always agree.
 
 <Canvas of={SliderStories.RightToLeft} />
 

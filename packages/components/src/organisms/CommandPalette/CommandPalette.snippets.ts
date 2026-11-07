@@ -193,7 +193,7 @@ export const commandPaletteSnippets = {
     ctrl, alt, shift, meta and a key, or false for none. The press is kept from the browser. */}
 <CommandPalette hotkey="mod+shift+p" commands={commands} />`,
 
-  rightToLeft: `{/* dir is passed on, not read from the page. */}
+  rightToLeft: `{/* dir left out follows the nearest DirectionProvider; it is never read from the page. */}
 <CommandPalette dir="rtl" trigger={<Button variant="secondary">بحث…</Button>} commands={commands} />`,
 
   fullScreen: `{/* fullScreen takes a mobile-first map: the whole screen on a phone, a panel from sm up. Turn the close button

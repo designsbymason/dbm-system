@@ -255,7 +255,7 @@ export interface StepperProps
    */
   controllerRef?: Ref<StepperController>;
   /**
-   * The reading direction. Passed to the stepper rather than read from the page, so the line between steps and the
+   * The reading direction. Left out, it follows the nearest `DirectionProvider`, else left-to-right; it is not read from the page. The line between steps and the
    * order of the steps agree with the text.
    * @default 'ltr'
    */

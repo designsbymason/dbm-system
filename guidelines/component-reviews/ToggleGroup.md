@@ -89,3 +89,6 @@ Three-question test: the default is today's behaviour, so nothing that existed c
 scoped mini-pass: JSDoc, a Properties-table row (a non-live control: turning it off in the Playground would only remove
 the keyboard movement), a Docs sentence, and three tests (one tab stop by default; with it off every item is a tab stop and
 a multiple group is a `group`; a single group stays a `radiogroup` and still chooses).
+
+## Reads the nearest DirectionProvider (2026-11-06)
+Additive, at explicit direction ([ADR-0177](../adr/0177-an-optional-direction-provider-sets-the-text-direction-for-a-subtree-over-reading-the-page-direction-automatically.md), [ADR-0182](../adr/0182-appshell-grows-a-busy-main-a-whole-page-state-and-a-layer-ladder-and-direction-reaches-the-shell-sidebar-and-navbar-through-a-provider.md)): `dir` left out now follows the nearest `DirectionProvider`, else left to right, as before; the prop and its own value are unchanged. The `dir` JSDoc, the Controls description and the Docs line say so. Covered by `DirectionProvider.consumers.test.tsx`. Finalized status is unchanged: no behaviour changes without a provider, and the existing right-to-left checks were re-run.

@@ -211,14 +211,14 @@ ${shell('railBelow="xl"', [header, sidebar(), main])}`,
   </AppShell.Main>
 </AppShell>`,
 
-  layers: `{/* The shell keeps its own bars in order: the page's sticky elements (Affix and the like) sit below the sidebar, the aside and
-    the footer, which sit below the header, which sits below the banner. A page's own sticky bar slides under the header. */}
+  layers: `{/* Park a sticky bar of your own just below the header with the shell's measured offsets, and it stays in view as the page scrolls.
+    If it ever sticks higher, the shell's header, sidebar and footer are above it, so it slides under them instead of painting over them. */}
 <AppShell scroll="page">
   <AppShell.Header>
     <Navbar />
   </AppShell.Header>
   <AppShell.Main>
-    <Affix offset={0}>
+    <Affix style={{ insetBlockStart: "calc(var(--app-shell-banner-stick, 0px) + var(--app-shell-header-height, 0px))" }}>
       <Text>A bar from the page itself</Text>
     </Affix>
     <Text>The rest of a long page…</Text>

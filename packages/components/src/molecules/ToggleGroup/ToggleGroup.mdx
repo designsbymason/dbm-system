@@ -190,7 +190,7 @@ A single group keeps one item chosen once it has one: clicking the chosen item d
 ### Right to left
 
 Set `dir="rtl"` on the group: the first item is at the right, the outer corners mirror with it, and the arrow keys
-follow the reading direction. It is not read from the page — left out, the group stays left-to-right.
+follow the reading direction. Left out, it follows the nearest `DirectionProvider`, else left-to-right; it is not read from the page.
 
 <Canvas of={ToggleGroupStories.RightToLeft} />
 

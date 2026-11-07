@@ -460,3 +460,6 @@ the real scrolling viewport, distinct from `ref`); the standard `aria-label`/`ar
 hook (`packages/utils`, also backing `Table`'s own `useScrollableRegion`). Per
 `06-engineering-standards.md` §9, don't make further changes to `ScrollArea` (code, stories, docs,
 or its tokens) without asking first.
+
+## Reads the nearest DirectionProvider (2026-11-06)
+Additive, at explicit direction ([ADR-0177](../adr/0177-an-optional-direction-provider-sets-the-text-direction-for-a-subtree-over-reading-the-page-direction-automatically.md), [ADR-0182](../adr/0182-appshell-grows-a-busy-main-a-whole-page-state-and-a-layer-ladder-and-direction-reaches-the-shell-sidebar-and-navbar-through-a-provider.md)): `dir` left out now follows the nearest `DirectionProvider`, else left to right, as before; the prop and its own value are unchanged. The `dir` JSDoc, the Controls description and the Docs line say so. Covered by `DirectionProvider.consumers.test.tsx`. Finalized status is unchanged: no behaviour changes without a provider, and the existing right-to-left checks were re-run.

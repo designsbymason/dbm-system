@@ -119,7 +119,7 @@ const meta: Meta<typeof ScrollArea> = {
     dir: {
       control: "select",
       options: ["ltr", "rtl"],
-      description: "Text direction, passed to the underlying Radix primitive and defaulted.",
+      description: "Text direction, passed to the underlying Radix primitive. Left out, it follows the nearest `DirectionProvider`, else left-to-right; it is not read from the page.",
       table: { defaultValue: { summary: "ltr" } },
     },
     onScroll: { control: false, description: "Fires on the actual scrolling element, not the outer frame." },

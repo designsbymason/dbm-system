@@ -3,6 +3,7 @@ import * as ScrollAreaPrimitive from "@radix-ui/react-scroll-area";
 import { forwardRef, useRef } from "react";
 import styles from "./ScrollArea.module.css";
 import type { ScrollAreaProps, ScrollAreaSize } from "./ScrollArea.types";
+import { useDirection } from "../../atoms/DirectionProvider";
 
 const toneClass: Record<"neutral" | "brand", string | undefined> = {
   neutral: undefined,
@@ -61,7 +62,7 @@ export const ScrollArea = forwardRef<HTMLDivElement, ScrollAreaProps>(
       scrollHideDelay = 600,
       overscrollBehavior = "auto",
       maxHeight,
-      dir = "ltr",
+      dir: dirProp,
       onScroll,
       viewportRef,
       className,
@@ -74,6 +75,7 @@ export const ScrollArea = forwardRef<HTMLDivElement, ScrollAreaProps>(
     },
     ref,
   ) => {
+    const dir = useDirection(dirProp);
     const internalViewportRef = useRef<HTMLDivElement>(null);
     const showVertical = scrollbars === "vertical" || scrollbars === "both";
     const showHorizontal = scrollbars === "horizontal" || scrollbars === "both";

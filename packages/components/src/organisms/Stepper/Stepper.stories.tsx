@@ -209,7 +209,7 @@ const meta: Meta<PlaygroundArgs> = {
     dir: {
       control: "select",
       options: ["ltr", "rtl"],
-      description: "The reading direction. Passed to the stepper rather than read from the page, so the line between steps and the order of the steps agree with the text.",
+      description: "The reading direction. Left out, it follows the nearest `DirectionProvider`, else left-to-right; it is not read from the page. The line between steps and the order of the steps agree with the text.",
       table: { defaultValue: { summary: '"ltr"' } },
     },
     "aria-label": {

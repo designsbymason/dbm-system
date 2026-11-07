@@ -84,7 +84,7 @@ interface ToggleGroupBaseProps
   rovingFocus?: boolean;
   /**
    * Text direction, passed through to Radix ToggleGroup: `"rtl"` mirrors the group (the first item at the right, the
-   * arrow keys the other way round). Not read from the page — left out, the group stays left-to-right.
+   * arrow keys the other way round). Left out, it follows the nearest `DirectionProvider`, else left-to-right; it is not read from the page.
    * @default 'ltr'
    */
   dir?: "ltr" | "rtl";

@@ -4,6 +4,7 @@ import { forwardRef, useEffect, useId, useRef, useState } from "react";
 import type { KeyboardEvent, ReactElement } from "react";
 import { Tooltip } from "../../atoms/Tooltip";
 import styles from "../Slider/Slider.module.css";
+import { useDirection } from "../../atoms/DirectionProvider";
 import {
   needsVerticalWrapper,
   SliderLayout,
@@ -87,7 +88,7 @@ export const RangeSlider = forwardRef<HTMLSpanElement, RangeSliderProps>(
       showTicks = false,
       tickInterval = step,
       disabled,
-      dir = "ltr",
+      dir: dirProp,
       autoFocus,
       name,
       form,
@@ -103,6 +104,7 @@ export const RangeSlider = forwardRef<HTMLSpanElement, RangeSliderProps>(
     },
     ref,
   ) => {
+    const dir = useDirection(dirProp);
     const isControlled = value !== undefined;
     const [uncontrolledValue, setUncontrolledValue] =
       useState<RangeSliderValue>(() => defaultValue ?? [min, max]);

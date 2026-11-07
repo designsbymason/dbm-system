@@ -51,6 +51,7 @@ import { useSelectedChips } from "./useSelectedChips";
 import { useMultiSelectRows } from "./useMultiSelectRows";
 import { useMultiSelectWarnings } from "./useMultiSelectWarnings";
 import { useTypedValues } from "./useTypedValues";
+import { useDirection } from "../../atoms/DirectionProvider";
 
 // How far the Page Up and Page Down keys move the highlight.
 const PAGE_STEP = 10;
@@ -246,7 +247,7 @@ export const MultiSelect = forwardRef<HTMLInputElement, MultiSelectProps>(
       container,
       side = "bottom",
       align = "start",
-      dir = "ltr",
+      dir: dirProp,
       labels: labelOverrides,
       formatNumber = String,
       controllerRef,
@@ -262,6 +263,7 @@ export const MultiSelect = forwardRef<HTMLInputElement, MultiSelectProps>(
     },
     ref,
   ) => {
+    const dir = useDirection(dirProp);
     const reactId = useId();
     const inputId = id ?? `${reactId}-input`;
     const listId = `${reactId}-list`;

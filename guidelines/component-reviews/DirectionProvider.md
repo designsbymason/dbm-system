@@ -6,7 +6,7 @@ Built as part of the AppShell work ([ADR-0182](../adr/0182-appshell-grows-a-busy
 
 ## Built
 - `DirectionProvider` (context only, no element) and `useDirection(own?)`; types and JSDoc; 8 unit tests (default, provided, own wins, nesting, fallback).
-- `Sidebar`, `Navbar` and `AppShell` read it. The other direction-aware components do not yet.
+- `Sidebar`, `Navbar` and `AppShell` read it. Batch 1 of the wiring (2026-11-06) added `Slider`, `RangeSlider`, `ScrollArea`, `ToggleGroup`, `Stepper`, `Combobox`, `MultiSelect`, `Tree` and `CommandPalette`: each swaps its `dir = "ltr"` default for `useDirection(dir)`. One table-driven test (`DirectionProvider.consumers.test.tsx`) checks that each follows a provider, is left to right without one, and that its own `dir` wins; breaking the wiring in all nine made all nine cases fail. Later batches add to the same table.
 - Stories (Playground, whole app, own `dir` wins), snippets (checked by `storySnippets.test.ts`), Docs page, description, inventory row.
 
 ## Not done / not verified

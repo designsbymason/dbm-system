@@ -1,0 +1,87 @@
+import { render, screen } from "@testing-library/react";
+import type { ReactNode } from "react";
+import { describe, expect, it } from "vitest";
+import { DirectionProvider } from "./DirectionProvider";
+import { Combobox } from "../../organisms/Combobox";
+import { CommandPalette } from "../../organisms/CommandPalette";
+import { MultiSelect } from "../../organisms/MultiSelect";
+import { Basic } from "../../organisms/Stepper/stepperTestKit";
+import { Tree } from "../../organisms/Tree";
+import { RangeSlider } from "../../molecules/RangeSlider";
+import { ScrollArea } from "../../molecules/ScrollArea";
+import { Slider } from "../../molecules/Slider";
+import { ToggleGroup } from "../../molecules/ToggleGroup";
+
+// Every component that takes a `dir` reads the nearest DirectionProvider when it is given none, and its own `dir` wins. Each case renders the
+// component with a given `dir` (or none) and returns the element that carries the direction.
+type Dir = "ltr" | "rtl" | undefined;
+interface Case {
+  name: string;
+  /** Renders the component and returns the element that carries its `dir`. */
+  draw: (dir: Dir) => ReactNode;
+  find: () => Element | null;
+}
+
+const options = [
+  { value: "a", label: "Alpha" },
+  { value: "b", label: "Beta" },
+];
+
+const cases: Case[] = [
+  { name: "Slider", draw: (dir) => <Slider aria-label="Volume" dir={dir} defaultValue={50} />, find: () => screen.getByRole("slider").closest("[dir]") },
+  {
+    name: "RangeSlider",
+    draw: (dir) => <RangeSlider aria-label="Price" dir={dir} defaultValue={[20, 80]} />,
+    find: () => screen.getAllByRole("slider")[0]?.closest("[dir]") ?? null,
+  },
+  {
+    name: "ScrollArea",
+    draw: (dir) => (
+      <ScrollArea dir={dir} data-testid="target">
+        Content
+      </ScrollArea>
+    ),
+    find: () => screen.getByTestId("target"),
+  },
+  {
+    name: "ToggleGroup",
+    draw: (dir) => (
+      <ToggleGroup aria-label="Alignment" dir={dir}>
+        <ToggleGroup.Item value="left">Left</ToggleGroup.Item>
+      </ToggleGroup>
+    ),
+    find: () => screen.getByRole("radiogroup"),
+  },
+  {
+    name: "Stepper",
+    draw: (dir) => <Basic dir={dir} data-testid="target" />,
+    find: () => screen.getByTestId("target"),
+  },
+  { name: "Combobox", draw: (dir) => <Combobox aria-label="Letter" options={options} dir={dir} />, find: () => screen.getByRole("combobox").closest("[dir]") },
+  {
+    name: "MultiSelect",
+    draw: (dir) => <MultiSelect aria-label="Letters" options={options} dir={dir} />,
+    find: () => screen.getByRole("combobox").closest("[dir]"),
+  },
+  { name: "Tree", draw: (dir) => <Tree aria-label="Files" dir={dir} nodes={[{ id: "a", label: "a" }]} />, find: () => screen.getByRole("tree").closest("[dir]") },
+  {
+    name: "CommandPalette",
+    draw: (dir) => <CommandPalette defaultOpen dir={dir} commands={[{ value: "x", label: "Do x" }]} />,
+    find: () => screen.getByRole("dialog"),
+  },
+];
+
+describe("components that take a dir read the nearest DirectionProvider", () => {
+  it.each(cases)("$name: follows the provider, else left to right, and its own dir wins", ({ draw, find }) => {
+    const bare = render(draw(undefined));
+    expect(find()).toHaveAttribute("dir", "ltr");
+    bare.unmount();
+
+    const provided = render(<DirectionProvider dir="rtl">{draw(undefined)}</DirectionProvider>);
+    expect(find()).toHaveAttribute("dir", "rtl");
+    provided.unmount();
+
+    render(<DirectionProvider dir="rtl">{draw("ltr")}</DirectionProvider>);
+    expect(find()).toHaveAttribute("dir", "ltr");
+  });
+});

@@ -4,6 +4,7 @@ import { forwardRef, useEffect, useRef, useState } from "react";
 import { Tooltip } from "../../atoms/Tooltip";
 import styles from "./Slider.module.css";
 import type { SliderProps } from "./Slider.types";
+import { useDirection } from "../../atoms/DirectionProvider";
 import {
   needsVerticalWrapper,
   SliderLayout,
@@ -65,7 +66,7 @@ export const Slider = forwardRef<HTMLSpanElement, SliderProps>(
       showTicks = false,
       tickInterval = step,
       disabled,
-      dir = "ltr",
+      dir: dirProp,
       name,
       form,
       autoFocus,
@@ -81,6 +82,7 @@ export const Slider = forwardRef<HTMLSpanElement, SliderProps>(
     },
     ref,
   ) => {
+    const dir = useDirection(dirProp);
     const isControlled = value !== undefined;
     const [uncontrolledValue, setUncontrolledValue] = useState(
       () => defaultValue ?? min,

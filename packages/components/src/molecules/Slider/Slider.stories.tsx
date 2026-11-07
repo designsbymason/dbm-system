@@ -56,7 +56,7 @@ const meta: Meta<typeof Slider> = {
       control: "select",
       options: ["ltr", "rtl"],
       description:
-        "Text direction: rtl mirrors the slider for right-to-left languages — the minimum at the right, the fill, thumbs and ticks running from there, ArrowLeft raising the value, and the value and min/max labels on the mirrored sides. Passed through to Radix Slider. Not inherited from the page: left out, the slider stays left-to-right, labels included.",
+        "Text direction: rtl mirrors the slider for right-to-left languages — the minimum at the right, the fill, thumbs and ticks running from there, ArrowLeft raising the value, and the value and min/max labels on the mirrored sides. Passed through to Radix Slider. Left out, it follows the nearest `DirectionProvider`, else left-to-right; it is not read from the page.",
       table: { defaultValue: { summary: "ltr" } },
     },
     showValue: {

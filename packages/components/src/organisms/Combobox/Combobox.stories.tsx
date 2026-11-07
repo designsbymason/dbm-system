@@ -222,7 +222,7 @@ const meta: Meta<typeof Combobox> = {
     dir: {
       control: "radio",
       options: ["ltr", "rtl"],
-      description: "Text direction of the list and its content. It is not read from the page.",
+      description: "Text direction of the list and its content. Left out, the nearest `DirectionProvider`'s, else left-to-right; not read from the page.",
       table: { defaultValue: { summary: "ltr" } },
     },
     formatNumber: {

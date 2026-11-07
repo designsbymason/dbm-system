@@ -385,14 +385,14 @@ export function DemoStickyBarShell({ framed = false }: { framed?: boolean }) {
   );
 }
 
-/** A page that scrolls under a sticky header, with an `Affix` (the system's own sticky element, on the `sticky` step) at the top of the main area. */
-export function DemoLayersShell({ framed = false }: { framed?: boolean }) {
+/** A page that scrolls under a sticky header, with an `Affix` (the system's own sticky element, on the `sticky` step) at the top of the main area. `parked` offsets it below the banner and header so it stays in view; without it, it sticks at the window's top edge, under them. */
+export function DemoLayersShell({ framed = false, parked = false }: { framed?: boolean; parked?: boolean }) {
   return (
     <DemoShell scroll="page" banner="sticky" headerSpan="full" framed={framed}>
       <div data-testid="layer-content">
-        <Affix offset={0}>
+        <Affix offset={0} style={parked ? { insetBlockStart: "calc(var(--app-shell-banner-stick, 0px) + var(--app-shell-header-height, 0px))" } : undefined}>
           <div data-testid="affix-bar" style={{ padding: "var(--dbm-space-3) var(--dbm-space-6)", background: "var(--dbm-bg-brand-subtle)" }}>
-            <Text weight="medium">A sticky bar from the page itself (Affix)</Text>
+            <Text weight="medium">{parked ? "A sticky bar (Affix) parked below the header" : "A sticky bar from the page itself (Affix)"}</Text>
           </div>
         </Affix>
         <DemoPage />
