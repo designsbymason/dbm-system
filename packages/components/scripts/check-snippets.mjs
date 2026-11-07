@@ -1,10 +1,10 @@
 #!/usr/bin/env node
 /**
- * Typechecks the hand-written "Show code" snippets of every template page as real code against the components
+ * Typechecks the hand-written "Show code" snippets of every template (a shell and a page) as real code against the components
  * (`07-storybook-and-documentation-standards.md` §4.2), and proves the check bites by planting a bad prop.
  *
- * A snippet is JSX only: it holds no imports and no state, so each page keeps a `<Name>.snippetScope.txt` beside its
- * `<Name>.snippets.ts` with the imports and the `declare const` lines the snippets rely on. For each such page this writes a throwaway
+ * A snippet is JSX only: it holds no imports and no state, so each template keeps a `<Name>.snippetScope.txt` beside its
+ * `<Name>.snippets.ts` with the imports and the `declare const` lines the snippets rely on. For each such template this writes a throwaway
  * `__snippetcheck.tsx` (the scope, then every snippet wrapped in a fragment), runs `tsc --noEmit`, and deletes the file. It then does
  * it again with a nonexistent prop planted in the first component of the first snippet, and fails if that is not reported (a check
  * that has never failed proves nothing). Run from the package: `pnpm check-snippets`.
@@ -44,7 +44,7 @@ for (const folder of folders) {
   const dir = join(TEMPLATES, folder);
   const scopeFile = join(dir, `${folder}.snippetScope.txt`);
   const snippetsFile = join(dir, `${folder}.snippets.ts`);
-  // A shell's snippets are checked by the package's own typecheck of its Docs page examples; only a page keeps a scope file.
+  // A template with no scope file has no snippets to check (none today: every template keeps one).
   if (!existsSync(scopeFile) || !existsSync(snippetsFile)) continue;
   checked += 1;
   const module = await import(pathToFileURL(snippetsFile).href);
@@ -76,5 +76,5 @@ for (const folder of folders) {
   }
 }
 
-if (checked === 0) process.stdout.write("no template page has a snippetScope.txt: nothing to check\n");
+if (checked === 0) process.stdout.write("no template has a snippetScope.txt: nothing to check\n");
 process.exit(failed ? 1 : 0);

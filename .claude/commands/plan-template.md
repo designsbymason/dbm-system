@@ -20,7 +20,7 @@ If no template is given, ask for one. For a component (an atom, molecule or orga
    - **Responsive:** the layout at phone, tablet and desktop widths, decided now (a stack, a sheet, an icon group), where it uses a container query, and what must never overflow or shift.
    - **Behaviour:** the keyboard path of the primary task, where focus goes after each action, and what is announced.
    - **Copy and landmarks:** the words (all in one place) and the landmark and heading tree.
-   - **Files and checks:** the file set (ADR-0184 or `05` §1; a page also has a `{Name}.snippetScope.txt` for `pnpm check-snippets`), the unit tests, the hydration and `StrictMode` tests, and the real-browser checks (widths, no page overflow, forced colours, print, real mouse and real keys), and which checks you will break once to prove they fail.
+   - **Files and checks:** the file set (ADR-0184 or `05` §1; a template, shell or page, also has a `{Name}.snippetScope.txt` for `pnpm check-snippets`), the unit tests, the hydration and `StrictMode` tests, and the real-browser checks (widths, no page overflow, forced colours, print, real mouse and real keys), and which checks you will break once to prove they fail.
    - **Registrations:** the `07` §6 row, the review file, the `04` status and build-order row, the `componentDescriptions.ts` line, the `example-page` tag, and the ADR if one is warranted.
    - **Decisions I need to make:** every open fork, each with your recommendation, and which would deserve an ADR.
 

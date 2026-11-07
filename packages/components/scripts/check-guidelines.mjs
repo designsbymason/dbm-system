@@ -214,6 +214,10 @@ check("every template has a status row, a review file and a place in the invento
   for (const folder of folders) {
     if (!listed.has(folder)) warn(file, 0, `the template ${folder} is built but has no row in the status table (§6)`);
     if (!existsSync(join(GUIDELINES, "component-reviews", `${folder}.md`))) warn(file, 0, `the template ${folder} has no component-reviews/${folder}.md`);
+    // A template with snippets keeps a scope file, or `pnpm check-snippets` would skip it silently.
+    if (existsSync(join(SRC, "templates", folder, `${folder}.snippets.ts`)) && !existsSync(join(SRC, "templates", folder, `${folder}.snippetScope.txt`))) {
+      warn(file, 0, `the template ${folder} has snippets but no ${folder}.snippetScope.txt for check-snippets`);
+    }
   }
   for (const [name, line] of listed) if (!folders.includes(name)) warn(file, line, `${name} has a status row but no templates/ folder`);
   // The inventory's Templates section names each built template: by its folder in backticks (a shell, `AppShell`) or in words (a page,
