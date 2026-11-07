@@ -53,10 +53,12 @@ packages/
                      `SpaceValue`/`Breakpoint` types) is re-exported from the
                      components package, so one install covers it
   icons/             Phosphor Icons wrapper
-  components/        The actual DBM component library (published npm package) — also
-                     holds its own .storybook/ config, src/foundations/ (Storybook-only
-                     token reference pages) and src/guides/ (the Getting started page and
-                     guide pages); neither is shipped in the package)
+  components/        The actual DBM component library (published npm package) — atoms,
+                     molecules and organisms, plus src/templates/ (application shells that
+                     ship, such as AppShell; page-level templates are story-only examples,
+                     ADR-0179). Also holds its own .storybook/ config, src/foundations/
+                     (Storybook-only token reference pages) and src/guides/ (the Getting
+                     started page and guide pages); neither is shipped in the package)
   manifest/          Build tool: generates the JSON component manifest from TS + JSDoc
   eslint-config/      Shared lint rules
   tsconfig/           Shared TypeScript configs
@@ -79,6 +81,7 @@ Full rationale for each choice: `guidelines/02-tech-stack-and-structure.md`.
 |---|---|
 | Adding/changing a design token | `guidelines/03-token-system-spec.md` |
 | Building a new component | `guidelines/04-component-inventory.md` (tier + scope) |
+| Building a template (a shell that ships, or a story-only page) and in what order | `guidelines/04-component-inventory.md` (Templates, with its build order) and ADR-0179 |
 | Unsure about a dependency or tool choice | `guidelines/02-tech-stack-and-structure.md` |
 | Overall project goals/scope | `guidelines/01-vision-and-goals.md` |
 | A component's props, file structure, or definition of done | `guidelines/05-component-api-conventions.md` |
