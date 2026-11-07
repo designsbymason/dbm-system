@@ -1,6 +1,14 @@
 import { Canvas, Meta } from "@storybook/addon-docs/blocks";
 import { Callout, ComponentHeader, PlaygroundControls, PropertiesTable, ReferenceTable, RelatedCard, TokenRow } from "../../../.storybook/blocks";
+import { HouseIcon, UsersIcon } from "@dbm-system/icons";
+import { Box } from "../../atoms/Box";
+import { Button } from "../../atoms/Button";
+import { Container } from "../../atoms/Container";
+import { IconButton } from "../../atoms/IconButton";
 import { VisuallyHidden } from "../../atoms/VisuallyHidden";
+import { Alert } from "../../molecules/Alert";
+import { Navbar } from "../../organisms/Navbar";
+import { Sidebar } from "../../organisms/Sidebar";
 import * as AppShellStories from "./AppShell.stories";
 import * as AppShellAsideStories from "./AppShellAside.stories";
 import * as AppShellAsideToggleStories from "./AppShellAsideToggle.stories";
@@ -514,7 +522,7 @@ own header slot is a plain `div` by default so that a `Navbar` is never wrapped 
 // A banner, a rail on tablets, a resizable sidebar and a remembered layout
 <AppShell railBelow="xl" persistKey="my-app">
   <AppShell.Banner sticky>
-    <Alert tone="warning">
+    <Alert banner tone="warning">
       <Alert.Description>Your trial ends in 3 days.</Alert.Description>
     </Alert>
   </AppShell.Banner>
@@ -612,34 +620,53 @@ should keep the panel open.
   description="The navigation column that goes in AppShell.Sidebar, with its rail and its phone panel"
   href="/?path=/docs/organisms-navigation-sidebar--docs"
 >
-  <span aria-hidden="true">Sidebar</span>
+  <Sidebar collapseBelow="never" size="sm" style={{ inlineSize: "100%", blockSize: "100%" }}>
+    <Sidebar.Content>
+      <Sidebar.Nav aria-label="Preview">
+        <Sidebar.Item icon={HouseIcon} current>
+          Home
+        </Sidebar.Item>
+      </Sidebar.Nav>
+    </Sidebar.Content>
+  </Sidebar>
 </RelatedCard>
 <RelatedCard
   name="Navbar"
   description="The header bar that goes in AppShell.Header, with the skip link and the menu button"
   href="/?path=/docs/organisms-navigation-navbar--docs"
 >
-  <span aria-hidden="true">Navbar</span>
+  <Navbar>
+    <Navbar.Brand href="#">dbM Cloud</Navbar.Brand>
+    <Navbar.Actions>
+      <IconButton icon={UsersIcon} aria-label="Account" variant="ghost" size="sm" />
+    </Navbar.Actions>
+  </Navbar>
 </RelatedCard>
 <RelatedCard
   name="Alert"
   description="What goes in AppShell.Banner: a notice with a tone"
   href="/?path=/docs/molecules-feedback-alert--docs"
 >
-  <span aria-hidden="true">Alert</span>
+  <Alert banner tone="info" style={{ inlineSize: "100%" }}>
+    <Alert.Description>Maintenance tonight at 22:00 UTC.</Alert.Description>
+  </Alert>
 </RelatedCard>
 <RelatedCard
   name="Drawer"
   description="The panel the aside and the sidebar become on a phone"
   href="/?path=/docs/organisms-overlay-drawer--docs"
 >
-  <span aria-hidden="true">Drawer</span>
+  <Button variant="secondary" size="sm">
+    Open drawer
+  </Button>
 </RelatedCard>
 <RelatedCard
   name="Container"
   description="A centred, constrained wrapper for the content inside the main area"
   href="/?path=/docs/atoms-layout-container--docs"
 >
-  <span aria-hidden="true">Container</span>
+  <Container style={{ border: "var(--dbm-border-width-1) dashed var(--dbm-border-neutral)", width: "100%" }}>
+    <Box style={{ width: 20, height: 20, margin: "0 auto", background: "var(--dbm-bg-canvas)", borderRadius: "var(--dbm-radius-xs)" }} />
+  </Container>
 </RelatedCard>
 </div>

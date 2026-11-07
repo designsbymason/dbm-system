@@ -1,5 +1,7 @@
 # AppShell — review findings
 
+**Tier:** Template · **Category:** Application shells · **Finalized:** ✅ 2026-11-07 (declared by the owner after the final review below)
+
 First template, built 2026-11-04 under [ADR-0179](../adr/0179-templates-ship-as-composable-shells-in-the-components-package-with-story-only-example-pages-over-shipping-finished-pages-or-keeping-all-templates-storybook-only.md) with the `06-engineering-standards.md` §9 checklist applied as it was written. **Not Finalized**: that is the maintainer's to declare.
 
 ## Decisions
@@ -70,7 +72,7 @@ Four additions, decided in [ADR-0182](../adr/0182-appshell-grows-a-busy-main-a-w
 - **Not verified:** busy and the states on a real screen reader; the layer ladder against a consumer's other sticky elements; every component that takes a `dir` now reads the `DirectionProvider` (2026-11-06).
 
 ## Verification pass (2026-11-06, at explicit direction)
-The unverified and open items from the gap list that a real browser could settle. Decided in [ADR-0183](../adr/0183-appshell-prints-the-page-without-its-navigation-chrome-over-printing-the-screen-layout-or-leaving-print-to-each-app.md) (print). Still not declared Finalized.
+The unverified and open items from the gap list that a real browser could settle. Decided in [ADR-0183](../adr/0183-appshell-prints-the-page-without-its-navigation-chrome-over-printing-the-screen-layout-or-leaving-print-to-each-app.md) (print). 
 - **Hydration (`AppShell.ssr.test.tsx`):** `hydrateRoot` over the server HTML, with `onRecoverableError` collected, for a page-scrolling shell with every part, a right-to-left one and content-scrolling ones, and a test that the measured heights are not in the server HTML and are set after hydrating. A deliberate mismatch made two of them fail.
 - **No unmeasured painted frame:** the header, banner and footer measured in a passive effect, so a frame could be painted before a `sticky` part was kept in view. `useElementHeight` now measures in a layout effect in the browser (an ordinary effect where there is no `window`). A real-browser check reads the shell from a `MutationObserver` as soon as the task that drew it has finished, which is what the first painted frame will show; deferring the measurement makes it fail. What the *server* draws before hydration is unavoidably unmeasured, and a second check shows the header, main area and sidebar are where they will be once measured (the sticky footer pins to the window's bottom only after hydration, by design).
 - **`StrictMode`:** a measuring shell ends up measured with exactly the observers a plain mount has (no observer left from the first mount), follows a later height change, and forgets the header's height when the header is removed. Breaking the disconnect or the reset in the cleanup fails them.
@@ -83,7 +85,7 @@ The unverified and open items from the gap list that a real browser could settle
 - **Not done:** a real phone, Safari and Firefox; the native `href="#main"` jump; the rail-toggle performance measurement; a keyboard shortcut for the sidebar; bottom navigation.
 
 ## Final review (2026-11-07, at explicit direction)
-The full `06` §9 pass on the current shell, after the additions of ADR-0180 to ADR-0183. Eight findings, all fixed; not yet declared Finalized.
+The full `06` §9 pass on the current shell, after the additions of ADR-0180 to ADR-0183. Nine findings, all fixed; declared Finalized by the owner on 2026-11-07.
 1. **The resize handle's target was 8px wide (item 57, WCAG 2.5.8).** An invisible, centred `::before` of `space.6` (24px) widens it; a real-browser check presses points up to 11px either side with `elementFromPoint` and starts a real drag 10px off the centre, and fails without the pseudo-element. **Accepted limit:** the header and the footer paint above the handle (the layer order, ADR-0182), so beside them only the sidebar side of the target, 12px, is grabbable; beside the main area's body it is the full 24px. There is still no single-pointer alternative to dragging (WCAG 2.5.7): the arrow keys and a double press cover the keyboard, and a pointer-only alternative (buttons for the steps) is a design decision not taken.
 2. **Stale direction text** in the `dir` JSDoc, its Controls description and the Right-to-left and Playground snippets, all of which still told an app to pass `dir` to the `Sidebar`; the shell has provided it since ADR-0182.
 3. **Properties table defaults:** `dir` now shows "the provider's, else 'ltr'", `scroll` and `sidebarSide` use the same quoting as the rest, and `labels` shows its defaults on the root, `SkipLink`, `Sidebar`, `Aside` and `AsideToggle`, as `Main` did.
@@ -97,3 +99,5 @@ The full `06` §9 pass on the current shell, after the additions of ADR-0180 to 
 **Show code, all 21 variants and the Playground reviewed against their stories and typechecked as code:** the sticky-bar snippet had no background or layer (a bar the page showed through); the rail snippets lacked the collapse button their comment named; the aside, hidden aside, sticky banner, content, busy, empty, error and resizable snippets showed props, words or limits their story does not (now the story's own); the Right-to-left and Playground snippets are Persian and no longer put `dir` on the `Sidebar`.
 
 **Not done:** a real phone, Safari and Firefox; a real printer; the native `#main` jump; a screen reader.
+
+**After the review, before Finalizing (2026-11-07):** the banner demo, snippets, Docs example and JSDoc use `Alert banner` (edge to edge) and say the banner holds any content; the Related components cards preview live `Sidebar`, `Navbar`, `Alert`, `Drawer` (its trigger button) and `Container` instances. Both checked on the Docs page.

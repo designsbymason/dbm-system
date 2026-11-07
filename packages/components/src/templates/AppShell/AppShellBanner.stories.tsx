@@ -7,7 +7,7 @@ const meta: Meta<typeof AppShell.Banner> = {
   component: AppShell.Banner,
   tags: ["!dev"],
   argTypes: {
-    children: { control: false, description: "The banner's content: an announcement, a maintenance notice, a trial reminder. Usually an Alert." },
+    children: { control: false, description: "The banner's content: an announcement, a maintenance notice, a trial reminder. Usually an Alert with banner, which draws edge to edge." },
     sticky: {
       control: false,
       description:

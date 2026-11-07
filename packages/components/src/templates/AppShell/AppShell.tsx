@@ -572,7 +572,7 @@ const AppShellSidebar = forwardRef<HTMLDivElement, AppShellSidebarProps>(
 AppShellSidebar.displayName = "AppShell.Sidebar";
 
 /**
- * A strip above everything, the header included: an announcement, a maintenance notice, a trial reminder (usually an `Alert`). It scrolls away
+ * A strip above everything, the header included: an announcement, a maintenance notice, a trial reminder (usually an `Alert` with `banner`, which draws edge to edge). It holds any content. It scrolls away
  * with the page unless it is `sticky`, in which case the header sticks below it. With `scroll="content"` it is always in view.
  */
 const AppShellBanner = forwardRef<HTMLDivElement, AppShellBannerProps>(({ sticky = false, className, ...props }, ref) => {

@@ -418,7 +418,7 @@ export interface AppShellSkipLinkProps extends Omit<ComponentPropsWithoutRef<"a"
 }
 
 export interface AppShellBannerProps extends Omit<ComponentPropsWithoutRef<"div">, "children">, AppShellPartBase {
-  /** The banner's content: an announcement, a maintenance notice, a trial reminder. Usually an `Alert`. */
+  /** The banner's content: an announcement, a maintenance notice, a trial reminder. Usually an `Alert` with `banner`, which draws edge to edge; any content will do. */
   children?: ReactNode;
   /**
    * Keeps the banner at the top of the window while the page scrolls (`scroll="page"`); the header sticks below it. Off, the banner scrolls away

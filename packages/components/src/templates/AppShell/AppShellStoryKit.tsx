@@ -262,7 +262,7 @@ export function DemoShell({
     <AppShell {...props} labels={fa ? { ...faLabels.shell, ...props.labels } : props.labels} style={framed ? framedStyle(props.scroll) : undefined}>
       {banner && (
         <AppShell.Banner sticky={banner === "sticky"}>
-          <Alert tone="info">
+          <Alert banner tone="info">
             <Alert.Description>{copy.banner}</Alert.Description>
           </Alert>
         </AppShell.Banner>

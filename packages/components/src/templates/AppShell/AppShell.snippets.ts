@@ -147,10 +147,11 @@ ${shell('headerSpan="full"', [header, sidebar(), main])}`,
     holds until the window crosses the step. Below collapseBelow the sidebar is a drawer, as ever. */}
 ${shell('railBelow="xl"', [header, sidebar("", { toggle: true }), main])}`,
 
-  banner: `{/* AppShell.Banner is a strip above the header: an announcement, a maintenance notice, a trial reminder. */}
+  banner: `{/* AppShell.Banner is a strip above the header: an announcement, a maintenance notice, a trial reminder. It holds anything; an Alert with
+    banner draws edge to edge, with square corners and no side borders, which is how a message across the whole page reads. */}
 <AppShell>
   <AppShell.Banner>
-    <Alert tone="info">
+    <Alert banner tone="info">
       <Alert.Description>Scheduled maintenance tonight at 22:00 UTC.</Alert.Description>
     </Alert>
   </AppShell.Banner>
@@ -169,7 +170,7 @@ ${shell('railBelow="xl"', [header, sidebar("", { toggle: true }), main])}`,
     and the header sticks at the top. */}
 <AppShell scroll="page">
   <AppShell.Banner sticky>
-    <Alert tone="info">
+    <Alert banner tone="info">
       <Alert.Description>Scheduled maintenance tonight at 22:00 UTC.</Alert.Description>
     </Alert>
   </AppShell.Banner>
