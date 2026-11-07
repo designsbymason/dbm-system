@@ -3,7 +3,7 @@ import { StrictMode, useRef } from "react";
 import { describe, expect, it } from "vitest";
 import { usePageChange } from "./usePageChange";
 
-// `AppShell` and `TopNavShell` are tested through their own wiring; these test the hook alone, the part both share.
+// `AppShell` and `PageShell` are tested through their own wiring; these test the hook alone, the part both share.
 function Probe({ pageKey, pageTitle, resetScroll = false }: { pageKey?: string | number; pageTitle?: string; resetScroll?: boolean }) {
   const mainRef = useRef<HTMLElement | null>(null);
   const message = usePageChange({ pageKey, pageTitle, mainRef, resetScroll });

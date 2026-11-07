@@ -3,28 +3,28 @@ import type { ContainerSize } from "../../atoms/Container";
 import type { Responsive, SpaceValue } from "@dbm-system/utils";
 
 /** Which way the shell reads. */
-export type TopNavShellDirection = "ltr" | "rtl";
+export type PageShellDirection = "ltr" | "rtl";
 
 /** The text the skip link supplies itself. */
-export interface TopNavShellSkipLinkLabels {
+export interface PageShellSkipLinkLabels {
   /** The link's text when it is given no children. @default 'Skip to content' */
   skipToContent: string;
 }
 
 /** The text the main area supplies itself. */
-export interface TopNavShellMainLabels {
+export interface PageShellMainLabels {
   /** What a screen reader hears, politely, when the main area becomes busy. @default 'Loading' */
   loading: string;
 }
 
-/** How far the width presets of `TopNavShell.Content` reach: a reading page, a dashboard, a page that fills the window. */
-export type TopNavShellContentWidth = "reading" | "dashboard" | "full";
+/** How far the width presets of `PageShell.Content` reach: a reading page, a dashboard, a page that fills the window. */
+export type PageShellContentWidth = "reading" | "dashboard" | "full";
 
-/** The look of `TopNavShell.Footer`: the standard footer, a tighter one, or a bar of actions that stays at the bottom of the window. */
-export type TopNavShellFooterVariant = "default" | "compact" | "actions";
+/** The look of `PageShell.Footer`: the standard footer, a tighter one, or a bar of actions that stays at the bottom of the window. */
+export type PageShellFooterVariant = "default" | "compact" | "actions";
 
 /** Props every part of the shell accepts on top of its own native element's. */
-interface TopNavShellPartBase {
+interface PageShellPartBase {
   /** Standard DOM id. */
   id?: string;
   /** Additional CSS classes for customization. */
@@ -39,11 +39,11 @@ interface TopNavShellPartBase {
 }
 
 // Every prop is declared here, in the order the Docs read, and not inherited: the Controls panel lists a type's inherited props before its own.
-export interface TopNavShellProps extends Omit<ComponentPropsWithoutRef<"div">, "dir" | "children"> {
+export interface PageShellProps extends Omit<ComponentPropsWithoutRef<"div">, "dir" | "children"> {
   /**
-   * The shell's parts: `TopNavShell.SkipLink`, `TopNavShell.Banner`, `TopNavShell.Header` (holding a `Navbar` and, if you like, a
-   * `TopNavShell.SubNav`), `TopNavShell.Main` (holding a `TopNavShell.Content`) and `TopNavShell.Footer`. They draw in the order you write
-   * them, which is the keyboard's tab order: put the skip link first and the header after it. Only `TopNavShell.Main` is needed.
+   * The shell's parts: `PageShell.SkipLink`, `PageShell.Banner`, `PageShell.Header` (holding a `Navbar` and, if you like, a
+   * `PageShell.SubNav`), `PageShell.Main` (holding a `PageShell.Content`) and `PageShell.Footer`. They draw in the order you write
+   * them, which is the keyboard's tab order: put the skip link first and the header after it. Only `PageShell.Main` is needed.
    */
   children?: ReactNode;
   /**
@@ -78,7 +78,7 @@ export interface TopNavShellProps extends Omit<ComponentPropsWithoutRef<"div">, 
    * nearest `DirectionProvider`'s, else left to right.
    * @default "the provider's, else 'ltr'"
    */
-  dir?: TopNavShellDirection;
+  dir?: PageShellDirection;
   /** Additional CSS classes for customization. */
   className?: string;
   /** Inline styles, merged onto the component's own internal styles. */
@@ -92,8 +92,8 @@ export interface TopNavShellProps extends Omit<ComponentPropsWithoutRef<"div">, 
   "data-testid"?: string;
 }
 
-/** The properties of `TopNavShell.SkipLink`: a link, out of sight until it takes keyboard focus, that skips the header to the main area. */
-export interface TopNavShellSkipLinkProps extends Omit<ComponentPropsWithoutRef<"a">, "children">, TopNavShellPartBase {
+/** The properties of `PageShell.SkipLink`: a link, out of sight until it takes keyboard focus, that skips the header to the main area. */
+export interface PageShellSkipLinkProps extends Omit<ComponentPropsWithoutRef<"a">, "children">, PageShellPartBase {
   /** The link's text. Left out, `labels.skipToContent`. */
   children?: ReactNode;
   /**
@@ -102,18 +102,18 @@ export interface TopNavShellSkipLinkProps extends Omit<ComponentPropsWithoutRef<
    */
   href?: string;
   /** The words the link supplies itself. */
-  labels?: Partial<TopNavShellSkipLinkLabels>;
+  labels?: Partial<PageShellSkipLinkLabels>;
 }
 
-/** The properties of `TopNavShell.Banner`: a notice above the header that scrolls away with the page. */
-export interface TopNavShellBannerProps extends Omit<ComponentPropsWithoutRef<"div">, "children">, TopNavShellPartBase {
+/** The properties of `PageShell.Banner`: a notice above the header that scrolls away with the page. */
+export interface PageShellBannerProps extends Omit<ComponentPropsWithoutRef<"div">, "children">, PageShellPartBase {
   /** The notice: an `Alert` with `banner`, or any content. */
   children?: ReactNode;
 }
 
-/** The properties of `TopNavShell.Header`: the sticky slot that holds a `Navbar` and, if you like, a `TopNavShell.SubNav`. */
-export interface TopNavShellHeaderProps extends Omit<ComponentPropsWithoutRef<"div">, "children">, TopNavShellPartBase {
-  /** The header's content: a `Navbar`, then a `TopNavShell.SubNav`. */
+/** The properties of `PageShell.Header`: the sticky slot that holds a `Navbar` and, if you like, a `PageShell.SubNav`. */
+export interface PageShellHeaderProps extends Omit<ComponentPropsWithoutRef<"div">, "children">, PageShellPartBase {
+  /** The header's content: a `Navbar`, then a `PageShell.SubNav`. */
   children?: ReactNode;
   /**
    * The element the slot is. A `Navbar` draws its own `<header>`, so leave this a `div` around one; use `header` for a header built without one,
@@ -123,10 +123,10 @@ export interface TopNavShellHeaderProps extends Omit<ComponentPropsWithoutRef<"d
   as?: "div" | "header";
 }
 
-/** The properties of `TopNavShell.SubNav`: a second row of navigation under the `Navbar`, sticking with it. */
-export interface TopNavShellSubNavProps extends Omit<ComponentPropsWithoutRef<"div">, "children">, TopNavShellPartBase {
+/** The properties of `PageShell.SubNav`: a second row of navigation under the `Navbar`, sticking with it. */
+export interface PageShellSubNavProps extends Omit<ComponentPropsWithoutRef<"div">, "children">, PageShellPartBase {
   /**
-   * The row's content. With `label` it is the links (`TopNavShell.SubNavLink`), which the row puts in a `nav` of its own; without it, a `nav`
+   * The row's content. With `label` it is the links (`PageShell.SubNavLink`), which the row puts in a `nav` of its own; without it, a `nav`
    * (a `Tabs` list, or links) you draw yourself, with its own name. It scrolls sideways when it does not fit.
    */
   children?: ReactNode;
@@ -154,8 +154,8 @@ export interface TopNavShellSubNavProps extends Omit<ComponentPropsWithoutRef<"d
   sticky?: boolean;
 }
 
-/** The properties of `TopNavShell.SubNavLink`: a link of the sub-navigation, a round ghost button, the current one in the subtle tint. */
-export interface TopNavShellSubNavLinkProps extends Omit<ComponentPropsWithoutRef<"a">, "children" | "aria-current">, TopNavShellPartBase {
+/** The properties of `PageShell.SubNavLink`: a link of the sub-navigation, a round ghost button, the current one in the subtle tint. */
+export interface PageShellSubNavLinkProps extends Omit<ComponentPropsWithoutRef<"a">, "children" | "aria-current">, PageShellPartBase {
   /** The link's text. */
   children?: ReactNode;
   /**
@@ -165,8 +165,8 @@ export interface TopNavShellSubNavLinkProps extends Omit<ComponentPropsWithoutRe
   current?: boolean;
 }
 
-/** The properties of `TopNavShell.PageHeader`: the head of a page, with its title, an optional trail of breadcrumbs, a description and actions. */
-export interface TopNavShellPageHeaderProps extends Omit<ComponentPropsWithoutRef<"div">, "children" | "title">, TopNavShellPartBase {
+/** The properties of `PageShell.PageHeader`: the head of a page, with its title, an optional trail of breadcrumbs, a description and actions. */
+export interface PageShellPageHeaderProps extends Omit<ComponentPropsWithoutRef<"div">, "children" | "title">, PageShellPartBase {
   /** The page's title, drawn as its heading. */
   title: ReactNode;
   /**
@@ -182,16 +182,16 @@ export interface TopNavShellPageHeaderProps extends Omit<ComponentPropsWithoutRe
   actions?: ReactNode;
 }
 
-/** The properties of `TopNavShell.Main`: the page's one `<main>`, and the skip link's target. */
-export interface TopNavShellMainProps extends Omit<ComponentPropsWithoutRef<"main">, "children">, TopNavShellPartBase {
-  /** The page. Usually one `TopNavShell.Content`. */
+/** The properties of `PageShell.Main`: the page's one `<main>`, and the skip link's target. */
+export interface PageShellMainProps extends Omit<ComponentPropsWithoutRef<"main">, "children">, PageShellPartBase {
+  /** The page. Usually one `PageShell.Content`. */
   children?: ReactNode;
   /**
    * Marks the main area as loading: `aria-busy`, a thin bar along its top edge and a polite announcement, without hiding what is already there.
    */
   busy?: boolean;
   /** The words the main area supplies itself. */
-  labels?: Partial<TopNavShellMainLabels>;
+  labels?: Partial<PageShellMainLabels>;
   /**
    * The element's id, the skip link's target.
    * @default 'main'
@@ -199,15 +199,15 @@ export interface TopNavShellMainProps extends Omit<ComponentPropsWithoutRef<"mai
   id?: string;
 }
 
-/** The properties of `TopNavShell.Content`: the page's content kept to a readable width and padded, a `Container` with padding above and below. */
-export interface TopNavShellContentProps extends Omit<ComponentPropsWithoutRef<"div">, "children">, TopNavShellPartBase {
+/** The properties of `PageShell.Content`: the page's content kept to a readable width and padded, a `Container` with padding above and below. */
+export interface PageShellContentProps extends Omit<ComponentPropsWithoutRef<"div">, "children">, PageShellPartBase {
   /** The page's content. */
   children?: ReactNode;
   /**
    * The width the page is kept to, by what it is: `reading` for text (a narrow column), `dashboard` for cards and tables (the wide step), `full`
    * for a page that fills the window. An explicit `size` replaces it.
    */
-  width?: TopNavShellContentWidth;
+  width?: PageShellContentWidth;
   /**
    * The widest the content gets, on the same steps as `Container`, centred. `full` is no limit. Takes the place of `width` when both are given.
    * @default 'xl'
@@ -225,8 +225,8 @@ export interface TopNavShellContentProps extends Omit<ComponentPropsWithoutRef<"
   paddingBlock?: SpaceValue;
 }
 
-/** The properties of `TopNavShell.Footer`: the page's `contentinfo`, at the bottom of the window on a short page. */
-export interface TopNavShellFooterProps extends Omit<ComponentPropsWithoutRef<"footer">, "children">, TopNavShellPartBase {
+/** The properties of `PageShell.Footer`: the page's `contentinfo`, at the bottom of the window on a short page. */
+export interface PageShellFooterProps extends Omit<ComponentPropsWithoutRef<"footer">, "children">, PageShellPartBase {
   /** The footer's content. */
   children?: ReactNode;
   /**
@@ -235,5 +235,5 @@ export interface TopNavShellFooterProps extends Omit<ComponentPropsWithoutRef<"f
    * inset kept clear.
    * @default 'default'
    */
-  variant?: TopNavShellFooterVariant;
+  variant?: PageShellFooterVariant;
 }

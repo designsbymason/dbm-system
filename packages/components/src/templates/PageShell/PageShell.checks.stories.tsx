@@ -2,13 +2,13 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 import { useState } from "react";
 import { expect, userEvent, waitFor, within } from "storybook/test";
 import { send } from "../../molecules/CodeBlock/browserProtocol";
-import { DemoTopNavShell } from "./TopNavShellStoryKit";
+import { DemoPageShell } from "./PageShellStoryKit";
 
 // Hidden real-browser checks (guidelines/adr/0013): what jsdom can't do (layout, a breakpoint, scrolling, forced colours, print, a real wheel).
 // They run in the `storybook` (Chromium) project; the test window is 1200px wide unless a story pins another. The page scrolls as a whole, so
 // each check that scrolls uses the window.
 const meta: Meta = {
-  title: "Templates/Application shells/TopNavShell/Checks",
+  title: "Templates/Application shells/PageShell/Checks",
   tags: ["!dev"],
   parameters: { layout: "fullscreen", fullBleed: true },
 };
@@ -82,7 +82,7 @@ async function atTop() {
 
 export const DesktopLayout: Story = {
   name: "On a desktop the bar's links are in the bar, the page does not scroll sideways, and the shell's parts stack in order — layout test",
-  render: () => <DemoTopNavShell subNav />,
+  render: () => <DemoPageShell subNav />,
   play: async ({ canvasElement }) => {
     await expect(window.innerWidth).toBeGreaterThanOrEqual(1024);
     const { canvas, shell, bar, slot, main, footer } = slots(canvasElement);
@@ -103,7 +103,7 @@ export const DesktopLayout: Story = {
 export const TabletLayout: Story = {
   name: "On a tablet the page does not scroll sideways — layout test",
   globals: { viewport: { value: "tablet", isRotated: false } },
-  render: () => <DemoTopNavShell subNav banner />,
+  render: () => <DemoPageShell subNav banner />,
   play: async ({ canvasElement }) => {
     await expect(window.innerWidth).toBeGreaterThanOrEqual(768);
     const { shell } = slots(canvasElement);
@@ -115,7 +115,7 @@ export const TabletLayout: Story = {
 export const PhoneLayout: Story = {
   name: "On a phone the bar's links are behind a menu button, the sub-navigation scrolls inside its own row, and the page does not scroll sideways — layout test",
   globals: { viewport: { value: "mobile1", isRotated: false } },
-  render: () => <DemoTopNavShell subNav banner />,
+  render: () => <DemoPageShell subNav banner />,
   play: async ({ canvasElement }) => {
     // Fails loudly if the pinned viewport did not apply.
     await expect(window.innerWidth).toBeLessThan(768);
@@ -145,7 +145,7 @@ export const PhoneLayout: Story = {
 
 export const HeaderStaysUnderARealWheel: Story = {
   name: "A real wheel scroll leaves the header and the sub-navigation at the top, with a shadow, and the page back at its top clears it — layout test",
-  render: () => <DemoTopNavShell subNav rows={80} />,
+  render: () => <DemoPageShell subNav rows={80} />,
   play: async ({ canvasElement }) => {
     await expect(window.innerWidth).toBeGreaterThanOrEqual(1024);
     const { canvas, shell, bar, slot } = slots(canvasElement);
@@ -175,7 +175,7 @@ export const HeaderStaysUnderARealWheel: Story = {
 
 export const HeaderScrollsAwayWhenNotSticky: Story = {
   name: "With stickyHeader off the header scrolls away with the page and there is no shadow — layout test",
-  render: () => <DemoTopNavShell stickyHeader={false} subNav rows={80} />,
+  render: () => <DemoPageShell stickyHeader={false} subNav rows={80} />,
   play: async ({ canvasElement }) => {
     const { shell, slot } = slots(canvasElement);
     await atTop();
@@ -192,7 +192,7 @@ export const HeaderScrollsAwayWhenNotSticky: Story = {
 
 export const BannerScrollsAway: Story = {
   name: "A banner above the header scrolls away, and the header then sticks at the very top — layout test",
-  render: () => <DemoTopNavShell banner rows={80} />,
+  render: () => <DemoPageShell banner rows={80} />,
   play: async ({ canvasElement }) => {
     const { canvas, slot } = slots(canvasElement);
     const banner = canvas.getByText(/maintenance/i);
@@ -212,7 +212,7 @@ export const BannerScrollsAway: Story = {
 
 export const FooterSitsAtTheBottomOfAShortPage: Story = {
   name: "On a page too short to fill the window the footer sits at the bottom of the window, and the page does not scroll — layout test",
-  render: () => <DemoTopNavShell rows={1} />,
+  render: () => <DemoPageShell rows={1} />,
   play: async ({ canvasElement }) => {
     const { main, footer, slot } = slots(canvasElement);
     await atTop();
@@ -226,7 +226,7 @@ export const FooterSitsAtTheBottomOfAShortPage: Story = {
 
 export const FooterFollowsALongPage: Story = {
   name: "On a long page the footer is at the end of the page, not stuck to the window — layout test",
-  render: () => <DemoTopNavShell rows={80} />,
+  render: () => <DemoPageShell rows={80} />,
   play: async ({ canvasElement }) => {
     const { footer } = slots(canvasElement);
     await atTop();
@@ -241,7 +241,7 @@ export const FooterFollowsALongPage: Story = {
 export const SkipLinkIsTheFirstTabStopAndWorks: Story = {
   name: "A real Tab reaches the skip link first and draws it, and Enter moves focus to the main area — interaction test",
   tags: ["!dev"],
-  render: () => <DemoTopNavShell subNav />,
+  render: () => <DemoPageShell subNav />,
   play: async ({ canvasElement }) => {
     const { canvas, main } = slots(canvasElement);
     await atTop();
@@ -280,12 +280,12 @@ export const PageChangeByARealClick: Story = {
 function PageChangeStory() {
   const [page, setPage] = useState<"projects" | "reports" | "team" | "settings">("projects");
   const titles = { projects: "Projects", reports: "Reports", team: "Team", settings: "Settings" };
-  return <DemoTopNavShell pageKey={page} pageTitle={titles[page]} onNavigate={setPage} />;
+  return <DemoPageShell pageKey={page} pageTitle={titles[page]} onNavigate={setPage} />;
 }
 
 export const BusyBarLiesAlongTheTopOfTheMain: Story = {
   name: "While busy, a bar lies along the top of the main area, takes no room, and the page stays where it is — layout test",
-  render: () => <DemoTopNavShell busy rows={6} />,
+  render: () => <DemoPageShell busy rows={6} />,
   play: async ({ canvasElement }) => {
     const { canvas, main } = slots(canvasElement);
     await atTop();
@@ -302,7 +302,7 @@ export const BusyBarLiesAlongTheTopOfTheMain: Story = {
 
 export const RightToLeftInteraction: Story = {
   name: "Right to left, in Persian: the bar, the sub-navigation and the page mirror, and lang and dir are both set — direction test",
-  render: () => <DemoTopNavShell dir="rtl" subNav />,
+  render: () => <DemoPageShell dir="rtl" subNav />,
   play: async ({ canvasElement }) => {
     await expect(window.innerWidth).toBeGreaterThanOrEqual(1024);
     const { canvas, shell, bar, main } = slots(canvasElement);
@@ -328,7 +328,7 @@ export const RightToLeftInteraction: Story = {
 
 export const LeftToRightDemoLeavesLangAlone: Story = {
   name: "A left-to-right demo sets no lang — direction test",
-  render: () => <DemoTopNavShell />,
+  render: () => <DemoPageShell />,
   play: async ({ canvasElement }) => {
     const { shell } = slots(canvasElement);
     await expect(shell).not.toHaveAttribute("lang");
@@ -337,7 +337,7 @@ export const LeftToRightDemoLeavesLangAlone: Story = {
 
 export const ForcedColoursInteraction: Story = {
   name: "In forced colours the frame takes the system colours, and a scrolled header gets a line of its own, since shadows are dropped — forced colours test",
-  render: () => <DemoTopNavShell subNav rows={80} />,
+  render: () => <DemoPageShell subNav rows={80} />,
   play: async ({ canvasElement }) => {
     const { shell, slot } = slots(canvasElement);
     const emulate = (value: "active" | "none") => send("Emulation.setEmulatedMedia", { features: [{ name: "forced-colors", value }] });
@@ -369,7 +369,7 @@ export const ForcedColoursInteraction: Story = {
 
 export const ReducedMotionKeepsTheShadowInstant: Story = {
   name: "With reduced motion the header's shadow appears without a transition — layout test",
-  render: () => <DemoTopNavShell rows={80} />,
+  render: () => <DemoPageShell rows={80} />,
   play: async ({ canvasElement }) => {
     const { slot } = slots(canvasElement);
     const emulate = (value: "reduce" | "no-preference") => send("Emulation.setEmulatedMedia", { features: [{ name: "prefers-reduced-motion", value }] });
@@ -387,7 +387,7 @@ export const ReducedMotionKeepsTheShadowInstant: Story = {
 
 export const SafeAreaInsetsKeepTheFrameClear: Story = {
   name: "The frame leaves the device's safe-area insets clear, the header keeps the top inset, and the stylesheet asks the device for them — layout test",
-  render: () => <DemoTopNavShell subNav rows={80} />,
+  render: () => <DemoPageShell subNav rows={80} />,
   play: async ({ canvasElement }) => {
     const { shell, bar, slot, footer } = slots(canvasElement);
     // The stylesheet reads each side from the device's own inset...
@@ -405,10 +405,10 @@ export const SafeAreaInsetsKeepTheFrameClear: Story = {
     await atTop();
     const before = bar.getBoundingClientRect().top;
     await expect(Math.abs(before)).toBeLessThan(1);
-    shell.style.setProperty("--top-nav-shell-safe-top", "30px");
-    shell.style.setProperty("--top-nav-shell-safe-left", "10px");
-    shell.style.setProperty("--top-nav-shell-safe-right", "12px");
-    shell.style.setProperty("--top-nav-shell-safe-bottom", "20px");
+    shell.style.setProperty("--page-shell-safe-top", "30px");
+    shell.style.setProperty("--page-shell-safe-left", "10px");
+    shell.style.setProperty("--page-shell-safe-right", "12px");
+    shell.style.setProperty("--page-shell-safe-bottom", "20px");
     await nextFrame();
     // The bar starts below the notch, though the slot is still at the top of the window, stuck or not.
     await expect(Math.abs(bar.getBoundingClientRect().top - 30)).toBeLessThan(1);
@@ -453,7 +453,7 @@ async function whilePrinting(check: () => Promise<void>) {
 
 export const PrintsThePageWithoutKeepingPartsInView: Story = {
   name: "Printed, the banner, header and footer are in the flow in order, nothing is kept in view, and the skip link and the loading bar are left out — layout test",
-  render: () => <DemoTopNavShell banner subNav busy rows={80} />,
+  render: () => <DemoPageShell banner subNav busy rows={80} />,
   play: async ({ canvasElement }) => {
     const { canvas, shell, slot, main, footer } = slots(canvasElement);
     const skip = canvas.getByText("Skip to content");
@@ -479,7 +479,7 @@ export const PrintsThePageWithoutKeepingPartsInView: Story = {
 
 export const StaysTheSameWhenItGrowsATallPage: Story = {
   name: "A page that grows while the page is scrolled leaves the header where it is — layout test",
-  render: () => <DemoTopNavShell subNav rows={80} />,
+  render: () => <DemoPageShell subNav rows={80} />,
   play: async ({ canvasElement }) => {
     const { slot, main } = slots(canvasElement);
     await atTop();
@@ -498,7 +498,7 @@ export const StaysTheSameWhenItGrowsATallPage: Story = {
 
 export const SubNavCentresAndKeepsTheCurrentLinkInView: Story = {
   name: "The sub-navigation's links are centred while they fit, and on a phone the current link is scrolled into view — layout test",
-  render: () => <DemoTopNavShell subNav />,
+  render: () => <DemoPageShell subNav />,
   play: async ({ canvasElement }) => {
     await expect(window.innerWidth).toBeGreaterThanOrEqual(1024);
     const { canvas, slot } = slots(canvasElement);
@@ -529,9 +529,9 @@ export const SubNavCurrentLinkScrollsIntoViewOnAPhone: Story = {
   name: "On a phone a current link beyond the edge is scrolled into view when the row appears — layout test",
   globals: { viewport: { value: "mobile1", isRotated: false } },
   render: () => (
-    <DemoTopNavShell subNav>
+    <DemoPageShell subNav>
       {/* The page is the demo's; the current section is the last one, which a phone cannot show without scrolling. */}
-    </DemoTopNavShell>
+    </DemoPageShell>
   ),
   play: async ({ canvasElement }) => {
     await expect(window.innerWidth).toBeLessThan(768);
@@ -552,7 +552,7 @@ export const SubNavCurrentLinkScrollsIntoViewOnAPhone: Story = {
 
 export const HeaderHidesOnAScrollDownAndReturnsOnAScrollUp: Story = {
   name: "With stickyHeader auto a real wheel down slides the header out of view, a wheel up brings it back, and focus inside keeps it — layout test",
-  render: () => <DemoTopNavShell stickyHeader="auto" subNav rows={80} />,
+  render: () => <DemoPageShell stickyHeader="auto" subNav rows={80} />,
   play: async ({ canvasElement }) => {
     await expect(window.innerWidth).toBeGreaterThanOrEqual(1024);
     const { canvas, shell, slot } = slots(canvasElement);
@@ -582,7 +582,7 @@ export const HeaderHidesOnAScrollDownAndReturnsOnAScrollUp: Story = {
 
 export const SubNavScrollsAwayLeavingTheBar: Story = {
   name: "With sticky off on the sub-navigation only the bar stays at the top of the window while the row scrolls away — layout test",
-  render: () => <DemoTopNavShell subNav subNavProps={{ sticky: false }} rows={80} />,
+  render: () => <DemoPageShell subNav subNavProps={{ sticky: false }} rows={80} />,
   play: async ({ canvasElement }) => {
     await expect(window.innerWidth).toBeGreaterThanOrEqual(1024);
     const { canvas, bar } = slots(canvasElement);
@@ -600,7 +600,7 @@ export const SubNavScrollsAwayLeavingTheBar: Story = {
 
 export const ActionsFooterStaysAtTheBottomOfTheWindow: Story = {
   name: "The actions footer stays at the bottom of the window over a long page, and ends the page in place — layout test",
-  render: () => <DemoTopNavShell footerVariant="actions" rows={60} />,
+  render: () => <DemoPageShell footerVariant="actions" rows={60} />,
   play: async ({ canvasElement }) => {
     await expect(window.innerWidth).toBeGreaterThanOrEqual(1024);
     const { footer } = slots(canvasElement);

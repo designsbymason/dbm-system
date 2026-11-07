@@ -5,17 +5,17 @@ import { createRef, StrictMode, useState } from "react";
 import { describe, expect, it, vi } from "vitest";
 import { DirectionProvider } from "../../atoms/DirectionProvider";
 import { Navbar } from "../../organisms/Navbar";
-import { TopNavShell } from "./TopNavShell";
-import type { TopNavShellProps } from "./TopNavShell.types";
+import { PageShell } from "./PageShell";
+import type { PageShellProps } from "./PageShell.types";
 
 // jsdom matches no media query and lays out nothing, so these tests are about structure, wiring and state: the landmarks, the skip link and its
 // target, the page-change handling, `busy`, the scrolled state and the props each part passes through. Sticking, the footer's place, widths and
 // print are in the real-browser checks.
-function Shell(props: TopNavShellProps) {
+function Shell(props: PageShellProps) {
   return (
-    <TopNavShell data-testid="shell" {...props}>
-      <TopNavShell.SkipLink />
-      <TopNavShell.Header>
+    <PageShell data-testid="shell" {...props}>
+      <PageShell.SkipLink />
+      <PageShell.Header>
         <Navbar>
           <Navbar.Brand href="/">Acme</Navbar.Brand>
           <Navbar.Links aria-label="Main">
@@ -25,25 +25,25 @@ function Shell(props: TopNavShellProps) {
             <Navbar.Link href="/reports">Reports</Navbar.Link>
           </Navbar.Links>
         </Navbar>
-        <TopNavShell.SubNav>
+        <PageShell.SubNav>
           <nav aria-label="Sections">
             <a href="/overview">Overview</a>
           </nav>
-        </TopNavShell.SubNav>
-      </TopNavShell.Header>
-      <TopNavShell.Main>
-        <TopNavShell.Content>
+        </PageShell.SubNav>
+      </PageShell.Header>
+      <PageShell.Main>
+        <PageShell.Content>
           <h1>Projects</h1>
-        </TopNavShell.Content>
-      </TopNavShell.Main>
-      <TopNavShell.Footer>
+        </PageShell.Content>
+      </PageShell.Main>
+      <PageShell.Footer>
         <p>Footer</p>
-      </TopNavShell.Footer>
-    </TopNavShell>
+      </PageShell.Footer>
+    </PageShell>
   );
 }
 
-describe("TopNavShell", () => {
+describe("PageShell", () => {
   describe("landmarks", () => {
     it("has one banner, one main and one contentinfo, and the named navigations", () => {
       render(<Shell />);
@@ -66,12 +66,12 @@ describe("TopNavShell", () => {
 
     it("draws the header slot as the banner with as=\"header\"", () => {
       render(
-        <TopNavShell>
-          <TopNavShell.Header as="header" data-testid="header">
+        <PageShell>
+          <PageShell.Header as="header" data-testid="header">
             Brand
-          </TopNavShell.Header>
-          <TopNavShell.Main>Main</TopNavShell.Main>
-        </TopNavShell>,
+          </PageShell.Header>
+          <PageShell.Main>Main</PageShell.Main>
+        </PageShell>,
       );
       expect(screen.getByTestId("header").tagName).toBe("HEADER");
       expect(screen.getByRole("banner")).toBe(screen.getByTestId("header"));
@@ -97,10 +97,10 @@ describe("TopNavShell", () => {
 
     it("can be given its own words, text and target", () => {
       render(
-        <TopNavShell>
-          <TopNavShell.SkipLink labels={{ skipToContent: "Aller au contenu" }} href="#page" />
-          <TopNavShell.Main id="page">Main</TopNavShell.Main>
-        </TopNavShell>,
+        <PageShell>
+          <PageShell.SkipLink labels={{ skipToContent: "Aller au contenu" }} href="#page" />
+          <PageShell.Main id="page">Main</PageShell.Main>
+        </PageShell>,
       );
       expect(screen.getByRole("link", { name: "Aller au contenu" })).toHaveAttribute("href", "#page");
       expect(screen.getByRole("main")).toHaveAttribute("id", "page");
@@ -108,20 +108,20 @@ describe("TopNavShell", () => {
 
     it("keeps its own words when a label is passed as undefined", () => {
       render(
-        <TopNavShell>
-          <TopNavShell.SkipLink labels={{ skipToContent: undefined }} />
-          <TopNavShell.Main>Main</TopNavShell.Main>
-        </TopNavShell>,
+        <PageShell>
+          <PageShell.SkipLink labels={{ skipToContent: undefined }} />
+          <PageShell.Main>Main</PageShell.Main>
+        </PageShell>,
       );
       expect(screen.getByRole("link", { name: "Skip to content" })).toBeInTheDocument();
     });
 
     it("takes children in place of the words", () => {
       render(
-        <TopNavShell>
-          <TopNavShell.SkipLink>Jump</TopNavShell.SkipLink>
-          <TopNavShell.Main>Main</TopNavShell.Main>
-        </TopNavShell>,
+        <PageShell>
+          <PageShell.SkipLink>Jump</PageShell.SkipLink>
+          <PageShell.Main>Main</PageShell.Main>
+        </PageShell>,
       );
       expect(screen.getByRole("link", { name: "Jump" })).toBeInTheDocument();
     });
@@ -205,9 +205,9 @@ describe("TopNavShell", () => {
   describe("direction", () => {
     it("sets dir on its own element and gives it to what is inside", () => {
       render(
-        <TopNavShell dir="rtl" data-testid="shell">
-          <TopNavShell.Main>Main</TopNavShell.Main>
-        </TopNavShell>,
+        <PageShell dir="rtl" data-testid="shell">
+          <PageShell.Main>Main</PageShell.Main>
+        </PageShell>,
       );
       expect(screen.getByTestId("shell")).toHaveAttribute("dir", "rtl");
     });
@@ -215,12 +215,12 @@ describe("TopNavShell", () => {
     it("follows the nearest DirectionProvider when it has no dir of its own, and its own dir wins", () => {
       render(
         <DirectionProvider dir="rtl">
-          <TopNavShell data-testid="inherits">
-            <TopNavShell.Main>Main</TopNavShell.Main>
-          </TopNavShell>
-          <TopNavShell dir="ltr" data-testid="own">
-            <TopNavShell.Main id="other">Main</TopNavShell.Main>
-          </TopNavShell>
+          <PageShell data-testid="inherits">
+            <PageShell.Main>Main</PageShell.Main>
+          </PageShell>
+          <PageShell dir="ltr" data-testid="own">
+            <PageShell.Main id="other">Main</PageShell.Main>
+          </PageShell>
         </DirectionProvider>,
       );
       expect(screen.getByTestId("inherits")).toHaveAttribute("dir", "rtl");
@@ -232,16 +232,16 @@ describe("TopNavShell", () => {
     function Router({ initial = "/a" }: { initial?: string }) {
       const [path, setPath] = useState(initial);
       return (
-        <TopNavShell pageKey={path} pageTitle={`Page ${path}`}>
-          <TopNavShell.Main>
+        <PageShell pageKey={path} pageTitle={`Page ${path}`}>
+          <PageShell.Main>
             <button type="button" onClick={() => setPath("/b")}>
               Go
             </button>
             <button type="button" onClick={() => setPath("/b")}>
               Same
             </button>
-          </TopNavShell.Main>
-        </TopNavShell>
+          </PageShell.Main>
+        </PageShell>
       );
     }
 
@@ -264,23 +264,23 @@ describe("TopNavShell", () => {
 
     it("does nothing while pageKey is left out, and draws no live region for it", () => {
       render(
-        <TopNavShell>
-          <TopNavShell.Main>Main</TopNavShell.Main>
-        </TopNavShell>,
+        <PageShell>
+          <PageShell.Main>Main</PageShell.Main>
+        </PageShell>,
       );
       expect(screen.queryByRole("status")).not.toBeInTheDocument();
     });
 
     it("moves focus without announcing when there is no pageTitle", () => {
       const { rerender } = render(
-        <TopNavShell pageKey="/a">
-          <TopNavShell.Main>Main</TopNavShell.Main>
-        </TopNavShell>,
+        <PageShell pageKey="/a">
+          <PageShell.Main>Main</PageShell.Main>
+        </PageShell>,
       );
       rerender(
-        <TopNavShell pageKey="/b">
-          <TopNavShell.Main>Main</TopNavShell.Main>
-        </TopNavShell>,
+        <PageShell pageKey="/b">
+          <PageShell.Main>Main</PageShell.Main>
+        </PageShell>,
       );
       expect(screen.getByRole("main")).toHaveFocus();
       expect(screen.getByRole("status")).toHaveTextContent("");
@@ -288,14 +288,14 @@ describe("TopNavShell", () => {
 
     it("treats a key that arrives after mount as the first page, not a change", () => {
       const { rerender } = render(
-        <TopNavShell>
-          <TopNavShell.Main>Main</TopNavShell.Main>
-        </TopNavShell>,
+        <PageShell>
+          <PageShell.Main>Main</PageShell.Main>
+        </PageShell>,
       );
       rerender(
-        <TopNavShell pageKey="/a" pageTitle="A">
-          <TopNavShell.Main>Main</TopNavShell.Main>
-        </TopNavShell>,
+        <PageShell pageKey="/a" pageTitle="A">
+          <PageShell.Main>Main</PageShell.Main>
+        </PageShell>,
       );
       expect(screen.getByRole("main")).not.toHaveFocus();
       expect(screen.getByRole("status")).toHaveTextContent("");
@@ -318,16 +318,16 @@ describe("TopNavShell", () => {
   describe("busy", () => {
     it("marks the main area busy, says Loading politely, and empties the region when it clears", () => {
       const { rerender } = render(
-        <TopNavShell>
-          <TopNavShell.Main busy>Main</TopNavShell.Main>
-        </TopNavShell>,
+        <PageShell>
+          <PageShell.Main busy>Main</PageShell.Main>
+        </PageShell>,
       );
       expect(screen.getByRole("main")).toHaveAttribute("aria-busy", "true");
       expect(screen.getByRole("status")).toHaveTextContent("Loading");
       rerender(
-        <TopNavShell>
-          <TopNavShell.Main busy={false}>Main</TopNavShell.Main>
-        </TopNavShell>,
+        <PageShell>
+          <PageShell.Main busy={false}>Main</PageShell.Main>
+        </PageShell>,
       );
       expect(screen.getByRole("main")).not.toHaveAttribute("aria-busy");
       expect(screen.getByRole("status")).toHaveTextContent("");
@@ -335,28 +335,28 @@ describe("TopNavShell", () => {
 
     it("draws no region at all while busy is left out", () => {
       render(
-        <TopNavShell>
-          <TopNavShell.Main>Main</TopNavShell.Main>
-        </TopNavShell>,
+        <PageShell>
+          <PageShell.Main>Main</PageShell.Main>
+        </PageShell>,
       );
       expect(screen.queryByRole("status")).not.toBeInTheDocument();
     });
 
     it("says its own words, and keeps the default when a label is passed as undefined", () => {
       const { rerender } = render(
-        <TopNavShell>
-          <TopNavShell.Main busy labels={{ loading: "Chargement" }}>
+        <PageShell>
+          <PageShell.Main busy labels={{ loading: "Chargement" }}>
             Main
-          </TopNavShell.Main>
-        </TopNavShell>,
+          </PageShell.Main>
+        </PageShell>,
       );
       expect(screen.getByRole("status")).toHaveTextContent("Chargement");
       rerender(
-        <TopNavShell>
-          <TopNavShell.Main busy labels={{ loading: undefined }}>
+        <PageShell>
+          <PageShell.Main busy labels={{ loading: undefined }}>
             Main
-          </TopNavShell.Main>
-        </TopNavShell>,
+          </PageShell.Main>
+        </PageShell>,
       );
       expect(screen.getByRole("status")).toHaveTextContent("Loading");
     });
@@ -375,17 +375,17 @@ describe("TopNavShell", () => {
         footer: createRef<HTMLElement>(),
       };
       render(
-        <TopNavShell ref={refs.root}>
-          <TopNavShell.SkipLink ref={refs.skip} />
-          <TopNavShell.Banner ref={refs.banner}>Notice</TopNavShell.Banner>
-          <TopNavShell.Header ref={refs.header}>
-            <TopNavShell.SubNav ref={refs.subNav}>Sub</TopNavShell.SubNav>
-          </TopNavShell.Header>
-          <TopNavShell.Main ref={refs.main}>
-            <TopNavShell.Content ref={refs.content}>Content</TopNavShell.Content>
-          </TopNavShell.Main>
-          <TopNavShell.Footer ref={refs.footer}>Footer</TopNavShell.Footer>
-        </TopNavShell>,
+        <PageShell ref={refs.root}>
+          <PageShell.SkipLink ref={refs.skip} />
+          <PageShell.Banner ref={refs.banner}>Notice</PageShell.Banner>
+          <PageShell.Header ref={refs.header}>
+            <PageShell.SubNav ref={refs.subNav}>Sub</PageShell.SubNav>
+          </PageShell.Header>
+          <PageShell.Main ref={refs.main}>
+            <PageShell.Content ref={refs.content}>Content</PageShell.Content>
+          </PageShell.Main>
+          <PageShell.Footer ref={refs.footer}>Footer</PageShell.Footer>
+        </PageShell>,
       );
       expect(refs.root.current).toBeInstanceOf(HTMLDivElement);
       expect(refs.skip.current).toBeInstanceOf(HTMLAnchorElement);
@@ -399,17 +399,17 @@ describe("TopNavShell", () => {
 
     it("accepts className, style, id and data-testid on every part", () => {
       render(
-        <TopNavShell className="root-class" style={{ color: "red" }} id="shell-id" data-testid="root">
-          <TopNavShell.SkipLink className="c" data-testid="skip" />
-          <TopNavShell.Banner className="c" data-testid="banner" />
-          <TopNavShell.Header className="c" data-testid="header">
-            <TopNavShell.SubNav className="c" data-testid="subnav" />
-          </TopNavShell.Header>
-          <TopNavShell.Main className="c" data-testid="main">
-            <TopNavShell.Content className="c" data-testid="content" id="content-id" />
-          </TopNavShell.Main>
-          <TopNavShell.Footer className="c" data-testid="footer" />
-        </TopNavShell>,
+        <PageShell className="root-class" style={{ color: "red" }} id="shell-id" data-testid="root">
+          <PageShell.SkipLink className="c" data-testid="skip" />
+          <PageShell.Banner className="c" data-testid="banner" />
+          <PageShell.Header className="c" data-testid="header">
+            <PageShell.SubNav className="c" data-testid="subnav" />
+          </PageShell.Header>
+          <PageShell.Main className="c" data-testid="main">
+            <PageShell.Content className="c" data-testid="content" id="content-id" />
+          </PageShell.Main>
+          <PageShell.Footer className="c" data-testid="footer" />
+        </PageShell>,
       );
       expect(screen.getByTestId("root")).toHaveClass("root-class");
       expect(screen.getByTestId("root")).toHaveAttribute("id", "shell-id");
@@ -420,22 +420,22 @@ describe("TopNavShell", () => {
 
     it("passes a native attribute straight through", () => {
       render(
-        <TopNavShell title="frame">
-          <TopNavShell.Main aria-labelledby="page-title">
+        <PageShell title="frame">
+          <PageShell.Main aria-labelledby="page-title">
             <h1 id="page-title">Projects</h1>
-          </TopNavShell.Main>
-        </TopNavShell>,
+          </PageShell.Main>
+        </PageShell>,
       );
       expect(screen.getByRole("main", { name: "Projects" })).toBeInTheDocument();
     });
 
     it("does not let a passed attribute replace one the part computes itself", () => {
       render(
-        <TopNavShell>
-          <TopNavShell.Main busy aria-busy={false} tabIndex={0} id="x">
+        <PageShell>
+          <PageShell.Main busy aria-busy={false} tabIndex={0} id="x">
             Main
-          </TopNavShell.Main>
-        </TopNavShell>,
+          </PageShell.Main>
+        </PageShell>,
       );
       const main = screen.getByRole("main");
       expect(main).toHaveAttribute("aria-busy", "true");
@@ -444,9 +444,9 @@ describe("TopNavShell", () => {
 
     it("keeps its own direction and attributes when props try to replace them", () => {
       render(
-        <TopNavShell {...({ "data-scrolled-edge": "no" } as object)} dir="rtl" data-testid="shell">
-          <TopNavShell.Main>Main</TopNavShell.Main>
-        </TopNavShell>,
+        <PageShell {...({ "data-scrolled-edge": "no" } as object)} dir="rtl" data-testid="shell">
+          <PageShell.Main>Main</PageShell.Main>
+        </PageShell>,
       );
       expect(screen.getByTestId("shell")).toHaveAttribute("dir", "rtl");
       expect(screen.getByTestId("shell").getAttribute("data-scrolled-edge")).toBe("");
@@ -454,11 +454,11 @@ describe("TopNavShell", () => {
 
     it("sets the content's size and padding through Container", () => {
       render(
-        <TopNavShell>
-          <TopNavShell.Main>
-            <TopNavShell.Content data-testid="content" size="md" paddingBlock={8} />
-          </TopNavShell.Main>
-        </TopNavShell>,
+        <PageShell>
+          <PageShell.Main>
+            <PageShell.Content data-testid="content" size="md" paddingBlock={8} />
+          </PageShell.Main>
+        </PageShell>,
       );
       expect(screen.getByTestId("content")).toHaveStyle({ paddingBlock: "var(--dbm-space-8)" });
     });
@@ -537,15 +537,15 @@ describe("TopNavShell", () => {
   describe("the sub-navigation", () => {
     it("draws a named nav around its links when given a label, and the links mark the current one", () => {
       render(
-        <TopNavShell>
-          <TopNavShell.SubNav label="Project sections">
-            <TopNavShell.SubNavLink href="/a" current>
+        <PageShell>
+          <PageShell.SubNav label="Project sections">
+            <PageShell.SubNavLink href="/a" current>
               Overview
-            </TopNavShell.SubNavLink>
-            <TopNavShell.SubNavLink href="/b">Activity</TopNavShell.SubNavLink>
-          </TopNavShell.SubNav>
-          <TopNavShell.Main>Main</TopNavShell.Main>
-        </TopNavShell>,
+            </PageShell.SubNavLink>
+            <PageShell.SubNavLink href="/b">Activity</PageShell.SubNavLink>
+          </PageShell.SubNav>
+          <PageShell.Main>Main</PageShell.Main>
+        </PageShell>,
       );
       const nav = screen.getByRole("navigation", { name: "Project sections" });
       expect(within(nav).getByRole("link", { name: "Overview" })).toHaveAttribute("aria-current", "page");
@@ -554,29 +554,29 @@ describe("TopNavShell", () => {
 
     it("draws no nav of its own without a label, so a nav you bring is the only one", () => {
       render(
-        <TopNavShell>
-          <TopNavShell.SubNav>
+        <PageShell>
+          <PageShell.SubNav>
             <nav aria-label="Mine">
               <a href="/a">A</a>
             </nav>
-          </TopNavShell.SubNav>
-          <TopNavShell.Main>Main</TopNavShell.Main>
-        </TopNavShell>,
+          </PageShell.SubNav>
+          <PageShell.Main>Main</PageShell.Main>
+        </PageShell>,
       );
       expect(screen.getAllByRole("navigation")).toHaveLength(1);
     });
 
     it("centres by default, starts at the start on request, and takes a line away", () => {
       render(
-        <TopNavShell>
-          <TopNavShell.SubNav label="One" data-testid="one">
+        <PageShell>
+          <PageShell.SubNav label="One" data-testid="one">
             x
-          </TopNavShell.SubNav>
-          <TopNavShell.SubNav label="Two" align="start" bordered={false} data-testid="two">
+          </PageShell.SubNav>
+          <PageShell.SubNav label="Two" align="start" bordered={false} data-testid="two">
             x
-          </TopNavShell.SubNav>
-          <TopNavShell.Main>Main</TopNavShell.Main>
-        </TopNavShell>,
+          </PageShell.SubNav>
+          <PageShell.Main>Main</PageShell.Main>
+        </PageShell>,
       );
       expect(screen.getByTestId("one")).toHaveAttribute("data-align", "center");
       expect(screen.getByTestId("two")).toHaveAttribute("data-align", "start");
@@ -586,12 +586,12 @@ describe("TopNavShell", () => {
 
     it("tells the shell while it is not sticky, and takes that back when it stops", () => {
       const row = (sticky: boolean) => (
-        <TopNavShell data-testid="shell">
-          <TopNavShell.SubNav label="Sections" sticky={sticky}>
+        <PageShell data-testid="shell">
+          <PageShell.SubNav label="Sections" sticky={sticky}>
             x
-          </TopNavShell.SubNav>
-          <TopNavShell.Main>Main</TopNavShell.Main>
-        </TopNavShell>
+          </PageShell.SubNav>
+          <PageShell.Main>Main</PageShell.Main>
+        </PageShell>
       );
       const { rerender, unmount } = render(row(false));
       expect(screen.getByTestId("shell")).toHaveAttribute("data-subnav-static");
@@ -606,23 +606,23 @@ describe("TopNavShell", () => {
   describe("the footer, the content and the page header", () => {
     it("marks the footer's variant", () => {
       render(
-        <TopNavShell>
-          <TopNavShell.Main>Main</TopNavShell.Main>
-          <TopNavShell.Footer variant="actions">Footer</TopNavShell.Footer>
-        </TopNavShell>,
+        <PageShell>
+          <PageShell.Main>Main</PageShell.Main>
+          <PageShell.Footer variant="actions">Footer</PageShell.Footer>
+        </PageShell>,
       );
       expect(screen.getByRole("contentinfo")).toHaveAttribute("data-variant", "actions");
     });
 
     it("keeps the content to the width preset's step, and an explicit size wins", () => {
       render(
-        <TopNavShell>
-          <TopNavShell.Main>
-            <TopNavShell.Content width="reading" data-testid="reading" />
-            <TopNavShell.Content width="full" data-testid="full" />
-            <TopNavShell.Content width="dashboard" size="sm" data-testid="explicit" />
-          </TopNavShell.Main>
-        </TopNavShell>,
+        <PageShell>
+          <PageShell.Main>
+            <PageShell.Content width="reading" data-testid="reading" />
+            <PageShell.Content width="full" data-testid="full" />
+            <PageShell.Content width="dashboard" size="sm" data-testid="explicit" />
+          </PageShell.Main>
+        </PageShell>,
       );
       expect(screen.getByTestId("reading").className).toContain("sizeMd");
       expect(screen.getByTestId("full").className).toContain("sizeFull");
@@ -631,17 +631,17 @@ describe("TopNavShell", () => {
 
     it("draws the page's title as its heading, with a description, breadcrumbs and actions", () => {
       render(
-        <TopNavShell>
-          <TopNavShell.Main>
-            <TopNavShell.PageHeader
+        <PageShell>
+          <PageShell.Main>
+            <PageShell.PageHeader
               title="Projects"
               description="All of them"
               breadcrumbs={<nav aria-label="Trail">Home</nav>}
               actions={<button type="button">New</button>}
             />
-            <TopNavShell.PageHeader title="Details" titleLevel={2} />
-          </TopNavShell.Main>
-        </TopNavShell>,
+            <PageShell.PageHeader title="Details" titleLevel={2} />
+          </PageShell.Main>
+        </PageShell>,
       );
       expect(screen.getByRole("heading", { level: 1, name: "Projects" })).toBeInTheDocument();
       expect(screen.getByRole("heading", { level: 2, name: "Details" })).toBeInTheDocument();
@@ -654,7 +654,7 @@ describe("TopNavShell", () => {
   describe("outside a shell", () => {
     it("throws for a part that needs the shell, with a message that says so", () => {
       const spy = vi.spyOn(console, "error").mockImplementation(() => undefined);
-      expect(() => render(<TopNavShell.Main>Main</TopNavShell.Main>)).toThrow("TopNavShell parts must be used inside a TopNavShell.");
+      expect(() => render(<PageShell.Main>Main</PageShell.Main>)).toThrow("PageShell parts must be used inside a PageShell.");
       spy.mockRestore();
     });
   });
@@ -667,17 +667,17 @@ describe("TopNavShell", () => {
 
     it("has no violations with a banner, busy, and a right-to-left shell", async () => {
       const { container } = render(
-        <TopNavShell dir="rtl" lang="fa">
-          <TopNavShell.SkipLink />
-          <TopNavShell.Banner>Notice</TopNavShell.Banner>
-          <TopNavShell.Header as="header">Header</TopNavShell.Header>
-          <TopNavShell.Main busy>
-            <TopNavShell.Content>
+        <PageShell dir="rtl" lang="fa">
+          <PageShell.SkipLink />
+          <PageShell.Banner>Notice</PageShell.Banner>
+          <PageShell.Header as="header">Header</PageShell.Header>
+          <PageShell.Main busy>
+            <PageShell.Content>
               <h1>Page</h1>
-            </TopNavShell.Content>
-          </TopNavShell.Main>
-          <TopNavShell.Footer>Footer</TopNavShell.Footer>
-        </TopNavShell>,
+            </PageShell.Content>
+          </PageShell.Main>
+          <PageShell.Footer>Footer</PageShell.Footer>
+        </PageShell>,
       );
       expect(await axe(container)).toHaveNoViolations();
     });

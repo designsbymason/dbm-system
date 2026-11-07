@@ -2,26 +2,26 @@ import type { Meta, StoryContext, StoryObj } from "@storybook/react-vite";
 import { useState } from "react";
 import { Heading } from "../../atoms/Heading";
 import { Text } from "../../atoms/Text";
-import { DemoPage, DemoTopNavShell, demoCopy } from "./TopNavShellStoryKit";
-import { TopNavShell } from "./TopNavShell";
-import type { TopNavShellProps } from "./TopNavShell.types";
-import { topNavShellPlaygroundSnippet, topNavShellSnippets } from "./TopNavShell.snippets";
+import { DemoPage, DemoPageShell, demoCopy } from "./PageShellStoryKit";
+import { PageShell } from "./PageShell";
+import type { PageShellProps } from "./PageShell.types";
+import { pageShellPlaygroundSnippet, pageShellSnippets } from "./PageShell.snippets";
 
 // A template is a whole page, so every story fills the window (`layout: "fullscreen"`). The page scrolls as a whole, so open a story on its own to
-// see the header stay at the top; on a Docs page the shell sits in a frame instead (see TopNavShell.mdx).
+// see the header stay at the top; on a Docs page the shell sits in a frame instead (see PageShell.mdx).
 /** The shell's props, and the two Storybook-only controls (whether the demo has a sub-navigation and a banner). */
-type PlaygroundArgs = TopNavShellProps & { subNav: boolean; banner: boolean };
+type PlaygroundArgs = PageShellProps & { subNav: boolean; banner: boolean };
 
 const meta: Meta<PlaygroundArgs> = {
-  title: "Templates/Application shells/TopNavShell",
-  component: TopNavShell,
+  title: "Templates/Application shells/PageShell",
+  component: PageShell,
   subcomponents: {},
   parameters: { layout: "fullscreen", fullBleed: true },
   argTypes: {
     children: {
       control: false,
       description:
-        "The shell's parts: TopNavShell.SkipLink, TopNavShell.Banner, TopNavShell.Header (a Navbar and an optional TopNavShell.SubNav), TopNavShell.Main (holding a TopNavShell.Content) and TopNavShell.Footer. They draw in the order you write them, which is the keyboard's tab order: put the skip link first and the header after it. Only TopNavShell.Main is needed.",
+        "The shell's parts: PageShell.SkipLink, PageShell.Banner, PageShell.Header (a Navbar and an optional PageShell.SubNav), PageShell.Main (holding a PageShell.Content) and PageShell.Footer. They draw in the order you write them, which is the keyboard's tab order: put the skip link first and the header after it. Only PageShell.Main is needed.",
     },
     stickyHeader: {
       control: "radio",
@@ -38,7 +38,7 @@ const meta: Meta<PlaygroundArgs> = {
     pageKey: {
       control: false,
       description:
-        "A value that changes when the reader goes to another page, such as the router's pathname. When it changes after the first render the shell moves focus to TopNavShell.Main so the keyboard starts at the new page's top, and announces pageTitle. Nothing happens on the first render, or while this is left out.",
+        "A value that changes when the reader goes to another page, such as the router's pathname. When it changes after the first render the shell moves focus to PageShell.Main so the keyboard starts at the new page's top, and announces pageTitle. Nothing happens on the first render, or while this is left out.",
     },
     pageTitle: {
       control: false,
@@ -59,12 +59,12 @@ const meta: Meta<PlaygroundArgs> = {
     },
     subNav: {
       control: "boolean",
-      description: "Storybook only — not a TopNavShell prop. Adds a TopNavShell.SubNav of the project's sections under the bar.",
+      description: "Storybook only — not a PageShell prop. Adds a PageShell.SubNav of the project's sections under the bar.",
       table: { disable: true },
     },
     banner: {
       control: "boolean",
-      description: "Storybook only — not a TopNavShell prop. Adds a TopNavShell.Banner with a notice above the header.",
+      description: "Storybook only — not a PageShell prop. Adds a PageShell.Banner with a notice above the header.",
       table: { disable: true },
     },
     style: { control: false, description: "Inline styles, merged onto the component's own internal styles." },
@@ -97,82 +97,82 @@ const docs = (context: { viewMode?: string }) => context.viewMode === "docs";
 export const Playground: Story = {
   parameters: {
     docs: {
-      source: { type: "dynamic", transform: (_code: string, context: StoryContext) => topNavShellPlaygroundSnippet(context.args) },
+      source: { type: "dynamic", transform: (_code: string, context: StoryContext) => pageShellPlaygroundSnippet(context.args) },
     },
   },
-  render: ({ subNav, banner, ...args }, context) => <DemoTopNavShell {...args} subNav={subNav} banner={banner} framed={docs(context)} />,
+  render: ({ subNav, banner, ...args }, context) => <DemoPageShell {...args} subNav={subNav} banner={banner} framed={docs(context)} />,
 };
 
 export const WithSubNav: Story = {
   name: "A second row of navigation",
-  parameters: { docs: { source: { code: topNavShellSnippets.subNav } } },
+  parameters: { docs: { source: { code: pageShellSnippets.subNav } } },
   argTypes: { ...noControls },
-  render: (_args, context) => <DemoTopNavShell subNav framed={docs(context)} />,
+  render: (_args, context) => <DemoPageShell subNav framed={docs(context)} />,
 };
 
 export const WithBanner: Story = {
   name: "A banner above the header",
-  parameters: { docs: { source: { code: topNavShellSnippets.banner } } },
+  parameters: { docs: { source: { code: pageShellSnippets.banner } } },
   argTypes: { ...noControls },
-  render: (_args, context) => <DemoTopNavShell banner subNav framed={docs(context)} />,
+  render: (_args, context) => <DemoPageShell banner subNav framed={docs(context)} />,
 };
 
 export const SubNavScrollsAway: Story = {
   name: "A sub-navigation that scrolls away",
-  parameters: { docs: { source: { code: topNavShellSnippets.subNavScrollsAway } } },
+  parameters: { docs: { source: { code: pageShellSnippets.subNavScrollsAway } } },
   argTypes: { ...noControls },
   render: (_args, context) => (
-    <DemoTopNavShell subNav subNavProps={{ sticky: false, align: "start" }} rows={80} framed={docs(context)} />
+    <DemoPageShell subNav subNavProps={{ sticky: false, align: "start" }} rows={80} framed={docs(context)} />
   ),
 };
 
 export const AutoHide: Story = {
   name: "A header that hides on scroll",
-  parameters: { docs: { source: { code: topNavShellSnippets.autoHide } } },
+  parameters: { docs: { source: { code: pageShellSnippets.autoHide } } },
   argTypes: { ...noControls },
-  render: (_args, context) => <DemoTopNavShell stickyHeader="auto" subNav rows={80} framed={docs(context)} />,
+  render: (_args, context) => <DemoPageShell stickyHeader="auto" subNav rows={80} framed={docs(context)} />,
 };
 
 export const ActionsFooter: Story = {
   name: "A footer of actions",
-  parameters: { docs: { source: { code: topNavShellSnippets.actionsFooter } } },
+  parameters: { docs: { source: { code: pageShellSnippets.actionsFooter } } },
   argTypes: { ...noControls },
-  render: (_args, context) => <DemoTopNavShell footerVariant="actions" rows={40} framed={docs(context)} />,
+  render: (_args, context) => <DemoPageShell footerVariant="actions" rows={40} framed={docs(context)} />,
 };
 
 export const ShortPage: Story = {
   name: "A short page",
-  parameters: { docs: { source: { code: topNavShellSnippets.shortPage } } },
+  parameters: { docs: { source: { code: pageShellSnippets.shortPage } } },
   argTypes: { ...noControls },
-  render: (_args, context) => <DemoTopNavShell rows={2} framed={docs(context)} />,
+  render: (_args, context) => <DemoPageShell rows={2} framed={docs(context)} />,
 };
 
 export const Busy: Story = {
   name: "A page that is loading",
-  parameters: { docs: { source: { code: topNavShellSnippets.busy } } },
+  parameters: { docs: { source: { code: pageShellSnippets.busy } } },
   argTypes: { ...noControls },
-  render: (_args, context) => <DemoTopNavShell busy rows={6} framed={docs(context)} />,
+  render: (_args, context) => <DemoPageShell busy rows={6} framed={docs(context)} />,
 };
 
 export const EmptyPage: Story = {
   name: "A page with nothing to show",
-  parameters: { docs: { source: { code: topNavShellSnippets.emptyPage } } },
+  parameters: { docs: { source: { code: pageShellSnippets.emptyPage } } },
   argTypes: { ...noControls },
-  render: (_args, context) => <DemoTopNavShell state="empty" framed={docs(context)} />,
+  render: (_args, context) => <DemoPageShell state="empty" framed={docs(context)} />,
 };
 
 export const ErrorPage: Story = {
   name: "A page that failed to load",
-  parameters: { docs: { source: { code: topNavShellSnippets.errorPage } } },
+  parameters: { docs: { source: { code: pageShellSnippets.errorPage } } },
   argTypes: { ...noControls },
-  render: (_args, context) => <DemoTopNavShell state="error" framed={docs(context)} />,
+  render: (_args, context) => <DemoPageShell state="error" framed={docs(context)} />,
 };
 
 export const StaticHeader: Story = {
   name: "A header that scrolls away",
-  parameters: { docs: { source: { code: topNavShellSnippets.staticHeader } } },
+  parameters: { docs: { source: { code: pageShellSnippets.staticHeader } } },
   argTypes: { ...noControls },
-  render: (_args, context) => <DemoTopNavShell stickyHeader={false} subNav framed={docs(context)} />,
+  render: (_args, context) => <DemoPageShell stickyHeader={false} subNav framed={docs(context)} />,
 };
 
 /** The router's part, played by state: choosing a link of the bar changes `pageKey`, as navigating would. */
@@ -181,7 +181,7 @@ function PageChangeDemo({ framed }: { framed: boolean }) {
   const copy = demoCopy.en;
   const title = { projects: copy.projects, reports: copy.reports, team: copy.team, settings: copy.settings }[page];
   return (
-    <DemoTopNavShell pageKey={page} pageTitle={title} onNavigate={setPage} framed={framed}>
+    <DemoPageShell pageKey={page} pageTitle={title} onNavigate={setPage} framed={framed}>
       {page === "projects" ? (
         <DemoPage rows={6} />
       ) : (
@@ -192,26 +192,26 @@ function PageChangeDemo({ framed }: { framed: boolean }) {
           <Text color="secondary">Focus moved to the main area, and the new title was announced.</Text>
         </div>
       )}
-    </DemoTopNavShell>
+    </DemoPageShell>
   );
 }
 
 export const PageChange: Story = {
   name: "Moving to another page",
-  parameters: { docs: { source: { code: topNavShellSnippets.pageChange } } },
+  parameters: { docs: { source: { code: pageShellSnippets.pageChange } } },
   argTypes: { ...noControls },
   render: (_args, context) => <PageChangeDemo framed={docs(context)} />,
 };
 
 export const ContentWidth: Story = {
   name: "Content kept to a narrower width",
-  parameters: { docs: { source: { code: topNavShellSnippets.contentWidth } } },
+  parameters: { docs: { source: { code: pageShellSnippets.contentWidth } } },
   argTypes: { ...noControls },
   render: (_args, context) => (
-    <DemoTopNavShell framed={docs(context)}>
+    <DemoPageShell framed={docs(context)}>
       <div style={{ maxInlineSize: "40rem", marginInline: "auto" }}>
         <DemoPage rows={4} />
       </div>
-    </DemoTopNavShell>
+    </DemoPageShell>
   ),
 };

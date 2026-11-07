@@ -320,7 +320,7 @@ const AppShellRoot = forwardRef<HTMLDivElement, AppShellProps>(
     const asideToggleRef = useRef<HTMLElement | null>(null);
 
     // Moving to another page: focus goes to the main area, a scrolling main area goes back to its top, and the new title is announced
-    // (`usePageChange`, shared with `TopNavShell`).
+    // (`usePageChange`, shared with `PageShell`).
     const announcement = usePageChange({ pageKey, pageTitle, mainRef, resetScroll: scroll === "content" });
 
     const context = useMemo(

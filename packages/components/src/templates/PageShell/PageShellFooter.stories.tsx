@@ -1,10 +1,10 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { TopNavShell } from "./TopNavShell";
+import { PageShell } from "./PageShell";
 
-// Docs-only (guidelines/adr/0013) — `TopNavShell.Footer`'s own props get their own Properties table on TopNavShell.mdx.
-const meta: Meta<typeof TopNavShell.Footer> = {
-  title: "Templates/Application shells/TopNavShell/Footer",
-  component: TopNavShell.Footer,
+// Docs-only (guidelines/adr/0013) — `PageShell.Footer`'s own props get their own Properties table on PageShell.mdx.
+const meta: Meta<typeof PageShell.Footer> = {
+  title: "Templates/Application shells/PageShell/Footer",
+  component: PageShell.Footer,
   tags: ["!dev"],
   argTypes: {
     children: { control: false, description: "The footer's content: the contentinfo landmark. On a page too short to fill the window it sits at the bottom of the window." },
@@ -26,13 +26,13 @@ const meta: Meta<typeof TopNavShell.Footer> = {
 
 export default meta;
 
-type Story = StoryObj<typeof TopNavShell.Footer>;
+type Story = StoryObj<typeof PageShell.Footer>;
 
 export const Default: Story = {
   render: () => (
-    <TopNavShell>
-      <TopNavShell.Footer>Footer</TopNavShell.Footer>
-      <TopNavShell.Main>Main</TopNavShell.Main>
-    </TopNavShell>
+    <PageShell>
+      <PageShell.Footer>Footer</PageShell.Footer>
+      <PageShell.Main>Main</PageShell.Main>
+    </PageShell>
   ),
 };

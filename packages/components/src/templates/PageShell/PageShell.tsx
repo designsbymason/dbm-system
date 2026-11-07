@@ -10,64 +10,64 @@ import { VisuallyHidden } from "../../atoms/VisuallyHidden";
 import { MainBusy } from "../../internal/MainBusy";
 import { usePageChange } from "../../internal/usePageChange";
 import skipLinkStyles from "../../internal/skipLink.module.css";
-import styles from "./TopNavShell.module.css";
-import { TopNavShellContext, useTopNavShellContext } from "./TopNavShellContext";
+import styles from "./PageShell.module.css";
+import { PageShellContext, usePageShellContext } from "./PageShellContext";
 import type {
-  TopNavShellBannerProps,
-  TopNavShellContentProps,
-  TopNavShellFooterProps,
-  TopNavShellHeaderProps,
-  TopNavShellMainLabels,
-  TopNavShellContentWidth,
-  TopNavShellMainProps,
-  TopNavShellPageHeaderProps,
-  TopNavShellProps,
-  TopNavShellSkipLinkLabels,
-  TopNavShellSkipLinkProps,
-  TopNavShellSubNavLinkProps,
-  TopNavShellSubNavProps,
-} from "./TopNavShell.types";
+  PageShellBannerProps,
+  PageShellContentProps,
+  PageShellFooterProps,
+  PageShellHeaderProps,
+  PageShellMainLabels,
+  PageShellContentWidth,
+  PageShellMainProps,
+  PageShellPageHeaderProps,
+  PageShellProps,
+  PageShellSkipLinkLabels,
+  PageShellSkipLinkProps,
+  PageShellSubNavLinkProps,
+  PageShellSubNavProps,
+} from "./PageShell.types";
 
-const defaultSkipLinkLabels: TopNavShellSkipLinkLabels = { skipToContent: "Skip to content" };
-const defaultMainLabels: TopNavShellMainLabels = { loading: "Loading" };
+const defaultSkipLinkLabels: PageShellSkipLinkLabels = { skipToContent: "Skip to content" };
+const defaultMainLabels: PageShellMainLabels = { loading: "Loading" };
 
 /** How far the page must be scrolled before a header that hides on scroll (`stickyHeader="auto"`) will go, and how far one move must be to count. */
 const HIDE_AFTER_SCROLL = 80;
 const SCROLL_STEP = 6;
 
-/** The steps of `Container` each width preset of `TopNavShell.Content` stands for. */
-const widthSizes: Record<TopNavShellContentWidth, ContainerSize> = { reading: "md", dashboard: "2xl", full: "full" };
+/** The steps of `Container` each width preset of `PageShell.Content` stands for. */
+const widthSizes: Record<PageShellContentWidth, ContainerSize> = { reading: "md", dashboard: "2xl", full: "full" };
 
 /**
  * The page frame of an application with no sidebar: a skip link, an optional banner, a header that stays at the top of the window (a `Navbar`
  * and an optional sub-navigation), the page's one `<main>` and a footer that sits at the bottom of the window on a short page. The page scrolls
  * as a whole. It is **layout and wiring only**: you put your own `Navbar` in the header and keep every prop it has.
  *
- * The shell owns the sticking: leave the `Navbar` inside it without its own `sticky`. Put `TopNavShell.SkipLink` first so it is the first tab stop.
+ * The shell owns the sticking: leave the `Navbar` inside it without its own `sticky`. Put `PageShell.SkipLink` first so it is the first tab stop.
  * Pass `pageKey` (the router's pathname) and `pageTitle` to move focus to the main area and announce the new page when the reader navigates.
  *
  * @example
  * ```tsx
- * <TopNavShell pageKey={pathname} pageTitle="Projects">
- *   <TopNavShell.SkipLink />
- *   <TopNavShell.Header>
+ * <PageShell pageKey={pathname} pageTitle="Projects">
+ *   <PageShell.SkipLink />
+ *   <PageShell.Header>
  *     <Navbar>
  *       <Navbar.Brand href="/">Acme</Navbar.Brand>
  *       <Navbar.Links aria-label="Main">
  *         <Navbar.Link href="/projects" current>Projects</Navbar.Link>
  *       </Navbar.Links>
  *     </Navbar>
- *   </TopNavShell.Header>
- *   <TopNavShell.Main>
- *     <TopNavShell.Content>
+ *   </PageShell.Header>
+ *   <PageShell.Main>
+ *     <PageShell.Content>
  *       <h1>Projects</h1>
- *     </TopNavShell.Content>
- *   </TopNavShell.Main>
- *   <TopNavShell.Footer>© Acme</TopNavShell.Footer>
- * </TopNavShell>
+ *     </PageShell.Content>
+ *   </PageShell.Main>
+ *   <PageShell.Footer>© Acme</PageShell.Footer>
+ * </PageShell>
  * ```
  */
-const TopNavShellRoot = forwardRef<HTMLDivElement, TopNavShellProps>(
+const PageShellRoot = forwardRef<HTMLDivElement, PageShellProps>(
   ({ children, stickyHeader = true, scrolledEdge = true, pageKey, pageTitle, documentTitle = false, dir: dirProp, className, style, ...props }, ref) => {
     // The direction of the shell: its own, else the nearest `DirectionProvider`'s, else left to right. Everything inside gets it from a provider.
     const dir = useDirection(dirProp);
@@ -126,7 +126,7 @@ const TopNavShellRoot = forwardRef<HTMLDivElement, TopNavShellProps>(
 
     return (
       <DirectionProvider dir={dir}>
-        <TopNavShellContext.Provider value={context}>
+        <PageShellContext.Provider value={context}>
           <div
             {...props}
             ref={mergeRefs(rootRef, ref)}
@@ -141,18 +141,18 @@ const TopNavShellRoot = forwardRef<HTMLDivElement, TopNavShellProps>(
             {children}
             {pageKey !== undefined && <VisuallyHidden role="status">{announcement}</VisuallyHidden>}
           </div>
-        </TopNavShellContext.Provider>
+        </PageShellContext.Provider>
       </DirectionProvider>
     );
   },
 );
-TopNavShellRoot.displayName = "TopNavShell";
+PageShellRoot.displayName = "PageShell";
 
 /**
  * A link, out of sight until it takes keyboard focus, that skips the header to the main area. Put it first in the shell, before
- * `TopNavShell.Header`, so it is the first tab stop. Use it when the header has no `Navbar` (a `Navbar` has its own `Navbar.SkipLink`).
+ * `PageShell.Header`, so it is the first tab stop. Use it when the header has no `Navbar` (a `Navbar` has its own `Navbar.SkipLink`).
  */
-const TopNavShellSkipLink = forwardRef<HTMLAnchorElement, TopNavShellSkipLinkProps>(
+const PageShellSkipLink = forwardRef<HTMLAnchorElement, PageShellSkipLinkProps>(
   ({ href = "#main", labels: labelsProp, className, children, ...props }, ref) => {
     const labels = mergeDefined(defaultSkipLinkLabels, labelsProp);
     return (
@@ -162,32 +162,32 @@ const TopNavShellSkipLink = forwardRef<HTMLAnchorElement, TopNavShellSkipLinkPro
     );
   },
 );
-TopNavShellSkipLink.displayName = "TopNavShell.SkipLink";
+PageShellSkipLink.displayName = "PageShell.SkipLink";
 
 /** A notice above the header: an `Alert` with `banner`, or any content. It scrolls away with the page; it does not stick. */
-const TopNavShellBanner = forwardRef<HTMLDivElement, TopNavShellBannerProps>(({ className, ...props }, ref) => (
+const PageShellBanner = forwardRef<HTMLDivElement, PageShellBannerProps>(({ className, ...props }, ref) => (
   <div {...props} ref={ref} className={cx(styles.banner, className)} />
 ));
-TopNavShellBanner.displayName = "TopNavShell.Banner";
+PageShellBanner.displayName = "PageShell.Banner";
 
 /**
  * The slot that stays at the top of the window while the page scrolls (unless the shell's `stickyHeader` is off): a `Navbar` and, if you like, a
- * `TopNavShell.SubNav`. It is a plain `div` by default, since a `Navbar` draws its own `<header>`; `as="header"` makes it the page's banner for
+ * `PageShell.SubNav`. It is a plain `div` by default, since a `Navbar` draws its own `<header>`; `as="header"` makes it the page's banner for
  * a header built without one.
  */
-const TopNavShellHeader = forwardRef<HTMLElement, TopNavShellHeaderProps>(({ as: Element = "div", className, ...props }, ref) => (
+const PageShellHeader = forwardRef<HTMLElement, PageShellHeaderProps>(({ as: Element = "div", className, ...props }, ref) => (
   <Element {...(props as object)} ref={ref as never} className={cx(styles.header, className)} />
 ));
-TopNavShellHeader.displayName = "TopNavShell.Header";
+PageShellHeader.displayName = "PageShell.Header";
 
 /**
- * A second row of navigation under the `Navbar`, inside the header so it sticks with it: a row of `TopNavShell.SubNavLink`s (give it a `label`
+ * A second row of navigation under the `Navbar`, inside the header so it sticks with it: a row of `PageShell.SubNavLink`s (give it a `label`
  * and it draws the `nav`), or a `Tabs` list of your own in a `nav` with its own name. The links are centred while they all fit. When they do
  * not, the row scrolls sideways so a phone keeps every item, fades at the edge that has more, and brings the current link into view.
  */
-const TopNavShellSubNav = forwardRef<HTMLDivElement, TopNavShellSubNavProps>(
+const PageShellSubNav = forwardRef<HTMLDivElement, PageShellSubNavProps>(
   ({ label, align = "center", bordered = true, sticky = true, className, children, ...props }, ref) => {
-    const { setSubNavStatic } = useTopNavShellContext();
+    const { setSubNavStatic } = usePageShellContext();
     const scrollerRef = useRef<HTMLDivElement | null>(null);
     const { overflowStart, overflowEnd } = useScrollEdges(scrollerRef, "horizontal", { itemSelector: "a, button, [role=tab]" });
 
@@ -243,27 +243,27 @@ const TopNavShellSubNav = forwardRef<HTMLDivElement, TopNavShellSubNavProps>(
     );
   },
 );
-TopNavShellSubNav.displayName = "TopNavShell.SubNav";
+PageShellSubNav.displayName = "PageShell.SubNav";
 
 /**
- * A link of `TopNavShell.SubNav`: a round ghost button. The current page's link (`current`) takes `aria-current="page"` and the subtle tint the
+ * A link of `PageShell.SubNav`: a round ghost button. The current page's link (`current`) takes `aria-current="page"` and the subtle tint the
  * `Navbar` gives its own current link, underlined as well in forced colours, where a fill is dropped.
  */
-const TopNavShellSubNavLink = forwardRef<HTMLAnchorElement, TopNavShellSubNavLinkProps>(({ current = false, className, children, ...props }, ref) => (
+const PageShellSubNavLink = forwardRef<HTMLAnchorElement, PageShellSubNavLinkProps>(({ current = false, className, children, ...props }, ref) => (
   <Button asChild variant="ghost" tone="neutral" size="sm" rounded className={cx(styles.subNavLink, current && styles.subNavLinkCurrent, className)}>
     <a {...props} ref={ref} aria-current={current ? "page" : undefined}>
       {children}
     </a>
   </Button>
 ));
-TopNavShellSubNavLink.displayName = "TopNavShell.SubNavLink";
+PageShellSubNavLink.displayName = "PageShell.SubNavLink";
 
 /**
  * The page's one `<main>`, and the skip link's target. It takes focus from the skip link and when the page changes (`tabindex="-1"`). `busy`
  * marks it as loading: `aria-busy`, a thin bar along its top edge and a polite announcement, without hiding what is already there.
  */
-const TopNavShellMain = forwardRef<HTMLElement, TopNavShellMainProps>(({ id = "main", busy, labels: labelsProp, className, children, ...props }, ref) => {
-  const { mainRef } = useTopNavShellContext();
+const PageShellMain = forwardRef<HTMLElement, PageShellMainProps>(({ id = "main", busy, labels: labelsProp, className, children, ...props }, ref) => {
+  const { mainRef } = usePageShellContext();
   const labels = mergeDefined(defaultMainLabels, labelsProp);
   return (
     <main
@@ -280,13 +280,13 @@ const TopNavShellMain = forwardRef<HTMLElement, TopNavShellMainProps>(({ id = "m
     </main>
   );
 });
-TopNavShellMain.displayName = "TopNavShell.Main";
+PageShellMain.displayName = "PageShell.Main";
 
 /**
- * The head of a page, at the top of `TopNavShell.Content`: its title as the page's `h1` (`titleLevel` changes that), an optional trail of
+ * The head of a page, at the top of `PageShell.Content`: its title as the page's `h1` (`titleLevel` changes that), an optional trail of
  * breadcrumbs above it, a description under it and the page's actions at the end of the row, under the title on a phone.
  */
-const TopNavShellPageHeader = forwardRef<HTMLDivElement, TopNavShellPageHeaderProps>(
+const PageShellPageHeader = forwardRef<HTMLDivElement, PageShellPageHeaderProps>(
   ({ title, titleLevel = 1, description, breadcrumbs, actions, className, ...props }, ref) => (
     <div {...props} ref={ref} className={cx(styles.pageHeader, className)}>
       <div className={styles.pageHeaderText}>
@@ -300,13 +300,13 @@ const TopNavShellPageHeader = forwardRef<HTMLDivElement, TopNavShellPageHeaderPr
     </div>
   ),
 );
-TopNavShellPageHeader.displayName = "TopNavShell.PageHeader";
+PageShellPageHeader.displayName = "PageShell.PageHeader";
 
 /**
  * The page's content in the main area, kept to a readable width and padded on the spacing scale: a `Container` with padding above and below
- * as well. Put it inside `TopNavShell.Main`, which adds none of its own.
+ * as well. Put it inside `PageShell.Main`, which adds none of its own.
  */
-const TopNavShellContent = forwardRef<HTMLDivElement, TopNavShellContentProps>(
+const PageShellContent = forwardRef<HTMLDivElement, PageShellContentProps>(
   ({ width, size = width === undefined ? "xl" : widthSizes[width], paddingInline = 4, paddingBlock = 6, style, ...props }, ref) => (
     <Container
       {...props}
@@ -317,13 +317,13 @@ const TopNavShellContent = forwardRef<HTMLDivElement, TopNavShellContentProps>(
     />
   ),
 );
-TopNavShellContent.displayName = "TopNavShell.Content";
+PageShellContent.displayName = "PageShell.Content";
 
 /**
  * The page's `contentinfo`. On a page too short to fill the window it sits at the bottom of the window, not under the content. `variant` makes it
  * a tighter one (`compact`) or a bar of actions that stays at the bottom of the window (`actions`).
  */
-const TopNavShellFooter = forwardRef<HTMLElement, TopNavShellFooterProps>(({ variant = "default", className, ...props }, ref) => (
+const PageShellFooter = forwardRef<HTMLElement, PageShellFooterProps>(({ variant = "default", className, ...props }, ref) => (
   <footer
     {...props}
     ref={ref}
@@ -331,28 +331,28 @@ const TopNavShellFooter = forwardRef<HTMLElement, TopNavShellFooterProps>(({ var
     className={cx(styles.footer, variant === "compact" && styles.footerCompact, variant === "actions" && styles.footerActions, className)}
   />
 ));
-TopNavShellFooter.displayName = "TopNavShell.Footer";
+PageShellFooter.displayName = "PageShell.Footer";
 
-type TopNavShellComponent = typeof TopNavShellRoot & {
-  SkipLink: typeof TopNavShellSkipLink;
-  Banner: typeof TopNavShellBanner;
-  Header: typeof TopNavShellHeader;
-  SubNav: typeof TopNavShellSubNav;
-  SubNavLink: typeof TopNavShellSubNavLink;
-  PageHeader: typeof TopNavShellPageHeader;
-  Main: typeof TopNavShellMain;
-  Content: typeof TopNavShellContent;
-  Footer: typeof TopNavShellFooter;
+type PageShellComponent = typeof PageShellRoot & {
+  SkipLink: typeof PageShellSkipLink;
+  Banner: typeof PageShellBanner;
+  Header: typeof PageShellHeader;
+  SubNav: typeof PageShellSubNav;
+  SubNavLink: typeof PageShellSubNavLink;
+  PageHeader: typeof PageShellPageHeader;
+  Main: typeof PageShellMain;
+  Content: typeof PageShellContent;
+  Footer: typeof PageShellFooter;
 };
 
-export const TopNavShell: TopNavShellComponent = Object.assign(TopNavShellRoot, {
-  SkipLink: TopNavShellSkipLink,
-  Banner: TopNavShellBanner,
-  Header: TopNavShellHeader,
-  SubNav: TopNavShellSubNav,
-  SubNavLink: TopNavShellSubNavLink,
-  PageHeader: TopNavShellPageHeader,
-  Main: TopNavShellMain,
-  Content: TopNavShellContent,
-  Footer: TopNavShellFooter,
+export const PageShell: PageShellComponent = Object.assign(PageShellRoot, {
+  SkipLink: PageShellSkipLink,
+  Banner: PageShellBanner,
+  Header: PageShellHeader,
+  SubNav: PageShellSubNav,
+  SubNavLink: PageShellSubNavLink,
+  PageHeader: PageShellPageHeader,
+  Main: PageShellMain,
+  Content: PageShellContent,
+  Footer: PageShellFooter,
 });

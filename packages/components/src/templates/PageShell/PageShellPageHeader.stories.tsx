@@ -1,10 +1,10 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { TopNavShell } from "./TopNavShell";
+import { PageShell } from "./PageShell";
 
-// Docs-only (guidelines/adr/0013) — `TopNavShell.PageHeader`'s own props get their own Properties table on TopNavShell.mdx.
-const meta: Meta<typeof TopNavShell.PageHeader> = {
-  title: "Templates/Application shells/TopNavShell/PageHeader",
-  component: TopNavShell.PageHeader,
+// Docs-only (guidelines/adr/0013) — `PageShell.PageHeader`'s own props get their own Properties table on PageShell.mdx.
+const meta: Meta<typeof PageShell.PageHeader> = {
+  title: "Templates/Application shells/PageShell/PageHeader",
+  component: PageShell.PageHeader,
   tags: ["!dev"],
   argTypes: {
     title: { control: false, description: "The page's title, drawn as its heading." },
@@ -24,16 +24,16 @@ const meta: Meta<typeof TopNavShell.PageHeader> = {
 
 export default meta;
 
-type Story = StoryObj<typeof TopNavShell.PageHeader>;
+type Story = StoryObj<typeof PageShell.PageHeader>;
 
 export const Default: Story = {
   render: () => (
-    <TopNavShell>
-      <TopNavShell.Main>
-        <TopNavShell.Content>
-          <TopNavShell.PageHeader title="Projects" description="Everything your team is working on." />
-        </TopNavShell.Content>
-      </TopNavShell.Main>
-    </TopNavShell>
+    <PageShell>
+      <PageShell.Main>
+        <PageShell.Content>
+          <PageShell.PageHeader title="Projects" description="Everything your team is working on." />
+        </PageShell.Content>
+      </PageShell.Main>
+    </PageShell>
   ),
 };

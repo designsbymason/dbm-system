@@ -1,10 +1,10 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { TopNavShell } from "./TopNavShell";
+import { PageShell } from "./PageShell";
 
-// Docs-only (guidelines/adr/0013) — `TopNavShell.Banner`'s own props get their own Properties table on TopNavShell.mdx.
-const meta: Meta<typeof TopNavShell.Banner> = {
-  title: "Templates/Application shells/TopNavShell/Banner",
-  component: TopNavShell.Banner,
+// Docs-only (guidelines/adr/0013) — `PageShell.Banner`'s own props get their own Properties table on PageShell.mdx.
+const meta: Meta<typeof PageShell.Banner> = {
+  title: "Templates/Application shells/PageShell/Banner",
+  component: PageShell.Banner,
   tags: ["!dev"],
   argTypes: {
     children: { control: false, description: "The notice: an Alert with banner, or any content. It scrolls away with the page; it does not stick." },
@@ -20,13 +20,13 @@ const meta: Meta<typeof TopNavShell.Banner> = {
 
 export default meta;
 
-type Story = StoryObj<typeof TopNavShell.Banner>;
+type Story = StoryObj<typeof PageShell.Banner>;
 
 export const Default: Story = {
   render: () => (
-    <TopNavShell>
-      <TopNavShell.Banner>Notice</TopNavShell.Banner>
-      <TopNavShell.Main>Main</TopNavShell.Main>
-    </TopNavShell>
+    <PageShell>
+      <PageShell.Banner>Notice</PageShell.Banner>
+      <PageShell.Main>Main</PageShell.Main>
+    </PageShell>
   ),
 };

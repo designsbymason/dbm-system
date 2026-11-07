@@ -3,7 +3,7 @@ import { useEffect, useRef } from "react";
 import type { RefObject } from "react";
 
 /**
- * Moving to another page, for an application shell (`AppShell`, `TopNavShell`): focus goes to the main area (so the keyboard starts at the new
+ * Moving to another page, for an application shell (`AppShell`, `PageShell`): focus goes to the main area (so the keyboard starts at the new
  * page's top, and a screen reader is told where it is), a main area that scrolls on its own goes back to its top (`resetScroll`), and the new
  * page's title is announced politely. Not on the first render, which the page's own load already announced, and not while `pageKey` is left
  * out. The key remembered here, not a flag, keeps it quiet under `StrictMode`. Returns the text for the shell's live region.

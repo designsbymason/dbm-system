@@ -1,4 +1,4 @@
-// The code shown under each story's "Show code" button on TopNavShell's Docs page.
+// The code shown under each story's "Show code" button on PageShell's Docs page.
 //
 // Hand-written rather than generated from the rendered story: a generated snippet would show the story's demo helpers instead of the shell filled
 // with your own navigation and page. Each snippet here is the smallest real usage of what its story shows, using only exports of the package;
@@ -10,7 +10,7 @@ const words = {
   fa: { title: "پروژه‌ها", projects: "پروژه‌ها", reports: "گزارش‌ها" },
 };
 
-const header = (extra = "", language: "en" | "fa" = "en") => `  <TopNavShell.Header>
+const header = (extra = "", language: "en" | "fa" = "en") => `  <PageShell.Header>
     {/* The shell keeps the header in view: leave the Navbar without its own sticky */}
     <Navbar>
       {/* On a phone the row is three columns: the menu button at the start, the brand in the centre, the actions at the end */}
@@ -23,33 +23,33 @@ const header = (extra = "", language: "en" | "fa" = "en") => `  <TopNavShell.Hea
         <Navbar.MenuButton variant="tertiary" tone="neutral" size="sm" />
       </Navbar.Row>
     </Navbar>${extra}
-  </TopNavShell.Header>`;
+  </PageShell.Header>`;
 
 const subNavRow = (attributes = "") => `
-    <TopNavShell.SubNav label="Project sections"${attributes ? ` ${attributes}` : ""}>
-      <TopNavShell.SubNavLink href="/projects/overview" current>Overview</TopNavShell.SubNavLink>
-      <TopNavShell.SubNavLink href="/projects/activity">Activity</TopNavShell.SubNavLink>
-      <TopNavShell.SubNavLink href="/projects/members">Members</TopNavShell.SubNavLink>
-    </TopNavShell.SubNav>`;
+    <PageShell.SubNav label="Project sections"${attributes ? ` ${attributes}` : ""}>
+      <PageShell.SubNavLink href="/projects/overview" current>Overview</PageShell.SubNavLink>
+      <PageShell.SubNavLink href="/projects/activity">Activity</PageShell.SubNavLink>
+      <PageShell.SubNavLink href="/projects/members">Members</PageShell.SubNavLink>
+    </PageShell.SubNav>`;
 const subNav = subNavRow();
 
-const main = (inner = "", language: "en" | "fa" = "en") => `  <TopNavShell.Main>
-    <TopNavShell.Content>
+const main = (inner = "", language: "en" | "fa" = "en") => `  <PageShell.Main>
+    <PageShell.Content>
       <h1>${words[language].title}</h1>${inner}
-    </TopNavShell.Content>
-  </TopNavShell.Main>`;
+    </PageShell.Content>
+  </PageShell.Main>`;
 
-const footer = `  <TopNavShell.Footer>© dbM</TopNavShell.Footer>`;
+const footer = `  <PageShell.Footer>© dbM</PageShell.Footer>`;
 
-const shell = (attributes: string, parts: string[]) => `<TopNavShell${attributes ? ` ${attributes}` : ""}>\n${parts.join("\n")}\n</TopNavShell>`;
+const shell = (attributes: string, parts: string[]) => `<PageShell${attributes ? ` ${attributes}` : ""}>\n${parts.join("\n")}\n</PageShell>`;
 
-const skipLink = `  <TopNavShell.SkipLink />`;
+const skipLink = `  <PageShell.SkipLink />`;
 
-export const topNavShellSnippets = {
+export const pageShellSnippets = {
   default: shell("", [skipLink, header(), main(), footer]),
 
-  subNav: `{/* TopNavShell.SubNav is a second row of navigation inside the header, so it sticks with the bar. With a label it draws the nav, with
-    that name, around its TopNavShell.SubNavLinks (or leave the label out and put a nav of your own in it). The links are centred while they all
+  subNav: `{/* PageShell.SubNav is a second row of navigation inside the header, so it sticks with the bar. With a label it draws the nav, with
+    that name, around its PageShell.SubNavLinks (or leave the label out and put a nav of your own in it). The links are centred while they all
     fit; when they do not, the row scrolls sideways, fades at the edge that has more and brings the current link into view. */}
 ${shell("", [skipLink, header(subNav), main(), footer])}`,
 
@@ -66,45 +66,45 @@ ${shell("", [
   skipLink,
   header(),
   main(),
-  `  <TopNavShell.Footer variant="actions">
-    <TopNavShell.Content paddingBlock={3} style={{ display: "flex", justifyContent: "flex-end", gap: "var(--dbm-space-2)" }}>
+  `  <PageShell.Footer variant="actions">
+    <PageShell.Content paddingBlock={3} style={{ display: "flex", justifyContent: "flex-end", gap: "var(--dbm-space-2)" }}>
       <Button variant="secondary">Cancel</Button>
       <Button>Save</Button>
-    </TopNavShell.Content>
-  </TopNavShell.Footer>`,
+    </PageShell.Content>
+  </PageShell.Footer>`,
 ])}`,
 
-  pageHeader: `{/* TopNavShell.PageHeader is the head of a page: the title as its h1, breadcrumbs above it, a description under it and the actions at the
+  pageHeader: `{/* PageShell.PageHeader is the head of a page: the title as its h1, breadcrumbs above it, a description under it and the actions at the
     end of the row (under the title on a phone). */}
 ${shell("", [
   skipLink,
   header(),
-  `  <TopNavShell.Main>
-    <TopNavShell.Content>
-      <TopNavShell.PageHeader
+  `  <PageShell.Main>
+    <PageShell.Content>
+      <PageShell.PageHeader
         title="Projects"
         description="Everything your team is working on."
         actions={<Button>New project</Button>}
       />
-    </TopNavShell.Content>
-  </TopNavShell.Main>`,
+    </PageShell.Content>
+  </PageShell.Main>`,
   footer,
 ])}`,
 
   documentTitle: `{/* documentTitle keeps the browser tab's title in step with pageTitle, so the router does not have to: true sets it to pageTitle, a
     function builds the whole title. The title the document had comes back when the shell unmounts. */}
-<TopNavShell pageKey={pathname} pageTitle="Projects" documentTitle={(title) => \`\${title} · dbM\`}>
+<PageShell pageKey={pathname} pageTitle="Projects" documentTitle={(title) => \`\${title} · dbM\`}>
 ${[skipLink, header(), main(), footer].join("\n")}
-</TopNavShell>`,
+</PageShell>`,
 
-  banner: `{/* TopNavShell.Banner is a notice above the header. It scrolls away with the page and does not stick. */}
+  banner: `{/* PageShell.Banner is a notice above the header. It scrolls away with the page and does not stick. */}
 ${shell("", [
   skipLink,
-  `  <TopNavShell.Banner>
+  `  <PageShell.Banner>
     <Alert banner tone="info">
       <Alert.Description>Scheduled maintenance tonight at 22:00 UTC.</Alert.Description>
     </Alert>
-  </TopNavShell.Banner>`,
+  </PageShell.Banner>`,
   header(),
   main(),
   footer,
@@ -118,11 +118,11 @@ ${shell("", [skipLink, header(), main(), footer])}`,
 ${shell("", [
   skipLink,
   header(),
-  `  <TopNavShell.Main busy>
-    <TopNavShell.Content>
+  `  <PageShell.Main busy>
+    <PageShell.Content>
       <h1>Projects</h1>
-    </TopNavShell.Content>
-  </TopNavShell.Main>`,
+    </PageShell.Content>
+  </PageShell.Main>`,
   footer,
 ])}`,
 
@@ -131,8 +131,8 @@ ${shell("", [
 ${shell("", [
   skipLink,
   header(),
-  `  <TopNavShell.Main>
-    <TopNavShell.Content>
+  `  <PageShell.Main>
+    <PageShell.Content>
       <EmptyState size="lg">
         <EmptyState.Icon icon={TrayIcon} />
         <EmptyState.Title level={1}>No projects yet</EmptyState.Title>
@@ -141,8 +141,8 @@ ${shell("", [
           <Button>Create a project</Button>
         </EmptyState.Actions>
       </EmptyState>
-    </TopNavShell.Content>
-  </TopNavShell.Main>`,
+    </PageShell.Content>
+  </PageShell.Main>`,
   footer,
 ])}`,
 
@@ -151,8 +151,8 @@ ${shell("", [
 ${shell("", [
   skipLink,
   header(),
-  `  <TopNavShell.Main>
-    <TopNavShell.Content>
+  `  <PageShell.Main>
+    <PageShell.Content>
       <EmptyState size="lg" tone="danger" announce>
         <EmptyState.Icon icon={WarningCircleIcon} />
         <EmptyState.Title level={1}>We couldn't load your projects</EmptyState.Title>
@@ -161,8 +161,8 @@ ${shell("", [
           <Button>Try again</Button>
         </EmptyState.Actions>
       </EmptyState>
-    </TopNavShell.Content>
-  </TopNavShell.Main>`,
+    </PageShell.Content>
+  </PageShell.Main>`,
   footer,
 ])}`,
 
@@ -180,25 +180,25 @@ ${shell('pageKey={pathname} pageTitle="Reports"', [skipLink, header(), main(), f
 ${shell("", [
   skipLink,
   header(),
-  `  <TopNavShell.Main>
-    <TopNavShell.Content size="md">
+  `  <PageShell.Main>
+    <PageShell.Content size="md">
       <h1>Projects</h1>
-    </TopNavShell.Content>
-  </TopNavShell.Main>`,
+    </PageShell.Content>
+  </PageShell.Main>`,
   footer,
 ])}`,
 
   rightToLeft: `{/* dir sets the shell's reading direction and provides it to the Navbar inside, so it needs none of its own. lang names the language
     (fonts, shaping, how a screen reader speaks it), so set it with dir. */}
 ${shell('dir="rtl" lang="fa"', [
-  `  <TopNavShell.SkipLink labels={{ skipToContent: "رفتن به محتوا" }} />`,
+  `  <PageShell.SkipLink labels={{ skipToContent: "رفتن به محتوا" }} />`,
   header("", "fa"),
   main("", "fa"),
   footer,
 ])}`,
 };
 
-export interface TopNavShellPlaygroundSnippetArgs {
+export interface PageShellPlaygroundSnippetArgs {
   stickyHeader?: boolean | "auto";
   scrolledEdge?: boolean;
   dir?: "ltr" | "rtl";
@@ -207,7 +207,7 @@ export interface TopNavShellPlaygroundSnippetArgs {
 }
 
 /** The Playground's snippet, built from the live controls: only the props that differ from their defaults, around a small real shell. */
-export function topNavShellPlaygroundSnippet(args: TopNavShellPlaygroundSnippetArgs): string {
+export function pageShellPlaygroundSnippet(args: PageShellPlaygroundSnippetArgs): string {
   const attributes: string[] = [];
   if (args.stickyHeader === false) attributes.push("stickyHeader={false}");
   if (args.stickyHeader === "auto") attributes.push('stickyHeader="auto"');
@@ -215,11 +215,11 @@ export function topNavShellPlaygroundSnippet(args: TopNavShellPlaygroundSnippetA
   if (args.dir === "rtl") attributes.push('dir="rtl"', 'lang="fa"');
   const language = args.dir === "rtl" ? "fa" : "en";
   const banner = args.banner
-    ? `  <TopNavShell.Banner>
+    ? `  <PageShell.Banner>
     <Alert banner tone="info">
       <Alert.Description>${language === "fa" ? "نگهداری برنامه‌ریزی‌شده امشب" : "Scheduled maintenance tonight at 22:00 UTC."}</Alert.Description>
     </Alert>
-  </TopNavShell.Banner>`
+  </PageShell.Banner>`
     : undefined;
   return shell(attributes.join(" "), [skipLink, ...(banner ? [banner] : []), header(args.subNav ? subNav : "", language), main("", language), footer]);
 }

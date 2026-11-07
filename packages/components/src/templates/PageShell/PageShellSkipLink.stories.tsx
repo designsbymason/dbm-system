@@ -1,10 +1,10 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { TopNavShell } from "./TopNavShell";
+import { PageShell } from "./PageShell";
 
-// Docs-only (guidelines/adr/0013) — `TopNavShell.SkipLink`'s own props get their own Properties table on TopNavShell.mdx.
-const meta: Meta<typeof TopNavShell.SkipLink> = {
-  title: "Templates/Application shells/TopNavShell/SkipLink",
-  component: TopNavShell.SkipLink,
+// Docs-only (guidelines/adr/0013) — `PageShell.SkipLink`'s own props get their own Properties table on PageShell.mdx.
+const meta: Meta<typeof PageShell.SkipLink> = {
+  title: "Templates/Application shells/PageShell/SkipLink",
+  component: PageShell.SkipLink,
   tags: ["!dev"],
   argTypes: {
     href: {
@@ -27,13 +27,13 @@ const meta: Meta<typeof TopNavShell.SkipLink> = {
 
 export default meta;
 
-type Story = StoryObj<typeof TopNavShell.SkipLink>;
+type Story = StoryObj<typeof PageShell.SkipLink>;
 
 export const Default: Story = {
   render: () => (
-    <TopNavShell>
-      <TopNavShell.SkipLink />
-      <TopNavShell.Main>Main</TopNavShell.Main>
-    </TopNavShell>
+    <PageShell>
+      <PageShell.SkipLink />
+      <PageShell.Main>Main</PageShell.Main>
+    </PageShell>
   ),
 };

@@ -9,26 +9,28 @@ import { VisuallyHidden } from "../../atoms/VisuallyHidden";
 import { Alert } from "../../molecules/Alert";
 import { EmptyState } from "../../molecules/EmptyState";
 import { Navbar } from "../../organisms/Navbar";
-import * as TopNavShellStories from "./TopNavShell.stories";
-import * as TopNavShellBannerStories from "./TopNavShellBanner.stories";
-import * as TopNavShellContentStories from "./TopNavShellContent.stories";
-import * as TopNavShellFooterStories from "./TopNavShellFooter.stories";
-import * as TopNavShellHeaderStories from "./TopNavShellHeader.stories";
-import * as TopNavShellMainStories from "./TopNavShellMain.stories";
-import * as TopNavShellPageHeaderStories from "./TopNavShellPageHeader.stories";
-import * as TopNavShellSkipLinkStories from "./TopNavShellSkipLink.stories";
-import * as TopNavShellSubNavLinkStories from "./TopNavShellSubNavLink.stories";
-import * as TopNavShellSubNavStories from "./TopNavShellSubNav.stories";
+import * as PageShellStories from "./PageShell.stories";
+import * as PageShellBannerStories from "./PageShellBanner.stories";
+import * as PageShellContentStories from "./PageShellContent.stories";
+import * as PageShellFooterStories from "./PageShellFooter.stories";
+import * as PageShellHeaderStories from "./PageShellHeader.stories";
+import * as PageShellMainStories from "./PageShellMain.stories";
+import * as PageShellPageHeaderStories from "./PageShellPageHeader.stories";
+import * as PageShellSkipLinkStories from "./PageShellSkipLink.stories";
+import * as PageShellSubNavLinkStories from "./PageShellSubNavLink.stories";
+import * as PageShellSubNavStories from "./PageShellSubNav.stories";
 
 export const propOrder = ["children", "stickyHeader", "scrolledEdge", "pageKey", "pageTitle", "documentTitle", "dir", "style", "className", "id", "data-testid"];
 
 export const playgroundOrder = ["stickyHeader", "scrolledEdge", "dir", "subNav", "banner"];
 
-<Meta of={TopNavShellStories} />
+<Meta of={PageShellStories} />
 
 <VisuallyHidden asChild><h2>Intro</h2></VisuallyHidden>
 
-<ComponentHeader title="TopNavShell" tier="Template" />
+<ComponentHeader title="PageShell" tier="Template" />
+
+**Which shell?** An app with no sidebar uses `PageShell`; one with a sidebar uses [`AppShell`](/docs/templates-application-shells-appshell--docs).
 
 The page frame of an application with no sidebar: a skip link, an optional banner, a header that stays at the top of the window, the page's
 one `<main>` and a footer. The page scrolls as a whole. It is **layout and wiring only**. You put your own
@@ -45,7 +47,7 @@ open a story from the sidebar on its own and narrow the window to see the phone 
 ### Import
 
 ```tsx
-import { Navbar, TopNavShell } from "@dbm-system/components";
+import { Navbar, PageShell } from "@dbm-system/components";
 ```
 
 ## Playground
@@ -54,157 +56,157 @@ Drive the shell's props live; the navbar, the sub-navigation and the page it is 
 
 <div className="dbm-playground-canvas">
 
-<Canvas of={TopNavShellStories.Playground} />
+<Canvas of={PageShellStories.Playground} />
 
 </div>
-<PlaygroundControls of={TopNavShellStories.Playground} exclude={["children", "pageKey", "pageTitle", "style", "className", "id", "data-testid"]} order={playgroundOrder} />
+<PlaygroundControls of={PageShellStories.Playground} exclude={["children", "pageKey", "pageTitle", "style", "className", "id", "data-testid"]} order={playgroundOrder} />
 
 ## Properties
 
-`TopNavShell` also accepts any other native `<div>` attribute beyond what's listed here (e.g. `title`, `onKeyDown`), passed straight through to the frame.
+`PageShell` also accepts any other native `<div>` attribute beyond what's listed here (e.g. `title`, `onKeyDown`), passed straight through to the frame.
 
-<PropertiesTable of={TopNavShellStories} order={propOrder} />
+<PropertiesTable of={PageShellStories} order={propOrder} />
 
-### TopNavShell.SkipLink properties
+### PageShell.SkipLink properties
 
-`TopNavShell.SkipLink` also accepts any other native `<a>` attribute.
+`PageShell.SkipLink` also accepts any other native `<a>` attribute.
 
-<PropertiesTable of={TopNavShellSkipLinkStories} order={["children", "href", "labels", "style", "className", "id", "data-testid"]} />
+<PropertiesTable of={PageShellSkipLinkStories} order={["children", "href", "labels", "style", "className", "id", "data-testid"]} />
 
-### TopNavShell.Banner properties
+### PageShell.Banner properties
 
-`TopNavShell.Banner` also accepts any other native `<div>` attribute.
+`PageShell.Banner` also accepts any other native `<div>` attribute.
 
-<PropertiesTable of={TopNavShellBannerStories} order={["children", "style", "className", "id", "data-testid"]} />
+<PropertiesTable of={PageShellBannerStories} order={["children", "style", "className", "id", "data-testid"]} />
 
-### TopNavShell.Header properties
+### PageShell.Header properties
 
-`TopNavShell.Header` also accepts any other native `<div>` attribute.
+`PageShell.Header` also accepts any other native `<div>` attribute.
 
-<PropertiesTable of={TopNavShellHeaderStories} order={["children", "as", "style", "className", "id", "data-testid"]} />
+<PropertiesTable of={PageShellHeaderStories} order={["children", "as", "style", "className", "id", "data-testid"]} />
 
-### TopNavShell.SubNav properties
+### PageShell.SubNav properties
 
-`TopNavShell.SubNav` also accepts any other native `<div>` attribute.
+`PageShell.SubNav` also accepts any other native `<div>` attribute.
 
-<PropertiesTable of={TopNavShellSubNavStories} order={["children", "label", "align", "bordered", "sticky", "style", "className", "id", "data-testid"]} />
+<PropertiesTable of={PageShellSubNavStories} order={["children", "label", "align", "bordered", "sticky", "style", "className", "id", "data-testid"]} />
 
-### TopNavShell.SubNavLink properties
+### PageShell.SubNavLink properties
 
-`TopNavShell.SubNavLink` also accepts any other native `<a>` attribute.
+`PageShell.SubNavLink` also accepts any other native `<a>` attribute.
 
-<PropertiesTable of={TopNavShellSubNavLinkStories} order={["children", "current", "style", "className", "id", "data-testid"]} />
+<PropertiesTable of={PageShellSubNavLinkStories} order={["children", "current", "style", "className", "id", "data-testid"]} />
 
-### TopNavShell.PageHeader properties
+### PageShell.PageHeader properties
 
-`TopNavShell.PageHeader` also accepts any other native `<div>` attribute.
+`PageShell.PageHeader` also accepts any other native `<div>` attribute.
 
-<PropertiesTable of={TopNavShellPageHeaderStories} order={["title", "titleLevel", "description", "breadcrumbs", "actions", "style", "className", "id", "data-testid"]} />
+<PropertiesTable of={PageShellPageHeaderStories} order={["title", "titleLevel", "description", "breadcrumbs", "actions", "style", "className", "id", "data-testid"]} />
 
-### TopNavShell.Main properties
+### PageShell.Main properties
 
-`TopNavShell.Main` also accepts any other native `<main>` attribute.
+`PageShell.Main` also accepts any other native `<main>` attribute.
 
-<PropertiesTable of={TopNavShellMainStories} order={["children", "busy", "labels", "id", "style", "className", "data-testid"]} />
+<PropertiesTable of={PageShellMainStories} order={["children", "busy", "labels", "id", "style", "className", "data-testid"]} />
 
-### TopNavShell.Content properties
+### PageShell.Content properties
 
-`TopNavShell.Content` also accepts any other native `<div>` attribute.
+`PageShell.Content` also accepts any other native `<div>` attribute.
 
-<PropertiesTable of={TopNavShellContentStories} order={["children", "width", "size", "paddingInline", "paddingBlock", "style", "className", "id", "data-testid"]} />
+<PropertiesTable of={PageShellContentStories} order={["children", "width", "size", "paddingInline", "paddingBlock", "style", "className", "id", "data-testid"]} />
 
-### TopNavShell.Footer properties
+### PageShell.Footer properties
 
-`TopNavShell.Footer` also accepts any other native `<footer>` attribute.
+`PageShell.Footer` also accepts any other native `<footer>` attribute.
 
-<PropertiesTable of={TopNavShellFooterStories} order={["children", "variant", "style", "className", "id", "data-testid"]} />
+<PropertiesTable of={PageShellFooterStories} order={["children", "variant", "style", "className", "id", "data-testid"]} />
 
 ## Variants
 
 ### A second row of navigation
 
-`TopNavShell.SubNav` is a row inside the header, under the `Navbar`, so it sticks with it. Give it a `label` and it draws a named `nav` around its
-`TopNavShell.SubNavLink`s (round ghost buttons, the current one in the subtle tint the `Navbar` gives its own current link); or leave the label out and
+`PageShell.SubNav` is a row inside the header, under the `Navbar`, so it sticks with it. Give it a `label` and it draws a named `nav` around its
+`PageShell.SubNavLink`s (round ghost buttons, the current one in the subtle tint the `Navbar` gives its own current link); or leave the label out and
 put a `nav` of your own in it. The links are centred while they all fit. When they do not, the row scrolls sideways, fades at the edge that has more
 links beyond it, and brings the current link into view. `bordered={false}` drops the line under it, and `align="start"` puts the links at the start.
 
-<Canvas of={TopNavShellStories.WithSubNav} />
+<Canvas of={PageShellStories.WithSubNav} />
 
 ### A sub-navigation that scrolls away
 
 `sticky={false}` on the row keeps only the bar at the top of the window; the row scrolls away with the page. The bar must be the header's first
 child (a `Navbar` is). The shadow and, with `stickyHeader="auto"`, the sliding move to the bar.
 
-<Canvas of={TopNavShellStories.SubNavScrollsAway} />
+<Canvas of={PageShellStories.SubNavScrollsAway} />
 
 ### A header that hides on scroll
 
 `stickyHeader="auto"` slides the header out of view while the reader scrolls down and brings it back on the first scroll up, at the top of the page,
 and whenever focus or an open menu is inside it, so the keyboard never loses the bar. With reduced motion it appears and disappears without sliding.
 
-<Canvas of={TopNavShellStories.AutoHide} />
+<Canvas of={PageShellStories.AutoHide} />
 
 ### A footer of actions
 
-`variant="actions"` on `TopNavShell.Footer` makes it a bar that stays at the bottom of the window until the page's own end: the Save and Cancel of a long
-form. `variant="compact"` pads the ordinary footer tighter. For a footer of several columns, put a `Grid` of link lists in `TopNavShell.Content` inside it.
+`variant="actions"` on `PageShell.Footer` makes it a bar that stays at the bottom of the window until the page's own end: the Save and Cancel of a long
+form. `variant="compact"` pads the ordinary footer tighter. For a footer of several columns, put a `Grid` of link lists in `PageShell.Content` inside it.
 
-<Canvas of={TopNavShellStories.ActionsFooter} />
+<Canvas of={PageShellStories.ActionsFooter} />
 
 ### A banner above the header
 
-`TopNavShell.Banner` is a notice above the header. It scrolls away with the page and does not stick.
+`PageShell.Banner` is a notice above the header. It scrolls away with the page and does not stick.
 
-<Canvas of={TopNavShellStories.WithBanner} />
+<Canvas of={PageShellStories.WithBanner} />
 
 ### A short page
 
 On a page too short to fill the window the footer sits at the bottom of the window, not under the content.
 
-<Canvas of={TopNavShellStories.ShortPage} />
+<Canvas of={PageShellStories.ShortPage} />
 
 ### A page that is loading
 
-`busy` on `TopNavShell.Main` puts a thin bar along the top of the main area, sets `aria-busy` and announces "Loading" politely. The page stays where it is.
+`busy` on `PageShell.Main` puts a thin bar along the top of the main area, sets `aria-busy` and announces "Loading" politely. The page stays where it is.
 
-<Canvas of={TopNavShellStories.Busy} />
+<Canvas of={PageShellStories.Busy} />
 
 ### A page with nothing to show
 
 An `EmptyState` in the content, with the next step. Its title is the page's `h1`.
 
-<Canvas of={TopNavShellStories.EmptyPage} />
+<Canvas of={PageShellStories.EmptyPage} />
 
 ### A page that failed to load
 
 `tone="danger"` and `announce` on the `EmptyState`: the message is read out once, when it appears.
 
-<Canvas of={TopNavShellStories.ErrorPage} />
+<Canvas of={PageShellStories.ErrorPage} />
 
 ### A header that scrolls away
 
 With `stickyHeader={false}` the header scrolls away with the page, and there is no shadow, since the shadow belongs to a header that sticks.
 
-<Canvas of={TopNavShellStories.StaticHeader} />
+<Canvas of={PageShellStories.StaticHeader} />
 
 ### Moving to another page
 
 Press a link in the bar: its page goes to the shell as `pageKey` and `pageTitle`, which moves focus to the main area and announces the new title.
 
-<Canvas of={TopNavShellStories.PageChange} />
+<Canvas of={PageShellStories.PageChange} />
 
 ### Content kept to a narrower width
 
-`TopNavShell.Content` centres the page and limits its width on the `Container` steps; the default is `xl`.
+`PageShell.Content` centres the page and limits its width on the `Container` steps; the default is `xl`.
 
-<Canvas of={TopNavShellStories.ContentWidth} />
+<Canvas of={PageShellStories.ContentWidth} />
 
-`width` on `TopNavShell.Content` picks the width by what the page is: `reading` for text, `dashboard` for cards and tables, `full` for a page that fills
+`width` on `PageShell.Content` picks the width by what the page is: `reading` for text, `dashboard` for cards and tables, `full` for a page that fills
 the window. `size` takes the steps of `Container` directly and replaces it.
 
 ### The head of a page
 
-`TopNavShell.PageHeader` is the head of a page: the title as its `h1`, an optional trail of breadcrumbs above it, a description under it and the
+`PageShell.PageHeader` is the head of a page: the title as its `h1`, an optional trail of breadcrumbs above it, a description under it and the
 page's actions at the end of the row, under the title on a phone. The demo pages on this page use it.
 
 ### The tab's title
@@ -217,11 +219,11 @@ builds the whole title (`(title) => title + " · dbM"`). The title the document 
 <div className="dbm-do-dont-grid">
 <Callout tone="success" title="Do">
 
-- Put `TopNavShell.SkipLink` first and `TopNavShell.Header` after it. The shell draws the parts in the order you write them, which is the keyboard's
+- Put `PageShell.SkipLink` first and `PageShell.Header` after it. The shell draws the parts in the order you write them, which is the keyboard's
   tab order, so the skip link is the first stop.
-- Put a `Navbar` in `TopNavShell.Header`, and leave it without its own `sticky`: the shell keeps the whole slot (the bar and the sub-navigation) in
-  view. Use `Navbar.SkipLink` inside a `Navbar`, and `TopNavShell.SkipLink` when the header is not a `Navbar`: both go to `#main`, which is
-  `TopNavShell.Main`'s `id`.
+- Put a `Navbar` in `PageShell.Header`, and leave it without its own `sticky`: the shell keeps the whole slot (the bar and the sub-navigation) in
+  view. Use `Navbar.SkipLink` inside a `Navbar`, and `PageShell.SkipLink` when the header is not a `Navbar`: both go to `#main`, which is
+  `PageShell.Main`'s `id`.
 - Give the sub-navigation a `label` (or its own named `nav`), so the page's navigation landmarks are told apart from the bar's.
 - Pass `pageKey` (the router's pathname) and `pageTitle`, so a screen-reader user and a keyboard user are told about a page change that no browser
   navigation announces.
@@ -233,10 +235,10 @@ builds the whole title (`(title) => title + " · dbM"`). The title the document 
 </Callout>
 <Callout tone="danger" title="Don't">
 
-- Don't use `TopNavShell` for an app with a sidebar: [`AppShell`](/docs/templates-application-shells-appshell--docs) has the sidebar, the rail and
+- Don't use `PageShell` for an app with a sidebar: [`AppShell`](/docs/templates-application-shells-appshell--docs) has the sidebar, the rail and
   the aside. Don't use it for a page with no header of its own either: a plain
   [`Container`](/docs/atoms-layout-container--docs) with `as="main"` is the page there.
-- Don't put a second `<main>` inside it, and don't wrap a `Navbar` in `TopNavShell.Header as="header"`: a `Navbar` draws its own `<header>`, and the
+- Don't put a second `<main>` inside it, and don't wrap a `Navbar` in `PageShell.Header as="header"`: a `Navbar` draws its own `<header>`, and the
   two would nest.
 - Don't set `overflow` on an element around the shell, or give it a height: it makes that element the box the header sticks to, so the header stops
   following the window. The shell is as tall as the window already (and taller when the page is).
@@ -248,7 +250,7 @@ builds the whole title (`(title) => title + " · dbM"`). The title the document 
 
 ## Best practices
 
-- Choose `size` on `TopNavShell.Content` for the page's reading width: `xl` (the default) suits a page of cards, `md` suits a form or an article. A
+- Choose `size` on `PageShell.Content` for the page's reading width: `xl` (the default) suits a page of cards, `md` suits a form or an article. A
   full-bleed section is a page's own element outside the content.
 - Let the footer be small. It holds the links people look for at the end of a page (help, privacy, terms), and it sits at the bottom of the window on a
   short page, so it is always reachable.
@@ -263,8 +265,8 @@ builds the whole title (`(title) => title + " · dbM"`). The title the document 
 
 <Callout tone="info" title="Who provides which landmark">
 
-The shell supplies `TopNavShell.Main` (the one `main`) and `TopNavShell.Footer` (the `contentinfo`). The banner `<header>` comes from the `Navbar` in the
-header slot, or from `TopNavShell.Header as="header"` for a header built without one; each `Navbar.Links` and your sub-navigation's `nav` is a named
+The shell supplies `PageShell.Main` (the one `main`) and `PageShell.Footer` (the `contentinfo`). The banner `<header>` comes from the `Navbar` in the
+header slot, or from `PageShell.Header as="header"` for a header built without one; each `Navbar.Links` and your sub-navigation's `nav` is a named
 `navigation`. All of them are real elements, not roles on divs. The shell's own header slot is a plain `div` by default so that a `Navbar` is never
 wrapped in a second banner.
 
@@ -274,12 +276,12 @@ wrapped in a second banner.
 |---|---|
 | `Tab` | Moves through the skip link, then the header (the bar, then the sub-navigation), then the main area's content, then the footer, in markup order. |
 | `Tab` into a hidden header | Slides the header back into view (`stickyHeader="auto"`). |
-| `Enter` on a skip link | Moves focus to `TopNavShell.Main`, past the header. |
+| `Enter` on a skip link | Moves focus to `PageShell.Main`, past the header. |
 | `Escape` in the bar's menu panel | Closes it and returns focus to the menu button (the `Navbar`'s own behaviour below its `collapseBelow` width). |
 
-- `TopNavShell.Main` takes focus from the skip link and when the page changes (`tabindex="-1"`). A focus ring is drawn just inside its edge whenever
+- `PageShell.Main` takes focus from the skip link and when the page changes (`tabindex="-1"`). A focus ring is drawn just inside its edge whenever
   the keyboard has focused it. The page scrolls as a whole, so the main area is not itself a tab stop.
-- When `pageKey` changes, focus moves to `TopNavShell.Main` and, with `pageTitle`, the new title is announced politely. Neither happens on the first
+- When `pageKey` changes, focus moves to `PageShell.Main` and, with `pageTitle`, the new title is announced politely. Neither happens on the first
   render, so the page's own load is not announced twice, and nothing happens while `pageKey` is left out. The shell does not scroll the window: that
   is the router's.
 - While `busy` is set the main area has `aria-busy="true"` and a polite status region says "Loading"; when it clears the region empties, so nothing more
@@ -300,9 +302,9 @@ wrapped in a second banner.
 ## Code examples
 
 ```tsx
-<TopNavShell pageKey={pathname} pageTitle={title}>
-  <TopNavShell.SkipLink />
-  <TopNavShell.Header>
+<PageShell pageKey={pathname} pageTitle={title}>
+  <PageShell.SkipLink />
+  <PageShell.Header>
     <Navbar contained>
       <Navbar.Brand href="/">Acme</Navbar.Brand>
       <Navbar.Links aria-label="Main">
@@ -310,46 +312,46 @@ wrapped in a second banner.
         <Navbar.Link href="/reports">Reports</Navbar.Link>
       </Navbar.Links>
     </Navbar>
-    <TopNavShell.SubNav>
+    <PageShell.SubNav>
       <nav aria-label="Project sections">…</nav>
-    </TopNavShell.SubNav>
-  </TopNavShell.Header>
-  <TopNavShell.Main>
-    <TopNavShell.Content>
+    </PageShell.SubNav>
+  </PageShell.Header>
+  <PageShell.Main>
+    <PageShell.Content>
       <h1>Projects</h1>
-    </TopNavShell.Content>
-  </TopNavShell.Main>
-  <TopNavShell.Footer>© Acme</TopNavShell.Footer>
-</TopNavShell>
+    </PageShell.Content>
+  </PageShell.Main>
+  <PageShell.Footer>© Acme</PageShell.Footer>
+</PageShell>
 ```
 
 ```tsx
 // A native attribute in use: name the main landmark by the page's own heading
-<TopNavShell.Main aria-labelledby="page-title">
-  <TopNavShell.Content>
+<PageShell.Main aria-labelledby="page-title">
+  <PageShell.Content>
     <h1 id="page-title">Projects</h1>
-  </TopNavShell.Content>
-</TopNavShell.Main>
+  </PageShell.Content>
+</PageShell.Main>
 ```
 
 ```tsx
 // With a router: the router's page goes to the shell, which moves focus and announces the title after each change
 const { pathname } = useLocation();
 return (
-  <TopNavShell pageKey={pathname} pageTitle={titles[pathname]}>
+  <PageShell pageKey={pathname} pageTitle={titles[pathname]}>
     …
-  </TopNavShell>
+  </PageShell>
 );
 ```
 
 ```tsx
 // A banner, a header that scrolls away and a flat look
-<TopNavShell stickyHeader={false} scrolledEdge={false}>
-  <TopNavShell.Banner>
+<PageShell stickyHeader={false} scrolledEdge={false}>
+  <PageShell.Banner>
     <Alert banner tone="info"><Alert.Description>Maintenance tonight at 22:00 UTC.</Alert.Description></Alert>
-  </TopNavShell.Banner>
+  </PageShell.Banner>
   …
-</TopNavShell>
+</PageShell>
 ```
 
 ## Design tokens used
@@ -386,7 +388,7 @@ return (
 <div className="dbm-card-grid">
 <RelatedCard
   name="Navbar"
-  description="The header bar that goes in TopNavShell.Header, with its links, its menu and its skip link"
+  description="The header bar that goes in PageShell.Header, with its links, its menu and its skip link"
   href="/?path=/docs/organisms-navigation-navbar--docs"
 >
   <Navbar>
@@ -405,7 +407,7 @@ return (
 </RelatedCard>
 <RelatedCard
   name="Container"
-  description="A centred, constrained wrapper: TopNavShell.Content is one with padding above and below"
+  description="A centred, constrained wrapper: PageShell.Content is one with padding above and below"
   href="/?path=/docs/atoms-layout-container--docs"
 >
   <Container style={{ border: "var(--dbm-border-width-1) dashed var(--dbm-border-neutral)", width: "100%" }}>
@@ -414,7 +416,7 @@ return (
 </RelatedCard>
 <RelatedCard
   name="Alert"
-  description="What goes in TopNavShell.Banner: a notice with a tone"
+  description="What goes in PageShell.Banner: a notice with a tone"
   href="/?path=/docs/molecules-feedback-alert--docs"
 >
   <Alert banner tone="info" style={{ inlineSize: "100%" }}>

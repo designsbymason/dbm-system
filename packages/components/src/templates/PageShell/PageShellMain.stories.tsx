@@ -1,10 +1,10 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { TopNavShell } from "./TopNavShell";
+import { PageShell } from "./PageShell";
 
-// Docs-only (guidelines/adr/0013) — `TopNavShell.Main`'s own props get their own Properties table on TopNavShell.mdx.
-const meta: Meta<typeof TopNavShell.Main> = {
-  title: "Templates/Application shells/TopNavShell/Main",
-  component: TopNavShell.Main,
+// Docs-only (guidelines/adr/0013) — `PageShell.Main`'s own props get their own Properties table on PageShell.mdx.
+const meta: Meta<typeof PageShell.Main> = {
+  title: "Templates/Application shells/PageShell/Main",
+  component: PageShell.Main,
   tags: ["!dev"],
   argTypes: {
     busy: {
@@ -12,7 +12,7 @@ const meta: Meta<typeof TopNavShell.Main> = {
       description:
         "Marks the main area as loading: aria-busy, a thin bar along its top edge and a polite announcement, without hiding what is already there.",
     },
-    children: { control: false, description: "The page. Usually one TopNavShell.Content." },
+    children: { control: false, description: "The page. Usually one PageShell.Content." },
     labels: { control: false, description: "The words the main area supplies itself, merged over the English default (\"Loading\")." },
     id: {
       control: false,
@@ -30,12 +30,12 @@ const meta: Meta<typeof TopNavShell.Main> = {
 
 export default meta;
 
-type Story = StoryObj<typeof TopNavShell.Main>;
+type Story = StoryObj<typeof PageShell.Main>;
 
 export const Default: Story = {
   render: () => (
-    <TopNavShell>
-      <TopNavShell.Main>Main</TopNavShell.Main>
-    </TopNavShell>
+    <PageShell>
+      <PageShell.Main>Main</PageShell.Main>
+    </PageShell>
   ),
 };

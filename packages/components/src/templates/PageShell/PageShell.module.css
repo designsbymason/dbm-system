@@ -4,26 +4,26 @@
 .root {
   /* A notch or a home indicator is kept clear: each custom property is the device's inset on that side (zero where a page does not draw under
      them). The names are physical because the device's are (a notch is on the left whatever the reading direction). */
-  --top-nav-shell-safe-top: env(safe-area-inset-top, 0px);
-  --template-safe-top: var(--top-nav-shell-safe-top);
-  --top-nav-shell-safe-right: env(safe-area-inset-right, 0px);
-  --top-nav-shell-safe-bottom: env(safe-area-inset-bottom, 0px);
-  --top-nav-shell-safe-left: env(safe-area-inset-left, 0px);
+  --page-shell-safe-top: env(safe-area-inset-top, 0px);
+  --template-safe-top: var(--page-shell-safe-top);
+  --page-shell-safe-right: env(safe-area-inset-right, 0px);
+  --page-shell-safe-bottom: env(safe-area-inset-bottom, 0px);
+  --page-shell-safe-left: env(safe-area-inset-left, 0px);
 
   /* The layers the shell's own parts sit on, lowest first, on the system's scale: the page's content on the `sticky` step (so an app's own
      sticky bars and `Affix` agree with it), the header a step above it (its shadow falls on the page). The skip link is on the `fixed` step and
      every floating panel is above that. */
-  --top-nav-shell-layer-content: var(--dbm-z-index-sticky);
-  --top-nav-shell-layer-header: calc(var(--dbm-z-index-sticky) + 1);
+  --page-shell-layer-content: var(--dbm-z-index-sticky);
+  --page-shell-layer-header: calc(var(--dbm-z-index-sticky) + 1);
 
   display: flex;
   flex-direction: column;
   box-sizing: border-box;
   inline-size: 100%;
   min-block-size: 100dvh;
-  padding-bottom: var(--top-nav-shell-safe-bottom);
-  padding-left: var(--top-nav-shell-safe-left);
-  padding-right: var(--top-nav-shell-safe-right);
+  padding-bottom: var(--page-shell-safe-bottom);
+  padding-left: var(--page-shell-safe-left);
+  padding-right: var(--page-shell-safe-right);
   background-color: var(--dbm-bg-surface);
   color: var(--dbm-text-primary);
   font-family: var(--dbm-font-family-primary);
@@ -36,10 +36,10 @@
 
 .header {
   position: relative;
-  z-index: var(--top-nav-shell-layer-header);
+  z-index: var(--page-shell-layer-header);
   min-inline-size: 0;
   /* The top inset belongs to the header, so a notch never covers it, stuck or not. */
-  padding-block-start: var(--top-nav-shell-safe-top);
+  padding-block-start: var(--page-shell-safe-top);
   background-color: var(--dbm-bg-surface);
 }
 
@@ -60,7 +60,7 @@
   transform: translateY(-100%);
 }
 
-/* A sub-navigation that scrolls away (`sticky` off on `TopNavShell.SubNav`): the slot stops being a box of its own, so the bar, its first child,
+/* A sub-navigation that scrolls away (`sticky` off on `PageShell.SubNav`): the slot stops being a box of its own, so the bar, its first child,
    sticks to the root's column on its own while the row under it goes with the page. The top inset, the layer, the surface, the shadow and the
    sliding of a header that hides on scroll all move to the bar. */
 .root[data-subnav-static] .header {
@@ -70,8 +70,8 @@
 .root[data-subnav-static][data-sticky-header] .header > :first-child {
   position: sticky;
   inset-block-start: 0;
-  z-index: var(--top-nav-shell-layer-header);
-  padding-block-start: var(--top-nav-shell-safe-top);
+  z-index: var(--page-shell-layer-header);
+  padding-block-start: var(--page-shell-safe-top);
   background-color: var(--dbm-bg-surface);
 }
 
@@ -103,7 +103,7 @@
    and the fades; the scroller inside it is the box that scrolls. */
 .subNav {
   /* How wide the fade is at an edge that has more links beyond it, and the room the current link is kept clear of it. */
-  --top-nav-shell-subnav-fade: var(--dbm-space-8);
+  --page-shell-subnav-fade: var(--dbm-space-8);
 
   position: relative;
   min-inline-size: 0;
@@ -117,7 +117,7 @@
   display: flex;
   min-inline-size: 0;
   overflow-x: auto;
-  scroll-padding-inline: var(--top-nav-shell-subnav-fade);
+  scroll-padding-inline: var(--page-shell-subnav-fade);
   /* The scrollbar is not drawn: the fades and the touch of the reader say there is more. Keyboard and wheel still scroll it. */
   scrollbar-width: none;
 }
@@ -163,7 +163,7 @@
   position: absolute;
   inset-block: 0;
   z-index: 1;
-  inline-size: var(--top-nav-shell-subnav-fade);
+  inline-size: var(--page-shell-subnav-fade);
   pointer-events: none;
   opacity: 0;
   transition: opacity var(--dbm-motion-duration-fast) var(--dbm-motion-easing-standard);
@@ -218,7 +218,7 @@
   inset-block-start: 0;
   inset-inline: 0;
   block-size: 0;
-  z-index: var(--top-nav-shell-layer-content);
+  z-index: var(--page-shell-layer-content);
   pointer-events: none;
 }
 
@@ -246,9 +246,9 @@
 .footerActions {
   position: sticky;
   inset-block-end: 0;
-  z-index: var(--top-nav-shell-layer-header);
-  padding-block-end: var(--top-nav-shell-safe-bottom);
-  margin-block-end: calc(-1 * var(--top-nav-shell-safe-bottom));
+  z-index: var(--page-shell-layer-header);
+  padding-block-end: var(--page-shell-safe-bottom);
+  margin-block-end: calc(-1 * var(--page-shell-safe-bottom));
   background-color: var(--dbm-bg-surface);
   box-shadow: var(--dbm-shadow-light-md);
   clip-path: inset(calc(-1 * var(--dbm-space-8)) 0 0 0);

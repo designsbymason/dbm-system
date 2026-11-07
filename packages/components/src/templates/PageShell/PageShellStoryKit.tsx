@@ -1,6 +1,6 @@
-// Demo code shared by TopNavShell's stories, its hidden real-browser checks and its tests: a "Projects" workspace drawn in the shell, with a
+// Demo code shared by PageShell's stories, its hidden real-browser checks and its tests: a "Projects" workspace drawn in the shell, with a
 // `Navbar`, a sub-navigation, a page of cards and a footer of links. Docs-only (a stories-support module, not shipped, ADR-0013's way of sharing
-// code between two stories files); the "Show code" snippets are written by hand in `TopNavShell.snippets.ts`.
+// code between two stories files); the "Show code" snippets are written by hand in `PageShell.snippets.ts`.
 import { BellIcon, TrayIcon, WarningCircleIcon } from "@dbm-system/icons";
 import type { MouseEvent, ReactNode } from "react";
 import { Avatar } from "../../atoms/Avatar";
@@ -16,8 +16,8 @@ import { Grid } from "../../molecules/Grid";
 import { Navbar } from "../../organisms/Navbar";
 import { useDemoCurrent } from "../../organisms/Navbar/NavbarStoryKit";
 import { preventNavigation } from "../../organisms/Sidebar/SidebarStoryKit";
-import { TopNavShell } from "./TopNavShell";
-import type { TopNavShellContentWidth, TopNavShellFooterVariant, TopNavShellProps, TopNavShellSubNavProps } from "./TopNavShell.types";
+import { PageShell } from "./PageShell";
+import type { PageShellContentWidth, PageShellFooterVariant, PageShellProps, PageShellSubNavProps } from "./PageShell.types";
 
 /** The language of a demo's words: a right-to-left demo is in Persian, so a right-to-left check measures real text and not mirrored English. */
 export type Language = "en" | "fa";
@@ -100,7 +100,7 @@ const mainLabelsFa = { loading: "در حال بارگذاری" } as const;
 
 const frameHeight = "36rem";
 
-/** The sub-navigation's row: the project's sections as `TopNavShell.SubNavLink`s, the current one marked. */
+/** The sub-navigation's row: the project's sections as `PageShell.SubNavLink`s, the current one marked. */
 function DemoSections({ language }: { language: Language }) {
   const copy = demoCopy[language];
   const demo = useDemoCurrent("overview");
@@ -113,9 +113,9 @@ function DemoSections({ language }: { language: Language }) {
   return (
     <>
       {sections.map(([id, label]) => (
-        <TopNavShell.SubNavLink key={id} {...demo.anchor(id)} current={demo.isCurrent(id)}>
+        <PageShell.SubNavLink key={id} {...demo.anchor(id)} current={demo.isCurrent(id)}>
           {label}
-        </TopNavShell.SubNavLink>
+        </PageShell.SubNavLink>
       ))}
     </>
   );
@@ -138,7 +138,7 @@ export function DemoPage({ language = "en", rows = 24, state }: { language?: Lan
   }
   return (
     <div style={{ display: "grid", gap: "var(--dbm-space-6)" }}>
-      <TopNavShell.PageHeader title={copy.title} description={copy.intro} actions={<Button onClick={preventClick}>{copy.newProject}</Button>} />
+      <PageShell.PageHeader title={copy.title} description={copy.intro} actions={<Button onClick={preventClick}>{copy.newProject}</Button>} />
       <Grid minChildWidth="16rem" gap={4}>
         {Array.from({ length: rows }, (_, index) => (
           <Card key={index} variant="outlined">
@@ -164,18 +164,18 @@ export function DemoPage({ language = "en", rows = 24, state }: { language?: Lan
 
 const preventClick = (event: MouseEvent) => event.preventDefault();
 
-export interface DemoTopNavShellProps extends TopNavShellProps {
+export interface DemoPageShellProps extends PageShellProps {
   /** Draws the shell in a box of its own, for a Docs page, where a shell as tall as the window would fill the page. */
   framed?: boolean;
-  /** Adds a `TopNavShell.SubNav` of the project's sections under the bar. */
+  /** Adds a `PageShell.SubNav` of the project's sections under the bar. */
   subNav?: boolean;
   /** Props for the sub-navigation row (its `align`, `bordered` and `sticky`), when `subNav` is on. */
-  subNavProps?: Partial<TopNavShellSubNavProps>;
+  subNavProps?: Partial<PageShellSubNavProps>;
   /** The footer's look. */
-  footerVariant?: TopNavShellFooterVariant;
+  footerVariant?: PageShellFooterVariant;
   /** The width preset of the page's content. */
-  contentWidth?: TopNavShellContentWidth;
-  /** Adds a `TopNavShell.Banner` with a notice. */
+  contentWidth?: PageShellContentWidth;
+  /** Adds a `PageShell.Banner` with a notice. */
   banner?: boolean;
   /** Marks the main area as busy. */
   busy?: boolean;
@@ -193,7 +193,7 @@ export interface DemoTopNavShellProps extends TopNavShellProps {
  * A whole shell filled in: a skip link and a `Navbar` (the bar's own links go into a menu behind a button on a phone), an optional banner and
  * sub-navigation, the demo page and a footer of links. A right-to-left shell (`dir="rtl"`) is in Persian, with `lang="fa"`.
  */
-export function DemoTopNavShell({
+export function DemoPageShell({
   framed = false,
   subNav = false,
   subNavProps,
@@ -206,7 +206,7 @@ export function DemoTopNavShell({
   onNavigate,
   children,
   ...props
-}: DemoTopNavShellProps) {
+}: DemoPageShellProps) {
   const language: Language = props.dir === "rtl" ? "fa" : "en";
   const copy = demoCopy[language];
   const fa = language === "fa";
@@ -223,9 +223,9 @@ export function DemoTopNavShell({
     };
   };
   const shell = (
-    <TopNavShell {...props} lang={props.lang ?? (fa ? "fa" : undefined)} style={framed ? { minBlockSize: "100%", ...props.style } : props.style}>
+    <PageShell {...props} lang={props.lang ?? (fa ? "fa" : undefined)} style={framed ? { minBlockSize: "100%", ...props.style } : props.style}>
       {/* In an app a router handles the link; here the click moves focus to the main area itself and keeps the preview's address unchanged. */}
-      <TopNavShell.SkipLink
+      <PageShell.SkipLink
         labels={fa ? skipLinkLabelsFa : undefined}
         onClick={(event) => {
           event.preventDefault();
@@ -233,13 +233,13 @@ export function DemoTopNavShell({
         }}
       />
       {banner && (
-        <TopNavShell.Banner>
+        <PageShell.Banner>
           <Alert banner tone="info">
             <Alert.Description>{copy.banner}</Alert.Description>
           </Alert>
-        </TopNavShell.Banner>
+        </PageShell.Banner>
       )}
-      <TopNavShell.Header>
+      <PageShell.Header>
         <Navbar contained labels={fa ? navbarLabelsFa : undefined}>
           {/* Below the step the row is three columns: the menu button at the start, the brand in the centre, the actions at the end. */}
           <Navbar.Row columns="balanced">
@@ -260,24 +260,24 @@ export function DemoTopNavShell({
           </Navbar.Row>
         </Navbar>
         {subNav && (
-          <TopNavShell.SubNav label={copy.sectionsName} bordered={false} {...subNavProps}>
+          <PageShell.SubNav label={copy.sectionsName} bordered={false} {...subNavProps}>
             <DemoSections language={language} />
-          </TopNavShell.SubNav>
+          </PageShell.SubNav>
         )}
-      </TopNavShell.Header>
-      <TopNavShell.Main busy={busy} labels={fa ? mainLabelsFa : undefined}>
-        <TopNavShell.Content width={contentWidth}>{children ?? <DemoPage language={language} rows={rows} state={state} />}</TopNavShell.Content>
-      </TopNavShell.Main>
-      <TopNavShell.Footer variant={footerVariant}>
+      </PageShell.Header>
+      <PageShell.Main busy={busy} labels={fa ? mainLabelsFa : undefined}>
+        <PageShell.Content width={contentWidth}>{children ?? <DemoPage language={language} rows={rows} state={state} />}</PageShell.Content>
+      </PageShell.Main>
+      <PageShell.Footer variant={footerVariant}>
         {footerVariant === "actions" ? (
-          <TopNavShell.Content paddingBlock={3} style={{ display: "flex", justifyContent: "flex-end", gap: "var(--dbm-space-2)" }}>
+          <PageShell.Content paddingBlock={3} style={{ display: "flex", justifyContent: "flex-end", gap: "var(--dbm-space-2)" }}>
             <Button variant="secondary" onClick={preventClick}>
               {copy.cancel}
             </Button>
             <Button onClick={preventClick}>{copy.save}</Button>
-          </TopNavShell.Content>
+          </PageShell.Content>
         ) : (
-        <TopNavShell.Content paddingBlock={4} style={{ display: "flex", flexWrap: "wrap", gap: "var(--dbm-space-4)", justifyContent: "space-between" }}>
+        <PageShell.Content paddingBlock={4} style={{ display: "flex", flexWrap: "wrap", gap: "var(--dbm-space-4)", justifyContent: "space-between" }}>
           <Text size="sm" color="secondary">
             {copy.footer}
           </Text>
@@ -288,10 +288,10 @@ export function DemoTopNavShell({
               </Link>
             ))}
           </nav>
-        </TopNavShell.Content>
+        </PageShell.Content>
         )}
-      </TopNavShell.Footer>
-    </TopNavShell>
+      </PageShell.Footer>
+    </PageShell>
   );
   if (!framed) return shell;
   return (

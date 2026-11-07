@@ -1,10 +1,10 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { TopNavShell } from "./TopNavShell";
+import { PageShell } from "./PageShell";
 
-// Docs-only (guidelines/adr/0013) — `TopNavShell.Content`'s own props get their own Properties table on TopNavShell.mdx.
-const meta: Meta<typeof TopNavShell.Content> = {
-  title: "Templates/Application shells/TopNavShell/Content",
-  component: TopNavShell.Content,
+// Docs-only (guidelines/adr/0013) — `PageShell.Content`'s own props get their own Properties table on PageShell.mdx.
+const meta: Meta<typeof PageShell.Content> = {
+  title: "Templates/Application shells/PageShell/Content",
+  component: PageShell.Content,
   tags: ["!dev"],
   argTypes: {
     width: {
@@ -41,13 +41,13 @@ const meta: Meta<typeof TopNavShell.Content> = {
 
 export default meta;
 
-type Story = StoryObj<typeof TopNavShell.Content>;
+type Story = StoryObj<typeof PageShell.Content>;
 
 export const Default: Story = {
   render: () => (
-    <TopNavShell>
-      <TopNavShell.Content>Content</TopNavShell.Content>
-      <TopNavShell.Main>Main</TopNavShell.Main>
-    </TopNavShell>
+    <PageShell>
+      <PageShell.Content>Content</PageShell.Content>
+      <PageShell.Main>Main</PageShell.Main>
+    </PageShell>
   ),
 };

@@ -1,16 +1,16 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { TopNavShell } from "./TopNavShell";
+import { PageShell } from "./PageShell";
 
-// Docs-only (guidelines/adr/0013) — `TopNavShell.SubNav`'s own props get their own Properties table on TopNavShell.mdx.
-const meta: Meta<typeof TopNavShell.SubNav> = {
-  title: "Templates/Application shells/TopNavShell/SubNav",
-  component: TopNavShell.SubNav,
+// Docs-only (guidelines/adr/0013) — `PageShell.SubNav`'s own props get their own Properties table on PageShell.mdx.
+const meta: Meta<typeof PageShell.SubNav> = {
+  title: "Templates/Application shells/PageShell/SubNav",
+  component: PageShell.SubNav,
   tags: ["!dev"],
   argTypes: {
     children: {
       control: false,
       description:
-        "The row's content. With label it is the links (TopNavShell.SubNavLink), which the row puts in a nav of its own; without it, a nav (a Tabs list, or links) you draw yourself, with its own name. It scrolls sideways when it does not fit.",
+        "The row's content. With label it is the links (PageShell.SubNavLink), which the row puts in a nav of its own; without it, a nav (a Tabs list, or links) you draw yourself, with its own name. It scrolls sideways when it does not fit.",
     },
     label: {
       control: false,
@@ -41,13 +41,13 @@ const meta: Meta<typeof TopNavShell.SubNav> = {
 
 export default meta;
 
-type Story = StoryObj<typeof TopNavShell.SubNav>;
+type Story = StoryObj<typeof PageShell.SubNav>;
 
 export const Default: Story = {
   render: () => (
-    <TopNavShell>
-      <TopNavShell.SubNav>Sub-navigation</TopNavShell.SubNav>
-      <TopNavShell.Main>Main</TopNavShell.Main>
-    </TopNavShell>
+    <PageShell>
+      <PageShell.SubNav>Sub-navigation</PageShell.SubNav>
+      <PageShell.Main>Main</PageShell.Main>
+    </PageShell>
   ),
 };

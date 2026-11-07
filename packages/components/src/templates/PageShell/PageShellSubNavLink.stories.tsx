@@ -1,10 +1,10 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { TopNavShell } from "./TopNavShell";
+import { PageShell } from "./PageShell";
 
-// Docs-only (guidelines/adr/0013) — `TopNavShell.SubNavLink`'s own props get their own Properties table on TopNavShell.mdx.
-const meta: Meta<typeof TopNavShell.SubNavLink> = {
-  title: "Templates/Application shells/TopNavShell/SubNavLink",
-  component: TopNavShell.SubNavLink,
+// Docs-only (guidelines/adr/0013) — `PageShell.SubNavLink`'s own props get their own Properties table on PageShell.mdx.
+const meta: Meta<typeof PageShell.SubNavLink> = {
+  title: "Templates/Application shells/PageShell/SubNavLink",
+  component: PageShell.SubNavLink,
   tags: ["!dev"],
   argTypes: {
     children: { control: false, description: "The link's text." },
@@ -25,18 +25,18 @@ const meta: Meta<typeof TopNavShell.SubNavLink> = {
 
 export default meta;
 
-type Story = StoryObj<typeof TopNavShell.SubNavLink>;
+type Story = StoryObj<typeof PageShell.SubNavLink>;
 
 export const Default: Story = {
   render: () => (
-    <TopNavShell>
-      <TopNavShell.SubNav label="Sections">
-        <TopNavShell.SubNavLink href="#" current>
+    <PageShell>
+      <PageShell.SubNav label="Sections">
+        <PageShell.SubNavLink href="#" current>
           Overview
-        </TopNavShell.SubNavLink>
-        <TopNavShell.SubNavLink href="#">Activity</TopNavShell.SubNavLink>
-      </TopNavShell.SubNav>
-      <TopNavShell.Main>Main</TopNavShell.Main>
-    </TopNavShell>
+        </PageShell.SubNavLink>
+        <PageShell.SubNavLink href="#">Activity</PageShell.SubNavLink>
+      </PageShell.SubNav>
+      <PageShell.Main>Main</PageShell.Main>
+    </PageShell>
   ),
 };

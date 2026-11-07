@@ -1,6 +1,6 @@
-// What TopNavShell's "Show code" snippets leave undefined (a router's pathname) and import, so `pnpm check-snippets` can typecheck them as real code.
+// What PageShell's "Show code" snippets leave undefined (a router's pathname) and import, so `pnpm check-snippets` can typecheck them as real code.
 // Plain text, not a module: the script writes it above each snippet in a throwaway file beside it. Declare only state and handlers; import every
 // component and icon the snippets use from the package, so a name that does not exist fails.
-import { Alert, Button, EmptyState, Navbar, TopNavShell } from "../../index";
+import { Alert, Button, EmptyState, Navbar, PageShell } from "../../index";
 import { TrayIcon, WarningCircleIcon } from "@dbm-system/icons";
 declare const pathname: string;
