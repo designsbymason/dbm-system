@@ -185,7 +185,7 @@ Non-visual/structural helpers other components are built from.
 
 Not individual components, but composed patterns — worth planning for since a template meaningfully reduces time-to-first-app for a common structure (a dashboard shell, an auth flow) versus composing it from scratch every time, but these should come **after** the underlying components exist, not before. They exist now: every component below is built.
 
-**Status:** one built, `AppShell` (the dashboard shell, in `packages/components/src/templates/`), with its review pending; none other is started without the maintainer's confirmation. Phase 7 builds a few before Phase 8 (`01-vision-and-goals.md` §13), one at a time, then, in the maintainer's order of interest, the data-table list page, the auth flow, the dashboard or overview page and the settings page. An **application shell** ships from the components package as a compound component with slots, and every other template is a story-only example page that an app copies ([ADR-0179](adr/0179-templates-ship-as-composable-shells-in-the-components-package-with-story-only-example-pages-over-shipping-finished-pages-or-keeping-all-templates-storybook-only.md)).
+**Status:** one built, `AppShell` (the dashboard shell, in `packages/components/src/templates/`), built and Finalized ([AppShell.md](component-reviews/AppShell.md)); none other is started without the maintainer's confirmation. Phase 7 builds a few before Phase 8 (`01-vision-and-goals.md` §13), one at a time, then, in the maintainer's order of interest, the data-table list page, the auth flow, the dashboard or overview page and the settings page. An **application shell** ships from the components package as a compound component with slots, and every other template is a story-only example page that an app copies ([ADR-0179](adr/0179-templates-ship-as-composable-shells-in-the-components-package-with-story-only-example-pages-over-shipping-finished-pages-or-keeping-all-templates-storybook-only.md)).
 
 This is the working list of page-level templates apps commonly need. The first four were planned from the start; the rest were added as candidates, and a candidate is built only when an app needs it. Priority follows the legend above. Nothing here is counted in the summary below.
 
@@ -193,7 +193,7 @@ This is the working list of page-level templates apps commonly need. The first f
 
 | Template | Priority | Composes |
 |---|---|---|
-| Dashboard shell (Sidebar + Navbar + content area) | 🟡 | `Sidebar`, `Navbar`, `Drawer` on a phone, `Breadcrumb` |
+| Dashboard shell (Sidebar + Navbar + content area), built as `AppShell` | 🟡 | `Sidebar`, `Navbar`, `Drawer` on a phone, `Breadcrumb` |
 | Top-nav app shell | ⚪ | `Navbar` or `NavigationMenu`, `Container`, a footer; for an app with no sidebar |
 | Marketing or public page shell | ⚪ | `NavigationMenu`, a footer, `Container`, `BackToTop` |
 | Docs or content shell | ⚪ | `Sidebar`, `TableOfContents`, `Breadcrumb`, a content column |
