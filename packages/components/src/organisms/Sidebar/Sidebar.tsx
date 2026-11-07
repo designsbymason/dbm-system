@@ -470,18 +470,23 @@ const SidebarRoot = forwardRef<HTMLDivElement, SidebarProps>(
     const drawerSize =
       panelWidth !== undefined ? toLength(panelWidth) : width !== undefined ? toLength(width) : "var(--dbm-sidebar-width)";
 
-    // The phone panel hands focus back to the menu button that opened it, wherever that button is; it is not the Drawer's own trigger.
-    const returnFocus = (event: Event) => {
-      const button = menuButtonRef.current;
-      if (button?.isConnected) {
-        event.preventDefault();
-        button.focus();
-      }
-    };
-
     // The panel opens with focus on its first item, not on whatever the browser would pick: Radix's focus scope skips links when it chooses
     // where to begin, which would land a keyboard user on the first group's button, or on the close button, below the navigation they came for.
     const panelRef = useRef<HTMLDivElement>(null);
+
+    // The phone panel hands focus back to the menu button that opened it, wherever that button is; it is not the Drawer's own trigger. It does so
+    // only if focus is still in the panel or has fallen to the page (the panel was removed with focus in it): a close that something else caused
+    // (a page change the shell answered by moving focus to the new page's main area) has already put focus where the reader should be, and
+    // taking it back to the button would undo that ("a late hand-back returns focus only if it is still here", `06` §9). Radix's own return,
+    // to a trigger this panel does not have, is always stopped.
+    const returnFocus = (event: Event) => {
+      event.preventDefault();
+      const button = menuButtonRef.current;
+      const active = document.activeElement;
+      const focusIsStillHere = active === null || active === document.body || panelRef.current?.contains(active) === true;
+      if (button?.isConnected && focusIsStillHere) button.focus();
+    };
+
     const focusFirstItem = (event: Event) => {
       const first = panelRef.current?.querySelector<HTMLElement>("nav a[href], nav button:not([disabled])");
       if (first) {

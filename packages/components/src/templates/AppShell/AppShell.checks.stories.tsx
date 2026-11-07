@@ -1063,3 +1063,251 @@ export const PhonePanelIsRightToLeftFromTheShellAlone: Story = {
     await waitFor(() => expect(within(document.body).queryByRole("dialog")).toBeNull());
   },
 };
+
+export const UnmeasuredShellLooksTheSameAtRest: Story = {
+  name: "The server's HTML, before anything is measured, draws the header, the main area and the sidebar where they will be once measured — layout test",
+  render: () => <DemoShell scroll="page" banner="sticky" stickyFooter />,
+  play: async ({ canvasElement }) => {
+    const { shell, main, header } = slots(canvasElement);
+    await waitFor(() => expect(shell).toHaveAttribute("data-header-measured"));
+    // Anything still easing in (the banner's alert grows into place) or loading (a web font) changes a height between the two reads, which would
+    // read as the measured and the unmeasured state differing.
+    await document.fonts.ready;
+    await Promise.all(shell.getAnimations({ subtree: true }).map((animation) => animation.finished.catch(() => undefined)));
+    window.scrollTo(0, 0);
+    await nextFrame();
+    await nextFrame();
+    const read = () => [main, header, within(canvasElement).getByRole("navigation", { name: "Main" })].map((element) => {
+      const box = element.getBoundingClientRect();
+      return [Math.round(box.top), Math.round(box.left), Math.round(box.width), Math.round(box.height)];
+    });
+    const measured = read();
+    // The state the server renders, which a person sees until the page hydrates: no measured attribute and none of the measured custom properties.
+    // The footer is left out on purpose: a `sticky` footer is pinned to the bottom of the window only once measured, and until then it is at the
+    // end of the page.
+    const properties = ["--app-shell-header-height", "--app-shell-banner-height", "--app-shell-banner-stick", "--app-shell-footer-height"];
+    const saved = properties.map((name) => shell.style.getPropertyValue(name));
+    const attributes = ["data-header-measured", "data-banner-measured", "data-footer-measured"].filter((name) => shell.hasAttribute(name));
+    for (const name of attributes) shell.removeAttribute(name);
+    for (const name of properties) shell.style.removeProperty(name);
+    await nextFrame();
+    const unmeasured = read();
+    // Put it back exactly, so nothing after this sees a changed shell.
+    for (const name of attributes) shell.setAttribute(name, "");
+    properties.forEach((name, index) => shell.style.setProperty(name, saved[index] ?? ""));
+    await expect(unmeasured).toEqual(measured);
+  },
+};
+
+/** Emulates the print media type, runs `check`, and always puts the page back: the type is cleared with an empty list so it cannot leak into the next story. */
+async function whilePrinting(check: () => Promise<void>) {
+  // Anything still easing in (the banner's alert grows into place) or loading (a web font) changes a height while it is measured.
+  await document.fonts.ready;
+  await Promise.all(document.getAnimations().map((animation) => animation.finished.catch(() => undefined)));
+  await send("Emulation.setEmulatedMedia", { media: "print", features: [] });
+  try {
+    await waitFor(() => expect(window.matchMedia("print").matches).toBe(true));
+    await nextFrame();
+    await Promise.all(document.getAnimations().map((animation) => animation.finished.catch(() => undefined)));
+    await nextFrame();
+    await check();
+  } finally {
+    await send("Emulation.setEmulatedMedia", { media: "", features: [] });
+    await waitFor(() => expect(window.matchMedia("print").matches).toBe(false));
+    await nextFrame();
+  }
+}
+
+export const PrintsTheWholePageWithoutTheChrome: Story = {
+  name: "Printed, the main area shows all of its content and the sidebar and aside are left out — layout test",
+  render: () => <DemoShell aside />,
+  play: async ({ canvasElement }) => {
+    const { shell, main, header, footer } = slots(canvasElement);
+    const sidebarSlot = within(canvasElement).getByRole("navigation", { name: "Main" }).closest<HTMLElement>("[class*='sidebar']")!;
+    const aside = asideOf(canvasElement).closest<HTMLElement>("aside") ?? asideOf(canvasElement);
+    // On screen the main area scrolls inside its box (more content than room), and the sidebar and the aside are drawn.
+    await expect(main.scrollHeight).toBeGreaterThan(main.clientHeight);
+    await expect(getComputedStyle(sidebarSlot).display).not.toBe("none");
+    await expect(getComputedStyle(aside).display).not.toBe("none");
+    await whilePrinting(async () => {
+      // Every line of the page is laid out: the box is as tall as its content, and the frame is as tall as its parts together.
+      await expect(getComputedStyle(main).overflowY).toBe("visible");
+      await expect(main.scrollHeight).toBeLessThanOrEqual(main.clientHeight + 1);
+      await expect(shell.getBoundingClientRect().height).toBeGreaterThanOrEqual(main.scrollHeight);
+      // The navigation and the side pane are not printed.
+      await expect(getComputedStyle(sidebarSlot).display).toBe("none");
+      await expect(getComputedStyle(aside).display).toBe("none");
+      // What is kept: the header above the main area and the footer below it, once each.
+      await expect(header.getBoundingClientRect().bottom).toBeLessThanOrEqual(main.getBoundingClientRect().top + 1);
+      await expect(footer.getBoundingClientRect().top).toBeGreaterThanOrEqual(main.getBoundingClientRect().bottom - 1);
+    });
+  },
+};
+
+export const PrintsStickyPartsWhereTheyBelong: Story = {
+  name: "Printed, a page-scrolling shell's sticky banner, header and footer are in the flow, not kept in view — layout test",
+  render: () => <DemoShell scroll="page" banner="sticky" stickyFooter />,
+  play: async ({ canvasElement }) => {
+    const { shell, main, header, footer } = slots(canvasElement);
+    // Sticky is applied part by part as each one is measured, so wait for all three.
+    for (const name of ["data-header-measured", "data-banner-measured", "data-footer-measured"]) await waitFor(() => expect(shell).toHaveAttribute(name));
+    const parts = [slotOf(shell, header), slotOf(shell, footer), shell.querySelector<HTMLElement>("[class*='banner']")!];
+    for (const part of parts) await expect(getComputedStyle(part).position).toBe("sticky");
+    await whilePrinting(async () => {
+      for (const part of parts) await expect(getComputedStyle(part).position).toBe("static");
+      // In order down the paper: banner, header, main, footer, each below the one before.
+      const tops = [parts[2]!, header, main, footer].map((element) => element.getBoundingClientRect().top);
+      await expect(tops).toEqual([...tops].sort((first, second) => first - second));
+      await expect(footer.getBoundingClientRect().top).toBeGreaterThanOrEqual(main.getBoundingClientRect().bottom - 1);
+    });
+  },
+};
+
+export const MeasuredBeforeTheFirstPaint: Story = {
+  name: "On the client, the header, banner and footer are measured in the same commit that draws them, so no unmeasured frame is painted — layout test",
+  render: () => <div data-testid="host" />,
+  play: async ({ canvasElement }) => {
+    const host = canvasElement.querySelector<HTMLElement>("[data-testid=host]")!;
+    const mount = document.createElement("div");
+    host.append(mount);
+    const { createRoot } = await import("react-dom/client");
+    const root = createRoot(mount);
+    try {
+      // A MutationObserver callback runs as soon as the task that drew the shell has finished, before the browser can paint and before any task React
+      // schedules for later (a passive effect). What it reads is therefore what the first painted frame will show.
+      const atFirstDraw = new Promise<string[]>((resolve) => {
+        const observer = new MutationObserver(() => {
+          const frame = mount.querySelector<HTMLElement>("[data-scroll]");
+          if (frame === null) return;
+          observer.disconnect();
+          resolve(["data-header-measured", "data-banner-measured", "data-footer-measured"].filter((name) => frame.hasAttribute(name)));
+        });
+        observer.observe(mount, { childList: true, subtree: true });
+      });
+      root.render(<DemoShell scroll="page" banner="sticky" stickyFooter />);
+      await expect(await atFirstDraw).toEqual(["data-header-measured", "data-banner-measured", "data-footer-measured"]);
+    } finally {
+      root.unmount();
+      mount.remove();
+    }
+  },
+};
+
+export const FloatingSidebarFitsItsColumn: Story = {
+  name: "A floating Sidebar sits inside its column, clear of the main area and of the edges, and keeps its place while the page scrolls — layout test",
+  render: () => <DemoShell sidebarVariant="floating" scroll="page" />,
+  play: async ({ canvasElement }) => {
+    await expect(window.innerWidth).toBeGreaterThanOrEqual(1024);
+    const { shell, main, header } = slots(canvasElement);
+    await waitFor(() => expect(shell).toHaveAttribute("data-header-measured"));
+    const nav = within(canvasElement).getByRole("navigation", { name: "Main" });
+    const slot = nav.closest<HTMLElement>("[class*='sidebar']")!;
+    const panel = nav.closest<HTMLElement>("[data-variant]") ?? slot.firstElementChild as HTMLElement;
+    await expect(panel.getAttribute("data-variant")).toBe("floating");
+    const read = () => ({ slot: slot.getBoundingClientRect(), panel: panel.getBoundingClientRect(), main: main.getBoundingClientRect() });
+    const rest = read();
+    // The floating panel (its margin included in the column) is wholly inside the column, and the main area starts where the column ends.
+    await expect(rest.panel.left).toBeGreaterThanOrEqual(rest.slot.left - 0.5);
+    await expect(rest.panel.right).toBeLessThanOrEqual(rest.slot.right + 0.5);
+    await expect(rest.panel.top).toBeGreaterThanOrEqual(rest.slot.top - 0.5);
+    await expect(rest.panel.bottom).toBeLessThanOrEqual(rest.slot.bottom + 0.5);
+    await expect(Math.abs(rest.main.left - rest.slot.right)).toBeLessThan(1);
+    // The floating look is really there: the panel is inset from the column's edge and has rounded corners and a shadow.
+    await expect(rest.panel.left).toBeGreaterThan(rest.slot.left);
+    await expect(Number.parseFloat(getComputedStyle(panel).borderTopLeftRadius)).toBeGreaterThan(0);
+    await expect(getComputedStyle(panel).boxShadow).not.toBe("none");
+    // It stays where it is, below the header, while the page scrolls.
+    const top = panel.getBoundingClientRect().top;
+    window.scrollTo(0, 500);
+    await waitFor(() => expect(shell).toHaveAttribute("data-scrolled"));
+    await expect(Math.abs(panel.getBoundingClientRect().top - top)).toBeLessThan(1);
+    await expect(panel.getBoundingClientRect().top).toBeGreaterThanOrEqual(header.getBoundingClientRect().top - 0.5);
+    window.scrollTo(0, 0);
+  },
+};
+
+export const HeaderGrowsWhileTheFramePageIsScrolled: Story = {
+  name: "When the header changes height while the page is scrolled, the bar and the sidebar kept below it follow at once — layout test",
+  render: () => <DemoLayersShell parked />,
+  play: async ({ canvasElement }) => {
+    const { shell, header } = slots(canvasElement);
+    await waitFor(() => expect(shell).toHaveAttribute("data-header-measured"));
+    const slot = slotOf(shell, header);
+    const bar = within(canvasElement).getByTestId("affix-bar");
+    const nav = within(canvasElement).getByRole("navigation", { name: "Main" });
+    const panel = nav.closest<HTMLElement>("[class*='sidebar']")!.firstElementChild as HTMLElement;
+    window.scrollTo(0, 600);
+    await waitFor(() => expect(shell).toHaveAttribute("data-scrolled"));
+    const below = () => ({
+      header: slot.getBoundingClientRect().bottom,
+      bar: bar.getBoundingClientRect().top,
+      panel: panel.getBoundingClientRect().top,
+      property: Number.parseFloat(shell.style.getPropertyValue("--app-shell-header-height")),
+      height: slot.getBoundingClientRect().height,
+    });
+    const before = below();
+    await expect(Math.abs(before.bar - before.header)).toBeLessThan(1.5);
+    await expect(Math.abs(before.panel - before.header)).toBeLessThan(1.5);
+
+    // The header grows by 60px (a second row appears, a banner message wraps, a safe-area inset changes).
+    const inner = slot.firstElementChild as HTMLElement;
+    inner.style.minBlockSize = `${Math.round(before.height) + 60}px`;
+    await waitFor(() => expect(Math.abs(below().height - (before.height + 60))).toBeLessThan(1.5));
+    // The recorded height, the bar's offset and the sidebar's offset all follow, still flush against the header's lower edge.
+    await waitFor(() => expect(Math.abs(below().property - below().height)).toBeLessThan(1.5));
+    await waitFor(() => expect(Math.abs(below().bar - below().header)).toBeLessThan(1.5));
+    await waitFor(() => expect(Math.abs(below().panel - below().header)).toBeLessThan(1.5));
+    // And back.
+    inner.style.minBlockSize = "";
+    await waitFor(() => expect(Math.abs(below().height - before.height)).toBeLessThan(1.5));
+    await waitFor(() => expect(Math.abs(below().bar - below().header)).toBeLessThan(1.5));
+    window.scrollTo(0, 0);
+  },
+};
+
+export const TextOnlyScrollingMainIsReachableByKeyboard: Story = {
+  name: "A scrolling main area that holds only text is a tab stop, so a keyboard can scroll it (the accessibility run that follows every story applies) — layout test",
+  render: () => (
+    <DemoShell>
+      {Array.from({ length: 40 }, (_, index) => (
+        <p key={index} style={{ margin: "var(--dbm-space-4)" }}>
+          Paragraph {index + 1}: only text here, nothing a keyboard could land on, in a box that is taller than the window and scrolls on its own.
+        </p>
+      ))}
+    </DemoShell>
+  ),
+  play: async ({ canvasElement }) => {
+    const { main } = slots(canvasElement);
+    await expect(main.scrollHeight).toBeGreaterThan(main.clientHeight);
+    await waitFor(() => expect(main).toHaveAttribute("tabindex", "0"));
+    // A real Tab key reaches it (past the skip link, the menu and the sidebar's links), and a real arrow key scrolls it.
+    let guard = 0;
+    while (document.activeElement !== main && guard++ < 40) await press("Tab", 9);
+    await expect(document.activeElement).toBe(main);
+    const before = main.scrollTop;
+    await press("ArrowDown", 40);
+    await waitFor(() => expect(main.scrollTop).toBeGreaterThan(before));
+    main.scrollTop = 0;
+  },
+};
+
+export const PhoneNavigationLandsFocusOnTheNewPage: Story = {
+  name: "On a phone, choosing a page from the open menu panel leaves focus on the main area, not back on the menu button — layout test",
+  globals: { viewport: { value: "mobile1", isRotated: false } },
+  render: () => <DemoNavigationShell />,
+  play: async ({ canvasElement }) => {
+    await expect(window.innerWidth).toBeLessThan(768);
+    const main = within(canvasElement).getByRole("main");
+    const menuButton = within(canvasElement).getByRole("button", { name: "Menu" });
+    // A real press on the menu button, then on a page in the panel it opens.
+    await userEvent.click(menuButton);
+    const panel = await within(document.body).findByRole("dialog");
+    await waitFor(() => expect(within(panel).getByRole("link", { name: "Reports" })).toBeVisible());
+    await userEvent.click(within(panel).getByRole("link", { name: "Reports" }));
+    await waitFor(() => expect(within(document.body).queryByRole("dialog")).toBeNull());
+    // Let the panel's own focus hand-back (it returns to the button that opened it) finish before looking.
+    await new Promise((resolve) => setTimeout(resolve, 400));
+    await expect(within(canvasElement).getByRole("heading", { level: 1 })).toHaveTextContent("Reports");
+    await expect(document.activeElement).toBe(main);
+  },
+};

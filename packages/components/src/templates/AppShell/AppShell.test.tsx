@@ -1,7 +1,7 @@
 import { act, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { axe } from "jest-axe";
-import { createRef, StrictMode } from "react";
+import { createRef, StrictMode, useState } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { DirectionProvider } from "../../atoms/DirectionProvider";
 import { Navbar } from "../../organisms/Navbar";
@@ -391,6 +391,46 @@ describe("AppShell.Aside", () => {
     await user.keyboard("{Escape}");
     await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
     await waitFor(() => expect(toggle).toHaveFocus());
+  });
+
+  it("leaves focus on the new page's main area when a link in the aside's drawer changes the page and closes the drawer", async () => {
+    const user = userEvent.setup();
+    function GoLink({ onGo }: { onGo: () => void }) {
+      const { setAsideOpen } = useAppShell();
+      return (
+        <a
+          href="/b"
+          onClick={(event) => {
+            event.preventDefault();
+            onGo();
+            setAsideOpen(false);
+          }}
+        >
+          Go to b
+        </a>
+      );
+    }
+    function Routed() {
+      const [path, setPath] = useState("/a");
+      return (
+        <AppShell pageKey={path} pageTitle={path}>
+          <AppShell.Header>
+            <AppShell.AsideToggle />
+          </AppShell.Header>
+          <AppShell.Main data-testid="main">Page</AppShell.Main>
+          <AppShell.Aside aria-label="Order details">
+            <GoLink onGo={() => setPath("/b")} />
+          </AppShell.Aside>
+        </AppShell>
+      );
+    }
+    render(<Routed />);
+    await user.click(screen.getByRole("button", { name: "Show details" }));
+    const drawer = await screen.findByRole("dialog", { name: "Order details" });
+    await user.click(within(drawer).getByRole("link", { name: "Go to b" }));
+    await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
+    await waitFor(() => expect(screen.getByTestId("main")).toHaveFocus());
+    expect(screen.getByRole("button", { name: "Show details" })).not.toHaveFocus();
   });
 
   it("takes its drawer's title and close name, and the toggle's name, through `labels`", async () => {
@@ -1182,5 +1222,141 @@ describe("AppShell direction", () => {
       </AppShell>,
     );
     expect(screen.getByTestId("shell")).toHaveAttribute("dir", "ltr");
+  });
+});
+
+// The header, the sticky banner and the sticky footer measure themselves in an effect and report `0` from its cleanup. `StrictMode` runs every
+// effect, its cleanup and the effect again, keeping state, so a measurement that is not reset in the cleanup (or an observer that is not
+// disconnected) shows up as a stale height or a leaked observer.
+describe("AppShell measuring under StrictMode", () => {
+  class FakeObserver {
+    static all: FakeObserver[] = [];
+    disconnected = false;
+    constructor(public callback: () => void) {
+      FakeObserver.all.push(this);
+    }
+    observe() {}
+    unobserve() {}
+    disconnect() {
+      this.disconnected = true;
+    }
+  }
+  let height = 64;
+
+  beforeEach(() => {
+    FakeObserver.all = [];
+    height = 64;
+    vi.stubGlobal("ResizeObserver", FakeObserver);
+    vi.spyOn(HTMLElement.prototype, "getBoundingClientRect").mockImplementation(() => ({ width: 100, height, top: 0, left: 0, right: 100, bottom: height, x: 0, y: 0, toJSON: () => ({}) }));
+  });
+  afterEach(() => {
+    vi.unstubAllGlobals();
+    vi.restoreAllMocks();
+  });
+
+  const parts = () => (
+    <AppShell scroll="page" data-testid="frame">
+      <AppShell.Banner sticky>Notice</AppShell.Banner>
+      <AppShell.Header>Header</AppShell.Header>
+      <AppShell.Main>Main</AppShell.Main>
+      <AppShell.Footer sticky>Foot</AppShell.Footer>
+    </AppShell>
+  );
+  const shell = () => <StrictMode>{parts()}</StrictMode>;
+  const live = () => FakeObserver.all.filter((observer) => !observer.disconnected);
+
+  it("ends up measured, with exactly the observers a plain mount has: none left over from the first mount", () => {
+    const plain = render(parts());
+    const expected = live().length;
+    plain.unmount();
+    FakeObserver.all = [];
+
+    render(shell());
+    const frame = screen.getByTestId("frame");
+    expect(frame).toHaveAttribute("data-header-measured");
+    expect(frame.style.getPropertyValue("--app-shell-header-height")).toBe("64px");
+    expect(expected).toBeGreaterThanOrEqual(3);
+    expect(live()).toHaveLength(expected);
+    // StrictMode did make a first set and disconnect it: the count above is not true of a mount that only ran once.
+    expect(FakeObserver.all.length).toBeGreaterThan(expected);
+  });
+
+  it("follows a later change in height, and reports nothing once unmounted", () => {
+    const { unmount } = render(shell());
+    height = 80;
+    act(() => live().forEach((observer) => observer.callback()));
+    expect(screen.getByTestId("frame").style.getPropertyValue("--app-shell-header-height")).toBe("80px");
+    unmount();
+    expect(live()).toHaveLength(0);
+  });
+
+  it("forgets the header's height when the header is removed, under StrictMode too", () => {
+    const withHeader = (on: boolean) => (
+      <StrictMode>
+        <AppShell scroll="page" data-testid="frame">
+          {on && <AppShell.Header>Header</AppShell.Header>}
+          <AppShell.Main>Main</AppShell.Main>
+        </AppShell>
+      </StrictMode>
+    );
+    const { rerender } = render(withHeader(true));
+    expect(screen.getByTestId("frame")).toHaveAttribute("data-header-measured");
+    rerender(withHeader(false));
+    expect(screen.getByTestId("frame")).not.toHaveAttribute("data-header-measured");
+    expect(screen.getByTestId("frame").style.getPropertyValue("--app-shell-header-height")).toBe("");
+  });
+});
+
+describe("AppShell with a router's link", () => {
+  beforeEach(() => {
+    vi.stubGlobal("ResizeObserver", class { observe() {} unobserve() {} disconnect() {} });
+  });
+  afterEach(() => vi.unstubAllGlobals());
+
+  it("closes the phone panel when an item that prevents the browser's navigation is pressed, leaves focus on the new page's main area and announces it", async () => {
+    const user = userEvent.setup();
+    function Routed() {
+      const [path, setPath] = useState("/home");
+      return (
+        <AppShell pageKey={path} pageTitle={path === "/home" ? "Home" : "Billing"}>
+          <AppShell.Header>
+            <Navbar>
+              <Navbar.Brand href="/">Acme</Navbar.Brand>
+              <Navbar.Actions>
+                <Sidebar.MenuButton />
+              </Navbar.Actions>
+            </Navbar>
+          </AppShell.Header>
+          <AppShell.Sidebar>
+            <Sidebar>
+              <Sidebar.Content>
+                <Sidebar.Nav aria-label="Main">
+                  <Sidebar.Item asChild current={path === "/billing"}>
+                    <a
+                      href="/billing"
+                      onClick={(event) => {
+                        event.preventDefault();
+                        setPath("/billing");
+                      }}
+                    >
+                      Billing
+                    </a>
+                  </Sidebar.Item>
+                </Sidebar.Nav>
+              </Sidebar.Content>
+            </Sidebar>
+          </AppShell.Sidebar>
+          <AppShell.Main data-testid="main">Page</AppShell.Main>
+        </AppShell>
+      );
+    }
+    render(<Routed />);
+    await user.click(screen.getByRole("button", { name: "Menu" }));
+    const panel = await screen.findByRole("dialog");
+    await user.click(within(panel).getByRole("link", { name: "Billing" }));
+    await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
+    await waitFor(() => expect(screen.getByRole("status")).toHaveTextContent("Billing"));
+    // Focus is on the new page's main area, not back on the menu button the panel opened from.
+    await waitFor(() => expect(screen.getByTestId("main")).toHaveFocus());
   });
 });

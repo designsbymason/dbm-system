@@ -308,8 +308,8 @@ Resize or collapse the sidebar, then reload the page: with `persistKey` the shel
 - Name the aside with `aria-label` when the page has another complementary landmark ("Details", "On
   this page"); the name is also the drawer's title.
 - Set the sidebar's own `side` to match `sidebarSide`, so its line and its phone panel are on the
-  same edge, and pass the same `dir` to the shell, the `Sidebar` and the `Navbar` on a right-to-left
-  page.
+  same edge. On a right-to-left page give the shell its `dir`: it provides it to the `Sidebar` and the
+  `Navbar` inside, so neither needs one of its own.
 - Keep a wide table or a long code block inside `AppShell.Main` in a component that scrolls on its
   own (`Table`, `CodeBlock`); the main area scrolls vertically and never pushes the frame wider than
   the window.
@@ -343,6 +343,9 @@ Resize or collapse the sidebar, then reload the page: with `persistKey` the shel
 
 ## Best practices
 
+- Printing prints the page, not the navigation: the sidebar, the aside and the skip link are left out, the main area is laid out
+  in full and the banner, header and footer are ordinary rows. Put your own page breaks and a table's
+  repeating header in the page's own CSS.
 - Choose `scroll="content"` for an application whose pages are long lists or tables, so the
   navigation is always in reach. Choose `scroll="page"` for a page that reads like a document: the
   page scrolls as a whole, and the shell keeps the header and the sidebar in view as it does.
@@ -526,6 +529,34 @@ function Filters() {
   </AppShell.Main>
 </AppShell>
 ```
+
+```tsx
+// With a router: the router's pathname is the page's key, its link is the item, and the sidebar closes its phone panel when an item is pressed
+function Frame({ children }: { children: ReactNode }) {
+  const { pathname } = useLocation(); // from your router
+  return (
+    <AppShell pageKey={pathname} pageTitle={titleFor(pathname)}>
+      <AppShell.Sidebar>
+        <Sidebar>
+          <Sidebar.Content>
+            <Sidebar.Nav aria-label="Main">
+              <Sidebar.Item asChild current={pathname === "/billing"}>
+                <RouterLink to="/billing">Billing</RouterLink>
+              </Sidebar.Item>
+            </Sidebar.Nav>
+          </Sidebar.Content>
+        </Sidebar>
+      </AppShell.Sidebar>
+      <AppShell.Main>{children}</AppShell.Main>
+    </AppShell>
+  );
+}
+```
+
+On a page change the shell moves focus to the main area, scrolls it to the top and announces `pageTitle` politely. It does nothing on
+the first render, so the page's own load is not announced twice. The phone panel closes by itself when an item is pressed, including a
+router's link that stops the browser's own navigation (`closeMenuOnNavigate` on `Sidebar`, on by default); turn it off there if a link
+should keep the panel open.
 
 ## Design tokens used
 

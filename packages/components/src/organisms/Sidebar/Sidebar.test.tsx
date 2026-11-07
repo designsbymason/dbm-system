@@ -645,6 +645,47 @@ describe("Sidebar", () => {
       expect(button).toHaveFocus();
     });
 
+    it("gives focus back to the menu button after a link is pressed with focus still in the panel", async () => {
+      const user = userEvent.setup();
+      render(
+        <Sidebar.Provider>
+          <Sidebar.MenuButton />
+          <Basic collapseBelow="md" />
+        </Sidebar.Provider>,
+      );
+      const button = screen.getByRole("button", { name: "Menu" });
+      await user.click(button);
+      const link = within(await screen.findByRole("dialog")).getByRole("link", { name: "Home" });
+      link.addEventListener("click", (event) => event.preventDefault());
+      await user.click(link);
+      await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
+      expect(button).toHaveFocus();
+    });
+
+    it("leaves focus where it is when something else moved it before the panel finished closing (a page change moving focus to its main area)", async () => {
+      const user = userEvent.setup();
+      render(
+        <Sidebar.Provider>
+          <Sidebar.MenuButton />
+          <Basic collapseBelow="md" />
+          <main id="elsewhere" tabIndex={-1}>
+            Page
+          </main>
+        </Sidebar.Provider>,
+      );
+      await user.click(screen.getByRole("button", { name: "Menu" }));
+      const link = within(await screen.findByRole("dialog")).getByRole("link", { name: "Home" });
+      link.addEventListener("click", (event) => {
+        event.preventDefault();
+        // What the app does when the link changes the page: focus goes to the new page's main area as the panel closes.
+        setTimeout(() => document.getElementById("elsewhere")?.focus(), 0);
+      });
+      await user.click(link);
+      await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
+      expect(document.getElementById("elsewhere")).toHaveFocus();
+      expect(screen.getByRole("button", { name: "Menu" })).not.toHaveFocus();
+    });
+
     it("closes when the page grows past the step", async () => {
       let handler: ((event: MediaQueryListEvent) => void) | undefined;
       const addEventListener = vi.fn((_type: string, listener: (event: MediaQueryListEvent) => void) => {

@@ -1,3 +1,5 @@
+import { act } from "@testing-library/react";
+import { hydrateRoot } from "react-dom/client";
 import { renderToString } from "react-dom/server";
 import { describe, expect, it, vi } from "vitest";
 import { Navbar } from "../../organisms/Navbar";
@@ -87,5 +89,86 @@ describe("AppShell on the server", () => {
     expect(html).toContain('aria-busy="true"');
     expect(html).toContain("Could not load");
     expect(html).toContain('dir="rtl"');
+  });
+});
+
+// Hydration. `renderToString` with the DOM removed proves nothing throws on the server; only `hydrateRoot` over that HTML, with
+// `onRecoverableError` collected (React reports a mismatch there, not through `console.error`), proves the first client render matches it
+// (`06` §9). What the server could not have drawn (the measured heights, the media query for the rail) waits for the first commit.
+describe("AppShell hydrating", () => {
+  const shell = (props: Record<string, unknown> = {}) => (
+    <AppShell scroll="page" railBelow="xl" persistKey="hydrate-test" {...props}>
+      <AppShell.Banner sticky>Maintenance tonight</AppShell.Banner>
+      <AppShell.Header as="header">
+        <AppShell.AsideToggle />
+      </AppShell.Header>
+      <AppShell.Sidebar resizable>
+        <Sidebar>
+          <Sidebar.Content>
+            <Sidebar.Nav aria-label="Main">
+              <Sidebar.Item href="/" current>
+                Home
+              </Sidebar.Item>
+            </Sidebar.Nav>
+          </Sidebar.Content>
+        </Sidebar>
+      </AppShell.Sidebar>
+      <AppShell.Main busy>
+        <AppShell.State kind="empty" title="Nothing here" />
+      </AppShell.Main>
+      <AppShell.Aside aria-label="Details">Aside</AppShell.Aside>
+      <AppShell.Footer sticky>Foot</AppShell.Footer>
+    </AppShell>
+  );
+
+  async function hydrate(element: React.ReactElement) {
+    const html = onTheServer(() => renderToString(element));
+    const container = document.createElement("div");
+    container.innerHTML = html;
+    document.body.append(container);
+    const recoverable: unknown[] = [];
+    const warn = vi.spyOn(console, "error").mockImplementation(() => undefined);
+    let root!: ReturnType<typeof hydrateRoot>;
+    await act(async () => {
+      root = hydrateRoot(container, element, { onRecoverableError: (error) => recoverable.push(error) });
+    });
+    const errors = warn.mock.calls.map((call) => String(call[0]));
+    warn.mockRestore();
+    const unmount = async () => {
+      await act(async () => root.unmount());
+      container.remove();
+    };
+    return { container, recoverable, errors, unmount };
+  }
+
+  it("matches the server HTML in a page-scrolling shell with every part, with no recoverable error", async () => {
+    const { container, recoverable, errors, unmount } = await hydrate(shell());
+    expect(recoverable).toEqual([]);
+    expect(errors.filter((message) => /hydrat|did not match|mismatch/i.test(message))).toEqual([]);
+    expect(container.querySelector("main")).toHaveAttribute("aria-busy", "true");
+    await unmount();
+  });
+
+  it("matches in right-to-left and content-scrolling shells too", async () => {
+    for (const props of [{ dir: "rtl" }, { scroll: "content" }, { dir: "rtl", scroll: "content", collapsed: true }]) {
+      const { recoverable, errors, unmount } = await hydrate(shell(props));
+      expect(recoverable).toEqual([]);
+      expect(errors.filter((message) => /hydrat|did not match|mismatch/i.test(message))).toEqual([]);
+      await unmount();
+    }
+  });
+
+  it("measures the header only after hydrating, so the heights it sets were not in the server HTML", async () => {
+    const html = onTheServer(() => renderToString(shell()));
+    expect(html).not.toContain("--app-shell-header-height");
+    expect(html).not.toContain("data-header-measured");
+    const rect = vi.spyOn(HTMLElement.prototype, "getBoundingClientRect").mockReturnValue({ height: 64, width: 100, top: 0, left: 0, right: 100, bottom: 64, x: 0, y: 0, toJSON: () => ({}) });
+    const { container, recoverable, unmount } = await hydrate(shell());
+    expect(recoverable).toEqual([]);
+    const frame = container.querySelector<HTMLElement>("[data-scroll]")!;
+    expect(frame).toHaveAttribute("data-header-measured");
+    expect(frame.style.getPropertyValue("--app-shell-header-height")).toBe("64px");
+    rect.mockRestore();
+    await unmount();
   });
 });

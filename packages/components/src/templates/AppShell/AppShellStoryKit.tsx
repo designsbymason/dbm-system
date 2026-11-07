@@ -14,6 +14,7 @@ import { Stat } from "../../molecules/Stat";
 import { Table } from "../../molecules/Table";
 import { Navbar } from "../../organisms/Navbar";
 import { Sidebar } from "../../organisms/Sidebar";
+import type { SidebarProps } from "../../organisms/Sidebar";
 import { DemoSidebar, preventNavigation } from "../../organisms/Sidebar/SidebarStoryKit";
 import { AppShell } from "./AppShell";
 import { useAppShell } from "./AppShellContext";
@@ -126,6 +127,7 @@ export function DemoShell({
   aside = false,
   banner,
   resizable = false,
+  sidebarVariant,
   contentWrapper = false,
   stickyFooter = false,
   busy,
@@ -141,6 +143,8 @@ export function DemoShell({
   banner?: boolean | "sticky";
   /** Makes the sidebar column resizable. */
   resizable?: boolean;
+  /** The `Sidebar`'s `variant`, for a look that is not the default. */
+  sidebarVariant?: SidebarProps["variant"];
   /** Puts the page in an `AppShell.Content`, kept to a readable width. */
   contentWrapper?: boolean;
   /** Makes the footer a bar of actions that stays at the bottom of the window while the page scrolls. */
@@ -180,7 +184,7 @@ export function DemoShell({
       </AppShell.Header>
       <AppShell.Sidebar resizable={resizable}>
         {/* The phone drawer is wider than the column on the page (`panelWidth`); it is capped at the window less a sliver of the page. */}
-        <DemoSidebar side={side} toggle panelWidth="20rem" />
+        <DemoSidebar side={side} toggle panelWidth="20rem" variant={sidebarVariant} />
       </AppShell.Sidebar>
       <AppShell.Main busy={busy}>
         {state !== undefined ? (

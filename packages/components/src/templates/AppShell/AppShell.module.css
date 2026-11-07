@@ -475,3 +475,58 @@
   min-block-size: 50vh;
   min-block-size: calc(var(--app-shell-viewport-size, 100dvh) / 2);
 }
+
+/* --- Printing --- */
+/* A printed page is the page's content, laid out once from the top: no sidebar or aside (navigation and a side pane are not what is being
+   printed), no skip link, loading bar or drag handle, and nothing kept in view, since a sticky part is drawn in the middle of the paper and a
+   main area that scrolls prints only as much as fits its box and cuts the rest. The banner, the header and the footer stay, in order, each once
+   (a header with the brand and a footer with the legal line belong on paper). `!important` is deliberate here: print has to win over every
+   screen rule above whatever its specificity (the measured, sticky and per-mode ones), and an app that wants a part printed overrides it the
+   same way. */
+@media print {
+  .root {
+    display: grid !important;
+    grid-template-areas: "banner" "header" "main" "footer" !important;
+    grid-template-columns: minmax(0, 1fr) !important;
+    grid-template-rows: auto auto auto auto !important;
+    block-size: auto !important;
+    min-block-size: 0 !important;
+    padding: 0 !important;
+  }
+
+  .sidebar,
+  .aside,
+  .skipLink,
+  .busyBar,
+  .resizeHandle,
+  button.asideToggle {
+    display: none !important;
+  }
+
+  .banner,
+  .header,
+  .footer {
+    align-self: auto !important;
+    box-shadow: none !important;
+    border-color: transparent !important;
+    position: static !important;
+  }
+
+  /* A kept part spans every row below it on screen (so it can stick inside an area as tall as the shell); on paper each is just its own row. */
+  .banner {
+    grid-area: banner !important;
+  }
+
+  .header {
+    grid-area: header !important;
+  }
+
+  .footer {
+    grid-area: footer !important;
+  }
+
+  .main {
+    block-size: auto !important;
+    overflow: visible !important;
+  }
+}

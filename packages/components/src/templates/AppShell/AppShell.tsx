@@ -679,6 +679,7 @@ const AppShellAside = forwardRef<HTMLElement, AppShellAsideProps>(
     const { scroll, dir, asideCollapseBelow, asideCollapseTo, asideOpen, setAsideOpen, asideToggleRef } = useAppShellContext();
     const labels = mergeDefined(defaultAsideLabels, labelsProp);
     const innerRef = useRef<HTMLElement>(null);
+    const asideDrawerRef = useRef<HTMLDivElement>(null);
     const scrolls = useIsScrollable(innerRef, "y");
     const size = width !== undefined ? toLength(width) : "var(--dbm-app-shell-aside-width)";
     const asDrawer = asideCollapseTo === "drawer" && asideCollapseBelow !== "never";
@@ -718,11 +719,15 @@ const AppShellAside = forwardRef<HTMLElement, AppShellAsideProps>(
               container={drawerContainer}
               labels={{ close: labels.close }}
               aria-describedby={undefined}
+              ref={asideDrawerRef}
               onCloseAutoFocus={(event) => {
+                // Focus goes back to the toggle only if it is still in the drawer or has fallen to the page; a page change that moved it to the main
+                // area while the drawer was closing has put it where the reader should be (`06` §9).
                 const toggle = asideToggleRef.current;
                 if (toggle === null || !toggle.isConnected) return;
                 event.preventDefault();
-                toggle.focus();
+                const active = document.activeElement;
+                if (active === null || active === document.body || asideDrawerRef.current?.contains(active)) toggle.focus();
               }}
             >
               <Drawer.Header>
