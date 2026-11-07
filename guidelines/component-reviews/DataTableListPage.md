@@ -1,6 +1,6 @@
 # Data Table List Page — review findings
 
-**Tier:** Template (a story-only example page, [ADR-0179](../adr/0179-templates-ship-as-composable-shells-in-the-components-package-with-story-only-example-pages-over-shipping-finished-pages-or-keeping-all-templates-storybook-only.md), [ADR-0184](../adr/0184-a-story-only-template-page-is-a-folder-of-stories-and-a-story-kit-in-templates-with-demo-controls-and-no-playground-over-a-shipped-component-or-a-separate-pages-tree.md)) · **Category:** Data pages · **Finalized:** not yet (the maintainer's to declare)
+**Tier:** Template (a story-only example page, [ADR-0179](../adr/0179-templates-ship-as-composable-shells-in-the-components-package-with-story-only-example-pages-over-shipping-finished-pages-or-keeping-all-templates-storybook-only.md), [ADR-0184](../adr/0184-a-story-only-template-page-is-a-folder-of-stories-and-a-story-kit-in-templates-with-demo-controls-and-no-playground-over-a-shipped-component-or-a-separate-pages-tree.md)) · **Category:** Data pages · **Finalized:** ✅ 2026-11-07 (declared by the owner after the `/review-template` pass below)
 
 Built 2026-11-07 as template #2 of the build order in `04-component-inventory.md`. A people directory in an `AppShell`: the count, the search and two filters in three columns, chips for the filters in force, sorting, paging, chosen rows with "select all across pages", bulk and row actions, a confirmed removal, and the states with nothing to show.
 
@@ -69,3 +69,13 @@ Built 2026-11-07 as template #2 of the build order in `04-component-inventory.md
   3. **The Docs import list** left out the components the page now uses (`Checkbox`, `CheckboxGroup`, `Drawer`, `Pagination`, `Select`).
 - **Review pass, checked and found right:** a real-key run of a row's menu and the confirmation (Enter, arrows, Tab to Remove, Enter; focus on the heading afterwards), the filter sheet handing focus back to its button, every announcement the Docs page claims (the count, the filters in force and the selection by `TableToolbar`, a sort by `DataTable`, a page by `Pagination`), landmarks and heading order (axe on every state), the four themes, forced colours, print, hydration and `StrictMode`. The small hit areas measured (a 20px checkbox, a 12px chip button) are the Finalized components' own, extended by their hit areas.
 - **Still not verified:** a real phone, Safari and Firefox, a screen reader and a real printer; a failing removal; a table of thousands of rows. Not Finalized: that is the maintainer's to declare.
+
+## First `/review-template` run (2026-11-07), fixed at explicit direction
+- **The "filtered" snippet said the count reads "12 of 137"**; the page passes only `count`, so it reads "6 results". The snippet comment now says so.
+- **The sidebar highlighted Home on a People page** (breadcrumb Home > People, with a Team item in the sidebar): the page now sets `sidebarCurrent="team"` (see [AppShell.md](AppShell.md)).
+- **The snippet typecheck is a script** (`pnpm check-snippets`, with this page's `DataTableListPage.snippetScope.txt`), where it had been a scratch file outside the repo; it fails on a wrong prop value and on a check that no longer bites.
+- **Left for the maintainer:** the blank space between a short table and its footer (the footer is kept at the bottom of the table's minimum height so it does not jump), and the Storybook bundle budget (23,488KB of 24,000KB; the maintainer then raised the total to 26,000KB).
+
+## Finalized (2026-11-07)
+Declared Finalized by the owner after the first `/review-template` pass and its fixes. Accepted as it stands: the blank space between a short table and its footer (the footer stays at the bottom of the table's minimum height so it does not jump). Still not verified: a real phone, Safari and Firefox, a screen reader, a real printer, a failing removal, and a table of thousands of rows. A later change to this page follows the Finalized rules of `06-engineering-standards.md` §9.
+
