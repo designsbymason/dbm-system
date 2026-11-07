@@ -105,3 +105,6 @@ The full `06` §9 pass on the current shell, after the additions of ADR-0180 to 
 **Persian demos name their language (2026-11-07):** the right-to-left demo (the Right-to-left story and the Playground with `dir` set to `rtl`) puts `lang="fa"` on the shell next to `dir="rtl"`, its two snippets and the Docs say to set both, and two real-browser checks guard it (`lang` and `dir` on the frame; a left-to-right demo sets no `lang`).
 
 **Right-to-left story removed (2026-11-07, at explicit direction):** the visible "Right to left" story, its snippet and its Docs section are gone, since a template needs no right-to-left story. The `dir` prop and its Playground control stay, and the hidden right-to-left checks (layout, aside, resize handle, phone panel, `lang` and `dir` together) still run. Docs-only, so by question 1 of the three-question test (`06-engineering-standards.md` §9) the shell stays Finalized.
+
+**Story kit: `DemoShell` takes `sidebarCurrent` (2026-11-07, at explicit direction):** an optional id for the sidebar item that starts as current (`"home"` by default), so a page that is not Home does not show Home highlighted (the Data Table List Page sets `"team"`). Additive and docs-only (no shipped code, no AppShell story changes), so by question 1 of the three-question test (`06-engineering-standards.md` §9) the shell stays Finalized.
+

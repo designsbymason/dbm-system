@@ -153,7 +153,7 @@ ${confirm}`;
 export const dataTableListPageSnippets = {
   default: page(everything),
 
-  filtered: `{/* Start with filters in force: they show as chips under the toolbar, the count says "12 of 137", and "Clear all" or a
+  filtered: `{/* Start with filters in force: they show as chips under the toolbar, the count says how many match ("6 results"), and "Clear all" or a
     chip's remove button takes them off and goes back to page 1 */}
 ${page(everything)}`,
 

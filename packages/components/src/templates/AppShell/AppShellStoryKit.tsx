@@ -227,6 +227,7 @@ export function DemoShell({
   banner,
   resizable = false,
   sidebarVariant,
+  sidebarCurrent,
   contentWrapper = false,
   stickyFooter = false,
   busy,
@@ -244,6 +245,8 @@ export function DemoShell({
   resizable?: boolean;
   /** The `Sidebar`'s `variant`, for a look that is not the default. */
   sidebarVariant?: SidebarProps["variant"];
+  /** The id of the sidebar item that starts as the current page (`"home"` by default): a page that is not Home sets its own, such as `"team"`. */
+  sidebarCurrent?: string;
   /** Puts the page in an `AppShell.Content`, kept to a readable width. */
   contentWrapper?: boolean;
   /** Makes the footer a bar of actions that stays at the bottom of the window while the page scrolls. */
@@ -287,7 +290,7 @@ export function DemoShell({
       </AppShell.Header>
       <AppShell.Sidebar resizable={resizable} labels={fa ? faLabels.sidebarSlot : undefined}>
         {/* The phone drawer is wider than the column on the page (`panelWidth`); it is capped at the window less a sliver of the page. */}
-        <DemoSidebar side={side} toggle panelWidth="20rem" variant={sidebarVariant} language={language} />
+        <DemoSidebar side={side} toggle panelWidth="20rem" variant={sidebarVariant} language={language} initial={sidebarCurrent} />
       </AppShell.Sidebar>
       <AppShell.Main busy={busy} labels={fa ? faLabels.main : undefined}>
         {state !== undefined ? (

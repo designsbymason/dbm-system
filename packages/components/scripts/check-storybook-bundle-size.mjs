@@ -48,7 +48,10 @@ const ASSETS_DIR = join(STATIC_DIR, "assets");
 // The total grew with every component's stories, Docs page and checks: 11.1MB at the first measurement (2026-08-12), 20.1MB with
 // `MultiSelect` (103 components built), which crossed the 20MB first set for it. Raised to 24MB to leave room for the components still to be built; revisit the
 // figure itself if growth continues.
-const TOTAL_BUDGET_KB = 24_000;
+// Raised from 24_000 on 2026-11-07, at 23_488KB used: the template pages are story code and Docs, so each one grows the build, and about
+// eighteen more are planned (`04-component-inventory.md`). About 10% headroom over the measured size; when a build comes within about 5% of it
+// again, revisit the number (what grew, is it justified) rather than raising it blindly.
+const TOTAL_BUDGET_KB = 26_000;
 const CHUNK_BUDGET_KB = 1_536; // ~1.5MB — current largest `assets/` chunk ~1.05MB
 
 /** Recursively lists every file under `dir` as absolute paths. */

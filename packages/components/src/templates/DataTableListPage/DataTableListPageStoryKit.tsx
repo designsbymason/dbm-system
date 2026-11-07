@@ -714,7 +714,7 @@ export function DataTableListPage({ framed = false, ...options }: DataTableListP
   const list = usePeopleList(options);
   return (
     <Toast.Provider>
-      <DemoShell framed={framed} pageKey="people" pageTitle={copy.title}>
+      <DemoShell framed={framed} sidebarCurrent="team" pageKey="people" pageTitle={copy.title}>
         <AppShell.Content size="xl">
           <PeopleListContent list={list} />
         </AppShell.Content>

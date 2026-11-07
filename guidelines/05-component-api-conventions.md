@@ -161,6 +161,7 @@ A template (a shell or a page, [ADR-0179](adr/0179-templates-ship-as-composable-
 - [ ] A row in `07-storybook-and-documentation-standards.md` §6 and a `component-reviews/{Name}.md`
 - [ ] Its status and build-order row in `04-component-inventory.md`
 - [ ] A line in `src/componentDescriptions.ts` (the Getting started table)
+- [ ] A page has a `{Name}.snippetScope.txt` beside its snippets, and `pnpm --filter @dbm-system/components check-snippets` passes (the snippets typecheck as real code, and a planted bad prop is reported)
 - [ ] A page carries `tags: ["example-page"]` on its stories and is not exported from `src/index.ts`; a shell is exported and has no tag
 - [ ] An ADR for a decision that constrains later templates
 - [ ] `pnpm check-storybook-bundle-size` run, and a budget change decided on, not drifted into

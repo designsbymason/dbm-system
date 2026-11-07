@@ -1,0 +1,35 @@
+// What the Data Table List Page's "Show code" snippets leave undefined (state, handlers, data) and import, so `pnpm check-snippets` can typecheck them as real code.
+// Plain text, not a module: the script writes it above each snippet in a throwaway file beside it. Declare only state and handlers; import every component and icon the
+// snippets use from the package, so a name that does not exist fails.
+import { AppShell, Button, ConfirmDialog, DataTable, Drawer, EmptyState, Heading, IconButton, Menu, Pagination, Select, SearchInput, Spacer, TableToolbar, Toast, Toolbar } from "../../index";
+import type { DataTableColumn, DataTableSort } from "../../index";
+import { DotsThreeIcon, FunnelSimpleIcon, MagnifyingGlassIcon, PencilSimpleIcon, PlusIcon, TrashIcon, UsersIcon, WarningCircleIcon } from "@dbm-system/icons";
+interface Person { id: string; name: string }
+declare const columns: DataTableColumn<Person>[];
+declare const rows: Person[];
+declare const sort: DataTableSort;
+declare const setSort: (next: DataTableSort) => void;
+declare const page: number;
+declare const setPage: (next: number) => void;
+declare const pageSize: number;
+declare const setPageSize: (next: number) => void;
+declare const matching: number;
+declare const loading: boolean;
+declare const selection: string[];
+declare const setSelection: (next: string[]) => void;
+declare const allSelected: boolean;
+declare const setAllSelected: (next: boolean) => void;
+declare const askToRemove: (target: string[] | "all") => void;
+declare const setQuery: (next: string) => void;
+declare const statuses: string[];
+declare const statusChoice: string;
+declare const setStatuses: (next: string[]) => void;
+declare const applied: { id: string; label: string; group?: string }[];
+declare const removeFilter: (id: string) => void;
+declare const clearFilters: () => void;
+declare const pending: string[] | "all" | null;
+declare const setPending: (next: null) => void;
+declare const remove: (target: string[] | "all" | null) => Promise<void>;
+declare const first: number;
+declare const last: number;
+declare const retry: () => void;

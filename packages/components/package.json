@@ -43,7 +43,8 @@
     "check-foundations-token-coverage": "node scripts/check-foundations-token-coverage.mjs",
     "check-guidelines": "node scripts/check-guidelines.mjs",
     "test:visual": "playwright test",
-    "test:visual:update": "playwright test --update-snapshots"
+    "test:visual:update": "playwright test --update-snapshots",
+    "check-snippets": "node scripts/check-snippets.mjs"
   },
   "peerDependencies": {
     "react": ">=18",
