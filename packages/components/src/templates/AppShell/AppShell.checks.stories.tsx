@@ -124,7 +124,7 @@ export const RightToLeftInteraction: Story = {
   play: async ({ canvasElement }) => {
     const { shell, main, header } = slots(canvasElement);
     await expect(getComputedStyle(shell).direction).toBe("rtl");
-    const nav = within(canvasElement).getByRole("navigation", { name: "Main" });
+    const nav = within(canvasElement).getByRole("navigation", { name: "پیمایش اصلی" });
     await expect(nav.getBoundingClientRect().left).toBeGreaterThanOrEqual(main.getBoundingClientRect().right - 1);
     await expect(Math.round(header.getBoundingClientRect().right)).toBe(Math.round(main.getBoundingClientRect().right));
   },
@@ -271,8 +271,7 @@ const px = (value: string) => Number.parseFloat(value);
 /** The main area of a shell that has no footer. */
 const mainOf = (canvasElement: HTMLElement) => within(canvasElement).getByRole("main");
 const rootRem = () => px(getComputedStyle(document.documentElement).fontSize);
-const asideOf = (canvasElement: HTMLElement) =>
-  within(canvasElement).getByRole("complementary", { name: "Order details" });
+const asideOf = (canvasElement: HTMLElement, name = "Order details") => within(canvasElement).getByRole("complementary", { name });
 
 /** The slot (a direct child of the shell) that holds an element: where the grid places it. */
 function slotOf(shell: HTMLElement, element: HTMLElement): HTMLElement {
@@ -396,8 +395,8 @@ export const AsideInRightToLeftInteraction: Story = {
   render: () => <DemoShell aside dir="rtl" />,
   play: async ({ canvasElement }) => {
     const { main } = slots(canvasElement);
-    const aside = asideOf(canvasElement);
-    const nav = within(canvasElement).getByRole("navigation", { name: "Main" });
+    const aside = asideOf(canvasElement, "جزئیات سفارش");
+    const nav = within(canvasElement).getByRole("navigation", { name: "پیمایش اصلی" });
     await expect(Math.abs(aside.getBoundingClientRect().left)).toBeLessThan(1);
     await expect(aside.getBoundingClientRect().right).toBeLessThanOrEqual(
       main.getBoundingClientRect().left + 1,
@@ -672,9 +671,9 @@ function tokenPx(name: string): number {
   return value.endsWith("rem") ? px(value) * rootRem() : px(value);
 }
 
-const sidebarColumn = (canvasElement: HTMLElement) => {
+const sidebarColumn = (canvasElement: HTMLElement, navigationName = "Main") => {
   const { shell } = slots(canvasElement);
-  return slotOf(shell, within(canvasElement).getByRole("navigation", { name: "Main" }));
+  return slotOf(shell, within(canvasElement).getByRole("navigation", { name: navigationName }));
 };
 
 export const RailBelowTheStep: Story = {
@@ -859,8 +858,8 @@ export const ResizeHandleInRightToLeftInteraction: Story = {
   render: () => <DemoShell resizable dir="rtl" />,
   play: async ({ canvasElement }) => {
     window.localStorage.clear();
-    const column = sidebarColumn(canvasElement);
-    const handle = within(canvasElement).getByRole("separator", { name: "Resize sidebar" });
+    const column = sidebarColumn(canvasElement, "پیمایش اصلی");
+    const handle = within(canvasElement).getByRole("separator", { name: "تغییر اندازه نوار کناری" });
     const start = Math.round(column.getBoundingClientRect().width);
     await expect(Math.abs(handle.getBoundingClientRect().left + handle.getBoundingClientRect().width / 2 - column.getBoundingClientRect().left)).toBeLessThan(2);
     // toward the content is to the left here
@@ -1051,9 +1050,9 @@ export const PhonePanelIsRightToLeftFromTheShellAlone: Story = {
   render: () => <DemoShell dir="rtl" />,
   play: async ({ canvasElement }) => {
     await expect(window.innerWidth).toBeLessThan(768);
-    await userEvent.click(within(canvasElement).getByRole("button", { name: "Menu" }));
+    await userEvent.click(within(canvasElement).getByRole("button", { name: "منو" }));
     const panel = await within(document.body).findByRole("dialog");
-    const link = await within(panel).findByRole("link", { name: "Home" });
+    const link = await within(panel).findByRole("link", { name: "خانه" });
     await waitFor(() => expect(link).toBeVisible());
     // The panel itself, and the scrolling body that holds the links (a ScrollArea inside the Drawer), both read right to left.
     await expect(getComputedStyle(panel).direction).toBe("rtl");
@@ -1309,5 +1308,40 @@ export const PhoneNavigationLandsFocusOnTheNewPage: Story = {
     await new Promise((resolve) => setTimeout(resolve, 400));
     await expect(within(canvasElement).getByRole("heading", { level: 1 })).toHaveTextContent("Reports");
     await expect(document.activeElement).toBe(main);
+  },
+};
+
+export const ResizeHandleTargetIsAtLeast24Wide: Story = {
+  name: "The resize handle can be grabbed within 11px of its centre either way (a 24px target), and a real press there starts a drag — layout test",
+  render: () => <DemoShell resizable />,
+  play: async ({ canvasElement }) => {
+    window.localStorage.clear();
+    const column = sidebarColumn(canvasElement);
+    const handle = within(canvasElement).getByRole("separator", { name: "Resize sidebar" });
+    const box = handle.getBoundingClientRect();
+    const centre = box.left + box.width / 2;
+    // The strip itself is narrow; what the pointer can grab is not. WCAG 2.5.8 asks for 24px, so every point up to 11px either side hits it
+    // (`getBoundingClientRect` does not see a pseudo-element, so this presses points with `elementFromPoint`). Beside the main area's body that is
+    // both sides; where the header and the footer overlap the main side they paint above the handle (the layer order, ADR-0182), so there it is the
+    // sidebar side, 12px.
+    const middle = box.top + box.height / 2;
+    for (const offset of [-11, -8, -4, 0, 4, 8, 11]) await expect(document.elementFromPoint(centre + offset, middle)).toBe(handle);
+    for (const y of [box.top + 40, box.bottom - 40]) {
+      for (const offset of [-11, -8, -4]) await expect(document.elementFromPoint(centre + offset, y)).toBe(handle);
+    }
+    // And it is not so wide that it takes presses meant for what is beside it.
+    for (const offset of [-14, 14]) await expect(document.elementFromPoint(centre + offset, box.top + box.height / 2)).not.toBe(handle);
+    // A real mouse press 10px off the centre, on the part of the target outside the strip, and a drag, resizes the column.
+    const before = column.getBoundingClientRect().width;
+    const frame = window.frameElement?.getBoundingClientRect();
+    const scale = frame ? frame.width / window.innerWidth : 1;
+    const x = (frame?.left ?? 0) + (centre + 10) * scale;
+    const y = (frame?.top ?? 0) + (box.top + box.height / 2) * scale;
+    await send("Input.dispatchMouseEvent", { type: "mouseMoved", x, y });
+    await send("Input.dispatchMouseEvent", { type: "mousePressed", x, y, button: "left", clickCount: 1 });
+    for (let step = 1; step <= 6; step += 1) await send("Input.dispatchMouseEvent", { type: "mouseMoved", x: x + (60 * scale * step) / 6, y, button: "left", buttons: 1 });
+    await send("Input.dispatchMouseEvent", { type: "mouseReleased", x: x + 60 * scale, y, button: "left", clickCount: 1 });
+    await waitFor(() => expect(column.getBoundingClientRect().width).toBeGreaterThan(before + 30));
+    window.localStorage.clear();
   },
 };

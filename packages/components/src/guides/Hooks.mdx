@@ -27,6 +27,8 @@ notice.
     ["useFormState, useFormController", "Hooks", "Read what a form is doing, or drive it, from a part of your own inside it"],
     ["useDataTable", "Hook", "Read and change a `DataTable`'s selection, sort, page and hidden columns"],
     ["useSidebar", "Hook", "Read and change a `Sidebar`'s collapsed and phone-panel state"],
+    ["useAppShell", "Hook", "Read and change an `AppShell`'s layout: the header's height, the rail, the sidebar's width, the aside's drawer"],
+    ["useDirection", "Hook", "The direction a part of your own should read: its own value, else the nearest `DirectionProvider`'s, else left to right"],
     ["useCommandPaletteController, useContextMenuController, useMenubarController, useImageViewerController", "Hooks", "Open and close the nearest palette, context menu, menubar or image viewer from a part inside it"],
     ["filterTree", "Function", "Narrow a `Tree`'s nodes to a search"],
     ["registerCodeLanguage", "Function", "Teach every `CodeBlock` a language"],
@@ -286,6 +288,38 @@ The state of the nearest `Sidebar` or `Sidebar.Provider`, for a part of your own
     ["menuOpen, setMenuOpen", "Whether the phone panel is open, and the function that opens or closes it."],
   ]}
 />
+
+## useAppShell
+
+The state of the nearest `AppShell`, for a part of your own (a bar that sticks below the header, a control that collapses the sidebar). It
+throws outside a shell. The full list is on the [`AppShell` page](/docs/templates-application-shells-appshell--docs).
+
+```tsx
+import { useAppShell } from "@dbm-system/components";
+
+function FilterBar() {
+  const { headerHeight, scrolled } = useAppShell();
+  return (
+    <div style={{ position: "sticky", top: headerHeight }} data-scrolled={scrolled || undefined}>
+      Filters
+    </div>
+  );
+}
+```
+
+## useDirection
+
+The direction a part of your own should read: the `dir` it was given, else the nearest `DirectionProvider`'s, else `"ltr"`. Every
+component that takes a `dir` uses it the same way.
+
+```tsx
+import { useDirection } from "@dbm-system/components";
+
+function Price({ dir, children }: { dir?: "ltr" | "rtl"; children: ReactNode }) {
+  const direction = useDirection(dir);
+  return <span dir={direction}>{children}</span>;
+}
+```
 
 ## Controller hooks
 

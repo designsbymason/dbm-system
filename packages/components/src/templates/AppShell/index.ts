@@ -24,7 +24,7 @@ export type {
   AppShellSidebarSide,
   AppShellSkipLinkLabels,
   AppShellSkipLinkProps,
-  AppShellState,
   AppShellStateKind,
   AppShellStateProps,
+  UseAppShellResult,
 } from "./AppShell.types";

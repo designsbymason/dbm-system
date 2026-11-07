@@ -82,8 +82,8 @@ export interface AppShellSkipLinkLabels {
   skipToContent: string;
 }
 
-/** What `useAppShell()` returns: how the shell is set up and the state the app may want to read or change. */
-export interface AppShellState {
+/** What `useAppShell()` returns: how the shell is set up and the state the app may want to read or change. (Not the `AppShell.State` part, which is `AppShellStateProps`.) */
+export interface UseAppShellResult {
   /** What scrolls: `content` (only the main area) or `page`. */
   scroll: AppShellScroll;
   /**
@@ -221,8 +221,8 @@ export interface AppShellProps
   /**
    * The reading direction of everything inside. The shell sets it on its own element (so logical CSS follows it) and provides it to everything
    * inside through a `DirectionProvider`, so a `Sidebar`, a `Navbar` and the parts they hold follow it without a `dir` of their own. Left out, it
-   * is the nearest `DirectionProvider`'s direction, else left to right. Components outside the shell's slots, or ones that do not read the
-   * provider yet, still take their own `dir`.
+   * is the nearest `DirectionProvider`'s direction, else left to right. Every component that takes a `dir` reads the provider, so one
+   * outside the shell's slots (in a portal of your own, say) is the only kind that still needs a `dir` of its own.
    * @default 'ltr'
    */
   dir?: AppShellDirection;

@@ -22,7 +22,10 @@ import type { AppShellProps } from "./AppShell.types";
 
 // Storybook-only: the page every AppShell story fills the slots with. Built from the library's own components, no hardcoded values.
 
-const rows = [
+/** The language of a demo's words: every right-to-left story uses Persian, so a right-to-left demo is read, and not only mirrored. */
+type Language = "en" | "fa";
+
+const rowsEn = [
   ["INV-1042", "Northwind Traders", "Paid", "$2,400.00"],
   ["INV-1043", "Globex Corporation", "Pending", "$1,180.50"],
   ["INV-1044", "Initech", "Paid", "$960.00"],
@@ -37,62 +40,158 @@ const rows = [
   ["INV-1053", "Massive Dynamic", "Paid", "$2,075.00"],
 ];
 
+const rowsFa = [
+  ["INV-1042", "شرکت نوین‌تجارت", "پرداخت‌شده", "۲٬۴۰۰٫۰۰ دلار"],
+  ["INV-1043", "گروه صنعتی آرمان", "در انتظار", "۱٬۱۸۰٫۵۰ دلار"],
+  ["INV-1044", "فناوری پارسیان", "پرداخت‌شده", "۹۶۰٫۰۰ دلار"],
+  ["INV-1045", "مجتمع البرز", "معوق", "۳٬۷۲۵٫۲۵ دلار"],
+  ["INV-1046", "صنایع فولاد سپهر", "پرداخت‌شده", "۱۲٬۰۰۰٫۰۰ دلار"],
+  ["INV-1047", "سرمایه‌گذاری دماوند", "در انتظار", "۴٬۳۱۰٫۰۰ دلار"],
+  ["INV-1048", "نرم‌افزار آریا", "پرداخت‌شده", "۷۸۰٫۰۰ دلار"],
+  ["INV-1049", "شرکت پویش داده", "پرداخت‌شده", "۱٬۹۵۰٫۰۰ دلار"],
+  ["INV-1050", "بازرگانی خلیج فارس", "معوق", "۶۱۵٫۷۵ دلار"],
+  ["INV-1051", "آزمایشگاه نوآوران", "در انتظار", "۵٬۲۰۰٫۰۰ دلار"],
+  ["INV-1052", "سامانه‌های هوشمند تهران", "پرداخت‌شده", "۸٬۶۴۰٫۰۰ دلار"],
+  ["INV-1053", "پویایی بزرگ", "پرداخت‌شده", "۲٬۰۷۵٫۰۰ دلار"],
+];
+
+/** Every word the demo shells draw, by language. The brand ("dbM Cloud") is a name and stays as it is. */
+export const demoCopy = {
+  en: {
+    home: "Home",
+    billing: "Billing",
+    intro: "Invoices and usage for the current period.",
+    seats: "Active seats",
+    seatsValue: "248",
+    open: "Open invoices",
+    openValue: "14",
+    balance: "Balance due",
+    balanceValue: "$9,851.50",
+    recent: "Recent invoices",
+    invoice: "Invoice",
+    customer: "Customer",
+    status: "Status",
+    amount: "Amount",
+    rows: rowsEn,
+    orderTitle: "Order #1042",
+    paid: "Paid",
+    orderCustomer: "Northwind Traders",
+    orderText: "Two seats of the Team plan, billed monthly, renewing on the 1st.",
+    updated: "Last updated by John Doe",
+    orderDetails: "Order details",
+    banner: "Scheduled maintenance tonight at 22:00 UTC. Saving may be unavailable for a few minutes.",
+    footer: "© dbM Cloud",
+    cancel: "Cancel",
+    save: "Save changes",
+    errorTitle: "We couldn't load this page",
+    errorText: "Something went wrong on our side. Your changes are safe. Try again in a moment.",
+    errorAction: "Try again",
+    emptyTitle: "No invoices yet",
+    emptyText: "Invoices appear here once a customer is billed. Create the first one to get started.",
+    emptyAction: "Create an invoice",
+  },
+  fa: {
+    home: "خانه",
+    billing: "صورتحساب",
+    intro: "صورتحساب‌ها و میزان مصرف دوره جاری.",
+    seats: "صندلی‌های فعال",
+    seatsValue: "۲۴۸",
+    open: "صورتحساب‌های باز",
+    openValue: "۱۴",
+    balance: "مانده بدهی",
+    balanceValue: "۹٬۸۵۱٫۵۰ دلار",
+    recent: "صورتحساب‌های اخیر",
+    invoice: "شماره",
+    customer: "مشتری",
+    status: "وضعیت",
+    amount: "مبلغ",
+    rows: rowsFa,
+    orderTitle: "سفارش ۱۰۴۲",
+    paid: "پرداخت‌شده",
+    orderCustomer: "شرکت نوین‌تجارت",
+    orderText: "دو صندلی از طرح تیم، ماهانه صورتحساب می‌شود و در روز اول ماه تمدید می‌گردد.",
+    updated: "آخرین به‌روزرسانی: علی رضایی",
+    orderDetails: "جزئیات سفارش",
+    banner: "نگهداری برنامه‌ریزی‌شده امشب ساعت ۲۲:۰۰ به وقت جهانی. ذخیره‌سازی ممکن است چند دقیقه در دسترس نباشد.",
+    footer: "© dbM Cloud",
+    cancel: "انصراف",
+    save: "ذخیره تغییرات",
+    errorTitle: "بارگذاری این صفحه ممکن نشد",
+    errorText: "مشکلی از سمت ما پیش آمد. تغییرات شما محفوظ است. لطفاً کمی بعد دوباره تلاش کنید.",
+    errorAction: "تلاش دوباره",
+    emptyTitle: "هنوز صورتحسابی نیست",
+    emptyText: "با صدور اولین صورتحساب برای یک مشتری، فهرست آن‌ها اینجا نمایش داده می‌شود. برای شروع، اولین صورتحساب را بسازید.",
+    emptyAction: "ایجاد صورتحساب",
+  },
+} as const;
+
+/** The labels the parts supply themselves, in Persian, for a right-to-left demo (English is each part's own default). */
+const faLabels = {
+  shell: { navigation: "پیمایش اصلی", collapse: "جمع کردن نوار کناری", expand: "باز کردن نوار کناری", menu: "منو", close: "بستن", loading: "در حال بارگذاری", externalLink: "پیوند خارجی" },
+  navbar: { menu: "منو", navigation: "پیمایش اصلی", close: "بستن", skipLink: "رفتن به محتوا", externalLink: "پیوند خارجی" },
+  sidebarSlot: { resize: "تغییر اندازه نوار کناری" },
+  main: { loading: "در حال بارگذاری" },
+  aside: { title: "جزئیات", close: "بستن" },
+  asideToggle: { open: "نمایش جزئیات" },
+} as const;
+
 /** The page a demo shell shows in its main area: a breadcrumb, a heading, three statistics and a table wide enough to scroll on a phone. */
-export function DemoPage({ padded = true }: { padded?: boolean }) {
+export function DemoPage({ padded = true, language = "en" }: { padded?: boolean; language?: Language }) {
+  const copy = demoCopy[language];
   return (
     <div style={{ display: "grid", gap: "var(--dbm-space-6)", padding: padded ? "var(--dbm-space-6)" : undefined }}>
       <Breadcrumb>
         <Breadcrumb.Item>
           <Breadcrumb.Link href="#" onClick={preventNavigation}>
-            Home
+            {copy.home}
           </Breadcrumb.Link>
         </Breadcrumb.Item>
         <Breadcrumb.Item>
-          <Breadcrumb.Page>Billing</Breadcrumb.Page>
+          <Breadcrumb.Page>{copy.billing}</Breadcrumb.Page>
         </Breadcrumb.Item>
       </Breadcrumb>
       <div style={{ display: "grid", gap: "var(--dbm-space-1)" }}>
         <Heading level={1} size="2xl">
-          Billing
+          {copy.billing}
         </Heading>
-        <Text color="secondary">Invoices and usage for the current period.</Text>
+        <Text color="secondary">{copy.intro}</Text>
       </div>
       {/* `minChildWidth` fits as many columns as the main area has room for (the sidebar takes some of the window), where `columns` follows the window; the minimum is wide enough for the longest value. */}
       <Grid minChildWidth="20rem" gap={4}>
         <Stat variant="outlined" tone="brand">
           <Stat.Icon icon={UsersIcon} />
-          <Stat.Label>Active seats</Stat.Label>
-          <Stat.Value>248</Stat.Value>
+          <Stat.Label>{copy.seats}</Stat.Label>
+          <Stat.Value>{copy.seatsValue}</Stat.Value>
         </Stat>
         <Stat variant="outlined" tone="brand">
           <Stat.Icon icon={ListIcon} />
-          <Stat.Label>Open invoices</Stat.Label>
-          <Stat.Value>14</Stat.Value>
+          <Stat.Label>{copy.open}</Stat.Label>
+          <Stat.Value>{copy.openValue}</Stat.Value>
         </Stat>
         <Stat variant="outlined" tone="brand">
           <Stat.Icon icon={WalletIcon} />
-          <Stat.Label>Balance due</Stat.Label>
-          <Stat.Value>$9,851.50</Stat.Value>
+          <Stat.Label>{copy.balance}</Stat.Label>
+          <Stat.Value>{copy.balanceValue}</Stat.Value>
         </Stat>
       </Grid>
       <Card variant="outlined">
         <Card.Header>
           <Heading level={2} size="lg">
-            Recent invoices
+            {copy.recent}
           </Heading>
         </Card.Header>
         <Card.Body>
-          <Table aria-label="Recent invoices" tone="brand" striped style={{ minInlineSize: "40rem" }}>
+          <Table aria-label={copy.recent} tone="brand" striped style={{ minInlineSize: "40rem" }}>
             <Table.Header>
               <Table.Row>
-                <Table.HeaderCell>Invoice</Table.HeaderCell>
-                <Table.HeaderCell>Customer</Table.HeaderCell>
-                <Table.HeaderCell>Status</Table.HeaderCell>
-                <Table.HeaderCell numeric>Amount</Table.HeaderCell>
+                <Table.HeaderCell>{copy.invoice}</Table.HeaderCell>
+                <Table.HeaderCell>{copy.customer}</Table.HeaderCell>
+                <Table.HeaderCell>{copy.status}</Table.HeaderCell>
+                <Table.HeaderCell numeric>{copy.amount}</Table.HeaderCell>
               </Table.Row>
             </Table.Header>
             <Table.Body>
-              {rows.map(([id, customer, status, amount]) => (
+              {copy.rows.map(([id, customer, status, amount]) => (
                 <Table.Row key={id}>
                   <Table.HeaderCell scope="row">{id}</Table.HeaderCell>
                   <Table.Cell>{customer}</Table.Cell>
@@ -155,17 +254,21 @@ export function DemoShell({
   state?: "empty" | "error";
 }) {
   const side = props.sidebarSide ?? "start";
+  // A right-to-left demo is in Persian (and its parts' own words too), so it is read and not only mirrored.
+  const language: Language = props.dir === "rtl" ? "fa" : "en";
+  const copy = demoCopy[language];
+  const fa = language === "fa";
   const shell = (
-    <AppShell {...props} style={framed ? framedStyle(props.scroll) : undefined}>
+    <AppShell {...props} labels={fa ? { ...faLabels.shell, ...props.labels } : props.labels} style={framed ? framedStyle(props.scroll) : undefined}>
       {banner && (
         <AppShell.Banner sticky={banner === "sticky"}>
           <Alert tone="info">
-            <Alert.Description>Scheduled maintenance tonight at 22:00 UTC. Saving may be unavailable for a few minutes.</Alert.Description>
+            <Alert.Description>{copy.banner}</Alert.Description>
           </Alert>
         </AppShell.Banner>
       )}
       <AppShell.Header>
-        <Navbar>
+        <Navbar labels={fa ? faLabels.navbar : undefined}>
           {/* In an app a router handles the link; here the click moves focus to the main area itself and keeps the preview's address unchanged. */}
           <Navbar.SkipLink
             onClick={(event) => {
@@ -177,53 +280,49 @@ export function DemoShell({
             dbM Cloud
           </Navbar.Brand>
           <Navbar.Actions>
-            {aside && <AppShell.AsideToggle />}
+            {aside && <AppShell.AsideToggle labels={fa ? faLabels.asideToggle : undefined} />}
             <Sidebar.MenuButton />
           </Navbar.Actions>
         </Navbar>
       </AppShell.Header>
-      <AppShell.Sidebar resizable={resizable}>
+      <AppShell.Sidebar resizable={resizable} labels={fa ? faLabels.sidebarSlot : undefined}>
         {/* The phone drawer is wider than the column on the page (`panelWidth`); it is capped at the window less a sliver of the page. */}
-        <DemoSidebar side={side} toggle panelWidth="20rem" variant={sidebarVariant} />
+        <DemoSidebar side={side} toggle panelWidth="20rem" variant={sidebarVariant} language={language} />
       </AppShell.Sidebar>
-      <AppShell.Main busy={busy}>
+      <AppShell.Main busy={busy} labels={fa ? faLabels.main : undefined}>
         {state !== undefined ? (
           <AppShell.State
             kind={state}
-            title={state === "error" ? "We couldn't load this page" : "No invoices yet"}
-            description={
-              state === "error"
-                ? "Something went wrong on our side. Your changes are safe. Try again in a moment."
-                : "Invoices appear here once a customer is billed. Create the first one to get started."
-            }
-            actions={state === "error" ? <Button>Try again</Button> : <Button>Create an invoice</Button>}
+            title={state === "error" ? copy.errorTitle : copy.emptyTitle}
+            description={state === "error" ? copy.errorText : copy.emptyText}
+            actions={state === "error" ? <Button>{copy.errorAction}</Button> : <Button>{copy.emptyAction}</Button>}
           />
         ) : (
           (children ??
             (contentWrapper ? (
             <AppShell.Content size="xl">
-              <DemoPage padded={false} />
+              <DemoPage padded={false} language={language} />
             </AppShell.Content>
           ) : (
-            <DemoPage />
+            <DemoPage language={language} />
           )))
         )}
       </AppShell.Main>
       {aside && (
-        <AppShell.Aside aria-label="Order details">
-          <DemoAside />
+        <AppShell.Aside aria-label={copy.orderDetails} labels={fa ? faLabels.aside : undefined}>
+          <DemoAside language={language} />
         </AppShell.Aside>
       )}
       <AppShell.Footer sticky={stickyFooter}>
         {stickyFooter ? (
           <div style={{ display: "flex", justifyContent: "flex-end", gap: "var(--dbm-space-3)", padding: "var(--dbm-space-3) var(--dbm-space-6)" }}>
-            <Button variant="secondary">Cancel</Button>
-            <Button>Save changes</Button>
+            <Button variant="secondary">{copy.cancel}</Button>
+            <Button>{copy.save}</Button>
           </div>
         ) : (
           <div style={{ padding: "var(--dbm-space-3) var(--dbm-space-6)" }}>
             <Text size="sm" color="secondary">
-              © dbM Cloud
+              {copy.footer}
             </Text>
           </div>
         )}
@@ -246,19 +345,20 @@ export function DemoShell({
 }
 
 /** What an `AppShell.Aside` holds in the demos: a small detail pane. */
-export function DemoAside() {
+export function DemoAside({ language = "en" }: { language?: Language }) {
+  const copy = demoCopy[language];
   return (
     <div style={{ display: "grid", gap: "var(--dbm-space-3)", padding: "var(--dbm-space-6)" }}>
       <Heading level={2} size="lg">
-        Order #1042
+        {copy.orderTitle}
       </Heading>
       <div>
-        <Badge tone="success">Paid</Badge>
+        <Badge tone="success">{copy.paid}</Badge>
       </div>
-      <Text color="secondary">Northwind Traders</Text>
-      <Text>Two seats of the Team plan, billed monthly, renewing on the 1st.</Text>
+      <Text color="secondary">{copy.orderCustomer}</Text>
+      <Text>{copy.orderText}</Text>
       <Text size="sm" color="secondary">
-        Last updated by John Doe
+        {copy.updated}
       </Text>
     </div>
   );

@@ -27,6 +27,7 @@ const meta: Meta<typeof AppShell.Aside> = {
     labels: {
       control: false,
       description: "Text the aside's drawer supplies itself, such as its title and its close button's name. Merged over the English defaults.",
+      table: { defaultValue: { summary: "{ title: 'Details', close: 'Close' }" } },
     },
     drawerContainer: {
       control: false,

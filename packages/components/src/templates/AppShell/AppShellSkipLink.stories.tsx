@@ -13,7 +13,11 @@ const meta: Meta<typeof AppShell.SkipLink> = {
       description: "Where the link goes: the id of the element to skip to, which is AppShell.Main's by default.",
       table: { defaultValue: { summary: "'#main'" } },
     },
-    labels: { control: false, description: "Text the link supplies itself, namely its words when it has no children. Merged over the English defaults." },
+    labels: {
+      control: false,
+      description: "Text the link supplies itself, namely its words when it has no children. Merged over the English defaults.",
+      table: { defaultValue: { summary: "{ skipToContent: 'Skip to content' }" } },
+    },
     id: { control: false, description: "Standard DOM id." },
     className: { control: false, description: "Additional CSS classes for customization." },
     style: { control: false, description: "Inline styles, merged onto the component's own internal styles." },

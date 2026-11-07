@@ -292,6 +292,16 @@
   transition: none;
 }
 
+/* The strip is only `space.2` wide, so the target the pointer can grab is widened by an invisible, centred pseudo-element of `space.6` (24px, WCAG
+   2.5.8): `elementFromPoint` finds the handle anywhere in it, though `getBoundingClientRect` does not see it. */
+.resizeHandle::before {
+  content: "";
+  position: absolute;
+  inset-block: 0;
+  inset-inline-start: calc(50% - var(--dbm-space-6) / 2);
+  inline-size: var(--dbm-space-6);
+}
+
 .resizeHandle::after {
   content: "";
   position: absolute;

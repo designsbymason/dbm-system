@@ -5,11 +5,11 @@ import type {
   AppShellAsideCollapseTo,
   AppShellDirection,
   AppShellSidebarSide,
-  AppShellState,
+  UseAppShellResult,
 } from "./AppShell.types";
 
 /** What the shell tells its slots, beyond what `useAppShell()` returns to an app. */
-export interface AppShellContextValue extends AppShellState {
+export interface AppShellContextValue extends UseAppShellResult {
   /** Called by `AppShell.Header` with its height in pixels (and with `0` when it unmounts), so the shell can keep it in view. */
   setHeaderHeight: (height: number) => void;
   /** Called by `AppShell.Banner` (and `AppShell.Footer`, when sticky) with its height, as the header does. */
@@ -71,7 +71,7 @@ export function useAppShellContext(): AppShellContextValue {
  * const { headerHeight, setAsideOpen } = useAppShell();
  * ```
  */
-export function useAppShell(): AppShellState {
+export function useAppShell(): UseAppShellResult {
   const { inShell, scroll, headerHeight, bannerHeight, footerHeight, collapsed, setCollapsed, sidebarWidth, setSidebarWidth, scrolled, moreBelow, asideOpen, setAsideOpen } =
     useContext(AppShellContext);
   if (!inShell) throw new Error("useAppShell must be used inside an AppShell.");

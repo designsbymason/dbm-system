@@ -20,7 +20,11 @@ const meta: Meta<typeof AppShell.AsideToggle> = {
     },
     size: { control: false, description: "The button's size, on the same scale as IconButton.", table: { defaultValue: { summary: "'md'" } } },
     "aria-label": { control: false, description: "The button's accessible name. Defaults to labels.open (Show details)." },
-    labels: { control: false, description: "Text the button supplies itself, namely its accessible name. Merged over the English defaults." },
+    labels: {
+      control: false,
+      description: "Text the button supplies itself, namely its accessible name. Merged over the English defaults.",
+      table: { defaultValue: { summary: "{ open: 'Show details' }" } },
+    },
     id: { control: false, description: "Standard DOM id." },
     className: { control: false, description: "Additional CSS classes for customization." },
     style: { control: false, description: "Inline styles, merged onto the component's own internal styles." },

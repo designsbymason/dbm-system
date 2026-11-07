@@ -23,7 +23,11 @@ const meta: Meta<typeof AppShell.Sidebar> = {
       description: "The most width a resize reaches: a number of pixels or a CSS length in rem or px.",
       table: { defaultValue: { summary: "'28rem'" } },
     },
-    labels: { control: false, description: "Text the resize handle supplies itself, namely its accessible name. Merged over the English defaults." },
+    labels: {
+      control: false,
+      description: "Text the resize handle supplies itself, namely its accessible name. Merged over the English defaults.",
+      table: { defaultValue: { summary: "{ resize: 'Resize sidebar' }" } },
+    },
     children: { control: false, description: "The `Sidebar`. The column is as wide as the sidebar and is absent from the page while the sidebar is in its phone panel." },
     id: { control: false, description: "Standard DOM id." },
     className: { control: false, description: "Additional CSS classes for customization." },

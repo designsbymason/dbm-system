@@ -23,6 +23,7 @@ const meta: Meta<PlaygroundArgs> = {
       control: "radio",
       options: ["content", "page"],
       description: "What scrolls: only the main area while the sidebar and header stay put, or the page as a whole.",
+      table: { defaultValue: { summary: "'content'" } },
     },
     headerSpan: {
       control: "radio",
@@ -91,11 +92,14 @@ const meta: Meta<PlaygroundArgs> = {
       control: "radio",
       options: ["start", "end"],
       description: "Which edge of the page the sidebar column sits against. Set the sidebar's own side to match.",
+      table: { defaultValue: { summary: "'start'" } },
     },
     dir: {
       control: "radio",
       options: ["ltr", "rtl"],
-      description: "The reading direction of everything inside. Not read from the page; components with their own dir prop still need it passed.",
+      description:
+        "The reading direction of everything inside. The shell sets it on its own element and provides it to the Sidebar, Navbar and everything inside, so none needs a dir of its own. Left out, the nearest DirectionProvider's, else left-to-right; not read from the page.",
+      table: { defaultValue: { summary: "the provider's, else 'ltr'" } },
     },
     collapseBelow: {
       control: "select",
@@ -117,7 +121,11 @@ const meta: Meta<PlaygroundArgs> = {
       table: { defaultValue: { summary: "false" } },
     },
     onMenuOpenChange: { control: false, description: "Called when the phone panel opens or closes, with what caused it." },
-    labels: { control: false, description: "Text the sidebar and its menu button supply themselves, merged over the English defaults. The shell has no text of its own." },
+    labels: {
+      control: false,
+      description: "Text the sidebar and its menu button supply themselves, merged over the English defaults. The shell has no text of its own.",
+      table: { defaultValue: { summary: "the Sidebar's English labels" } },
+    },
     className: { control: false, description: "Additional CSS classes, on the shell's root." },
     style: { control: false, description: "Inline styles, merged onto the component's own internal styles." },
     id: { control: false, description: "Standard DOM id, on the shell's root." },

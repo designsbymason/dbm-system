@@ -68,6 +68,48 @@ export function useDemoCurrent(initial: string) {
   };
 }
 
+/** The words a demo sidebar draws, in English and in Persian (every right-to-left story uses Persian). */
+export const demoSidebarCopy = {
+  en: {
+    home: "Home",
+    inbox: "Inbox",
+    unread: "12",
+    projects: "Projects",
+    active: "Active",
+    archived: "Archived",
+    reports: "Reports",
+    sales: "Sales",
+    regional: "Regional",
+    emea: "EMEA",
+    apac: "APAC",
+    team: "Team",
+    settings: "Settings",
+    docs: "Documentation",
+    workspace: "Workspace",
+    admin: "Admin",
+    account: "John Doe",
+  },
+  fa: {
+    home: "خانه",
+    inbox: "صندوق ورودی",
+    unread: "۱۲",
+    projects: "پروژه‌ها",
+    active: "فعال",
+    archived: "بایگانی‌شده",
+    reports: "گزارش‌ها",
+    sales: "فروش",
+    regional: "منطقه‌ای",
+    emea: "اروپا و خاورمیانه",
+    apac: "آسیا و اقیانوسیه",
+    team: "تیم",
+    settings: "تنظیمات",
+    docs: "مستندات",
+    workspace: "فضای کار",
+    admin: "مدیریت",
+    account: "علی رضایی",
+  },
+} as const;
+
 /** The brand a demo header draws: smaller in the rail, where there is room for the mark only. */
 export function DemoBrand() {
   const { collapsed } = useSidebar();
@@ -80,12 +122,12 @@ export function DemoBrand() {
 }
 
 /** The account a demo footer draws: the avatar alone in the rail. */
-export function DemoAccount() {
+export function DemoAccount({ name = "John Doe" }: { name?: string }) {
   const { collapsed } = useSidebar();
   return (
     <span style={{ display: "inline-flex", alignItems: "center", gap: "var(--dbm-space-2)", minInlineSize: 0 }}>
-      <Avatar name="John Doe" size="sm" />
-      {!collapsed && <span style={{ whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>John Doe</span>}
+      <Avatar name={name} size="sm" />
+      {!collapsed && <span style={{ whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{name}</span>}
     </span>
   );
 }
@@ -101,6 +143,7 @@ export function DemoSidebar({
   header = true,
   sections = true,
   navLabel,
+  language = "en",
   ...props
 }: SidebarProps & {
   /** The id of the item that starts as the current page. */
@@ -115,39 +158,42 @@ export function DemoSidebar({
   sections?: boolean;
   /** The navigation's name. */
   navLabel?: string;
+  /** The language of the words in the sidebar: English, or Persian for a right-to-left story. */
+  language?: "en" | "fa";
 }) {
   const demo = useDemoCurrent(initial);
+  const copy = demoSidebarCopy[language];
   const workspace = (
     <>
       <Sidebar.Item icon={HouseIcon} {...demo.item("home")}>
-        Home
+        {copy.home}
       </Sidebar.Item>
-      <Sidebar.Item icon={TrayIcon} badge="12" {...demo.item("inbox")}>
-        Inbox
+      <Sidebar.Item icon={TrayIcon} badge={copy.unread} {...demo.item("inbox")}>
+        {copy.inbox}
       </Sidebar.Item>
-      <Sidebar.Group label="Projects" icon={FolderSimpleIcon} current={demo.holds("active", "archived")}>
-        <Sidebar.Item {...demo.item("active")}>Active</Sidebar.Item>
-        <Sidebar.Item {...demo.item("archived")}>Archived</Sidebar.Item>
+      <Sidebar.Group label={copy.projects} icon={FolderSimpleIcon} current={demo.holds("active", "archived")}>
+        <Sidebar.Item {...demo.item("active")}>{copy.active}</Sidebar.Item>
+        <Sidebar.Item {...demo.item("archived")}>{copy.archived}</Sidebar.Item>
       </Sidebar.Group>
-      <Sidebar.Group label="Reports" icon={ChartBarIcon} current={demo.holds("sales", "emea", "apac")}>
-        <Sidebar.Item {...demo.item("sales")}>Sales</Sidebar.Item>
-        <Sidebar.Group label="Regional" current={demo.holds("emea", "apac")}>
-          <Sidebar.Item {...demo.item("emea")}>EMEA</Sidebar.Item>
-          <Sidebar.Item {...demo.item("apac")}>APAC</Sidebar.Item>
+      <Sidebar.Group label={copy.reports} icon={ChartBarIcon} current={demo.holds("sales", "emea", "apac")}>
+        <Sidebar.Item {...demo.item("sales")}>{copy.sales}</Sidebar.Item>
+        <Sidebar.Group label={copy.regional} current={demo.holds("emea", "apac")}>
+          <Sidebar.Item {...demo.item("emea")}>{copy.emea}</Sidebar.Item>
+          <Sidebar.Item {...demo.item("apac")}>{copy.apac}</Sidebar.Item>
         </Sidebar.Group>
       </Sidebar.Group>
       <Sidebar.Item icon={UsersIcon} {...demo.item("team")}>
-        Team
+        {copy.team}
       </Sidebar.Item>
     </>
   );
   const settings = (
     <>
       <Sidebar.Item icon={GearIcon} {...demo.item("settings")}>
-        Settings
+        {copy.settings}
       </Sidebar.Item>
       <Sidebar.Item icon={BookOpenIcon} href="https://example.com/docs" onClick={(event) => event.preventDefault()}>
-        Documentation
+        {copy.docs}
       </Sidebar.Item>
     </>
   );
@@ -162,8 +208,8 @@ export function DemoSidebar({
         <Sidebar.Nav aria-label={navLabel}>
           {sections ? (
             <>
-              <Sidebar.Section label="Workspace">{workspace}</Sidebar.Section>
-              <Sidebar.Section label="Admin">{settings}</Sidebar.Section>
+              <Sidebar.Section label={copy.workspace}>{workspace}</Sidebar.Section>
+              <Sidebar.Section label={copy.admin}>{settings}</Sidebar.Section>
             </>
           ) : (
             <>
@@ -176,7 +222,7 @@ export function DemoSidebar({
       </Sidebar.Content>
       {footer && (
         <Sidebar.Footer style={{ justifyContent: "space-between" }}>
-          <DemoAccount />
+          <DemoAccount name={copy.account} />
           {toggle && <Sidebar.Toggle />}
         </Sidebar.Footer>
       )}

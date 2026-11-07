@@ -6,15 +6,28 @@
 
 import type { AppShellDirection, AppShellHeaderSpan, AppShellScroll, AppShellSidebarSide } from "./AppShell.types";
 
-const sidebar = (attributes = "") => `  <AppShell.Sidebar>
+// What the snippets' shell says, in English and in Persian (a right-to-left snippet is in Persian, as its story is).
+const words = {
+  en: { home: "Home", billing: "Billing" },
+  fa: { home: "خانه", billing: "صورتحساب" },
+};
+
+const sidebar = (attributes = "", { toggle = false, language = "en" as "en" | "fa" } = {}) => `  <AppShell.Sidebar>
     <Sidebar${attributes ? ` ${attributes}` : ""}>
       <Sidebar.Header>dbM Cloud</Sidebar.Header>
       <Sidebar.Content>
         <Sidebar.Nav>
-          <Sidebar.Item href="/" current>Home</Sidebar.Item>
-          <Sidebar.Item href="/billing">Billing</Sidebar.Item>
+          <Sidebar.Item href="/" current>${words[language].home}</Sidebar.Item>
+          <Sidebar.Item href="/billing">${words[language].billing}</Sidebar.Item>
         </Sidebar.Nav>
-      </Sidebar.Content>
+      </Sidebar.Content>${
+        toggle
+          ? `
+      <Sidebar.Footer>
+        <Sidebar.Toggle />
+      </Sidebar.Footer>`
+          : ""
+      }
     </Sidebar>
   </AppShell.Sidebar>`;
 
@@ -28,9 +41,10 @@ const header = `  <AppShell.Header>
     </Navbar>
   </AppShell.Header>`;
 
-const main = `  <AppShell.Main>
-    <h1>Billing</h1>
+const mainIn = (language: "en" | "fa" = "en") => `  <AppShell.Main>
+    <h1>${words[language].billing}</h1>
   </AppShell.Main>`;
+const main = mainIn();
 
 const shell = (attributes: string, parts: string[]) =>
   `<AppShell${attributes ? ` ${attributes}` : ""}>\n${parts.join("\n")}\n</AppShell>`;
@@ -38,7 +52,7 @@ const shell = (attributes: string, parts: string[]) =>
 export const appShellSnippets = {
   rail: `{/* defaultCollapsed starts the sidebar as a rail of icons; the collapse button (Sidebar.Toggle) or the controlled
     collapsed prop changes it, and the main area takes the room */}
-${shell("defaultCollapsed", [header, sidebar(), main])}`,
+${shell("defaultCollapsed", [header, sidebar("", { toggle: true }), main])}`,
 
   endSidebar: `{/* sidebarSide moves the column to the end edge; set the sidebar's own side to match, so its line and its phone panel
     are on the same edge */}
@@ -47,8 +61,9 @@ ${shell('sidebarSide="end"', [header, sidebar('side="end"'), main])}`,
   pageScroll: `{/* scroll="page": the page scrolls as a whole, and the shell keeps the header and the sidebar in view */}
 ${shell('scroll="page"', [header, sidebar(), main])}`,
 
-  aside: `{/* AppShell.Aside is a complementary column at the end edge. Below asideCollapseBelow ("lg" = 1024px) it leaves the page and its
-    children open in a Drawer from AppShell.AsideToggle, which sits outside it (here in the Navbar). */}
+  aside: `{/* AppShell.Aside is a complementary column at the end edge, as wide as the app-shell.aside-width token unless you give it a width. Below
+    asideCollapseBelow ("lg" = 1024px) it leaves the page and its children open in a Drawer from AppShell.AsideToggle, which sits outside it
+    (here in the Navbar). */}
 <AppShell>
   <AppShell.Header>
     <Navbar>
@@ -63,14 +78,14 @@ ${shell('scroll="page"', [header, sidebar(), main])}`,
   <AppShell.Main>
     <h1>Orders</h1>
   </AppShell.Main>
-  <AppShell.Aside aria-label="Order details" width="24rem">
+  <AppShell.Aside aria-label="Order details">
     <h2>Order #1042</h2>
   </AppShell.Aside>
 </AppShell>`,
 
-  asideHidden: `{/* asideCollapseTo="hidden": below the collapse width the aside is not drawn at all, and there is no toggle. For content a phone can do
-    without, such as a table of contents. */}
-<AppShell asideCollapseTo="hidden" asideCollapseBelow="xl">
+  asideHidden: `{/* asideCollapseTo="hidden": below the collapse width (asideCollapseBelow, "lg" unless you change it) the aside is not drawn at all, and
+    there is no toggle. For content a phone can do without, such as a table of contents. */}
+<AppShell asideCollapseTo="hidden">
   <AppShell.Main>
     <h1>Documentation</h1>
   </AppShell.Main>
@@ -109,18 +124,28 @@ ${shell('headerSpan="full"', [header, sidebar(), main])}`,
 </AppShell>`,
 
   stickyBar: `{/* With scroll="page" the shell sets --app-shell-header-height on itself (useAppShell().headerHeight is the same number), so a
-    bar in the main area can stick just below the header. */}
+    bar in the main area can stick just below the header. Give it a background, or the page shows through it, and the shell's content layer,
+    so it stays above the page's own positioned parts. */}
 <AppShell scroll="page">
   <AppShell.Header>…</AppShell.Header>
   <AppShell.Main>
-    <div style={{ position: "sticky", top: "var(--app-shell-header-height, 0px)" }}>Filters</div>
+    <div
+      style={{
+        position: "sticky",
+        top: "var(--app-shell-header-height, 0px)",
+        zIndex: "var(--app-shell-layer-content)",
+        background: "var(--dbm-bg-surface)",
+      }}
+    >
+      Filters
+    </div>
     <p>Page content.</p>
   </AppShell.Main>
 </AppShell>`,
 
   autoRail: `{/* railBelow: below 1280px ("xl") the shell collapses the sidebar to a rail, and above it expands it again. The reader's own toggle
     holds until the window crosses the step. Below collapseBelow the sidebar is a drawer, as ever. */}
-${shell('railBelow="xl"', [header, sidebar(), main])}`,
+${shell('railBelow="xl"', [header, sidebar("", { toggle: true }), main])}`,
 
   banner: `{/* AppShell.Banner is a strip above the header: an announcement, a maintenance notice, a trial reminder. */}
 <AppShell>
@@ -144,8 +169,8 @@ ${shell('railBelow="xl"', [header, sidebar(), main])}`,
     and the header sticks at the top. */}
 <AppShell scroll="page">
   <AppShell.Banner sticky>
-    <Alert tone="warning">
-      <Alert.Description>Your trial ends in 3 days.</Alert.Description>
+    <Alert tone="info">
+      <Alert.Description>Scheduled maintenance tonight at 22:00 UTC.</Alert.Description>
     </Alert>
   </AppShell.Banner>
   <AppShell.Header>
@@ -158,10 +183,11 @@ ${shell('railBelow="xl"', [header, sidebar(), main])}`,
   </AppShell.Main>
 </AppShell>`,
 
-  content: `{/* AppShell.Content centres the page, keeps it to a width (the Container steps) and pads it on the spacing scale. The main area adds none. */}
+  content: `{/* AppShell.Content centres the page, keeps it to a width (the Container steps) and pads it on the spacing scale (paddingInline and
+    paddingBlock change the padding). The main area adds none. */}
 <AppShell>
   <AppShell.Main>
-    <AppShell.Content size="xl" paddingBlock={8}>
+    <AppShell.Content size="xl">
       <h1>Billing</h1>
     </AppShell.Content>
   </AppShell.Main>
@@ -179,10 +205,10 @@ ${shell('railBelow="xl"', [header, sidebar(), main])}`,
   </AppShell.Footer>
 </AppShell>`,
 
-  busy: `{/* busy marks the main area as loading: a thin bar along its top edge, aria-busy, and a polite "Loading" announcement. Change
-    the words through labels. The page stays where it is; keep showing what you have. */}
+  busy: `{/* busy marks the main area as loading: a thin bar along its top edge, aria-busy, and a polite "Loading" announcement (change the words
+    through labels={{ loading: "…" }}). The page stays where it is; keep showing what you have. */}
 <AppShell>
-  <AppShell.Main busy={isFetching} labels={{ loading: "Loading invoices" }}>
+  <AppShell.Main busy={isFetching}>
     <Text>Invoices</Text>
   </AppShell.Main>
 </AppShell>`,
@@ -193,7 +219,7 @@ ${shell('railBelow="xl"', [header, sidebar(), main])}`,
   <AppShell.Main>
     <AppShell.State
       title="No invoices yet"
-      description="Invoices appear here once a customer is billed."
+      description="Invoices appear here once a customer is billed. Create the first one to get started."
       actions={<Button>Create an invoice</Button>}
     />
   </AppShell.Main>
@@ -205,7 +231,7 @@ ${shell('railBelow="xl"', [header, sidebar(), main])}`,
     <AppShell.State
       kind="error"
       title="We couldn't load this page"
-      description="Something went wrong on our side. Try again in a moment."
+      description="Something went wrong on our side. Your changes are safe. Try again in a moment."
       actions={<Button onClick={retry}>Try again</Button>}
     />
   </AppShell.Main>
@@ -226,9 +252,10 @@ ${shell('railBelow="xl"', [header, sidebar(), main])}`,
 </AppShell>`,
 
   resizable: `{/* resizable puts a handle on the column's inner edge: drag it, or use the arrow keys (Shift for bigger steps, Home and End for the
-    least and the most, a double press to reset). Leave width off the Sidebar inside: the shell sets the width. */}
+    least and the most, a double press to reset). minWidth and maxWidth set the limits (12rem and 28rem unless you change them). Leave width off
+    the Sidebar inside: the shell sets the width. */}
 <AppShell>
-  <AppShell.Sidebar resizable minWidth="14rem" maxWidth="26rem">
+  <AppShell.Sidebar resizable>
     <Sidebar>
       <Sidebar.Content>
         <Sidebar.Nav aria-label="Main">
@@ -265,8 +292,21 @@ ${shell('railBelow="xl"', [header, sidebar(), main])}`,
   </AppShell.Main>
 </AppShell>`,
 
-  rightToLeft: `{/* dir sets the reading direction of the shell; pass it to the Sidebar too, which has its own dir prop */}
-${shell('dir="rtl"', [header, sidebar('dir="rtl"'), main])}`,
+  rightToLeft: `{/* dir sets the shell's reading direction and provides it to the Sidebar and the Navbar inside, so neither needs one of its own. The
+    words the parts supply themselves (the skip link, the collapse and menu buttons) are translated through labels. */}
+<AppShell dir="rtl" labels={{ collapse: "جمع کردن نوار کناری", expand: "باز کردن نوار کناری", menu: "منو" }}>
+  <AppShell.Header>
+    <Navbar labels={{ skipLink: "رفتن به محتوا", menu: "منو" }}>
+      <Navbar.SkipLink />
+      <Navbar.Brand href="/">dbM Cloud</Navbar.Brand>
+      <Navbar.Actions>
+        <Sidebar.MenuButton />
+      </Navbar.Actions>
+    </Navbar>
+  </AppShell.Header>
+${sidebar("", { toggle: true, language: "fa" })}
+${mainIn("fa")}
+</AppShell>`,
 } as const;
 
 export interface AppShellPlaygroundSnippetArgs {
@@ -299,14 +339,13 @@ export function appShellPlaygroundSnippet(args: AppShellPlaygroundSnippetArgs): 
   if (args.dir && args.dir !== "ltr") attributes.push(`dir="${args.dir}"`);
   if (args.collapseBelow && args.collapseBelow !== "md") attributes.push(`collapseBelow="${args.collapseBelow}"`);
   if (args.defaultCollapsed) attributes.push("defaultCollapsed");
-  const sidebarAttributes = [
-    args.sidebarSide === "end" ? 'side="end"' : "",
-    args.dir === "rtl" ? 'dir="rtl"' : "",
-  ].filter(Boolean);
+  // The shell provides its `dir` to the Sidebar, so only its side is repeated on it.
+  const sidebarAttributes = [args.sidebarSide === "end" ? 'side="end"' : ""].filter(Boolean);
+  const language = args.dir === "rtl" ? "fa" : "en";
   const aside = args.showAside
-    ? `  <AppShell.Aside aria-label="Order details">
-    <h2>Order #1042</h2>
+    ? `  <AppShell.Aside aria-label="${language === "fa" ? "جزئیات سفارش" : "Order details"}">
+    <h2>${language === "fa" ? "سفارش ۱۰۴۲" : "Order #1042"}</h2>
   </AppShell.Aside>`
     : undefined;
-  return shell(attributes.join(" "), [header, sidebar(sidebarAttributes.join(" ")), main, ...(aside ? [aside] : [])]);
+  return shell(attributes.join(" "), [header, sidebar(sidebarAttributes.join(" "), { toggle: true, language }), mainIn(language), ...(aside ? [aside] : [])]);
 }
