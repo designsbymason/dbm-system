@@ -1,5 +1,5 @@
-/* The skip link both shells draw: a link, out of sight until it takes keyboard focus, then drawn at the top of the window above everything.
-   Shared (internal) so the two shells cannot drift apart. Each shell's root sets `--template-safe-top` to its own top inset. */
+/* A link, out of sight until it takes keyboard focus, then drawn at the top of the window above everything. It is hidden by clipping it to a
+   pixel, not by `display: none`, so it stays in the tab order and the accessibility tree. */
 .skipLink {
   position: absolute;
   inline-size: var(--dbm-space-px);
@@ -11,7 +11,8 @@
 
 .skipLink:focus-visible {
   position: fixed;
-  inset-block-start: calc(var(--dbm-space-2) + var(--template-safe-top, 0px));
+  /* A notch is kept clear: the device's top inset (zero where a page does not draw under one) is added to the gap. */
+  inset-block-start: calc(var(--dbm-space-2) + env(safe-area-inset-top, 0px));
   inset-inline-start: var(--dbm-space-4);
   z-index: var(--dbm-z-index-fixed);
   inline-size: auto;
@@ -36,6 +37,7 @@
   box-shadow: var(--dbm-shadow-dark-md);
 }
 
+/* Printed, the page is its content: no skip link. */
 @media print {
   .skipLink {
     display: none !important;

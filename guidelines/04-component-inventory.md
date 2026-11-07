@@ -175,6 +175,7 @@ Non-visual/structural helpers other components are built from.
 | ThemeProvider | atom | 🟢 | Applies brand/mode semantic token set |
 | Portal | atom | 🟢 | Wraps Radix Portal, used by overlays |
 | VisuallyHidden | atom | 🟢 | Screen-reader-only content |
+| SkipLink | atom | 🟡 | A link, hidden until it takes keyboard focus, that jumps past the header to the main content: drawn in the top corner above everything with an edge and a ring, a plain hash link to `#main`, `labels` for its words. `Navbar.SkipLink`, `AppShell.SkipLink` and `PageShell.SkipLink` are this link. Not built on `VisuallyHidden focusable`, which reveals in the page's flow. Review: [SkipLink.md](component-reviews/SkipLink.md) |
 | DirectionProvider | atom | 🟢 | Says which way the app reads, once, near the root: a direction-aware component given no `dir` uses the nearest provider's (its own `dir` still wins). Context only, renders no element ([ADR-0177](adr/0177-an-optional-direction-provider-sets-the-text-direction-for-a-subtree-over-reading-the-page-direction-automatically.md), [ADR-0182](adr/0182-appshell-grows-a-busy-main-a-whole-page-state-and-a-layer-ladder-and-direction-reaches-the-shell-sidebar-and-navbar-through-a-provider.md)). Every component that takes a `dir` reads it, and so do the portalled overlays without one (`Dialog`, `Drawer`, `AlertDialog`, `ConfirmDialog`, `Popover`, `Tooltip`, `HoverCard`); `DirectionProvider.coverage.test.ts` fails one that does not. `Pagination` follows the DOM direction (`:dir(rtl)`). Review: [DirectionProvider.md](component-reviews/DirectionProvider.md) |
 | FocusTrap | atom | 🟢 | Standalone focus containment for a custom overlay. `Dialog` and `Drawer` get theirs from Radix Dialog, so they do not use it ([ADR-0052](adr/0052-dialog-wraps-radix-dialog-draws-its-scrim-with-backdrop-inside-radixs-overlay-and-pins-the-radix-family-to-one-release-train.md)) |
 | ClientOnly | atom | 🟡 | SSR-safe render guard |
@@ -265,15 +266,15 @@ Nothing in the list depends on another template, and every component they compos
 | Priority | Count |
 |---|---|
 | 🟢 v1 (core) | 70 |
-| 🟡 v1.5 (comprehensive) | 28 |
+| 🟡 v1.5 (comprehensive) | 29 |
 | ⚪ v2/deferred | 18 |
-| **Total planned** | **116** |
+| **Total planned** | **117** |
 
-Counted directly from the nine category tables above, deduplicated by component name (`Pagination` is listed under both Data Display and Navigation). By tier: 49 atoms, 40 molecules, 27 organisms. Templates (below) are composed patterns, not components, and aren't counted. **When adding or re-prioritizing a component, recount from the tables rather than adjusting these figures by increments** — they drifted from the tables that way before.
+Counted directly from the nine category tables above, deduplicated by component name (`Pagination` is listed under both Data Display and Navigation). By tier: 50 atoms, 40 molecules, 27 organisms. Templates (below) are composed patterns, not components, and aren't counted. **When adding or re-prioritizing a component, recount from the tables rather than adjusting these figures by increments** — they drifted from the tables that way before.
 
 Tier placement follows [ADR-0012](adr/0012-item-components-are-atom-tier-even-when-their-container-is-a-molecule.md): an item component that works standalone (`Radio`, `GridItem`, `ListItem`) is an atom even when its container (`RadioGroup`, `Grid`, `List`) is a molecule.
 
-This puts v1 alone in "real, comprehensive design system" territory (not a 15-component starter kit), with a clear, sequenced path to full coverage rather than trying to build all 116 at once.
+This puts v1 alone in "real, comprehensive design system" territory (not a 15-component starter kit), with a clear, sequenced path to full coverage rather than trying to build all 117 at once.
 
 ## Sequencing recommendation for actual build order
 

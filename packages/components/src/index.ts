@@ -48,6 +48,7 @@ export * from "./atoms/Text";
 export * from "./atoms/Textarea";
 export * from "./atoms/ThemeProvider";
 export * from "./atoms/Tooltip";
+export * from "./atoms/SkipLink";
 export * from "./atoms/VisuallyHidden";
 
 export * from "./molecules/Accordion";

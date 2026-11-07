@@ -35,6 +35,7 @@ import { portalPlaygroundSnippet } from "./atoms/Portal/Portal.snippets";
 import { tooltipPlaygroundSnippet } from "./atoms/Tooltip/Tooltip.snippets";
 import { directionProviderPlaygroundSnippet, directionProviderSnippets } from "./atoms/DirectionProvider/DirectionProvider.snippets";
 import { visuallyHiddenPlaygroundSnippet } from "./atoms/VisuallyHidden/VisuallyHidden.snippets";
+import { skipLinkPlaygroundSnippet, skipLinkSnippets } from "./atoms/SkipLink/SkipLink.snippets";
 import { aspectRatioPlaygroundSnippet } from "./atoms/AspectRatio/AspectRatio.snippets";
 import { bleedPlaygroundSnippet } from "./atoms/Bleed/Bleed.snippets";
 import { boxPlaygroundSnippet } from "./atoms/Box/Box.snippets";
@@ -1409,6 +1410,19 @@ describe("Playground snippets for the eleven media, overlay and utility atoms", 
 
   it.each(Object.entries(directionProviderSnippets))("DirectionProvider snippet %s is real", (_name, code) => {
     expect(problemsIn(code)).toEqual([]);
+  });
+
+  it.each([{}, { children: "Skip to the article", href: "#content" }, { href: "#main" }])("SkipLink %j is a real snippet", (args) => {
+    expect(problemsIn(skipLinkPlaygroundSnippet(args))).toEqual([]);
+  });
+
+  it.each(Object.entries(skipLinkSnippets))("SkipLink snippet %s is real", (_name, code) => {
+    expect(problemsIn(code)).toEqual([]);
+  });
+
+  it("SkipLink writes only what differs from the defaults, and the target it points at", () => {
+    expect(skipLinkPlaygroundSnippet({})).toBe('<SkipLink />\n<main id="main" tabIndex={-1}>…</main>');
+    expect(skipLinkPlaygroundSnippet({ children: "Skip", href: "#content" })).toBe('<SkipLink href="#content">Skip</SkipLink>\n<main id="content" tabIndex={-1}>…</main>');
   });
 
   it("VisuallyHidden writes the text, and `focusable` only when it's on", () => {

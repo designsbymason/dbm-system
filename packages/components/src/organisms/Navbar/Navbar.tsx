@@ -8,6 +8,7 @@ import { Affix } from "../../atoms/Affix";
 import { useDirection } from "../../atoms/DirectionProvider";
 import { ButtonGroupProvider, useButtonGroup } from "../../atoms/Button/buttonGroupContext";
 import { Icon } from "../../atoms/Icon";
+import { SkipLink } from "../../atoms/SkipLink";
 import { VisuallyHidden } from "../../atoms/VisuallyHidden";
 import { IconButton } from "../../atoms/IconButton";
 import { Drawer } from "../Drawer";
@@ -738,9 +739,9 @@ const NavbarSkipLink = forwardRef<HTMLAnchorElement, NavbarSkipLinkProps>(
   ({ href = "#main", className, children, ...props }, ref) => {
     const { labels } = useNavbarContext("Navbar.SkipLink");
     return (
-      <a {...props} ref={ref} href={href} className={cx(styles.skipLink, className)}>
+      <SkipLink {...props} ref={ref} href={href} className={className}>
         {children ?? labels.skipLink}
-      </a>
+      </SkipLink>
     );
   },
 );

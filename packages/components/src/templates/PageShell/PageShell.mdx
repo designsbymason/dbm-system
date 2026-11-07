@@ -356,15 +356,16 @@ return (
 
 ## Design tokens used
 
-<TokenRow token="bg.surface" usage="the frame's background: the page colour behind the header, the main area and the footer; the skip link's fill" />
-<TokenRow token="text.primary" usage="the colour of text inside the frame that sets none of its own, and of the skip link" />
+The skip link is `SkipLink`, which lists its own tokens.
+
+<TokenRow token="bg.surface" usage="the frame's background: the page colour behind the header, the main area and the footer" />
+<TokenRow token="text.primary" usage="the colour of text inside the frame that sets none of its own" />
 <TokenRow token="font-family.primary" usage="the typeface of the frame, inherited by everything inside it" />
-<TokenRow token="border.default" usage="the line under the sub-navigation (when `bordered`) and over the footer, and the skip link's border" />
+<TokenRow token="border.default" usage="the line under the sub-navigation (when `bordered`) and over the footer" />
 <TokenRow token="border-width.1" usage="the thickness of those lines" />
-<TokenRow token="border-focus" usage="the focus ring drawn inside the main area while the keyboard has focused it, and around the skip link" />
+<TokenRow token="border-focus" usage="the focus ring drawn inside the main area while the keyboard has focused it" />
 <TokenRow token="border-width.2" usage="the thickness of that ring, and how far it is drawn inside the edge" />
 <TokenRow token="z-index.sticky" usage="the layer of the page's own content (the loading bar), and, one step up, of the header, so its shadow falls on the page" />
-<TokenRow token="z-index.fixed" usage="keeps the skip link above everything while it is focused" />
 <TokenRow token="motion-duration.base" usage="how long the header's shadow takes to appear, and how long a header that hides on scroll takes to slide" />
 <TokenRow token="motion-duration.fast" usage="how long the sub-navigation's edge fade takes to appear" />
 <TokenRow token="motion-easing.standard" usage="the easing of those transitions" />
@@ -373,14 +374,11 @@ return (
 <TokenRow token="text.brand" usage="the colour of the sub-navigation's current link" />
 <TokenRow token="space.8" usage="how wide the sub-navigation's edge fade is, and how far the current link is kept clear of it" />
 <TokenRow token="space.32" usage="the room the text of a page header is given before its actions wrap under it (twice this step)" />
-<TokenRow token="space.px" usage="the skip link's hidden size, until it takes focus" />
-<TokenRow token="space.2" usage="how far the skip link sits from the top edge; padding above and below its words" />
-<TokenRow token="space.4" usage="how far the skip link sits from the start edge; padding beside its words" />
-<TokenRow token="space.1" usage="the gap between the skip link and its focus ring" />
-<TokenRow token="radius.md" usage="the skip link's corners" />
-<TokenRow token="font-size.sm" usage="the skip link's text size" />
-<TokenRow token="font-weight.medium" usage="the skip link's text weight" />
-<TokenRow token="shadow.light-md" usage="the skip link's elevation, and the header's shadow while the page is scrolled, in the light themes" />
+<TokenRow token="space.2" usage="padding above and below the sub-navigation's links; the gap between a page header's actions" />
+<TokenRow token="space.4" usage="the sub-navigation's side padding; the gap between a page header's text and its actions" />
+<TokenRow token="space.1" usage="the gap between the sub-navigation's links and between a page header's lines; a compact footer's padding; how far a current link's underline sits from its text" />
+<TokenRow token="font-size.sm" usage="the compact footer's text size" />
+<TokenRow token="shadow.light-md" usage="the header's shadow while the page is scrolled, in the light themes" />
 <TokenRow token="shadow.dark-md" usage="the same header shadow, in the dark themes" />
 
 ## Related components

@@ -6,12 +6,12 @@ import { Container } from "../../atoms/Container";
 import { DirectionProvider, useDirection } from "../../atoms/DirectionProvider";
 import { IconButton } from "../../atoms/IconButton";
 import { VisuallyHidden } from "../../atoms/VisuallyHidden";
+import { SkipLink } from "../../atoms/SkipLink";
 import { EmptyState } from "../../molecules/EmptyState";
 import { Drawer } from "../../organisms/Drawer";
 import { Sidebar } from "../../organisms/Sidebar";
 import { MainBusy } from "../../internal/MainBusy";
 import { usePageChange } from "../../internal/usePageChange";
-import skipLinkStyles from "../../internal/skipLink.module.css";
 import styles from "./AppShell.module.css";
 import { AppShellContext, useAppShellContext } from "./AppShellContext";
 import { useElementHeight } from "./useElementHeight";
@@ -30,14 +30,12 @@ import type {
   AppShellProps,
   AppShellSidebarLabels,
   AppShellSidebarProps,
-  AppShellSkipLinkLabels,
   AppShellSkipLinkProps,
   AppShellStateProps,
 } from "./AppShell.types";
 
 const defaultAsideLabels: AppShellAsideLabels = { title: "Details", close: "Close" };
 const defaultAsideToggleLabels: AppShellAsideToggleLabels = { open: "Show details" };
-const defaultSkipLinkLabels: AppShellSkipLinkLabels = { skipToContent: "Skip to content" };
 const defaultSidebarLabels: AppShellSidebarLabels = { resize: "Resize sidebar" };
 const defaultMainLabels: AppShellMainLabels = { loading: "Loading" };
 
@@ -638,14 +636,7 @@ AppShellState.displayName = "AppShell.State";
  * `AppShell.Header`, so it is the first tab stop. Use it when the header has no `Navbar` (a `Navbar` has its own `Navbar.SkipLink`).
  */
 const AppShellSkipLink = forwardRef<HTMLAnchorElement, AppShellSkipLinkProps>(
-  ({ href = "#main", labels: labelsProp, className, children, ...props }, ref) => {
-    const labels = mergeDefined(defaultSkipLinkLabels, labelsProp);
-    return (
-      <a {...props} ref={ref} href={href} className={cx(skipLinkStyles.skipLink, className)}>
-        {children ?? labels.skipToContent}
-      </a>
-    );
-  },
+  (props, ref) => <SkipLink {...props} ref={ref} />,
 );
 AppShellSkipLink.displayName = "AppShell.SkipLink";
 

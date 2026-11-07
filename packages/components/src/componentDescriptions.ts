@@ -122,6 +122,7 @@ export const componentDescriptions: Record<string, string> = {
   PageShell: "The page frame of an app with no sidebar: a sticky header, main area and footer.",
   Tour: "A guided tour that highlights parts of a page one step at a time.",
   Tree: "An expandable hierarchy of rows, like a file tree.",
+  SkipLink: "A link, hidden until it takes keyboard focus, that jumps past the header to the main content.",
   VisuallyHidden: "Hides content from the eye but not from screen readers.",
   DirectionProvider: "Says once which way the app reads, so direction-aware components need no dir of their own.",
 };

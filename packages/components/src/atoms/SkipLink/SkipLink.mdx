@@ -1,0 +1,149 @@
+import { Canvas, Meta } from "@storybook/addon-docs/blocks";
+import { Callout, ComponentHeader, PlaygroundControls, PropertiesTable, RelatedCard, TokenRow } from "../../../.storybook/blocks";
+import { VisuallyHidden } from "../VisuallyHidden";
+import * as SkipLinkStories from "./SkipLink.stories";
+
+export const propOrder = ["children", "href", "labels", "id", "className", "style", "data-testid"];
+
+<Meta of={SkipLinkStories} />
+
+<VisuallyHidden asChild><h2>Intro</h2></VisuallyHidden>
+
+<ComponentHeader title="SkipLink" tier="Atom" />
+
+A link that jumps past the page's header to its main content, out of sight until it takes keyboard focus. Then it is drawn in the top corner of the
+window, above everything, with an edge and a focus ring, so a sighted keyboard user sees where focus is. It is the first tab stop of a page, so a
+keyboard or screen-reader user does not have to tab through every link of the header on every page. It is a plain hash link: nothing moves focus by
+script. `Navbar.SkipLink`, `AppShell.SkipLink` and `PageShell.SkipLink` are this link.
+
+### Import
+
+```tsx
+import { SkipLink } from "@dbm-system/components";
+```
+
+## Playground
+
+Drive the link's props live. It is out of sight until it takes keyboard focus: click in the example, then press `Tab`.
+
+<div className="dbm-playground-canvas">
+
+<Canvas of={SkipLinkStories.Playground} />
+
+</div>
+<PlaygroundControls of={SkipLinkStories.Playground} exclude={["labels", "id", "className", "style", "data-testid"]} order={propOrder} />
+
+## Properties
+
+`SkipLink` also accepts any other native `<a>` attribute beyond what's listed here (e.g. `onClick`, `aria-describedby`), passed straight through to the link.
+
+<PropertiesTable of={SkipLinkStories} order={propOrder} />
+
+## Variants
+
+### Beside the page it skips to
+
+Put the link first on the page, so it is the first tab stop, and give its target `tabIndex={-1}` so focus lands in it.
+
+<Canvas of={SkipLinkStories.WithATarget} />
+
+### In your language
+
+`labels` holds the words the link supplies itself; `children` replace them.
+
+<Canvas of={SkipLinkStories.YourWords} />
+
+## Usage guidelines
+
+<div className="dbm-do-dont-grid">
+<Callout tone="success" title="Do">
+
+- Put it first on the page, before the header, so it is the first thing `Tab` reaches.
+- Give its target (`#main` by default) `tabIndex={-1}`, so focus lands in it and the next `Tab` starts at the page's content.
+- Use it once per page, and point it at the page's `main`. A page with a sidebar and a long header may add a second link to the navigation.
+- Translate it: pass `labels` (or `children`) in the page's language.
+
+</Callout>
+<Callout tone="danger" title="Don't">
+
+- Don't hide it with `display: none` or `visibility: hidden`: it would leave the tab order and the accessibility tree, which is the opposite of its job.
+  The component clips it to a pixel instead.
+- Don't use it for a link that should always be seen: it is a keyboard aid. A visible "back to top" is [`BackToTop`](/docs/atoms-navigation-backtotop--docs).
+- Don't point it at an element without `tabIndex={-1}`: in some browsers the next `Tab` would start at the link again, not at the page.
+- Don't rely on it for anything the page can't do without it: it is a shortcut, not the only way to reach the content.
+
+</Callout>
+</div>
+
+## Best practices
+
+- Keep the words short and plain: "Skip to content" is read out in full by a screen reader before anything else on every page.
+- In an app with `Navbar`, `AppShell` or `PageShell`, use their own `SkipLink` (they are this component), and put it first in the shell.
+- Let the target be the page's `<main>`, which the shells already give `id="main"` and `tabIndex={-1}`.
+
+## Accessibility
+
+<Callout tone="info" title="A skip link is for sighted keyboard users and screen-reader users alike">
+
+It stays in the tab order and the accessibility tree while hidden (it is clipped, not removed), so a screen reader announces it as the first link, and
+a sighted keyboard user sees it the moment it takes focus.
+
+</Callout>
+
+| Key | Behaviour |
+|---|---|
+| `Tab` | The first stop of the page: the link appears in the top corner of the window. |
+| `Enter` | Follows the hash: focus moves to the target (`tabIndex={-1}`), past the header. |
+
+- The revealed link has the focus ring every focusable element has (2px `border-focus`, offset by `space.1`), on an opaque surface with an edge and a
+  shadow, so it reads over any content.
+- In forced colours the edge and the ring are drawn in system colours. Printed, the link is not drawn.
+- Its text is the primary text colour on the surface colour, at least 4.5:1 in every theme.
+- A notch is kept clear: the top offset adds the device's top inset.
+- In a right-to-left page it appears at the right edge, not the left.
+
+## Code examples
+
+```tsx
+<SkipLink />
+<header>…</header>
+<main id="main" tabIndex={-1}>…</main>
+```
+
+```tsx
+// Another target, and words of your own
+<SkipLink href="#content" labels={{ skipToContent: "Aller au contenu" }} />
+<article id="content" tabIndex={-1}>…</article>
+```
+
+## Design tokens used
+
+<TokenRow token="bg.surface" usage="the revealed link's fill" />
+<TokenRow token="text.primary" usage="the link's text colour" />
+<TokenRow token="border.default" usage="the revealed link's edge" />
+<TokenRow token="border-width.1" usage="the thickness of that edge" />
+<TokenRow token="border-focus" usage="the focus ring" />
+<TokenRow token="border-width.2" usage="the thickness of the ring" />
+<TokenRow token="radius.md" usage="the link's corners" />
+<TokenRow token="font-size.sm" usage="the text size" />
+<TokenRow token="font-weight.medium" usage="the text weight" />
+<TokenRow token="space.px" usage="the link's size while it is hidden" />
+<TokenRow token="space.1" usage="the gap between the link and its ring" />
+<TokenRow token="space.2" usage="how far it sits from the top edge; padding above and below its words" />
+<TokenRow token="space.4" usage="how far it sits from the start edge; padding beside its words" />
+<TokenRow token="z-index.fixed" usage="keeps the link above everything while it is shown" />
+<TokenRow token="shadow.light-md" usage="the link's elevation, in the light themes" />
+<TokenRow token="shadow.dark-md" usage="the same elevation, in the dark themes" />
+
+## Related components
+
+<div className="dbm-card-grid">
+<RelatedCard
+  name="VisuallyHidden"
+  description="Hides content from the eye but not from screen readers. Its focusable mode reveals the content in the page's flow; SkipLink draws the revealed link over the page"
+  href="/?path=/docs/atoms-utility-visuallyhidden--docs"
+>
+  <VisuallyHidden>Screen-reader-only text</VisuallyHidden>
+  <span>Hidden text is beside this</span>
+</RelatedCard>
+</div>

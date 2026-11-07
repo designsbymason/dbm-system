@@ -1040,7 +1040,6 @@ describe("Navbar.SkipLink", () => {
     );
     const skip = screen.getByRole("link", { name: "Skip to content" });
     expect(skip).toHaveAttribute("href", "#main");
-    expect(skip).toHaveClass(styles.skipLink!);
     await user.tab();
     expect(skip).toHaveFocus();
   });

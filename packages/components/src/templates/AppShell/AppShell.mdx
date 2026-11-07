@@ -585,29 +585,25 @@ should keep the panel open.
 
 ## Design tokens used
 
+The skip link is `SkipLink`, which lists its own tokens.
+
 <TokenRow token="app-shell.aside-width" usage="the width of the aside, and of the drawer it becomes, when `width` is not given" />
-<TokenRow token="bg.surface" usage="the frame's background: the page colour behind the header, the sidebar, the main area and the aside; the skip link's fill" />
-<TokenRow token="text.primary" usage="the colour of text inside the frame that sets none of its own, and of the skip link" />
+<TokenRow token="bg.surface" usage="the frame's background: the page colour behind the header, the sidebar, the main area and the aside" />
+<TokenRow token="text.primary" usage="the colour of text inside the frame that sets none of its own" />
 <TokenRow token="font-family.primary" usage="the typeface of the frame, inherited by everything inside it" />
-<TokenRow token="border.default" usage="the line along the aside's inner edge, the line over the footer while there is more below, and the skip link's border" />
+<TokenRow token="border.default" usage="the line along the aside's inner edge, the line over the footer while there is more below" />
 <TokenRow token="border-width.1" usage="the thickness of those lines, and of the line over the footer" />
-<TokenRow token="border-focus" usage="the focus ring drawn inside the main area and a scrolling aside while the keyboard has focused it, and around the skip link" />
+<TokenRow token="border-focus" usage="the focus ring drawn inside the main area and a scrolling aside while the keyboard has focused it" />
 <TokenRow token="border-width.2" usage="the thickness of that ring, and how far it is drawn inside the edge" />
 <TokenRow token="z-index.sticky" usage="keeps the header, the sidebar and the aside above the page's content as it scrolls (scroll=&quot;page&quot;)" />
-<TokenRow token="z-index.fixed" usage="keeps the skip link above everything while it is focused" />
 <TokenRow token="bg.brand" usage="the resize handle's line while it is hovered or dragged" />
 <TokenRow token="motion-duration.base" usage="how long the header's shadow, the footer's line and the resize handle's line take to appear" />
 <TokenRow token="motion-easing.standard" usage="the easing of those transitions" />
 <TokenRow token="z-index.base" usage="keeps the resize handle above the main area beside it" />
-<TokenRow token="space.px" usage="the skip link's hidden size, until it takes focus" />
-<TokenRow token="space.2" usage="how far the skip link sits from the top edge; padding above and below its words; the resize handle's width" />
-<TokenRow token="space.4" usage="how far the skip link sits from the start edge; padding beside its words" />
+<TokenRow token="space.2" usage="the resize handle's width" />
 <TokenRow token="space.6" usage="the padding around a whole-page state; how wide the resize handle's grabbable target is (24px)" />
-<TokenRow token="space.1" usage="the gap between the skip link and its focus ring; how far the resize handle reaches past the sidebar's edge" />
-<TokenRow token="radius.md" usage="the skip link's corners" />
-<TokenRow token="font-size.sm" usage="the skip link's text size" />
-<TokenRow token="font-weight.medium" usage="the skip link's text weight" />
-<TokenRow token="shadow.light-md" usage="the skip link's elevation, and the header's shadow while the content is scrolled, in the light themes" />
+<TokenRow token="space.1" usage="how far the resize handle reaches past the sidebar's edge" />
+<TokenRow token="shadow.light-md" usage="the header's shadow while the content is scrolled, in the light themes" />
 <TokenRow token="shadow.dark-md" usage="the same two, in the dark themes" />
 
 ## Related components

@@ -218,42 +218,6 @@ a.brand:focus-visible,
 }
 
 /* The skip link: out of sight until it takes keyboard focus, then drawn over the top corner of the page, above the bar. */
-.skipLink {
-  position: absolute;
-  inline-size: var(--dbm-space-px);
-  block-size: var(--dbm-space-px);
-  overflow: hidden;
-  clip-path: inset(50%);
-  white-space: nowrap;
-}
-
-.skipLink:focus-visible {
-  position: fixed;
-  inset-block-start: var(--dbm-space-2);
-  inset-inline-start: var(--dbm-space-4);
-  z-index: var(--dbm-z-index-fixed);
-  inline-size: auto;
-  block-size: auto;
-  overflow: visible;
-  clip-path: none;
-  padding-block: var(--dbm-space-2);
-  padding-inline: var(--dbm-space-4);
-  border: var(--dbm-border-width-1) solid var(--dbm-border-default);
-  border-radius: var(--dbm-radius-md);
-  background-color: var(--dbm-bg-surface);
-  color: var(--dbm-text-primary);
-  font-size: var(--dbm-font-size-sm);
-  font-weight: var(--dbm-font-weight-medium);
-  text-decoration: none;
-  outline: var(--dbm-border-width-2) solid var(--dbm-border-focus);
-  outline-offset: var(--dbm-space-1);
-  box-shadow: var(--dbm-shadow-light-md);
-}
-
-[data-theme$="-dark"] .skipLink:focus-visible {
-  box-shadow: var(--dbm-shadow-dark-md);
-}
-
 /* The current link as an item of a group's floating menu: the menu draws the item itself, so the look is the tint `NavigationMenu`'s
    current panel link has: brand text on `bg.brand-subtle` (6.5:1 or more in every theme), a step darker while the item is the
    highlighted one, since `Menu` tints the highlighted item with the same `bg.brand-subtle`. The attribute selector raises the

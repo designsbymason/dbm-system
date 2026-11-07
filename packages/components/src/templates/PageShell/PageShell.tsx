@@ -5,11 +5,11 @@ import { Container } from "../../atoms/Container";
 import type { ContainerSize } from "../../atoms/Container";
 import { DirectionProvider, useDirection } from "../../atoms/DirectionProvider";
 import { Heading } from "../../atoms/Heading";
+import { SkipLink } from "../../atoms/SkipLink";
 import { Text } from "../../atoms/Text";
 import { VisuallyHidden } from "../../atoms/VisuallyHidden";
 import { MainBusy } from "../../internal/MainBusy";
 import { usePageChange } from "../../internal/usePageChange";
-import skipLinkStyles from "../../internal/skipLink.module.css";
 import styles from "./PageShell.module.css";
 import { PageShellContext, usePageShellContext } from "./PageShellContext";
 import type {
@@ -22,13 +22,11 @@ import type {
   PageShellMainProps,
   PageShellPageHeaderProps,
   PageShellProps,
-  PageShellSkipLinkLabels,
   PageShellSkipLinkProps,
   PageShellSubNavLinkProps,
   PageShellSubNavProps,
 } from "./PageShell.types";
 
-const defaultSkipLinkLabels: PageShellSkipLinkLabels = { skipToContent: "Skip to content" };
 const defaultMainLabels: PageShellMainLabels = { loading: "Loading" };
 
 /** How far the page must be scrolled before a header that hides on scroll (`stickyHeader="auto"`) will go, and how far one move must be to count. */
@@ -153,14 +151,7 @@ PageShellRoot.displayName = "PageShell";
  * `PageShell.Header`, so it is the first tab stop. Use it when the header has no `Navbar` (a `Navbar` has its own `Navbar.SkipLink`).
  */
 const PageShellSkipLink = forwardRef<HTMLAnchorElement, PageShellSkipLinkProps>(
-  ({ href = "#main", labels: labelsProp, className, children, ...props }, ref) => {
-    const labels = mergeDefined(defaultSkipLinkLabels, labelsProp);
-    return (
-      <a {...props} ref={ref} href={href} className={cx(skipLinkStyles.skipLink, className)}>
-        {children ?? labels.skipToContent}
-      </a>
-    );
-  },
+  (props, ref) => <SkipLink {...props} ref={ref} />,
 );
 PageShellSkipLink.displayName = "PageShell.SkipLink";
 
