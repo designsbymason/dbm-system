@@ -33,7 +33,7 @@ const demoBody = ({ current = "home", footer = "toggle" }: DemoOptions = {}) => 
   const parts = [
     `<Sidebar.Header>
   <Avatar name="dbM" shape="square" size="sm" colorful />
-  dbM Cloud
+  dbM
 </Sidebar.Header>`,
     `<Sidebar.Content>
   <Sidebar.Nav>
@@ -465,7 +465,7 @@ ${indent(sidebar("", { footer: "account" }), 4)}
   yourOwnParts: `{/* const { collapsed } = useSidebar(); reads the state from inside a Sidebar or a Sidebar.Provider, so the header can draw the brand's mark alone in the rail. */}
 <Sidebar.Header>
   <Avatar name="dbM" shape="square" size="sm" />
-  {!collapsed && "dbM Cloud"}
+  {!collapsed && "dbM"}
 </Sidebar.Header>`,
 
   controlledPanel: `{/* const [collapsed, setCollapsed] = useState(false); and the reason the panel last changed: const [reason, setReason] = useState(""); */}

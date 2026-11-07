@@ -2,7 +2,7 @@
 // `Navbar`, a sub-navigation, a page of cards and a footer of links. Docs-only (a stories-support module, not shipped, ADR-0013's way of sharing
 // code between two stories files); the "Show code" snippets are written by hand in `TopNavShell.snippets.ts`.
 import { BellIcon, TrayIcon, WarningCircleIcon } from "@dbm-system/icons";
-import type { CSSProperties, MouseEvent, ReactNode } from "react";
+import type { MouseEvent, ReactNode } from "react";
 import { Avatar } from "../../atoms/Avatar";
 import { Button } from "../../atoms/Button";
 import { Heading } from "../../atoms/Heading";
@@ -17,15 +17,15 @@ import { Navbar } from "../../organisms/Navbar";
 import { useDemoCurrent } from "../../organisms/Navbar/NavbarStoryKit";
 import { preventNavigation } from "../../organisms/Sidebar/SidebarStoryKit";
 import { TopNavShell } from "./TopNavShell";
-import type { TopNavShellProps } from "./TopNavShell.types";
+import type { TopNavShellContentWidth, TopNavShellFooterVariant, TopNavShellProps, TopNavShellSubNavProps } from "./TopNavShell.types";
 
 /** The language of a demo's words: a right-to-left demo is in Persian, so a right-to-left check measures real text and not mirrored English. */
 export type Language = "en" | "fa";
 
-/** Every word the demo draws, by language. The brand ("dbM Cloud") is a name and stays as it is. */
+/** Every word the demo draws, by language. The brand ("dbM") is a name and stays as it is. */
 export const demoCopy = {
   en: {
-    brand: "dbM Cloud",
+    brand: "dbM",
     navigation: "Main",
     projects: "Projects",
     reports: "Reports",
@@ -44,9 +44,12 @@ export const demoCopy = {
     card: (n: number) => `Project ${n}`,
     cardText: "Updated by the team a few days ago.",
     open: "Open",
+    newProject: "New project",
+    cancel: "Cancel",
+    save: "Save",
     footerNavigation: "Footer",
     footerLinks: ["Help", "Privacy", "Terms"],
-    footer: "© dbM Cloud",
+    footer: "© dbM",
     emptyTitle: "No projects yet",
     emptyText: "Projects appear here once your team creates one. Create the first to get started.",
     emptyAction: "Create a project",
@@ -55,7 +58,7 @@ export const demoCopy = {
     errorAction: "Try again",
   },
   fa: {
-    brand: "dbM Cloud",
+    brand: "dbM",
     navigation: "پیمایش اصلی",
     projects: "پروژه‌ها",
     reports: "گزارش‌ها",
@@ -74,9 +77,12 @@ export const demoCopy = {
     card: (n: number) => `پروژه ${new Intl.NumberFormat("fa").format(n)}`,
     cardText: "چند روز پیش به‌روزرسانی شد.",
     open: "باز کردن",
+    newProject: "پروژه جدید",
+    cancel: "انصراف",
+    save: "ذخیره",
     footerNavigation: "پاورقی",
     footerLinks: ["راهنما", "حریم خصوصی", "شرایط"],
-    footer: "© dbM Cloud",
+    footer: "© dbM",
     emptyTitle: "هنوز پروژه‌ای نیست",
     emptyText: "با ساختن اولین پروژه توسط تیم شما، فهرست آن‌ها اینجا نمایش داده می‌شود.",
     emptyAction: "ایجاد پروژه",
@@ -94,14 +100,7 @@ const mainLabelsFa = { loading: "در حال بارگذاری" } as const;
 
 const frameHeight = "36rem";
 
-const sectionNav: CSSProperties = {
-  display: "flex",
-  gap: "var(--dbm-space-6)",
-  paddingInline: "var(--dbm-space-4)",
-  inlineSize: "max-content",
-};
-
-/** The sub-navigation's row: the project's sections as links, the current one marked. A demo's own, since there is no link-tabs component. */
+/** The sub-navigation's row: the project's sections as `TopNavShell.SubNavLink`s, the current one marked. */
 function DemoSections({ language }: { language: Language }) {
   const copy = demoCopy[language];
   const demo = useDemoCurrent("overview");
@@ -112,26 +111,13 @@ function DemoSections({ language }: { language: Language }) {
     ["settings", copy.projectSettings],
   ] as const;
   return (
-    <nav aria-label={copy.sectionsName} style={sectionNav}>
-      {sections.map(([id, label]) => {
-        const current = demo.isCurrent(id);
-        return (
-          <Link
-            key={id}
-            {...demo.anchor(id)}
-            aria-current={current ? "page" : undefined}
-            style={{
-              paddingBlock: "var(--dbm-space-3)",
-              borderBlockEnd: `var(--dbm-border-width-2) solid ${current ? "var(--dbm-border-focus)" : "transparent"}`,
-              fontWeight: current ? "var(--dbm-font-weight-semibold)" : undefined,
-              whiteSpace: "nowrap",
-            }}
-          >
-            {label}
-          </Link>
-        );
-      })}
-    </nav>
+    <>
+      {sections.map(([id, label]) => (
+        <TopNavShell.SubNavLink key={id} {...demo.anchor(id)} current={demo.isCurrent(id)}>
+          {label}
+        </TopNavShell.SubNavLink>
+      ))}
+    </>
   );
 }
 
@@ -152,12 +138,7 @@ export function DemoPage({ language = "en", rows = 24, state }: { language?: Lan
   }
   return (
     <div style={{ display: "grid", gap: "var(--dbm-space-6)" }}>
-      <div style={{ display: "grid", gap: "var(--dbm-space-1)" }}>
-        <Heading level={1} size="2xl">
-          {copy.title}
-        </Heading>
-        <Text color="secondary">{copy.intro}</Text>
-      </div>
+      <TopNavShell.PageHeader title={copy.title} description={copy.intro} actions={<Button onClick={preventClick}>{copy.newProject}</Button>} />
       <Grid minChildWidth="16rem" gap={4}>
         {Array.from({ length: rows }, (_, index) => (
           <Card key={index} variant="outlined">
@@ -188,6 +169,12 @@ export interface DemoTopNavShellProps extends TopNavShellProps {
   framed?: boolean;
   /** Adds a `TopNavShell.SubNav` of the project's sections under the bar. */
   subNav?: boolean;
+  /** Props for the sub-navigation row (its `align`, `bordered` and `sticky`), when `subNav` is on. */
+  subNavProps?: Partial<TopNavShellSubNavProps>;
+  /** The footer's look. */
+  footerVariant?: TopNavShellFooterVariant;
+  /** The width preset of the page's content. */
+  contentWidth?: TopNavShellContentWidth;
   /** Adds a `TopNavShell.Banner` with a notice. */
   banner?: boolean;
   /** Marks the main area as busy. */
@@ -206,7 +193,20 @@ export interface DemoTopNavShellProps extends TopNavShellProps {
  * A whole shell filled in: a skip link and a `Navbar` (the bar's own links go into a menu behind a button on a phone), an optional banner and
  * sub-navigation, the demo page and a footer of links. A right-to-left shell (`dir="rtl"`) is in Persian, with `lang="fa"`.
  */
-export function DemoTopNavShell({ framed = false, subNav = false, banner = false, busy, rows, state, onNavigate, children, ...props }: DemoTopNavShellProps) {
+export function DemoTopNavShell({
+  framed = false,
+  subNav = false,
+  subNavProps,
+  footerVariant,
+  contentWidth,
+  banner = false,
+  busy,
+  rows,
+  state,
+  onNavigate,
+  children,
+  ...props
+}: DemoTopNavShellProps) {
   const language: Language = props.dir === "rtl" ? "fa" : "en";
   const copy = demoCopy[language];
   const fa = language === "fa";
@@ -241,30 +241,42 @@ export function DemoTopNavShell({ framed = false, subNav = false, banner = false
       )}
       <TopNavShell.Header>
         <Navbar contained labels={fa ? navbarLabelsFa : undefined}>
-          <Navbar.Brand href="#" onClick={preventNavigation}>
-            {copy.brand}
-          </Navbar.Brand>
-          <Navbar.Links aria-label={copy.navigation}>
-            <Navbar.Link {...link("projects")}>{copy.projects}</Navbar.Link>
-            <Navbar.Link {...link("reports")}>{copy.reports}</Navbar.Link>
-            <Navbar.Link {...link("team")}>{copy.team}</Navbar.Link>
-            <Navbar.Link {...link("settings")}>{copy.settings}</Navbar.Link>
-          </Navbar.Links>
-          <Navbar.Actions>
-            <IconButton icon={BellIcon} variant="ghost" size="sm" aria-label={copy.notifications} />
-            <Avatar name={copy.account} size="sm" />
-          </Navbar.Actions>
+          {/* Below the step the row is three columns: the menu button at the start, the brand in the centre, the actions at the end. */}
+          <Navbar.Row columns="balanced">
+            <Navbar.Brand href="#" onClick={preventNavigation}>
+              {copy.brand}
+            </Navbar.Brand>
+            <Navbar.Links aria-label={copy.navigation}>
+              <Navbar.Link {...link("projects")}>{copy.projects}</Navbar.Link>
+              <Navbar.Link {...link("reports")}>{copy.reports}</Navbar.Link>
+              <Navbar.Link {...link("team")}>{copy.team}</Navbar.Link>
+              <Navbar.Link {...link("settings")}>{copy.settings}</Navbar.Link>
+            </Navbar.Links>
+            <Navbar.Actions>
+              <IconButton icon={BellIcon} variant="tertiary" tone="neutral" size="sm" aria-label={copy.notifications} />
+              <Avatar name={copy.account} size="sm" />
+            </Navbar.Actions>
+            <Navbar.MenuButton variant="tertiary" tone="neutral" size="sm" />
+          </Navbar.Row>
         </Navbar>
         {subNav && (
-          <TopNavShell.SubNav>
+          <TopNavShell.SubNav label={copy.sectionsName} bordered={false} {...subNavProps}>
             <DemoSections language={language} />
           </TopNavShell.SubNav>
         )}
       </TopNavShell.Header>
       <TopNavShell.Main busy={busy} labels={fa ? mainLabelsFa : undefined}>
-        <TopNavShell.Content>{children ?? <DemoPage language={language} rows={rows} state={state} />}</TopNavShell.Content>
+        <TopNavShell.Content width={contentWidth}>{children ?? <DemoPage language={language} rows={rows} state={state} />}</TopNavShell.Content>
       </TopNavShell.Main>
-      <TopNavShell.Footer>
+      <TopNavShell.Footer variant={footerVariant}>
+        {footerVariant === "actions" ? (
+          <TopNavShell.Content paddingBlock={3} style={{ display: "flex", justifyContent: "flex-end", gap: "var(--dbm-space-2)" }}>
+            <Button variant="secondary" onClick={preventClick}>
+              {copy.cancel}
+            </Button>
+            <Button onClick={preventClick}>{copy.save}</Button>
+          </TopNavShell.Content>
+        ) : (
         <TopNavShell.Content paddingBlock={4} style={{ display: "flex", flexWrap: "wrap", gap: "var(--dbm-space-4)", justifyContent: "space-between" }}>
           <Text size="sm" color="secondary">
             {copy.footer}
@@ -277,6 +289,7 @@ export function DemoTopNavShell({ framed = false, subNav = false, banner = false
             ))}
           </nav>
         </TopNavShell.Content>
+        )}
       </TopNavShell.Footer>
     </TopNavShell>
   );

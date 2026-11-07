@@ -464,6 +464,193 @@ describe("TopNavShell", () => {
     });
   });
 
+  describe("a header that hides on scroll", () => {
+    const scrollTo = (y: number) => {
+      Object.defineProperty(window, "scrollY", { configurable: true, value: y });
+      act(() => {
+        fireEvent.scroll(document);
+      });
+    };
+
+    it("hides on a scroll down past the first screenful, and comes back on a scroll up and at the top", () => {
+      render(<Shell stickyHeader="auto" />);
+      const shell = screen.getByTestId("shell");
+      expect(shell).toHaveAttribute("data-sticky-header", "auto");
+      expect(shell).not.toHaveAttribute("data-header-hidden");
+      scrollTo(40);
+      expect(shell).not.toHaveAttribute("data-header-hidden");
+      scrollTo(200);
+      expect(shell).toHaveAttribute("data-header-hidden");
+      scrollTo(150);
+      expect(shell).not.toHaveAttribute("data-header-hidden");
+      scrollTo(400);
+      expect(shell).toHaveAttribute("data-header-hidden");
+      scrollTo(0);
+      expect(shell).not.toHaveAttribute("data-header-hidden");
+    });
+
+    it("ignores a tiny move, so a trembling finger does not make the header flicker", () => {
+      render(<Shell stickyHeader="auto" />);
+      scrollTo(300);
+      expect(screen.getByTestId("shell")).toHaveAttribute("data-header-hidden");
+      scrollTo(298);
+      expect(screen.getByTestId("shell")).toHaveAttribute("data-header-hidden");
+    });
+
+    it("never hides a header that is plainly sticky, or one that does not stick", () => {
+      const { rerender } = render(<Shell />);
+      scrollTo(500);
+      expect(screen.getByTestId("shell")).not.toHaveAttribute("data-header-hidden");
+      rerender(<Shell stickyHeader={false} />);
+      scrollTo(900);
+      expect(screen.getByTestId("shell")).not.toHaveAttribute("data-header-hidden");
+      scrollTo(0);
+    });
+  });
+
+  describe("documentTitle", () => {
+    it("sets the document's title from pageTitle, and puts the old one back on unmount", () => {
+      document.title = "Original";
+      const { rerender, unmount } = render(<Shell pageKey="/a" pageTitle="Projects" documentTitle />);
+      expect(document.title).toBe("Projects");
+      rerender(<Shell pageKey="/b" pageTitle="Reports" documentTitle />);
+      expect(document.title).toBe("Reports");
+      unmount();
+      expect(document.title).toBe("Original");
+    });
+
+    it("builds the title with a function", () => {
+      render(<Shell pageKey="/a" pageTitle="Projects" documentTitle={(title) => `${title} · Acme`} />);
+      expect(document.title).toBe("Projects · Acme");
+    });
+
+    it("leaves the title alone while it is off or pageTitle is left out", () => {
+      document.title = "Untouched";
+      const { unmount } = render(<Shell pageKey="/a" pageTitle="Projects" />);
+      expect(document.title).toBe("Untouched");
+      unmount();
+      render(<Shell documentTitle />);
+      expect(document.title).toBe("Untouched");
+    });
+  });
+
+  describe("the sub-navigation", () => {
+    it("draws a named nav around its links when given a label, and the links mark the current one", () => {
+      render(
+        <TopNavShell>
+          <TopNavShell.SubNav label="Project sections">
+            <TopNavShell.SubNavLink href="/a" current>
+              Overview
+            </TopNavShell.SubNavLink>
+            <TopNavShell.SubNavLink href="/b">Activity</TopNavShell.SubNavLink>
+          </TopNavShell.SubNav>
+          <TopNavShell.Main>Main</TopNavShell.Main>
+        </TopNavShell>,
+      );
+      const nav = screen.getByRole("navigation", { name: "Project sections" });
+      expect(within(nav).getByRole("link", { name: "Overview" })).toHaveAttribute("aria-current", "page");
+      expect(within(nav).getByRole("link", { name: "Activity" })).not.toHaveAttribute("aria-current");
+    });
+
+    it("draws no nav of its own without a label, so a nav you bring is the only one", () => {
+      render(
+        <TopNavShell>
+          <TopNavShell.SubNav>
+            <nav aria-label="Mine">
+              <a href="/a">A</a>
+            </nav>
+          </TopNavShell.SubNav>
+          <TopNavShell.Main>Main</TopNavShell.Main>
+        </TopNavShell>,
+      );
+      expect(screen.getAllByRole("navigation")).toHaveLength(1);
+    });
+
+    it("centres by default, starts at the start on request, and takes a line away", () => {
+      render(
+        <TopNavShell>
+          <TopNavShell.SubNav label="One" data-testid="one">
+            x
+          </TopNavShell.SubNav>
+          <TopNavShell.SubNav label="Two" align="start" bordered={false} data-testid="two">
+            x
+          </TopNavShell.SubNav>
+          <TopNavShell.Main>Main</TopNavShell.Main>
+        </TopNavShell>,
+      );
+      expect(screen.getByTestId("one")).toHaveAttribute("data-align", "center");
+      expect(screen.getByTestId("two")).toHaveAttribute("data-align", "start");
+      expect(screen.getByTestId("one").className).toContain("subNavBordered");
+      expect(screen.getByTestId("two").className).not.toContain("subNavBordered");
+    });
+
+    it("tells the shell while it is not sticky, and takes that back when it stops", () => {
+      const row = (sticky: boolean) => (
+        <TopNavShell data-testid="shell">
+          <TopNavShell.SubNav label="Sections" sticky={sticky}>
+            x
+          </TopNavShell.SubNav>
+          <TopNavShell.Main>Main</TopNavShell.Main>
+        </TopNavShell>
+      );
+      const { rerender, unmount } = render(row(false));
+      expect(screen.getByTestId("shell")).toHaveAttribute("data-subnav-static");
+      rerender(row(true));
+      expect(screen.getByTestId("shell")).not.toHaveAttribute("data-subnav-static");
+      rerender(row(false));
+      expect(screen.getByTestId("shell")).toHaveAttribute("data-subnav-static");
+      unmount();
+    });
+  });
+
+  describe("the footer, the content and the page header", () => {
+    it("marks the footer's variant", () => {
+      render(
+        <TopNavShell>
+          <TopNavShell.Main>Main</TopNavShell.Main>
+          <TopNavShell.Footer variant="actions">Footer</TopNavShell.Footer>
+        </TopNavShell>,
+      );
+      expect(screen.getByRole("contentinfo")).toHaveAttribute("data-variant", "actions");
+    });
+
+    it("keeps the content to the width preset's step, and an explicit size wins", () => {
+      render(
+        <TopNavShell>
+          <TopNavShell.Main>
+            <TopNavShell.Content width="reading" data-testid="reading" />
+            <TopNavShell.Content width="full" data-testid="full" />
+            <TopNavShell.Content width="dashboard" size="sm" data-testid="explicit" />
+          </TopNavShell.Main>
+        </TopNavShell>,
+      );
+      expect(screen.getByTestId("reading").className).toContain("sizeMd");
+      expect(screen.getByTestId("full").className).toContain("sizeFull");
+      expect(screen.getByTestId("explicit").className).toContain("sizeSm");
+    });
+
+    it("draws the page's title as its heading, with a description, breadcrumbs and actions", () => {
+      render(
+        <TopNavShell>
+          <TopNavShell.Main>
+            <TopNavShell.PageHeader
+              title="Projects"
+              description="All of them"
+              breadcrumbs={<nav aria-label="Trail">Home</nav>}
+              actions={<button type="button">New</button>}
+            />
+            <TopNavShell.PageHeader title="Details" titleLevel={2} />
+          </TopNavShell.Main>
+        </TopNavShell>,
+      );
+      expect(screen.getByRole("heading", { level: 1, name: "Projects" })).toBeInTheDocument();
+      expect(screen.getByRole("heading", { level: 2, name: "Details" })).toBeInTheDocument();
+      expect(screen.getByText("All of them")).toBeInTheDocument();
+      expect(screen.getByRole("navigation", { name: "Trail" })).toBeInTheDocument();
+      expect(screen.getByRole("button", { name: "New" })).toBeInTheDocument();
+    });
+  });
+
   describe("outside a shell", () => {
     it("throws for a part that needs the shell, with a message that says so", () => {
       const spy = vi.spyOn(console, "error").mockImplementation(() => undefined);

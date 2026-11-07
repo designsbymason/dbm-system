@@ -5,7 +5,8 @@ import { describe, expect, it } from "vitest";
 // The Docs page's "Design tokens used" table is written by hand, so it can drift from the stylesheet. This holds
 // the two together for every token the stylesheet uses, in both directions. (The tests run from the package's own folder.)
 const folder = join(process.cwd(), "src/templates/TopNavShell");
-const css = readFileSync(join(folder, "TopNavShell.module.css"), "utf8");
+// The skip link both shells draw lives in the shared stylesheet, so its tokens are the shell's too.
+const css = [readFileSync(join(folder, "TopNavShell.module.css"), "utf8"), readFileSync(join(folder, "../../internal/skipLink.module.css"), "utf8")].join("\n");
 const mdx = readFileSync(join(folder, "TopNavShell.mdx"), "utf8");
 
 /** `--dbm-bg-brand-subtle` -> `bg-brand-subtle`, the way a token row writes it (dots, not dashes). */

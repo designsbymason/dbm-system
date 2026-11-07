@@ -17,6 +17,12 @@ export interface TopNavShellMainLabels {
   loading: string;
 }
 
+/** How far the width presets of `TopNavShell.Content` reach: a reading page, a dashboard, a page that fills the window. */
+export type TopNavShellContentWidth = "reading" | "dashboard" | "full";
+
+/** The look of `TopNavShell.Footer`: the standard footer, a tighter one, or a bar of actions that stays at the bottom of the window. */
+export type TopNavShellFooterVariant = "default" | "compact" | "actions";
+
 /** Props every part of the shell accepts on top of its own native element's. */
 interface TopNavShellPartBase {
   /** Standard DOM id. */
@@ -42,10 +48,12 @@ export interface TopNavShellProps extends Omit<ComponentPropsWithoutRef<"div">, 
   children?: ReactNode;
   /**
    * Keeps the header (and the sub-navigation in it) at the top of the window while the page scrolls. Leave the `Navbar` inside it without its
-   * own `sticky`: the shell owns the sticking.
+   * own `sticky`: the shell owns the sticking. `"auto"` also sticks it, but slides it out of view while the reader scrolls down and brings it
+   * back on the first scroll up, at the top of the page, and whenever focus or an open menu is inside it (so the keyboard never loses the bar).
+   * With reduced motion it appears and disappears without sliding.
    * @default true
    */
-  stickyHeader?: boolean;
+  stickyHeader?: boolean | "auto";
   /**
    * Shows a shadow under the header while the page is scrolled down from its top (a line instead in forced colours, which drop shadows).
    * @default true
@@ -58,6 +66,13 @@ export interface TopNavShellProps extends Omit<ComponentPropsWithoutRef<"div">, 
   pageKey?: string | number;
   /** The new page's title, announced politely after `pageKey` changes. */
   pageTitle?: string;
+  /**
+   * Keeps the browser tab's title (`document.title`) in step with `pageTitle`, so a router does not have to. `true` sets it to `pageTitle`; a
+   * function builds the whole title from it (`(title) => `${title} · Acme``). The title the document had is put back when the shell unmounts.
+   * Nothing happens while `pageTitle` is left out.
+   * @default false
+   */
+  documentTitle?: boolean | ((pageTitle: string) => string);
   /**
    * The reading direction of everything inside. The shell sets it on its own element and provides it to everything inside. Left out, it is the
    * nearest `DirectionProvider`'s, else left to right.
@@ -110,8 +125,61 @@ export interface TopNavShellHeaderProps extends Omit<ComponentPropsWithoutRef<"d
 
 /** The properties of `TopNavShell.SubNav`: a second row of navigation under the `Navbar`, sticking with it. */
 export interface TopNavShellSubNavProps extends Omit<ComponentPropsWithoutRef<"div">, "children">, TopNavShellPartBase {
-  /** The row's content: usually a `nav` (a `Tabs` list, or links) with its own name. It scrolls sideways when it does not fit. */
+  /**
+   * The row's content. With `label` it is the links (`TopNavShell.SubNavLink`), which the row puts in a `nav` of its own; without it, a `nav`
+   * (a `Tabs` list, or links) you draw yourself, with its own name. It scrolls sideways when it does not fit.
+   */
   children?: ReactNode;
+  /**
+   * The accessible name of the `nav` the row draws around its children, which tells it apart from the bar's and the footer's navigation
+   * landmarks. Left out, the row draws no `nav` and you put your own in it.
+   */
+  label?: string;
+  /**
+   * Where the links sit in the row when they all fit: `center` (the default) or the `start`. When they do not fit the row scrolls from its start
+   * either way.
+   * @default 'center'
+   */
+  align?: "start" | "center";
+  /**
+   * Draws a line under the row.
+   * @default true
+   */
+  bordered?: boolean;
+  /**
+   * Keeps the row with the bar while the page scrolls. Off, only the bar stays at the top of the window and the row scrolls away with the page,
+   * so the bar must be the header's first child.
+   * @default true
+   */
+  sticky?: boolean;
+}
+
+/** The properties of `TopNavShell.SubNavLink`: a link of the sub-navigation, a round ghost button, the current one in the subtle tint. */
+export interface TopNavShellSubNavLinkProps extends Omit<ComponentPropsWithoutRef<"a">, "children" | "aria-current">, TopNavShellPartBase {
+  /** The link's text. */
+  children?: ReactNode;
+  /**
+   * Marks the link as the page the reader is on: `aria-current="page"` and the subtle tint. The caller decides, from the router.
+   * @default false
+   */
+  current?: boolean;
+}
+
+/** The properties of `TopNavShell.PageHeader`: the head of a page, with its title, an optional trail of breadcrumbs, a description and actions. */
+export interface TopNavShellPageHeaderProps extends Omit<ComponentPropsWithoutRef<"div">, "children" | "title">, TopNavShellPartBase {
+  /** The page's title, drawn as its heading. */
+  title: ReactNode;
+  /**
+   * The heading level of the title.
+   * @default 1
+   */
+  titleLevel?: 1 | 2 | 3 | 4 | 5 | 6;
+  /** A line under the title that says what the page is. */
+  description?: ReactNode;
+  /** A trail above the title: a `Breadcrumb`. */
+  breadcrumbs?: ReactNode;
+  /** The page's actions, at the end of the title's row, and under it on a phone: buttons. */
+  actions?: ReactNode;
 }
 
 /** The properties of `TopNavShell.Main`: the page's one `<main>`, and the skip link's target. */
@@ -136,7 +204,12 @@ export interface TopNavShellContentProps extends Omit<ComponentPropsWithoutRef<"
   /** The page's content. */
   children?: ReactNode;
   /**
-   * The widest the content gets, on the same steps as `Container`, centred. `full` is no limit.
+   * The width the page is kept to, by what it is: `reading` for text (a narrow column), `dashboard` for cards and tables (the wide step), `full`
+   * for a page that fills the window. An explicit `size` replaces it.
+   */
+  width?: TopNavShellContentWidth;
+  /**
+   * The widest the content gets, on the same steps as `Container`, centred. `full` is no limit. Takes the place of `width` when both are given.
    * @default 'xl'
    */
   size?: ContainerSize;
@@ -156,4 +229,11 @@ export interface TopNavShellContentProps extends Omit<ComponentPropsWithoutRef<"
 export interface TopNavShellFooterProps extends Omit<ComponentPropsWithoutRef<"footer">, "children">, TopNavShellPartBase {
   /** The footer's content. */
   children?: ReactNode;
+  /**
+   * `default` is the standard footer, with its line above. `compact` pads it tighter. `actions` is a bar of actions (the Save and Cancel of a
+   * form) that stays at the bottom of the window until the page's own end, with a shadow over the page behind it and the device's bottom
+   * inset kept clear.
+   * @default 'default'
+   */
+  variant?: TopNavShellFooterVariant;
 }

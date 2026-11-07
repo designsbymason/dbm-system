@@ -7,10 +7,15 @@ const meta: Meta<typeof TopNavShell.Content> = {
   component: TopNavShell.Content,
   tags: ["!dev"],
   argTypes: {
+    width: {
+      control: false,
+      description:
+        "The width the page is kept to, by what it is: reading for text (a narrow column), dashboard for cards and tables (the wide step), full for a page that fills the window. An explicit size replaces it.",
+    },
     size: {
       control: false,
       description:
-        "The widest the content gets, on the same steps as Container, centred. full is no limit.",
+        "The widest the content gets, on the same steps as Container, centred. full is no limit. Takes the place of width when both are given.",
       table: { defaultValue: { summary: "\"xl\"" } },
     },
     children: { control: false, description: "The page's content." },

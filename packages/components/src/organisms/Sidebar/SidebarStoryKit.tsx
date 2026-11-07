@@ -116,7 +116,7 @@ export function DemoBrand() {
   return (
     <span style={{ display: "inline-flex", alignItems: "center", gap: "var(--dbm-space-2)", fontWeight: "var(--dbm-font-weight-bold)" }}>
       <Avatar name="dbM" shape="square" size="sm" colorful />
-      {!collapsed && <span>dbM Cloud</span>}
+      {!collapsed && <span>dbM</span>}
     </span>
   );
 }

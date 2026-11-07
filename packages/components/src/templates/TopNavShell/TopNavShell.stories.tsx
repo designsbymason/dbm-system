@@ -24,9 +24,10 @@ const meta: Meta<PlaygroundArgs> = {
         "The shell's parts: TopNavShell.SkipLink, TopNavShell.Banner, TopNavShell.Header (a Navbar and an optional TopNavShell.SubNav), TopNavShell.Main (holding a TopNavShell.Content) and TopNavShell.Footer. They draw in the order you write them, which is the keyboard's tab order: put the skip link first and the header after it. Only TopNavShell.Main is needed.",
     },
     stickyHeader: {
-      control: "boolean",
+      control: "radio",
+      options: [true, false, "auto"],
       description:
-        "Keeps the header (and the sub-navigation in it) at the top of the window while the page scrolls. Leave the Navbar inside it without its own sticky: the shell owns the sticking.",
+        "Keeps the header (and the sub-navigation in it) at the top of the window while the page scrolls. Leave the Navbar inside it without its own sticky: the shell owns the sticking. \"auto\" also sticks it, but slides it out of view while the reader scrolls down and brings it back on the first scroll up, at the top of the page, and whenever focus or an open menu is inside it. With reduced motion it appears and disappears without sliding.",
       table: { defaultValue: { summary: "true" } },
     },
     scrolledEdge: {
@@ -42,6 +43,12 @@ const meta: Meta<PlaygroundArgs> = {
     pageTitle: {
       control: false,
       description: "The new page's title, announced politely to a screen reader when pageKey changes. Left out, the focus still moves and nothing is said.",
+    },
+    documentTitle: {
+      control: false,
+      description:
+        "Keeps the browser tab's title (document.title) in step with pageTitle, so a router does not have to. true sets it to pageTitle; a function builds the whole title from it. The title the document had is put back when the shell unmounts. Nothing happens while pageTitle is left out.",
+      table: { defaultValue: { summary: "false" } },
     },
     dir: {
       control: "radio",
@@ -108,6 +115,29 @@ export const WithBanner: Story = {
   parameters: { docs: { source: { code: topNavShellSnippets.banner } } },
   argTypes: { ...noControls },
   render: (_args, context) => <DemoTopNavShell banner subNav framed={docs(context)} />,
+};
+
+export const SubNavScrollsAway: Story = {
+  name: "A sub-navigation that scrolls away",
+  parameters: { docs: { source: { code: topNavShellSnippets.subNavScrollsAway } } },
+  argTypes: { ...noControls },
+  render: (_args, context) => (
+    <DemoTopNavShell subNav subNavProps={{ sticky: false, align: "start" }} rows={80} framed={docs(context)} />
+  ),
+};
+
+export const AutoHide: Story = {
+  name: "A header that hides on scroll",
+  parameters: { docs: { source: { code: topNavShellSnippets.autoHide } } },
+  argTypes: { ...noControls },
+  render: (_args, context) => <DemoTopNavShell stickyHeader="auto" subNav rows={80} framed={docs(context)} />,
+};
+
+export const ActionsFooter: Story = {
+  name: "A footer of actions",
+  parameters: { docs: { source: { code: topNavShellSnippets.actionsFooter } } },
+  argTypes: { ...noControls },
+  render: (_args, context) => <DemoTopNavShell footerVariant="actions" rows={40} framed={docs(context)} />,
 };
 
 export const ShortPage: Story = {

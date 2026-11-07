@@ -39,7 +39,10 @@ async function realClick(element: Element) {
   const rect = element.getBoundingClientRect();
   const frame = window.frameElement?.getBoundingClientRect();
   const scale = frame ? frame.width / window.innerWidth : 1;
-  const x = (frame?.left ?? 0) + (rect.left + rect.width / 2) * scale;
+  // The middle of the part of the element that is inside the window: an element half off its edge is clicked where it can be.
+  const left = Math.max(rect.left, 0);
+  const right = Math.min(rect.right, window.innerWidth);
+  const x = (frame?.left ?? 0) + ((left + right) / 2) * scale;
   const y = (frame?.top ?? 0) + (rect.top + rect.height / 2) * scale;
   await send("Input.dispatchMouseEvent", { type: "mouseMoved", x, y });
   await send("Input.dispatchMouseEvent", { type: "mousePressed", x, y, button: "left", clickCount: 1 });
@@ -121,9 +124,16 @@ export const PhoneLayout: Story = {
     await expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(window.innerWidth);
     await expect(shell.scrollWidth).toBeLessThanOrEqual(window.innerWidth);
     // The sub-navigation does not fit a phone: it scrolls inside its own row, which is no wider than the window.
-    const row = slot.querySelector<HTMLElement>("nav[aria-label='Project sections']")!.parentElement as HTMLElement;
+    const row = slot.querySelector<HTMLElement>("[data-sub-nav-scroller]") as HTMLElement;
     await expect(row.scrollWidth).toBeGreaterThan(row.clientWidth);
     await expect(row.getBoundingClientRect().right).toBeLessThanOrEqual(window.innerWidth);
+    // It fades at the edge that has more links beyond it (the end, at its start), and the fade takes no click.
+    const rowBox = row.parentElement as HTMLElement;
+    await waitFor(() => expect(rowBox).toHaveAttribute("data-overflow-end"));
+    await expect(rowBox).not.toHaveAttribute("data-overflow-start");
+    await waitFor(() => expect(getComputedStyle(rowBox, "::after").opacity).toBe("1"));
+    await expect(getComputedStyle(rowBox, "::after").pointerEvents).toBe("none");
+    await expect(getComputedStyle(rowBox, "::before").opacity).toBe("0");
     // The menu button opens the bar's links in a panel, and Escape closes it.
     await userEvent.click(canvas.getByRole("button", { name: "Menu" }));
     const panel = await within(document.body).findByRole("dialog");
@@ -482,6 +492,128 @@ export const StaysTheSameWhenItGrowsATallPage: Story = {
     await nextFrame();
     await expect(Math.abs(slot.getBoundingClientRect().top - top)).toBeLessThan(1);
     extra.remove();
+    await atTop();
+  },
+};
+
+export const SubNavCentresAndKeepsTheCurrentLinkInView: Story = {
+  name: "The sub-navigation's links are centred while they fit, and on a phone the current link is scrolled into view — layout test",
+  render: () => <DemoTopNavShell subNav />,
+  play: async ({ canvasElement }) => {
+    await expect(window.innerWidth).toBeGreaterThanOrEqual(1024);
+    const { canvas, slot } = slots(canvasElement);
+    const nav = canvas.getByRole("navigation", { name: "Project sections" });
+    const links = within(nav).getAllByRole("link");
+    // The links sit in the middle of the window, not at its start.
+    const first = links[0]!.getBoundingClientRect();
+    const last = links[links.length - 1]!.getBoundingClientRect();
+    await expect(Math.abs((first.left + last.right) / 2 - window.innerWidth / 2)).toBeLessThan(2);
+    // No line under the row in this demo, and no edge fade, since everything fits.
+    await expect(getComputedStyle(slot.querySelector("[data-sub-nav-scroller]")!.parentElement as HTMLElement).borderBlockEndStyle).toBe("none");
+    await expect(slot.querySelector("[data-overflow-start], [data-overflow-end]")).toBeNull();
+    // The current link is a round ghost button in the subtle tint, and marks itself.
+    const current = within(nav).getByRole("link", { name: "Overview" });
+    await expect(current).toHaveAttribute("aria-current", "page");
+    await expect(getComputedStyle(current).borderRadius).not.toBe("0px");
+    const probe = document.createElement("div");
+    probe.style.backgroundColor = "var(--dbm-bg-brand-subtle)";
+    document.body.append(probe);
+    const tint = getComputedStyle(probe).backgroundColor;
+    probe.remove();
+    await expect(getComputedStyle(current).backgroundColor).toBe(tint);
+    await expect(getComputedStyle(links[1]!).backgroundColor).not.toBe(tint);
+  },
+};
+
+export const SubNavCurrentLinkScrollsIntoViewOnAPhone: Story = {
+  name: "On a phone a current link beyond the edge is scrolled into view when the row appears — layout test",
+  globals: { viewport: { value: "mobile1", isRotated: false } },
+  render: () => (
+    <DemoTopNavShell subNav>
+      {/* The page is the demo's; the current section is the last one, which a phone cannot show without scrolling. */}
+    </DemoTopNavShell>
+  ),
+  play: async ({ canvasElement }) => {
+    await expect(window.innerWidth).toBeLessThan(768);
+    const { canvas, slot } = slots(canvasElement);
+    const nav = canvas.getByRole("navigation", { name: "Project sections" });
+    const scroller = slot.querySelector<HTMLElement>("[data-sub-nav-scroller]") as HTMLElement;
+    const last = within(nav).getByRole("link", { name: "Project settings" });
+    await expect(last.getBoundingClientRect().right).toBeGreaterThan(scroller.getBoundingClientRect().right);
+    // A real click on the last link makes it the current one, and the row brings it into view and the fade at the end goes.
+    await realClick(last);
+    await waitFor(() => expect(last).toHaveAttribute("aria-current", "page"));
+    await waitFor(() => expect(last.getBoundingClientRect().right).toBeLessThanOrEqual(scroller.getBoundingClientRect().right + 1));
+    await waitFor(() => expect(scroller.parentElement).toHaveAttribute("data-overflow-start"));
+    // Only the row scrolled: the page did not move.
+    await expect(window.scrollY).toBe(0);
+  },
+};
+
+export const HeaderHidesOnAScrollDownAndReturnsOnAScrollUp: Story = {
+  name: "With stickyHeader auto a real wheel down slides the header out of view, a wheel up brings it back, and focus inside keeps it — layout test",
+  render: () => <DemoTopNavShell stickyHeader="auto" subNav rows={80} />,
+  play: async ({ canvasElement }) => {
+    await expect(window.innerWidth).toBeGreaterThanOrEqual(1024);
+    const { canvas, shell, slot } = slots(canvasElement);
+    await atTop();
+    await waitFor(() => expect(shell).not.toHaveAttribute("data-header-hidden"));
+    await wheel(900);
+    await waitFor(() => expect(window.scrollY).toBeGreaterThan(300));
+    await settled();
+    await waitFor(() => expect(shell).toHaveAttribute("data-header-hidden"));
+    // Out of view: its lower edge is at or above the top of the window.
+    await waitFor(() => expect(slot.getBoundingClientRect().bottom).toBeLessThanOrEqual(1));
+    // A key press into it: focus is inside it, so it is back, whatever the scroll did.
+    await press("Tab", 9);
+    await press("Tab", 9);
+    await expect(slot.contains(document.activeElement)).toBe(true);
+    await waitFor(() => expect(slot.getBoundingClientRect().top).toBeGreaterThanOrEqual(-1));
+    (document.activeElement as HTMLElement).blur();
+    // A wheel up brings it back for good.
+    await wheel(-300);
+    await settled();
+    await waitFor(() => expect(shell).not.toHaveAttribute("data-header-hidden"));
+    await waitFor(() => expect(Math.abs(slot.getBoundingClientRect().top)).toBeLessThan(1));
+    await expect(canvas.getByRole("banner")).toBeVisible();
+    await atTop();
+  },
+};
+
+export const SubNavScrollsAwayLeavingTheBar: Story = {
+  name: "With sticky off on the sub-navigation only the bar stays at the top of the window while the row scrolls away — layout test",
+  render: () => <DemoTopNavShell subNav subNavProps={{ sticky: false }} rows={80} />,
+  play: async ({ canvasElement }) => {
+    await expect(window.innerWidth).toBeGreaterThanOrEqual(1024);
+    const { canvas, bar } = slots(canvasElement);
+    const nav = canvas.getByRole("navigation", { name: "Project sections" });
+    await atTop();
+    await expect(nav.getBoundingClientRect().top).toBeGreaterThanOrEqual(bar.getBoundingClientRect().bottom - 1);
+    await wheel(900);
+    await waitFor(() => expect(window.scrollY).toBeGreaterThan(300));
+    await settled();
+    await expect(Math.abs(bar.getBoundingClientRect().top)).toBeLessThan(1);
+    await expect(nav.getBoundingClientRect().bottom).toBeLessThanOrEqual(bar.getBoundingClientRect().bottom + 1);
+    await atTop();
+  },
+};
+
+export const ActionsFooterStaysAtTheBottomOfTheWindow: Story = {
+  name: "The actions footer stays at the bottom of the window over a long page, and ends the page in place — layout test",
+  render: () => <DemoTopNavShell footerVariant="actions" rows={60} />,
+  play: async ({ canvasElement }) => {
+    await expect(window.innerWidth).toBeGreaterThanOrEqual(1024);
+    const { footer } = slots(canvasElement);
+    await atTop();
+    await expect(getComputedStyle(footer).position).toBe("sticky");
+    await expect(Math.abs(footer.getBoundingClientRect().bottom - window.innerHeight)).toBeLessThan(1);
+    await wheel(900);
+    await waitFor(() => expect(window.scrollY).toBeGreaterThan(300));
+    await settled();
+    await expect(Math.abs(footer.getBoundingClientRect().bottom - window.innerHeight)).toBeLessThan(1);
+    window.scrollTo(0, document.documentElement.scrollHeight);
+    await nextFrame();
+    await expect(Math.abs(footer.getBoundingClientRect().bottom - window.innerHeight)).toBeLessThan(1);
     await atTop();
   },
 };

@@ -15,10 +15,12 @@ import * as TopNavShellContentStories from "./TopNavShellContent.stories";
 import * as TopNavShellFooterStories from "./TopNavShellFooter.stories";
 import * as TopNavShellHeaderStories from "./TopNavShellHeader.stories";
 import * as TopNavShellMainStories from "./TopNavShellMain.stories";
+import * as TopNavShellPageHeaderStories from "./TopNavShellPageHeader.stories";
 import * as TopNavShellSkipLinkStories from "./TopNavShellSkipLink.stories";
+import * as TopNavShellSubNavLinkStories from "./TopNavShellSubNavLink.stories";
 import * as TopNavShellSubNavStories from "./TopNavShellSubNav.stories";
 
-export const propOrder = ["children", "stickyHeader", "scrolledEdge", "pageKey", "pageTitle", "dir", "style", "className", "id", "data-testid"];
+export const propOrder = ["children", "stickyHeader", "scrolledEdge", "pageKey", "pageTitle", "documentTitle", "dir", "style", "className", "id", "data-testid"];
 
 export const playgroundOrder = ["stickyHeader", "scrolledEdge", "dir", "subNav", "banner"];
 
@@ -85,7 +87,19 @@ Drive the shell's props live; the navbar, the sub-navigation and the page it is 
 
 `TopNavShell.SubNav` also accepts any other native `<div>` attribute.
 
-<PropertiesTable of={TopNavShellSubNavStories} order={["children", "style", "className", "id", "data-testid"]} />
+<PropertiesTable of={TopNavShellSubNavStories} order={["children", "label", "align", "bordered", "sticky", "style", "className", "id", "data-testid"]} />
+
+### TopNavShell.SubNavLink properties
+
+`TopNavShell.SubNavLink` also accepts any other native `<a>` attribute.
+
+<PropertiesTable of={TopNavShellSubNavLinkStories} order={["children", "current", "style", "className", "id", "data-testid"]} />
+
+### TopNavShell.PageHeader properties
+
+`TopNavShell.PageHeader` also accepts any other native `<div>` attribute.
+
+<PropertiesTable of={TopNavShellPageHeaderStories} order={["title", "titleLevel", "description", "breadcrumbs", "actions", "style", "className", "id", "data-testid"]} />
 
 ### TopNavShell.Main properties
 
@@ -97,21 +111,45 @@ Drive the shell's props live; the navbar, the sub-navigation and the page it is 
 
 `TopNavShell.Content` also accepts any other native `<div>` attribute.
 
-<PropertiesTable of={TopNavShellContentStories} order={["children", "size", "paddingInline", "paddingBlock", "style", "className", "id", "data-testid"]} />
+<PropertiesTable of={TopNavShellContentStories} order={["children", "width", "size", "paddingInline", "paddingBlock", "style", "className", "id", "data-testid"]} />
 
 ### TopNavShell.Footer properties
 
 `TopNavShell.Footer` also accepts any other native `<footer>` attribute.
 
-<PropertiesTable of={TopNavShellFooterStories} order={["children", "style", "className", "id", "data-testid"]} />
+<PropertiesTable of={TopNavShellFooterStories} order={["children", "variant", "style", "className", "id", "data-testid"]} />
 
 ## Variants
 
 ### A second row of navigation
 
-`TopNavShell.SubNav` is a row inside the header, under the `Navbar`, so it sticks with it. Put a `nav` of your own in it, with its own name.
+`TopNavShell.SubNav` is a row inside the header, under the `Navbar`, so it sticks with it. Give it a `label` and it draws a named `nav` around its
+`TopNavShell.SubNavLink`s (round ghost buttons, the current one in the subtle tint the `Navbar` gives its own current link); or leave the label out and
+put a `nav` of your own in it. The links are centred while they all fit. When they do not, the row scrolls sideways, fades at the edge that has more
+links beyond it, and brings the current link into view. `bordered={false}` drops the line under it, and `align="start"` puts the links at the start.
 
 <Canvas of={TopNavShellStories.WithSubNav} />
+
+### A sub-navigation that scrolls away
+
+`sticky={false}` on the row keeps only the bar at the top of the window; the row scrolls away with the page. The bar must be the header's first
+child (a `Navbar` is). The shadow and, with `stickyHeader="auto"`, the sliding move to the bar.
+
+<Canvas of={TopNavShellStories.SubNavScrollsAway} />
+
+### A header that hides on scroll
+
+`stickyHeader="auto"` slides the header out of view while the reader scrolls down and brings it back on the first scroll up, at the top of the page,
+and whenever focus or an open menu is inside it, so the keyboard never loses the bar. With reduced motion it appears and disappears without sliding.
+
+<Canvas of={TopNavShellStories.AutoHide} />
+
+### A footer of actions
+
+`variant="actions"` on `TopNavShell.Footer` makes it a bar that stays at the bottom of the window until the page's own end: the Save and Cancel of a long
+form. `variant="compact"` pads the ordinary footer tighter. For a footer of several columns, put a `Grid` of link lists in `TopNavShell.Content` inside it.
+
+<Canvas of={TopNavShellStories.ActionsFooter} />
 
 ### A banner above the header
 
@@ -161,6 +199,19 @@ Press a link in the bar: its page goes to the shell as `pageKey` and `pageTitle`
 
 <Canvas of={TopNavShellStories.ContentWidth} />
 
+`width` on `TopNavShell.Content` picks the width by what the page is: `reading` for text, `dashboard` for cards and tables, `full` for a page that fills
+the window. `size` takes the steps of `Container` directly and replaces it.
+
+### The head of a page
+
+`TopNavShell.PageHeader` is the head of a page: the title as its `h1`, an optional trail of breadcrumbs above it, a description under it and the
+page's actions at the end of the row, under the title on a phone. The demo pages on this page use it.
+
+### The tab's title
+
+`documentTitle` keeps the browser tab's title in step with `pageTitle`, so the router does not have to: `true` sets it to `pageTitle`, and a function
+builds the whole title (`(title) => title + " · dbM"`). The title the document had comes back when the shell unmounts.
+
 ## Usage guidelines
 
 <div className="dbm-do-dont-grid">
@@ -171,7 +222,7 @@ Press a link in the bar: its page goes to the shell as `pageKey` and `pageTitle`
 - Put a `Navbar` in `TopNavShell.Header`, and leave it without its own `sticky`: the shell keeps the whole slot (the bar and the sub-navigation) in
   view. Use `Navbar.SkipLink` inside a `Navbar`, and `TopNavShell.SkipLink` when the header is not a `Navbar`: both go to `#main`, which is
   `TopNavShell.Main`'s `id`.
-- Give the sub-navigation its own named `nav` (`aria-label="Project sections"`), so the page's navigation landmarks are told apart from the bar's.
+- Give the sub-navigation a `label` (or its own named `nav`), so the page's navigation landmarks are told apart from the bar's.
 - Pass `pageKey` (the router's pathname) and `pageTitle`, so a screen-reader user and a keyboard user are told about a page change that no browser
   navigation announces.
 - Keep a wide table or a long code block in a component that scrolls on its own (`Table`, `CodeBlock`): the page scrolls vertically and never
@@ -222,6 +273,7 @@ wrapped in a second banner.
 | Key | Behaviour |
 |---|---|
 | `Tab` | Moves through the skip link, then the header (the bar, then the sub-navigation), then the main area's content, then the footer, in markup order. |
+| `Tab` into a hidden header | Slides the header back into view (`stickyHeader="auto"`). |
 | `Enter` on a skip link | Moves focus to `TopNavShell.Main`, past the header. |
 | `Escape` in the bar's menu panel | Closes it and returns focus to the menu button (the `Navbar`'s own behaviour below its `collapseBelow` width). |
 
@@ -236,6 +288,9 @@ wrapped in a second banner.
   page's content on the system's `sticky` step, the header one step above it, the skip link on the `fixed` step, and every menu, popover and dialog above those.
 - The scrolled-edge shadow is not the only way to tell that a page scrolls, and forced colours, which drop shadows, get a line instead. Motion on it
   respects `prefers-reduced-motion`.
+- A header that hides on scroll (`stickyHeader="auto"`) never hides while focus is inside it or one of its menus is open, so a keyboard user does not
+  lose the bar; with reduced motion it jumps instead of sliding. The sub-navigation's links are ordinary links in a named `nav`, the current one has
+  `aria-current="page"` and, in forced colours, an underline besides its tint. The edge fades are decoration and never take a click.
 - A notch or a home indicator never covers the shell: the header keeps the top inset clear, the frame the sides and the bottom, and the skip link is drawn
   below it.
 - The shell adds no colour pairing of its own: the page background is the surface colour, and text inside uses the primary text colour (at least 4.5:1
@@ -302,14 +357,20 @@ return (
 <TokenRow token="bg.surface" usage="the frame's background: the page colour behind the header, the main area and the footer; the skip link's fill" />
 <TokenRow token="text.primary" usage="the colour of text inside the frame that sets none of its own, and of the skip link" />
 <TokenRow token="font-family.primary" usage="the typeface of the frame, inherited by everything inside it" />
-<TokenRow token="border.default" usage="the line under the sub-navigation and over the footer, and the skip link's border" />
+<TokenRow token="border.default" usage="the line under the sub-navigation (when `bordered`) and over the footer, and the skip link's border" />
 <TokenRow token="border-width.1" usage="the thickness of those lines" />
 <TokenRow token="border-focus" usage="the focus ring drawn inside the main area while the keyboard has focused it, and around the skip link" />
 <TokenRow token="border-width.2" usage="the thickness of that ring, and how far it is drawn inside the edge" />
 <TokenRow token="z-index.sticky" usage="the layer of the page's own content (the loading bar), and, one step up, of the header, so its shadow falls on the page" />
 <TokenRow token="z-index.fixed" usage="keeps the skip link above everything while it is focused" />
-<TokenRow token="motion-duration.base" usage="how long the header's shadow takes to appear" />
-<TokenRow token="motion-easing.standard" usage="the easing of that transition" />
+<TokenRow token="motion-duration.base" usage="how long the header's shadow takes to appear, and how long a header that hides on scroll takes to slide" />
+<TokenRow token="motion-duration.fast" usage="how long the sub-navigation's edge fade takes to appear" />
+<TokenRow token="motion-easing.standard" usage="the easing of those transitions" />
+<TokenRow token="bg.brand-subtle" usage="the tint of the sub-navigation's current link, the one the Navbar gives its own" />
+<TokenRow token="bg.brand-subtle-hover" usage="that tint under the pointer" />
+<TokenRow token="text.brand" usage="the colour of the sub-navigation's current link" />
+<TokenRow token="space.8" usage="how wide the sub-navigation's edge fade is, and how far the current link is kept clear of it" />
+<TokenRow token="space.32" usage="the room the text of a page header is given before its actions wrap under it (twice this step)" />
 <TokenRow token="space.px" usage="the skip link's hidden size, until it takes focus" />
 <TokenRow token="space.2" usage="how far the skip link sits from the top edge; padding above and below its words" />
 <TokenRow token="space.4" usage="how far the skip link sits from the start edge; padding beside its words" />
@@ -329,7 +390,7 @@ return (
   href="/?path=/docs/organisms-navigation-navbar--docs"
 >
   <Navbar>
-    <Navbar.Brand href="#">dbM Cloud</Navbar.Brand>
+    <Navbar.Brand href="#">dbM</Navbar.Brand>
     <Navbar.Actions>
       <IconButton icon={BellIcon} aria-label="Notifications" variant="ghost" size="sm" />
     </Navbar.Actions>

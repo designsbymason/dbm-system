@@ -108,3 +108,5 @@ The full `06` §9 pass on the current shell, after the additions of ADR-0180 to 
 
 **Story kit: `DemoShell` takes `sidebarCurrent` (2026-11-07, at explicit direction):** an optional id for the sidebar item that starts as current (`"home"` by default), so a page that is not Home does not show Home highlighted (the Data Table List Page sets `"team"`). Additive and docs-only (no shipped code, no AppShell story changes), so by question 1 of the three-question test (`06-engineering-standards.md` §9) the shell stays Finalized.
 
+## Shared skip link (2026-11-07, at explicit direction)
+The skip link's stylesheet moved to `src/internal/skipLink.module.css`, which `TopNavShell` now uses too (it was a line-for-line copy). Nothing `AppShell` draws changed, and its unit tests and real-browser checks pass unchanged.

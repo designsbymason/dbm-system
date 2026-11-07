@@ -14,7 +14,7 @@ const words = {
 
 const sidebar = (attributes = "", { toggle = false, language = "en" as "en" | "fa" } = {}) => `  <AppShell.Sidebar>
     <Sidebar${attributes ? ` ${attributes}` : ""}>
-      <Sidebar.Header>dbM Cloud</Sidebar.Header>
+      <Sidebar.Header>dbM</Sidebar.Header>
       <Sidebar.Content>
         <Sidebar.Nav>
           <Sidebar.Item href="/" current>${words[language].home}</Sidebar.Item>
@@ -34,7 +34,7 @@ const sidebar = (attributes = "", { toggle = false, language = "en" as "en" | "f
 const header = `  <AppShell.Header>
     <Navbar>
       <Navbar.SkipLink />
-      <Navbar.Brand href="/">dbM Cloud</Navbar.Brand>
+      <Navbar.Brand href="/">dbM</Navbar.Brand>
       <Navbar.Actions>
         <Sidebar.MenuButton />
       </Navbar.Actions>
@@ -68,7 +68,7 @@ ${shell('scroll="page"', [header, sidebar(), main])}`,
   <AppShell.Header>
     <Navbar>
       <Navbar.SkipLink />
-      <Navbar.Brand href="/">dbM Cloud</Navbar.Brand>
+      <Navbar.Brand href="/">dbM</Navbar.Brand>
       <Navbar.Actions>
         <AppShell.AsideToggle />
         <Sidebar.MenuButton />
@@ -102,7 +102,7 @@ ${shell('headerSpan="full"', [header, sidebar(), main])}`,
 <AppShell>
   <AppShell.SkipLink />
   <AppShell.Header as="header">
-    <p>dbM Cloud</p>
+    <p>dbM</p>
   </AppShell.Header>
   <AppShell.Main>
     <h1>Billing</h1>
@@ -115,7 +115,7 @@ ${shell('headerSpan="full"', [header, sidebar(), main])}`,
   <AppShell.Header>
     <Navbar>
       <Navbar.SkipLink />
-      <Navbar.Brand href="/">dbM Cloud</Navbar.Brand>
+      <Navbar.Brand href="/">dbM</Navbar.Brand>
     </Navbar>
   </AppShell.Header>
   <AppShell.Main>
@@ -158,7 +158,7 @@ ${shell('railBelow="xl"', [header, sidebar("", { toggle: true }), main])}`,
   <AppShell.Header>
     <Navbar>
       <Navbar.SkipLink />
-      <Navbar.Brand href="/">dbM Cloud</Navbar.Brand>
+      <Navbar.Brand href="/">dbM</Navbar.Brand>
     </Navbar>
   </AppShell.Header>
   <AppShell.Main>
@@ -176,7 +176,7 @@ ${shell('railBelow="xl"', [header, sidebar("", { toggle: true }), main])}`,
   </AppShell.Banner>
   <AppShell.Header>
     <Navbar>
-      <Navbar.Brand href="/">dbM Cloud</Navbar.Brand>
+      <Navbar.Brand href="/">dbM</Navbar.Brand>
     </Navbar>
   </AppShell.Header>
   <AppShell.Main>

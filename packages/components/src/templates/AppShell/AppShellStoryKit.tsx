@@ -55,7 +55,7 @@ const rowsFa = [
   ["INV-1053", "پویایی بزرگ", "پرداخت‌شده", "۲٬۰۷۵٫۰۰ دلار"],
 ];
 
-/** Every word the demo shells draw, by language. The brand ("dbM Cloud") is a name and stays as it is. */
+/** Every word the demo shells draw, by language. The brand ("dbM") is a name and stays as it is. */
 export const demoCopy = {
   en: {
     home: "Home",
@@ -80,7 +80,7 @@ export const demoCopy = {
     updated: "Last updated by John Doe",
     orderDetails: "Order details",
     banner: "Scheduled maintenance tonight at 22:00 UTC. Saving may be unavailable for a few minutes.",
-    footer: "© dbM Cloud",
+    footer: "© dbM",
     cancel: "Cancel",
     save: "Save changes",
     errorTitle: "We couldn't load this page",
@@ -113,7 +113,7 @@ export const demoCopy = {
     updated: "آخرین به‌روزرسانی: علی رضایی",
     orderDetails: "جزئیات سفارش",
     banner: "نگهداری برنامه‌ریزی‌شده امشب ساعت ۲۲:۰۰ به وقت جهانی. ذخیره‌سازی ممکن است چند دقیقه در دسترس نباشد.",
-    footer: "© dbM Cloud",
+    footer: "© dbM",
     cancel: "انصراف",
     save: "ذخیره تغییرات",
     errorTitle: "بارگذاری این صفحه ممکن نشد",
@@ -280,7 +280,7 @@ export function DemoShell({
             }}
           />
           <Navbar.Brand href="#" onClick={preventNavigation}>
-            dbM Cloud
+            dbM
           </Navbar.Brand>
           <Navbar.Actions>
             {aside && <AppShell.AsideToggle labels={fa ? faLabels.asideToggle : undefined} />}
@@ -380,7 +380,7 @@ export function DemoPlainHeaderShell({ framed = false }: { framed?: boolean }) {
       />
       <AppShell.Header as="header" data-testid="plain-header">
         <div style={{ padding: "var(--dbm-space-4) var(--dbm-space-6)", borderBlockEnd: "var(--dbm-border-width-1) solid var(--dbm-border-default)" }}>
-          <Text weight="bold">dbM Cloud</Text>
+          <Text weight="bold">dbM</Text>
         </div>
       </AppShell.Header>
       <AppShell.Main>
@@ -425,7 +425,7 @@ export function DemoNavigationShell({ framed = false }: { framed?: boolean }) {
       <AppShell.Header>
         <Navbar>
           <Navbar.Brand href="#" onClick={preventNavigation}>
-            dbM Cloud
+            dbM
           </Navbar.Brand>
           <Navbar.Actions>
             <Sidebar.MenuButton />

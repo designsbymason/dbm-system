@@ -17,7 +17,7 @@ const meta: Meta<typeof Sidebar.Header> = {
         "Test identifier for automated testing (e.g. Testing Library's getByTestId, Playwright/Cypress selectors). Rendered as the DOM data-testid attribute; has no visual or behavioral effect.",
     },
   },
-  args: { children: "dbM Cloud" },
+  args: { children: "dbM" },
 };
 
 export default meta;

@@ -1,10 +1,15 @@
-import { cx, mergeDefined, mergeRefs } from "@dbm-system/utils";
-import { forwardRef, useEffect, useMemo, useRef, useState } from "react";
+import { cx, mergeDefined, mergeRefs, useScrollEdges } from "@dbm-system/utils";
+import { forwardRef, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { Button } from "../../atoms/Button";
 import { Container } from "../../atoms/Container";
+import type { ContainerSize } from "../../atoms/Container";
 import { DirectionProvider, useDirection } from "../../atoms/DirectionProvider";
+import { Heading } from "../../atoms/Heading";
+import { Text } from "../../atoms/Text";
 import { VisuallyHidden } from "../../atoms/VisuallyHidden";
 import { MainBusy } from "../../internal/MainBusy";
 import { usePageChange } from "../../internal/usePageChange";
+import skipLinkStyles from "../../internal/skipLink.module.css";
 import styles from "./TopNavShell.module.css";
 import { TopNavShellContext, useTopNavShellContext } from "./TopNavShellContext";
 import type {
@@ -13,15 +18,25 @@ import type {
   TopNavShellFooterProps,
   TopNavShellHeaderProps,
   TopNavShellMainLabels,
+  TopNavShellContentWidth,
   TopNavShellMainProps,
+  TopNavShellPageHeaderProps,
   TopNavShellProps,
   TopNavShellSkipLinkLabels,
   TopNavShellSkipLinkProps,
+  TopNavShellSubNavLinkProps,
   TopNavShellSubNavProps,
 } from "./TopNavShell.types";
 
 const defaultSkipLinkLabels: TopNavShellSkipLinkLabels = { skipToContent: "Skip to content" };
 const defaultMainLabels: TopNavShellMainLabels = { loading: "Loading" };
+
+/** How far the page must be scrolled before a header that hides on scroll (`stickyHeader="auto"`) will go, and how far one move must be to count. */
+const HIDE_AFTER_SCROLL = 80;
+const SCROLL_STEP = 6;
+
+/** The steps of `Container` each width preset of `TopNavShell.Content` stands for. */
+const widthSizes: Record<TopNavShellContentWidth, ContainerSize> = { reading: "md", dashboard: "2xl", full: "full" };
 
 /**
  * The page frame of an application with no sidebar: a skip link, an optional banner, a header that stays at the top of the window (a `Navbar`
@@ -53,7 +68,7 @@ const defaultMainLabels: TopNavShellMainLabels = { loading: "Loading" };
  * ```
  */
 const TopNavShellRoot = forwardRef<HTMLDivElement, TopNavShellProps>(
-  ({ children, stickyHeader = true, scrolledEdge = true, pageKey, pageTitle, dir: dirProp, className, style, ...props }, ref) => {
+  ({ children, stickyHeader = true, scrolledEdge = true, pageKey, pageTitle, documentTitle = false, dir: dirProp, className, style, ...props }, ref) => {
     // The direction of the shell: its own, else the nearest `DirectionProvider`'s, else left to right. Everything inside gets it from a provider.
     const dir = useDirection(dirProp);
     const rootRef = useRef<HTMLDivElement | null>(null);
@@ -63,24 +78,51 @@ const TopNavShellRoot = forwardRef<HTMLDivElement, TopNavShellProps>(
     // scrolls as a whole, so there is no scroller of the shell's own to send back to its top: that is the router's.
     const announcement = usePageChange({ pageKey, pageTitle, mainRef, resetScroll: false });
 
-    // Whether the page is scrolled down from its top, for the header's shadow. A scroll event does not bubble, so one listener on the document in
-    // the capture phase hears the window and any box the shell is drawn inside (a framed demo). Read only from an effect, so the server render and
-    // the first client render agree.
-    const [scrolled, setScrolled] = useState(false);
+    // The browser tab's title follows `pageTitle` when asked, and the title the document had comes back when the shell goes.
     useEffect(() => {
-      if (!scrolledEdge) return undefined;
+      if (!documentTitle || pageTitle === undefined) return undefined;
+      const previous = document.title;
+      document.title = typeof documentTitle === "function" ? documentTitle(pageTitle) : pageTitle;
+      return () => {
+        document.title = previous;
+      };
+    }, [documentTitle, pageTitle]);
+
+    // Whether the page is scrolled down from its top, for the header's shadow, and which way it is moving, for a header that hides on scroll. A
+    // scroll event does not bubble, so one listener on the document in the capture phase hears the window and any box the shell is drawn inside
+    // (a framed demo). Read only from an effect, so the server render and the first client render agree.
+    const autoHide = stickyHeader === "auto";
+    const [scrolled, setScrolled] = useState(false);
+    const [hidden, setHidden] = useState(false);
+    useEffect(() => {
+      if (!scrolledEdge && !autoHide) return undefined;
       const root = rootRef.current;
+      let last = 0;
+      const move = (position: number) => {
+        setScrolled(position > 0);
+        if (!autoHide) return;
+        if (position <= HIDE_AFTER_SCROLL) setHidden(false);
+        else if (position - last > SCROLL_STEP) setHidden(true);
+        else if (last - position > SCROLL_STEP) setHidden(false);
+        if (Math.abs(position - last) > SCROLL_STEP || position <= HIDE_AFTER_SCROLL) last = position;
+      };
       const read = (event?: Event) => {
         const target = event?.target;
-        if (target === undefined || target === document) setScrolled(window.scrollY > 0);
-        else if (target instanceof Element && root !== null && target.contains(root)) setScrolled(target.scrollTop > 0);
+        if (target === undefined || target === document) move(window.scrollY);
+        else if (target instanceof Element && root !== null && target.contains(root)) move(target.scrollTop);
       };
       read();
       document.addEventListener("scroll", read, { capture: true, passive: true });
       return () => document.removeEventListener("scroll", read, true);
-    }, [scrolledEdge]);
+    }, [scrolledEdge, autoHide]);
 
-    const context = useMemo(() => ({ mainRef }), []);
+    // A sub-navigation that scrolls away with the page tells the shell, which then sticks only the bar and not the whole slot (a marker on the
+    // root, set from outside React's render so the page does not draw twice).
+    const setSubNavStatic = useCallback((isStatic: boolean) => {
+      rootRef.current?.toggleAttribute("data-subnav-static", isStatic);
+    }, []);
+
+    const context = useMemo(() => ({ mainRef, setSubNavStatic }), [setSubNavStatic]);
 
     return (
       <DirectionProvider dir={dir}>
@@ -89,7 +131,8 @@ const TopNavShellRoot = forwardRef<HTMLDivElement, TopNavShellProps>(
             {...props}
             ref={mergeRefs(rootRef, ref)}
             dir={dir}
-            data-sticky-header={stickyHeader ? "" : undefined}
+            data-sticky-header={stickyHeader === "auto" ? "auto" : stickyHeader ? "" : undefined}
+            data-header-hidden={autoHide && hidden ? "" : undefined}
             data-scrolled-edge={scrolledEdge ? "" : undefined}
             data-scrolled={scrolledEdge && scrolled ? "" : undefined}
             className={cx(styles.root, className)}
@@ -113,7 +156,7 @@ const TopNavShellSkipLink = forwardRef<HTMLAnchorElement, TopNavShellSkipLinkPro
   ({ href = "#main", labels: labelsProp, className, children, ...props }, ref) => {
     const labels = mergeDefined(defaultSkipLinkLabels, labelsProp);
     return (
-      <a {...props} ref={ref} href={href} className={cx(styles.skipLink, className)}>
+      <a {...props} ref={ref} href={href} className={cx(skipLinkStyles.skipLink, className)}>
         {children ?? labels.skipToContent}
       </a>
     );
@@ -138,13 +181,82 @@ const TopNavShellHeader = forwardRef<HTMLElement, TopNavShellHeaderProps>(({ as:
 TopNavShellHeader.displayName = "TopNavShell.Header";
 
 /**
- * A second row of navigation under the `Navbar`, inside the header so it sticks with it: a `Tabs` list or a row of links, in a `nav` of its own
- * with its own name. It scrolls sideways when it does not fit, so a phone keeps every item.
+ * A second row of navigation under the `Navbar`, inside the header so it sticks with it: a row of `TopNavShell.SubNavLink`s (give it a `label`
+ * and it draws the `nav`), or a `Tabs` list of your own in a `nav` with its own name. The links are centred while they all fit. When they do
+ * not, the row scrolls sideways so a phone keeps every item, fades at the edge that has more, and brings the current link into view.
  */
-const TopNavShellSubNav = forwardRef<HTMLDivElement, TopNavShellSubNavProps>(({ className, ...props }, ref) => (
-  <div {...props} ref={ref} className={cx(styles.subNav, className)} />
-));
+const TopNavShellSubNav = forwardRef<HTMLDivElement, TopNavShellSubNavProps>(
+  ({ label, align = "center", bordered = true, sticky = true, className, children, ...props }, ref) => {
+    const { setSubNavStatic } = useTopNavShellContext();
+    const scrollerRef = useRef<HTMLDivElement | null>(null);
+    const { overflowStart, overflowEnd } = useScrollEdges(scrollerRef, "horizontal", { itemSelector: "a, button, [role=tab]" });
+
+    // The current link is brought into view, when the row mounts and whenever the current link changes.
+    useEffect(() => {
+      const scroller = scrollerRef.current;
+      if (scroller === null) return undefined;
+      let first = true;
+      const reveal = () => {
+        const current = scroller.querySelector("[aria-current]");
+        if (current === null) return;
+        const box = scroller.getBoundingClientRect();
+        const rect = current.getBoundingClientRect();
+        const gap = Number.parseFloat(getComputedStyle(scroller).scrollPaddingInlineStart) || 0;
+        const smooth = !first && !window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+        const behavior = smooth ? "smooth" : "auto";
+        if (rect.left < box.left + gap) scroller.scrollBy({ left: rect.left - box.left - gap, behavior });
+        else if (rect.right > box.right - gap) scroller.scrollBy({ left: rect.right - box.right + gap, behavior });
+        first = false;
+      };
+      reveal();
+      first = false;
+      if (typeof MutationObserver === "undefined") return undefined;
+      const observer = new MutationObserver(reveal);
+      observer.observe(scroller, { attributes: true, attributeFilter: ["aria-current"], subtree: true });
+      return () => observer.disconnect();
+    }, []);
+
+    // A row that is not sticky tells the shell, and takes it back when it stops or goes.
+    useEffect(() => {
+      if (sticky) return undefined;
+      setSubNavStatic(true);
+      return () => setSubNavStatic(false);
+    }, [sticky, setSubNavStatic]);
+
+    return (
+      <div
+        {...props}
+        ref={ref}
+        data-overflow-start={overflowStart ? "" : undefined}
+        data-overflow-end={overflowEnd ? "" : undefined}
+        data-align={align}
+        className={cx(styles.subNav, bordered && styles.subNavBordered, className)}
+      >
+        <div ref={scrollerRef} data-sub-nav-scroller="" className={styles.subNavScroller}>
+          {label === undefined ? children : (
+            <nav aria-label={label} className={styles.subNavList}>
+              {children}
+            </nav>
+          )}
+        </div>
+      </div>
+    );
+  },
+);
 TopNavShellSubNav.displayName = "TopNavShell.SubNav";
+
+/**
+ * A link of `TopNavShell.SubNav`: a round ghost button. The current page's link (`current`) takes `aria-current="page"` and the subtle tint the
+ * `Navbar` gives its own current link, underlined as well in forced colours, where a fill is dropped.
+ */
+const TopNavShellSubNavLink = forwardRef<HTMLAnchorElement, TopNavShellSubNavLinkProps>(({ current = false, className, children, ...props }, ref) => (
+  <Button asChild variant="ghost" tone="neutral" size="sm" rounded className={cx(styles.subNavLink, current && styles.subNavLinkCurrent, className)}>
+    <a {...props} ref={ref} aria-current={current ? "page" : undefined}>
+      {children}
+    </a>
+  </Button>
+));
+TopNavShellSubNavLink.displayName = "TopNavShell.SubNavLink";
 
 /**
  * The page's one `<main>`, and the skip link's target. It takes focus from the skip link and when the page changes (`tabindex="-1"`). `busy`
@@ -171,11 +283,31 @@ const TopNavShellMain = forwardRef<HTMLElement, TopNavShellMainProps>(({ id = "m
 TopNavShellMain.displayName = "TopNavShell.Main";
 
 /**
+ * The head of a page, at the top of `TopNavShell.Content`: its title as the page's `h1` (`titleLevel` changes that), an optional trail of
+ * breadcrumbs above it, a description under it and the page's actions at the end of the row, under the title on a phone.
+ */
+const TopNavShellPageHeader = forwardRef<HTMLDivElement, TopNavShellPageHeaderProps>(
+  ({ title, titleLevel = 1, description, breadcrumbs, actions, className, ...props }, ref) => (
+    <div {...props} ref={ref} className={cx(styles.pageHeader, className)}>
+      <div className={styles.pageHeaderText}>
+        {breadcrumbs}
+        <Heading level={titleLevel} size="2xl">
+          {title}
+        </Heading>
+        {description !== undefined && <Text color="secondary">{description}</Text>}
+      </div>
+      {actions !== undefined && <div className={styles.pageHeaderActions}>{actions}</div>}
+    </div>
+  ),
+);
+TopNavShellPageHeader.displayName = "TopNavShell.PageHeader";
+
+/**
  * The page's content in the main area, kept to a readable width and padded on the spacing scale: a `Container` with padding above and below
  * as well. Put it inside `TopNavShell.Main`, which adds none of its own.
  */
 const TopNavShellContent = forwardRef<HTMLDivElement, TopNavShellContentProps>(
-  ({ size = "xl", paddingInline = 4, paddingBlock = 6, style, ...props }, ref) => (
+  ({ width, size = width === undefined ? "xl" : widthSizes[width], paddingInline = 4, paddingBlock = 6, style, ...props }, ref) => (
     <Container
       {...props}
       ref={ref}
@@ -187,9 +319,17 @@ const TopNavShellContent = forwardRef<HTMLDivElement, TopNavShellContentProps>(
 );
 TopNavShellContent.displayName = "TopNavShell.Content";
 
-/** The page's `contentinfo`. On a page too short to fill the window it sits at the bottom of the window, not under the content. */
-const TopNavShellFooter = forwardRef<HTMLElement, TopNavShellFooterProps>(({ className, ...props }, ref) => (
-  <footer {...props} ref={ref} className={cx(styles.footer, className)} />
+/**
+ * The page's `contentinfo`. On a page too short to fill the window it sits at the bottom of the window, not under the content. `variant` makes it
+ * a tighter one (`compact`) or a bar of actions that stays at the bottom of the window (`actions`).
+ */
+const TopNavShellFooter = forwardRef<HTMLElement, TopNavShellFooterProps>(({ variant = "default", className, ...props }, ref) => (
+  <footer
+    {...props}
+    ref={ref}
+    data-variant={variant}
+    className={cx(styles.footer, variant === "compact" && styles.footerCompact, variant === "actions" && styles.footerActions, className)}
+  />
 ));
 TopNavShellFooter.displayName = "TopNavShell.Footer";
 
@@ -198,6 +338,8 @@ type TopNavShellComponent = typeof TopNavShellRoot & {
   Banner: typeof TopNavShellBanner;
   Header: typeof TopNavShellHeader;
   SubNav: typeof TopNavShellSubNav;
+  SubNavLink: typeof TopNavShellSubNavLink;
+  PageHeader: typeof TopNavShellPageHeader;
   Main: typeof TopNavShellMain;
   Content: typeof TopNavShellContent;
   Footer: typeof TopNavShellFooter;
@@ -208,6 +350,8 @@ export const TopNavShell: TopNavShellComponent = Object.assign(TopNavShellRoot, 
   Banner: TopNavShellBanner,
   Header: TopNavShellHeader,
   SubNav: TopNavShellSubNav,
+  SubNavLink: TopNavShellSubNavLink,
+  PageHeader: TopNavShellPageHeader,
   Main: TopNavShellMain,
   Content: TopNavShellContent,
   Footer: TopNavShellFooter,

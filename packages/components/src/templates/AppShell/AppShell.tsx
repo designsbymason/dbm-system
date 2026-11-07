@@ -11,6 +11,7 @@ import { Drawer } from "../../organisms/Drawer";
 import { Sidebar } from "../../organisms/Sidebar";
 import { MainBusy } from "../../internal/MainBusy";
 import { usePageChange } from "../../internal/usePageChange";
+import skipLinkStyles from "../../internal/skipLink.module.css";
 import styles from "./AppShell.module.css";
 import { AppShellContext, useAppShellContext } from "./AppShellContext";
 import { useElementHeight } from "./useElementHeight";
@@ -640,7 +641,7 @@ const AppShellSkipLink = forwardRef<HTMLAnchorElement, AppShellSkipLinkProps>(
   ({ href = "#main", labels: labelsProp, className, children, ...props }, ref) => {
     const labels = mergeDefined(defaultSkipLinkLabels, labelsProp);
     return (
-      <a {...props} ref={ref} href={href} className={cx(styles.skipLink, className)}>
+      <a {...props} ref={ref} href={href} className={cx(skipLinkStyles.skipLink, className)}>
         {children ?? labels.skipToContent}
       </a>
     );

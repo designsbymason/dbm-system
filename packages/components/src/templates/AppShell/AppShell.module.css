@@ -9,6 +9,7 @@
   /* A notch or a home indicator is kept clear: each custom property is the device's inset on that side (zero where a page does not draw under
      them). The names are physical because the device's are (a notch is on the left whatever the reading direction). */
   --app-shell-safe-top: env(safe-area-inset-top, 0px);
+  --template-safe-top: var(--app-shell-safe-top);
   --app-shell-safe-right: env(safe-area-inset-right, 0px);
   --app-shell-safe-bottom: env(safe-area-inset-bottom, 0px);
   --app-shell-safe-left: env(safe-area-inset-left, 0px);
@@ -417,42 +418,6 @@
 }
 
 /* The skip link: out of sight until it takes keyboard focus, then drawn over the top corner of the page, above everything. */
-.skipLink {
-  position: absolute;
-  inline-size: var(--dbm-space-px);
-  block-size: var(--dbm-space-px);
-  overflow: hidden;
-  clip-path: inset(50%);
-  white-space: nowrap;
-}
-
-.skipLink:focus-visible {
-  position: fixed;
-  inset-block-start: calc(var(--dbm-space-2) + var(--app-shell-safe-top, 0px));
-  inset-inline-start: var(--dbm-space-4);
-  z-index: var(--dbm-z-index-fixed);
-  inline-size: auto;
-  block-size: auto;
-  overflow: visible;
-  clip-path: none;
-  padding-block: var(--dbm-space-2);
-  padding-inline: var(--dbm-space-4);
-  border: var(--dbm-border-width-1) solid var(--dbm-border-default);
-  border-radius: var(--dbm-radius-md);
-  background-color: var(--dbm-bg-surface);
-  color: var(--dbm-text-primary);
-  font-size: var(--dbm-font-size-sm);
-  font-weight: var(--dbm-font-weight-medium);
-  text-decoration: none;
-  outline: var(--dbm-border-width-2) solid var(--dbm-border-focus);
-  outline-offset: var(--dbm-space-1);
-  box-shadow: var(--dbm-shadow-light-md);
-}
-
-[data-theme$="-dark"] .skipLink:focus-visible {
-  box-shadow: var(--dbm-shadow-dark-md);
-}
-
 /* --- A busy main area --- */
 /* Zero tall and stuck to the top of the main area (below the banner and the header when the page scrolls under them), so the bar lies along its
    edge however far the content has scrolled and takes no room. */
@@ -506,7 +471,6 @@
 
   .sidebar,
   .aside,
-  .skipLink,
   .busyBar,
   .resizeHandle,
   button.asideToggle {

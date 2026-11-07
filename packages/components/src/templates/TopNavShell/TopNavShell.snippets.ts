@@ -13,20 +13,25 @@ const words = {
 const header = (extra = "", language: "en" | "fa" = "en") => `  <TopNavShell.Header>
     {/* The shell keeps the header in view: leave the Navbar without its own sticky */}
     <Navbar>
-      <Navbar.Brand href="/">dbM Cloud</Navbar.Brand>
-      <Navbar.Links aria-label="Main">
-        <Navbar.Link href="/projects" current>${words[language].projects}</Navbar.Link>
-        <Navbar.Link href="/reports">${words[language].reports}</Navbar.Link>
-      </Navbar.Links>
+      {/* On a phone the row is three columns: the menu button at the start, the brand in the centre, the actions at the end */}
+      <Navbar.Row columns="balanced">
+        <Navbar.Brand href="/">dbM</Navbar.Brand>
+        <Navbar.Links aria-label="Main">
+          <Navbar.Link href="/projects" current>${words[language].projects}</Navbar.Link>
+          <Navbar.Link href="/reports">${words[language].reports}</Navbar.Link>
+        </Navbar.Links>
+        <Navbar.MenuButton variant="tertiary" tone="neutral" size="sm" />
+      </Navbar.Row>
     </Navbar>${extra}
   </TopNavShell.Header>`;
 
-const subNav = `
-    <TopNavShell.SubNav>
-      <nav aria-label="Project sections">
-        {/* your links, or a row of buttons: it scrolls sideways when it does not fit */}
-      </nav>
+const subNavRow = (attributes = "") => `
+    <TopNavShell.SubNav label="Project sections"${attributes ? ` ${attributes}` : ""}>
+      <TopNavShell.SubNavLink href="/projects/overview" current>Overview</TopNavShell.SubNavLink>
+      <TopNavShell.SubNavLink href="/projects/activity">Activity</TopNavShell.SubNavLink>
+      <TopNavShell.SubNavLink href="/projects/members">Members</TopNavShell.SubNavLink>
     </TopNavShell.SubNav>`;
+const subNav = subNavRow();
 
 const main = (inner = "", language: "en" | "fa" = "en") => `  <TopNavShell.Main>
     <TopNavShell.Content>
@@ -34,7 +39,7 @@ const main = (inner = "", language: "en" | "fa" = "en") => `  <TopNavShell.Main>
     </TopNavShell.Content>
   </TopNavShell.Main>`;
 
-const footer = `  <TopNavShell.Footer>© dbM Cloud</TopNavShell.Footer>`;
+const footer = `  <TopNavShell.Footer>© dbM</TopNavShell.Footer>`;
 
 const shell = (attributes: string, parts: string[]) => `<TopNavShell${attributes ? ` ${attributes}` : ""}>\n${parts.join("\n")}\n</TopNavShell>`;
 
@@ -43,9 +48,54 @@ const skipLink = `  <TopNavShell.SkipLink />`;
 export const topNavShellSnippets = {
   default: shell("", [skipLink, header(), main(), footer]),
 
-  subNav: `{/* TopNavShell.SubNav is a second row of navigation inside the header, so it sticks with the bar. Put a nav of your own in it, with its
-    own name; it scrolls sideways when it does not fit, so a phone keeps every item. */}
+  subNav: `{/* TopNavShell.SubNav is a second row of navigation inside the header, so it sticks with the bar. With a label it draws the nav, with
+    that name, around its TopNavShell.SubNavLinks (or leave the label out and put a nav of your own in it). The links are centred while they all
+    fit; when they do not, the row scrolls sideways, fades at the edge that has more and brings the current link into view. */}
 ${shell("", [skipLink, header(subNav), main(), footer])}`,
+
+  subNavScrollsAway: `{/* sticky={false} keeps only the bar at the top of the window: the row scrolls away with the page. bordered={false} draws no line under
+    it, and align="start" puts the links at the start of the row instead of the centre. */}
+${shell("", [skipLink, header(subNavRow('sticky={false} bordered={false} align="start"')), main(), footer])}`,
+
+  autoHide: `{/* stickyHeader="auto" slides the header out of view while the reader scrolls down and brings it back on the first scroll up. It stays
+    while focus or an open menu is inside it, and with reduced motion it appears and disappears without sliding. */}
+${shell('stickyHeader="auto"', [skipLink, header(subNav), main(), footer])}`,
+
+  actionsFooter: `{/* variant="actions" makes the footer a bar of actions that stays at the bottom of the window until the page's own end. */}
+${shell("", [
+  skipLink,
+  header(),
+  main(),
+  `  <TopNavShell.Footer variant="actions">
+    <TopNavShell.Content paddingBlock={3} style={{ display: "flex", justifyContent: "flex-end", gap: "var(--dbm-space-2)" }}>
+      <Button variant="secondary">Cancel</Button>
+      <Button>Save</Button>
+    </TopNavShell.Content>
+  </TopNavShell.Footer>`,
+])}`,
+
+  pageHeader: `{/* TopNavShell.PageHeader is the head of a page: the title as its h1, breadcrumbs above it, a description under it and the actions at the
+    end of the row (under the title on a phone). */}
+${shell("", [
+  skipLink,
+  header(),
+  `  <TopNavShell.Main>
+    <TopNavShell.Content>
+      <TopNavShell.PageHeader
+        title="Projects"
+        description="Everything your team is working on."
+        actions={<Button>New project</Button>}
+      />
+    </TopNavShell.Content>
+  </TopNavShell.Main>`,
+  footer,
+])}`,
+
+  documentTitle: `{/* documentTitle keeps the browser tab's title in step with pageTitle, so the router does not have to: true sets it to pageTitle, a
+    function builds the whole title. The title the document had comes back when the shell unmounts. */}
+<TopNavShell pageKey={pathname} pageTitle="Projects" documentTitle={(title) => \`\${title} · dbM\`}>
+${[skipLink, header(), main(), footer].join("\n")}
+</TopNavShell>`,
 
   banner: `{/* TopNavShell.Banner is a notice above the header. It scrolls away with the page and does not stick. */}
 ${shell("", [
@@ -149,7 +199,7 @@ ${shell('dir="rtl" lang="fa"', [
 };
 
 export interface TopNavShellPlaygroundSnippetArgs {
-  stickyHeader?: boolean;
+  stickyHeader?: boolean | "auto";
   scrolledEdge?: boolean;
   dir?: "ltr" | "rtl";
   subNav?: boolean;
@@ -160,6 +210,7 @@ export interface TopNavShellPlaygroundSnippetArgs {
 export function topNavShellPlaygroundSnippet(args: TopNavShellPlaygroundSnippetArgs): string {
   const attributes: string[] = [];
   if (args.stickyHeader === false) attributes.push("stickyHeader={false}");
+  if (args.stickyHeader === "auto") attributes.push('stickyHeader="auto"');
   if (args.scrolledEdge === false) attributes.push("scrolledEdge={false}");
   if (args.dir === "rtl") attributes.push('dir="rtl"', 'lang="fa"');
   const language = args.dir === "rtl" ? "fa" : "en";
