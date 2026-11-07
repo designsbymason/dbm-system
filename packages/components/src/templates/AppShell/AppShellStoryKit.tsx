@@ -259,7 +259,7 @@ export function DemoShell({
   const copy = demoCopy[language];
   const fa = language === "fa";
   const shell = (
-    <AppShell {...props} labels={fa ? { ...faLabels.shell, ...props.labels } : props.labels} style={framed ? framedStyle(props.scroll) : undefined}>
+    <AppShell {...props} lang={props.lang ?? (fa ? "fa" : undefined)} labels={fa ? { ...faLabels.shell, ...props.labels } : props.labels} style={framed ? framedStyle(props.scroll) : undefined}>
       {banner && (
         <AppShell.Banner sticky={banner === "sticky"}>
           <Alert banner tone="info">

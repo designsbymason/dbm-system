@@ -101,3 +101,5 @@ The full `06` §9 pass on the current shell, after the additions of ADR-0180 to 
 **Not done:** a real phone, Safari and Firefox; a real printer; the native `#main` jump; a screen reader.
 
 **After the review, before Finalizing (2026-11-07):** the banner demo, snippets, Docs example and JSDoc use `Alert banner` (edge to edge) and say the banner holds any content; the Related components cards preview live `Sidebar`, `Navbar`, `Alert`, `Drawer` (its trigger button) and `Container` instances. Both checked on the Docs page.
+
+**Persian demos name their language (2026-11-07):** the right-to-left demo (the Right-to-left story and the Playground with `dir` set to `rtl`) puts `lang="fa"` on the shell next to `dir="rtl"`, its two snippets and the Docs say to set both, and two real-browser checks guard it (`lang` and `dir` on the frame; a left-to-right demo sets no `lang`).

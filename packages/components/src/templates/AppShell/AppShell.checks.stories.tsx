@@ -1345,3 +1345,26 @@ export const ResizeHandleTargetIsAtLeast24Wide: Story = {
     window.localStorage.clear();
   },
 };
+
+export const RightToLeftDemoNamesItsLanguage: Story = {
+  name: "A right-to-left demo is in Persian and says so: lang=\"fa\" and dir=\"rtl\" are on its frame, so the text is shaped and spoken as Persian — layout test",
+  render: () => <DemoShell dir="rtl" />,
+  play: async ({ canvasElement }) => {
+    const { shell } = slots(canvasElement);
+    await expect(shell).toHaveAttribute("lang", "fa");
+    await expect(shell).toHaveAttribute("dir", "rtl");
+    const heading = within(canvasElement).getByRole("heading", { level: 1 });
+    await expect(heading).toHaveTextContent("صورتحساب");
+    await expect(heading.closest("[lang]")).toHaveAttribute("lang", "fa");
+    // The left-to-right demo says nothing: the page's own language applies.
+  },
+};
+
+export const LeftToRightDemoLeavesLangAlone: Story = {
+  name: "A left-to-right demo sets no lang of its own — layout test",
+  render: () => <DemoShell />,
+  play: async ({ canvasElement }) => {
+    const { shell } = slots(canvasElement);
+    await expect(shell).not.toHaveAttribute("lang");
+  },
+};

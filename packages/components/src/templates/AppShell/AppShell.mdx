@@ -210,6 +210,9 @@ Drive the shell's props live; the sidebar, header and page it is filled with sta
 
 ### Right to left
 
+The demo is in Persian: `dir="rtl"` mirrors the layout, `lang="fa"` names the language, and the parts' own words (the skip link, the
+collapse button) are translated through `labels`.
+
 <Canvas of={AppShellStories.RightToLeft} />
 
 ### An aside beside the main area
@@ -332,8 +335,8 @@ Resize or collapse the sidebar, then reload the page: with `persistKey` the shel
 - Name the aside with `aria-label` when the page has another complementary landmark ("Details", "On
   this page"); the name is also the drawer's title.
 - Set the sidebar's own `side` to match `sidebarSide`, so its line and its phone panel are on the
-  same edge. On a right-to-left page give the shell its `dir`: it provides it to the `Sidebar` and the
-  `Navbar` inside, so neither needs one of its own.
+  same edge. On a right-to-left page give the shell its `dir` and the page's `lang`: the shell provides `dir` to the `Sidebar` and
+  the `Navbar` inside, so neither needs one of its own, and `lang` picks the fonts and how a screen reader speaks the text.
 - Keep a wide table or a long code block inside `AppShell.Main` in a component that scrolls on its
   own (`Table`, `CodeBlock`); the main area scrolls vertically and never pushes the frame wider than
   the window.

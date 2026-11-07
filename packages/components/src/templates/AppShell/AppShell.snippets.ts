@@ -293,9 +293,10 @@ ${shell('railBelow="xl"', [header, sidebar("", { toggle: true }), main])}`,
   </AppShell.Main>
 </AppShell>`,
 
-  rightToLeft: `{/* dir sets the shell's reading direction and provides it to the Sidebar and the Navbar inside, so neither needs one of its own. The
-    words the parts supply themselves (the skip link, the collapse and menu buttons) are translated through labels. */}
-<AppShell dir="rtl" labels={{ collapse: "جمع کردن نوار کناری", expand: "باز کردن نوار کناری", menu: "منو" }}>
+  rightToLeft: `{/* dir sets the shell's reading direction and provides it to the Sidebar and the Navbar inside, so neither needs one of its own. lang
+    names the language (fonts, shaping, how a screen reader speaks it), so set it with dir. The words the parts supply themselves (the skip
+    link, the collapse and menu buttons) are translated through labels. */}
+<AppShell dir="rtl" lang="fa" labels={{ collapse: "جمع کردن نوار کناری", expand: "باز کردن نوار کناری", menu: "منو" }}>
   <AppShell.Header>
     <Navbar labels={{ skipLink: "رفتن به محتوا", menu: "منو" }}>
       <Navbar.SkipLink />
@@ -338,6 +339,7 @@ export function appShellPlaygroundSnippet(args: AppShellPlaygroundSnippetArgs): 
     if (args.asideCollapseTo && args.asideCollapseTo !== "drawer") attributes.push(`asideCollapseTo="${args.asideCollapseTo}"`);
   }
   if (args.dir && args.dir !== "ltr") attributes.push(`dir="${args.dir}"`);
+  if (args.dir === "rtl") attributes.push('lang="fa"');
   if (args.collapseBelow && args.collapseBelow !== "md") attributes.push(`collapseBelow="${args.collapseBelow}"`);
   if (args.defaultCollapsed) attributes.push("defaultCollapsed");
   // The shell provides its `dir` to the Sidebar, so only its side is repeated on it.
