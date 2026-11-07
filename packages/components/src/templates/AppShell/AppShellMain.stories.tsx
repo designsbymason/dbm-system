@@ -13,6 +13,16 @@ const meta: Meta<typeof AppShell.Main> = {
       description: "The id the skip link points at: Navbar.SkipLink links to #main unless you give it another href.",
       table: { defaultValue: { summary: "'main'" } },
     },
+    busy: {
+      control: false,
+      description:
+        "Marks the main area as loading: a thin indeterminate bar along its top edge (below the sticky header), `aria-busy`, and a polite announcement of `labels.loading`. Going back to false announces nothing more. Left out, none of it is drawn or announced.",
+    },
+    labels: {
+      control: false,
+      description: "Text the part draws or announces, overridable for translation. Keys: `loading`.",
+      table: { defaultValue: { summary: "{ loading: 'Loading' }" } },
+    },
     className: { control: false, description: "Additional CSS classes for customization." },
     style: { control: false, description: "Inline styles, merged onto the component's own internal styles." },
     "data-testid": {

@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 import { expect, userEvent, waitFor, within } from "storybook/test";
 import { send } from "../../molecules/CodeBlock/browserProtocol";
 import { AppShell } from "./AppShell";
-import { DemoNavigationShell, DemoPlainHeaderShell, DemoShell, DemoStickyBarShell } from "./AppShellStoryKit";
+import { DemoLayersShell, DemoNavigationShell, DemoPlainHeaderShell, DemoShell, DemoStickyBarShell } from "./AppShellStoryKit";
 
 // Hidden real-browser checks (guidelines/adr/0013): what jsdom can't do (layout, a breakpoint, scrolling, forced colours). They run in the
 // `storybook` (Chromium) project; the test window is 1200px wide unless a story pins another.
@@ -968,5 +968,63 @@ export const ScrolledEdgeCueInForcedColours: Story = {
       // Clear the emulation by sending an empty feature list, not the default value, so it cannot leak into the next story.
       await send("Emulation.setEmulatedMedia", { features: [] });
     }
+  },
+};
+
+export const BusyBarLiesAlongTheTopOfTheMain: Story = {
+  name: "A busy main area draws a bar along its top edge that stays below the sticky header and takes no room — layout test",
+  render: () => <DemoShell busy scroll="page" />,
+  play: async ({ canvasElement }) => {
+    const { shell, main, header } = slots(canvasElement);
+    await waitFor(() => expect(shell).toHaveAttribute("data-header-measured"));
+    const bar = main.querySelector<HTMLElement>("[role=progressbar]")!;
+    await expect(bar).toBeTruthy();
+    const height = main.getBoundingClientRect().height;
+    await expect(main).toHaveAttribute("aria-busy", "true");
+
+    // At rest the bar is on the main area's top edge.
+    await waitFor(() => expect(Math.abs(bar.getBoundingClientRect().top - main.getBoundingClientRect().top)).toBeLessThanOrEqual(1));
+
+    // Scrolled, it stays on the header's bottom edge instead of leaving with the content.
+    window.scrollTo(0, 400);
+    await waitFor(() => expect(shell).toHaveAttribute("data-scrolled"));
+    await waitFor(() => expect(Math.abs(bar.getBoundingClientRect().top - header.getBoundingClientRect().bottom)).toBeLessThanOrEqual(1.5));
+    window.scrollTo(0, 0);
+    await waitFor(() => expect(Math.round(main.getBoundingClientRect().height)).toBe(Math.round(height)));
+  },
+};
+
+export const StateIsCentredInTheMain: Story = {
+  name: "A whole-page state is centred in the main area — layout test",
+  render: () => <DemoShell state="empty" />,
+  play: async ({ canvasElement }) => {
+    const { main } = slots(canvasElement);
+    const heading = within(main).getByRole("heading", { level: 1 });
+    const box = main.querySelector<HTMLElement>("[data-kind]")!;
+    const mainBox = main.getBoundingClientRect();
+    const boxRect = box.getBoundingClientRect();
+    await expect(Math.abs(boxRect.left + boxRect.width / 2 - (mainBox.left + mainBox.width / 2))).toBeLessThanOrEqual(2);
+    const headingRect = heading.getBoundingClientRect();
+    await expect(headingRect.top).toBeGreaterThan(mainBox.top + mainBox.height * 0.2);
+    await expect(headingRect.bottom).toBeLessThan(mainBox.bottom - mainBox.height * 0.2);
+  },
+};
+
+export const LayersKeepTheShellAbovePageStickies: Story = {
+  name: "A page's own sticky bar slides under the shell's header, not over it — layout test",
+  render: () => <DemoLayersShell />,
+  play: async ({ canvasElement }) => {
+    const { shell, header } = slots(canvasElement);
+    await waitFor(() => expect(shell).toHaveAttribute("data-header-measured"));
+    const affix = canvasElement.querySelector<HTMLElement>("[data-testid=affix-bar]")!;
+    window.scrollTo(0, 600);
+    await waitFor(() => expect(shell).toHaveAttribute("data-scrolled"));
+    // The bar is stuck at the top of the window, in the header's area; the point at the header's centre must belong to the header.
+    const box = header.getBoundingClientRect();
+    await expect(affix.getBoundingClientRect().top).toBeLessThan(box.bottom);
+    const hit = document.elementFromPoint(box.left + box.width / 2, box.top + box.height / 2)!;
+    await expect(header.contains(hit)).toBe(true);
+    await expect(affix.contains(hit)).toBe(false);
+    window.scrollTo(0, 0);
   },
 };

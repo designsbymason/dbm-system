@@ -97,7 +97,11 @@ const PER_COMPONENT_CSS_BUDGET_KB = 5;
 //   running-a-command code, 14.75KB of JS and 6.11KB of CSS measured (with searching inside lists, the keyword a row matched through and a list's own text) against the defaults of 10KB and 5KB (ADR-0132, ADR-0133, ADR-0134).
 //   With the highlight report, values asked for in the search field, modes reached by a prefix, capped and suggested groups, the Enter
 //   hint and platform keys (ADR-0135): 16.02KB of JS and 6.12KB of CSS. The budgets are 18KB and 7KB.
-const JS_BUDGET_OVERRIDES_KB = { Calendar: 12, ColorPicker: 15, CommandPalette: 18, DataTable: 32, DatePicker: 18, DateRangePicker: 22, EditorTabs: 16, FileUpload: 14, ImageViewer: 13, Menubar: 12, MultiSelect: 18, Navbar: 22, Sidebar: 22, TimeRangePicker: 12, Toolbar: 13, Tour: 16 };
+//   AppShell (2026-11-06): a template. Its own bundle holds the `Sidebar` provider and the `Drawer` its phone panel and aside are drawn with
+//   (the `Sidebar` is 21.87KB of JS and 10.12KB of CSS on its own), the `EmptyState`, `ProgressBar` and `Stat` of its busy bar and states, and
+//   the rail, resize, remembered-layout, banner and measuring code of its own: 27.10KB of JS and 12.30KB of CSS measured against the defaults
+//   of 10KB and 5KB. The budgets are 29KB and 13KB, a little above the `Sidebar`'s plus the shell's own code.
+const JS_BUDGET_OVERRIDES_KB = { AppShell: 29, Calendar: 12, ColorPicker: 15, CommandPalette: 18, DataTable: 32, DatePicker: 18, DateRangePicker: 22, EditorTabs: 16, FileUpload: 14, ImageViewer: 13, Menubar: 12, MultiSelect: 18, Navbar: 22, Sidebar: 22, TimeRangePicker: 12, Toolbar: 13, Tour: 16 };
 
 // `EditorTabs`'s bundle holds `Tabs`, the `Menu` and `ContextMenu` its tab list and per-tab menus open, the `IconButton` and `Tooltip` of its
 // add button and tabs, the `Spinner`, and `useSortable`: 12.21KB measured first, 14.49KB with the tab menu, status, tooltips, shortcuts and the vertical strip,
@@ -128,7 +132,7 @@ const JS_BUDGET_OVERRIDES_KB = { Calendar: 12, ColorPicker: 15, CommandPalette: 
 // `Menu`'s stylesheet grew by about 0.4KB with the sheet presentation (2026-10-24), which every bundle that holds a `Menu` carries:
 // `Sidebar`'s CSS went from 9.75KB to 10.12KB against its 10KB, so its budget is 11KB, and `Toolbar`'s overflow menu took its JS to 11.98KB
 // against 12KB, so its budget is 13KB.
-const CSS_BUDGET_OVERRIDES_KB = { CommandPalette: 7, DataTable: 10, Navbar: 11, Sidebar: 11 };
+const CSS_BUDGET_OVERRIDES_KB = { AppShell: 13, CommandPalette: 7, DataTable: 10, Navbar: 11, Sidebar: 11 };
 
 // Words only an opt-in extra's code contains, and the component whose bundle must not contain them: `CodeBlock`
 // ships Python, Go and Java as separate exports an app registers (ADR-0027). If a change makes the component

@@ -3,6 +3,7 @@ import userEvent from "@testing-library/user-event";
 import { axe } from "jest-axe";
 import { createRef, StrictMode } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { DirectionProvider } from "../../atoms/DirectionProvider";
 import { Navbar } from "../../organisms/Navbar";
 import { Sidebar } from "../../organisms/Sidebar";
 import { AppShell } from "./AppShell";
@@ -1024,5 +1025,162 @@ describe("AppShell's scrolled-edge cue and state", () => {
     await user.click(screen.getByRole("button", { name: "collapse" }));
     await user.click(screen.getByRole("button", { name: "widen" }));
     expect(screen.getByTestId("probe")).toHaveTextContent("false|false|true|300");
+  });
+});
+
+// --- Busy, the whole-page state, direction and layers ---
+
+describe("AppShell.Main busy", () => {
+  it("marks the main area busy and announces it politely", () => {
+    render(
+      <AppShell>
+        <AppShell.Main busy data-testid="main">
+          x
+        </AppShell.Main>
+      </AppShell>,
+    );
+    expect(screen.getByTestId("main")).toHaveAttribute("aria-busy", "true");
+    expect(screen.getByRole("status")).toHaveTextContent("Loading");
+    expect(screen.getByRole("progressbar", { hidden: true })).toBeInTheDocument();
+  });
+
+  it("draws and announces nothing while busy is left out, and empties the region when it clears", () => {
+    const { rerender } = render(
+      <AppShell>
+        <AppShell.Main data-testid="main">x</AppShell.Main>
+      </AppShell>,
+    );
+    expect(screen.getByTestId("main")).not.toHaveAttribute("aria-busy");
+    expect(screen.queryByRole("status")).not.toBeInTheDocument();
+    expect(screen.queryByRole("progressbar", { hidden: true })).not.toBeInTheDocument();
+    rerender(
+      <AppShell>
+        <AppShell.Main busy data-testid="main">
+          x
+        </AppShell.Main>
+      </AppShell>,
+    );
+    rerender(
+      <AppShell>
+        <AppShell.Main busy={false} data-testid="main">
+          x
+        </AppShell.Main>
+      </AppShell>,
+    );
+    expect(screen.getByTestId("main")).not.toHaveAttribute("aria-busy");
+    expect(screen.getByRole("status")).toHaveTextContent("");
+    expect(screen.queryByRole("progressbar", { hidden: true })).not.toBeInTheDocument();
+  });
+
+  it("takes its words from labels", () => {
+    render(
+      <AppShell>
+        <AppShell.Main busy labels={{ loading: "Loading invoices" }}>
+          x
+        </AppShell.Main>
+      </AppShell>,
+    );
+    expect(screen.getByRole("status")).toHaveTextContent("Loading invoices");
+  });
+});
+
+describe("AppShell.State", () => {
+  it("is an empty state with a level 1 title by default, and is not announced", () => {
+    render(
+      <AppShell>
+        <AppShell.Main>
+          <AppShell.State title="No invoices yet" description="Create one." actions={<button>Create</button>} />
+        </AppShell.Main>
+      </AppShell>,
+    );
+    expect(screen.getByRole("heading", { level: 1, name: "No invoices yet" })).toBeInTheDocument();
+    expect(screen.getByText("Create one.")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Create" })).toBeInTheDocument();
+    expect(screen.queryByRole("status")).not.toBeInTheDocument();
+  });
+
+  it("announces an error through a live region and honours level", async () => {
+    render(
+      <AppShell>
+        <AppShell.Main>
+          <AppShell.State kind="error" level={2} title="Could not load" />
+        </AppShell.Main>
+      </AppShell>,
+    );
+    await waitFor(() => expect(screen.getByRole("status")).toHaveTextContent("Could not load"));
+    expect(screen.getByRole("heading", { level: 2, name: "Could not load" })).toBeInTheDocument();
+  });
+
+  it("has no axe violations in either kind", async () => {
+    const { container } = render(
+      <AppShell>
+        <AppShell.Main busy>
+          <AppShell.State kind="error" title="Could not load" description="Try again." actions={<button>Try again</button>} />
+        </AppShell.Main>
+      </AppShell>,
+    );
+    expect(await axe(container)).toHaveNoViolations();
+  });
+});
+
+describe("AppShell direction", () => {
+  const shellWith = (props: AppShellProps) => (
+    <AppShell collapseBelow="never" {...props}>
+      <AppShell.Header>
+        <Navbar data-testid="navbar">
+          <Navbar.Brand href="/">Acme</Navbar.Brand>
+        </Navbar>
+      </AppShell.Header>
+      <AppShell.Sidebar>
+        <Sidebar collapseBelow="never" data-testid="sidebar">
+          <Sidebar.Content>
+            <Sidebar.Nav aria-label="Main">
+              <Sidebar.Item href="/">Home</Sidebar.Item>
+            </Sidebar.Nav>
+          </Sidebar.Content>
+        </Sidebar>
+      </AppShell.Sidebar>
+      <AppShell.Main>x</AppShell.Main>
+    </AppShell>
+  );
+
+  it("gives the sidebar and the navbar its direction without their own dir", () => {
+    render(shellWith({ dir: "rtl", children: null }));
+    expect(screen.getByTestId("navbar")).toHaveAttribute("dir", "rtl");
+    expect(screen.getByTestId("sidebar")).toHaveAttribute("dir", "rtl");
+  });
+
+  it("lets a part's own dir win", () => {
+    render(
+      <AppShell dir="rtl">
+        <AppShell.Header>
+          <Navbar dir="ltr" data-testid="navbar">
+            <Navbar.Brand href="/">Acme</Navbar.Brand>
+          </Navbar>
+        </AppShell.Header>
+        <AppShell.Main>x</AppShell.Main>
+      </AppShell>,
+    );
+    expect(screen.getByTestId("navbar")).toHaveAttribute("dir", "ltr");
+  });
+
+  it("takes a direction from an enclosing DirectionProvider when it has none of its own", () => {
+    render(
+      <DirectionProvider dir="rtl">
+        <AppShell data-testid="shell">
+          <AppShell.Main>x</AppShell.Main>
+        </AppShell>
+      </DirectionProvider>,
+    );
+    expect(screen.getByTestId("shell")).toHaveAttribute("dir", "rtl");
+  });
+
+  it("is left to right when nothing says otherwise", () => {
+    render(
+      <AppShell data-testid="shell">
+        <AppShell.Main>x</AppShell.Main>
+      </AppShell>,
+    );
+    expect(screen.getByTestId("shell")).toHaveAttribute("dir", "ltr");
   });
 });

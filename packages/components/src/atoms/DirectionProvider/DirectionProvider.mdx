@@ -1,0 +1,112 @@
+import { Canvas, Meta } from "@storybook/addon-docs/blocks";
+import { Callout, ComponentHeader, PlaygroundControls, PropertiesTable, RelatedCard } from "../../../.storybook/blocks";
+import { VisuallyHidden } from "../VisuallyHidden";
+import { Navbar } from "../../organisms/Navbar";
+import { DirectionProvider } from "./DirectionProvider";
+import * as DirectionProviderStories from "./DirectionProvider.stories";
+
+export const propOrder = ["dir", "children"];
+
+<Meta of={DirectionProviderStories} />
+
+<VisuallyHidden asChild><h2>Intro</h2></VisuallyHidden>
+
+<ComponentHeader title="DirectionProvider" tier="Atom" />
+
+Says which way the app reads, once, near the root. A direction-aware component that is given no `dir` of its
+own uses the nearest provider's direction, so a right-to-left app wraps its root instead of passing `dir` to
+every `Sidebar`, `Navbar` and part. It renders no element and changes no style; the layout itself follows the
+`dir` attribute of the page, which `AppShell` sets for you. Today `Sidebar`, `Navbar` and `AppShell` read it;
+the other direction-aware components still take `dir` on their own and will follow.
+
+### Import
+
+```tsx
+import { DirectionProvider, useDirection } from "@dbm-system/components";
+```
+
+## Playground
+
+<div className="dbm-playground-canvas">
+
+<Canvas of={DirectionProviderStories.Playground} />
+
+</div>
+<PlaygroundControls of={DirectionProviderStories.Playground} order={propOrder} />
+
+## Properties
+
+<PropertiesTable of={DirectionProviderStories} order={propOrder} />
+
+`useDirection(own?)` returns the direction a component should use: `own` when given, else the nearest
+provider's, else `"ltr"`.
+
+## Variants
+
+### One provider for the whole app
+
+<Canvas of={DirectionProviderStories.WholeApp} />
+
+### A component's own dir wins
+
+<Canvas of={DirectionProviderStories.OwnDirWins} />
+
+## Usage guidelines
+
+<div className="dbm-do-dont-grid">
+<Callout tone="success" title="Do">
+
+- Wrap the app once, as high as the direction is known (the user's language setting).
+- Also set `dir` on the page (`<html dir="rtl">`), or use `AppShell`, which sets both.
+- Give a component its own `dir` only for an island that reads the other way.
+
+</Callout>
+<Callout tone="danger" title="Don't">
+
+- Don't expect the provider to flip the layout: it carries a value, not a style.
+- Don't nest a provider to change the direction of a single component; give that component a `dir`.
+
+</Callout>
+</div>
+
+## Best practices
+
+- Read the direction in your own parts with `useDirection()` rather than checking the document.
+- Nothing is detected: the provider says what the app tells it.
+
+## Accessibility
+
+<Callout tone="info" title="The provider adds nothing to the accessibility tree">
+
+It renders no element. The page's `dir` and `lang` are what assistive technology reads; keep them in step
+with the provider's value.
+
+</Callout>
+
+## Code examples
+
+```tsx
+<DirectionProvider dir="rtl">
+  <Navbar>
+    <Navbar.Brand href="/">أكمي</Navbar.Brand>
+  </Navbar>
+</DirectionProvider>
+```
+
+## Design tokens used
+
+`DirectionProvider` references **no tokens**: it renders nothing of its own.
+
+## Related components
+
+<div className="dbm-card-grid">
+<RelatedCard
+  name="Navbar"
+  description="Reads the provider's direction when it has no dir of its own"
+  href="/?path=/docs/organisms-navigation-navbar--docs"
+>
+  <Navbar>
+    <Navbar.Brand href="/">Acme</Navbar.Brand>
+  </Navbar>
+</RelatedCard>
+</div>

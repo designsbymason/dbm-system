@@ -1,10 +1,13 @@
-import { SidebarSimpleIcon } from "@dbm-system/icons";
+import { SidebarSimpleIcon, TrayIcon, WarningCircleIcon } from "@dbm-system/icons";
 import { cx, mergeDefined, mergeRefs, useAnnouncement, useIsScrollable } from "@dbm-system/utils";
 import { Children, forwardRef, isValidElement, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import type { CSSProperties, KeyboardEvent as ReactKeyboardEvent, PointerEvent as ReactPointerEvent } from "react";
 import { Container } from "../../atoms/Container";
+import { DirectionProvider, useDirection } from "../../atoms/DirectionProvider";
 import { IconButton } from "../../atoms/IconButton";
+import { ProgressBar } from "../../atoms/ProgressBar";
 import { VisuallyHidden } from "../../atoms/VisuallyHidden";
+import { EmptyState } from "../../molecules/EmptyState";
 import { Drawer } from "../../organisms/Drawer";
 import { Sidebar } from "../../organisms/Sidebar";
 import styles from "./AppShell.module.css";
@@ -20,18 +23,21 @@ import type {
   AppShellContentProps,
   AppShellFooterProps,
   AppShellHeaderProps,
+  AppShellMainLabels,
   AppShellMainProps,
   AppShellProps,
   AppShellSidebarLabels,
   AppShellSidebarProps,
   AppShellSkipLinkLabels,
   AppShellSkipLinkProps,
+  AppShellStateProps,
 } from "./AppShell.types";
 
 const defaultAsideLabels: AppShellAsideLabels = { title: "Details", close: "Close" };
 const defaultAsideToggleLabels: AppShellAsideToggleLabels = { open: "Show details" };
 const defaultSkipLinkLabels: AppShellSkipLinkLabels = { skipToContent: "Skip to content" };
 const defaultSidebarLabels: AppShellSidebarLabels = { resize: "Resize sidebar" };
+const defaultMainLabels: AppShellMainLabels = { loading: "Loading" };
 
 // Before paint where there is a browser, so a remembered layout or a rail is in place on the first frame and nothing jumps; the plain effect on
 // the server, where a layout effect warns in React 18 and does nothing useful.
@@ -161,7 +167,7 @@ const AppShellRoot = forwardRef<HTMLDivElement, AppShellProps>(
       onAsideOpenChange,
       pageKey,
       pageTitle,
-      dir = "ltr",
+      dir: dirProp,
       collapsed: collapsedProp,
       defaultCollapsed,
       onCollapsedChange,
@@ -176,6 +182,9 @@ const AppShellRoot = forwardRef<HTMLDivElement, AppShellProps>(
     },
     ref,
   ) => {
+    // The direction of the shell: its own, else the nearest `DirectionProvider`'s, else left to right. Everything inside gets it from a provider.
+    const dir = useDirection(dirProp);
+
     // With `scroll="page"` a header, a banner or a footer can only stay in view if its grid area is as tall as the whole shell, so the shell needs
     // their heights to keep their rows that size. Zero (the server render, the first client render) leaves each in its own row, unstuck.
     const [headerHeight, setHeaderHeight] = useState(0);
@@ -395,41 +404,43 @@ const AppShellRoot = forwardRef<HTMLDivElement, AppShellProps>(
     } as CSSProperties;
 
     return (
-      <Sidebar.Provider
-        collapsed={collapsed}
-        onCollapsedChange={(next) => changeCollapsed(next, "reader")}
-        menuOpen={menuOpen}
-        defaultMenuOpen={defaultMenuOpen}
-        onMenuOpenChange={onMenuOpenChange}
-        collapseBelow={collapseBelow}
-        labels={labels}
-      >
-        <AppShellContext.Provider value={context}>
-          <div
-            {...props}
-            ref={ref}
-            dir={dir}
-            data-scroll={scroll}
-            data-sidebar-side={sidebarSide}
-            data-header-span={headerSpan}
-            data-aside-collapse={asideCollapseBelow}
-            data-aside-to={asideCollapseTo}
-            data-header-measured={measured ? "" : undefined}
-            data-banner-measured={bannerMeasured ? "" : undefined}
-            data-banner-sticky={bannerSticky ? "" : undefined}
-            data-footer-measured={footerMeasured ? "" : undefined}
-            data-restoring={settled ? undefined : ""}
-            data-scrolled-edge={scrolledEdge ? "" : undefined}
-            data-scrolled={scrolled ? "" : undefined}
-            data-more-below={moreBelow ? "" : undefined}
-            className={cx(styles.root, className)}
-            style={{ ...rootStyle, ...style }}
-          >
-            {children}
-            {pageKey !== undefined && <VisuallyHidden role="status">{announcement}</VisuallyHidden>}
-          </div>
-        </AppShellContext.Provider>
-      </Sidebar.Provider>
+      <DirectionProvider dir={dir}>
+        <Sidebar.Provider
+          collapsed={collapsed}
+          onCollapsedChange={(next) => changeCollapsed(next, "reader")}
+          menuOpen={menuOpen}
+          defaultMenuOpen={defaultMenuOpen}
+          onMenuOpenChange={onMenuOpenChange}
+          collapseBelow={collapseBelow}
+          labels={labels}
+        >
+          <AppShellContext.Provider value={context}>
+            <div
+              {...props}
+              ref={ref}
+              dir={dir}
+              data-scroll={scroll}
+              data-sidebar-side={sidebarSide}
+              data-header-span={headerSpan}
+              data-aside-collapse={asideCollapseBelow}
+              data-aside-to={asideCollapseTo}
+              data-header-measured={measured ? "" : undefined}
+              data-banner-measured={bannerMeasured ? "" : undefined}
+              data-banner-sticky={bannerSticky ? "" : undefined}
+              data-footer-measured={footerMeasured ? "" : undefined}
+              data-restoring={settled ? undefined : ""}
+              data-scrolled-edge={scrolledEdge ? "" : undefined}
+              data-scrolled={scrolled ? "" : undefined}
+              data-more-below={moreBelow ? "" : undefined}
+              className={cx(styles.root, className)}
+              style={{ ...rootStyle, ...style }}
+            >
+              {children}
+              {pageKey !== undefined && <VisuallyHidden role="status">{announcement}</VisuallyHidden>}
+            </div>
+          </AppShellContext.Provider>
+        </Sidebar.Provider>
+      </DirectionProvider>
     );
   },
 );
@@ -588,9 +599,13 @@ const AppShellHeader = forwardRef<HTMLElement, AppShellHeaderProps>(({ as: Eleme
 });
 AppShellHeader.displayName = "AppShell.Header";
 
-/** The page's one `<main>`. It scrolls on its own when the shell is `scroll="content"`, and is the skip link's target. */
-const AppShellMain = forwardRef<HTMLElement, AppShellMainProps>(({ id = "main", className, ...props }, ref) => {
+/**
+ * The page's one `<main>`. It scrolls on its own when the shell is `scroll="content"`, and is the skip link's target. `busy` marks it as loading:
+ * `aria-busy`, a thin bar along its top edge and a polite announcement, without hiding what is already there.
+ */
+const AppShellMain = forwardRef<HTMLElement, AppShellMainProps>(({ id = "main", busy, labels: labelsProp, className, children, ...props }, ref) => {
   const { scroll, mainRef } = useAppShellContext();
+  const labels = mergeDefined(defaultMainLabels, labelsProp);
   const innerRef = useRef<HTMLElement>(null);
   const scrolls = useIsScrollable(innerRef, "y");
   // The skip link needs `main` to take focus (`-1`). While it scrolls it is also a tab stop (`0`), so a keyboard user can scroll a page with
@@ -600,12 +615,43 @@ const AppShellMain = forwardRef<HTMLElement, AppShellMainProps>(({ id = "main", 
       {...props}
       ref={mergeRefs(innerRef, mainRef, ref)}
       id={id}
+      aria-busy={busy ? true : undefined}
+      data-busy={busy ? "" : undefined}
       tabIndex={scroll === "content" && scrolls ? 0 : -1}
       className={cx(styles.main, className)}
-    />
+    >
+      {busy && (
+        // Zero tall and stuck to the top, so the bar is along the main area's edge however far the content has scrolled, and takes no room.
+        <div className={styles.busyBar} aria-hidden="true">
+          <ProgressBar size="xs" tone="brand" label={labels.loading} />
+        </div>
+      )}
+      {/* The region is there before it has anything to say, so that "Loading" is a change a screen reader announces and not a first appearance. */}
+      {busy !== undefined && <VisuallyHidden role="status">{busy ? labels.loading : ""}</VisuallyHidden>}
+      {children}
+    </main>
   );
 });
 AppShellMain.displayName = "AppShell.Main";
+
+/**
+ * A whole-page state for the main area: nothing to show yet (`empty`) or something failed (`error`). Put it inside `AppShell.Main` in place of
+ * the page; the sidebar, the header and the rest of the shell stay. It is an `EmptyState` filling and centring the main area; an error is in the
+ * danger tone and is announced to a screen reader when it appears.
+ */
+const AppShellState = forwardRef<HTMLDivElement, AppShellStateProps>(
+  ({ kind = "empty", title, description, icon, actions, level = 1, className, ...props }, ref) => (
+    <div {...props} ref={ref} data-kind={kind} className={cx(styles.state, className)}>
+      <EmptyState size="lg" tone={kind === "error" ? "danger" : "neutral"} announce={kind === "error"}>
+        <EmptyState.Icon icon={icon ?? (kind === "error" ? WarningCircleIcon : TrayIcon)} />
+        <EmptyState.Title level={level}>{title}</EmptyState.Title>
+        {description !== undefined && <EmptyState.Description>{description}</EmptyState.Description>}
+        {actions !== undefined && <EmptyState.Actions>{actions}</EmptyState.Actions>}
+      </EmptyState>
+    </div>
+  ),
+);
+AppShellState.displayName = "AppShell.State";
 
 /**
  * A link, out of sight until it takes keyboard focus, that skips the header and the sidebar to the main area. Put it first in the shell, before
@@ -759,6 +805,7 @@ type AppShellComponent = typeof AppShellRoot & {
   Sidebar: typeof AppShellSidebar;
   Header: typeof AppShellHeader;
   Main: typeof AppShellMain;
+  State: typeof AppShellState;
   Content: typeof AppShellContent;
   Aside: typeof AppShellAside;
   AsideToggle: typeof AppShellAsideToggle;
@@ -771,6 +818,7 @@ export const AppShell: AppShellComponent = Object.assign(AppShellRoot, {
   Sidebar: AppShellSidebar,
   Header: AppShellHeader,
   Main: AppShellMain,
+  State: AppShellState,
   Content: AppShellContent,
   Aside: AppShellAside,
   AsideToggle: AppShellAsideToggle,

@@ -17,6 +17,7 @@ export * from "./atoms/CloseButton";
 export * from "./atoms/Code";
 export * from "./atoms/Collapse";
 export * from "./atoms/Container";
+export * from "./atoms/DirectionProvider";
 export * from "./atoms/Divider";
 export * from "./atoms/FieldError";
 export * from "./atoms/FieldHelperText";

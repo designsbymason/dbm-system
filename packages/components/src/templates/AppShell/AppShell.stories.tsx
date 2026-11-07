@@ -2,7 +2,7 @@ import type { Meta, StoryContext, StoryObj } from "@storybook/react-vite";
 import { AppShell } from "./AppShell";
 import type { AppShellProps } from "./AppShell.types";
 import { appShellPlaygroundSnippet, appShellSnippets } from "./AppShell.snippets";
-import { DemoNavigationShell, DemoPlainHeaderShell, DemoShell, DemoStickyBarShell } from "./AppShellStoryKit";
+import { DemoLayersShell, DemoNavigationShell, DemoPlainHeaderShell, DemoShell, DemoStickyBarShell } from "./AppShellStoryKit";
 
 // A template is a whole page, so every story fills the window (`layout: "fullscreen"`) and the shell is as tall as the window
 // (`scroll="content"`). On a Docs page the shell sits in a frame instead (see AppShell.mdx).
@@ -284,6 +284,34 @@ export const StickyFooter: Story = {
   parameters: { docs: { source: { code: appShellSnippets.stickyFooter } } },
   argTypes: { ...noControls },
   render: (_args, context) => <DemoShell scroll="page" stickyFooter framed={context.viewMode === "docs"} />,
+};
+
+export const Busy: Story = {
+  name: "A page that is loading",
+  parameters: { docs: { source: { code: appShellSnippets.busy } } },
+  argTypes: { ...noControls },
+  render: (_args, context) => <DemoShell busy framed={context.viewMode === "docs"} />,
+};
+
+export const EmptyPage: Story = {
+  name: "A page with nothing to show",
+  parameters: { docs: { source: { code: appShellSnippets.emptyState } } },
+  argTypes: { ...noControls },
+  render: (_args, context) => <DemoShell state="empty" framed={context.viewMode === "docs"} />,
+};
+
+export const ErrorPage: Story = {
+  name: "A page that failed to load",
+  parameters: { docs: { source: { code: appShellSnippets.errorState } } },
+  argTypes: { ...noControls },
+  render: (_args, context) => <DemoShell state="error" framed={context.viewMode === "docs"} />,
+};
+
+export const Layers: Story = {
+  name: "A page's own sticky bar under the header",
+  parameters: { docs: { source: { code: appShellSnippets.layers } } },
+  argTypes: { ...noControls },
+  render: (_args, context) => <DemoLayersShell framed={context.viewMode === "docs"} />,
 };
 
 export const ResizableSidebar: Story = {

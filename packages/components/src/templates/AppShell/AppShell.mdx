@@ -5,6 +5,7 @@ import * as AppShellStories from "./AppShell.stories";
 import * as AppShellAsideStories from "./AppShellAside.stories";
 import * as AppShellAsideToggleStories from "./AppShellAsideToggle.stories";
 import * as AppShellBannerStories from "./AppShellBanner.stories";
+import * as AppShellStateStories from "./AppShellState.stories";
 import * as AppShellContentStories from "./AppShellContent.stories";
 import * as AppShellFooterStories from "./AppShellFooter.stories";
 import * as AppShellHeaderStories from "./AppShellHeader.stories";
@@ -131,7 +132,13 @@ Drive the shell's props live; the sidebar, header and page it is filled with sta
 
 `AppShell.Main` also accepts any other native `<main>` attribute.
 
-<PropertiesTable of={AppShellMainStories} order={["children", "id", "style", "className", "data-testid"]} />
+<PropertiesTable of={AppShellMainStories} order={["children", "busy", "labels", "id", "style", "className", "data-testid"]} />
+
+### AppShell.State properties
+
+`AppShell.State` also accepts any other native `<div>` attribute.
+
+<PropertiesTable of={AppShellStateStories} order={["title", "description", "kind", "icon", "actions", "level", "style", "className", "id", "data-testid"]} />
 
 ### AppShell.Content properties
 
@@ -250,6 +257,30 @@ With `scroll="page"` a `sticky` banner stays at the top of the window and the he
 A `sticky` footer stays at the bottom of the window while the page scrolls.
 
 <Canvas of={AppShellStories.StickyFooter} />
+
+### A page that is loading
+
+`busy` on `AppShell.Main` puts a thin bar along the top of the main area, sets `aria-busy` and announces "Loading" politely. The page stays where it is.
+
+<Canvas of={AppShellStories.Busy} />
+
+### A page with nothing to show
+
+`AppShell.State` fills the main area with one centred message and the next step.
+
+<Canvas of={AppShellStories.EmptyPage} />
+
+### A page that failed to load
+
+`kind="error"` uses the danger tone and announces the message at once.
+
+<Canvas of={AppShellStories.ErrorPage} />
+
+### A page's own sticky bar
+
+A sticky element from the page, such as an `Affix`, slides under the shell's header instead of over it.
+
+<Canvas of={AppShellStories.Layers} />
 
 ### A sidebar the reader can resize
 
@@ -370,6 +401,21 @@ own header slot is a plain `div` by default so that a `Navbar` is never wrapped 
 - When `pageKey` changes, focus moves to `AppShell.Main` and, with `pageTitle`, the new title is
   announced politely. Neither happens on the first render, so the page's own load is not announced
   twice, and nothing happens while `pageKey` is left out.
+- While `busy` is set the main area has `aria-busy="true"` and a polite status region says "Loading"; when it
+  clears the region empties, so nothing more is read out. The bar is decoration and hidden from assistive
+  technology. An `error` state is announced at once (a polite status region); an `empty` one is not, because it is
+  the page's expected content. A state's title is the page's `h1`.
+- The shell keeps its layers in a fixed order, so a bar of your own never paints over it:
+
+  | Layer | Above it | Parts |
+  |---|---|---|
+  | Content | – | The page's own sticky elements, such as `Affix` (the `sticky` step) |
+  | Sidebar, aside, footer | Content | One step up |
+  | Header | Sidebar, aside, footer | Two steps up |
+  | Banner | Header | Three steps up |
+  | Skip link | Everything in the shell | The `fixed` step |
+
+  Menus, tooltips and dialogs sit on the steps above all of these.
 - The resize handle is a `separator` (`aria-orientation="vertical"`) that takes focus and reports its
   width and its bounds (`aria-valuenow`, `aria-valuemin`, `aria-valuemax`). The arrow keys move it (Shift
   moves it four times as far, Home and End go to the least and the most), so a keyboard user can resize
@@ -500,6 +546,7 @@ function Filters() {
 <TokenRow token="space.px" usage="the skip link's hidden size, until it takes focus" />
 <TokenRow token="space.2" usage="how far the skip link sits from the top edge; padding above and below its words; the resize handle's width" />
 <TokenRow token="space.4" usage="how far the skip link sits from the start edge; padding beside its words" />
+<TokenRow token="space.6" usage="the padding around a whole-page state" />
 <TokenRow token="space.1" usage="the gap between the skip link and its focus ring; how far the resize handle reaches past the sidebar's edge" />
 <TokenRow token="radius.md" usage="the skip link's corners" />
 <TokenRow token="font-size.sm" usage="the skip link's text size" />

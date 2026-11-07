@@ -227,6 +227,7 @@ Foundational components first (prove the template before mass-applying it), then
 | Portal | Atom | Utility | ✅ | ✅ 2026-09-09 | [Portal.md](component-reviews/Portal.md) |
 | ThemeProvider | Atom | Utility | ✅ | ✅ 2026-09-10 | [ThemeProvider.md](component-reviews/ThemeProvider.md) |
 | VisuallyHidden | Atom | Utility | ✅ | ✅ 2026-09-10 | [VisuallyHidden.md](component-reviews/VisuallyHidden.md) |
+| DirectionProvider | Atom | Utility | ✅ | built 2026-11-06, review pending | [DirectionProvider.md](component-reviews/DirectionProvider.md) |
 | Grid | Molecule | Layout | ✅ | ✅ 2026-09-12 | [Grid.md](component-reviews/Grid.md) |
 | List | Molecule | Typography | ✅ | ✅ 2026-09-13 | [List.md](component-reviews/List.md) |
 | Select | Molecule | Inputs & Forms | ✅ | ✅ 2026-09-14 (focus ring moved onto the field's own edge 2026-10-11; re-verified: functional verification, Docs) | [Select.md](component-reviews/Select.md) |

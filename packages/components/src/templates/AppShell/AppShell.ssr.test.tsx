@@ -73,4 +73,19 @@ describe("AppShell on the server", () => {
     // the live region for a page change is in the first server render, empty, so a later announcement is a change
     expect(html).toContain('role="status"');
   });
+
+  it("renders a busy main area and a whole-page state without a DOM", () => {
+    const html = onTheServer(() =>
+      renderToString(
+        <AppShell dir="rtl">
+          <AppShell.Main busy>
+            <AppShell.State kind="error" title="Could not load" />
+          </AppShell.Main>
+        </AppShell>,
+      ),
+    );
+    expect(html).toContain('aria-busy="true"');
+    expect(html).toContain("Could not load");
+    expect(html).toContain('dir="rtl"');
+  });
 });

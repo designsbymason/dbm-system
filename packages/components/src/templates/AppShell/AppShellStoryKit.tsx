@@ -1,6 +1,7 @@
 import { ListIcon, UsersIcon, WalletIcon } from "@dbm-system/icons";
 import { useState } from "react";
 import type { CSSProperties, ReactNode } from "react";
+import { Affix } from "../../atoms/Affix";
 import { Badge } from "../../atoms/Badge";
 import { Button } from "../../atoms/Button";
 import { Heading } from "../../atoms/Heading";
@@ -127,6 +128,8 @@ export function DemoShell({
   resizable = false,
   contentWrapper = false,
   stickyFooter = false,
+  busy,
+  state,
   ...props
 }: AppShellProps & {
   children?: ReactNode;
@@ -142,9 +145,12 @@ export function DemoShell({
   contentWrapper?: boolean;
   /** Makes the footer a bar of actions that stays at the bottom of the window while the page scrolls. */
   stickyFooter?: boolean;
+  /** Marks the main area as busy: a bar along its top edge, `aria-busy` and a polite announcement. */
+  busy?: boolean;
+  /** Puts a whole-page state in the main area in place of the page. */
+  state?: "empty" | "error";
 }) {
   const side = props.sidebarSide ?? "start";
-  const dir = props.dir ?? "ltr";
   const shell = (
     <AppShell {...props} style={framed ? framedStyle(props.scroll) : undefined}>
       {banner && (
@@ -155,7 +161,7 @@ export function DemoShell({
         </AppShell.Banner>
       )}
       <AppShell.Header>
-        <Navbar dir={dir}>
+        <Navbar>
           {/* In an app a router handles the link; here the click moves focus to the main area itself and keeps the preview's address unchanged. */}
           <Navbar.SkipLink
             onClick={(event) => {
@@ -174,17 +180,30 @@ export function DemoShell({
       </AppShell.Header>
       <AppShell.Sidebar resizable={resizable}>
         {/* The phone drawer is wider than the column on the page (`panelWidth`); it is capped at the window less a sliver of the page. */}
-        <DemoSidebar side={side} dir={dir} toggle panelWidth="20rem" />
+        <DemoSidebar side={side} toggle panelWidth="20rem" />
       </AppShell.Sidebar>
-      <AppShell.Main>
-        {children ??
-          (contentWrapper ? (
+      <AppShell.Main busy={busy}>
+        {state !== undefined ? (
+          <AppShell.State
+            kind={state}
+            title={state === "error" ? "We couldn't load this page" : "No invoices yet"}
+            description={
+              state === "error"
+                ? "Something went wrong on our side. Your changes are safe. Try again in a moment."
+                : "Invoices appear here once a customer is billed. Create the first one to get started."
+            }
+            actions={state === "error" ? <Button>Try again</Button> : <Button>Create an invoice</Button>}
+          />
+        ) : (
+          (children ??
+            (contentWrapper ? (
             <AppShell.Content size="xl">
               <DemoPage padded={false} />
             </AppShell.Content>
           ) : (
             <DemoPage />
-          ))}
+          )))
+        )}
       </AppShell.Main>
       {aside && (
         <AppShell.Aside aria-label="Order details">
@@ -345,7 +364,7 @@ function StickyBar() {
       style={{
         position: "sticky",
         insetBlockStart: "var(--app-shell-header-height, 0px)",
-        zIndex: "var(--dbm-z-index-base)",
+        zIndex: "var(--app-shell-layer-content)",
         padding: "var(--dbm-space-3) var(--dbm-space-6)",
         background: "var(--dbm-bg-surface)",
         borderBlockEnd: "var(--dbm-border-width-1) solid var(--dbm-border-default)",
@@ -362,6 +381,22 @@ export function DemoStickyBarShell({ framed = false }: { framed?: boolean }) {
     <DemoShell scroll="page" framed={framed}>
       <StickyBar />
       <DemoPage />
+    </DemoShell>
+  );
+}
+
+/** A page that scrolls under a sticky header, with an `Affix` (the system's own sticky element, on the `sticky` step) at the top of the main area. */
+export function DemoLayersShell({ framed = false }: { framed?: boolean }) {
+  return (
+    <DemoShell scroll="page" banner="sticky" headerSpan="full" framed={framed}>
+      <div data-testid="layer-content">
+        <Affix offset={0}>
+          <div data-testid="affix-bar" style={{ padding: "var(--dbm-space-3) var(--dbm-space-6)", background: "var(--dbm-bg-brand-subtle)" }}>
+            <Text weight="medium">A sticky bar from the page itself (Affix)</Text>
+          </div>
+        </Affix>
+        <DemoPage />
+      </div>
     </DemoShell>
   );
 }

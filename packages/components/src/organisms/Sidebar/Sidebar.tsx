@@ -15,6 +15,7 @@ import { Badge } from "../../atoms/Badge";
 import { ButtonGroupProvider, useButtonGroup } from "../../atoms/Button/buttonGroupContext";
 import type { BadgeProps } from "../../atoms/Badge";
 import { Collapse } from "../../atoms/Collapse";
+import { useDirection } from "../../atoms/DirectionProvider";
 import { Icon } from "../../atoms/Icon";
 import { Skeleton } from "../../atoms/Skeleton";
 import { IconButton } from "../../atoms/IconButton";
@@ -308,7 +309,7 @@ const SidebarRoot = forwardRef<HTMLDivElement, SidebarProps>(
       menuContainer,
       sticky = false,
       stickyOffset = 0,
-      dir = "ltr",
+      dir: dirProp,
       labels,
       className,
       style,
@@ -316,6 +317,8 @@ const SidebarRoot = forwardRef<HTMLDivElement, SidebarProps>(
     },
     ref,
   ) => {
+    // The direction of the nearest `DirectionProvider` when none is given, so one provider at the root is enough for a right-to-left page.
+    const dir = useDirection(dirProp);
     const parent = useContext(SidebarStateContext);
     const own = useSidebarState({ collapsed, defaultCollapsed, onCollapsedChange, menuOpen, defaultMenuOpen, onMenuOpenChange });
     // Inside a `Sidebar.Provider` the provider holds the state, so the buttons outside the sidebar act on the same one.

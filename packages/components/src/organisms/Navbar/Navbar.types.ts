@@ -182,7 +182,8 @@ export interface NavbarProps extends Omit<ComponentPropsWithoutRef<"header">, "d
   scrollContainerRef?: RefObject<HTMLElement | null>;
   /**
    * The reading direction, passed to the bar and to the menu panel (which is drawn in a portal and would otherwise follow
-   * the page). Not read from the page.
+   * the page). Not read from the page: pass `"rtl"`, or wrap the page in a `DirectionProvider` once and leave this out. Left out, it is the
+   * nearest provider's direction, else left to right.
    * @default 'ltr'
    */
   dir?: NavbarDirection;

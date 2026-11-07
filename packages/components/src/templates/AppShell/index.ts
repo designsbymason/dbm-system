@@ -14,6 +14,7 @@ export type {
   AppShellHeaderElement,
   AppShellHeaderProps,
   AppShellHeaderSpan,
+  AppShellMainLabels,
   AppShellMainProps,
   AppShellProps,
   AppShellRailBelow,
@@ -24,4 +25,6 @@ export type {
   AppShellSkipLinkLabels,
   AppShellSkipLinkProps,
   AppShellState,
+  AppShellStateKind,
+  AppShellStateProps,
 } from "./AppShell.types";

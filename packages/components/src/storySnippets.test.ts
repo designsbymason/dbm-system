@@ -33,6 +33,7 @@ import { imagePlaygroundSnippet } from "./atoms/Image/Image.snippets";
 import { indicatorsPlaygroundSnippet } from "./atoms/Indicators/Indicators.snippets";
 import { portalPlaygroundSnippet } from "./atoms/Portal/Portal.snippets";
 import { tooltipPlaygroundSnippet } from "./atoms/Tooltip/Tooltip.snippets";
+import { directionProviderPlaygroundSnippet, directionProviderSnippets } from "./atoms/DirectionProvider/DirectionProvider.snippets";
 import { visuallyHiddenPlaygroundSnippet } from "./atoms/VisuallyHidden/VisuallyHidden.snippets";
 import { aspectRatioPlaygroundSnippet } from "./atoms/AspectRatio/AspectRatio.snippets";
 import { bleedPlaygroundSnippet } from "./atoms/Bleed/Bleed.snippets";
@@ -1400,6 +1401,14 @@ describe("Playground snippets for the eleven media, overlay and utility atoms", 
 
   it.each([{}, { children: "Skip to content", focusable: true }])("VisuallyHidden %j is a real snippet", (args) => {
     expect(problemsIn(visuallyHiddenPlaygroundSnippet(args))).toEqual([]);
+  });
+
+  it.each([{}, { dir: "rtl" as const }])("DirectionProvider %j is a real snippet", (args) => {
+    expect(problemsIn(directionProviderPlaygroundSnippet(args))).toEqual([]);
+  });
+
+  it.each(Object.entries(directionProviderSnippets))("DirectionProvider snippet %s is real", (_name, code) => {
+    expect(problemsIn(code)).toEqual([]);
   });
 
   it("VisuallyHidden writes the text, and `focusable` only when it's on", () => {

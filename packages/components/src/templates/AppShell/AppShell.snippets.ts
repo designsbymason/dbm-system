@@ -179,6 +179,52 @@ ${shell('railBelow="xl"', [header, sidebar(), main])}`,
   </AppShell.Footer>
 </AppShell>`,
 
+  busy: `{/* busy marks the main area as loading: a thin bar along its top edge, aria-busy, and a polite "Loading" announcement. Change
+    the words through labels. The page stays where it is; keep showing what you have. */}
+<AppShell>
+  <AppShell.Main busy={isFetching} labels={{ loading: "Loading invoices" }}>
+    <Text>Invoices</Text>
+  </AppShell.Main>
+</AppShell>`,
+
+  emptyState: `{/* AppShell.State fills the main area with one centred message when there is no page to show. Give it a title, an optional
+    description and the next step. */}
+<AppShell>
+  <AppShell.Main>
+    <AppShell.State
+      title="No invoices yet"
+      description="Invoices appear here once a customer is billed."
+      actions={<Button>Create an invoice</Button>}
+    />
+  </AppShell.Main>
+</AppShell>`,
+
+  errorState: `{/* kind="error" uses the danger tone and announces the message at once. The title is the page's heading (level 1 unless you set level). */}
+<AppShell>
+  <AppShell.Main>
+    <AppShell.State
+      kind="error"
+      title="We couldn't load this page"
+      description="Something went wrong on our side. Try again in a moment."
+      actions={<Button onClick={retry}>Try again</Button>}
+    />
+  </AppShell.Main>
+</AppShell>`,
+
+  layers: `{/* The shell keeps its own bars in order: the page's sticky elements (Affix and the like) sit below the sidebar, the aside and
+    the footer, which sit below the header, which sits below the banner. A page's own sticky bar slides under the header. */}
+<AppShell scroll="page">
+  <AppShell.Header>
+    <Navbar />
+  </AppShell.Header>
+  <AppShell.Main>
+    <Affix offset={0}>
+      <Text>A bar from the page itself</Text>
+    </Affix>
+    <Text>The rest of a long page…</Text>
+  </AppShell.Main>
+</AppShell>`,
+
   resizable: `{/* resizable puts a handle on the column's inner edge: drag it, or use the arrow keys (Shift for bigger steps, Home and End for the
     least and the most, a double press to reset). Leave width off the Sidebar inside: the shell sets the width. */}
 <AppShell>

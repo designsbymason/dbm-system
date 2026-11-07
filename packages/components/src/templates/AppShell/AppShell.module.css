@@ -13,6 +13,15 @@
   --app-shell-safe-bottom: env(safe-area-inset-bottom, 0px);
   --app-shell-safe-left: env(safe-area-inset-left, 0px);
 
+  /* The layers the shell's own parts sit on, lowest first, for a page whose own sticky parts must agree with them. The app's sticky bars (and
+     `Affix`) are on the `sticky` step of the system's scale, so the shell's parts are each a step above it, in the order a reader expects: the
+     page's content, then the sidebar, aside and footer, then the header (whose shadow falls on them), then the banner. The skip link is on the
+     `fixed` step and every floating panel (menus, popovers, dialogs, tooltips) is above that. */
+  --app-shell-layer-content: var(--dbm-z-index-sticky);
+  --app-shell-layer-aside: calc(var(--dbm-z-index-sticky) + 1);
+  --app-shell-layer-header: calc(var(--dbm-z-index-sticky) + 2);
+  --app-shell-layer-banner: calc(var(--dbm-z-index-sticky) + 3);
+
   display: grid;
   grid-template-areas:
     "banner banner banner"
@@ -88,7 +97,7 @@
   block-size: calc(var(--app-shell-viewport-size, 100dvh) - var(--app-shell-banner-stick, 0px) - var(--app-shell-header-height, 0px));
   inset-block-start: calc(var(--app-shell-banner-stick, 0px) + var(--app-shell-header-height, 0px));
   position: sticky;
-  z-index: var(--dbm-z-index-sticky);
+  z-index: var(--app-shell-layer-aside);
 }
 
 /* With the header spanning only the content, the sidebar spans the header's row too and sticks at the top (below the banner), as tall as the
@@ -120,7 +129,7 @@
   grid-row: 1 / -1;
   inset-block-start: 0;
   position: sticky;
-  z-index: calc(var(--dbm-z-index-sticky) + 1);
+  z-index: var(--app-shell-layer-banner);
 }
 
 .root[data-scroll="page"][data-header-measured] .header {
@@ -129,7 +138,7 @@
   grid-row: 2 / -1;
   inset-block-start: var(--app-shell-banner-stick, 0px);
   position: sticky;
-  z-index: var(--dbm-z-index-sticky);
+  z-index: var(--app-shell-layer-header);
 }
 
 .root[data-scroll="page"][data-header-measured]:not(:has(> .banner)) .header {
@@ -143,12 +152,14 @@
   inset-block-end: 0;
   padding-block-end: var(--app-shell-safe-bottom);
   position: sticky;
-  z-index: var(--dbm-z-index-sticky);
+  z-index: var(--app-shell-layer-aside);
 }
 
 .banner {
   grid-area: banner;
   min-inline-size: 0;
+  position: relative;
+  z-index: var(--app-shell-layer-banner);
 }
 
 .sidebar {
@@ -156,6 +167,7 @@
   display: flex;
   min-block-size: 0;
   position: relative;
+  z-index: var(--app-shell-layer-aside);
 }
 
 /* The sidebar fills its column's height; a floating one keeps its own inset. */
@@ -166,6 +178,8 @@
 .header {
   grid-area: header;
   min-inline-size: 0;
+  position: relative;
+  z-index: var(--app-shell-layer-header);
 }
 
 .main {
@@ -190,6 +204,8 @@
 /* The aside: a column at the end of the content, as wide as its `width` (or the token), with a line along its inner edge. */
 .aside {
   grid-area: aside;
+  position: relative;
+  z-index: var(--app-shell-layer-aside);
   box-sizing: border-box;
   inline-size: var(--app-shell-aside-size, var(--dbm-app-shell-aside-width));
   min-block-size: 0;
@@ -199,6 +215,8 @@
 .footer {
   grid-area: footer;
   min-inline-size: 0;
+  position: relative;
+  z-index: var(--app-shell-layer-aside);
   /* The line over the footer is always there (transparent) so nothing moves when it shows, and shows only while there is more below. */
   border-block-start: var(--dbm-border-width-1) solid transparent;
 }
@@ -212,12 +230,8 @@
   transition: border-color var(--dbm-motion-duration-base) var(--dbm-motion-easing-standard);
 }
 
-/* While the content is scrolled down from its top the header casts a shadow on it (`position: relative` lifts it over the main area that follows
-   it; with the page scrolling it is already sticky). While there is more below the footer shows a line. */
-.root[data-scroll="content"][data-scrolled-edge][data-scrolled] .header {
-  position: relative;
-}
-
+/* While the content is scrolled down from its top the header casts a shadow on it (it is on a layer above the main area and the sidebar). While
+   there is more below the footer shows a line. */
 .root[data-scrolled-edge][data-scrolled] .header {
   box-shadow: var(--dbm-shadow-light-md);
 }
@@ -427,4 +441,37 @@
 
 [data-theme$="-dark"] .skipLink:focus-visible {
   box-shadow: var(--dbm-shadow-dark-md);
+}
+
+/* --- A busy main area --- */
+/* Zero tall and stuck to the top of the main area (below the banner and the header when the page scrolls under them), so the bar lies along its
+   edge however far the content has scrolled and takes no room. */
+.busyBar {
+  position: sticky;
+  inset-block-start: calc(var(--app-shell-banner-stick, 0px) + var(--app-shell-header-height, 0px));
+  block-size: 0;
+  z-index: var(--app-shell-layer-content);
+  pointer-events: none;
+}
+
+.busyBar > * {
+  position: absolute;
+  inset-block-start: 0;
+  inset-inline: 0;
+  inline-size: 100%;
+}
+
+/* --- A whole-page state --- */
+/* Fills the main area and centres what it holds; a page that scrolls as a whole is as tall as half the window at least. */
+.state {
+  display: grid;
+  place-items: center;
+  box-sizing: border-box;
+  min-block-size: 100%;
+  padding: var(--dbm-space-6);
+}
+
+.root[data-scroll="page"] .state {
+  min-block-size: 50vh;
+  min-block-size: calc(var(--app-shell-viewport-size, 100dvh) / 2);
 }

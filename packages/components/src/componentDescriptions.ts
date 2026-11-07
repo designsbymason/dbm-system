@@ -121,4 +121,5 @@ export const componentDescriptions: Record<string, string> = {
   Tour: "A guided tour that highlights parts of a page one step at a time.",
   Tree: "An expandable hierarchy of rows, like a file tree.",
   VisuallyHidden: "Hides content from the eye but not from screen readers.",
+  DirectionProvider: "Says once which way the app reads, so direction-aware components need no dir of their own.",
 };

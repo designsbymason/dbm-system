@@ -3,6 +3,8 @@ import type { Icon as PhosphorIcon } from "@dbm-system/icons";
 import type { ComponentPropsWithoutRef, CSSProperties, ReactNode } from "react";
 import type { ButtonSize, ButtonTone, ButtonVariant } from "../../atoms/Button";
 import type { ContainerSize } from "../../atoms/Container";
+import type { Direction } from "../../atoms/DirectionProvider";
+import type { HeadingLevel } from "../../atoms/Heading/Heading.types";
 import type { SidebarStateProps } from "../../organisms/Sidebar";
 
 /**
@@ -16,7 +18,7 @@ export type AppShellScroll = "content" | "page";
 export type AppShellSidebarSide = "start" | "end";
 
 /** The reading direction. Not read from the page: pass `"rtl"` on a right-to-left page. */
-export type AppShellDirection = "ltr" | "rtl";
+export type AppShellDirection = Direction;
 
 /**
  * How far the header reaches. `content` stops at the sidebar, so the sidebar is a full-height column beside it. `full` runs across the whole
@@ -50,6 +52,15 @@ export interface AppShellSidebarLabels {
 
 /** The element `AppShell.Header` renders: a plain `div`, or a real `<header>` for a header that does not hold a `Navbar`. */
 export type AppShellHeaderElement = "div" | "header";
+
+/** The text `AppShell.Main` supplies itself, translatable through its `labels`. */
+export interface AppShellMainLabels {
+  /** What a screen reader hears, politely, when the main area becomes busy. @default 'Loading' */
+  loading: string;
+}
+
+/** What `AppShell.State` says: `empty` (there is nothing to show yet) or `error` (something failed). */
+export type AppShellStateKind = "empty" | "error";
 
 /** The text the aside's drawer supplies itself, translatable through `AppShell.Aside`'s `labels`. */
 export interface AppShellAsideLabels {
@@ -208,8 +219,10 @@ export interface AppShellProps
    */
   scrolledEdge?: boolean;
   /**
-   * The reading direction of everything inside. Not read from the page: pass `"rtl"` on a right-to-left page. Components with their own `dir`
-   * prop (`Sidebar`, `Menu`, `Tabs`) still need it passed to them.
+   * The reading direction of everything inside. The shell sets it on its own element (so logical CSS follows it) and provides it to everything
+   * inside through a `DirectionProvider`, so a `Sidebar`, a `Navbar` and the parts they hold follow it without a `dir` of their own. Left out, it
+   * is the nearest `DirectionProvider`'s direction, else left to right. Components outside the shell's slots, or ones that do not read the
+   * provider yet, still take their own `dir`.
    * @default 'ltr'
    */
   dir?: AppShellDirection;
@@ -252,6 +265,15 @@ export interface AppShellHeaderProps extends Omit<ComponentPropsWithoutRef<"div"
 }
 
 export interface AppShellMainProps extends Omit<ComponentPropsWithoutRef<"main">, "children">, AppShellPartBase {
+  /**
+   * Marks the main area as busy: `aria-busy` is set, a thin indeterminate bar runs along its top edge, and a screen reader is told, politely,
+   * that it is loading. For a page whose content is on its way (a route change, a refetch). It does not hide the content: the previous page can
+   * stay until the new one arrives. The bar sticks below a sticky banner and header.
+   * @default false
+   */
+  busy?: boolean;
+  /** Text the main area supplies itself, namely what a screen reader hears while it is busy. Merged over the English defaults. */
+  labels?: Partial<AppShellMainLabels>;
   /**
    * The page's content. The one `<main>` landmark, and the target of the skip link. With `scroll="content"` it scrolls on its own, and
    * while it does it is a tab stop (with a focus ring) so the keyboard can scroll it.
@@ -389,4 +411,29 @@ export interface AppShellContentProps extends Omit<ComponentPropsWithoutRef<"div
    * @default 6
    */
   paddingBlock?: SpaceValue;
+}
+
+export interface AppShellStateProps extends Omit<ComponentPropsWithoutRef<"div">, "children" | "title">, AppShellPartBase {
+  /**
+   * What the state is: `empty` (there is nothing to show yet) or `error` (something failed, shown in the danger tone and announced to a screen
+   * reader when it appears).
+   * @default 'empty'
+   */
+  kind?: AppShellStateKind;
+  /** A short statement of what happened or what is missing ("We couldn't load this page", "No invoices yet"). It is the state's heading. */
+  title: ReactNode;
+  /** A sentence of explanation, or what to do next. */
+  description?: ReactNode;
+  /**
+   * The icon, a component reference. Left out it is a tray for `empty` and a warning for `error`.
+   */
+  icon?: PhosphorIcon;
+  /** What the reader can do about it: a `Button` such as "Try again" or "Create an invoice", or several in a row. */
+  actions?: ReactNode;
+  /**
+   * The title's heading level. A state that replaces the whole page is its heading, so `1`; one inside a section sits one level below that
+   * section's heading.
+   * @default 1
+   */
+  level?: HeadingLevel;
 }

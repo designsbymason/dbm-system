@@ -1,6 +1,6 @@
 # 0177 — An optional direction provider sets the text direction for a subtree, over reading the page direction automatically
 
-**Status:** Accepted · **Date:** 2026-11-04
+**Status:** Accepted · **Date:** 2026-11-04 · **Amended 2026-11-06** — built in part: `DirectionProvider` and `useDirection` exist and `AppShell`, `Sidebar` and `Navbar` read them; the other components follow ([ADR-0182](./0182-appshell-grows-a-busy-main-a-whole-page-state-and-a-layer-ladder-and-direction-reaches-the-shell-sidebar-and-navbar-through-a-provider.md)); the decision itself is unchanged
 
 ## Context
 Components that behave differently in right-to-left (`Tabs`, `Accordion`, `RadioGroup`, `Slider`, `Dialog`, `Menu`, `Calendar`, `Combobox`, `Tree`, `Toast` and more) take an explicit `dir` prop and default to left-to-right; none reads the page. A right-to-left app has to pass `dir` to each one.

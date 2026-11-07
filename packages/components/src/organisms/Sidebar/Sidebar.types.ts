@@ -212,7 +212,8 @@ export interface SidebarProps extends SidebarStateProps, Omit<ComponentPropsWith
    */
   stickyOffset?: SpaceValue;
   /**
-   * The reading direction. Not read from the page: pass `"rtl"` on a right-to-left page.
+   * The reading direction. Not read from the page: pass `"rtl"` on a right-to-left page, or wrap the page in a `DirectionProvider` once and leave
+   * this out. Left out, it is the nearest provider's direction, else left to right.
    * @default 'ltr'
    */
   dir?: SidebarDirection;

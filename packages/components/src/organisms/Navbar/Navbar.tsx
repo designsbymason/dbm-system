@@ -5,6 +5,7 @@ import { cloneElement, forwardRef, isValidElement, useCallback, useContext, useE
 import type { CSSProperties, MouseEvent, ReactElement } from "react";
 import { createPortal } from "react-dom";
 import { Affix } from "../../atoms/Affix";
+import { useDirection } from "../../atoms/DirectionProvider";
 import { ButtonGroupProvider, useButtonGroup } from "../../atoms/Button/buttonGroupContext";
 import { Icon } from "../../atoms/Icon";
 import { VisuallyHidden } from "../../atoms/VisuallyHidden";
@@ -180,7 +181,7 @@ const NavbarRoot = forwardRef<HTMLElement, NavbarProps>(
       stickyOffset = 0,
       scrollContainerRef,
       hideOnScroll = false,
-      dir = "ltr",
+      dir: dirProp,
       labels,
       className,
       style,
@@ -188,6 +189,8 @@ const NavbarRoot = forwardRef<HTMLElement, NavbarProps>(
     },
     ref,
   ) => {
+    // The direction of the nearest `DirectionProvider` when none is given, so one provider at the root is enough for a right-to-left page.
+    const dir = useDirection(dirProp);
     const resolvedLabels = mergeDefined(defaultLabels, labels);
     const [uncontrolledOpen, setUncontrolledOpen] = useState(defaultMenuOpen);
     const isControlled = menuOpen !== undefined;
