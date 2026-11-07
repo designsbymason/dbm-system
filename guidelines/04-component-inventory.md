@@ -185,7 +185,7 @@ Non-visual/structural helpers other components are built from.
 
 Not individual components, but composed patterns — worth planning for since a template meaningfully reduces time-to-first-app for a common structure (a dashboard shell, an auth flow) versus composing it from scratch every time, but these should come **after** the underlying components exist, not before. They exist now: every component below is built.
 
-**Status:** two built. `AppShell` (the dashboard shell, in `packages/components/src/templates/`) is built and Finalized ([AppShell.md](component-reviews/AppShell.md)); the Data Table List Page, the first story-only page, is built and Finalized ([DataTableListPage.md](component-reviews/DataTableListPage.md)). None other is started without the maintainer's confirmation. Phase 7 builds a few before Phase 8 (`01-vision-and-goals.md` §13), one at a time, then, in the maintainer's order of interest, the data-table list page, the auth flow, the dashboard or overview page and the settings page (the full order is at the end of this section). An **application shell** ships from the components package as a compound component with slots, and every other template is a story-only example page that an app copies ([ADR-0179](adr/0179-templates-ship-as-composable-shells-in-the-components-package-with-story-only-example-pages-over-shipping-finished-pages-or-keeping-all-templates-storybook-only.md)).
+**Status:** three built. `AppShell` (the dashboard shell, in `packages/components/src/templates/`) is built and Finalized ([AppShell.md](component-reviews/AppShell.md)); the Data Table List Page, the first story-only page, is built and Finalized ([DataTableListPage.md](component-reviews/DataTableListPage.md)); `TopNavShell`, the second shell (in `packages/components/src/templates/`), is built and awaits the maintainer's review ([TopNavShell.md](component-reviews/TopNavShell.md)). None other is started without the maintainer's confirmation. Phase 7 builds a few before Phase 8 (`01-vision-and-goals.md` §13), one at a time, then, in the maintainer's order of interest, the data-table list page, the auth flow, the dashboard or overview page and the settings page (the full order is at the end of this section). An **application shell** ships from the components package as a compound component with slots, and every other template is a story-only example page that an app copies ([ADR-0179](adr/0179-templates-ship-as-composable-shells-in-the-components-package-with-story-only-example-pages-over-shipping-finished-pages-or-keeping-all-templates-storybook-only.md)).
 
 **A template is named in Title Case, and a page ends with the word "Page"** (`Data Table List Page`, `Auth Flow Page`): the Storybook title `Templates/{Group}/{Name}`, its folder (`DataTableListPage`), its files and its review file all use that name. An application shell keeps its component name (`AppShell`). A template's name must not equal a component's. The table below describes what each is in plain words. This is the working list of page-level templates apps commonly need. The first four were planned from the start; the rest were added as candidates, and a candidate is built only when an app needs it. Priority follows the legend above. Nothing here is counted in the summary below.
 
@@ -194,7 +194,7 @@ Not individual components, but composed patterns — worth planning for since a 
 | Template | Priority | Composes |
 |---|---|---|
 | Dashboard shell (Sidebar + Navbar + content area), built as `AppShell` | 🟡 | `Sidebar`, `Navbar`, `Drawer` on a phone, `Breadcrumb` |
-| Top-nav app shell | ⚪ | `Navbar` or `NavigationMenu`, `Container`, a footer; for an app with no sidebar |
+| Top-nav app shell, built as `TopNavShell` | ⚪ | `Navbar`, `Container`, `BackToTop`, a footer; for an app with no sidebar |
 | Marketing or public page shell | ⚪ | `NavigationMenu`, a footer, `Container`, `BackToTop` |
 | Docs or content shell | ⚪ | `Sidebar`, `TableOfContents`, `Breadcrumb`, a content column |
 
@@ -236,7 +236,7 @@ Not individual components, but composed patterns — worth planning for since a 
 
 ### Template build order, itemized
 
-Nothing in the list depends on another template, and every component they compose is built, so the order is about what each one proves and what the next one can reuse, not about blocking. **1 and 2 are built, 3–5 are the maintainer's order of interest, and 6 onwards is a proposed sequence** that the maintainer can reorder. One template at a time, each planned first and started only on the maintainer's confirmation ([ADR-0179](adr/0179-templates-ship-as-composable-shells-in-the-components-package-with-story-only-example-pages-over-shipping-finished-pages-or-keeping-all-templates-storybook-only.md)). Application shells ship (API to keep stable); every page is a story-only example.
+Nothing in the list depends on another template, and every component they compose is built, so the order is about what each one proves and what the next one can reuse, not about blocking. **1, 2 and 18 are built, 3–5 are the maintainer's order of interest, and 6 onwards is a proposed sequence** that the maintainer can reorder. One template at a time, each planned first and started only on the maintainer's confirmation ([ADR-0179](adr/0179-templates-ship-as-composable-shells-in-the-components-package-with-story-only-example-pages-over-shipping-finished-pages-or-keeping-all-templates-storybook-only.md)). Application shells ship (API to keep stable); every page is a story-only example.
 
 | # | Template | Kind | Why here | Status |
 |---|---|---|---|---|
@@ -255,7 +255,8 @@ Nothing in the list depends on another template, and every component they compos
 | 14–15 | Notifications or activity feed; Maintenance or status page | Page | Both lean on `Timeline` and `EmptyState` | Planned |
 | 16 | Master-detail (inbox style) | Page | Layout-heavy (`Splitter`, `List`, `ScrollArea`); independent of the rest | Planned |
 | 17 | Onboarding or setup wizard | Page | Needs flow decisions (`Stepper`, `Form`, `ProgressBar`); follows 3 | Planned |
-| 18–20 | Top-nav app shell; Docs or content shell; Marketing or public page shell | Shell (ships) | Public API, so built when an app (or the docs site, `docs-site/`) needs one; order among them is open | Planned, on demand |
+| 18 | `TopNavShell` (the top-nav app shell) | Shell (ships) | Public API for an app with no sidebar: a sticky header with an optional sub-navigation, one `main`, a footer at the window's bottom; shares its page-change handling and loading strip with `AppShell` | Built: [review](component-reviews/TopNavShell.md), not yet Finalized ([ADR-0185](adr/0185-topnavshell-is-its-own-small-compound-shell-with-two-helpers-extracted-from-appshell-to-internal-over-appshell-without-a-sidebar-or-a-wrapper-around-it.md)) |
+| 19–20 | Docs or content shell; Marketing or public page shell | Shell (ships) | Public API, so built when an app (or the docs site, `docs-site/`) needs one; order between them is open | Planned, on demand |
 
 ---
 

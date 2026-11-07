@@ -1,0 +1,41 @@
+import type { Meta, StoryObj } from "@storybook/react-vite";
+import { TopNavShell } from "./TopNavShell";
+
+// Docs-only (guidelines/adr/0013) — `TopNavShell.Main`'s own props get their own Properties table on TopNavShell.mdx.
+const meta: Meta<typeof TopNavShell.Main> = {
+  title: "Templates/Application shells/TopNavShell/Main",
+  component: TopNavShell.Main,
+  tags: ["!dev"],
+  argTypes: {
+    busy: {
+      control: false,
+      description:
+        "Marks the main area as loading: aria-busy, a thin bar along its top edge and a polite announcement, without hiding what is already there.",
+    },
+    children: { control: false, description: "The page. Usually one TopNavShell.Content." },
+    labels: { control: false, description: "The words the main area supplies itself, merged over the English default (\"Loading\")." },
+    id: {
+      control: false,
+      description: "The element's id, the skip link's target.",
+      table: { defaultValue: { summary: "'main'" } },
+    },
+    className: { control: false, description: "Additional CSS classes for customization." },
+    style: { control: false, description: "Inline styles, merged onto the component's own internal styles." },
+    "data-testid": {
+      control: false,
+      description: "Test identifier for automated testing. Rendered as the DOM data-testid attribute; has no visual or behavioral effect.",
+    },
+  },
+};
+
+export default meta;
+
+type Story = StoryObj<typeof TopNavShell.Main>;
+
+export const Default: Story = {
+  render: () => (
+    <TopNavShell>
+      <TopNavShell.Main>Main</TopNavShell.Main>
+    </TopNavShell>
+  ),
+};

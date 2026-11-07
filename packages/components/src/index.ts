@@ -121,6 +121,7 @@ export * from "./organisms/Toast";
 export * from "./organisms/Tour";
 export * from "./organisms/Tree";
 export * from "./templates/AppShell";
+export * from "./templates/TopNavShell";
 
 // What a consumer is meant to use from `@dbm-system/utils`, re-exported so that installing only this package
 // is enough (ADR-0023, `02-tech-stack-and-structure.md` §2) — never the helpers only components use.

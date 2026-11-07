@@ -1,0 +1,372 @@
+import { Canvas, Meta } from "@storybook/addon-docs/blocks";
+import { Callout, ComponentHeader, PlaygroundControls, PropertiesTable, RelatedCard, TokenRow } from "../../../.storybook/blocks";
+import { BellIcon } from "@dbm-system/icons";
+import { Box } from "../../atoms/Box";
+import { Button } from "../../atoms/Button";
+import { Container } from "../../atoms/Container";
+import { IconButton } from "../../atoms/IconButton";
+import { VisuallyHidden } from "../../atoms/VisuallyHidden";
+import { Alert } from "../../molecules/Alert";
+import { EmptyState } from "../../molecules/EmptyState";
+import { Navbar } from "../../organisms/Navbar";
+import * as TopNavShellStories from "./TopNavShell.stories";
+import * as TopNavShellBannerStories from "./TopNavShellBanner.stories";
+import * as TopNavShellContentStories from "./TopNavShellContent.stories";
+import * as TopNavShellFooterStories from "./TopNavShellFooter.stories";
+import * as TopNavShellHeaderStories from "./TopNavShellHeader.stories";
+import * as TopNavShellMainStories from "./TopNavShellMain.stories";
+import * as TopNavShellSkipLinkStories from "./TopNavShellSkipLink.stories";
+import * as TopNavShellSubNavStories from "./TopNavShellSubNav.stories";
+
+export const propOrder = ["children", "stickyHeader", "scrolledEdge", "pageKey", "pageTitle", "dir", "style", "className", "id", "data-testid"];
+
+export const playgroundOrder = ["stickyHeader", "scrolledEdge", "dir", "subNav", "banner"];
+
+<Meta of={TopNavShellStories} />
+
+<VisuallyHidden asChild><h2>Intro</h2></VisuallyHidden>
+
+<ComponentHeader title="TopNavShell" tier="Template" />
+
+The page frame of an application with no sidebar: a skip link, an optional banner, a header that stays at the top of the window, the page's
+one `<main>` and a footer. The page scrolls as a whole. It is **layout and wiring only**. You put your own
+[`Navbar`](/docs/organisms-navigation-navbar--docs) in the header and keep every prop it has; the shell adds the sticky slot it sits in, an
+optional second row of navigation that sticks with it, the page's one `<main>` landmark, the skip link's target, and a footer that sits at the
+bottom of the window on a page too short to fill it.
+
+The shell keeps the header in view itself, so leave the `Navbar` without its own `sticky`. While the page is scrolled the header casts a shadow on
+it (a line in forced colours), and a notch or a home indicator never covers the header or the footer. Given the router's page, the shell moves focus to
+the new page and announces it. Below the `Navbar`'s own `collapseBelow` width its links move into a menu behind a button, which the `Navbar` draws;
+the sub-navigation scrolls sideways when it does not fit. On this page the live examples sit in a framed box 36rem tall, which is wider than a phone;
+open a story from the sidebar on its own and narrow the window to see the phone layout, and scroll to see the header stay at the top.
+
+### Import
+
+```tsx
+import { Navbar, TopNavShell } from "@dbm-system/components";
+```
+
+## Playground
+
+Drive the shell's props live; the navbar, the sub-navigation and the page it is filled with stay fixed. Scroll the framed page to see the header stay.
+
+<div className="dbm-playground-canvas">
+
+<Canvas of={TopNavShellStories.Playground} />
+
+</div>
+<PlaygroundControls of={TopNavShellStories.Playground} exclude={["children", "pageKey", "pageTitle", "style", "className", "id", "data-testid"]} order={playgroundOrder} />
+
+## Properties
+
+`TopNavShell` also accepts any other native `<div>` attribute beyond what's listed here (e.g. `title`, `onKeyDown`), passed straight through to the frame.
+
+<PropertiesTable of={TopNavShellStories} order={propOrder} />
+
+### TopNavShell.SkipLink properties
+
+`TopNavShell.SkipLink` also accepts any other native `<a>` attribute.
+
+<PropertiesTable of={TopNavShellSkipLinkStories} order={["children", "href", "labels", "style", "className", "id", "data-testid"]} />
+
+### TopNavShell.Banner properties
+
+`TopNavShell.Banner` also accepts any other native `<div>` attribute.
+
+<PropertiesTable of={TopNavShellBannerStories} order={["children", "style", "className", "id", "data-testid"]} />
+
+### TopNavShell.Header properties
+
+`TopNavShell.Header` also accepts any other native `<div>` attribute.
+
+<PropertiesTable of={TopNavShellHeaderStories} order={["children", "as", "style", "className", "id", "data-testid"]} />
+
+### TopNavShell.SubNav properties
+
+`TopNavShell.SubNav` also accepts any other native `<div>` attribute.
+
+<PropertiesTable of={TopNavShellSubNavStories} order={["children", "style", "className", "id", "data-testid"]} />
+
+### TopNavShell.Main properties
+
+`TopNavShell.Main` also accepts any other native `<main>` attribute.
+
+<PropertiesTable of={TopNavShellMainStories} order={["children", "busy", "labels", "id", "style", "className", "data-testid"]} />
+
+### TopNavShell.Content properties
+
+`TopNavShell.Content` also accepts any other native `<div>` attribute.
+
+<PropertiesTable of={TopNavShellContentStories} order={["children", "size", "paddingInline", "paddingBlock", "style", "className", "id", "data-testid"]} />
+
+### TopNavShell.Footer properties
+
+`TopNavShell.Footer` also accepts any other native `<footer>` attribute.
+
+<PropertiesTable of={TopNavShellFooterStories} order={["children", "style", "className", "id", "data-testid"]} />
+
+## Variants
+
+### A second row of navigation
+
+`TopNavShell.SubNav` is a row inside the header, under the `Navbar`, so it sticks with it. Put a `nav` of your own in it, with its own name.
+
+<Canvas of={TopNavShellStories.WithSubNav} />
+
+### A banner above the header
+
+`TopNavShell.Banner` is a notice above the header. It scrolls away with the page and does not stick.
+
+<Canvas of={TopNavShellStories.WithBanner} />
+
+### A short page
+
+On a page too short to fill the window the footer sits at the bottom of the window, not under the content.
+
+<Canvas of={TopNavShellStories.ShortPage} />
+
+### A page that is loading
+
+`busy` on `TopNavShell.Main` puts a thin bar along the top of the main area, sets `aria-busy` and announces "Loading" politely. The page stays where it is.
+
+<Canvas of={TopNavShellStories.Busy} />
+
+### A page with nothing to show
+
+An `EmptyState` in the content, with the next step. Its title is the page's `h1`.
+
+<Canvas of={TopNavShellStories.EmptyPage} />
+
+### A page that failed to load
+
+`tone="danger"` and `announce` on the `EmptyState`: the message is read out once, when it appears.
+
+<Canvas of={TopNavShellStories.ErrorPage} />
+
+### A header that scrolls away
+
+With `stickyHeader={false}` the header scrolls away with the page, and there is no shadow, since the shadow belongs to a header that sticks.
+
+<Canvas of={TopNavShellStories.StaticHeader} />
+
+### Moving to another page
+
+Press a link in the bar: its page goes to the shell as `pageKey` and `pageTitle`, which moves focus to the main area and announces the new title.
+
+<Canvas of={TopNavShellStories.PageChange} />
+
+### Content kept to a narrower width
+
+`TopNavShell.Content` centres the page and limits its width on the `Container` steps; the default is `xl`.
+
+<Canvas of={TopNavShellStories.ContentWidth} />
+
+## Usage guidelines
+
+<div className="dbm-do-dont-grid">
+<Callout tone="success" title="Do">
+
+- Put `TopNavShell.SkipLink` first and `TopNavShell.Header` after it. The shell draws the parts in the order you write them, which is the keyboard's
+  tab order, so the skip link is the first stop.
+- Put a `Navbar` in `TopNavShell.Header`, and leave it without its own `sticky`: the shell keeps the whole slot (the bar and the sub-navigation) in
+  view. Use `Navbar.SkipLink` inside a `Navbar`, and `TopNavShell.SkipLink` when the header is not a `Navbar`: both go to `#main`, which is
+  `TopNavShell.Main`'s `id`.
+- Give the sub-navigation its own named `nav` (`aria-label="Project sections"`), so the page's navigation landmarks are told apart from the bar's.
+- Pass `pageKey` (the router's pathname) and `pageTitle`, so a screen-reader user and a keyboard user are told about a page change that no browser
+  navigation announces.
+- Keep a wide table or a long code block in a component that scrolls on its own (`Table`, `CodeBlock`): the page scrolls vertically and never
+  scrolls sideways.
+- Use `BackToTop` on a long page, and pass it the box that scrolls (`scrollContainerRef`) when the shell is drawn inside one.
+- Give a page with nothing to show its own `EmptyState`, and a failed one `tone="danger"` with `announce`.
+
+</Callout>
+<Callout tone="danger" title="Don't">
+
+- Don't use `TopNavShell` for an app with a sidebar: [`AppShell`](/docs/templates-application-shells-appshell--docs) has the sidebar, the rail and
+  the aside. Don't use it for a page with no header of its own either: a plain
+  [`Container`](/docs/atoms-layout-container--docs) with `as="main"` is the page there.
+- Don't put a second `<main>` inside it, and don't wrap a `Navbar` in `TopNavShell.Header as="header"`: a `Navbar` draws its own `<header>`, and the
+  two would nest.
+- Don't set `overflow` on an element around the shell, or give it a height: it makes that element the box the header sticks to, so the header stops
+  following the window. The shell is as tall as the window already (and taller when the page is).
+- Don't keep a tall banner above the header and expect it to stay: it scrolls away with the page.
+- Don't put important navigation only in the sub-navigation of a phone: it scrolls sideways, so keep the few places everyone needs in the bar's menu.
+
+</Callout>
+</div>
+
+## Best practices
+
+- Choose `size` on `TopNavShell.Content` for the page's reading width: `xl` (the default) suits a page of cards, `md` suits a form or an article. A
+  full-bleed section is a page's own element outside the content.
+- Let the footer be small. It holds the links people look for at the end of a page (help, privacy, terms), and it sits at the bottom of the window on a
+  short page, so it is always reachable.
+- Printing prints the page, not the chrome: the skip link and the loading bar are left out, the banner, header and footer are ordinary rows and nothing
+  sticks. Put your own page breaks in the page's own CSS.
+- Name each `Navbar.Links` and each sub-navigation, so a screen reader's list of navigation landmarks tells them apart.
+- Use `busy` for a page that is reloading its content: it keeps what is on screen and says so, where an `EmptyState` replaces it.
+- The shell's shadow under the header marks that the page has scrolled. Keep it on a page that scrolls and turn it off with `scrolledEdge={false}`
+  for a flat look, where the header is already separated from the page by its own surface.
+
+## Accessibility
+
+<Callout tone="info" title="Who provides which landmark">
+
+The shell supplies `TopNavShell.Main` (the one `main`) and `TopNavShell.Footer` (the `contentinfo`). The banner `<header>` comes from the `Navbar` in the
+header slot, or from `TopNavShell.Header as="header"` for a header built without one; each `Navbar.Links` and your sub-navigation's `nav` is a named
+`navigation`. All of them are real elements, not roles on divs. The shell's own header slot is a plain `div` by default so that a `Navbar` is never
+wrapped in a second banner.
+
+</Callout>
+
+| Key | Behaviour |
+|---|---|
+| `Tab` | Moves through the skip link, then the header (the bar, then the sub-navigation), then the main area's content, then the footer, in markup order. |
+| `Enter` on a skip link | Moves focus to `TopNavShell.Main`, past the header. |
+| `Escape` in the bar's menu panel | Closes it and returns focus to the menu button (the `Navbar`'s own behaviour below its `collapseBelow` width). |
+
+- `TopNavShell.Main` takes focus from the skip link and when the page changes (`tabindex="-1"`). A focus ring is drawn just inside its edge whenever
+  the keyboard has focused it. The page scrolls as a whole, so the main area is not itself a tab stop.
+- When `pageKey` changes, focus moves to `TopNavShell.Main` and, with `pageTitle`, the new title is announced politely. Neither happens on the first
+  render, so the page's own load is not announced twice, and nothing happens while `pageKey` is left out. The shell does not scroll the window: that
+  is the router's.
+- While `busy` is set the main area has `aria-busy="true"` and a polite status region says "Loading"; when it clears the region empties, so nothing more
+  is read out. The bar is decoration and hidden from assistive technology.
+- The sticky header, the sub-navigation and the page's own sticky parts keep a fixed order of layers, so a bar of yours never paints over the header: the
+  page's content on the system's `sticky` step, the header one step above it, the skip link on the `fixed` step, and every menu, popover and dialog above those.
+- The scrolled-edge shadow is not the only way to tell that a page scrolls, and forced colours, which drop shadows, get a line instead. Motion on it
+  respects `prefers-reduced-motion`.
+- A notch or a home indicator never covers the shell: the header keeps the top inset clear, the frame the sides and the bottom, and the skip link is drawn
+  below it.
+- The shell adds no colour pairing of its own: the page background is the surface colour, and text inside uses the primary text colour (at least 4.5:1
+  on it in every theme).
+- The reading direction is the shell's (`dir`, else the nearest `DirectionProvider`'s), and the `Navbar` inside takes it from the shell. Set `lang` beside it.
+
+## Code examples
+
+```tsx
+<TopNavShell pageKey={pathname} pageTitle={title}>
+  <TopNavShell.SkipLink />
+  <TopNavShell.Header>
+    <Navbar contained>
+      <Navbar.Brand href="/">Acme</Navbar.Brand>
+      <Navbar.Links aria-label="Main">
+        <Navbar.Link href="/projects" current>Projects</Navbar.Link>
+        <Navbar.Link href="/reports">Reports</Navbar.Link>
+      </Navbar.Links>
+    </Navbar>
+    <TopNavShell.SubNav>
+      <nav aria-label="Project sections">…</nav>
+    </TopNavShell.SubNav>
+  </TopNavShell.Header>
+  <TopNavShell.Main>
+    <TopNavShell.Content>
+      <h1>Projects</h1>
+    </TopNavShell.Content>
+  </TopNavShell.Main>
+  <TopNavShell.Footer>© Acme</TopNavShell.Footer>
+</TopNavShell>
+```
+
+```tsx
+// A native attribute in use: name the main landmark by the page's own heading
+<TopNavShell.Main aria-labelledby="page-title">
+  <TopNavShell.Content>
+    <h1 id="page-title">Projects</h1>
+  </TopNavShell.Content>
+</TopNavShell.Main>
+```
+
+```tsx
+// With a router: the router's page goes to the shell, which moves focus and announces the title after each change
+const { pathname } = useLocation();
+return (
+  <TopNavShell pageKey={pathname} pageTitle={titles[pathname]}>
+    …
+  </TopNavShell>
+);
+```
+
+```tsx
+// A banner, a header that scrolls away and a flat look
+<TopNavShell stickyHeader={false} scrolledEdge={false}>
+  <TopNavShell.Banner>
+    <Alert banner tone="info"><Alert.Description>Maintenance tonight at 22:00 UTC.</Alert.Description></Alert>
+  </TopNavShell.Banner>
+  …
+</TopNavShell>
+```
+
+## Design tokens used
+
+<TokenRow token="bg.surface" usage="the frame's background: the page colour behind the header, the main area and the footer; the skip link's fill" />
+<TokenRow token="text.primary" usage="the colour of text inside the frame that sets none of its own, and of the skip link" />
+<TokenRow token="font-family.primary" usage="the typeface of the frame, inherited by everything inside it" />
+<TokenRow token="border.default" usage="the line under the sub-navigation and over the footer, and the skip link's border" />
+<TokenRow token="border-width.1" usage="the thickness of those lines" />
+<TokenRow token="border-focus" usage="the focus ring drawn inside the main area while the keyboard has focused it, and around the skip link" />
+<TokenRow token="border-width.2" usage="the thickness of that ring, and how far it is drawn inside the edge" />
+<TokenRow token="z-index.sticky" usage="the layer of the page's own content (the loading bar), and, one step up, of the header, so its shadow falls on the page" />
+<TokenRow token="z-index.fixed" usage="keeps the skip link above everything while it is focused" />
+<TokenRow token="motion-duration.base" usage="how long the header's shadow takes to appear" />
+<TokenRow token="motion-easing.standard" usage="the easing of that transition" />
+<TokenRow token="space.px" usage="the skip link's hidden size, until it takes focus" />
+<TokenRow token="space.2" usage="how far the skip link sits from the top edge; padding above and below its words" />
+<TokenRow token="space.4" usage="how far the skip link sits from the start edge; padding beside its words" />
+<TokenRow token="space.1" usage="the gap between the skip link and its focus ring" />
+<TokenRow token="radius.md" usage="the skip link's corners" />
+<TokenRow token="font-size.sm" usage="the skip link's text size" />
+<TokenRow token="font-weight.medium" usage="the skip link's text weight" />
+<TokenRow token="shadow.light-md" usage="the skip link's elevation, and the header's shadow while the page is scrolled, in the light themes" />
+<TokenRow token="shadow.dark-md" usage="the same header shadow, in the dark themes" />
+
+## Related components
+
+<div className="dbm-card-grid">
+<RelatedCard
+  name="Navbar"
+  description="The header bar that goes in TopNavShell.Header, with its links, its menu and its skip link"
+  href="/?path=/docs/organisms-navigation-navbar--docs"
+>
+  <Navbar>
+    <Navbar.Brand href="#">dbM Cloud</Navbar.Brand>
+    <Navbar.Actions>
+      <IconButton icon={BellIcon} aria-label="Notifications" variant="ghost" size="sm" />
+    </Navbar.Actions>
+  </Navbar>
+</RelatedCard>
+<RelatedCard
+  name="AppShell"
+  description="The frame for an app with a sidebar: the sidebar, the aside and a header over them"
+  href="/?path=/docs/templates-application-shells-appshell--docs"
+>
+  <Button variant="secondary" size="sm">Open shell</Button>
+</RelatedCard>
+<RelatedCard
+  name="Container"
+  description="A centred, constrained wrapper: TopNavShell.Content is one with padding above and below"
+  href="/?path=/docs/atoms-layout-container--docs"
+>
+  <Container style={{ border: "var(--dbm-border-width-1) dashed var(--dbm-border-neutral)", width: "100%" }}>
+    <Box style={{ width: 20, height: 20, margin: "0 auto", background: "var(--dbm-bg-canvas)", borderRadius: "var(--dbm-radius-xs)" }} />
+  </Container>
+</RelatedCard>
+<RelatedCard
+  name="Alert"
+  description="What goes in TopNavShell.Banner: a notice with a tone"
+  href="/?path=/docs/molecules-feedback-alert--docs"
+>
+  <Alert banner tone="info" style={{ inlineSize: "100%" }}>
+    <Alert.Description>Maintenance tonight at 22:00 UTC.</Alert.Description>
+  </Alert>
+</RelatedCard>
+<RelatedCard
+  name="EmptyState"
+  description="What the page says when it has nothing to show or has failed to load"
+  href="/?path=/docs/molecules-data-display-emptystate--docs"
+>
+  <EmptyState size="sm">
+    <EmptyState.Title level={3}>Nothing yet</EmptyState.Title>
+  </EmptyState>
+</RelatedCard>
+</div>

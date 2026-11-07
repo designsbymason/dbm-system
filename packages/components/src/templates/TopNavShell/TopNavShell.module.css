@@ -1,0 +1,173 @@
+/* The frame is a column at least as tall as the window: the banner, the header, the main area, which takes the room that is left, and the
+   footer, so a short page's footer sits at the bottom of the window. The page scrolls as a whole, so the root sets no `overflow` (any box
+   with one would become the scroller the sticky header sticks to, and it would stop sticking to the window). */
+.root {
+  /* A notch or a home indicator is kept clear: each custom property is the device's inset on that side (zero where a page does not draw under
+     them). The names are physical because the device's are (a notch is on the left whatever the reading direction). */
+  --top-nav-shell-safe-top: env(safe-area-inset-top, 0px);
+  --top-nav-shell-safe-right: env(safe-area-inset-right, 0px);
+  --top-nav-shell-safe-bottom: env(safe-area-inset-bottom, 0px);
+  --top-nav-shell-safe-left: env(safe-area-inset-left, 0px);
+
+  /* The layers the shell's own parts sit on, lowest first, on the system's scale: the page's content on the `sticky` step (so an app's own
+     sticky bars and `Affix` agree with it), the header a step above it (its shadow falls on the page). The skip link is on the `fixed` step and
+     every floating panel is above that. */
+  --top-nav-shell-layer-content: var(--dbm-z-index-sticky);
+  --top-nav-shell-layer-header: calc(var(--dbm-z-index-sticky) + 1);
+
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+  inline-size: 100%;
+  min-block-size: 100dvh;
+  padding-bottom: var(--top-nav-shell-safe-bottom);
+  padding-left: var(--top-nav-shell-safe-left);
+  padding-right: var(--top-nav-shell-safe-right);
+  background-color: var(--dbm-bg-surface);
+  color: var(--dbm-text-primary);
+  font-family: var(--dbm-font-family-primary);
+}
+
+.banner {
+  position: relative;
+  min-inline-size: 0;
+}
+
+.header {
+  position: relative;
+  z-index: var(--top-nav-shell-layer-header);
+  min-inline-size: 0;
+  /* The top inset belongs to the header, so a notch never covers it, stuck or not. */
+  padding-block-start: var(--top-nav-shell-safe-top);
+  background-color: var(--dbm-bg-surface);
+}
+
+.root[data-sticky-header] .header {
+  position: sticky;
+  inset-block-start: 0;
+}
+
+/* The second row of navigation, in the header: a line under it, and it scrolls sideways rather than wrapping or widening the page. */
+.subNav {
+  min-inline-size: 0;
+  overflow-x: auto;
+  border-block-end: var(--dbm-border-width-1) solid var(--dbm-border-default);
+}
+
+/* `main` takes the room that is left, so the footer is at the bottom of the window on a short page. It takes focus from the skip link and when
+   the page changes; its ring is drawn inside it. */
+.main {
+  position: relative;
+  flex: 1 1 auto;
+  min-inline-size: 0;
+}
+
+.main:focus-visible {
+  outline: var(--dbm-border-width-2) solid var(--dbm-border-focus);
+  outline-offset: calc(-1 * var(--dbm-border-width-2));
+}
+
+/* The loading bar: zero tall and along the main area's top edge, so it takes no room. */
+.busyBar {
+  position: absolute;
+  inset-block-start: 0;
+  inset-inline: 0;
+  block-size: 0;
+  z-index: var(--top-nav-shell-layer-content);
+  pointer-events: none;
+}
+
+.busyBar > * {
+  position: absolute;
+  inset-block-start: 0;
+  inset-inline: 0;
+  inline-size: 100%;
+}
+
+.footer {
+  position: relative;
+  min-inline-size: 0;
+  border-block-start: var(--dbm-border-width-1) solid var(--dbm-border-default);
+}
+
+/* A link, out of sight until it takes keyboard focus, then drawn at the top of the window above everything. */
+.skipLink {
+  position: absolute;
+  inline-size: var(--dbm-space-px);
+  block-size: var(--dbm-space-px);
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.skipLink:focus-visible {
+  position: fixed;
+  inset-block-start: calc(var(--dbm-space-2) + var(--top-nav-shell-safe-top, 0px));
+  inset-inline-start: var(--dbm-space-4);
+  z-index: var(--dbm-z-index-fixed);
+  inline-size: auto;
+  block-size: auto;
+  overflow: visible;
+  clip-path: none;
+  padding-block: var(--dbm-space-2);
+  padding-inline: var(--dbm-space-4);
+  border: var(--dbm-border-width-1) solid var(--dbm-border-default);
+  border-radius: var(--dbm-radius-md);
+  background-color: var(--dbm-bg-surface);
+  color: var(--dbm-text-primary);
+  font-size: var(--dbm-font-size-sm);
+  font-weight: var(--dbm-font-weight-medium);
+  text-decoration: none;
+  outline: var(--dbm-border-width-2) solid var(--dbm-border-focus);
+  outline-offset: var(--dbm-space-1);
+  box-shadow: var(--dbm-shadow-light-md);
+}
+
+/* The scrolled-edge cue: while the page is scrolled down from its top the header, if it sticks, casts a shadow on it. A header that scrolls away
+   with the page has nothing to mark. */
+.header {
+  transition: box-shadow var(--dbm-motion-duration-base) var(--dbm-motion-easing-standard);
+}
+
+.root[data-sticky-header][data-scrolled-edge][data-scrolled] .header {
+  box-shadow: var(--dbm-shadow-light-md);
+}
+
+[data-theme$="-dark"] .root[data-sticky-header][data-scrolled-edge][data-scrolled] .header {
+  box-shadow: var(--dbm-shadow-dark-md);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .header {
+    transition: none;
+  }
+}
+
+/* Forced colours drop shadows, so the header gets a line of its own while the page is scrolled. */
+@media (forced-colors: active) {
+  .root[data-sticky-header][data-scrolled-edge][data-scrolled] .header {
+    border-block-end: var(--dbm-border-width-1) solid CanvasText;
+  }
+}
+
+/* Printed, the page is its parts in order, nothing kept in view, and no skip link or loading bar. */
+@media print {
+  .root {
+    display: block !important;
+    min-block-size: 0 !important;
+    padding: 0 !important;
+  }
+
+  .skipLink,
+  .busyBar {
+    display: none !important;
+  }
+
+  .banner,
+  .header,
+  .footer {
+    box-shadow: none !important;
+    border-color: transparent !important;
+    position: static !important;
+  }
+}
