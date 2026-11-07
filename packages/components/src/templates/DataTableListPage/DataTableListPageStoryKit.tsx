@@ -13,13 +13,17 @@ import { Checkbox } from "../../atoms/Checkbox";
 import { Heading } from "../../atoms/Heading";
 import { IconButton } from "../../atoms/IconButton";
 import { Text } from "../../atoms/Text";
+import { VisuallyHidden } from "../../atoms/VisuallyHidden";
 import { Breadcrumb } from "../../molecules/Breadcrumb";
 import { CheckboxGroup } from "../../molecules/CheckboxGroup";
 import { EmptyState } from "../../molecules/EmptyState";
+import { Pagination } from "../../molecules/Pagination";
 import { SearchInput } from "../../molecules/SearchInput";
+import { Select } from "../../molecules/Select";
 import { TableToolbar } from "../../molecules/TableToolbar";
 import { Toolbar } from "../../molecules/Toolbar";
 import { ConfirmDialog } from "../../organisms/ConfirmDialog";
+import { Drawer } from "../../organisms/Drawer";
 import { DataTable } from "../../organisms/DataTable";
 import type { DataTableColumn, DataTableSort } from "../../organisms/DataTable";
 import { Menu } from "../../organisms/Menu";
@@ -64,7 +68,7 @@ export function makePeople(count: number): Person[] {
 }
 
 /** Every word the page draws. */
-export const listPageCopy = {
+export const dataTableListPageCopy = {
   people: "People",
   home: "Home",
   title: "People",
@@ -78,6 +82,14 @@ export const listPageCopy = {
   statusFilter: "Status",
   departmentFilter: "Department",
   allChoices: "All",
+  filtersButton: "Filters",
+  filtersButtonCount: (count: number) => `Filters (${count})`,
+  filtersSheetTitle: "Filters",
+  filtersSheetText: "Narrow the list of people.",
+  clearAll: "Clear all",
+  done: "Done",
+  rowsPerPage: "Rows per page",
+  range: (first: number, last: number, total: number) => `${first}–${last} of ${total}`,
   selectedCount: (count: number) => `${count} selected`,
   statusLabels: { active: "Active", invited: "Invited", suspended: "Suspended" } as Record<PersonStatus, string>,
   departmentLabels: { design: "Design", engineering: "Engineering", sales: "Sales", support: "Support" } as Record<Department, string>,
@@ -108,7 +120,9 @@ export const listPageCopy = {
   added: "Invitation sent",
 } as const;
 
-const copy = listPageCopy;
+const copy = dataTableListPageCopy;
+
+const pageSizes = [10, 25, 50];
 
 /** A wait, so the request takes the time a request takes. */
 const wait = (milliseconds: number) => new Promise<void>((resolve) => window.setTimeout(resolve, milliseconds));
@@ -143,7 +157,9 @@ export function usePeopleList({
   initialSelection = [],
   initialPageSize = 10,
 }: PeopleListOptions = {}) {
+  // What is typed, and what the request uses: the request follows the text once it has stopped changing, so a key press is not a request.
   const [query, setQueryState] = useState(initialQuery);
+  const [appliedQuery, setAppliedQuery] = useState(initialQuery);
   const [selectedStatuses, setStatusesState] = useState<PersonStatus[]>(initialStatuses);
   const [selectedDepartments, setDepartmentsState] = useState<Department[]>(initialDepartments);
   const [sort, setSortState] = useState<DataTableSort>([]);
@@ -155,7 +171,12 @@ export function usePeopleList({
   const [attempt, setAttempt] = useState(0);
 
   const everyone = useMemo(() => makePeople(total), [total]);
-  const request = JSON.stringify([query, selectedStatuses, selectedDepartments, sort, page, pageSize, removed.length, attempt]);
+  useEffect(() => {
+    if (query === appliedQuery) return;
+    const timer = window.setTimeout(() => setAppliedQuery(query), 300);
+    return () => window.clearTimeout(timer);
+  }, [query, appliedQuery]);
+  const request = JSON.stringify([appliedQuery, selectedStatuses, selectedDepartments, sort, page, pageSize, removed.length, attempt]);
   const [loaded, setLoaded] = useState<Loaded>({ request: "", rows: [], matching: 0, error: false });
 
   const matching = useCallback(
@@ -163,11 +184,11 @@ export function usePeopleList({
       everyone.filter(
         (person) =>
           !removed.includes(person.id) &&
-          (!query || `${person.name} ${person.email} ${person.role}`.toLowerCase().includes(query.toLowerCase())) &&
+          (!appliedQuery || `${person.name} ${person.email} ${person.role}`.toLowerCase().includes(appliedQuery.toLowerCase())) &&
           (selectedStatuses.length === 0 || selectedStatuses.includes(person.status)) &&
           (selectedDepartments.length === 0 || selectedDepartments.includes(person.department)),
       ),
-    [everyone, removed, query, selectedStatuses, selectedDepartments],
+    [everyone, removed, appliedQuery, selectedStatuses, selectedDepartments],
   );
 
   useEffect(() => {
@@ -192,7 +213,7 @@ export function usePeopleList({
     setSelection([]);
     setAllSelected(false);
   };
-  const filtered = query !== "" || selectedStatuses.length > 0 || selectedDepartments.length > 0;
+  const filtered = appliedQuery !== "" || selectedStatuses.length > 0 || selectedDepartments.length > 0;
 
   return {
     // What the table is drawn from.
@@ -213,6 +234,8 @@ export function usePeopleList({
     // The ways it changes.
     setQuery(next: string) {
       setQueryState(next);
+      // Emptying the box shows everyone at once; typing waits for a pause.
+      if (next === "") setAppliedQuery("");
       backToStart();
     },
     setStatuses(next: PersonStatus[]) {
@@ -225,6 +248,7 @@ export function usePeopleList({
     },
     clearFilters() {
       setQueryState("");
+      setAppliedQuery("");
       setStatusesState([]);
       setDepartmentsState([]);
       backToStart();
@@ -286,6 +310,89 @@ function filterValue(chosen: string[]): string {
   return copy.selectedCount(chosen.length);
 }
 
+/** The choices of one filter: an "All" checkbox that clears the others, and a checkbox for each option. In a filter's panel and in the sheet. */
+function FilterChoices<T extends string>({
+  name,
+  options,
+  labels,
+  chosen,
+  onChange,
+}: {
+  name: string;
+  options: T[];
+  labels: Record<T, string>;
+  chosen: T[];
+  onChange: (next: T[]) => void;
+}) {
+  return (
+    <div className={styles.panel}>
+      <Checkbox checked={chosen.length === 0} onCheckedChange={() => onChange([])}>
+        {copy.allChoices}
+      </Checkbox>
+      <CheckboxGroup aria-label={name} value={chosen} onValueChange={(value) => onChange(value as T[])}>
+        {options.map((option) => (
+          <Checkbox key={option} value={option}>
+            {labels[option]}
+          </Checkbox>
+        ))}
+      </CheckboxGroup>
+    </div>
+  );
+}
+
+/**
+ * On a phone the two filters are one "Filters" button that opens a bottom sheet holding both, so the toolbar is a search box and a
+ * button. The button says how many filters are in force.
+ */
+function FiltersSheet({ list }: { list: PeopleList }) {
+  const count = list.selectedStatuses.length + list.selectedDepartments.length;
+  return (
+    <Drawer>
+      <Drawer.Trigger asChild>
+        <Button className={styles.filtersButton} variant="secondary">
+          {count > 0 ? copy.filtersButtonCount(count) : copy.filtersButton}
+        </Button>
+      </Drawer.Trigger>
+      <Drawer.Content side="bottom" size="lg">
+        <Drawer.Header>
+          <Drawer.Title>{copy.filtersSheetTitle}</Drawer.Title>
+          <Drawer.Description>{copy.filtersSheetText}</Drawer.Description>
+        </Drawer.Header>
+        <Drawer.Body>
+          <div className={styles.sheetSections}>
+            <section className={styles.sheetSection}>
+              <Heading level={3} size="sm">
+                {copy.statusFilter}
+              </Heading>
+              <FilterChoices name={copy.statusFilter} options={statuses} labels={copy.statusLabels} chosen={list.selectedStatuses} onChange={list.setStatuses} />
+            </section>
+            <section className={styles.sheetSection}>
+              <Heading level={3} size="sm">
+                {copy.departmentFilter}
+              </Heading>
+              <FilterChoices
+                name={copy.departmentFilter}
+                options={departments}
+                labels={copy.departmentLabels}
+                chosen={list.selectedDepartments}
+                onChange={list.setDepartments}
+              />
+            </section>
+          </div>
+        </Drawer.Body>
+        <Drawer.Footer>
+          <Button variant="secondary" disabled={count === 0} onClick={() => { list.setStatuses([]); list.setDepartments([]); }}>
+            {copy.clearAll}
+          </Button>
+          <Drawer.Close asChild>
+            <Button>{copy.done}</Button>
+          </Drawer.Close>
+        </Drawer.Footer>
+      </Drawer.Content>
+    </Drawer>
+  );
+}
+
 /**
  * One toolbar filter: its name as plain text before the button, and a button of a fixed width that shows only the choice, with the
  * choice at the start and the chevron at the end. The panel is a list of checkboxes headed by "All". The button is named by both
@@ -322,19 +429,49 @@ function ChoiceFilter<T extends string>({
         style={{ inlineSize: width }}
         labels={{ panel: () => `${name} filter` }}
       >
-        <div className={styles.panel}>
-          <Checkbox checked={chosen.length === 0} onCheckedChange={() => onChange([])}>
-            {copy.allChoices}
-          </Checkbox>
-          <CheckboxGroup aria-label={name} value={chosen} onValueChange={(value) => onChange(value as T[])}>
-            {options.map((option) => (
-              <Checkbox key={option} value={option}>
-                {labels[option]}
-              </Checkbox>
-            ))}
-          </CheckboxGroup>
-        </div>
+        <FilterChoices name={name} options={options} labels={labels} chosen={chosen} onChange={onChange} />
       </TableToolbar.Filter>
+    </div>
+  );
+}
+
+/**
+ * The table's footer, drawn from the page's own state: rows per page at the start, the page controls in the middle and the range
+ * ("1–10 of 137") at the end. The page already holds the page and the page size, so it draws the footer itself.
+ */
+function ListFooter({ list }: { list: PeopleList }) {
+  // A change of page is announced by `Pagination`; a change of page size is not, so the footer says what the list now shows.
+  const [pageSizeNote, setPageSizeNote] = useState("");
+  const first = Math.min((list.page - 1) * list.pageSize + 1, list.matching);
+  const last = Math.min(list.page * list.pageSize, list.matching);
+  return (
+    <div className={styles.footer}>
+      <div className={styles.pageSize}>
+        <Select
+          size="sm"
+          value={String(list.pageSize)}
+          onValueChange={(next) => {
+            list.setPageSize(Number(next));
+            setPageSizeNote(`${copy.rowsPerPage}: ${next}. ${copy.range(1, Math.min(Number(next), list.matching), list.matching)}`);
+          }}
+          aria-label={copy.rowsPerPage}
+        >
+          {pageSizes.map((option) => (
+            <Select.Option key={option} value={String(option)}>
+              {option}
+            </Select.Option>
+          ))}
+        </Select>
+      </div>
+      <Pagination
+        className={styles.footerPages}
+        size="sm"
+        pageCount={Math.max(1, Math.ceil(list.matching / list.pageSize))}
+        value={list.page}
+        onValueChange={list.setPage}
+      />
+      <span className={styles.range}>{copy.range(first, last, list.matching)}</span>
+      <VisuallyHidden role="status">{pageSizeNote}</VisuallyHidden>
     </div>
   );
 }
@@ -345,7 +482,7 @@ type PendingRemoval = { ids: string[] | "all"; count: number; name?: string } | 
 /**
  * The page itself: heading, toolbar (the count, the search and two filters in three columns, the chips of the filters in force and the
  * bulk actions), the table, its paging, and the three ways it has nothing to show (no one yet, no one matching, a failed request). It
- * lives inside an `AppShell.Main`; `ListPage` below puts it in a whole shell.
+ * lives inside an `AppShell.Main`; `DataTableListPage` below puts it in a whole shell.
  */
 export function PeopleListContent({ list }: { list: PeopleList }) {
   const { toast } = useToast();
@@ -410,7 +547,7 @@ export function PeopleListContent({ list }: { list: PeopleList }) {
           </Heading>
           <Text color="secondary">{copy.intro}</Text>
         </div>
-        <Button leadingIcon={PlusIcon} onClick={() => toast({ tone: "success", title: copy.added })}>
+        <Button className={styles.add} leadingIcon={PlusIcon} onClick={() => toast({ tone: "success", title: copy.added })}>
           {copy.add}
         </Button>
       </div>
@@ -439,8 +576,7 @@ export function PeopleListContent({ list }: { list: PeopleList }) {
             onPageChange={list.setPage}
             pageSize={list.pageSize}
             onPageSizeChange={list.setPageSize}
-            pageSizeOptions={[10, 25, 50]}
-            totalCount={list.matching}
+                        totalCount={list.matching}
             loading={list.loading}
             loadingRows={list.pageSize}
             selectionMode="multiple"
@@ -484,11 +620,18 @@ export function PeopleListContent({ list }: { list: PeopleList }) {
             )}
           >
             <DataTable.Toolbar aria-label={copy.toolsName} className={styles.toolbar}>
-              <TableToolbar.Row className={styles.row}>
+              <TableToolbar.Row className={styles.mainRow}>
                 <TableToolbar.Summary className={styles.summary} count={list.matching} loading={list.loading} />
                 <TableToolbar.Search className={styles.search}>
-                  <SearchInput aria-label={copy.search} placeholder="Search" defaultValue={list.query} onSearch={list.setQuery} />
+                  <SearchInput
+                    aria-label={copy.search}
+                    placeholder="Search"
+                    value={list.query}
+                    onChange={(event) => list.setQuery(event.target.value)}
+                    onClear={() => list.setQuery("")}
+                  />
                 </TableToolbar.Search>
+                <FiltersSheet list={list} />
                 <Toolbar aria-label={copy.filtersName} variant="secondary" className={styles.filters}>
                   <Toolbar.Item>
                     <ChoiceFilter
@@ -512,8 +655,8 @@ export function PeopleListContent({ list }: { list: PeopleList }) {
                   </Toolbar.Item>
                 </Toolbar>
               </TableToolbar.Row>
-              <TableToolbar.Row className={styles.row}>
-                <TableToolbar.ActiveFilters className={styles.chips} items={applied} onRemove={removeFilter} onClearAll={list.clearFilters} />
+              <TableToolbar.Row className={styles.chipsRow}>
+                <TableToolbar.ActiveFilters items={applied} onRemove={removeFilter} onClearAll={list.clearFilters} />
               </TableToolbar.Row>
               <DataTable.Selection className={styles.bulk}>
                 <Toolbar aria-label={copy.bulkName} variant="secondary">
@@ -532,8 +675,8 @@ export function PeopleListContent({ list }: { list: PeopleList }) {
                 </Toolbar>
               </DataTable.Selection>
             </DataTable.Toolbar>
-            {!nothingAtAll && !noResults && <DataTable.Pagination />}
           </DataTable>
+          {!nothingAtAll && !noResults && <ListFooter list={list} />}
         </div>
       )}
 
@@ -561,13 +704,13 @@ export function PeopleListContent({ list }: { list: PeopleList }) {
   );
 }
 
-export interface ListPageProps extends PeopleListOptions {
+export interface DataTableListPageProps extends PeopleListOptions {
   /** Draws the shell in a box of its own, for a Docs page. */
   framed?: boolean;
 }
 
 /** The whole template: an `AppShell` with the demo's sidebar and header, holding the people list. */
-export function ListPage({ framed = false, ...options }: ListPageProps) {
+export function DataTableListPage({ framed = false, ...options }: DataTableListPageProps) {
   const list = usePeopleList(options);
   return (
     <Toast.Provider>

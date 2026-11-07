@@ -943,9 +943,10 @@
   min-inline-size: 11rem;
 }
 
-/* The table keeps one height (the toolbar and the 34rem of rows) whether 115 rows or none match, and its scroll area
-   always reserves room for the scrollbar, so nothing below it moves and no column narrows when one appears. */
-.dbm-getting-started__table {
+/* The components table keeps one height (the toolbar and the 34rem of rows) whether 115 rows or none match, and its scroll
+   area always reserves room for the scrollbar, so nothing below it moves and no column narrows when one appears. The
+   templates table is short and has no toolbar, so it takes only the height of its own rows. */
+.dbm-getting-started__table--tall {
   min-block-size: 37.5rem;
 }
 
@@ -1014,41 +1015,62 @@
   gap: var(--dbm-space-4);
 }
 
+/* Narrower than 45rem the toolbar is one line: the count at the start, and at the end a group of three icon buttons (Tier, Category,
+   search), each opening a small panel. The toolbar's own search box and filters are not drawn at that width. */
+.dbm-getting-started__mobiletools {
+  display: none;
+}
+
+/* The Templates table shows a name in full: it wraps onto more lines (and its asterisk stays visible) instead of being cut with an
+   ellipsis, which the table's row-header cell does by default. Written with the class twice to win the cell's own rule. */
+.dbm-getting-started__table.dbm-getting-started__table--wrapnames th[scope="row"] {
+  overflow: visible;
+  overflow-wrap: anywhere;
+  text-overflow: clip;
+  white-space: normal;
+}
+
+/* The name of the filter a phone's icon button opens, at the top of its panel. */
+.dbm-getting-started__panellabel {
+  color: var(--dbm-text-secondary);
+  font-size: var(--dbm-font-size-sm);
+  font-weight: var(--dbm-font-weight-semibold);
+}
+
+.dbm-getting-started__searchpanel {
+  min-inline-size: 15rem;
+}
+
 @container (max-width: 45rem) {
-  .dbm-getting-started__table .dbm-getting-started__summary {
-    margin-inline-start: 0;
-  }
-
+  .dbm-getting-started__table [class*="_search_"],
   .dbm-getting-started__table .dbm-getting-started__filters {
-    flex: 1 1 100%;
-    order: 2;
+    display: none;
   }
 
-  /* The two filters stack, each as wide as the row, so neither is cut off. */
-  .dbm-getting-started__table .dbm-getting-started__filters [role="toolbar"] {
-    align-items: stretch;
-    flex-direction: column;
-    gap: var(--dbm-space-3);
-    inline-size: 100%;
-  }
-
-  .dbm-getting-started__filtergroup {
-    inline-size: 100%;
-  }
-
-  .dbm-getting-started__filtergroup .dbm-getting-started__filter {
+  .dbm-getting-started__table .dbm-getting-started__summary {
     flex: 1 1 auto;
-    inline-size: auto !important;
+    min-inline-size: 0;
   }
 
-  .dbm-getting-started__table [class*="_search_"] {
-    flex: 1 1 100%;
-    order: 3;
+  .dbm-getting-started__mobiletools {
+    align-items: center;
+    display: flex;
+    flex: none;
+    gap: var(--dbm-space-2);
+    margin-inline-start: auto;
   }
 }
 
+/* The note under the Templates table: what the asterisk in front of a name means. */
+.dbm-getting-started__footnote {
+  font-size: var(--dbm-font-size-sm);
+  margin-block-start: var(--dbm-space-2);
+}
+
+/* The brand's own text colour, not the link blue: the blue measures 4.49:1 on the table's striped rows in the light themes, a hair
+   under the 4.5:1 floor, where the brand text colour has plenty of room. */
 .dbm-getting-started__link {
-  color: var(--dbm-text-link);
+  color: var(--dbm-text-brand);
   font-weight: var(--dbm-font-weight-semibold);
   text-decoration: none;
 }
@@ -1216,6 +1238,18 @@
 .dbm-proptable.dbm-reftable-prose td:nth-child(1) {
   white-space: normal;
   width: 30%;
+}
+
+/* A ReferenceTable given a `firstColumnWidth` has a first column of exactly that width (set as a custom property on the table), so
+   the tables of one page line up as the reader scrolls. A longer name or list wraps inside it. */
+.dbm-proptable.dbm-reftable.dbm-reftable-fixed {
+  table-layout: fixed;
+}
+
+.dbm-proptable.dbm-reftable.dbm-reftable-fixed th:nth-child(1),
+.dbm-proptable.dbm-reftable.dbm-reftable-fixed td:nth-child(1) {
+  white-space: normal;
+  width: var(--dbm-reftable-first-width);
 }
 
 /* A long list of related links laid out in as many columns as fit. */

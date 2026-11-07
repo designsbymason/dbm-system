@@ -1,7 +1,7 @@
-// The code shown under each story's "Show code" button on the data-table list page's Docs page.
+// The code shown under each story's "Show code" button on the Data Table List Page's Docs page.
 //
 // Hand-written rather than generated from the rendered story: a generated snippet would show the story's demo helpers
-// (`ListPage`, `usePeopleList`) and freeze the page's state. Each snippet is the smallest real usage of what its story shows, using only
+// (`DataTableListPage`, `usePeopleList`) and freeze the page's state. Each snippet is the smallest real usage of what its story shows, using only
 // exports of the package; `storySnippets.test.ts` checks that stays true. State can't live in a snippet, so a comment names what the
 // page holds. See `07-storybook-and-documentation-standards.md` §4.2.
 
@@ -60,6 +60,25 @@ const table = (extra = "") => `    <DataTable
           <TableToolbar.Search>
             <SearchInput aria-label="Search people" placeholder="Search" onSearch={setQuery} />
           </TableToolbar.Search>
+          {/* On a phone the filters are one button that opens a bottom sheet holding both (hide the Toolbar below, and show this,
+              under your own breakpoint); the button says how many filters are in force */}
+          <Drawer>
+            <Drawer.Trigger asChild>
+              <Button variant="secondary">Filters</Button>
+            </Drawer.Trigger>
+            <Drawer.Content side="bottom" size="lg">
+              <Drawer.Header>
+                <Drawer.Title>Filters</Drawer.Title>
+              </Drawer.Header>
+              <Drawer.Body>{/* a heading and the choices (a Checkbox for "All", a CheckboxGroup) for each filter */}</Drawer.Body>
+              <Drawer.Footer>
+                <Button variant="secondary" onClick={clearFilters}>Clear all</Button>
+                <Drawer.Close asChild>
+                  <Button>Done</Button>
+                </Drawer.Close>
+              </Drawer.Footer>
+            </Drawer.Content>
+          </Drawer>
           <Toolbar aria-label="Filters" variant="secondary">
             <Toolbar.Item>
               {/* The filter's name is plain text before a button of a fixed width that shows only the choice ("All",
@@ -89,8 +108,20 @@ const table = (extra = "") => `    <DataTable
           </Toolbar>
         </DataTable.Selection>
       </DataTable.Toolbar>
-      <DataTable.Pagination />
-    </DataTable>`;
+    </DataTable>
+    {/* The footer, from the page's own state, in three columns: the rows-per-page button (a small fixed width) at the start, the
+        page controls in the middle, the range right-aligned at the end */}
+    <div style={{ display: "grid", gridTemplateColumns: "1fr auto 1fr", alignItems: "center", gap: 16 }}>
+      <div style={{ inlineSize: "5rem" }}>
+        <Select size="sm" value={String(pageSize)} onValueChange={(next) => setPageSize(Number(next))} aria-label="Rows per page">
+          <Select.Option value="10">10</Select.Option>
+          <Select.Option value="25">25</Select.Option>
+          <Select.Option value="50">50</Select.Option>
+        </Select>
+      </div>
+      <Pagination size="sm" pageCount={Math.ceil(matching / pageSize)} value={page} onValueChange={setPage} />
+      <span style={{ justifySelf: "end" }}>{\`\${first}–\${last} of \${matching}\`}</span>
+    </div>`;
 
 const confirm = `    <ConfirmDialog
       open={pending !== null}
@@ -119,7 +150,7 @@ const everything = `${heading(english)}
 ${table()}
 ${confirm}`;
 
-export const listPageSnippets = {
+export const dataTableListPageSnippets = {
   default: page(everything),
 
   filtered: `{/* Start with filters in force: they show as chips under the toolbar, the count says "12 of 137", and "Clear all" or a
@@ -134,7 +165,7 @@ ${page(everything)}`,
 ${page(`${heading(english)}\n${table()}`)}`,
 
   empty: `{/* Nothing at all, and no filter in force: say what the page is for and offer the first step.
-    TableToolbar.Summary and DataTable.Pagination are best left out. */}
+    There is no count or footer to draw. */}
 ${page(
   `${heading(english)}
     <DataTable aria-label="People" columns={columns} data={[]} emptyState={

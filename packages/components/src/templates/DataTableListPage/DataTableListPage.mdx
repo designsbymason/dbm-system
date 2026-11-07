@@ -12,7 +12,7 @@ import * as DataTableListPageStories from "./DataTableListPage.stories";
 
 <VisuallyHidden asChild><h2>Intro</h2></VisuallyHidden>
 
-<ComponentHeader title="Data table list page" tier="Template" />
+<ComponentHeader title="Data Table List Page" tier="Template" />
 
 A page that lists records in a table: a people directory with a search box, filters, sorting, paging, chosen
 rows with bulk actions, a menu on each row and a confirmed removal. It is an **example page, not a component**.
@@ -30,8 +30,8 @@ open a story from the sidebar on its own, and narrow the window, to see the phon
 
 ```tsx
 import {
-  AppShell, Breadcrumb, Button, ConfirmDialog, DataTable, EmptyState, Heading, IconButton, Menu,
-  SearchInput, TableToolbar, Toast, Toolbar,
+  AppShell, Breadcrumb, Button, Checkbox, CheckboxGroup, ConfirmDialog, DataTable, Drawer, EmptyState, Heading, IconButton, Menu,
+  Pagination, SearchInput, Select, TableToolbar, Toast, Toolbar,
 } from "@dbm-system/components";
 ```
 
@@ -54,6 +54,7 @@ A page is not a component, so it has no properties table. What it does have is s
 drives. This is what the page holds, and what it hands to `DataTable`.
 
 <ReferenceTable
+  firstColumnWidth="20rem"
   columns={["State", "What it is and what changes it"]}
   rows={[
     ["query, statuses, departments", "The filters. Any change goes back to page 1 and drops the selection, since \"the rows I chose\" and \"every row\" meant the old filter."],
@@ -65,6 +66,7 @@ drives. This is what the page holds, and what it hands to `DataTable`.
 />
 
 <ReferenceTable
+  firstColumnWidth="20rem"
   columns={["DataTable prop", "How the page uses it"]}
   rows={[
     ["sortMode=\"manual\", sort, onSortChange", "The server sorts, so the table draws the rows as given and reports what was asked for."],
@@ -152,11 +154,14 @@ The table is replaced by a message and a retry, and the heading stays. The messa
 
 - Lay the toolbar out in three columns: the count at the start, the search taking the room that is left, and the filters
   at the end. A filter is its name as plain text, then a button of a fixed width that shows only the choice, so choosing
-  something never changes the button's size or moves what is beside it. Keep the chips' and the bulk actions' rows in
-  place when they are empty, and the table's columns fixed shares of its width, so nothing under the toolbar shifts.
-- Keep the toolbar's search, filters, count and bulk actions inside `DataTable.Toolbar`, and the pager inside
-  `DataTable.Pagination`. The table places them above and below itself and hands them its state, so a count or a
-  "select all" cannot disagree with the table.
+  something never changes the button's size or moves what is beside it. Make the table's columns fixed shares of its
+  width, so a longer value never moves one. On a phone, the toolbar is the search and a "Filters" button that opens both
+  filters in a bottom sheet (with "Clear all" and "Done"), then the count; the button says how many filters are in force.
+- Keep the toolbar's search, filters, count and bulk actions inside `DataTable.Toolbar`: the table places it above
+  itself and hands it the table's state, so a count or a "select all" cannot disagree with the table. The footer here is
+  drawn from the page's own state (`Select` and `Pagination`): a small rows-per-page button at the start, the page
+  controls centred and the range ("1–10 of 137") right-aligned at the end. `DataTable.Pagination` is the same footer with
+  the range before the select and the controls at the end, and needs no code of your own.
 - Give every filter a chip. A person who has set three filters and sees an empty table needs to see why, and to take
   one off without opening a panel.
 - Reserve the table's space while loading (`loadingRows` equal to the page size), so the pager and the footer do
@@ -179,14 +184,18 @@ and error states use `h2`, so the heading order never skips a level.
 
 </Callout>
 
-| Key | Behaviour |
-|---|---|
-| `Tab` | Moves through the header, the sidebar, the page's button, the search, the filters, the table's header buttons, the rows' controls and the pager, in that order. |
-| `Enter` or `Space` on a filter | Opens its panel. `Escape` closes it and returns focus to the button. |
-| `Space` on a row's checkbox | Chooses the row. The toolbar then shows how many are chosen. |
-| `Enter` on a column heading's button | Sorts by it; `Shift`+`Enter` adds it to the sort. |
-| `Enter` on a row's menu button | Opens the menu. `Escape` closes it. |
-| `Escape` in the confirmation | Cancels it and leaves everything as it was. |
+<ReferenceTable
+  firstColumnWidth="20rem"
+  columns={["Key", "Behaviour"]}
+  rows={[
+    ["`Tab`", "Moves through the header, the sidebar, the page's button, the search, the filters, the table's header buttons, the rows' controls and the pager, in that order."],
+    ["`Enter` or `Space` on a filter", "Opens its panel. `Escape` closes it and returns focus to the button."],
+    ["`Space` on a row's checkbox", "Chooses the row. The toolbar then shows how many are chosen."],
+    ["`Enter` on a column heading's button", "Sorts by it; `Shift`+`Enter` adds it to the sort."],
+    ["`Enter` on a row's menu button", "Opens the menu. `Escape` closes it."],
+    ["`Escape` in the confirmation", "Cancels it and leaves everything as it was."],
+  ]}
+/>
 
 - A chosen count, the filters in force and the number of results are announced politely as they change; a failed request is
   announced once, when it appears. Nothing is announced the first time the page loads.
@@ -233,8 +242,8 @@ and error states use `h2`, so the heading order never skips a level.
       <TableToolbar.Summary count={matching} loading={loading} />
     </TableToolbar.Row>
   </DataTable.Toolbar>
-  <DataTable.Pagination />
 </DataTable>
+{/* The footer under the table: Select for the rows per page, the range, and Pagination, from the same state */}
 ```
 
 ```tsx
@@ -260,11 +269,12 @@ spacing between its own pieces.
 
 <TokenRow token="space.1" usage="the gap between the heading and the sentence under it" />
 <TokenRow token="space.2" usage="the gap between a filter's name and its button, and between the checkboxes in its panel" />
-<TokenRow token="space.3" usage="the gap between the toolbar's lines when they wrap; the space inside a filter button at its start and end" />
+<TokenRow token="space.3" usage="the gap between the toolbar's lines when they wrap; the space inside a filter button at its start and end; between the footer's parts" />
 <TokenRow token="space.4" usage="the gap between the heading row's heading and its button when they wrap, and between the two filters" />
 <TokenRow token="space.6" usage="the gap between the breadcrumb, the heading row and the table, and between the toolbar's three columns" />
-<TokenRow token="space.8" usage="the height kept for the chips' row and the bulk actions' row while they are empty" />
-<TokenRow token="text.secondary" usage="the name in front of a filter's button" />
+<TokenRow token="space.20" usage="the width of the rows-per-page button" />
+<TokenRow token="font-size.sm" usage="the size of the range in the footer" />
+<TokenRow token="text.secondary" usage="the name in front of a filter's button, and the range in the footer" />
 
 ## Related components
 

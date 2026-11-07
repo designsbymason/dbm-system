@@ -4,5 +4,5 @@
   "compilerOptions": {
     "noEmit": true
   },
-  "include": ["**/*.ts", "**/*.tsx", "../src/types/**/*.d.ts"]
+  "include": ["**/*.ts", "**/*.tsx", "../src/types/**/*.d.ts", "../src/guides/GettingStarted.checks.stories.tsx"]
 }

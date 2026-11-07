@@ -4,7 +4,7 @@ import { axe } from "jest-axe";
 import { StrictMode } from "react";
 import { describe, expect, it } from "vitest";
 import { Toast } from "../../organisms/Toast";
-import { ListPage, PeopleListContent, usePeopleList } from "./DataTableListPageStoryKit";
+import { DataTableListPage, PeopleListContent, usePeopleList } from "./DataTableListPageStoryKit";
 import type { PeopleListOptions } from "./DataTableListPageStoryKit";
 
 // The page's own behaviour: what state it holds, what each change does to the rest, and the states it has nothing to show in. The
@@ -91,6 +91,41 @@ describe("the data-table list page", () => {
     expect(screen.getByRole("button", { name: "Actions for Ada Lovelace" }).className).toMatch(/variantTertiary/i);
   });
 
+  it("offers both filters in a sheet from a Filters button, which says how many are in force", async () => {
+    const user = userEvent.setup();
+    render(<Page />);
+    await loaded();
+    // The button is only drawn on a phone (a container query) and the stylesheet hides it from the accessibility tree elsewhere, so it is found by its text.
+    await user.click(screen.getByText("Filters", { selector: "button" }));
+    const sheet = await screen.findByRole("dialog", { name: "Filters" });
+    expect(within(sheet).getByRole("group", { name: "Status" })).toBeInTheDocument();
+    expect(within(sheet).getByRole("group", { name: "Department" })).toBeInTheDocument();
+    expect(within(sheet).getByRole("button", { name: "Clear all" })).toBeDisabled();
+    await user.click(within(sheet).getByRole("checkbox", { name: "Invited" }));
+    await user.click(within(sheet).getByRole("checkbox", { name: "Design" }));
+    await waitFor(() => expect(within(sheet).getByRole("button", { name: "Clear all" })).toBeEnabled());
+    await user.click(within(sheet).getByRole("button", { name: "Clear all" }));
+    await user.click(within(sheet).getByRole("checkbox", { name: "Suspended" }));
+    await user.click(within(sheet).getByRole("button", { name: "Done" }));
+    await waitFor(() => expect(screen.queryByRole("dialog", { name: "Filters" })).not.toBeInTheDocument());
+    expect(screen.getByText("Filters (1)", { selector: "button" })).toBeInTheDocument();
+    expect(within(screen.getByRole("list", { name: /applied filters/i })).getAllByRole("listitem")).toHaveLength(1);
+  });
+
+  it("draws the footer from the page's state: rows per page, the page controls and the range", async () => {
+    const user = userEvent.setup();
+    render(<Page />);
+    await loaded();
+    expect(screen.getByText("1–10 of 37")).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Next page" }));
+    await screen.findByText("11–20 of 37");
+    await user.click(screen.getByRole("combobox", { name: "Rows per page" }));
+    await user.click(await screen.findByRole("option", { name: "25" }));
+    await screen.findAllByText("1–25 of 37");
+    // The change of page size is announced (the range text alone is not a live region).
+    expect(screen.getAllByRole("status").some((region) => region.textContent === "Rows per page: 25. 1–25 of 37")).toBe(true);
+  });
+
   it("sorts by a column through the request, and starts again at page 1", async () => {
     const user = userEvent.setup();
     render(<Page />);
@@ -151,8 +186,11 @@ describe("the data-table list page", () => {
     const user = userEvent.setup();
     render(<Page initialQuery="zzzz" />);
     expect(await screen.findByText("No one matches")).toBeInTheDocument();
+    expect(screen.getByRole("searchbox", { name: "Search people" })).toHaveValue("zzzz");
     await user.click(screen.getByRole("button", { name: "Clear filters" }));
     await loaded();
+    // The box shows what the list is showing: nothing is left in it.
+    expect(screen.getByRole("searchbox", { name: "Search people" })).toHaveValue("");
   });
 
   it("replaces the table with a message and a retry when the request fails, and keeps the heading", async () => {
@@ -207,7 +245,7 @@ describe("the data-table list page", () => {
 
 describe("the whole template", () => {
   it("has the page's landmarks once each and one level-one heading", async () => {
-    render(<ListPage latency={0} total={37} />);
+    render(<DataTableListPage latency={0} total={37} />);
     await loaded();
     expect(screen.getAllByRole("main")).toHaveLength(1);
     expect(screen.getAllByRole("banner")).toHaveLength(1);

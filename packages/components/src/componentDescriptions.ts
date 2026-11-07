@@ -40,7 +40,7 @@ export const componentDescriptions: Record<string, string> = {
   Container: "Centers content and limits it to a maximum width.",
   ContextMenu: "A menu that opens where a person right-clicks or long-presses.",
   DataTable: "A table of data with sorting, selection, paging and a toolbar.",
-  "Data table list page": "An example list page: search, filters, paging, chosen rows and a confirmed removal.",
+  "Data Table List Page": "An example list page: search, filters, paging, chosen rows and a confirmed removal.",
   DatePicker: "A date field you type into, with a calendar to pick from.",
   DateRangePicker: "Two date fields and a calendar for choosing a start and an end date.",
   DescriptionList: "Terms and their values, laid out as a list of labelled details.",

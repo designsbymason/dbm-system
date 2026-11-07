@@ -24,10 +24,14 @@
   justify-content: space-between;
 }
 
-/* The table keeps one height (the toolbar's rows, a page of rows and the pager) whether a page is full, short or still
-   loading, so nothing below it moves. Its columns are fixed shares of the width (`table-layout: fixed`), so a longer value or a
-   sort never moves a column, and it never gets narrower than 40rem: on a phone it scrolls sideways inside its own frame. */
+/* The table keeps one height (the toolbar's rows, a page of rows and the footer) whether a page is full, short or still loading, so
+   nothing below it moves, and the footer stays at the bottom of that room. Its columns are fixed shares of the width
+   (`table-layout: fixed`), so a longer value or a sort never moves a column, and it never gets narrower than 40rem: on a phone it
+   scrolls sideways inside its own frame. It is also the container the narrow layout below asks about. */
 .table {
+  container-type: inline-size;
+  display: grid;
+  grid-template-rows: minmax(0, 1fr) auto;
   min-block-size: 38rem;
 }
 
@@ -36,15 +40,22 @@
   table-layout: fixed;
 }
 
-/* The toolbar is three columns: the count on the left (it hugs its text, with a floor as wide as its longest, so it never
-   changes width), the search box in the middle taking all the room that is left, and the filters on the right, 24px between
-   the columns and 16px between the filters. Narrower than 45rem the filters and then the search box take a line each. */
+/* The toolbar's first line is three columns: the count on the left (it hugs its text, with a floor as wide as its longest, so it
+   never changes width), the search box in the middle taking all the room that is left, and the filters on the right, 24px between
+   the columns and 16px between the filters. Under it, one line holds the chips of the filters in force at the start and the bulk
+   actions of the chosen rows at the end. The line is there only while one of them is: a line reserved for them would be blank space
+   between the toolbar and the table most of the time. */
 .toolbar {
-  container-type: inline-size;
+  align-content: start;
+  column-gap: var(--dbm-space-6);
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  row-gap: var(--dbm-space-3);
 }
 
-.toolbar .row {
+.toolbar .mainRow {
   column-gap: var(--dbm-space-6);
+  grid-column: 1 / -1;
   row-gap: var(--dbm-space-3);
 }
 
@@ -67,6 +78,14 @@
 /* The gap between the filters is the toolbar element inside the frame (it owns the 4px the Toolbar draws). */
 .toolbar .filters [role="toolbar"] {
   gap: var(--dbm-space-4);
+}
+
+.toolbar .chipsRow {
+  grid-column: 1;
+}
+
+.toolbar .bulk {
+  grid-column: 2;
 }
 
 /* A filter is its name as plain text, then a button of a fixed width that shows only the choice: the choice at the start, the
@@ -98,45 +117,93 @@
   min-inline-size: 11rem;
 }
 
-/* The rows under the toolbar (the chips of the filters in force, and the bulk actions of the chosen rows) keep their place
-   when they have nothing to show: hidden from the page and from assistive technology, but still taking their height, so the
-   table below does not jump down when a filter or a row is chosen. */
-.toolbar .chips,
-.toolbar .bulk {
-  min-block-size: var(--dbm-space-8);
+/* The footer, in three columns: the rows-per-page button at the start (a small fixed width, not the room that is left), the page
+   controls in the middle, and the range at the end, right-aligned. The outer columns are equal, so the controls are centred
+   whatever the range says. */
+.footer {
+  align-items: center;
+  display: grid;
+  gap: var(--dbm-space-3) var(--dbm-space-4);
+  grid-template-areas: "size pages range";
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  padding-block-start: var(--dbm-space-3);
 }
 
-.toolbar .chips[hidden],
-.toolbar .bulk[hidden] {
-  display: flex;
-  visibility: hidden;
+.pageSize {
+  grid-area: size;
+  inline-size: var(--dbm-space-20);
 }
 
+.footerPages {
+  grid-area: pages;
+  justify-self: center;
+}
+
+.range {
+  color: var(--dbm-text-secondary);
+  font-size: var(--dbm-font-size-sm);
+  font-variant-numeric: tabular-nums;
+  grid-area: range;
+  justify-self: end;
+  white-space: nowrap;
+}
+
+/* The phone's "Filters" button, and what it opens: two sections of checkboxes. The button is only there on a phone. */
+.toolbar .filtersButton {
+  display: none;
+  flex: none;
+}
+
+.sheetSections {
+  display: grid;
+  gap: var(--dbm-space-6);
+}
+
+.sheetSection {
+  display: grid;
+  gap: var(--dbm-space-3);
+}
+
+.headingRow .add {
+  flex: none;
+}
+
+/* Narrower than 45rem, the toolbar is the search box and a "Filters" button that opens both filters in a bottom sheet, then the
+   count; the chips and the bulk actions take a line each, and the table's footer puts the page controls first and the rows per
+   page and the range under them, one at each end. */
 @container (max-width: 45rem) {
-  .toolbar .filters {
-    flex: 1 1 100%;
-    order: 2;
-  }
-
-  /* The filters stack, each as wide as the row, so neither is cut off. */
-  .toolbar .filters [role="toolbar"] {
-    align-items: stretch;
-    flex-direction: column;
-    gap: var(--dbm-space-3);
-    inline-size: 100%;
-  }
-
-  .filterGroup {
-    inline-size: 100%;
-  }
-
-  .toolbar .filterGroup .filter {
-    flex: 1 1 auto;
-    inline-size: auto !important;
+  .toolbar {
+    grid-template-columns: minmax(0, 1fr);
   }
 
   .toolbar .search {
+    flex: 1 1 8rem;
+    order: 1;
+  }
+
+  .toolbar .filtersButton {
+    display: inline-flex;
+    order: 2;
+  }
+
+  .toolbar .filters {
+    display: none;
+  }
+
+  .toolbar .summary {
     flex: 1 1 100%;
+    min-inline-size: 0;
     order: 3;
+  }
+
+  .toolbar .bulk {
+    grid-column: 1;
+  }
+
+  .footer {
+    grid-template-areas:
+      "pages pages"
+      "size range";
+    grid-template-columns: auto minmax(0, 1fr);
   }
 }

@@ -12,7 +12,7 @@ const mdx = readFileSync(join(folder, "DataTableListPage.mdx"), "utf8");
 const usedTokens = [...new Set([...css.matchAll(/var\(--dbm-([a-z0-9-]+)/g)].map((match) => match[1] as string))];
 const listedTokens = new Set([...mdx.matchAll(/<TokenRow token="([^"]+)"/g)].map((match) => (match[1] as string).replace(/\./g, "-")));
 
-describe("the data-table list page's Docs page", () => {
+describe("the Data Table List Page's Docs page", () => {
   it("finds the tokens the stylesheet uses, and the rows that list them", () => {
     expect(usedTokens.length).toBeGreaterThan(3);
     expect(listedTokens.size).toBeGreaterThan(3);

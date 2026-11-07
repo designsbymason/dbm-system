@@ -2,6 +2,11 @@ import { useEffect, useId, useMemo, useState } from "react";
 import type { ReactNode } from "react";
 import { Badge } from "../../src/atoms/Badge";
 import { Checkbox } from "../../src/atoms/Checkbox";
+import { MagnifyingGlassIcon, SquaresFourIcon, StackIcon } from "@dbm-system/icons";
+import type { Icon as PhosphorIcon } from "@dbm-system/icons";
+import { IconButton } from "../../src/atoms/IconButton";
+import { VisuallyHidden } from "../../src/atoms/VisuallyHidden";
+import { Popover } from "../../src/molecules/Popover";
 import { CheckboxGroup } from "../../src/molecules/CheckboxGroup";
 import { SearchInput } from "../../src/molecules/SearchInput";
 import { TableToolbar } from "../../src/molecules/TableToolbar";
@@ -19,12 +24,15 @@ interface IndexRow {
   name: string;
   tier: Tier;
   category: string;
+  /** A template that is a story-only example page an app copies, not a component it imports (only the application shells ship). */
+  examplePage: boolean;
 }
 
-interface RawEntry {
+export interface RawEntry {
   id: string;
   title: string;
   type: string;
+  tags?: string[];
 }
 
 /** The singular label of each tier, which is also the key of the badge tone `ComponentHeader` draws it with. */
@@ -34,6 +42,13 @@ const TIER_LABEL: Record<Tier, ComponentTier> = {
   Organisms: "Organism",
   Templates: "Template",
 };
+
+/**
+ * The tag a story-only example page puts on its stories (`tags: ["example-page"]`), which Storybook copies onto the page's Docs entry.
+ * It is the template's own statement, so it holds wherever the template is grouped; `src/templates/examplePageTags.test.ts` fails a
+ * template that is not exported from the package and lacks it.
+ */
+const EXAMPLE_PAGE_TAG = "example-page";
 
 const COMPONENT_TIERS: Exclude<Tier, "Templates">[] = ["Atoms", "Molecules", "Organisms"];
 
@@ -70,9 +85,9 @@ function toRows(entries: Record<string, RawEntry>): IndexRow[] {
     if (!name) continue;
     if (tier === "Templates") {
       if (parts.length < 2 || parts.length > 3) continue;
-      rows.push({ id: entry.id, name, tier, category: parts[1] ?? "" });
+      rows.push({ id: entry.id, name, tier, category: parts[1] ?? "", examplePage: entry.tags?.includes(EXAMPLE_PAGE_TAG) === true });
     } else if (parts.length === 3 && parts[1]) {
-      rows.push({ id: entry.id, name, tier, category: parts[1] });
+      rows.push({ id: entry.id, name, tier, category: parts[1], examplePage: false });
     }
   }
   return rows.sort((a, b) => a.name.localeCompare(b.name, undefined, { sensitivity: "base" }));
@@ -141,8 +156,76 @@ function ChoiceFilter({
   );
 }
 
-/** The columns of both tables. Fixed shares of the width, so choosing a filter never moves a column. */
-const COLUMNS: DataTableColumn<IndexRow>[] = [
+/**
+ * On a phone the filters and the search are a right-aligned group of icon buttons beside the count (Tier, Category, search), each
+ * opening a small panel: the same checkboxes as the toolbar's filters, and the search box, focused. A button shows it is in use (a
+ * filter chosen, a search typed) by its look, and is named by its choice ("Tier: All"). These stand in for the toolbar's own filters and
+ * search, which are not drawn at that width.
+ */
+function FilterIconButton({
+  name,
+  icon,
+  options,
+  chosen,
+  onChange,
+}: {
+  name: string;
+  icon: PhosphorIcon;
+  options: string[];
+  chosen: string[];
+  onChange: (next: string[]) => void;
+}) {
+  return (
+    <Popover>
+      <Popover.Trigger asChild>
+        <IconButton icon={icon} variant="ghost" tone={chosen.length > 0 ? "brand" : "neutral"} size="sm" aria-label={`${name}: ${filterValue(chosen)}`} />
+      </Popover.Trigger>
+      <Popover.Content align="end" aria-label={`${name} filter`}>
+        <div className="dbm-getting-started__panel">
+          {/* The icon button has no words of its own, so the panel says which filter it is. */}
+          <span className="dbm-getting-started__panellabel">{name}</span>
+          <Checkbox checked={chosen.length === 0} onCheckedChange={() => onChange([])}>
+            All
+          </Checkbox>
+          <CheckboxGroup aria-label={name} value={chosen} onValueChange={onChange}>
+            {options.map((option) => (
+              <Checkbox key={option} value={option}>
+                {option}
+              </Checkbox>
+            ))}
+          </CheckboxGroup>
+        </div>
+      </Popover.Content>
+    </Popover>
+  );
+}
+
+function SearchIconButton({ query, onChange }: { query: string; onChange: (next: string) => void }) {
+  return (
+    <Popover>
+      <Popover.Trigger asChild>
+        <IconButton
+          icon={MagnifyingGlassIcon}
+          variant="ghost"
+          tone={query.trim() !== "" ? "brand" : "neutral"}
+          size="sm"
+          aria-label={query.trim() !== "" ? `Search components: ${query.trim()}` : "Search components"}
+        />
+      </Popover.Trigger>
+      <Popover.Content align="end" aria-label="Search components">
+        <div className="dbm-getting-started__searchpanel">
+          <SearchInput aria-label="Search components" placeholder="Search" value={query} onChange={(event) => onChange(event.target.value)} onClear={() => onChange("")} />
+        </div>
+      </Popover.Content>
+    </Popover>
+  );
+}
+
+/**
+ * The columns of both tables. Fixed shares of the width, so choosing a filter never moves a column. With `markPages`, the name of an
+ * example page template ends with an asterisk, which the note under the table explains.
+ */
+const columnsFor = (markPages: boolean): DataTableColumn<IndexRow>[] => [
   {
     id: "name",
     header: "Name",
@@ -150,6 +233,8 @@ const COLUMNS: DataTableColumn<IndexRow>[] = [
     cell: (row) => (
       <a className="dbm-getting-started__link" href={docsHref(row.id)} target="_top">
         {row.name}
+        {markPages && row.examplePage && <span aria-hidden="true">*</span>}
+        {markPages && row.examplePage && <VisuallyHidden> (example page)</VisuallyHidden>}
       </a>
     ),
     sortable: true,
@@ -185,23 +270,38 @@ const COLUMNS: DataTableColumn<IndexRow>[] = [
   },
 ];
 
+const COMPONENT_COLUMNS = columnsFor(false);
+const TEMPLATE_COLUMNS = columnsFor(true);
+
 /** The shared table: brand header, striped, sortable on every column, a header that stays while the rows scroll. */
 function IndexTable({
   rows,
   label,
   emptyState,
+  tall = false,
+  wrapNames = false,
+  columns,
   children,
 }: {
   rows: IndexRow[];
+  columns: DataTableColumn<IndexRow>[];
   label: string;
   emptyState: string;
+  /** Holds one height whatever the rows (a table with filters), so nothing below it moves as they change. */
+  tall?: boolean;
+  /** Lets a long name wrap onto lines in full, rather than being cut off with an ellipsis. */
+  wrapNames?: boolean;
   children?: ReactNode;
 }) {
   return (
-    <div className="dbm-getting-started__table">
+    <div
+      className={["dbm-getting-started__table", tall && "dbm-getting-started__table--tall", wrapNames && "dbm-getting-started__table--wrapnames"]
+        .filter(Boolean)
+        .join(" ")}
+    >
       <DataTable
         aria-label={label}
-        columns={COLUMNS}
+        columns={columns}
         data={rows}
         getRowId={(row) => row.id}
         tone="brand"
@@ -224,14 +324,16 @@ function IndexTable({
  * every component; its tier badges are the ones the component pages draw. Templates are listed in a section of their
  * own, empty until the first one exists. Not part of the published package.
  */
-export function ComponentIndex() {
-  const [entries, setEntries] = useState<IndexRow[] | null>(null);
+export function ComponentIndex({ index }: { index?: Record<string, RawEntry> } = {}) {
+  const [entries, setEntries] = useState<IndexRow[] | null>(index ? toRows(index) : null);
   const [failed, setFailed] = useState(false);
   const [query, setQuery] = useState("");
   const [tiers, setTiers] = useState<string[]>([]);
   const [categories, setCategories] = useState<string[]>([]);
 
   useEffect(() => {
+    // An index handed in (by a check) is drawn as it is; otherwise Storybook's own is fetched.
+    if (index) return;
     const controller = new AbortController();
     const url = new URL("index.json", window.location.href);
     fetch(url, { signal: controller.signal })
@@ -244,7 +346,7 @@ export function ComponentIndex() {
         if ((error as { name?: string }).name !== "AbortError") setFailed(true);
       });
     return () => controller.abort();
-  }, []);
+  }, [index]);
 
   const components = useMemo(() => (entries ?? []).filter((row) => row.tier !== "Templates"), [entries]);
   const templates = useMemo(() => (entries ?? []).filter((row) => row.tier === "Templates"), [entries]);
@@ -299,7 +401,7 @@ export function ComponentIndex() {
           Loading the component list…
         </p>
       ) : (
-        <IndexTable rows={shown} label="Components" emptyState="No component matches. Try a shorter search or clear a filter.">
+        <IndexTable tall columns={COMPONENT_COLUMNS} rows={shown} label="Components" emptyState="No component matches. Try a shorter search or clear a filter.">
           <DataTable.Toolbar aria-label="Component list tools">
             <TableToolbar.Row>
               <TableToolbar.Summary
@@ -317,6 +419,11 @@ export function ComponentIndex() {
                   onClear={() => setQuery("")}
                 />
               </TableToolbar.Search>
+              <div className="dbm-getting-started__mobiletools">
+                <FilterIconButton name="Tier" icon={StackIcon} options={COMPONENT_TIERS} chosen={tiers} onChange={setTiers} />
+                <FilterIconButton name="Category" icon={SquaresFourIcon} options={categoryOptions} chosen={categories} onChange={setCategories} />
+                <SearchIconButton query={query} onChange={setQuery} />
+              </div>
               <Toolbar aria-label="Filters" variant="secondary" className="dbm-getting-started__filters">
                 <Toolbar.Item>
                   <ChoiceFilter name="Tier" options={COMPONENT_TIERS} chosen={tiers} onChange={setTiers} width="8.25rem" />
@@ -341,7 +448,15 @@ export function ComponentIndex() {
         Templates are page-level compositions of the components above: a dashboard shell, an auth flow and so on.
       </p>
       {templates.length > 0 ? (
-        <IndexTable rows={templates} label="Templates" emptyState="No templates yet." />
+        <>
+          <IndexTable wrapNames columns={TEMPLATE_COLUMNS} rows={templates} label="Templates" emptyState="No templates yet." />
+          {templates.some((row) => row.examplePage) && (
+            <p className="dbm-getting-started__note dbm-getting-started__footnote">
+              * An example page template, not a component. Nothing is imported from the package: copy the page into your app
+              and replace its data and words.
+            </p>
+          )}
+        </>
       ) : (
         <p className="dbm-getting-started__note">No templates yet.</p>
       )}
