@@ -36,7 +36,7 @@ import type {
   DialogTitleProps,
   DialogTriggerProps,
 } from "./Dialog.types";
-import { useProvidedDirection } from "../../atoms/DirectionProvider/DirectionProvider";
+import { useProvidedDirection } from "../../internal/useProvidedDirection";
 
 const defaultLabels: DialogLabels = { close: "Close" };
 

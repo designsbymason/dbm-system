@@ -187,7 +187,7 @@ const meta: Meta<PlaygroundArgs> = {
     dir: {
       control: "radio",
       options: ["ltr", "rtl"],
-      description: "The reading direction, passed to the primitive and every part around it rather than read from the page.",
+      description: "The reading direction, passed to the primitive and every part around it. Left out, the nearest DirectionProvider's, else left-to-right; not read from the page.",
       table: { defaultValue: { summary: '"ltr"' } },
     },
     labels: readOnly("Text the menu supplies itself (the landmark's name, the external-link cue, a split trigger's caret), merged over the English defaults."),

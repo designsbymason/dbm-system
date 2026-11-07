@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 import { describe, expect, it } from "vitest";
 import { DirectionProvider } from "./DirectionProvider";
 import { Combobox } from "../../organisms/Combobox";
+import { NavigationMenu } from "../../organisms/NavigationMenu";
 import { AlertDialog } from "../../organisms/AlertDialog";
 import { Dialog } from "../../organisms/Dialog";
 import { Drawer } from "../../organisms/Drawer";
@@ -123,6 +124,19 @@ const cases: Case[] = [
   },
   { name: "DatePicker", draw: (dir) => <DatePicker aria-label="Start" dir={dir} />, find: () => screen.getByRole("group"), bare: null },
   { name: "DateRangePicker", draw: (dir) => <DateRangePicker aria-label="Stay" dir={dir} />, find: () => screen.getByRole("group", { name: "Stay" }), bare: null },
+  {
+    name: "NavigationMenu",
+    draw: (dir) => (
+      <NavigationMenu aria-label="Primary" dir={dir} data-testid="target">
+        <NavigationMenu.List>
+          <NavigationMenu.Item>
+            <NavigationMenu.Link href="/">Home</NavigationMenu.Link>
+          </NavigationMenu.Item>
+        </NavigationMenu.List>
+      </NavigationMenu>
+    ),
+    find: () => screen.getByRole("navigation", { name: "Primary" }).closest("[dir]"),
+  },
   {
     name: "Tabs",
     draw: (dir) => (

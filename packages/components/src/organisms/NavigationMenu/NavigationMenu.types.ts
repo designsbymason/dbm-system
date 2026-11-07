@@ -163,8 +163,8 @@ export interface NavigationMenuProps extends Omit<ComponentPropsWithoutRef<"nav"
    */
   skipDelayDuration?: number;
   /**
-   * The reading direction, passed to the primitive and every part around it rather than read from the page. Inside a `Navbar`
-   * the bar's `dir` applies.
+   * The reading direction, passed to the primitive and every part around it. Left out, it follows the nearest `DirectionProvider`,
+   * else left-to-right; it is not read from the page. Inside a `Navbar` the bar's `dir` applies.
    * @default 'ltr'
    */
   dir?: NavigationMenuDirection;

@@ -51,6 +51,7 @@ import type {
   NavigationMenuSize,
   NavigationMenuTriggerProps,
 } from "./NavigationMenu.types";
+import { useDirection } from "../../atoms/DirectionProvider";
 
 /** How long the pointer rests on a trigger or link before `onIntent` is called. */
 const INTENT_DELAY_MS = 100;
@@ -379,7 +380,7 @@ const NavigationMenuRoot = forwardRef<HTMLElement, NavigationMenuProps>(
       rounded: ownRounded = false,
       delayDuration = 200,
       skipDelayDuration = 300,
-      dir: ownDir = "ltr",
+      dir: ownDirProp,
       labels,
       className,
       "aria-label": ariaLabel,
@@ -388,6 +389,7 @@ const NavigationMenuRoot = forwardRef<HTMLElement, NavigationMenuProps>(
     },
     ref,
   ) => {
+    const ownDir = useDirection(ownDirProp);
     const embed = useNavigationEmbed();
     const embedded = embed !== null;
     const resolvedPresentation = useResolvedResponsiveValue(presentation, "mega");

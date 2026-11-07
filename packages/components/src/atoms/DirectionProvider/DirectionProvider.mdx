@@ -1,5 +1,6 @@
 import { Canvas, Meta } from "@storybook/addon-docs/blocks";
 import { Callout, ComponentHeader, PlaygroundControls, PropertiesTable, RelatedCard } from "../../../.storybook/blocks";
+import { Text } from "../Text";
 import { VisuallyHidden } from "../VisuallyHidden";
 import { Navbar } from "../../organisms/Navbar";
 import { DirectionProvider } from "./DirectionProvider";
@@ -13,11 +14,11 @@ export const propOrder = ["dir", "children"];
 
 <ComponentHeader title="DirectionProvider" tier="Atom" />
 
-Says which way the app reads, once, near the root. A direction-aware component that is given no `dir` of its
-own uses the nearest provider's direction, so a right-to-left app wraps its root instead of passing `dir` to
-every `Sidebar`, `Navbar` and part. It renders no element and changes no style; the layout itself follows the
-`dir` attribute of the page, which `AppShell` sets for you. Today `AppShell`, `Sidebar`, `Navbar`, `Slider`, `RangeSlider`, `ScrollArea`, `ToggleGroup`, `Stepper`, `Combobox`,
-`MultiSelect`, `Tree`, `CommandPalette`, `Calendar`, `RatingInput`, `Splitter`, `Carousel`, `ImageViewer`, `Tour`, `Toast`, `EditorTabs`, `Toolbar`, `Menubar`, `Menu`, `ContextMenu`, `Select`, `Dialog`, `Drawer`, `DatePicker`, `DateRangePicker`, `DataTable`, `Accordion`, `Tabs`, `RadioGroup`, `Alert`, `Breadcrumb`, `ColorPicker`, `AlertDialog`, `ConfirmDialog`, `Popover`, `Tooltip` and `HoverCard` (and so their portalled panels, which carry the direction themselves) read it; every component that takes a `dir` reads it, and so do the portalled overlays without one.
+Says which way the app reads, once, near the root. Every component that takes a `dir`, and every overlay that
+opens in a portal without one (`Dialog`, `Popover`, `Tooltip` and the rest), uses the nearest provider's
+direction when it is given none of its own, so a right-to-left app wraps its root instead of passing `dir` to
+each part. A `dir` on the component itself still wins. The provider renders no element and changes no style: the
+layout itself follows the `dir` attribute of the page, which `AppShell` sets for you. It does not set `lang`.
 
 ### Import
 
@@ -36,6 +37,9 @@ import { DirectionProvider, useDirection } from "@dbm-system/components";
 
 ## Properties
 
+`DirectionProvider` draws no element, so it accepts no native attributes and takes no `ref`, `className`, `style`, `id` or
+`data-testid`: there is nothing to put them on.
+
 <PropertiesTable of={DirectionProviderStories} order={propOrder} />
 
 `useDirection(own?)` returns the direction a component should use: `own` when given, else the nearest
@@ -50,6 +54,14 @@ provider's, else `"ltr"`.
 ### A component's own dir wins
 
 <Canvas of={DirectionProviderStories.OwnDirWins} />
+
+### Languages and scripts, in each direction
+
+Six left-to-right languages in six scripts (Latin, Cyrillic, Greek, Devanagari, Han and kana, and Hangul) and four right-to-left ones in two
+(Hebrew, and the Arabic script used for Arabic, Persian and Urdu). Each card has its own provider, a `lang` and a `dir`; the tabs, the breadcrumb and the
+slider mirror from the provider alone.
+
+<Canvas of={DirectionProviderStories.Languages} />
 
 ## Usage guidelines
 
@@ -77,6 +89,9 @@ provider's, else `"ltr"`.
 
 - Read the direction in your own parts with `useDirection()` rather than checking the document.
 - Nothing is detected: the provider says what the app tells it.
+- Keep `lang` and `dir` together. The provider sets neither on the page, so put `lang` (which picks the fonts and the shaping for a script)
+  and `dir` on the root element, as the Languages story does on each card.
+- Give it `"ltr"` or `"rtl"` only. Any other value (from untyped configuration) is refused with a development warning and read as `"ltr"`.
 
 ## Accessibility
 
@@ -92,7 +107,7 @@ with the provider's value.
 ```tsx
 <DirectionProvider dir="rtl">
   <Navbar>
-    <Navbar.Brand href="/">أكمي</Navbar.Brand>
+    <Navbar.Brand href="/">dbM</Navbar.Brand>
   </Navbar>
 </DirectionProvider>
 ```
@@ -110,7 +125,14 @@ with the provider's value.
   href="/?path=/docs/organisms-navigation-navbar--docs"
 >
   <Navbar>
-    <Navbar.Brand href="/">Acme</Navbar.Brand>
+    <Navbar.Brand href="/">dbM</Navbar.Brand>
   </Navbar>
+</RelatedCard>
+<RelatedCard
+  name="AppShell"
+  description="Given a dir, it provides it to the Sidebar, Navbar and everything inside, and sets the page's direction on its own frame"
+  href="/?path=/docs/templates-application-shells-appshell--docs"
+>
+  <Text size="sm" color="secondary">AppShell dir="rtl"</Text>
 </RelatedCard>
 </div>

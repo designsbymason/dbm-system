@@ -19,7 +19,7 @@ import { DateRangePickerPanel } from "./DateRangePickerPanel";
 import type { RangePresetChoice } from "./DateRangePickerPanel";
 import { laterOf, rangeProblem, wholeNumber } from "./dateRangeValue";
 import type { RangeRules } from "./dateRangeValue";
-import { useProvidedDirection } from "../../atoms/DirectionProvider/DirectionProvider";
+import { useProvidedDirection } from "../../internal/useProvidedDirection";
 
 const defaultLabels = (formatNumber: (value: number) => string): DateRangePickerLabels => ({
   start: "Start date",

@@ -37,7 +37,7 @@ import type {
   DrawerTitleProps,
   DrawerTriggerProps,
 } from "./Drawer.types";
-import { useProvidedDirection } from "../../atoms/DirectionProvider/DirectionProvider";
+import { useProvidedDirection } from "../../internal/useProvidedDirection";
 
 const defaultLabels: DrawerLabels = { close: "Close" };
 

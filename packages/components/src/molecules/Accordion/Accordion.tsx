@@ -14,7 +14,7 @@ import type {
   AccordionTriggerProps,
 } from "./Accordion.types";
 import type { IconSize } from "../../atoms/Icon";
-import { useProvidedDirection } from "../../atoms/DirectionProvider/DirectionProvider";
+import { useProvidedDirection } from "../../internal/useProvidedDirection";
 
 type AccordionPrimitiveRootProps = ComponentPropsWithoutRef<typeof AccordionPrimitive.Root>;
 

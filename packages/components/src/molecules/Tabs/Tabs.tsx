@@ -17,7 +17,7 @@ import type {
   TabsTriggerProps,
   TabsVariant,
 } from "./Tabs.types";
-import { useProvidedDirection } from "../../atoms/DirectionProvider/DirectionProvider";
+import { useProvidedDirection } from "../../internal/useProvidedDirection";
 
 interface TabsContextValue {
   variant: TabsVariant;

@@ -27,7 +27,7 @@ import { DatePickerPanel } from "./DatePickerPanel";
 import type { PresetChoice } from "./DatePickerPanel";
 import { reasonOf } from "./datePickerReason";
 import { useDatePickerValue } from "./useDatePickerValue";
-import { useProvidedDirection } from "../../atoms/DirectionProvider/DirectionProvider";
+import { useProvidedDirection } from "../../internal/useProvidedDirection";
 
 const defaultLabels: DatePickerLabels = {
   day: "Day",

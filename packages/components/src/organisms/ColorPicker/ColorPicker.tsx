@@ -13,7 +13,7 @@ import type { ColorPickerLabels, ColorPickerProps, ColorPickerSize } from "./Col
 import { ColorPickerPanel } from "./ColorPickerPanel";
 import type { SwatchChoice } from "./ColorPickerPanel";
 import { useColorPickerValue } from "./useColorPickerValue";
-import { useProvidedDirection } from "../../atoms/DirectionProvider/DirectionProvider";
+import { useProvidedDirection } from "../../internal/useProvidedDirection";
 
 const defaultLabels: ColorPickerLabels = {
   value: "Color value",

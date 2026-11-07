@@ -12,7 +12,7 @@ import type {
   HoverCardTriggerProps,
 } from "./HoverCard.types";
 import { HoverCardProviderContext } from "./HoverCardProviderContext";
-import { useProvidedDirection } from "../../atoms/DirectionProvider/DirectionProvider";
+import { useProvidedDirection } from "../../internal/useProvidedDirection";
 
 // Radix's arrow is 10 x 5 unless told otherwise, and it adds the arrow's height to
 // `sideOffset` when it places the card, so the gap to bridge is the two together.

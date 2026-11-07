@@ -64,3 +64,6 @@ Decisions in [ADR-0161](../adr/0161-navigationmenu-keeps-its-panels-on-the-scree
 - `Shift+Tab` from the first link of a panel back to its trigger was done with real keys in the preview and not in a check: the primitive hands focus through its hidden stop, which a synthetic key doesn't reproduce.
 - A panel is capped by the room to the edge of what can show it and its links wrap, so it is not moved to fit; a very narrow room (under the least panel width) still takes that width.
 - The primitive's hidden focus stop still fails an accessibility scan while a panel is open; it is the primitive's own and not patched.
+
+## Reads the nearest DirectionProvider (2026-11-06)
+Additive, at explicit direction ([ADR-0177](../adr/0177-an-optional-direction-provider-sets-the-text-direction-for-a-subtree-over-reading-the-page-direction-automatically.md)): `dir` left out now follows the nearest `DirectionProvider`, else left to right, as before; inside a `Navbar` the bar's `dir` still applies first. Found by `DirectionProvider.coverage.test.ts`, which fails a component that declares a `dir` and never reads the provider; the earlier passes had missed it. Covered by `DirectionProvider.consumers.test.tsx`. Finalized status is unchanged.

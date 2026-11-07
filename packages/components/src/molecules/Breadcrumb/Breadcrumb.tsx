@@ -28,7 +28,7 @@ import type {
   BreadcrumbSize,
   BreadcrumbTone,
 } from "./Breadcrumb.types";
-import { useProvidedDirection } from "../../atoms/DirectionProvider/DirectionProvider";
+import { useProvidedDirection } from "../../internal/useProvidedDirection";
 
 interface BreadcrumbContextValue {
   size: BreadcrumbSize;

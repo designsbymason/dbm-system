@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
+import { composeStory } from "@storybook/react-vite";
 import type { ReactNode } from "react";
 import { expect, waitFor, within } from "storybook/test";
 import { Button } from "../Button";
@@ -15,6 +16,7 @@ import { Dialog } from "../../organisms/Dialog";
 import { Drawer } from "../../organisms/Drawer";
 import { Menu } from "../../organisms/Menu";
 import { DirectionProvider } from "./DirectionProvider";
+import stories, { Languages } from "./DirectionProvider.stories";
 
 // Hidden real-browser checks (guidelines/adr/0013): content that opens in a portal sits outside the provider's DOM, so the direction has to reach
 // it through the component, not the cascade. Every story here sets the direction ONLY with a DirectionProvider (never a `dir` on a component or
@@ -341,5 +343,33 @@ export const HoverCardAndTooltipAreRightToLeft: Story = {
   play: async () => {
     await expect(direction(await body.findByTestId("card-text"))).toBe("rtl");
     await expect(direction(await body.findByTestId("tip-text"))).toBe("rtl");
+  },
+};
+
+const LanguagesShowcase = composeStory(Languages, stories);
+
+export const LanguagesMirrorFromTheirProviders: Story = {
+  name: "Every language card mirrors from its own provider: the first tab and the slider's start sit on the reading direction's own edge",
+  render: () => <LanguagesShowcase />,
+  play: async ({ canvasElement }) => {
+    const cards = [...canvasElement.querySelectorAll<HTMLElement>("div[lang][dir]")];
+    await expect(cards).toHaveLength(10);
+    let rtlCards = 0;
+    for (const card of cards) {
+      const rtl = card.getAttribute("dir") === "rtl";
+      if (rtl) rtlCards += 1;
+      const tabs = within(card).getAllByRole("tab");
+      const first = tabs[0]!.getBoundingClientRect();
+      const last = tabs[tabs.length - 1]!.getBoundingClientRect();
+      // The first tab is on the start edge: left in left-to-right text, right in right-to-left.
+      await expect(first.left < last.left).toBe(!rtl);
+      // The slider's value (30) sits nearer the start edge, so its thumb is in the half of the card on that side.
+      const thumb = within(card).getByRole("slider").getBoundingClientRect();
+      const box = card.getBoundingClientRect();
+      const thumbCentre = thumb.left + thumb.width / 2;
+      await expect(thumbCentre < box.left + box.width / 2).toBe(!rtl);
+      await expect(direction(card)).toBe(rtl ? "rtl" : "ltr");
+    }
+    await expect(rtlCards).toBe(4);
   },
 };

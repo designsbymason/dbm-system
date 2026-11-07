@@ -6,7 +6,7 @@ import type { ReactElement, ReactNode } from "react";
 import { Icon } from "../../atoms/Icon";
 import styles from "./Select.module.css";
 import type { SelectOptionProps, SelectProps, SelectSize } from "./Select.types";
-import { useProvidedDirection } from "../../atoms/DirectionProvider/DirectionProvider";
+import { useProvidedDirection } from "../../internal/useProvidedDirection";
 
 const sizeClass: Record<SelectSize, string | undefined> = {
   xs: styles.sizeXs,

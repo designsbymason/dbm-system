@@ -89,27 +89,32 @@ direction is `rtl`. Do the same in your own CSS.
   through an optional `formatNumber`. Pass translated strings and a locale-aware formatter there.
   Components do not bundle translations.
 
-## The dir prop
+## Direction: `DirectionProvider` and the `dir` prop
 
-Most components that behave differently in right-to-left take an explicit `dir?: "ltr" | "rtl"`. It
-decides which side things sit on and which arrow key moves forward. It **defaults to left-to-right and is
-not read from the page**. Reading it needs JavaScript and can flash left-to-right on a server-rendered
-page, and it is one decision for every component together, which is not made yet. Until it is, a
-right-to-left app passes `dir="rtl"` to each of these.
+Components that behave differently in right-to-left take an explicit `dir?: "ltr" | "rtl"`. It decides which
+side things sit on and which arrow key moves forward. Wrap your app once in `DirectionProvider` and every one
+of them, and every overlay that opens in a portal (`Dialog`, `Popover`, `Tooltip` and the rest), follows it.
+A `dir` on a component itself still wins. Nothing is read from the page: reading it needs JavaScript and can
+flash left-to-right on a server-rendered page, so the app says which way it reads.
 
 <ReferenceTable
   columns={["Behaviour", "Components"]}
   rows={[
-    ["Takes `dir`, default left-to-right", "`Accordion`, `Calendar`, `Carousel`, `ColorPicker`, `Combobox`, `CommandPalette`, `DataTable`, `DatePicker`, `DateRangePicker`, `Dialog`, `Drawer`, `EditorTabs`, `ImageViewer`, `Menu`, `Menubar`, `MultiSelect`, `RadioGroup`, `RangeSlider`, `RatingInput`, `ScrollArea`, `Select`, `Slider`, `Splitter`, `Stepper`, `Tabs`, `Toast`, `ToggleGroup`, `Tour`, `Tree`"],
-    ["Native `dir` attribute, inherited from the page", "`Alert`, `Breadcrumb`"],
+    ["Reads the nearest `DirectionProvider`, else left-to-right", "Every component that takes a `dir` (`Tabs`, `Slider`, `Menu`, `Select`, `Calendar`, `Sidebar`, `AppShell`, `DataTable` and the rest), and the overlays without one: `Dialog`, `Drawer`, `AlertDialog`, `ConfirmDialog`, `Popover`, `Tooltip`, `HoverCard`"],
+    ["Native `dir` attribute: the provider's when there is one, else inherited from the page", "`Alert`, `Breadcrumb`, and the field of `ColorPicker`, `DatePicker` and `DateRangePicker`"],
   ]}
 />
 
 ```tsx
-<Tabs dir="rtl" defaultValue="overview">
-  {/* … */}
-</Tabs>
+<DirectionProvider dir="rtl">
+  <Tabs defaultValue="overview">{/* … */}</Tabs>
+</DirectionProvider>
 ```
+
+The provider carries a value; it draws no element and sets neither `dir` nor `lang` on the page. Set those on
+the root element too (`<html lang="ar" dir="rtl">`), or use `AppShell`, which sets `dir` on its own frame.
+Content you portal yourself with the `Portal` atom is outside the provider's reach: give it a `dir`, or read
+the provider's with `useDirection()`.
 
 Components that only draw layout and text, such as `Stack`, `Card` and `Text`, need no prop: they follow the
 page's direction through CSS.
@@ -123,7 +128,7 @@ page's direction through CSS.
 - Reference the `breakpoint.*` tokens, or a component's responsive prop, for a change in layout.
 - Check the real width with the viewport toolbar in Storybook, not only the narrowest and widest.
 - Write your own CSS with logical properties (`inline`, `block`, `start`, `end`).
-- Pass `dir="rtl"` to every component in the table above in a right-to-left app, and `mirrored` to a
+- Wrap a right-to-left app in `DirectionProvider`, set `dir` and `lang` on the page, and pass `mirrored` to a
   directional icon.
 - Test a right-to-left page in a real browser, with long text and the keyboard.
 
@@ -134,7 +139,7 @@ page's direction through CSS.
 - Don't hide a control at a narrow width without a way to reach what it did.
 - Don't assume a hover. A phone has none, so anything that appears on hover needs a tap or focus path.
 - Don't use `left`, `right`, `margin-left` or `padding-right` in new CSS.
-- Don't rely on the page's `dir` alone to flip a component that takes the prop.
+- Don't rely on the page's `dir` alone to flip a component that takes a `dir`: wrap the app in `DirectionProvider`.
 - Don't mirror an icon that is not directional, such as a clock or a check.
 
 </Callout>

@@ -45,7 +45,7 @@ import type {
   AlertDialogTone,
   AlertDialogTriggerProps,
 } from "./AlertDialog.types";
-import { useProvidedDirection } from "../../atoms/DirectionProvider/DirectionProvider";
+import { useProvidedDirection } from "../../internal/useProvidedDirection";
 
 // The panel and its sections are drawn with `Dialog`'s stylesheet: the two must look the same and change
 // together, as `RangeSlider` draws with `Slider`'s. This file's own module holds only what an alert adds (the tone

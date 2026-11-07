@@ -192,7 +192,7 @@ A running record of foundational decisions, cross-referenced to the detailed doc
 - **Storybook's Accessibility panel needs `@storybook/addon-vitest`**, not just `@storybook/addon-a11y`, so `pnpm test:storybook:watch` must run alongside `pnpm storybook` (`guidelines/adr/0003`).
 - **Dependency refresh is manual, not prompted** ([ADR-0022](adr/0022-dependency-updates-are-a-manual-refresh-pass-not-dependabot-version-prs.md)): nothing reminds anyone to run the refresh pass in `02-tech-stack-and-structure.md` §3.2, which is due every few weeks and before a release.
 - **How a consumer loads the CSS and tokens is decided but not built (a Phase 8 item)** ([ADR-0175](adr/0175-a-consumer-imports-an-explicit-stylesheet-and-one-bundled-theme-file-and-supplies-the-fonts-over-implicit-css-or-shipped-fonts.md)): an explicit stylesheet import exposed through `exports`, one bundled token file per brand and mode, fonts supplied by the app. Still to do: build both, write the consumer guide, and test the packed package in a fresh app.
-- **Text direction:** components keep the explicit `dir` prop and the left-to-right default, and a new opt-in direction provider sets it for a subtree ([ADR-0177](adr/0177-an-optional-direction-provider-sets-the-text-direction-for-a-subtree-over-reading-the-page-direction-automatically.md)). Not built yet; the Responsive and right-to-left guide gains it when it is.
+- **Text direction:** components keep the explicit `dir` prop and the left-to-right default, and the opt-in `DirectionProvider` sets it for a subtree ([ADR-0177](adr/0177-an-optional-direction-provider-sets-the-text-direction-for-a-subtree-over-reading-the-page-direction-automatically.md)).
 
 ---
 

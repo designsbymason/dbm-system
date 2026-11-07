@@ -44,7 +44,7 @@ import type {
   AlertTone,
   AlertVariant,
 } from "./Alert.types";
-import { useProvidedDirection } from "../../atoms/DirectionProvider/DirectionProvider";
+import { useProvidedDirection } from "../../internal/useProvidedDirection";
 
 const toneClass: Record<AlertTone, string | undefined> = {
   info: styles.toneInfo,

@@ -5,7 +5,7 @@ import { TooltipProviderPresenceContext } from "./TooltipProviderContext";
 import { ButtonGroupReset } from "../Button/buttonGroupContext";
 import styles from "./Tooltip.module.css";
 import type { TooltipProps } from "./Tooltip.types";
-import { useProvidedDirection } from "../DirectionProvider/DirectionProvider";
+import { useProvidedDirection } from "../../internal/useProvidedDirection";
 
 /**
  * A short, non-interactive hint shown on hover/focus of its trigger, built

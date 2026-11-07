@@ -11,7 +11,7 @@ import type {
   PopoverProps,
   PopoverTriggerProps,
 } from "./Popover.types";
-import { useProvidedDirection } from "../../atoms/DirectionProvider/DirectionProvider";
+import { useProvidedDirection } from "../../internal/useProvidedDirection";
 
 /**
  * A floating panel of arbitrary content anchored to a trigger, built on
