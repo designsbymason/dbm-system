@@ -30,7 +30,7 @@ component, made of named parts you compose: `PageHeader.Breadcrumbs`, `PageHeade
 `PageHeader.Actions`, any of them optional. The first four stack in one column and `PageHeader.Actions` sits beside it, under it where there is no room
 (a phone), so put the parts directly in the header.
 
-`size` sets the title's and the description's text steps and the gaps (`md` is a page's usual head), and `bordered` draws a line under it. It is a
+`size` sets the title's and the description's text steps and the space around them (`md` is a page's usual head), and `bordered` draws a line under it. It is a
 `<div>` (or a `<header>` with `as`) and adds no landmark and no tab stop. It is not navigation ([`Navbar`](/docs/organisms-navigation-navbar--docs),
 `Tabs`) and not a card's header (`Card.Header`).
 
@@ -61,33 +61,36 @@ Drive the header's props live, and switch its optional parts on and off. Narrow 
 
 `PageHeader.Breadcrumbs` also accepts any other native `<div>` attribute.
 
-<PropertiesTable of={PageHeaderBreadcrumbsStories} order={["children", "style", "className", "id", "data-testid"]} />
+<PropertiesTable of={PageHeaderBreadcrumbsStories} order={["children", "id", "className", "style", "data-testid"]} />
 
 ### PageHeader.Title properties
 
 `PageHeader.Title` also accepts any other native heading attribute (e.g. `tabIndex`, `aria-describedby`), and a `ref`.
 
-<PropertiesTable of={PageHeaderTitleStories} order={["children", "level", "style", "className", "id", "data-testid"]} />
+<PropertiesTable of={PageHeaderTitleStories} order={["children", "level", "id", "className", "style", "data-testid"]} />
 
 ### PageHeader.Description properties
 
 `PageHeader.Description` also accepts any other native `<p>` attribute.
 
-<PropertiesTable of={PageHeaderDescriptionStories} order={["children", "style", "className", "id", "data-testid"]} />
+<PropertiesTable of={PageHeaderDescriptionStories} order={["children", "id", "className", "style", "data-testid"]} />
 
 ### PageHeader.Meta properties
 
 `PageHeader.Meta` also accepts any other native `<div>` attribute.
 
-<PropertiesTable of={PageHeaderMetaStories} order={["children", "style", "className", "id", "data-testid"]} />
+<PropertiesTable of={PageHeaderMetaStories} order={["children", "id", "className", "style", "data-testid"]} />
 
 ### PageHeader.Actions properties
 
 `PageHeader.Actions` also accepts any other native `<div>` attribute.
 
-<PropertiesTable of={PageHeaderActionsStories} order={["children", "style", "className", "id", "data-testid"]} />
+<PropertiesTable of={PageHeaderActionsStories} order={["children", "id", "className", "style", "data-testid"]} />
 
 ## Variants
+
+The titles in the examples on this page are drawn one level down (`h3`, and `h4` for a section's), under this page's own sections, so the page keeps one
+`h1`; the code beside each one shows the usual levels.
 
 ### A title alone
 
@@ -195,8 +198,8 @@ jumps to; the breadcrumbs keep their own `nav` and name; the actions are buttons
 
 ## Design tokens used
 
-<TokenRow token="space.1" usage="the gap between the breadcrumbs, the title, the description and the facts" />
-<TokenRow token="space.2" usage="the gap between the actions, and between the facts; the gap between the text and the actions at the small size" />
+<TokenRow token="space.1" usage="the gap between the breadcrumbs, the title, the description and the facts (a size up at the large size)" />
+<TokenRow token="space.2" usage="the gap between the actions, and between the facts; the gap between the text and the actions at the small size; the extra room under the breadcrumbs and above the facts; the gap between the title's lines at the large size" />
 <TokenRow token="space.4" usage="the gap between the text and the actions, and the room under the header when it has a line" />
 <TokenRow token="space.32" usage="the room the text column is given before the actions wrap under it (twice this step)" />
 <TokenRow token="border.default" usage="the line under a bordered header" />

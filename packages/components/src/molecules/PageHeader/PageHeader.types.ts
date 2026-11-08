@@ -2,8 +2,8 @@ import type { ComponentPropsWithoutRef, CSSProperties, ReactNode } from "react";
 import type { HeadingLevel } from "../../atoms/Heading/Heading.types";
 
 /**
- * The header's size, a subset of the shared scale (`05-component-api-conventions.md` §2): the title's and the description's text steps and the gaps
- * between the parts. `md` is a page's usual head; `sm` suits a panel or a dialog's page, `lg` a landing page.
+ * The header's size, a subset of the shared scale (`05-component-api-conventions.md` §2): the title's and the description's text steps, and the space between the text and the actions (tighter at `sm`) and between its lines (roomier at `lg`).
+ * `md` is a page's usual head; `sm` suits a panel or a dialog's page, `lg` a landing page.
  */
 export type PageHeaderSize = "sm" | "md" | "lg";
 
@@ -23,14 +23,14 @@ interface PageHeaderPartBase {
 }
 
 // Every prop is declared here, in the order the Docs read, and not inherited: the Controls panel lists a type's inherited props before its own.
-export interface PageHeaderProps extends Omit<ComponentPropsWithoutRef<"div">, "children">, PageHeaderPartBase {
+export interface PageHeaderProps extends Omit<ComponentPropsWithoutRef<"div">, "children"> {
   /**
    * The parts, in reading order: `PageHeader.Breadcrumbs`, `PageHeader.Title`, `PageHeader.Description` and `PageHeader.Meta` in one column, and
    * `PageHeader.Actions` beside it (under it where there is no room). Put them directly in the header: `PageHeader.Actions` has to be a direct child.
    */
   children?: ReactNode;
   /**
-   * The title's and the description's text steps and the gaps between the parts.
+   * The title's and the description's text steps, and the space between the text and the actions (tighter at `sm`) and between its lines (roomier at `lg`).
    * @default 'md'
    */
   size?: PageHeaderSize;
@@ -45,6 +45,17 @@ export interface PageHeaderProps extends Omit<ComponentPropsWithoutRef<"div">, "
    * @default 'div'
    */
   as?: "div" | "header";
+  /** Standard DOM id. */
+  id?: string;
+  /** Additional CSS classes for customization. */
+  className?: string;
+  /** Inline styles, merged onto the component's own internal styles. */
+  style?: CSSProperties;
+  /**
+   * Test identifier for automated testing (e.g. Testing Library's `getByTestId`, Playwright/Cypress selectors).
+   * Rendered as the DOM `data-testid` attribute; has no visual or behavioral effect.
+   */
+  "data-testid"?: string;
 }
 
 /** The properties of `PageHeader.Breadcrumbs`: the trail above the title. */

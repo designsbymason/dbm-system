@@ -33,7 +33,7 @@ export const pageHeaderSnippets = {
   <PageHeader.Title>Settings</PageHeader.Title>
 </PageHeader>`,
 
-  sizes: `{/* size sets the title's and the description's text steps and the gaps: sm, md (the default) and lg */}
+  sizes: `{/* size sets the title's and the description's text steps and the space around them: sm, md (the default) and lg */}
 <PageHeader size="sm">
   <PageHeader.Title>Small</PageHeader.Title>
   <PageHeader.Description>A panel's page.</PageHeader.Description>

@@ -39,7 +39,7 @@ const meta: Meta<PlaygroundArgs> = {
     size: {
       control: "radio",
       options: ["sm", "md", "lg"],
-      description: "The title's and the description's text steps and the gaps between the parts.",
+      description: "The title's and the description's text steps, and the space between the text and the actions (tighter at sm) and between its lines (roomier at lg).",
       table: { defaultValue: { summary: "'md'" } },
     },
     bordered: {
@@ -85,15 +85,21 @@ const noControls = {
   actions: { control: false },
 } as const;
 
+/**
+ * The title level a demo draws: on a Docs page the demos draw `h3`, under the page's own sections, so the page keeps one `h1` and its outline; on their
+ * own they draw the default `h1` the code shows. A page's header keeps the default.
+ */
+const titleLevel = (context: { viewMode?: string }, onTheirOwn: 1 | 2 = 1) => (context.viewMode === "docs" ? 3 : onTheirOwn);
+
 /** Drive the header's props live, and switch its optional parts on and off. */
 export const Playground: Story = {
   parameters: {
     docs: { source: { type: "dynamic", transform: (_code: string, context: StoryContext) => pageHeaderPlaygroundSnippet(context.args) } },
   },
-  render: ({ breadcrumbs, description, meta, actions, ...args }) => (
+  render: ({ breadcrumbs, description, meta, actions, ...args }, context) => (
     <PageHeader {...args}>
       {breadcrumbs && <PageHeader.Breadcrumbs>{trail}</PageHeader.Breadcrumbs>}
-      <PageHeader.Title>Projects</PageHeader.Title>
+      <PageHeader.Title level={titleLevel(context)}>Projects</PageHeader.Title>
       {description && <PageHeader.Description>Everything your team is working on, in one place.</PageHeader.Description>}
       {meta && (
         <PageHeader.Meta>
@@ -117,9 +123,9 @@ export const TitleOnly: Story = {
   name: "A title alone",
   parameters: { docs: { source: { code: pageHeaderSnippets.titleOnly } } },
   argTypes: { ...noControls },
-  render: () => (
+  render: (_args, context) => (
     <PageHeader>
-      <PageHeader.Title>Settings</PageHeader.Title>
+      <PageHeader.Title level={titleLevel(context)}>Settings</PageHeader.Title>
     </PageHeader>
   ),
 };
@@ -128,11 +134,11 @@ export const Sizes: Story = {
   name: "Sizes",
   parameters: { docs: { source: { code: pageHeaderSnippets.sizes } } },
   argTypes: { ...noControls },
-  render: () => (
+  render: (_args, context) => (
     <div style={{ display: "grid", gap: "var(--dbm-space-8)" }}>
       {(["sm", "md", "lg"] as const).map((size) => (
         <PageHeader key={size} size={size}>
-          <PageHeader.Title>{{ sm: "Small", md: "Medium", lg: "Large" }[size]}</PageHeader.Title>
+          <PageHeader.Title level={titleLevel(context)}>{{ sm: "Small", md: "Medium", lg: "Large" }[size]}</PageHeader.Title>
           <PageHeader.Description>{{ sm: "A panel's page.", md: "A page's usual head.", lg: "A landing page." }[size]}</PageHeader.Description>
         </PageHeader>
       ))}
@@ -144,9 +150,9 @@ export const Bordered: Story = {
   name: "With a line under it",
   parameters: { docs: { source: { code: pageHeaderSnippets.bordered } } },
   argTypes: { ...noControls },
-  render: () => (
+  render: (_args, context) => (
     <PageHeader bordered>
-      <PageHeader.Title>Billing</PageHeader.Title>
+      <PageHeader.Title level={titleLevel(context)}>Billing</PageHeader.Title>
       <PageHeader.Description>Invoices and payment methods.</PageHeader.Description>
       <PageHeader.Actions>
         <Button>Add payment method</Button>
@@ -159,9 +165,9 @@ export const Section: Story = {
   name: "The header of a section",
   parameters: { docs: { source: { code: pageHeaderSnippets.section } } },
   argTypes: { ...noControls },
-  render: () => (
+  render: (_args, context) => (
     <PageHeader as="header" size="sm">
-      <PageHeader.Title level={2}>Members</PageHeader.Title>
+      <PageHeader.Title level={context.viewMode === "docs" ? 4 : 2}>Members</PageHeader.Title>
       <PageHeader.Actions>
         <Button size="sm">Invite</Button>
       </PageHeader.Actions>

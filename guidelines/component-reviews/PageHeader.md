@@ -1,6 +1,6 @@
 # PageHeader — review findings
 
-**Tier:** Molecule · **Category:** Layout · **Priority:** 🟡.
+**Tier:** Molecule · **Category:** Layout · **Priority:** 🟡. **Finalized 2026-11-07**, at the maintainer's declaration, after the first review and the prop-order pass below, with the items under "Not verified" accepted as open.
 
 Planned 2026-11-07 with `/plan-component` as stage 5 of the `PageShell` restructure ([PageShell.md](PageShell.md)), approved by the maintainer with the recommendation on all eight decisions. Extracted from three hand-built copies of the same row: `PageShell.PageHeader`, `AppShell`'s demo page and the Data Table List Page's heading row.
 
@@ -14,7 +14,7 @@ Planned 2026-11-07 with `/plan-component` as stage 5 of the `PageShell` restruct
 - **Tokens:** all existing, none new (`space.1`/`2`/`4`/`32`, `border.default`, `border-width.1`).
 - **No leading `Media` part** until an app needs one.
 - **Adoption (each its own behaviour-preserving commit, confirmed):** `PageShell.PageHeader` is removed and the shell's demo uses the molecule; the Data Table List Page's heading row (its title keeps taking focus after a removal, its checks unchanged); `AppShell`'s story kit (docs-only; `AppShell` is Finalized).
-- **Tests planned:** unit and axe (defaults, `level`, `size`, `as`, the title's ref and `tabIndex`, passthrough, nesting, no title); no SSR test (it creates no node or portal of its own, `05`); real browser (the actions beside the text on a desktop and under it on a phone, a very long title without page overflow, right to left, forced colours for the border), each broken once.
+- **Tests planned:** unit and axe (defaults, `level`, `size`, `as`, the title's ref and `tabIndex`, passthrough, nesting, an empty header: the title is optional by design, since a header of actions alone is legitimate, so nothing warns for a missing one); no SSR test (it creates no node or portal of its own, `05`); real browser (the actions beside the text on a desktop and under it on a phone, a very long title without page overflow, right to left, forced colours for the border), each broken once.
 - **No ADR:** nothing here is a fork that changes how later components must be built.
 
 ## Built (2026-11-07)
@@ -24,3 +24,15 @@ All parts as planned; no new token.
 - **Docs:** the page follows the `07` §4 sections; the code examples show native attributes in use (a `ref` and `tabIndex` on the title, an `aria-label` on the header); the token table is held to the stylesheet by a test.
 - **Adopted (behaviour-preserving):** `PageShell.PageHeader` is removed (its types, CSS, stories, Docs section, snippet and test) and the shell's demo uses the molecule; the Data Table List Page's heading row is the molecule (its title keeps taking focus after a removal, and its 18 real-browser and 38 unit checks pass unchanged), with its "Show code" updated; `AppShell`'s demo pages use it (docs-only).
 - **Review pass complete, awaiting a `/review-component` and the maintainer's Finalized declaration.** **Not verified:** Safari and Firefox, a screen reader, both brands in light and dark by eye, tablet widths by eye.
+
+## First review (2026-11-07, at explicit direction)
+Six findings, all fixed.
+1. **A part that draws nothing left an empty text column.** `{cond && <PageHeader.Title />}` when false, or `{null}`, was pushed into the text column, so with `PageHeader.Actions` the header had an empty text `div` that took the 16rem basis and pushed the layout. The root now skips `null`, `undefined` and booleans. Two unit tests (the actions alone beside empty children; the shown part still makes its column), the first broken once (the skip removed) and failed.
+2. **The right-to-left check had never failed.** Broken once (`direction: ltr` on the root): it failed.
+3. **The demos drew an `h1` each on the Docs page** (six more than the page's own). On a Docs page they now draw one level down (`h3`, and `h4` for a section's), on their own the default the code shows; the page says so. The snippets keep the usual levels.
+4. **The plan said a missing title warns; the build does not.** Amended above: a header of actions alone is legitimate, so the title is optional and nothing warns.
+5. **`size` did less than the Docs said** (`.sizeLg` repeated the default row gap, and `sm` changed only the row gap). The wording is now what it does: `sm` tightens the space between the text and the actions, `lg` opens the lines of the text up (`space.2` between them); the no-op line is gone.
+6. **The vertical rhythm was tight** (the trail on the title, the description on the facts, 4px each). `PageHeader.Breadcrumbs` and `PageHeader.Meta` now add `space.2` on top of the text gap (first `space.1`, which was only 4px more and barely showed, so the maintainer chose `space.2`: 12px between the trail and the title and between the description and the facts). A layout check reads the margins and the gap of both sizes; broken once (the trail's margin removed), it failed. The Data Table List Page and `PageShell` demos use neither part, so they are unchanged.
+- **Review pass complete.** **Not verified:** Safari and Firefox, a screen reader, tablet width by eye, Purple and Emerald light and Purple dark measured live (Emerald dark was; the rest follow from the same tokens).
+
+**Prop order (2026-11-07, at explicit direction).** One order everywhere a prop is listed: a part's own props in the order the types declare them, then `id`, `className`, `style`, `data-testid`. Found and fixed: the parts' Properties tables on the Docs page listed the standard four in the reverse order (`style`, `className`, `id`); and the root inherited them from a shared base, so its Controls panel listed them first (the panel lists a type's inherited props before its own), so the root now declares all of its props itself, as `Navbar`'s and `PageShell`'s do. `PageHeader.docs.test.ts` now holds the types, each Docs table's `order` array and each stories file's `argTypes` to that one order, and the Playground's panel order (broken once: a swapped Docs table failed). Looked at live: the Controls panel (`children`, `size`, `bordered`, `as`, `id`, `className`, `style`, `data-testid`), the six Properties tables and the Docs Playground's controls (`size`, `bordered`, `as`, then the optional parts). A change to a types file alone does not refresh Storybook's generated prop docs until a component or stories file is touched.

@@ -133,3 +133,43 @@ export const BorderInForcedColours: Story = {
     }
   },
 };
+
+export const TheTrailAndTheFactsGetRoomOfTheirOwn: Story = {
+  name: "The trail and the facts sit twice as far from the title and the description as those two sit from each other, and a large header opens its lines up — layout test",
+  render: () => (
+    <div style={{ display: "grid", gap: "var(--dbm-space-8)" }}>
+      {(["md", "lg"] as const).map((size) => (
+        <PageHeader key={size} size={size} data-testid={`header-${size}`}>
+          <PageHeader.Breadcrumbs data-testid={`crumbs-${size}`}>Home</PageHeader.Breadcrumbs>
+          <PageHeader.Title>Projects</PageHeader.Title>
+          <PageHeader.Description>Words</PageHeader.Description>
+          <PageHeader.Meta data-testid={`meta-${size}`}>Draft</PageHeader.Meta>
+        </PageHeader>
+      ))}
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    // `space.1` and `space.2` in pixels, read the way the page draws them (the tokens are lengths in rem)
+    const measure = (token: string) => {
+      const probe = document.createElement("div");
+      probe.style.inlineSize = `var(--dbm-${token})`;
+      document.body.append(probe);
+      const width = probe.getBoundingClientRect().width;
+      probe.remove();
+      return width;
+    };
+    const step = measure("space-1");
+    const room = measure("space-2");
+    for (const size of ["md", "lg"] as const) {
+      const text = canvas.getByTestId(`header-${size}`).firstElementChild as HTMLElement;
+      const gap = px(getComputedStyle(text).rowGap);
+      const crumbs = getComputedStyle(canvas.getByTestId(`crumbs-${size}`));
+      const meta = getComputedStyle(canvas.getByTestId(`meta-${size}`));
+      // the trail and the facts each add `space.2` on top of the column's gap
+      await expect(px(crumbs.marginBlockEnd)).toBeCloseTo(room, 0);
+      await expect(px(meta.marginBlockStart)).toBeCloseTo(room, 0);
+      await expect(gap).toBeCloseTo(size === "lg" ? step * 2 : step, 0);
+    }
+  },
+};

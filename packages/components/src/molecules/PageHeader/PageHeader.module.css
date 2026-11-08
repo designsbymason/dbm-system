@@ -12,12 +12,12 @@
   min-inline-size: 0;
 }
 
+/* `size` changes the space between the text and the actions and between the lines of the text: tighter at `sm`, roomier at `lg`. */
 .sizeSm {
   --page-header-gap: var(--dbm-space-2);
 }
 
 .sizeLg {
-  --page-header-gap: var(--dbm-space-4);
   --page-header-text-gap: var(--dbm-space-2);
 }
 
@@ -38,7 +38,14 @@
   overflow-wrap: anywhere;
 }
 
+/* The trail and the facts are `space.2` further from the lines they sit beside, on top of the text gap: the trail is its own thing above the title, and the
+   facts are a row under a sentence, so neither should look like another line of the title's block. */
+.breadcrumbs {
+  margin-block-end: var(--dbm-space-2);
+}
+
 .meta {
+  margin-block-start: var(--dbm-space-2);
   display: flex;
   flex-wrap: wrap;
   align-items: center;

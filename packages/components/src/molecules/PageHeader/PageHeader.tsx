@@ -35,7 +35,7 @@ const descriptionSize: Record<PageHeaderSize, TextSize> = { sm: "sm", md: "base"
  * `PageHeader.Actions`, any of them optional. The first four stack in one column; `PageHeader.Actions` sits beside it, and under it where there is no
  * room (a phone), so put the parts directly in the header.
  *
- * `size` sets the title's and the description's text steps and the gaps (`md` is a page's usual head), and `bordered` draws a line under it. It is a
+ * `size` sets the title's and the description's text steps and the space around them (`md` is a page's usual head), and `bordered` draws a line under it. It is a
  * `<div>` (or a `<header>` with `as`) and adds no landmark and no tab stop. A page has one `h1`: `PageHeader.Title` is `level` 1 unless you say
  * otherwise, and takes a `ref` and a `tabIndex`, so an app can move focus to it.
  *
@@ -66,6 +66,8 @@ const PageHeaderRoot = forwardRef<HTMLElement, PageHeaderProps>(
     const actions: ReactNode[] = [];
     const sort = (nodes: ReactNode) => {
       Children.forEach(nodes, (child) => {
+        // An empty node (`{cond && <PageHeader.Title />}` when it is false, `null`) draws nothing, so it must not make a text column of its own.
+        if (child === null || child === undefined || typeof child === "boolean") return;
         if (isValidElement<{ children?: ReactNode }>(child) && child.type === PageHeaderActions) actions.push(child);
         else if (isValidElement<{ children?: ReactNode }>(child) && child.type === Fragment) sort(child.props.children);
         else text.push(child);
@@ -85,7 +87,9 @@ const PageHeaderRoot = forwardRef<HTMLElement, PageHeaderProps>(
 PageHeaderRoot.displayName = "PageHeader";
 
 /** The trail above the title: a `Breadcrumb`. */
-const PageHeaderBreadcrumbs = forwardRef<HTMLDivElement, PageHeaderBreadcrumbsProps>((props, ref) => <div {...props} ref={ref} />);
+const PageHeaderBreadcrumbs = forwardRef<HTMLDivElement, PageHeaderBreadcrumbsProps>(({ className, ...props }, ref) => (
+  <div {...props} ref={ref} className={cx(styles.breadcrumbs, className)} />
+));
 PageHeaderBreadcrumbs.displayName = "PageHeader.Breadcrumbs";
 
 /**

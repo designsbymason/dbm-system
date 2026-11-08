@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, within } from "@testing-library/react";
 import { axe } from "jest-axe";
 import { createRef } from "react";
 import { describe, expect, it, vi } from "vitest";
@@ -72,6 +72,39 @@ describe("PageHeader", () => {
       </PageHeader>,
     );
     expect(screen.getByTestId("header").children).toHaveLength(1);
+  });
+
+  describe("empty children", () => {
+    it("draws no text column for children that draw nothing, beside the actions", () => {
+      const show = false as boolean;
+      render(
+        <PageHeader data-testid="header">
+          {show && <PageHeader.Title>Hidden</PageHeader.Title>}
+          {null}
+          {undefined}
+          {false}
+          <PageHeader.Actions data-testid="actions">Act</PageHeader.Actions>
+        </PageHeader>,
+      );
+      const header = screen.getByTestId("header");
+      expect(header.children).toHaveLength(1);
+      expect(header.firstElementChild).toBe(screen.getByTestId("actions"));
+    });
+
+    it("keeps the text column for a part that is shown, whatever else is empty", () => {
+      const show = true as boolean;
+      render(
+        <PageHeader data-testid="header">
+          {show && <PageHeader.Title>Shown</PageHeader.Title>}
+          {null}
+          <PageHeader.Actions>Act</PageHeader.Actions>
+        </PageHeader>,
+      );
+      const header = screen.getByTestId("header");
+      expect(header.children).toHaveLength(2);
+      expect(header.firstElementChild).toHaveClass(styles.text!);
+      expect(within(header.firstElementChild as HTMLElement).getByRole("heading", { name: "Shown" })).toBeInTheDocument();
+    });
   });
 
   describe("size and the line", () => {
@@ -179,6 +212,7 @@ describe("PageHeader", () => {
       );
       for (const id of ["root", "crumbs", "title", "description", "meta", "actions"]) expect(screen.getByTestId(id)).toHaveClass("c");
       expect(screen.getByTestId("root")).toHaveClass(styles.root!);
+      expect(screen.getByTestId("crumbs")).toHaveClass(styles.breadcrumbs!);
       expect(screen.getByTestId("meta")).toHaveClass(styles.meta!);
       expect(screen.getByTestId("actions")).toHaveClass(styles.actions!);
       expect(screen.getByTestId("root")).toHaveAttribute("id", "root");
