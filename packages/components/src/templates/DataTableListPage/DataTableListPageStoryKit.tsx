@@ -12,11 +12,11 @@ import { Button } from "../../atoms/Button";
 import { Checkbox } from "../../atoms/Checkbox";
 import { Heading } from "../../atoms/Heading";
 import { IconButton } from "../../atoms/IconButton";
-import { Text } from "../../atoms/Text";
 import { VisuallyHidden } from "../../atoms/VisuallyHidden";
 import { Breadcrumb } from "../../molecules/Breadcrumb";
 import { CheckboxGroup } from "../../molecules/CheckboxGroup";
 import { EmptyState } from "../../molecules/EmptyState";
+import { PageHeader } from "../../molecules/PageHeader";
 import { Pagination } from "../../molecules/Pagination";
 import { SearchInput } from "../../molecules/SearchInput";
 import { Select } from "../../molecules/Select";
@@ -539,18 +539,18 @@ export function PeopleListContent({ list }: { list: PeopleList }) {
           <Breadcrumb.Page>{copy.people}</Breadcrumb.Page>
         </Breadcrumb.Item>
       </Breadcrumb>
-      <div className={styles.headingRow}>
-        <div className={styles.heading}>
-          {/* Focus goes here when a removal finishes: the row that had it is gone, and the heading is where the page starts. */}
-          <Heading ref={headingRef} level={1} size="2xl" tabIndex={-1}>
-            {copy.title}
-          </Heading>
-          <Text color="secondary">{copy.intro}</Text>
-        </div>
-        <Button className={styles.add} leadingIcon={PlusIcon} onClick={() => toast({ tone: "success", title: copy.added })}>
-          {copy.add}
-        </Button>
-      </div>
+      <PageHeader>
+        {/* Focus goes here when a removal finishes: the row that had it is gone, and the heading is where the page starts. */}
+        <PageHeader.Title ref={headingRef} tabIndex={-1}>
+          {copy.title}
+        </PageHeader.Title>
+        <PageHeader.Description>{copy.intro}</PageHeader.Description>
+        <PageHeader.Actions>
+          <Button leadingIcon={PlusIcon} onClick={() => toast({ tone: "success", title: copy.added })}>
+            {copy.add}
+          </Button>
+        </PageHeader.Actions>
+      </PageHeader>
 
       {list.error ? (
         <EmptyState announce tone="danger" variant="outlined">

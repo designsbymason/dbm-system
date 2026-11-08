@@ -13,10 +13,12 @@ const state = `{/* Your own state, held by the page (a hook, a router's search p
     rows, matching, loading       what the request answered with
     A change to a filter goes back to page 1 and clears the selection. */}`;
 
-const heading = (words: { title: string; add: string }) => `    <div style={{ display: "flex", justifyContent: "space-between", gap: 16 }}>
-      <Heading level={1} tabIndex={-1}>${words.title}</Heading>
-      <Button leadingIcon={PlusIcon}>${words.add}</Button>
-    </div>`;
+const heading = (words: { title: string; add: string }) => `    <PageHeader>
+      <PageHeader.Title tabIndex={-1}>${words.title}</PageHeader.Title>
+      <PageHeader.Actions>
+        <Button leadingIcon={PlusIcon}>${words.add}</Button>
+      </PageHeader.Actions>
+    </PageHeader>`;
 
 const english = { title: "People", add: "Add person" };
 

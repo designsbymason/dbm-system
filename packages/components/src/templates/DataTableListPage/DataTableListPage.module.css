@@ -11,19 +11,6 @@
   grid-template-columns: minmax(0, 1fr);
 }
 
-.heading {
-  display: grid;
-  gap: var(--dbm-space-1);
-}
-
-.headingRow {
-  align-items: flex-start;
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--dbm-space-4);
-  justify-content: space-between;
-}
-
 /* The table keeps one height (the toolbar's rows, a page of rows and the footer) whether a page is full, short or still loading, so
    nothing below it moves, and the footer stays at the bottom of that room. Its columns are fixed shares of the width
    (`table-layout: fixed`), so a longer value or a sort never moves a column, and it never gets narrower than 40rem: on a phone it
@@ -162,10 +149,6 @@
 .sheetSection {
   display: grid;
   gap: var(--dbm-space-3);
-}
-
-.headingRow .add {
-  flex: none;
 }
 
 /* Narrower than 45rem, the toolbar is the search box and a "Filters" button that opens both filters in a bottom sheet, then the
