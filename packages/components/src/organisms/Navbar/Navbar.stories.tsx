@@ -6,7 +6,7 @@ import type { CSSProperties, ReactNode, RefObject } from "react";
 import type { SpaceValue } from "@dbm-system/utils";
 import { navbarPlaygroundSnippet, navbarSnippets } from "./Navbar.snippets";
 import type { NavbarCollapseBelow, NavbarCurrentVariant, NavbarLinkSize, NavbarProps, NavbarSize, NavbarVariant } from "./Navbar.types";
-import { DemoColumnsBars, DemoNavbar, DemoRowsNavbar, DemoSectionsNavbar, GalleryBar, NavbarStage, RouterDemoNavbar, NavbarViewModeContext, StickyDemo } from "./NavbarStoryKit";
+import { DemoColumnsBars, DemoNavbar, DemoRowsNavbar, DemoSectionsNavbar, GalleryBar, NavbarStage, RouterDemoNavbar, NavbarViewModeContext, ScrollStage, StickyDemo } from "./NavbarStoryKit";
 
 // Navbar's root-level args in one Playground, every prop listed in the one order the Docs table uses: the ones a person can
 // edit have a control, and the rest (children, callbacks, refs, objects, the standard attributes) show as "–". Each sub-part
@@ -242,14 +242,20 @@ const meta: Meta<PlaygroundArgs> = {
     "data-testid": undefined,
   },
   // (an empty text control means "not set": it must not reach the bar as `aria-label=""` or `id=""`)
+  // The bar sits at the top of one box with text under it that scrolls, so `sticky`, `stickyOffset` and `hideOnScroll` can be tried by scrolling it:
+  // the box is the bar's `scrollContainerRef` unless the control gives another.
   render: ({ "aria-label": ariaLabel, id, ...args }) => (
-    <NavbarStage minBlockSize="22rem">
-      {(menuContainer) => (
-        <Top>
-          <DemoNavbar {...args} aria-label={ariaLabel || undefined} id={id || undefined} menuContainer={menuContainer} />
-        </Top>
+    <ScrollStage>
+      {(menuContainer, scrollRef) => (
+        <DemoNavbar
+          {...args}
+          aria-label={ariaLabel || undefined}
+          id={id || undefined}
+          menuContainer={menuContainer}
+          scrollContainerRef={args.scrollContainerRef ?? scrollRef}
+        />
       )}
-    </NavbarStage>
+    </ScrollStage>
   ),
 };
 

@@ -313,7 +313,7 @@ ${navbar('currentVariant="solid"')}`,
 
   rowsSections: `{/* A row at the end with sticky={false} is drawn after the bar's <header>, so the bar sticks on its own and the row scrolls away under it. scroll keeps
     its links in the bar at every width (they are not copied into the menu, and the row stays on a phone): the set scrolls sideways when it does not fit,
-    fades at the edge that has more, and scrolls the current link into view. currentVariant and rounded give this set a look of its own beside the
+    fades at the edge that has more, and scrolls the current link into view (align="center" would centre it while it fits). currentVariant and rounded give this set a look of its own beside the
     bar's. variant="filled" draws no line under the row. boxRef is the scrolling box, as in the sticky example. */}
 <Navbar sticky scrollContainerRef={boxRef}>
   <Navbar.Row>
@@ -324,7 +324,7 @@ ${navbar('currentVariant="solid"')}`,
     </Navbar.Links>
   </Navbar.Row>
   <Navbar.Row size="sm" variant="filled" sticky={false}>
-    <Navbar.Links aria-label="Project sections" scroll rounded currentVariant="subtle" align="center">
+    <Navbar.Links aria-label="Project sections" scroll rounded currentVariant="subtle">
       <Navbar.Link href="/projects/overview" current>Overview</Navbar.Link>
       <Navbar.Link href="/projects/activity">Activity</Navbar.Link>
       <Navbar.Link href="/projects/members">Members</Navbar.Link>

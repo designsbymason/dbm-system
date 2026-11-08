@@ -283,8 +283,8 @@ as one box around the rows between, so a row that scrolls away can't sit between
 A row at the end with `sticky={false}` is drawn after the bar's `<header>`, so the bar sticks on its own and the row scrolls away under it. Its `<nav>` is a
 navigation landmark outside the banner, where a sub-navigation belongs. `scroll` on its `Navbar.Links` keeps the links in the bar at every width instead of
 moving them into the menu (they are not copied into the panel, the row stays on a phone, and a bar of only such sets draws no menu button). The set scrolls
-sideways when the links do not fit, with no scrollbar, fades at the edge that has more, and scrolls the current link into view when it changes; `align="center"`
-centres it while everything fits. `currentVariant` and `rounded` on the set give it a look of its own beside the bar's, here round and subtle pills under a bar
+sideways when the links do not fit, with no scrollbar, fades at the edge that has more, and scrolls the current link into view when it changes; the links start
+at the start of the row, and `align="center"` would centre them while everything fits. `currentVariant` and `rounded` on the set give it a look of its own beside the bar's, here round and subtle pills under a bar
 that underlines. `variant="filled"` on the row draws no line under it. Put only `Navbar.Link`s in a scrolling set: a `Navbar.Group`'s floating list would be cut.
 Narrow the window to see the row scroll.
 

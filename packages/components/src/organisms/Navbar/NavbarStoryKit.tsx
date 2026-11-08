@@ -1,5 +1,5 @@
 import { BellIcon, BookOpenIcon, ShoppingCartIcon, UserCircleIcon } from "@dbm-system/icons";
-import { useState } from "react";
+import { useContext, useRef, useState } from "react";
 import type { MouseEvent, ReactNode, RefObject } from "react";
 import { Button } from "../../atoms/Button";
 import type { ButtonTone } from "../../atoms/Button";
@@ -10,7 +10,9 @@ import { Menu } from "../Menu";
 import { Navbar } from "./Navbar";
 import type { NavbarProps, NavbarSize } from "./Navbar.types";
 
-export { DrawerStage as NavbarStage, DrawerViewModeContext as NavbarViewModeContext } from "../Drawer/DrawerStoryKit";
+import { DrawerStage, DrawerViewModeContext } from "../Drawer/DrawerStoryKit";
+
+export { DrawerStage as NavbarStage, DrawerViewModeContext as NavbarViewModeContext };
 
 /** Stops a demo link from navigating: a story's link goes nowhere, so it must not load another page. */
 export function preventNavigation(event: MouseEvent) {
@@ -226,7 +228,7 @@ export interface DemoRowsOptions {
  * A bar with a second row of links under it: the main links in the bar's own look (an underline) and the project's sections in a row of their own, round
  * and subtle, that stays in the bar at every width and scrolls sideways when it does not fit, and scrolls away with the page while the bar sticks.
  */
-export function DemoSectionsNavbar({ menuContainer, ...props }: NavbarProps) {
+export function DemoSectionsNavbar({ menuContainer, sectionsAlign = "start", ...props }: NavbarProps & { sectionsAlign?: "start" | "center" | "end" }) {
   const main = useDemoCurrent("projects");
   const sections = useDemoCurrent("overview");
   return (
@@ -242,7 +244,7 @@ export function DemoSectionsNavbar({ menuContainer, ...props }: NavbarProps) {
         </Navbar.Links>
       </Navbar.Row>
       <Navbar.Row size="sm" variant="filled" sticky={false}>
-        <Navbar.Links aria-label="Project sections" scroll rounded currentVariant="subtle" align="center">
+        <Navbar.Links aria-label="Project sections" scroll rounded currentVariant="subtle" align={sectionsAlign}>
           <Navbar.Link {...sections.link("overview")}>Overview</Navbar.Link>
           <Navbar.Link {...sections.link("activity")}>Activity</Navbar.Link>
           <Navbar.Link {...sections.link("members")}>Members</Navbar.Link>
@@ -407,13 +409,69 @@ export function StickyDemo({
           }}
         />
       )}
-      <div style={{ padding: "var(--dbm-space-6)", display: "grid", gap: "var(--dbm-space-4)", background: tinted ? "var(--dbm-bg-brand-subtle)" : undefined }}>
-        {Array.from({ length: 12 }, (_, index) => (
-          <Text key={index}>
-            Scroll this box. The bar above stays at its top, and gains a shadow once the page has moved under it (paragraph{" "}
-            {index + 1}).
-          </Text>
-        ))}
+      <ScrollText tinted={tinted} />
+    </div>
+  );
+}
+
+/** What the page under a demo bar says: placeholder paragraphs about the bar itself, so the page has something real to scroll past. */
+const placeholderParagraphs = [
+  "The navbar is the header of an application: a named banner with the brand, the primary links and the actions that belong to the whole app. It sits at the top of the page, so a reader always knows where they are and where they can go.",
+  "A sticky bar stays at the top of the window while the page scrolls under it. Once the page has moved, the bar gains a shadow, which tells the reader that there is more above and that the bar is no longer part of the page's flow.",
+  "With hide on scroll the bar leaves on a scroll down, to give the content the room, and comes back on the first scroll up or near the top. It stays while anything inside it has keyboard focus, so the keyboard never loses its place.",
+  "Below a width the links move into a menu behind a button. The same links are drawn in the bar and in the menu panel, so the tab order is plain and a screen reader hears one list of links, whichever is on show.",
+  "A header often has more than one band: a thin strip of help links that scrolls away, a row with the logo and a search field, and a row of categories. Each is a row of the one bar, so the page still has a single banner.",
+  "A second row of links, the sections of a project or the categories of a shop, can stay in the bar at every width. It scrolls sideways when the links do not fit, fades at the edge that has more, and brings the current link into view.",
+  "The current page is marked on its link with an underline, a soft tint or a solid fill, and the mark is also in the link's accessibility state, so it never depends on colour alone. A set of links can choose its own look beside the bar's.",
+  "Actions on the bar, such as a sign in button or a cart, can leave it below a width and return in the footer of the menu panel, so the bar keeps its room on a phone and nothing the reader needs is lost.",
+  "A skip link is the first thing a keyboard reaches. It is out of sight until it has focus, then it appears in the corner and takes the reader past the header to the main content of the page.",
+  "In right-to-left text the whole bar mirrors: the brand is at the right, the links read from the right, and the fade at the end of a scrolling row is on the left. The bar takes its direction from the page, so none of this needs setting twice.",
+];
+
+/** The page under a sticky bar in a demo: paragraphs about the bar to scroll past (the list repeats when `count` is longer). */
+function ScrollText({ tinted = false, count = placeholderParagraphs.length }: { tinted?: boolean; count?: number }) {
+  return (
+    <div style={{ padding: "var(--dbm-space-6)", display: "grid", gap: "var(--dbm-space-4)", background: tinted ? "var(--dbm-bg-brand-subtle)" : undefined }}>
+      {Array.from({ length: count }, (_, index) => (
+        <Text key={index}>{placeholderParagraphs[index % placeholderParagraphs.length]}</Text>
+      ))}
+    </div>
+  );
+}
+
+/**
+ * One box for a bar to stick in: a frame on the page surface that a menu panel opens inside (`container`), holding the scrolling page the bar names
+ * with `scrollContainerRef`. The bar sits at the top of the box, not in the middle of a second one.
+ */
+export function ScrollStage({
+  children,
+  minBlockSize = "22rem",
+}: {
+  children: (container: HTMLElement | null, scrollRef: RefObject<HTMLDivElement | null>) => ReactNode;
+  /** How tall the box is on a Docs page; viewed on its own, a story's box fills the canvas. */
+  minBlockSize?: string;
+}) {
+  const [container, setContainer] = useState<HTMLElement | null>(null);
+  const scrollRef = useRef<HTMLDivElement | null>(null);
+  const viewMode = useContext(DrawerViewModeContext);
+  const blockSize = viewMode === "docs" ? minBlockSize : `max(${minBlockSize}, calc(100vh - 2 * var(--dbm-space-6)))`;
+  return (
+    <div
+      ref={setContainer}
+      style={{
+        position: "relative",
+        transform: "translateZ(0)",
+        blockSize,
+        overflow: "hidden",
+        border: "var(--dbm-border-width-1) dashed var(--dbm-border-default)",
+        borderRadius: "var(--dbm-radius-lg)",
+        background: "var(--dbm-bg-surface)",
+      }}
+    >
+      <div ref={scrollRef} style={{ blockSize: "100%", overflow: "auto" }}>
+        {children(container, scrollRef)}
+        {/* More than a tall window shows, so there is always something to scroll. */}
+        <ScrollText count={30} />
       </div>
     </div>
   );

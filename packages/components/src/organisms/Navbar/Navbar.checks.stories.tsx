@@ -1943,7 +1943,7 @@ export const CountBadgeIsACircleAtEveryLinkSize: Story = {
 
 // --- A second row of links (ADR-0187): the row at the end that scrolls away, and a set that scrolls ---
 
-const sectionsStory = (props: Partial<React.ComponentProps<typeof Navbar>> = {}) =>
+const sectionsStory = (props: Partial<React.ComponentProps<typeof Navbar>> & { sectionsAlign?: "start" | "center" | "end" } = {}) =>
   function Render() {
     const boxRef = useRef<HTMLDivElement | null>(null);
     return <StickyDemo boxRef={boxRef}>{(ref) => <DemoSectionsNavbar sticky scrollContainerRef={ref} {...props} />}</StickyDemo>;
@@ -1995,8 +1995,8 @@ export const SecondRowWithHideOnScroll: Story = {
 };
 
 export const ScrollingSetCentresWhenItFits: Story = {
-  name: "A scrolling set is centred while its links fit, with no fade, and keeps its own look beside the bar's",
-  render: sectionsStory(),
+  name: "A scrolling set with align center is centred while its links fit, with no fade, and keeps its own look beside the bar's",
+  render: sectionsStory({ sectionsAlign: "center" }),
   play: async ({ canvasElement }) => {
     await expect(window.innerWidth).toBeGreaterThanOrEqual(1024);
     const sections = sectionsOf(canvasElement);
