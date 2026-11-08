@@ -1,0 +1,7 @@
+/* A documentation page prints its text, not its navigation: the sidebar and the outline are left out on paper (the header prints as it does alone). */
+@media print {
+  .sidebar,
+  .outline {
+    display: none !important;
+  }
+}

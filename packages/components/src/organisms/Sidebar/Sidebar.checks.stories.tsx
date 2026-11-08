@@ -697,6 +697,27 @@ export const StickyStaysInView: Story = {
   },
 };
 
+export const StickyOffsetTakesACssLength: Story = {
+  name: "A sticky sidebar's offset can be a CSS length that is not a spacing step, such as a header's measured height",
+  render: () => (
+    <div style={{ display: "flex", blockSize: "300vh", "--measured-header": "59px" } as React.CSSProperties}>
+      <DemoSidebar sticky stickyOffset="var(--measured-header, 0px)" />
+      <div style={{ flex: 1, padding: "1rem" }}>A page much taller than its window.</div>
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    const root = rootOf(canvasElement);
+    window.scrollTo(0, 500);
+    await nextFrame();
+    await nextFrame();
+    expect(window.scrollY).toBeGreaterThan(0);
+    // 59px is no step of the scale (space 14 is 56px, 16 is 64px): the sidebar sticks exactly there and takes the rest of the window.
+    expect(Math.abs(root.getBoundingClientRect().top - 59)).toBeLessThanOrEqual(1);
+    expect(Math.abs(root.getBoundingClientRect().height - (window.innerHeight - 59))).toBeLessThanOrEqual(1);
+    window.scrollTo(0, 0);
+  },
+};
+
 export const PassedBadgeIsDrawnAsWritten: Story = {
   name: "A Badge passed as an item's badge keeps its own tone and variant, is one pill, and stays within the item's height, expanded and in the rail",
   render: () => (

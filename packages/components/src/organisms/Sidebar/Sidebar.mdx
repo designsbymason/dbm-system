@@ -575,7 +575,7 @@ changed.
 - `side="end"` and `dir="rtl"` are separate: `side` says which edge of the layout, `dir` which way text runs, and `start` is the right
   in right-to-left text. Pass `dir` on the sidebar and it reaches the panel too, which is drawn in a portal and would otherwise follow
   the page.
-- A sticky sidebar is as tall as the rest of the window (`stickyOffset` is the height of a sticky `Navbar` above it) and scrolls its
+- A sticky sidebar is as tall as the rest of the window (`stickyOffset` is the height of a sticky `Navbar` above it: a spacing step, or a CSS length such as `"var(--page-shell-header-height, 0px)"` for a header whose height is not a step) and scrolls its
   own content, so it needs no height from you. A sidebar that is not sticky takes the height of its row.
 - To make the sidebar resizable, put it in a `Splitter` pane rather than adding a drag handle of its own.
 - `Sidebar.Toggle` takes a `collapseIcon` and an `expandIcon` when the caret is not the mark you want; the default caret mirrors with `side` and

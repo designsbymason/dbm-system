@@ -140,6 +140,18 @@ describe("Sidebar", () => {
     });
   });
 
+  it("sets its sticky offset from a spacing step or from any CSS length, and only while it is sticky", () => {
+    const offset = () => screen.getByTestId("sidebar").style.getPropertyValue("--sidebar-sticky-offset");
+    const { rerender } = render(<Basic data-testid="sidebar" sticky stickyOffset={4} />);
+    expect(offset()).toBe("var(--dbm-space-4)");
+    rerender(<Basic data-testid="sidebar" sticky stickyOffset="var(--page-shell-header-height, 0px)" />);
+    expect(offset()).toBe("var(--page-shell-header-height, 0px)");
+    rerender(<Basic data-testid="sidebar" sticky stickyOffset="3.5rem" />);
+    expect(offset()).toBe("3.5rem");
+    rerender(<Basic data-testid="sidebar" stickyOffset="3.5rem" />);
+    expect(offset()).toBe("");
+  });
+
   it("applies the width prop as the sidebar's width", () => {
     const { rerender } = render(<Basic data-testid="sidebar" width={288} />);
     expect(screen.getByTestId("sidebar").style.getPropertyValue("--sidebar-width")).toBe("288px");

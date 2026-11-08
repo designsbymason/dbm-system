@@ -55,7 +55,7 @@ interface PlaygroundArgs {
   exclusive: boolean;
   menuContainer?: HTMLElement | null;
   sticky: boolean;
-  stickyOffset: SpaceValue;
+  stickyOffset: SpaceValue | string;
   dir: "ltr" | "rtl";
   labels?: SidebarProps["labels"];
   id: string;
@@ -218,7 +218,8 @@ const meta: Meta<PlaygroundArgs> = {
       control: "select",
       options: [0, 1, 2, 3, 4, 5, 6, 8, 10, 12, 16, 20, 24, 32],
       if: { arg: "sticky" },
-      description: "How far from the top a sticky sidebar sticks, from the spacing scale: the height of a sticky Navbar above it. No effect without sticky.",
+      description:
+        "How far from the top a sticky sidebar sticks: a step of the spacing scale, or any CSS length for a header whose height is not a step (the height of a sticky Navbar above it). No effect without sticky.",
       table: { defaultValue: { summary: "0" } },
     },
     dir: {

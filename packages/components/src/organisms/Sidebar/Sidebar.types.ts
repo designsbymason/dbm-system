@@ -207,10 +207,12 @@ export interface SidebarProps extends SidebarStateProps, Omit<ComponentPropsWith
    */
   sticky?: boolean;
   /**
-   * How far from the top of the page a sticky sidebar sticks, on the spacing scale: the height of a sticky `Navbar` above it.
+   * How far from the top of the page a sticky sidebar sticks: a step of the spacing scale, or any CSS length for a header whose height is not a
+   * step (`"var(--page-shell-header-height, 0px)"` under a `PageShell` header, which publishes its measured height). It is the height of a
+   * sticky `Navbar` above the sidebar, which the sidebar then leaves clear and shortens itself by.
    * @default 0
    */
-  stickyOffset?: SpaceValue;
+  stickyOffset?: SpaceValue | string;
   /**
    * The reading direction. Not read from the page: pass `"rtl"` on a right-to-left page, or wrap the page in a `DirectionProvider` once and leave
    * this out. Left out, it is the nearest provider's direction, else left to right.

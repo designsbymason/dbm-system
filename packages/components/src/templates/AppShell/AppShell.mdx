@@ -447,13 +447,20 @@ own header slot is a plain `div` by default so that a `Navbar` is never wrapped 
   the page's expected content. A state's title is the page's `h1`.
 - The shell keeps its layers in a fixed order, so a bar of your own never paints over it:
 
-  | Layer | Above it | Parts |
-  |---|---|---|
-  | Content | – | The page's own sticky elements, such as `Affix` (the `sticky` step) |
-  | Sidebar, aside, footer | Content | One step up |
-  | Header | Sidebar, aside, footer | Two steps up |
-  | Banner | Header | Three steps up |
-  | Skip link | Everything in the shell | The `fixed` step |
+  <ReferenceTable
+    firstColumnWidth="13rem"
+    plainFirstColumn
+    minWidth="34rem"
+    label="Layers"
+    columns={["Layer", "Above it", "Parts"]}
+    rows={[
+      ["Content", "–", "The page's own sticky elements, such as `Affix` (the `sticky` step)"],
+      ["Sidebar, aside, footer", "Content", "One step up"],
+      ["Header", "Sidebar, aside, footer", "Two steps up"],
+      ["Banner", "Header", "Three steps up"],
+      ["Skip link", "Everything in the shell", "The `fixed` step"],
+    ]}
+  />
 
   Menus, tooltips and dialogs sit on the steps above all of these.
 - The resize handle is a `separator` (`aria-orientation="vertical"`) that takes focus and reports its

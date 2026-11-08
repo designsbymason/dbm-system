@@ -1,0 +1,230 @@
+import { Canvas, Meta } from "@storybook/addon-docs/blocks";
+import { Callout, ComponentHeader, PlaygroundControls, ReferenceTable, RelatedCard } from "../../../.storybook/blocks";
+import { BookOpenIcon } from "@dbm-system/icons";
+import { Button } from "../../atoms/Button";
+import { VisuallyHidden } from "../../atoms/VisuallyHidden";
+import { Breadcrumb } from "../../molecules/Breadcrumb";
+import { TableOfContents } from "../../molecules/TableOfContents";
+import { Navbar } from "../../organisms/Navbar";
+import { Sidebar } from "../../organisms/Sidebar";
+import * as DocumentationPageStories from "./DocumentationPage.stories";
+
+<Meta of={DocumentationPageStories} />
+
+<VisuallyHidden asChild><h2>Intro</h2></VisuallyHidden>
+
+<ComponentHeader title="Documentation Page" tier="Template" />
+
+A page of documentation or long-form content: the site's navigation in a column at the start, the page in the middle (a breadcrumb, its head, sections with
+a code block, a table and a note, and links to the previous and next page) and a table of contents at the end that follows the reader down the page. It is an
+**example page, not a component**. Nothing here is exported from the package: you copy the page into your app and replace the words. What the page shows you is the
+part that is hard to get right: a navigation column and an outline on either side of a `PageShell` page, both sticking under the header, and what each does on
+a tablet and a phone.
+
+It is a [`PageShell`](/docs/templates-application-shells-pageshell--docs) with a `PageShell.Body` that holds a [`Sidebar`](/docs/organisms-navigation-sidebar--docs),
+`PageShell.Main` and a `PageShell.Aside` with a [`TableOfContents`](/docs/molecules-navigation-tableofcontents--docs). On this page the live examples sit in a framed
+box 40rem tall; open a story from the sidebar on its own, and narrow the window, to see the tablet and phone layouts.
+
+### Import
+
+```tsx
+import {
+  Alert, Breadcrumb, CodeBlock, Container, Heading, Link, Navbar, PageHeader, PageShell, Sidebar, Table, TableOfContents, Text,
+} from "@dbm-system/components";
+```
+
+## Playground
+
+A page has no props to drive. The controls below change what the page holds: how many of its six sections it has, and whether the end column holds a table of
+contents. Scroll the framed page to see the outline follow it, and choose an entry to jump to its section.
+
+<div className="dbm-playground-canvas">
+
+<Canvas of={DocumentationPageStories.Default} />
+
+</div>
+<PlaygroundControls of={DocumentationPageStories.Default} order={["sections", "contents"]} />
+
+## Properties
+
+A page is not a component, so it has no properties table. These are the pieces it is made of, and what each is for.
+
+<ReferenceTable
+  firstColumnWidth="13rem"
+  plainFirstColumn
+  minWidth="34rem"
+  label="What the page is made of"
+  columns={["Where", "What it is and why"]}
+  rows={[
+    ["Header", "A sticky `Navbar` whose links are a navigation named \"Main\", and a `Sidebar.MenuButton`, which opens the navigation panel below `lg`. The header is a direct child of `PageShell`, so it sticks by itself."],
+    ["Navigation column", "A `Sidebar` at the start of `PageShell.Body`, with `sticky` and `stickyOffset=\"var(--page-shell-header-height, 0px)\"`: it sticks under the header at the height the shell measured, and takes the rest of the window. Give its `Sidebar.Nav` a name of its own."],
+    ["The page", "`PageShell.Main` holding a `Container size=\"md\"` (a reading width) with a `Breadcrumb`, a `PageHeader`, one `section` per heading, and links to the previous and next page."],
+    ["Outline", "A sticky `PageShell.Aside` with a `TableOfContents`: its entries link to the sections and the current one follows the scroll. `scrollOffset` keeps a section's heading clear of the header."],
+    ["Provider", "A `Sidebar.Provider` around the whole shell, with `collapseBelow=\"lg\"`, so the header's menu button reaches the sidebar's panel (`AppShell` does this for you). The body stacks as a whole below the aside's step, so the sidebar leaves for its panel at the same one."],
+    ["Footer", "`PageShell.Footer`, at the bottom of the window on a short page."],
+  ]}
+/>
+
+## Variants
+
+### A short page
+
+A page of two sections: the footer follows the page and the outline lists only what the page has.
+
+<Canvas of={DocumentationPageStories.ShortPage} />
+
+### Without a table of contents
+
+A page of a few paragraphs needs no outline: there is no aside, and the page takes the room.
+
+<Canvas of={DocumentationPageStories.WithoutContents} />
+
+## Usage guidelines
+
+<div className="dbm-do-dont-grid">
+<Callout tone="success" title="Do">
+
+- Give the sidebar's navigation its own name (`Sidebar.Nav aria-label="Documentation"`), and the sidebar's menu button its own (`labels.menu` on the provider): the header's links
+  are already a navigation named "Main", and its menu button is named "Menu".
+- Give the sidebar and the aside the same collapse step. The body stacks as a whole below the aside's step, so a sidebar that is still a column there would sit
+  above the page.
+- Write one `section` with its own `h2` for each entry of the outline, with the `id` the entry links to, and keep one `h1` (the `PageHeader`'s title).
+- Set `scrollOffset` on the outline (and `scroll-margin` on a section) to the header's height, so a jump does not hide the heading under the bar.
+- Leave the sidebar and the outline out of print (the page's own `@media print`), so the paper holds the text.
+
+</Callout>
+<Callout tone="danger" title="Don't">
+
+- Don't use `PageShell.Aside` for the sidebar: an aside is a `complementary` landmark, and the navigation is a `navigation`.
+- Don't put a second `PageShell.Main` or a `PageShell.Content` inside the body's `Main`: the page is kept to its width by the `Container` you write.
+- Don't pass the sidebar a spacing step for `stickyOffset` when the header's height is not one: use the shell's measured height (a CSS length), or the sidebar sticks behind
+  the bar.
+- Don't leave the outline's entries and the sections out of step: a link to an `id` that is not there does nothing.
+
+</Callout>
+</div>
+
+## Best practices
+
+- A page with no outline (a short guide, a changelog entry) should not draw an empty column: leave the aside out, and the page takes the width.
+- Keep the page's reading width to `md` (about 48rem), so a line is short enough to read and the outline has room beside it on a laptop.
+- The sidebar scrolls inside itself when its list is longer than the window, so the page's own scroll is never the sidebar's.
+- A code block and a wide table scroll in their own frames: the page never scrolls sideways.
+
+## Accessibility
+
+<Callout tone="info" title="The landmarks, once each">
+
+One `banner` (the header), the header's `navigation` named "Main", the sidebar's `navigation` (named "Documentation"), one `main`, a `complementary` aside named "On this page"
+holding the outline's `navigation`, a `navigation` for the previous and next links, and one `contentinfo`. Every navigation has its own name, so a screen reader's
+list of landmarks tells them apart.
+
+</Callout>
+
+- The keyboard follows the markup: the skip link, the header, the sidebar, the page, the outline, the footer. The skip link goes to the page's `main`, past the header and the sidebar.
+- On a phone the sidebar is not on the page: the header's menu button opens its panel as a dialog, focus goes into it, `Escape` closes it and focus returns to the button.
+- Choosing an outline entry scrolls to its section and marks it current (`aria-current="location"`); the mark follows the scroll, and only one entry has it.
+- The sidebar marks the page the reader is on with `aria-current="page"`.
+- The sidebar and the outline are sticky boxes that scroll inside themselves when they are taller than the window, so a long list is never cut off.
+
+## Code examples
+
+```tsx
+<Sidebar.Provider collapseBelow="lg" labels={{ menu: "Documentation menu" }}>
+  <PageShell>
+    <PageShell.SkipLink />
+    <Navbar sticky contained>
+      <Navbar.Row columns="balanced">
+        <Navbar.Brand href="/">Acme Docs</Navbar.Brand>
+        <Navbar.Links aria-label="Main">
+          <Navbar.Link href="/components" current>Components</Navbar.Link>
+        </Navbar.Links>
+        <Sidebar.MenuButton />
+      </Navbar.Row>
+    </Navbar>
+    <PageShell.Body width="full" paddingInline={0} paddingBlock={0}>
+      <Sidebar sticky stickyOffset="var(--page-shell-header-height, 0px)" width="16rem">
+        <Sidebar.Content>
+          <Sidebar.Nav aria-label="Documentation">…</Sidebar.Nav>
+        </Sidebar.Content>
+      </Sidebar>
+      <PageShell.Main>…</PageShell.Main>
+      <PageShell.Aside aria-label="On this page" sticky width="14rem">
+        <TableOfContents scrollOffset={80} items={[{ id: "overview", label: "Overview" }]} />
+      </PageShell.Aside>
+    </PageShell.Body>
+  </PageShell>
+</Sidebar.Provider>
+```
+
+```tsx
+// Leave the navigation out of print: your own stylesheet
+@media print {
+  .sidebar,
+  .outline {
+    display: none !important;
+  }
+}
+```
+
+## Design tokens used
+
+The page is made of components, so every colour, size and radius comes from them. What it draws itself is spacing between its own pieces, in inline styles: `space.4`,
+`space.6` and `space.8`. It has no stylesheet of its own beyond the print rule above.
+
+## Related components
+
+<div className="dbm-card-grid">
+<RelatedCard
+  name="PageShell"
+  description="The frame the page sits in: the skip link, the header, the body with its aside, the page's one main and the footer"
+  href="/?path=/docs/templates-application-shells-pageshell--docs"
+>
+  <Button variant="secondary" size="sm">Open shell</Button>
+</RelatedCard>
+<RelatedCard
+  name="Sidebar"
+  description="The navigation column, which sticks under the header and becomes a panel on a phone"
+  href="/?path=/docs/organisms-navigation-sidebar--docs"
+>
+  <Sidebar.Provider>
+    <Sidebar variant="ghost" collapseBelow="never" width="10rem">
+      <Sidebar.Content>
+        <Sidebar.Nav aria-label="Preview">
+          <Sidebar.Item icon={BookOpenIcon} href="#" current>Guides</Sidebar.Item>
+        </Sidebar.Nav>
+      </Sidebar.Content>
+    </Sidebar>
+  </Sidebar.Provider>
+</RelatedCard>
+<RelatedCard
+  name="TableOfContents"
+  description="The outline of the page's sections, which follows the scroll"
+  href="/?path=/docs/molecules-navigation-tableofcontents--docs"
+>
+  <TableOfContents aria-label="Preview contents" items={[{ id: "a", label: "Overview" }, { id: "b", label: "Usage" }]} defaultActiveId="a" size="sm" />
+</RelatedCard>
+<RelatedCard
+  name="Breadcrumb"
+  description="Where the page is in the site, above its title"
+  href="/?path=/docs/molecules-navigation-breadcrumb--docs"
+>
+  <Breadcrumb>
+    <Breadcrumb.Item>
+      <Breadcrumb.Link href="#">Components</Breadcrumb.Link>
+    </Breadcrumb.Item>
+    <Breadcrumb.Item>
+      <Breadcrumb.Page>Button</Breadcrumb.Page>
+    </Breadcrumb.Item>
+  </Breadcrumb>
+</RelatedCard>
+<RelatedCard
+  name="Navbar"
+  description="The header: its links, its menu and its own sticking"
+  href="/?path=/docs/organisms-navigation-navbar--docs"
+>
+  <Navbar>
+    <Navbar.Brand href="#">Docs</Navbar.Brand>
+  </Navbar>
+</RelatedCard>
+</div>

@@ -1,0 +1,246 @@
+import { useRef } from "react";
+import type { CSSProperties, MouseEvent } from "react";
+import { Alert } from "../../molecules/Alert";
+import { Breadcrumb } from "../../molecules/Breadcrumb";
+import { CodeBlock } from "../../molecules/CodeBlock";
+import { PageHeader } from "../../molecules/PageHeader";
+import { Table } from "../../molecules/Table";
+import { TableOfContents } from "../../molecules/TableOfContents";
+import { Container } from "../../atoms/Container";
+import { Heading } from "../../atoms/Heading";
+import { Link } from "../../atoms/Link";
+import { Text } from "../../atoms/Text";
+import { Navbar } from "../../organisms/Navbar";
+import { Sidebar } from "../../organisms/Sidebar";
+import { preventNavigation } from "../../organisms/Sidebar/SidebarStoryKit";
+import { PageShell } from "../PageShell";
+import styles from "./DocumentationPage.module.css";
+
+// The page's words, in one place. A documentation page is static, so there is no router and no state: the demo's only controls are how long the page
+// is and whether it has a contents list.
+export const documentationCopy = {
+  brand: "dbM Docs",
+  mainNavigation: "Main",
+  guides: "Guides",
+  components: "Components",
+  foundations: "Foundations",
+  sidebarName: "Documentation",
+  sidebarMenu: "Documentation menu",
+  sidebarSections: [
+    { label: "Getting started", items: ["Introduction", "Installation", "Theming"] },
+    { label: "Components", items: ["Badge", "Button", "ButtonGroup", "Card", "Checkbox", "Dialog"] },
+  ],
+  breadcrumbHome: "Components",
+  title: "Button",
+  intro: "A control that starts an action: submit a form, open a dialog, move to the next step.",
+  contentsTitle: "On this page",
+  contentsName: "Contents",
+  sections: [
+    { id: "overview", title: "Overview", text: "A button says what will happen when it is pressed. Give it a short verb as its label, and use one primary button for the main action on a page." },
+    { id: "usage", title: "Usage", text: "Import the component and give it a label. A button that only has an icon needs an accessible name, since there is no text to read." },
+    { id: "variants", title: "Variants", text: "Four variants cover most pages: a filled one for the main action, an outlined one for a second choice, a quiet one for toolbars and a link-like one for inline actions." },
+    { id: "properties", title: "Properties", text: "Every prop has a default, so the smallest button is a label. These are the ones used most." },
+    { id: "accessibility", title: "Accessibility", text: "A button is a native button: it is reached by Tab, pressed with Enter or Space, and announced with its name and its state." },
+    { id: "related", title: "Related components", text: "A link that looks like a button is still a link: use a button for an action and a link for going somewhere." },
+  ],
+  note: "Use one primary button per view. More than one makes it unclear which action matters most.",
+  code: 'import { Button } from "@dbm-system/components";\n\n<Button onClick={save}>Save changes</Button>',
+  tableName: "Button properties",
+  tableColumns: ["Prop", "Default", "What it does"],
+  tableRows: [
+    ["variant", '"solid"', "The look: solid, outlined, ghost or link."],
+    ["size", '"md"', "The height and text size."],
+    ["disabled", "false", "Turns the button off and out of the tab order."],
+  ],
+  previous: "Badge",
+  next: "ButtonGroup",
+  previousLabel: "Previous",
+  nextLabel: "Next",
+  footer: "© dbM Docs",
+  footerNavigation: "Footer",
+  footerLinks: ["Help", "Privacy", "Terms"],
+};
+
+export interface DocumentationPageProps {
+  /** Draws the page in a box of its own, for a Docs page, where a page as tall as the window would fill it. */
+  framed?: boolean;
+  /** How many of the demo's six sections the page has. */
+  sections?: number;
+  /** Whether the end column holds a table of contents. */
+  contents?: boolean;
+}
+
+const frameHeight = "40rem";
+
+/**
+ * A documentation page: the site's navigation in a `Sidebar` at the start, the page in the middle (a breadcrumb, the page's head, sections with a code
+ * block, a table and a note, and links to the previous and next page) and a table of contents at the end. All of it is existing components in a
+ * `PageShell`; nothing here is drawn by hand. A `Sidebar.Provider` wraps the shell so the header's menu button can open the sidebar's panel on a
+ * phone (`AppShell` does that for you).
+ */
+export function DocumentationPage({ framed = false, sections = 6, contents = true }: DocumentationPageProps) {
+  const copy = documentationCopy;
+  const shown = copy.sections.slice(0, Math.max(1, Math.min(sections, copy.sections.length)));
+  const frameRef = useRef<HTMLDivElement | null>(null);
+  const page = (
+    <Sidebar.Provider collapseBelow="lg" labels={{ menu: copy.sidebarMenu }}>
+      <PageShell>
+        {/* In an app a router handles the link; here the click moves focus to the main area itself and keeps the preview's address unchanged. */}
+        <PageShell.SkipLink
+          onClick={(event: MouseEvent) => {
+            event.preventDefault();
+            document.getElementById("main")?.focus();
+          }}
+        />
+        <Navbar sticky contained scrollContainerRef={framed ? frameRef : undefined}>
+          <Navbar.Row columns="balanced">
+            <Navbar.Brand href="#" onClick={preventNavigation}>
+              {copy.brand}
+            </Navbar.Brand>
+            <Navbar.Links aria-label={copy.mainNavigation}>
+              <Navbar.Link href="#" current onClick={preventNavigation}>
+                {copy.components}
+              </Navbar.Link>
+              <Navbar.Link href="#" onClick={preventNavigation}>
+                {copy.guides}
+              </Navbar.Link>
+              <Navbar.Link href="#" onClick={preventNavigation}>
+                {copy.foundations}
+              </Navbar.Link>
+            </Navbar.Links>
+            <Sidebar.MenuButton variant="tertiary" tone="neutral" size="sm" />
+          </Navbar.Row>
+        </Navbar>
+        {/* The page's width is the columns', so the body spans the window and the page is kept to a reading width inside `Main`. */}
+        <PageShell.Body width="full" paddingInline={0} paddingBlock={0}>
+          <Sidebar
+            className={styles.sidebar}
+            sticky
+            // The sidebar sticks under the header at the height the shell measured for it.
+            stickyOffset="var(--page-shell-header-height, 0px)"
+            // A Docs page frames the page in a box narrower than a window, so its columns are narrower there.
+            width={framed ? "12rem" : "16rem"}
+          >
+            <Sidebar.Content>
+              <Sidebar.Nav aria-label={copy.sidebarName}>
+                {copy.sidebarSections.map((section) => (
+                  <Sidebar.Section key={section.label} label={section.label}>
+                    {section.items.map((item) => (
+                      <Sidebar.Item key={item} href="#" current={item === copy.title || undefined} onClick={preventNavigation}>
+                        {item}
+                      </Sidebar.Item>
+                    ))}
+                  </Sidebar.Section>
+                ))}
+              </Sidebar.Nav>
+            </Sidebar.Content>
+          </Sidebar>
+          <PageShell.Main>
+            <Container size="md" paddingInline={framed ? 4 : 6} style={{ paddingBlock: "var(--dbm-space-8)", display: "grid", gap: "var(--dbm-space-8)" }}>
+              <div style={{ display: "grid", gap: "var(--dbm-space-4)" }}>
+                <Breadcrumb>
+                  <Breadcrumb.Item>
+                    <Breadcrumb.Link href="#" onClick={preventNavigation}>
+                      {copy.breadcrumbHome}
+                    </Breadcrumb.Link>
+                  </Breadcrumb.Item>
+                  <Breadcrumb.Item>
+                    <Breadcrumb.Page>{copy.title}</Breadcrumb.Page>
+                  </Breadcrumb.Item>
+                </Breadcrumb>
+                <PageHeader>
+                  <PageHeader.Title>{copy.title}</PageHeader.Title>
+                  <PageHeader.Description>{copy.intro}</PageHeader.Description>
+                </PageHeader>
+              </div>
+              {shown.map((section) => (
+                <section key={section.id} aria-labelledby={`${section.id}-heading`} id={section.id} style={{ display: "grid", gap: "var(--dbm-space-4)", scrollMarginBlockStart: "5rem" }}>
+                  <Heading level={2} size="lg" id={`${section.id}-heading`}>
+                    {section.title}
+                  </Heading>
+                  <Text>{section.text}</Text>
+                  {section.id === "overview" && (
+                    <Alert tone="info">
+                      <Alert.Description>{copy.note}</Alert.Description>
+                    </Alert>
+                  )}
+                  {section.id === "usage" && <CodeBlock language="tsx" code={copy.code} />}
+                  {section.id === "properties" && (
+                    <Table aria-label={copy.tableName}>
+                      <Table.Header>
+                        <Table.Row>
+                          {copy.tableColumns.map((column) => (
+                            <Table.HeaderCell key={column}>{column}</Table.HeaderCell>
+                          ))}
+                        </Table.Row>
+                      </Table.Header>
+                      <Table.Body>
+                        {copy.tableRows.map(([prop, fallback, what]) => (
+                          <Table.Row key={prop}>
+                            <Table.HeaderCell scope="row">{prop}</Table.HeaderCell>
+                            <Table.Cell>{fallback}</Table.Cell>
+                            <Table.Cell>{what}</Table.Cell>
+                          </Table.Row>
+                        ))}
+                      </Table.Body>
+                    </Table>
+                  )}
+                </section>
+              ))}
+              <nav aria-label="Pages" style={{ display: "flex", justifyContent: "space-between", gap: "var(--dbm-space-4)", flexWrap: "wrap" }}>
+                <Link href="#" onClick={preventNavigation}>
+                  {copy.previousLabel}: {copy.previous}
+                </Link>
+                <Link href="#" onClick={preventNavigation}>
+                  {copy.nextLabel}: {copy.next}
+                </Link>
+              </nav>
+            </Container>
+          </PageShell.Main>
+          {contents && (
+            // A complementary landmark beside the page: the outline of its sections, which follows the scroll. Below `lg` it drops under the page, the step
+            // at which the sidebar leaves for its panel: the body stacks as a whole, so the two share a step.
+            <PageShell.Aside aria-label={copy.contentsTitle} className={styles.outline} sticky width={framed ? "11rem" : "14rem"} style={{ paddingBlock: "var(--dbm-space-8)", paddingInlineEnd: "var(--dbm-space-4)" }}>
+              <TableOfContents
+                items={shown.map((section) => ({ id: section.id, label: section.title }))}
+                scrollOffset={80}
+                scrollContainerRef={framed ? frameRef : undefined}
+                aria-label={copy.contentsName}
+              />
+            </PageShell.Aside>
+          )}
+        </PageShell.Body>
+        <PageShell.Footer>
+          <PageShell.Content paddingBlock={4} style={{ display: "flex", flexWrap: "wrap", gap: "var(--dbm-space-4)", justifyContent: "space-between" }}>
+            <Text size="sm" color="secondary">
+              {copy.footer}
+            </Text>
+            <nav aria-label={copy.footerNavigation} style={{ display: "flex", gap: "var(--dbm-space-4)" }}>
+              {copy.footerLinks.map((label) => (
+                <Link key={label} href="#" size="sm" onClick={preventNavigation}>
+                  {label}
+                </Link>
+              ))}
+            </nav>
+          </PageShell.Content>
+        </PageShell.Footer>
+      </PageShell>
+    </Sidebar.Provider>
+  );
+  if (!framed) return page;
+  return (
+    <div
+      ref={frameRef}
+      style={
+        {
+          blockSize: frameHeight,
+          overflow: "auto",
+          border: "var(--dbm-border-width-1) solid var(--dbm-border-default)",
+          borderRadius: "var(--dbm-radius-lg)",
+        } as CSSProperties
+      }
+    >
+      {page}
+    </div>
+  );
+}

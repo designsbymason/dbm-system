@@ -462,7 +462,7 @@ const SidebarRoot = forwardRef<HTMLDivElement, SidebarProps>(
 
     const rootStyle = {
       ...(width !== undefined ? { "--sidebar-width": toLength(width) } : {}),
-      ...(sticky ? { "--sidebar-sticky-offset": `var(--dbm-space-${stickyOffset})` } : {}),
+      ...(sticky ? { "--sidebar-sticky-offset": typeof stickyOffset === "string" ? stickyOffset : `var(--dbm-space-${stickyOffset})` } : {}),
       ...style,
     } as CSSProperties;
 
