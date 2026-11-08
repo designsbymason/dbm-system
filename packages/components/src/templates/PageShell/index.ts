@@ -7,7 +7,6 @@ export type {
   PageShellFooterProps,
   PageShellMainLabels,
   PageShellMainProps,
-  PageShellPageHeaderProps,
   PageShellProps,
   PageShellSkipLinkLabels,
   PageShellSkipLinkProps,

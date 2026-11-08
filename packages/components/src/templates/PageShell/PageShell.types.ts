@@ -95,23 +95,6 @@ export interface PageShellBannerProps extends Omit<ComponentPropsWithoutRef<"div
   children?: ReactNode;
 }
 
-/** The properties of `PageShell.PageHeader`: the head of a page, with its title, an optional trail of breadcrumbs, a description and actions. */
-export interface PageShellPageHeaderProps extends Omit<ComponentPropsWithoutRef<"div">, "children" | "title">, PageShellPartBase {
-  /** The page's title, drawn as its heading. */
-  title: ReactNode;
-  /**
-   * The heading level of the title.
-   * @default 1
-   */
-  titleLevel?: 1 | 2 | 3 | 4 | 5 | 6;
-  /** A line under the title that says what the page is. */
-  description?: ReactNode;
-  /** A trail above the title: a `Breadcrumb`. */
-  breadcrumbs?: ReactNode;
-  /** The page's actions, at the end of the title's row, and under it on a phone: buttons. */
-  actions?: ReactNode;
-}
-
 /** The properties of `PageShell.Main`: the page's one `<main>`, and the skip link's target. */
 export interface PageShellMainProps extends Omit<ComponentPropsWithoutRef<"main">, "children">, PageShellPartBase {
   /** The page. Usually one `PageShell.Content`. */

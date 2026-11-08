@@ -15,7 +15,6 @@ import * as PageShellBannerStories from "./PageShellBanner.stories";
 import * as PageShellContentStories from "./PageShellContent.stories";
 import * as PageShellFooterStories from "./PageShellFooter.stories";
 import * as PageShellMainStories from "./PageShellMain.stories";
-import * as PageShellPageHeaderStories from "./PageShellPageHeader.stories";
 import * as PageShellSkipLinkStories from "./PageShellSkipLink.stories";
 
 export const propOrder = ["children", "pageKey", "pageTitle", "documentTitle", "dir", "style", "className", "id", "data-testid"];
@@ -74,12 +73,6 @@ Drive the shell's props live. The header controls (`sticky`, `hideOnScroll`, a h
 `PageShell.Banner` also accepts any other native `<div>` attribute.
 
 <PropertiesTable of={PageShellBannerStories} order={["children", "style", "className", "id", "data-testid"]} />
-
-### PageShell.PageHeader properties
-
-`PageShell.PageHeader` also accepts any other native `<div>` attribute.
-
-<PropertiesTable of={PageShellPageHeaderStories} order={["title", "titleLevel", "description", "breadcrumbs", "actions", "style", "className", "id", "data-testid"]} />
 
 ### PageShell.Main properties
 
@@ -177,8 +170,8 @@ the window. `size` takes the steps of `Container` directly and replaces it.
 
 ### The head of a page
 
-`PageShell.PageHeader` is the head of a page: the title as its `h1`, an optional trail of breadcrumbs above it, a description under it and the
-page's actions at the end of the row, under the title on a phone. The demo pages on this page use it.
+The head of a page (its title, breadcrumbs, description, facts and actions) is the [`PageHeader`](/docs/molecules-layout-pageheader--docs) component,
+which the demo pages on this page use. The shell draws none of its own.
 
 ### The tab's title
 
@@ -333,10 +326,6 @@ The skip link is `SkipLink`, which lists its own tokens.
 <TokenRow token="border-focus" usage="the focus ring drawn inside the main area while the keyboard has focused it" />
 <TokenRow token="border-width.2" usage="the thickness of that ring, and how far it is drawn inside the edge" />
 <TokenRow token="z-index.sticky" usage="the layer of the page's own content (the loading bar), the step a sticky header's own layer is on" />
-<TokenRow token="space.32" usage="the room the text of a page header is given before its actions wrap under it (twice this step)" />
-<TokenRow token="space.2" usage="the gap between a page header's actions" />
-<TokenRow token="space.4" usage="the gap between a page header's text and its actions" />
-<TokenRow token="space.1" usage="the gap between a page header's lines" />
 
 ## Related components
 

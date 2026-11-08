@@ -399,7 +399,7 @@ describe("PageShell", () => {
     });
   });
 
-  describe("the content and the page header", () => {
+  describe("the content", () => {
     it("keeps the content to the width preset's step, and an explicit size wins", () => {
       render(
         <PageShell>
@@ -413,27 +413,6 @@ describe("PageShell", () => {
       expect(screen.getByTestId("reading").className).toContain("sizeMd");
       expect(screen.getByTestId("full").className).toContain("sizeFull");
       expect(screen.getByTestId("explicit").className).toContain("sizeSm");
-    });
-
-    it("draws the page's title as its heading, with a description, breadcrumbs and actions", () => {
-      render(
-        <PageShell>
-          <PageShell.Main>
-            <PageShell.PageHeader
-              title="Projects"
-              description="All of them"
-              breadcrumbs={<nav aria-label="Trail">Home</nav>}
-              actions={<button type="button">New</button>}
-            />
-            <PageShell.PageHeader title="Details" titleLevel={2} />
-          </PageShell.Main>
-        </PageShell>,
-      );
-      expect(screen.getByRole("heading", { level: 1, name: "Projects" })).toBeInTheDocument();
-      expect(screen.getByRole("heading", { level: 2, name: "Details" })).toBeInTheDocument();
-      expect(screen.getByText("All of them")).toBeInTheDocument();
-      expect(screen.getByRole("navigation", { name: "Trail" })).toBeInTheDocument();
-      expect(screen.getByRole("button", { name: "New" })).toBeInTheDocument();
     });
   });
 

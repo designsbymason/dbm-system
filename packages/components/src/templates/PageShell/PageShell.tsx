@@ -3,9 +3,7 @@ import { forwardRef, useEffect, useMemo, useRef } from "react";
 import { Container } from "../../atoms/Container";
 import type { ContainerSize } from "../../atoms/Container";
 import { DirectionProvider, useDirection } from "../../atoms/DirectionProvider";
-import { Heading } from "../../atoms/Heading";
 import { SkipLink } from "../../atoms/SkipLink";
-import { Text } from "../../atoms/Text";
 import { VisuallyHidden } from "../../atoms/VisuallyHidden";
 import { MainBusy } from "../../internal/MainBusy";
 import { usePageChange } from "../../internal/usePageChange";
@@ -18,7 +16,6 @@ import type {
   PageShellMainLabels,
   PageShellContentWidth,
   PageShellMainProps,
-  PageShellPageHeaderProps,
   PageShellProps,
   PageShellSkipLinkProps,
 } from "./PageShell.types";
@@ -133,26 +130,6 @@ const PageShellMain = forwardRef<HTMLElement, PageShellMainProps>(({ id = "main"
 PageShellMain.displayName = "PageShell.Main";
 
 /**
- * The head of a page, at the top of `PageShell.Content`: its title as the page's `h1` (`titleLevel` changes that), an optional trail of
- * breadcrumbs above it, a description under it and the page's actions at the end of the row, under the title on a phone.
- */
-const PageShellPageHeader = forwardRef<HTMLDivElement, PageShellPageHeaderProps>(
-  ({ title, titleLevel = 1, description, breadcrumbs, actions, className, ...props }, ref) => (
-    <div {...props} ref={ref} className={cx(styles.pageHeader, className)}>
-      <div className={styles.pageHeaderText}>
-        {breadcrumbs}
-        <Heading level={titleLevel} size="2xl">
-          {title}
-        </Heading>
-        {description !== undefined && <Text color="secondary">{description}</Text>}
-      </div>
-      {actions !== undefined && <div className={styles.pageHeaderActions}>{actions}</div>}
-    </div>
-  ),
-);
-PageShellPageHeader.displayName = "PageShell.PageHeader";
-
-/**
  * The page's content in the main area, kept to a readable width and padded on the spacing scale: a `Container` with padding above and below
  * as well. Put it inside `PageShell.Main`, which adds none of its own.
  */
@@ -180,7 +157,6 @@ PageShellFooter.displayName = "PageShell.Footer";
 type PageShellComponent = typeof PageShellRoot & {
   SkipLink: typeof PageShellSkipLink;
   Banner: typeof PageShellBanner;
-  PageHeader: typeof PageShellPageHeader;
   Main: typeof PageShellMain;
   Content: typeof PageShellContent;
   Footer: typeof PageShellFooter;
@@ -189,7 +165,6 @@ type PageShellComponent = typeof PageShellRoot & {
 export const PageShell: PageShellComponent = Object.assign(PageShellRoot, {
   SkipLink: PageShellSkipLink,
   Banner: PageShellBanner,
-  PageHeader: PageShellPageHeader,
   Main: PageShellMain,
   Content: PageShellContent,
   Footer: PageShellFooter,

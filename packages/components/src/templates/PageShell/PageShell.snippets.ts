@@ -78,23 +78,6 @@ ${main()}
 ${footer}
 </PageShell>`,
 
-  pageHeader: `{/* PageShell.PageHeader is the head of a page: the title as its h1, breadcrumbs above it, a description under it and the actions at the
-    end of the row (under the title on a phone). */}
-${shell("", [
-  skipLink,
-  header(),
-  `  <PageShell.Main>
-    <PageShell.Content>
-      <PageShell.PageHeader
-        title="Projects"
-        description="Everything your team is working on."
-        actions={<Button>New project</Button>}
-      />
-    </PageShell.Content>
-  </PageShell.Main>`,
-  footer,
-])}`,
-
   documentTitle: `{/* documentTitle keeps the browser tab's title in step with pageTitle, so the router does not have to: true sets it to pageTitle, a
     function builds the whole title. The title the document had comes back when the shell unmounts. */}
 <PageShell pageKey={pathname} pageTitle="Projects" documentTitle={(title) => \`\${title} · dbM\`}>

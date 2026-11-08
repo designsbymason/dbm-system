@@ -15,6 +15,7 @@ import { Alert } from "../../molecules/Alert";
 import { Card } from "../../molecules/Card";
 import { EmptyState } from "../../molecules/EmptyState";
 import { Grid } from "../../molecules/Grid";
+import { PageHeader } from "../../molecules/PageHeader";
 import { Navbar } from "../../organisms/Navbar";
 import { useDemoCurrent } from "../../organisms/Navbar/NavbarStoryKit";
 import { preventNavigation } from "../../organisms/Sidebar/SidebarStoryKit";
@@ -151,7 +152,13 @@ export function DemoPage({ language = "en", rows = 24, state }: { language?: Lan
   }
   return (
     <div style={{ display: "grid", gap: "var(--dbm-space-6)" }}>
-      <PageShell.PageHeader title={copy.title} description={copy.intro} actions={<Button onClick={preventClick}>{copy.newProject}</Button>} />
+      <PageHeader>
+        <PageHeader.Title>{copy.title}</PageHeader.Title>
+        <PageHeader.Description>{copy.intro}</PageHeader.Description>
+        <PageHeader.Actions>
+          <Button onClick={preventClick}>{copy.newProject}</Button>
+        </PageHeader.Actions>
+      </PageHeader>
       <Grid minChildWidth="16rem" gap={4}>
         {Array.from({ length: rows }, (_, index) => (
           <Card key={index} variant="outlined">

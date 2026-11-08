@@ -68,29 +68,6 @@
   border-block-start: var(--dbm-border-width-1) solid var(--dbm-border-default);
 }
 
-/* The head of a page: its text at the start and its actions at the end, the actions under the text where they do not fit. */
-.pageHeader {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: flex-end;
-  justify-content: space-between;
-  gap: var(--dbm-space-4);
-  min-inline-size: 0;
-}
-
-.pageHeaderText {
-  display: grid;
-  flex: 1 1 calc(var(--dbm-space-32) * 2);
-  gap: var(--dbm-space-1);
-  min-inline-size: 0;
-}
-
-.pageHeaderActions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--dbm-space-2);
-}
-
 /* Printed, the page is its parts in order, nothing kept in view, and no loading bar (the skip link and a `Navbar` print themselves as they do alone). */
 @media print {
   .root {
