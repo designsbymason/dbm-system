@@ -560,7 +560,8 @@ export const AsideScrollsWithThePageUnlessSticky: Story = {
     await waitFor(() => expect(window.scrollY).toBeGreaterThan(300));
     await settled();
     // Stuck: at the bar's bottom edge (the header's height as the shell measured it), not scrolled away with the page.
-    await expect(Math.abs(aside.getBoundingClientRect().top - bar.getBoundingClientRect().bottom)).toBeLessThan(2);
+    // (the aside eases to its offset, so wait for it to arrive)
+    await waitFor(() => expect(Math.abs(aside.getBoundingClientRect().top - bar.getBoundingClientRect().bottom)).toBeLessThan(2), { timeout: 3000 });
     await expect(Math.abs(parseFloat(shell.style.getPropertyValue("--page-shell-header-height")) - bar.getBoundingClientRect().height)).toBeLessThan(1);
     await expect(start).toBeGreaterThan(bar.getBoundingClientRect().bottom);
     await atTop();
@@ -590,7 +591,7 @@ export const StickyOffsetOverridesTheMeasuredHeight: Story = {
     await wheel(900);
     await waitFor(() => expect(window.scrollY).toBeGreaterThan(300));
     await settled();
-    await expect(Math.abs(aside.getBoundingClientRect().top - 120)).toBeLessThan(2);
+    await waitFor(() => expect(Math.abs(aside.getBoundingClientRect().top - 120)).toBeLessThan(2), { timeout: 3000 });
     await atTop();
   },
 };
@@ -703,6 +704,79 @@ export const AsideFocusRingInForcedColours: Story = {
       tall.remove();
       await atTop();
     }
+  },
+};
+
+export const AsideFollowsAHidingHeaderUnderARealWheel: Story = {
+  name: "A sticky aside eases up to the top of the window while the Navbar slides away on a real wheel scroll down, and back under it on a scroll up — layout test",
+  render: () => <DemoPageShell aside asideSticky hideOnScroll rows={80} />,
+  play: async ({ canvasElement }) => {
+    await expect(window.innerWidth).toBeGreaterThanOrEqual(1024);
+    const { bar } = slots(canvasElement);
+    const aside = asideOf(canvasElement);
+    await atTop();
+    await wheel(900);
+    await waitFor(() => expect(window.scrollY).toBeGreaterThan(300));
+    await settled();
+    await waitFor(() => expect(bar).toHaveAttribute("data-away"));
+    // The bar is out of the window and the aside has risen to its top edge.
+    await waitFor(() => expect(bar.getBoundingClientRect().bottom).toBeLessThanOrEqual(1));
+    await waitFor(() => expect(Math.abs(aside.getBoundingClientRect().top)).toBeLessThan(2), { timeout: 3000 });
+    await wheel(-300);
+    await settled();
+    await waitFor(() => expect(bar).not.toHaveAttribute("data-away"));
+    // The bar is back, and the aside sticks under it again, not under its old place.
+    await waitFor(() => expect(Math.abs(aside.getBoundingClientRect().top - bar.getBoundingClientRect().bottom)).toBeLessThan(2), { timeout: 3000 });
+    await atTop();
+  },
+};
+
+export const NavigatingBarIsAlongTheTopOfTheWindowAboveTheHeader: Story = {
+  name: "While navigating a loading bar is fixed along the top of the window, above a sticky header, and says Loading — layout test",
+  render: () => <DemoPageShell navigating rows={80} />,
+  play: async ({ canvasElement }) => {
+    const { bar } = slots(canvasElement);
+    const track = canvasElement.querySelector<HTMLElement>("[role='progressbar']")!;
+    const holder = track.closest<HTMLElement>("[aria-hidden='true']")!;
+    await expect(getComputedStyle(holder).position).toBe("fixed");
+    await atTop();
+    await expect(Math.abs(holder.getBoundingClientRect().top)).toBeLessThan(1);
+    await expect(Number(getComputedStyle(holder).zIndex)).toBeGreaterThan(Number(getComputedStyle(bar).zIndex));
+    // Still along the top when the page has scrolled.
+    window.scrollTo(0, 600);
+    await nextFrame();
+    await expect(Math.abs(holder.getBoundingClientRect().top)).toBeLessThan(1);
+    await expect(within(canvasElement).getByRole("status")).toHaveTextContent("Loading");
+    await atTop();
+  },
+};
+
+export const NavigatingBarIsLeftOutOfPrint: Story = {
+  name: "Printed, the navigating bar is left out — print test",
+  render: () => <DemoPageShell navigating rows={6} />,
+  play: async ({ canvasElement }) => {
+    const holder = canvasElement.querySelector<HTMLElement>("[role='progressbar']")!.closest<HTMLElement>("[aria-hidden='true']")!;
+    await expect(getComputedStyle(holder).display).not.toBe("none");
+    await whilePrinting(async () => {
+      await expect(getComputedStyle(holder).display).toBe("none");
+    });
+  },
+};
+
+export const DismissedBannerGoesAway: Story = {
+  tags: ["!dev"],
+  name: "A banner dismissed with its button goes away, and the dismissal is remembered for the session — interaction test",
+  render: () => <DemoPageShell dismissibleBanner rows={4} />,
+  play: async ({ canvasElement }) => {
+    const key = "dbm-dismissed:dbm-demo-page-shell-banner";
+    const canvas = within(canvasElement);
+    const dismiss = await canvas.findByRole("button", { name: "Dismiss" });
+    await userEvent.click(dismiss);
+    // It eases out, then it is gone from the page.
+    await waitFor(() => expect(canvas.queryByText(/maintenance/i)).toBeNull(), { timeout: 4000 });
+    await expect(sessionStorage.getItem(key)).not.toBeNull();
+    // Leave nothing behind for the next run.
+    sessionStorage.removeItem(key);
   },
 };
 

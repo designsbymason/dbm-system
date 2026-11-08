@@ -48,6 +48,26 @@ const meta: Meta<PlaygroundArgs> = {
         "Keeps the browser tab's title (document.title) in step with pageTitle, so a router does not have to. true sets it to pageTitle; a function builds the whole title from it. The title the document had is put back when the shell unmounts. Nothing happens while pageTitle is left out.",
       table: { defaultValue: { summary: "false" } },
     },
+    focusTarget: {
+      control: false,
+      description:
+        "Where focus goes after pageKey changes: main (the main area, the default) or heading, the first h1 inside it, so the keyboard starts at the page's own title. With no h1 it is the main area. The title is announced either way.",
+      table: { defaultValue: { summary: "\"main\"" } },
+    },
+    scrollToTopOnChange: {
+      control: false,
+      description: "Scrolls the window to its top, instantly, when pageKey changes, for an app whose router does not. Nothing happens on the first render.",
+      table: { defaultValue: { summary: "false" } },
+    },
+    navigating: {
+      control: false,
+      description:
+        "The app is moving between pages: a loading bar along the top of the window, above the header, and a polite \"Loading\" announcement. busy on PageShell.Main is for a page that is reloading its own content.",
+    },
+    labels: {
+      control: false,
+      description: "Text the shell supplies itself, namely what is announced while navigating. Merged over the English defaults.",
+    },
     asideOpen: {
       control: false,
       description:
@@ -206,6 +226,27 @@ export const AsideDrawer: Story = {
   render: (_args, context) => <DemoPageShell aside asideCollapse="drawer" asideCollapseBelow="3xl" rows={12} framed={docs(context)} />,
 };
 
+export const AsideFollowsHidingHeader: Story = {
+  name: "An aside that follows a header that hides",
+  parameters: { docs: { source: { code: pageShellSnippets.asideFollowsHeader } } },
+  argTypes: { ...noControls },
+  render: (_args, context) => <DemoPageShell aside asideSticky hideOnScroll rows={80} framed={docs(context)} />,
+};
+
+export const TwoAsides: Story = {
+  name: "An aside at each end",
+  parameters: { docs: { source: { code: pageShellSnippets.twoAsides } } },
+  argTypes: { ...noControls },
+  render: (_args, context) => <DemoPageShell aside secondAside rows={12} framed={docs(context)} />,
+};
+
+export const WithTableOfContents: Story = {
+  name: "A table of contents in the aside",
+  parameters: { docs: { source: { code: pageShellSnippets.tableOfContents } } },
+  argTypes: { ...noControls },
+  render: (_args, context) => <DemoPageShell aside asideSticky asideContent="contents" page="article" framed={docs(context)} />,
+};
+
 export const ShortPage: Story = {
   name: "A short page",
   parameters: { docs: { source: { code: pageShellSnippets.shortPage } } },
@@ -242,12 +283,12 @@ export const StaticHeader: Story = {
 };
 
 /** The router's part, played by state: choosing a link of the bar changes `pageKey`, as navigating would. */
-function PageChangeDemo({ framed }: { framed: boolean }) {
+function PageChangeDemo({ framed, ...options }: { framed: boolean; focusTarget?: "main" | "heading"; scrollToTopOnChange?: boolean }) {
   const [page, setPage] = useState<"projects" | "reports" | "team" | "settings">("projects");
   const copy = demoCopy.en;
   const title = { projects: copy.projects, reports: copy.reports, team: copy.team, settings: copy.settings }[page];
   return (
-    <DemoPageShell pageKey={page} pageTitle={title} onNavigate={setPage} framed={framed}>
+    <DemoPageShell pageKey={page} pageTitle={title} onNavigate={setPage} framed={framed} {...options}>
       {page === "projects" ? (
         <DemoPage rows={6} />
       ) : (
@@ -280,4 +321,39 @@ export const ContentWidth: Story = {
       </div>
     </DemoPageShell>
   ),
+};
+
+export const PageChangeToHeading: Story = {
+  name: "A page change that lands on the heading",
+  parameters: { docs: { source: { code: pageShellSnippets.pageChangeHeading } } },
+  argTypes: { ...noControls },
+  render: (_args, context) => <PageChangeDemo focusTarget="heading" scrollToTopOnChange framed={docs(context)} />,
+};
+
+export const Navigating: Story = {
+  name: "Moving between pages",
+  parameters: { docs: { source: { code: pageShellSnippets.navigating } } },
+  argTypes: { ...noControls },
+  render: (_args, context) => <DemoPageShell navigating rows={6} framed={docs(context)} />,
+};
+
+export const DismissibleBanner: Story = {
+  name: "A banner that can be dismissed",
+  parameters: { docs: { source: { code: pageShellSnippets.dismissibleBanner } } },
+  argTypes: { ...noControls },
+  render: (_args, context) => <DemoPageShell dismissibleBanner rows={4} framed={docs(context)} />,
+};
+
+export const NotFoundPage: Story = {
+  name: "A page that does not exist",
+  parameters: { docs: { source: { code: pageShellSnippets.notFoundPage } } },
+  argTypes: { ...noControls },
+  render: (_args, context) => <DemoPageShell state="notFound" framed={docs(context)} />,
+};
+
+export const FullBleedSection: Story = {
+  name: "A section that runs edge to edge",
+  parameters: { docs: { source: { code: pageShellSnippets.fullBleed } } },
+  argTypes: { ...noControls },
+  render: (_args, context) => <DemoPageShell fullBleed rows={4} framed={docs(context)} />,
 };

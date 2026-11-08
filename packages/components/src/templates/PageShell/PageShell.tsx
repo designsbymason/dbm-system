@@ -24,6 +24,7 @@ import type {
   PageShellBodyProps,
   PageShellContentProps,
   PageShellFooterProps,
+  PageShellLabels,
   PageShellMainLabels,
   PageShellContentWidth,
   PageShellMainProps,
@@ -31,6 +32,7 @@ import type {
   PageShellSkipLinkProps,
 } from "./PageShell.types";
 
+const defaultLabels: PageShellLabels = { loading: "Loading" };
 const defaultMainLabels: PageShellMainLabels = { loading: "Loading" };
 const defaultAsideLabels: PageShellAsideLabels = { title: "Details", close: "Close" };
 const defaultAsideToggleLabels: PageShellAsideToggleLabels = { open: "Show details" };
@@ -69,7 +71,7 @@ const widthSizes: Record<PageShellContentWidth, ContainerSize> = { reading: "md"
  */
 const PageShellRoot = forwardRef<HTMLDivElement, PageShellProps>(
   (
-    { children, pageKey, pageTitle, documentTitle = false, asideOpen: asideOpenProp, defaultAsideOpen = false, onAsideOpenChange, dir: dirProp, className, style, ...props },
+    { children, pageKey, pageTitle, documentTitle = false, focusTarget = "main", scrollToTopOnChange = false, navigating, labels: labelsProp, asideOpen: asideOpenProp, defaultAsideOpen = false, onAsideOpenChange, dir: dirProp, className, style, ...props },
     ref,
   ) => {
     // The direction of the shell: its own, else the nearest `DirectionProvider`'s, else left to right. Everything inside gets it from a provider.
@@ -79,7 +81,8 @@ const PageShellRoot = forwardRef<HTMLDivElement, PageShellProps>(
 
     // Moving to another page: focus goes to the main area and the new title is announced (`usePageChange`, shared with `AppShell`). The page
     // scrolls as a whole, so there is no scroller of the shell's own to send back to its top: that is the router's.
-    const announcement = usePageChange({ pageKey, pageTitle, mainRef, resetScroll: false });
+    const announcement = usePageChange({ pageKey, pageTitle, mainRef, resetScroll: false, focusTarget, scrollToTop: scrollToTopOnChange });
+    const labels = mergeDefined(defaultLabels, labelsProp);
 
     // The browser tab's title follows `pageTitle` when asked, and the title the document had comes back when the shell goes.
     useEffect(() => {
@@ -120,17 +123,24 @@ const PageShellRoot = forwardRef<HTMLDivElement, PageShellProps>(
           attributes?.disconnect();
           if (header !== null) {
             resize?.observe(header);
-            attributes?.observe(header, { attributes: true, attributeFilter: ["class", "style"] });
+            attributes?.observe(header, { attributes: true, attributeFilter: ["class", "style", "data-away"] });
           }
           observed = header;
         }
-        const height = header !== null && getComputedStyle(header).position === "sticky" ? header.getBoundingClientRect().height : 0;
+        // A bar slid out by `hideOnScroll` (`data-away`) takes no room, unless focus inside it has brought it back.
+        const away = header !== null && header.hasAttribute("data-away") && !header.matches(":focus-within");
+        const height = header !== null && !away && getComputedStyle(header).position === "sticky" ? header.getBoundingClientRect().height : 0;
         root!.style.setProperty("--page-shell-header-height", `${height}px`);
       }
       measure();
       const mutations = typeof MutationObserver === "undefined" ? undefined : new MutationObserver(measure);
       mutations?.observe(root, { childList: true });
+      // Focus moving into or out of the header brings a hidden bar back or lets it go again.
+      root.addEventListener("focusin", measure);
+      root.addEventListener("focusout", measure);
       return () => {
+        root.removeEventListener("focusin", measure);
+        root.removeEventListener("focusout", measure);
         resize?.disconnect();
         attributes?.disconnect();
         mutations?.disconnect();
@@ -144,6 +154,7 @@ const PageShellRoot = forwardRef<HTMLDivElement, PageShellProps>(
       <DirectionProvider dir={dir}>
         <PageShellContext.Provider value={context}>
           <div {...props} ref={mergeRefs(rootRef, ref)} dir={dir} className={cx(styles.root, className)} style={style}>
+            <MainBusy busy={navigating} label={labels.loading} barClassName={styles.navigatingBar} />
             {children}
             {pageKey !== undefined && <VisuallyHidden role="status">{announcement}</VisuallyHidden>}
           </div>

@@ -102,3 +102,11 @@ A real phone, Safari and Firefox (everything ran in Chromium, with the phone wid
 7. **Demo:** the stacked aside has a visible caption ("Sections") that differs from the drawer's title.
 
 **Not verified at Finalization:** Safari and Firefox, a real phone, a notched device, a screen reader's reading of the page-change announcement, the busy region and the aside's drawer, a real printer, and the drawer closing when the window grows (unit-tested only).
+
+## Additions after Finalization (2026-11-08, at explicit direction, [ADR-0190](../adr/0190-pageshell-gains-a-window-wide-navigating-bar-a-heading-focus-target-an-opt-in-scroll-to-top-and-an-aside-that-follows-a-hiding-header-over-leaving-each-to-the-app.md))
+All additive (nothing an app that sets none of them sees changes), so PageShell stays Finalized, each addition with its own scoped checks.
+1. **The aside follows a hiding header:** `Navbar` draws `data-away` on its `<header>` while slid out (additive; see `Navbar.md`); the shell publishes `--page-shell-header-height` as zero while it is set (unless focus is inside the bar) and a sticky aside eases to the new top (motion tokens, none under reduced motion). A real-browser check scrolls by a real wheel down and up.
+2. **`focusTarget`** (`main` or `heading`) and 4. **`scrollToTopOnChange`**, optional parameters of the shared `usePageChange` that `AppShell` does not pass. 6. **`navigating`** with `labels.loading`: the `MainBusy` bar fixed along the top of the window on the `fixed` layer, left out of print.
+3. **Two asides, one at each end,** 7. **recipes** (a dismissible banner with `usePersistentDismiss`, a not-found page, a full-bleed section) and 8. **a `TableOfContents` in a sticky aside** are stories, snippets and Docs only.
+5. **Deferred:** a hide-and-show toggle for the aside on a wide window, with remembered state (needs its own plan).
+Checks added: unit (header away and focus, `focusTarget`, `scrollToTopOnChange`, `navigating` and its words, a hydration case) and real-browser (the aside following a hiding header by a real wheel, the navigating bar's place and layer, its absence from print, a dismissed banner). Each was broken once and failed. The sticky-aside checks now wait for the easing to arrive.

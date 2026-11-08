@@ -159,3 +159,6 @@ Stage 3 of the `PageShell` restructure ([PageShell.md](PageShell.md)): a templat
 - **Functional verification** (real browser, above): sticking, hide-on-scroll, centring, the reveal, right to left, forced colours, print.
 - **Docs page, looked at:** the new section reads as written (including the `align="center"` sentence), its canvas draws the bar and the row, Show code shows the hand-written snippet, and `Navbar.Links`' Properties table lists `scroll`, `currentVariant` and `rounded` in the types' order with their defaults.
 - **Accessibility:** one banner, the row's `<nav>` a named navigation landmark outside it (axe passes). **Not verified:** a screen reader's reading of that landmark, Safari and Firefox.
+
+## `data-away` (2026-11-08, additive, [ADR-0190](../adr/0190-pageshell-gains-a-window-wide-navigating-bar-a-heading-focus-target-an-opt-in-scroll-to-top-and-an-aside-that-follows-a-hiding-header-over-leaving-each-to-the-app.md))
+The `<header>` of a sticky bar with `hideOnScroll` carries `data-away` while it is slid out of view, so a shell (`PageShell`) can let a sticky aside follow it. Nothing it draws changes; a unit test holds it.

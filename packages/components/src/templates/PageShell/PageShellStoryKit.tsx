@@ -2,6 +2,7 @@
 // `Navbar` (and a second row of links under it), a page of cards and a footer of links. Docs-only (a stories-support module, not shipped, ADR-0013's way of sharing
 // code between two stories files); the "Show code" snippets are written by hand in `PageShell.snippets.ts`.
 import { BellIcon, TrayIcon, WarningCircleIcon } from "@dbm-system/icons";
+import { usePersistentDismiss } from "@dbm-system/utils";
 import { useRef, useState } from "react";
 import type { MouseEvent, ReactNode } from "react";
 import { Affix } from "../../atoms/Affix";
@@ -16,6 +17,7 @@ import { Card } from "../../molecules/Card";
 import { EmptyState } from "../../molecules/EmptyState";
 import { Grid } from "../../molecules/Grid";
 import { PageHeader } from "../../molecules/PageHeader";
+import { TableOfContents } from "../../molecules/TableOfContents";
 import { Navbar } from "../../organisms/Navbar";
 import { useDemoCurrent } from "../../organisms/Navbar/NavbarStoryKit";
 import { preventNavigation } from "../../organisms/Sidebar/SidebarStoryKit";
@@ -60,6 +62,13 @@ export const demoCopy = {
     errorTitle: "We couldn't load your projects",
     errorText: "Something went wrong on our side. Nothing was changed. Try again in a moment.",
     errorAction: "Try again",
+    notFoundTitle: "Page not found",
+    notFoundText: "The page may have moved, or the address may have a typo. Go back to your projects.",
+    notFoundAction: "Back to projects",
+    filtersTitle: "Filters",
+    filterLinks: ["All projects", "Mine", "Archived"],
+    sectionText: "Details for this section appear here, with the settings and the people it concerns.",
+    fullBleed: "A section that runs edge to edge, outside the page's width.",
   },
   fa: {
     brand: "dbM",
@@ -94,6 +103,13 @@ export const demoCopy = {
     errorTitle: "بارگذاری پروژه‌ها ممکن نشد",
     errorText: "مشکلی از سمت ما پیش آمد. چیزی تغییر نکرده است. لطفاً کمی بعد دوباره تلاش کنید.",
     errorAction: "تلاش دوباره",
+    notFoundTitle: "صفحه پیدا نشد",
+    notFoundText: "ممکن است صفحه جابه‌جا شده باشد یا نشانی اشتباه باشد. به پروژه‌ها برگردید.",
+    notFoundAction: "بازگشت به پروژه‌ها",
+    filtersTitle: "فیلترها",
+    filterLinks: ["همه پروژه‌ها", "مال من", "بایگانی‌شده"],
+    sectionText: "جزئیات این بخش، با تنظیمات و افرادی که به آن مربوط‌اند، اینجا نمایش داده می‌شود.",
+    fullBleed: "بخشی که از لبه تا لبه می‌رود، بیرون از عرض صفحه.",
   },
 } as const;
 
@@ -142,8 +158,18 @@ function DemoCustomHeader({ language, scrollContainerRef }: { language: Language
 }
 
 /** What a demo's aside holds: "On this page", a table of contents of links. */
-function DemoAsideContent({ language }: { language: Language }) {
+function DemoAsideContent({ language, content = "links" }: { language: Language; content?: "links" | "contents" }) {
   const copy = demoCopy[language];
+  // The page's own `TableOfContents`: its entries are the article's sections, and the current one follows the scroll.
+  if (content === "contents") {
+    return (
+      <TableOfContents
+        items={copy.asideLinks.map((label, index) => ({ id: `section-${index}`, label }))}
+        scrollOffset={80}
+        labels={language === "fa" ? { title: copy.asideTitle } : undefined}
+      />
+    );
+  }
   return (
     <div style={{ display: "grid", gap: "var(--dbm-space-3)", padding: "var(--dbm-space-4)", border: "var(--dbm-border-width-1) solid var(--dbm-border-default)", borderRadius: "var(--dbm-radius-lg)" }}>
       <Text size="sm" color="secondary" aria-hidden="true">
@@ -160,9 +186,76 @@ function DemoAsideContent({ language }: { language: Language }) {
   );
 }
 
-/** The page a demo shell shows in its main area: a heading, and `rows` cards in a grid (24 is longer than a window, 3 is shorter). */
-export function DemoPage({ language = "en", rows = 24, state, extraActions }: { language?: Language; rows?: number; state?: "empty" | "error"; extraActions?: ReactNode }) {
+/** A second aside's content: a short list of filters. */
+function DemoFilters({ language }: { language: Language }) {
   const copy = demoCopy[language];
+  return (
+    <div style={{ display: "grid", gap: "var(--dbm-space-3)", padding: "var(--dbm-space-4)", border: "var(--dbm-border-width-1) solid var(--dbm-border-default)", borderRadius: "var(--dbm-radius-lg)" }}>
+      <Heading level={2} size="sm">
+        {copy.filtersTitle}
+      </Heading>
+      <nav aria-label={copy.filtersTitle} style={{ display: "grid", gap: "var(--dbm-space-2)" }}>
+        {copy.filterLinks.map((label) => (
+          <Link key={label} href="#" onClick={preventNavigation}>
+            {label}
+          </Link>
+        ))}
+      </nav>
+    </div>
+  );
+}
+
+/** A page of sections, each with an id the aside's table of contents links to. */
+function DemoArticle({ language }: { language: Language }) {
+  const copy = demoCopy[language];
+  return (
+    <div style={{ display: "grid", gap: "var(--dbm-space-6)" }}>
+      <PageHeader>
+        <PageHeader.Title>{copy.projectSettings}</PageHeader.Title>
+        <PageHeader.Description>{copy.intro}</PageHeader.Description>
+      </PageHeader>
+      {copy.asideLinks.map((label, index) => (
+        <section key={label} aria-labelledby={`section-heading-${index}`} id={`section-${index}`} style={{ display: "grid", gap: "var(--dbm-space-2)", scrollMarginBlockStart: "5rem" }}>
+          <Heading level={2} size="md" id={`section-heading-${index}`}>
+            {label}
+          </Heading>
+          <Text color="secondary" style={{ minBlockSize: "10rem" }}>
+            {copy.sectionText}
+          </Text>
+        </section>
+      ))}
+    </div>
+  );
+}
+
+/** A banner the reader can dismiss, and that stays dismissed for the rest of the session (`usePersistentDismiss`). */
+function DemoDismissibleBanner({ language }: { language: Language }) {
+  const copy = demoCopy[language];
+  const { ready, dismissed, dismiss } = usePersistentDismiss("dbm-demo-page-shell-banner", { storage: "session" });
+  return (
+    <PageShell.Banner>
+      <Alert banner tone="info" dismissible open={ready && !dismissed} onOpenChange={(open) => !open && dismiss()}>
+        <Alert.Description>{copy.banner}</Alert.Description>
+      </Alert>
+    </PageShell.Banner>
+  );
+}
+
+/** The page a demo shell shows in its main area: a heading, and `rows` cards in a grid (24 is longer than a window, 3 is shorter). */
+export function DemoPage({ language = "en", rows = 24, state, extraActions }: { language?: Language; rows?: number; state?: "empty" | "error" | "notFound"; extraActions?: ReactNode }) {
+  const copy = demoCopy[language];
+  if (state === "notFound") {
+    return (
+      <EmptyState size="lg">
+        <EmptyState.Icon icon={TrayIcon} />
+        <EmptyState.Title level={1}>{copy.notFoundTitle}</EmptyState.Title>
+        <EmptyState.Description>{copy.notFoundText}</EmptyState.Description>
+        <EmptyState.Actions>
+          <Button onClick={preventClick}>{copy.notFoundAction}</Button>
+        </EmptyState.Actions>
+      </EmptyState>
+    );
+  }
   if (state !== undefined) {
     return (
       <EmptyState size="lg" tone={state === "error" ? "danger" : "neutral"} announce={state === "error"}>
@@ -242,7 +335,17 @@ export interface DemoPageShellProps extends PageShellProps {
   /** How many cards the page holds. */
   rows?: number;
   /** Puts a whole-page state in the main area in place of the cards. */
-  state?: "empty" | "error";
+  state?: "empty" | "error" | "notFound";
+  /** What the aside holds: a list of links, or the page's `TableOfContents` (with the article page, whose sections it links to). */
+  asideContent?: "links" | "contents";
+  /** The page's content: the cards, or an article of sections. */
+  page?: "cards" | "article";
+  /** Adds a second aside, a list of filters, at the start, so the page has one at each end. */
+  secondAside?: boolean;
+  /** Draws the banner as a dismissible `Alert`, whose dismissal is remembered for the session. */
+  dismissibleBanner?: boolean;
+  /** Adds a section that runs edge to edge, outside the page's width, above the page's content. */
+  fullBleed?: boolean;
   /** Called with the id of the bar's link that was chosen (`"projects"`, `"reports"`, `"team"`, `"settings"`), as a router would be told. */
   onNavigate?: (id: "projects" | "reports" | "team" | "settings") => void;
   /** The page's own content, in place of the demo's. */
@@ -267,6 +370,11 @@ export function DemoPageShell({
   asideSide = "end",
   asideCollapseBelow = "lg",
   banner = false,
+  asideContent = "links",
+  page = "cards",
+  secondAside = false,
+  dismissibleBanner = false,
+  fullBleed = false,
   busy,
   rows,
   state,
@@ -304,7 +412,7 @@ export function DemoPageShell({
       drawerContainer={framed ? frame : undefined}
       labels={fa ? { title: copy.asideTitle, close: "بستن" } : undefined}
     >
-      <DemoAsideContent language={language} />
+      <DemoAsideContent language={language} content={asideContent} />
     </PageShell.Aside>
   );
   const asideToggle = <PageShell.AsideToggle variant="secondary" tone="neutral" labels={fa ? { open: "نمایش جزئیات" } : undefined} />;
@@ -318,7 +426,8 @@ export function DemoPageShell({
           document.getElementById("main")?.focus();
         }}
       />
-      {banner && (
+      {dismissibleBanner && <DemoDismissibleBanner language={language} />}
+      {banner && !dismissibleBanner && (
         <PageShell.Banner>
           <Alert banner tone="info">
             <Alert.Description>{copy.banner}</Alert.Description>
@@ -370,15 +479,31 @@ export function DemoPageShell({
       {aside ? (
         // A page with an aside: the width is the body's, around the main area and the aside, which is a landmark of its own beside `<main>`.
         <PageShell.Body width={contentWidth}>
+          {secondAside && (
+            <PageShell.Aside aria-label={copy.filtersTitle}>
+              <DemoFilters language={language} />
+            </PageShell.Aside>
+          )}
           {asideSide === "start" && asideElement}
           <PageShell.Main busy={busy} labels={fa ? mainLabelsFa : undefined}>
-            {children ?? <DemoPage language={language} rows={rows} state={state} extraActions={asideCollapse === "drawer" ? asideToggle : undefined} />}
+            {children ??
+              (page === "article" ? (
+                <DemoArticle language={language} />
+              ) : (
+                <DemoPage language={language} rows={rows} state={state} extraActions={asideCollapse === "drawer" ? asideToggle : undefined} />
+              ))}
           </PageShell.Main>
           {asideSide !== "start" && asideElement}
         </PageShell.Body>
       ) : (
         <PageShell.Main busy={busy} labels={fa ? mainLabelsFa : undefined}>
-          <PageShell.Content width={contentWidth}>{children ?? <DemoPage language={language} rows={rows} state={state} />}</PageShell.Content>
+          {fullBleed && (
+            // A section outside the page's width: the main area is as wide as the window, and `Content` is inside it, not around it.
+            <div style={{ padding: "var(--dbm-space-8) var(--dbm-space-4)", background: "var(--dbm-bg-canvas)", textAlign: "center" }}>
+              <Text>{copy.fullBleed}</Text>
+            </div>
+          )}
+          <PageShell.Content width={contentWidth}>{children ?? (page === "article" ? <DemoArticle language={language} /> : <DemoPage language={language} rows={rows} state={state} />)}</PageShell.Content>
         </PageShell.Main>
       )}
       <PageShell.Footer>

@@ -235,6 +235,105 @@ describe("PageShell", () => {
     });
   });
 
+  describe("where a page change lands and how it scrolls", () => {
+    function Heading({ focusTarget, scrollToTopOnChange, withHeading = true }: { focusTarget?: "main" | "heading"; scrollToTopOnChange?: boolean; withHeading?: boolean }) {
+      const [path, setPath] = useState("/a");
+      return (
+        <PageShell pageKey={path} pageTitle={path} focusTarget={focusTarget} scrollToTopOnChange={scrollToTopOnChange}>
+          <PageShell.Main>
+            {withHeading && <h1>Projects</h1>}
+            <button type="button" onClick={() => setPath("/b")}>
+              Go
+            </button>
+          </PageShell.Main>
+        </PageShell>
+      );
+    }
+
+    it("focuses the main area by default", async () => {
+      const user = userEvent.setup();
+      render(<Heading />);
+      await user.click(screen.getByRole("button", { name: "Go" }));
+      expect(screen.getByRole("main")).toHaveFocus();
+    });
+
+    it("focuses the page's h1 with focusTarget heading, which is a tab stop only while it has focus", async () => {
+      const user = userEvent.setup();
+      render(<Heading focusTarget="heading" />);
+      const heading = screen.getByRole("heading", { name: "Projects" });
+      expect(heading).not.toHaveAttribute("tabindex");
+      await user.click(screen.getByRole("button", { name: "Go" }));
+      expect(heading).toHaveFocus();
+      expect(heading).toHaveAttribute("tabindex", "-1");
+      await user.tab();
+      expect(heading).not.toHaveAttribute("tabindex");
+    });
+
+    it("falls back to the main area when there is no h1", async () => {
+      const user = userEvent.setup();
+      render(<Heading focusTarget="heading" withHeading={false} />);
+      await user.click(screen.getByRole("button", { name: "Go" }));
+      expect(screen.getByRole("main")).toHaveFocus();
+    });
+
+    it("scrolls the window to its top on a change only with scrollToTopOnChange, and not on the first render", async () => {
+      const user = userEvent.setup();
+      const scrollTo = vi.spyOn(window, "scrollTo").mockImplementation(() => undefined);
+      const { unmount } = render(<Heading />);
+      await user.click(screen.getByRole("button", { name: "Go" }));
+      expect(scrollTo).not.toHaveBeenCalled();
+      unmount();
+      render(<Heading scrollToTopOnChange />);
+      expect(scrollTo).not.toHaveBeenCalled();
+      await user.click(screen.getByRole("button", { name: "Go" }));
+      expect(scrollTo).toHaveBeenCalledWith(0, 0);
+      scrollTo.mockRestore();
+    });
+  });
+
+  describe("navigating", () => {
+    it("draws a bar and says Loading politely while navigating, and empties the region when it ends", () => {
+      const { rerender, container } = render(
+        <PageShell navigating>
+          <PageShell.Main>Main</PageShell.Main>
+        </PageShell>,
+      );
+      expect(screen.getByRole("status")).toHaveTextContent("Loading");
+      expect(container.querySelector("[aria-hidden='true'] [role='progressbar']")).not.toBeNull();
+      rerender(
+        <PageShell navigating={false}>
+          <PageShell.Main>Main</PageShell.Main>
+        </PageShell>,
+      );
+      expect(screen.getByRole("status")).toHaveTextContent("");
+      expect(container.querySelector("[role='progressbar']")).toBeNull();
+    });
+
+    it("takes its words from labels, and keeps the default for a value passed as undefined", () => {
+      const { rerender } = render(
+        <PageShell navigating labels={{ loading: "Chargement" }}>
+          <PageShell.Main>Main</PageShell.Main>
+        </PageShell>,
+      );
+      expect(screen.getByRole("status")).toHaveTextContent("Chargement");
+      rerender(
+        <PageShell navigating labels={{ loading: undefined }}>
+          <PageShell.Main>Main</PageShell.Main>
+        </PageShell>,
+      );
+      expect(screen.getByRole("status")).toHaveTextContent("Loading");
+    });
+
+    it("draws nothing and no region while navigating is left out", () => {
+      render(
+        <PageShell>
+          <PageShell.Main>Main</PageShell.Main>
+        </PageShell>,
+      );
+      expect(screen.queryByRole("status")).not.toBeInTheDocument();
+    });
+  });
+
   describe("busy", () => {
     it("marks the main area busy, says Loading politely, and empties the region when it clears", () => {
       const { rerender } = render(
@@ -677,6 +776,33 @@ describe("PageShell.Aside", () => {
     await waitFor(() => expect(shell.style.getPropertyValue("--page-shell-header-height")).toBe("56px"));
     rerender(<Page sticky={false} />);
     await waitFor(() => expect(shell.style.getPropertyValue("--page-shell-header-height")).toBe("0px"));
+    rect.mockRestore();
+  });
+
+  it("publishes a height of zero while the header is slid away, unless focus is inside it", async () => {
+    const rect = vi.spyOn(HTMLElement.prototype, "getBoundingClientRect").mockReturnValue({ height: 56 } as DOMRect);
+    function Page({ away }: { away: boolean }) {
+      return (
+        <PageShell data-testid="shell">
+          <header style={{ position: "sticky" }} data-away={away ? "" : undefined}>
+            <a href="#x">Link</a>
+          </header>
+          <PageShell.Main>Main</PageShell.Main>
+        </PageShell>
+      );
+    }
+    const user = userEvent.setup();
+    const { rerender } = render(<Page away={false} />);
+    const shell = screen.getByTestId("shell");
+    const height = () => shell.style.getPropertyValue("--page-shell-header-height");
+    expect(height()).toBe("56px");
+    rerender(<Page away />);
+    await waitFor(() => expect(height()).toBe("0px"));
+    // Focus brings a hidden bar back, so the aside makes room for it again; focus leaving lets it go.
+    await user.tab();
+    await waitFor(() => expect(height()).toBe("56px"));
+    await user.tab();
+    await waitFor(() => expect(height()).toBe("0px"));
     rect.mockRestore();
   });
 

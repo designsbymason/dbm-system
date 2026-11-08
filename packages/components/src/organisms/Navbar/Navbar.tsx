@@ -349,6 +349,7 @@ const NavbarRoot = forwardRef<HTMLElement, NavbarProps>(
         data-variant={variant}
         data-size={size}
         data-navbar-stuck={hasLeading && pastLeading ? "" : undefined}
+        data-away={awayFromView ? "" : undefined}
         className={cx(
           styles.root,
           variant === "ghost" && styles.ghostBar,

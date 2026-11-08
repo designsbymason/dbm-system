@@ -13,6 +13,8 @@ export function usePageChange({
   pageTitle,
   mainRef,
   resetScroll,
+  focusTarget = "main",
+  scrollToTop = false,
 }: {
   /** The router's page (its pathname); a change of it is a change of page. */
   pageKey: string | number | undefined;
@@ -22,6 +24,10 @@ export function usePageChange({
   mainRef: RefObject<HTMLElement | null>;
   /** Whether the main area scrolls inside itself, so it goes back to its top. */
   resetScroll: boolean;
+  /** Where focus goes: the main area, or the first `h1` inside it (the main area when there is none). */
+  focusTarget?: "main" | "heading";
+  /** Whether the window scrolls to its top, for a shell whose page scrolls as a whole. */
+  scrollToTop?: boolean;
 }): string {
   const { message, announce } = useAnnouncement();
   const previousKey = useRef(pageKey);
@@ -34,10 +40,22 @@ export function usePageChange({
     previousKey.current = pageKey;
     const main = mainRef.current;
     if (main !== null) {
-      main.focus({ preventScroll: true });
+      const heading = focusTarget === "heading" ? main.querySelector<HTMLElement>("h1") : null;
+      if (heading !== null) {
+        // Focusable for the moment it takes focus, and not a tab stop afterwards.
+        const hadTabIndex = heading.hasAttribute("tabindex");
+        if (!hadTabIndex) {
+          heading.setAttribute("tabindex", "-1");
+          heading.addEventListener("blur", () => heading.removeAttribute("tabindex"), { once: true });
+        }
+        heading.focus({ preventScroll: true });
+      } else {
+        main.focus({ preventScroll: true });
+      }
       if (resetScroll) main.scrollTop = 0;
     }
+    if (scrollToTop) window.scrollTo(0, 0);
     if (pageTitle) announce(pageTitle);
-  }, [pageKey, pageTitle, mainRef, resetScroll, announce]);
+  }, [pageKey, pageTitle, mainRef, resetScroll, focusTarget, scrollToTop, announce]);
   return message;
 }

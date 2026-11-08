@@ -13,6 +13,15 @@ export interface PageShellSkipLinkLabels {
   skipToContent: string;
 }
 
+/** Where focus goes when the page changes: the main area, or the page's heading (the first `h1` in the main area). */
+export type PageShellFocusTarget = "main" | "heading";
+
+/** The text the shell supplies itself. */
+export interface PageShellLabels {
+  /** What a screen reader hears, politely, when the shell is `navigating`. @default 'Loading' */
+  loading: string;
+}
+
 /** The text the main area supplies itself. */
 export interface PageShellMainLabels {
   /** What a screen reader hears, politely, when the main area becomes busy. @default 'Loading' */
@@ -85,6 +94,24 @@ export interface PageShellProps extends Omit<ComponentPropsWithoutRef<"div">, "d
    * @default false
    */
   documentTitle?: boolean | ((pageTitle: string) => string);
+  /**
+   * Where focus goes after `pageKey` changes: `main` (the main area, the default) or `heading`, the first `h1` inside it, so the keyboard starts at the
+   * page's own title. With no `h1` it is the main area. The title is announced either way.
+   * @default 'main'
+   */
+  focusTarget?: PageShellFocusTarget;
+  /**
+   * Scrolls the window to its top, instantly, when `pageKey` changes, for an app whose router does not. Nothing happens on the first render.
+   * @default false
+   */
+  scrollToTopOnChange?: boolean;
+  /**
+   * The app is moving between pages: a loading bar along the top of the window, above the header, and a polite "Loading" announcement. For the time
+   * a router takes to arrive at the next page; `busy` on `PageShell.Main` is for a page that is reloading its own content.
+   */
+  navigating?: boolean;
+  /** Text the shell supplies itself, namely what is announced while `navigating`. Merged over the English defaults. */
+  labels?: Partial<PageShellLabels>;
   /**
    * Whether the aside's drawer is open (controlled), for an aside with `collapse="drawer"` below its collapse step. Always `false` while the aside is
    * on the page.

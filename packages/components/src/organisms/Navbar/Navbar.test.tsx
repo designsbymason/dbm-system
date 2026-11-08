@@ -1199,6 +1199,16 @@ describe("Navbar hideOnScroll", () => {
     expect(bar).not.toHaveClass(styles.awayFromView!);
   });
 
+  it("marks its header with data-away exactly while it is slid out, for a shell that follows it", async () => {
+    render(<Basic sticky hideOnScroll />);
+    const bar = screen.getByRole("banner");
+    expect(bar).not.toHaveAttribute("data-away");
+    await act(async () => scrollTo(300));
+    expect(bar).toHaveAttribute("data-away");
+    await act(async () => scrollTo(250));
+    expect(bar).not.toHaveAttribute("data-away");
+  });
+
   it("does nothing without hideOnScroll, and warns when it is set without sticky", async () => {
     const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
     const { rerender } = render(<Basic sticky />);

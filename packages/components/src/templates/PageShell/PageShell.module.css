@@ -14,6 +14,9 @@
      the `fixed` step and every floating panel is above that. */
   --page-shell-layer-content: var(--dbm-z-index-sticky);
 
+  /* The bar along the top of the window while the app is moving between pages: on the `fixed` step, above a sticky header. */
+  --page-shell-layer-navigating: var(--dbm-z-index-fixed);
+
   display: flex;
   flex-direction: column;
   box-sizing: border-box;
@@ -56,6 +59,23 @@
 }
 
 .busyBar > * {
+  position: absolute;
+  inset-block-start: 0;
+  inset-inline: 0;
+  inline-size: 100%;
+}
+
+/* The bar of a shell that is `navigating`: along the top of the window, below a notch, above the header. */
+.navigatingBar {
+  position: fixed;
+  inset-block-start: var(--page-shell-safe-top);
+  inset-inline: 0;
+  block-size: 0;
+  z-index: var(--page-shell-layer-navigating);
+  pointer-events: none;
+}
+
+.navigatingBar > * {
   position: absolute;
   inset-block-start: 0;
   inset-inline: 0;
@@ -107,6 +127,17 @@
   inset-block-start: var(--page-shell-aside-top);
   max-block-size: calc(100dvh - var(--page-shell-aside-top));
   overflow-y: auto;
+
+  /* Follows a header that slides away and comes back (`hideOnScroll`) rather than jumping. */
+  transition:
+    inset-block-start var(--dbm-motion-duration-base) var(--dbm-motion-easing-standard),
+    max-block-size var(--dbm-motion-duration-base) var(--dbm-motion-easing-standard);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sticky {
+    transition: none;
+  }
 }
 
 /* The toggle that opens the drawer is out of sight until an aside with a drawer has left the page (below). */
@@ -284,7 +315,8 @@ button.asideToggle {
     padding: 0 !important;
   }
 
-  .busyBar {
+  .busyBar,
+  .navigatingBar {
     display: none !important;
   }
 

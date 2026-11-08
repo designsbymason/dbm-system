@@ -127,6 +127,126 @@ ${header()}
 ${footer}
 </PageShell>`,
 
+  asideFollowsHeader: `{/* A Navbar with hideOnScroll slides away while the reader scrolls down and draws data-away while it is out. The shell then
+    publishes a header height of zero and a sticky aside eases up to the top of the window, and back down when the bar returns. Nothing to pass. */}
+${shell("", [
+  skipLink,
+  header("", "en", "sticky hideOnScroll"),
+  `  <PageShell.Body>
+    <PageShell.Main>
+      <h1>Projects</h1>
+    </PageShell.Main>
+    <PageShell.Aside aria-label="On this page" sticky>
+      <nav aria-label="On this page">…</nav>
+    </PageShell.Aside>
+  </PageShell.Body>`,
+  footer,
+])}`,
+
+  twoAsides: `{/* Two asides, one at each end: the layout follows the order written, so one before PageShell.Main is at the start and one after it is at the
+    end (and the sides swap in right-to-left text). Name each, since a page can have more than one complementary landmark. */}
+${shell("", [
+  skipLink,
+  header(),
+  `  <PageShell.Body>
+    <PageShell.Aside aria-label="Filters">
+      <nav aria-label="Filters">…</nav>
+    </PageShell.Aside>
+    <PageShell.Main>
+      <h1>Projects</h1>
+    </PageShell.Main>
+    <PageShell.Aside aria-label="On this page">
+      <nav aria-label="On this page">…</nav>
+    </PageShell.Aside>
+  </PageShell.Body>`,
+  footer,
+])}`,
+
+  tableOfContents: `{/* A table of contents in the aside is the TableOfContents component: its entries link to the page's sections, and the current one follows
+    the scroll. The aside is sticky, so the outline stays in view; scrollOffset keeps a section's heading clear of a sticky bar. */}
+${shell("", [
+  skipLink,
+  header(),
+  `  <PageShell.Body>
+    <PageShell.Main>
+      <h1>Project settings</h1>
+      <section id="overview">
+        <h2>Overview</h2>
+      </section>
+      <section id="members">
+        <h2>Members</h2>
+      </section>
+    </PageShell.Main>
+    <PageShell.Aside aria-label="On this page" sticky>
+      <TableOfContents
+        scrollOffset={80}
+        items={[
+          { id: "overview", label: "Overview" },
+          { id: "members", label: "Members" },
+        ]}
+      />
+    </PageShell.Aside>
+  </PageShell.Body>`,
+  footer,
+])}`,
+
+  pageChangeHeading: `{/* const { pathname } = useLocation(); // your router's */}
+{/* focusTarget="heading" moves focus to the page's own h1 (the main area when there is none), and scrollToTopOnChange scrolls the window to its top,
+    for a router that does neither. The title is announced either way. */}
+${shell('pageKey={pathname} pageTitle="Reports" focusTarget="heading" scrollToTopOnChange', [skipLink, header(), main("", "en"), footer])}`,
+
+  navigating: `{/* const navigating = useIsNavigating(); // your router's: true between the press of a link and the next page's arrival */}
+{/* navigating draws a loading bar along the top of the window, above the header, and announces "Loading". busy on PageShell.Main is for a
+    page that is reloading its own content. */}
+${shell("navigating={navigating}", [skipLink, header(), main(), footer])}`,
+
+  dismissibleBanner: `{/* const { ready, dismissed, dismiss } = usePersistentDismiss("maintenance-notice", { storage: "session" }); */}
+{/* A notice the reader can dismiss, remembered for the rest of the session: Alert's controlled open with usePersistentDismiss. It shows nothing
+    until the hook is ready, so a dismissed notice does not flash. */}
+<PageShell.Banner>
+  <Alert banner tone="info" dismissible open={ready && !dismissed} onOpenChange={(open) => !open && dismiss()}>
+    <Alert.Description>Maintenance tonight at 22:00 UTC.</Alert.Description>
+  </Alert>
+</PageShell.Banner>`,
+
+  notFoundPage: `{/* A page that does not exist: an EmptyState with the way back. EmptyState.Title is the page's h1; the shell's header and footer stay.
+    TrayIcon comes from @dbm-system/icons */}
+${shell("", [
+  skipLink,
+  header(),
+  `  <PageShell.Main>
+    <PageShell.Content>
+      <EmptyState size="lg">
+        <EmptyState.Icon icon={TrayIcon} />
+        <EmptyState.Title level={1}>Page not found</EmptyState.Title>
+        <EmptyState.Description>The page may have moved, or the address may have a typo.</EmptyState.Description>
+        <EmptyState.Actions>
+          <Button asChild>
+            <a href="/projects">Back to projects</a>
+          </Button>
+        </EmptyState.Actions>
+      </EmptyState>
+    </PageShell.Content>
+  </PageShell.Main>`,
+  footer,
+])}`,
+
+  fullBleed: `{/* A section that runs edge to edge: PageShell.Main is as wide as the window, and PageShell.Content is a box inside it, not around it, so
+    a section written beside Content is outside the page's width. */}
+${shell("", [
+  skipLink,
+  header(),
+  `  <PageShell.Main>
+    <section style={{ background: "var(--dbm-bg-canvas)", padding: "var(--dbm-space-8) var(--dbm-space-4)", textAlign: "center" }}>
+      A section that runs edge to edge.
+    </section>
+    <PageShell.Content>
+      <h1>Projects</h1>
+    </PageShell.Content>
+  </PageShell.Main>`,
+  footer,
+])}`,
+
   documentTitle: `{/* documentTitle keeps the browser tab's title in step with pageTitle, so the router does not have to: true sets it to pageTitle, a
     function builds the whole title. The title the document had comes back when the shell unmounts. */}
 <PageShell pageKey={pathname} pageTitle="Projects" documentTitle={(title) => \`\${title} · dbM\`}>

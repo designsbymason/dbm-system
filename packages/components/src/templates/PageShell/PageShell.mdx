@@ -20,7 +20,7 @@ import * as PageShellFooterStories from "./PageShellFooter.stories";
 import * as PageShellMainStories from "./PageShellMain.stories";
 import * as PageShellSkipLinkStories from "./PageShellSkipLink.stories";
 
-export const propOrder = ["children", "pageKey", "pageTitle", "documentTitle", "asideOpen", "defaultAsideOpen", "onAsideOpenChange", "dir", "style", "className", "id", "data-testid"];
+export const propOrder = ["children", "pageKey", "pageTitle", "documentTitle", "focusTarget", "scrollToTopOnChange", "navigating", "labels", "asideOpen", "defaultAsideOpen", "onAsideOpenChange", "dir", "style", "className", "id", "data-testid"];
 
 export const playgroundOrder = ["dir", "sticky", "hideOnScroll", "customHeader", "subNav", "banner"];
 
@@ -166,6 +166,29 @@ the step closes the drawer and shows the aside again. The demo's step is `3xl` s
 
 <Canvas of={PageShellStories.AsideDrawer} />
 
+### An aside that follows a header that hides
+
+A sticky aside sticks under the header at the height the shell measures. A `Navbar` with `hideOnScroll` slides out of view on a scroll down and marks its
+header `data-away` while it is out; the shell then publishes a height of zero, so the aside eases up to the top of the window and back down when the bar
+returns (and stays down while focus is inside the bar). Nothing to pass; reduced motion jumps instead of easing. A bar with leading rows that scroll away
+still needs `stickyOffset`.
+
+<Canvas of={PageShellStories.AsideFollowsHidingHeader} />
+
+### An aside at each end
+
+The layout follows the order written, so one aside before `PageShell.Main` is at the start and one after it is at the end, and the sides swap in
+right-to-left text. Name each: a page can have more than one `complementary` landmark. Below the step each stacks, in the order written.
+
+<Canvas of={PageShellStories.TwoAsides} />
+
+### A table of contents in the aside
+
+The [`TableOfContents`](/docs/molecules-navigation-tableofcontents--docs) in a sticky aside keeps the page's outline in view, with the current section
+following the scroll. Its entries link to the page's sections; `scrollOffset` keeps a section's heading clear of a sticky bar.
+
+<Canvas of={PageShellStories.WithTableOfContents} />
+
 ### A banner above the header
 
 `PageShell.Banner` is a notice above the header. It scrolls away with the page and does not stick.
@@ -207,6 +230,41 @@ A `Navbar` without `sticky` (or a header with no `Affix`) scrolls away with the 
 Press a link in the bar: its page goes to the shell as `pageKey` and `pageTitle`, which moves focus to the main area and announces the new title.
 
 <Canvas of={PageShellStories.PageChange} />
+
+### A page change that lands on the heading
+
+`focusTarget="heading"` moves focus to the new page's own `h1`, instead of the whole main area, so the keyboard starts at the title (with no `h1` it is
+the main area). `scrollToTopOnChange` scrolls the window to its top for a router that does not. Both are off by default.
+
+<Canvas of={PageShellStories.PageChangeToHeading} />
+
+### Moving between pages
+
+`navigating` is for the time a router takes to arrive at the next page: a loading bar along the top of the window, above the header, and a polite
+"Loading" announcement (`labels.loading` changes the words). `busy` on `PageShell.Main` is for a page that is reloading its own content and keeps what
+is on screen.
+
+<Canvas of={PageShellStories.Navigating} />
+
+### A banner that can be dismissed
+
+An `Alert` with `dismissible` and its `open` controlled by `usePersistentDismiss`: the notice stays dismissed for the rest of the session (or longer, with
+`storage: "local"`) and shows nothing until the hook is ready, so a dismissed notice does not flash.
+
+<Canvas of={PageShellStories.DismissibleBanner} />
+
+### A page that does not exist
+
+An `EmptyState` in the content, with the way back: its title is the page's `h1`, and the header and footer stay, so the reader is never stranded.
+
+<Canvas of={PageShellStories.NotFoundPage} />
+
+### A section that runs edge to edge
+
+`PageShell.Main` is as wide as the window and `PageShell.Content` is a box inside it, not around it, so a section written beside `Content` is outside the
+page's width.
+
+<Canvas of={PageShellStories.FullBleedSection} />
 
 ### Content kept to a narrower width
 
@@ -279,6 +337,7 @@ builds the whole title (`(title) => title + " · dbM"`). The title the document 
   short page, so it is always reachable.
 - Printing prints the page, not the chrome: the skip link and the loading bar are left out, and the banner, main and footer are ordinary rows. The header
   prints as it does alone. Put your own page breaks in the page's own CSS.
+- Use `navigating` for the gap between pages and `busy` for a page reloading its own content: the first is the window's, the second is the main area's.
 - Name each `Navbar.Links`, so a screen reader's list of navigation landmarks tells them apart.
 - Use `busy` for a page that is reloading its content: it keeps what is on screen and says so, where an `EmptyState` replaces it.
 ## Accessibility
@@ -311,6 +370,10 @@ banner. All of them are real elements, not roles on divs. The shell wraps no hea
 - `PageShell.AsideToggle` shows only below the aside's collapse step with `collapse="drawer"`. It has `aria-haspopup="dialog"` and `aria-expanded`. The
   drawer is a dialog named by the aside's `aria-label` (else `labels.title`): focus moves into it, `Escape` or a press outside closes it and focus
   returns to the toggle. Growing the window past the step closes it.
+- With `focusTarget="heading"` focus goes to the first `h1` in the main area instead (made focusable only for that moment, and not a tab stop afterwards),
+  and to the main area when there is none. `scrollToTopOnChange` scrolls the window to its top; it does not move focus.
+- While `navigating` is set a polite status region says "Loading" (the words are `labels.loading`), and clears when it ends; the bar is decoration and
+  hidden from assistive technology. It is not drawn on paper.
 - While `busy` is set the main area has `aria-busy="true"` and a polite status region says "Loading"; when it clears the region empties, so nothing more
   is read out. The bar is decoration and hidden from assistive technology.
 - The sticky header and the page's own sticky parts keep the system's order of layers (the page's content and `Affix` on the `sticky` step, the skip
@@ -417,6 +480,9 @@ The skip link is `SkipLink`, which lists its own tokens.
 <TokenRow token="border-width.2" usage="the thickness of that ring, and how far it is drawn inside the edge" />
 <TokenRow token="space.6" usage="the gap between the page and the aside beside it, and the space under the page when the aside is stacked" />
 <TokenRow token="app-shell.aside-width" usage="the width of the aside column, and of its drawer, when it is given no width" />
+<TokenRow token="z-index.fixed" usage="the layer of the loading bar along the top of the window while the shell is navigating, above a sticky header" />
+<TokenRow token="motion.duration.base" usage="how long a sticky aside takes to follow a header that slides away or returns" />
+<TokenRow token="motion.easing.standard" usage="the easing of that movement" />
 <TokenRow token="z-index.sticky" usage="the layer of the page's own content (the loading bar), the step a sticky header's own layer is on" />
 
 ## Related components

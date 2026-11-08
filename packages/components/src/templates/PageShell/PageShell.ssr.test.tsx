@@ -62,6 +62,7 @@ describe("PageShell on the server", () => {
 
   it.each([
     ["a page", {}],
+    ["a navigating page that lands on its heading", { navigating: true, focusTarget: "heading" as const, scrollToTopOnChange: true }],
     ["a right-to-left page", { dir: "rtl" as const }],
     ["a busy page with every part", { subNav: true, banner: true, busy: true }],
     ["a page with a sticky aside as a drawer", { aside: true, asideSticky: true, asideCollapse: "drawer" as const, defaultAsideOpen: false }],
