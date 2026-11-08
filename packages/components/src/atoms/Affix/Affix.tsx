@@ -181,7 +181,10 @@ export const Affix = forwardRef<HTMLDivElement, AffixProps>(
           setIsStuck(stuck);
           onStickyChange?.(stuck);
         },
-        { root: scrollContainerRef?.current ?? null, threshold: 0 },
+        // `[0, 1]`, not `0`: the sentinel is one pixel tall, so near the edge it is only partly visible, or just touching it, and `isIntersecting` is
+        // true for both. With a threshold of `0` nothing crosses as it then moves wholly into view, so no callback came and a soft scroll back to
+        // the top left the stuck state (and any shadow drawn from it) on. Reaching a ratio of `1` is the crossing that reports it.
+        { root: scrollContainerRef?.current ?? null, threshold: [0, 1] },
       );
       observer.observe(sentinel);
       return () => observer.disconnect();
