@@ -14,7 +14,6 @@ import { PageShellAnatomy } from "./PageShellAnatomy";
 import * as PageShellStories from "./PageShell.stories";
 import * as PageShellAsideStories from "./PageShellAside.stories";
 import * as PageShellAsideToggleStories from "./PageShellAsideToggle.stories";
-import * as PageShellBleedStories from "./PageShellBleed.stories";
 import * as PageShellBodyStories from "./PageShellBody.stories";
 import * as PageShellBannerStories from "./PageShellBanner.stories";
 import * as PageShellContentStories from "./PageShellContent.stories";
@@ -63,13 +62,13 @@ PageShell                        the frame: a div, as tall as the window; owns f
 ├─ Navbar (or your <header>)     a direct child; it sticks itself
 ├─ A) a page with no aside
 │   └─ PageShell.Main            the one <main>; as wide as the window
-│       ├─ <section> (plain)     edge to edge, content too
-│       ├─ PageShell.Bleed       edge to edge, content kept to the page's width
-│       └─ PageShell.Content     the page's own width-limited box
+│       ├─ PageShell.Content width="full"   edge to edge, content too
+│       ├─ PageShell.Content bleed          a band edge to edge, content kept to the page's width
+│       └─ PageShell.Content                the page's own width-limited box
 ├─ B) a page with an aside
 │   └─ PageShell.Body            the page's width and padding, laid out as a row
 │       ├─ PageShell.Aside       a sibling landmark of <main>, never inside it
-│       ├─ PageShell.Main        your page directly: no Content, no Bleed
+│       ├─ PageShell.Main        your page directly: no Content
 │       │   └─ PageShell.AsideToggle   anywhere in the page (usually its actions)
 │       └─ PageShell.Aside       a second one, at the other end
 └─ PageShell.Footer              the contentinfo; at the window's bottom on a short page
@@ -79,9 +78,10 @@ PageShell                        the frame: a div, as tall as the window; owns f
 
 - **Use `Content` or `Body`, never both.** `Body` is `Content`'s width and padding wrapped around `Main` and `Aside`, so a `Content` inside a `Main` inside a
   `Body` would pad the page twice.
-- **`Bleed` and a plain section belong to layout A.** They sit inside `Main` beside `Content`, because `Main` is as wide as the window. In layout B `Main` is
-  already inside `Body`'s width limit, so a band there would be held to it. A page with an aside that also needs a full-width band puts the band above or
-  below `Body`, as a plain element.
+- **Several `Content` sections side by side belong to layout A.** `Content` is one part with three ways to span: contained (the default), `width="full"` (no
+  width limit, so its content runs edge to edge) and `bleed` (a band as wide as `Main`, its content kept to the page's width). They sit inside `Main` beside
+  one another, because `Main` is as wide as the window. In layout B `Main` is already inside `Body`'s width limit, so a band there would be held to it. A
+  page with an aside that also needs a full-width band puts the band above or below `Body`, as a plain element.
 - **`Aside` is outside `Main`**, since an `<aside>` landmark cannot be inside `<main>`. The order written is the layout: an aside before `Main` is at the
   start, one after it is at the end, and the sides swap in right-to-left text.
 - **`AsideToggle` can go anywhere in the shell.** It shows only below the aside's collapse step, and only for an aside with `collapse="drawer"`.
@@ -124,9 +124,9 @@ Drive the shell's props live. The header controls (`sticky`, `hideOnScroll`, a h
 
 ### PageShell.Content properties
 
-`PageShell.Content` also accepts any other native `<div>` attribute.
+`PageShell.Content` also accepts any other native `<div>` attribute (a `<section>`'s, with `as="section"`).
 
-<PropertiesTable of={PageShellContentStories} order={["children", "width", "size", "paddingInline", "paddingBlock", "style", "className", "id", "data-testid"]} />
+<PropertiesTable of={PageShellContentStories} order={["children", "width", "size", "paddingInline", "paddingBlock", "bleed", "as", "aria-label", "aria-labelledby", "style", "className", "id", "data-testid"]} />
 
 ### PageShell.Body properties
 
@@ -145,12 +145,6 @@ Drive the shell's props live. The header controls (`sticky`, `hideOnScroll`, a h
 `PageShell.AsideToggle` also accepts any other native `<button>` attribute.
 
 <PropertiesTable of={PageShellAsideToggleStories} order={["icon", "variant", "tone", "size", "aria-label", "labels", "style", "className", "id", "data-testid"]} />
-
-### PageShell.Bleed properties
-
-`PageShell.Bleed` also accepts any other native `<section>` attribute.
-
-<PropertiesTable of={PageShellBleedStories} order={["children", "tone", "width", "size", "paddingInline", "paddingBlock", "aria-label", "aria-labelledby", "style", "className", "id", "data-testid"]} />
 
 ### PageShell.Footer properties
 
@@ -304,15 +298,20 @@ An `EmptyState` in the content, with the way back: its title is the page's `h1`,
 
 <Canvas of={PageShellStories.NotFoundPage} />
 
-### Edge to edge: a plain section, a Bleed and Content
+### Edge to edge: `Content` in three widths
 
-`PageShell.Bleed` is a band as wide as the main area, with its content kept to the page's width and padding (`width`, `size` and `paddingInline`, as
-`PageShell.Content`), so the text lines up with the rest of the page. `tone="canvas"` fills it with the page's alternate surface and `paddingBlock` is on
-the spacing scale. Write it inside `PageShell.Main`, beside `PageShell.Content`. A band whose content must also run edge to edge is a plain element
-there, since `PageShell.Main` is as wide as the window and `Content` is a box inside it, not around it. The story shows the three: the plain section at the
-top (its text at the window's edge), the `Bleed` under it (the same width, its text lined up with the page) and the page's own `Content`. A `Bleed` and a
-`Content` take their `width`, `size` and `paddingInline` separately, so give both the same ones when the page is not at the defaults. `text.tertiary` does not pass AA on `canvas`, so
-keep tertiary text off a tinted band.
+`PageShell.Main` is as wide as the window, and `PageShell.Content` is one part with three ways to span, written side by side inside it:
+
+- **Contained** (the default): the page's width limit and padding.
+- **`width="full"`** (or `size="full"`): no width limit, so its content runs edge to edge. `paddingInline={0}` takes the side padding away too.
+- **`bleed`**: a band as wide as `Main` (edge to edge) whose content is still kept to the page's width and padding (`width`, `size` and `paddingInline`), so
+  it lines up with the rest of the page. `paddingBlock` is the band's. `className`, `style`, `id` and the `ref` are on the band, so a token in `style`
+  tints it (`background: "var(--dbm-bg-canvas)"`); `text.tertiary` does not pass AA on that fill, so keep tertiary text off a tinted band. `as="section"` with an
+  `aria-label` makes it a named part of the page (a `section` is a landmark only when it is named).
+
+The story shows the three, top to bottom: the full-width section (its text at the window's edge), the `bleed` band under it (the same width, its text lined
+up with the page) and the page's own `Content`. A `bleed` band and a `Content` take their `width`, `size` and `paddingInline` separately, so give both the same
+ones when the page is not at the defaults.
 
 <Canvas of={PageShellStories.FullBleedSection} />
 
@@ -382,7 +381,7 @@ builds the whole title (`(title) => title + " · dbM"`). The title the document 
 ## Best practices
 
 - Choose `size` on `PageShell.Content` (or on `PageShell.Body` for a page with an aside) for the page's reading width: `xl` (the default) suits a page of cards, `md` suits a form or an article. A
-  full-bleed section is a page's own element outside the content.
+  band that runs edge to edge is `PageShell.Content` with `bleed`.
 - Let the footer be small. It holds the links people look for at the end of a page (help, privacy, terms), and it sits at the bottom of the window on a
   short page, so it is always reachable.
 - Printing prints the page, not the chrome: the skip link and the loading bar are left out, and the banner, main and footer are ordinary rows. The header
@@ -522,7 +521,6 @@ return (
 The skip link is `SkipLink`, which lists its own tokens.
 
 <TokenRow token="bg.surface" usage="the frame's background: the page colour behind the header, the main area and the footer" />
-<TokenRow token="bg.canvas" usage="the fill of a PageShell.Bleed with tone canvas, the page's alternate surface" />
 <TokenRow token="text.primary" usage="the colour of text inside the frame that sets none of its own" />
 <TokenRow token="font-family.primary" usage="the typeface of the frame, inherited by everything inside it" />
 <TokenRow token="border.default" usage="the line over the footer" />

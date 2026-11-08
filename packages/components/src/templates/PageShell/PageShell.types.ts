@@ -282,42 +282,6 @@ export interface PageShellAsideToggleProps extends Omit<ComponentPropsWithoutRef
   "data-testid"?: string;
 }
 
-/** The fill of `PageShell.Bleed`: none, or the page's alternate surface. */
-export type PageShellBleedTone = "default" | "canvas";
-
-/** The properties of `PageShell.Bleed`: a band as wide as the main area whose content lines up with the page. */
-export interface PageShellBleedProps extends Omit<ComponentPropsWithoutRef<"section">, "children">, PageShellPartBase {
-  /** The band's content, kept to the page's width and padding. */
-  children?: ReactNode;
-  /**
-   * The band's fill: `default` (none, the page's surface) or `canvas`, the page's alternate surface (`text.primary` and `text.secondary` pass AA on it;
-   * `text.tertiary` does not).
-   * @default 'default'
-   */
-  tone?: PageShellBleedTone;
-  /** The width the content is kept to, by what the page is: `reading`, `dashboard` or `full`. An explicit `size` replaces it. */
-  width?: PageShellContentWidth;
-  /**
-   * The widest the content gets, on the same steps as `Container`, centred: the same as `PageShell.Content`, so the band lines up with the page.
-   * @default 'xl'
-   */
-  size?: ContainerSize;
-  /**
-   * Padding at the start and end of the content, on the spacing scale: one step, or a map keyed by breakpoint.
-   * @default 4
-   */
-  paddingInline?: Responsive<SpaceValue>;
-  /**
-   * Padding above and below, on the spacing scale.
-   * @default 8
-   */
-  paddingBlock?: SpaceValue;
-  /** A `section` is a `region` landmark only when it is named: name a band that matters to navigation. */
-  "aria-label"?: string;
-  /** The id of a visible element that names the band, in place of `aria-label`. */
-  "aria-labelledby"?: string;
-}
-
 /** The properties of `PageShell.Main`: the page's one `<main>`, and the skip link's target. */
 export interface PageShellMainProps extends Omit<ComponentPropsWithoutRef<"main">, "children">, PageShellPartBase {
   /** The page. Usually one `PageShell.Content`. */
@@ -355,10 +319,27 @@ export interface PageShellContentProps extends Omit<ComponentPropsWithoutRef<"di
    */
   paddingInline?: Responsive<SpaceValue>;
   /**
-   * Padding above and below, on the spacing scale.
+   * Padding above and below, on the spacing scale. With `bleed` it is the band's.
    * @default 6
    */
   paddingBlock?: SpaceValue;
+  /**
+   * Makes the section a band as wide as `PageShell.Main` (edge to edge) with its content kept to the page's width: `width`, `size` and `paddingInline`
+   * still decide that, so the content lines up with the rest of the page. `className`, `style`, `id`, the native props and the `ref` are then on the band,
+   * so a token in `style` (`background: "var(--dbm-bg-canvas)"`) tints it. Write it inside `PageShell.Main`, not inside a `PageShell.Body`, whose width
+   * would hold the band. `text.tertiary` does not pass AA on `bg.canvas`.
+   * @default false
+   */
+  bleed?: boolean;
+  /**
+   * The element: a `div`, or a `section` for a part of the page that has a name. A `section` is a `region` landmark only when it is named.
+   * @default 'div'
+   */
+  as?: "div" | "section";
+  /** Names a `section`: it is a `region` landmark only when it has a name. */
+  "aria-label"?: string;
+  /** The id of a visible element that names a `section`, in place of `aria-label`. */
+  "aria-labelledby"?: string;
 }
 
 /** The properties of `PageShell.Footer`: the page's `contentinfo`, at the bottom of the window on a short page. */

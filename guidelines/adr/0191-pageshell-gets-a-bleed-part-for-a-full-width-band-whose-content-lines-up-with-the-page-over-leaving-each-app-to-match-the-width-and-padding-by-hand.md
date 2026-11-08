@@ -1,6 +1,6 @@
 # 0191 — `PageShell` gets a `Bleed` part for a full-width band whose content lines up with the page, over leaving each app to match the width and padding by hand
 
-**Status:** Accepted · **Date:** 2026-11-08
+**Status:** Superseded by [0192](./0192-pageshell-content-gets-a-bleed-prop-and-an-as-prop-and-pageshell-bleed-is-removed-over-a-separate-part-or-a-single-type-prop.md) · **Date:** 2026-11-08
 
 ## Context
 `PageShell.Main` is as wide as the window and `PageShell.Content` is a width-limited box inside it, so a section written beside `Content` runs edge to edge. It does not line up with the page unless its author matches `Content`'s width and padding by hand, and a background colour is a hardcoded value in every app. A band (a hero, a call to action, a strip of figures) is common enough that the repetition is real.

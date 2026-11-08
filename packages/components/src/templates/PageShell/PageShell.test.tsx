@@ -291,66 +291,50 @@ describe("PageShell", () => {
     });
   });
 
-  describe("PageShell.Bleed", () => {
-    it("draws a section holding its children in a container, with a tone and padding above and below", () => {
-      render(
+  describe("PageShell.Content bleed and as", () => {
+    function Band(props: React.ComponentProps<typeof PageShell.Content>) {
+      return (
         <PageShell>
           <PageShell.Main>
-            <PageShell.Bleed tone="canvas" paddingBlock={6} data-testid="band">
+            <PageShell.Content data-testid="band" {...props}>
               <p>Band</p>
-            </PageShell.Bleed>
+            </PageShell.Content>
           </PageShell.Main>
-        </PageShell>,
+        </PageShell>
       );
+    }
+
+    it("with bleed is a band holding its children in a container, with padding above and below on the band", () => {
+      render(<Band bleed paddingBlock={8} />);
       const band = screen.getByTestId("band");
-      expect(band.tagName).toBe("SECTION");
-      expect(band).toHaveAttribute("data-tone", "canvas");
-      expect(band).toHaveStyle({ paddingBlock: "var(--dbm-space-6)" });
-      expect(within(band).getByText("Band").parentElement).not.toBe(band);
+      expect(band).toHaveStyle({ paddingBlock: "var(--dbm-space-8)" });
+      const text = within(band).getByText("Band");
+      expect(text.parentElement).not.toBe(band);
+      expect(text.parentElement?.parentElement).toBe(band);
     });
 
-    it("has no tone attribute by default, and pads by space 8", () => {
-      render(
-        <PageShell>
-          <PageShell.Main>
-            <PageShell.Bleed data-testid="band">Band</PageShell.Bleed>
-          </PageShell.Main>
-        </PageShell>,
-      );
-      expect(screen.getByTestId("band")).not.toHaveAttribute("data-tone");
-      expect(screen.getByTestId("band")).toHaveStyle({ paddingBlock: "var(--dbm-space-8)" });
+    it("without bleed draws what it always did: the container is the element, with the padding on it", () => {
+      render(<Band paddingBlock={8} />);
+      const content = screen.getByTestId("band");
+      expect(within(content).getByText("Band").parentElement).toBe(content);
+      expect(content).toHaveStyle({ paddingBlock: "var(--dbm-space-8)" });
     });
 
-    it("is a region landmark only when it is named", () => {
-      const { rerender } = render(
-        <PageShell>
-          <PageShell.Main>
-            <PageShell.Bleed>Band</PageShell.Bleed>
-          </PageShell.Main>
-        </PageShell>,
-      );
+    it("is a div by default and a section with as, a region only when it is named", () => {
+      const { rerender } = render(<Band bleed />);
+      expect(screen.getByTestId("band").tagName).toBe("DIV");
+      rerender(<Band bleed as="section" />);
+      expect(screen.getByTestId("band").tagName).toBe("SECTION");
       expect(screen.queryByRole("region")).not.toBeInTheDocument();
-      rerender(
-        <PageShell>
-          <PageShell.Main>
-            <PageShell.Bleed aria-label="Highlights">Band</PageShell.Bleed>
-          </PageShell.Main>
-        </PageShell>,
-      );
+      rerender(<Band bleed as="section" aria-label="Highlights" />);
+      expect(screen.getByRole("region", { name: "Highlights" })).toBeInTheDocument();
+      rerender(<Band as="section" aria-label="Highlights" />);
       expect(screen.getByRole("region", { name: "Highlights" })).toBeInTheDocument();
     });
 
-    it("forwards a ref, passes native props through and puts the caller's style over its own", () => {
+    it("puts the ref, native props and the caller's style on the band, over its own padding", () => {
       const ref = createRef<HTMLElement>();
-      render(
-        <PageShell>
-          <PageShell.Main>
-            <PageShell.Bleed ref={ref} id="b" className="c" title="extra" style={{ paddingBlock: "1px" }} data-testid="band">
-              Band
-            </PageShell.Bleed>
-          </PageShell.Main>
-        </PageShell>,
-      );
+      render(<Band bleed ref={ref} id="b" className="c" title="extra" style={{ paddingBlock: "1px", background: "var(--dbm-bg-canvas)" }} />);
       const band = screen.getByTestId("band");
       expect(ref.current).toBe(band);
       expect(band).toHaveAttribute("id", "b");
@@ -359,12 +343,14 @@ describe("PageShell", () => {
       expect(band).toHaveStyle({ paddingBlock: "1px" });
     });
 
-    it("has no accessibility violations, named and unnamed", async () => {
+    it("has no accessibility violations as a band, named and unnamed", async () => {
       const { container } = render(
         <PageShell>
           <PageShell.Main>
-            <PageShell.Bleed tone="canvas">Band</PageShell.Bleed>
-            <PageShell.Bleed aria-label="Highlights">Band</PageShell.Bleed>
+            <PageShell.Content bleed>Band</PageShell.Content>
+            <PageShell.Content bleed as="section" aria-label="Highlights">
+              Band
+            </PageShell.Content>
           </PageShell.Main>
         </PageShell>,
       );

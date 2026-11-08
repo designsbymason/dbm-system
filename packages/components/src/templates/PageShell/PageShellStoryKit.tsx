@@ -68,8 +68,8 @@ export const demoCopy = {
     filtersTitle: "Filters",
     filterLinks: ["All projects", "Mine", "Archived"],
     sectionText: "Details for this section appear here, with the settings and the people it concerns.",
-    fullBleed: "A Bleed band as wide as the window, its content lined up with the page.",
-    fullBleedPlain: "A plain section: its content runs edge to edge, outside the page's width.",
+    fullBleed: "Content with bleed: a band as wide as the window, its content lined up with the page.",
+    fullBleedPlain: "Content with width full: its content runs edge to edge, outside the page's width.",
   },
   fa: {
     brand: "dbM",
@@ -110,8 +110,8 @@ export const demoCopy = {
     filtersTitle: "فیلترها",
     filterLinks: ["همه پروژه‌ها", "مال من", "بایگانی‌شده"],
     sectionText: "جزئیات این بخش، با تنظیمات و افرادی که به آن مربوط‌اند، اینجا نمایش داده می‌شود.",
-    fullBleed: "نوار Bleed به پهنای پنجره، با محتوایی هم‌تراز با صفحه.",
-    fullBleedPlain: "یک بخش ساده: محتوایش از لبه تا لبه می‌رود، بیرون از عرض صفحه.",
+    fullBleed: "Content با bleed: نواری به پهنای پنجره، با محتوایی هم‌تراز با صفحه.",
+    fullBleedPlain: "Content با width برابر full: محتوایش از لبه تا لبه می‌رود، بیرون از عرض صفحه.",
   },
 } as const;
 
@@ -358,7 +358,7 @@ export interface DemoPageShellProps extends PageShellProps {
   secondAside?: boolean;
   /** Draws the banner as a dismissible `Alert`, whose dismissal is remembered for the session. */
   dismissibleBanner?: boolean;
-  /** Adds, above the page's content, a plain section (its content edge to edge) and a `PageShell.Bleed` band (its content lined up with the page). */
+  /** Adds, above the page's content, a `Content width="full"` (its content edge to edge) and a `Content bleed` band (its content lined up with the page). */
   fullBleed?: boolean;
   /** Called with the id of the bar's link that was chosen (`"projects"`, `"reports"`, `"team"`, `"settings"`), as a router would be told. */
   onNavigate?: (id: "projects" | "reports" | "team" | "settings") => void;
@@ -513,20 +513,19 @@ export function DemoPageShell({
         <PageShell.Main busy={busy} labels={fa ? mainLabelsFa : undefined}>
           {fullBleed && (
             <>
-              {/* A plain element beside `Content`: as wide as the main area, and so is its content. */}
-              <section
-                style={{
-                  padding: "var(--dbm-space-8) var(--dbm-space-4)",
-                  background: "var(--dbm-bg-canvas)",
-                  borderBlockEnd: "var(--dbm-border-width-1) solid var(--dbm-border-default)",
-                }}
+              {/* `Content width="full"`: as wide as the main area, and so is its content. */}
+              <PageShell.Content
+                data-testid="full-section"
+                width="full"
+                paddingBlock={8}
+                style={{ background: "var(--dbm-bg-canvas)", borderBlockEnd: "var(--dbm-border-width-1) solid var(--dbm-border-default)" }}
               >
                 <Text>{copy.fullBleedPlain}</Text>
-              </section>
-              {/* A `Bleed`: as wide as the main area, its content lined up with the page's. */}
-              <PageShell.Bleed tone="canvas" width={contentWidth}>
+              </PageShell.Content>
+              {/* `Content bleed`: as wide as the main area, its content lined up with the page's. */}
+              <PageShell.Content data-testid="bleed-band" bleed paddingBlock={8} width={contentWidth} style={{ background: "var(--dbm-bg-canvas)" }}>
                 <Text>{copy.fullBleed}</Text>
-              </PageShell.Bleed>
+              </PageShell.Content>
             </>
           )}
           <PageShell.Content width={contentWidth}>{children ?? (page === "article" ? <DemoArticle language={language} /> : <DemoPage language={language} rows={rows} state={state} />)}</PageShell.Content>

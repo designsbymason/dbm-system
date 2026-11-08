@@ -231,20 +231,21 @@ ${shell("", [
   footer,
 ])}`,
 
-  fullBleed: `{/* Three widths inside PageShell.Main, which is as wide as the window: a plain element runs edge to edge with its content; PageShell.Bleed is
-    as wide as the window but keeps its children to the page's width and padding (width, size and paddingInline, as PageShell.Content), so they line up;
-    PageShell.Content is the page's own box. tone="canvas" fills a Bleed with the page's alternate surface; paddingBlock is on the spacing scale. */}
+  fullBleed: `{/* One part, three ways to span: PageShell.Content keeps the page to a width; width="full" (or size="full") has no width limit, so its
+    content runs edge to edge; bleed makes the section a band as wide as PageShell.Main whose content is still kept to the page's width (width, size and
+    paddingInline), so it lines up. In bleed mode className, style, id and the ref are on the band, so a token in style tints it. as="section" makes it a
+    part of the page with a name. Write them inside PageShell.Main, side by side. */}
 ${shell("", [
   skipLink,
   header(),
   `  <PageShell.Main>
-    <section style={{ background: "var(--dbm-bg-canvas)", padding: "var(--dbm-space-8) var(--dbm-space-4)" }}>
-      A plain section: its content runs edge to edge.
-    </section>
-    <PageShell.Bleed tone="canvas" aria-label="Highlights">
-      A Bleed band: as wide as the window, its content lined up with the page.
-    </PageShell.Bleed>
-    <PageShell.Content>
+    <PageShell.Content width="full" paddingBlock={8} style={{ background: "var(--dbm-bg-canvas)" }}>
+      Content width="full": its content runs edge to edge.
+    </PageShell.Content>
+    <PageShell.Content bleed width="reading" as="section" aria-label="Highlights" paddingBlock={8} style={{ background: "var(--dbm-bg-canvas)" }}>
+      Content bleed: a band as wide as the window, its content lined up with the page.
+    </PageShell.Content>
+    <PageShell.Content width="reading">
       <h1>Projects</h1>
     </PageShell.Content>
   </PageShell.Main>`,

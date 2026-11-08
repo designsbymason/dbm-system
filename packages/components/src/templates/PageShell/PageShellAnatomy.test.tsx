@@ -15,23 +15,24 @@ describe("PageShellAnatomy", () => {
   it("names every part of the shell at least once", () => {
     const { container } = render(<PageShellAnatomy />);
     const text = container.textContent ?? "";
-    for (const part of ["PageShell.SkipLink", "PageShell.Banner", "Navbar", "PageShell.Main", "PageShell.Bleed", "PageShell.Content", "PageShell.Body", "PageShell.Aside", "PageShell.AsideToggle", "PageShell.Footer"]) {
+    for (const part of ["PageShell.SkipLink", "PageShell.Banner", "Navbar", "PageShell.Main", "PageShell.Content", "PageShell.Body", "PageShell.Aside", "PageShell.AsideToggle", "PageShell.Footer"]) {
       expect(text, `the diagram does not name ${part}`).toContain(part);
     }
   });
 
-  it("draws Bleed and Content inside Main in the first layout, and Main inside Body in the second", () => {
+  it("draws the Content variants inside Main in the first layout, and Main inside Body in the second", () => {
     render(<PageShellAnatomy />);
     const figure = screen.getByRole("figure");
     const nameOf = (element: Element) => element.querySelector("code")?.textContent;
     const mains = within(figure).getAllByText("PageShell.Main");
     const first = mains[0]!.closest("p")!.parentElement!;
-    expect(within(first).getByText("PageShell.Bleed")).toBeInTheDocument();
+    expect(within(first).getByText("PageShell.Content bleed")).toBeInTheDocument();
+    expect(within(first).getByText('PageShell.Content width="full"')).toBeInTheDocument();
     expect(within(first).getByText("PageShell.Content")).toBeInTheDocument();
     const body = within(figure).getByText("PageShell.Body").closest("p")!.parentElement!;
     expect(nameOf(body)).toBe("PageShell.Body");
     expect(within(body).getByText("PageShell.Main")).toBeInTheDocument();
-    expect(within(body).queryByText("PageShell.Bleed")).toBeNull();
+    expect(within(body).queryByText(/PageShell\.Content/)).toBeNull();
   });
 
   it("has no accessibility violations", async () => {

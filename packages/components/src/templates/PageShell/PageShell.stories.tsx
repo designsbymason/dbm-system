@@ -352,8 +352,9 @@ export const NotFoundPage: Story = {
 };
 
 export const FullBleedSection: Story = {
-  name: "Edge to edge: a plain section, a Bleed and Content",
+  name: "Edge to edge: Content in three widths",
   parameters: { docs: { source: { code: pageShellSnippets.fullBleed } } },
   argTypes: { ...noControls },
-  render: (_args, context) => <DemoPageShell fullBleed rows={4} framed={docs(context)} />,
+  // A reading width, narrower than the window, so the three widths are different.
+  render: (_args, context) => <DemoPageShell fullBleed contentWidth="reading" rows={4} framed={docs(context)} />,
 };

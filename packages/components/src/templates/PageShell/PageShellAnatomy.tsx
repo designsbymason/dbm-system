@@ -62,12 +62,12 @@ export function PageShellAnatomy() {
   return (
     <figure className={styles.figure} aria-label="Anatomy of a PageShell page: each part drawn inside the part that holds it">
       <div className={styles.diagrams}>
-        <Layout title="A page with no aside" lead="Main is as wide as the window. Write bands and Content inside it, in any order.">
+        <Layout title="A page with no aside" lead="Main is as wide as the window. Write Content sections inside it, contained, full width or bleed, in any order.">
           <Part name="PageShell.Main" note="the one <main>, as wide as the window" className={join(styles.main, styles.flush)}>
-            <Part name="<section>" note="a plain element: edge to edge, and so is its content" className={join(styles.band, styles.plain)} />
+            <Part name={'PageShell.Content width="full"'} note="no width limit: edge to edge, and so is its content" className={join(styles.band, styles.plain)} />
             <div className={join(styles.box, styles.band, styles.bleed)}>
               <div className={styles.inner}>
-                <Head name="PageShell.Bleed" note="edge to edge, with its content kept to the page's width and lined up with the content below" />
+                <Head name="PageShell.Content bleed" note="a band edge to edge, with its content kept to the page's width and lined up with the content below" />
               </div>
             </div>
             <Part name="PageShell.Content" note="the page's own box, holding your page: its width and padding" className={styles.content} />
@@ -81,7 +81,7 @@ export function PageShellAnatomy() {
                 name="PageShell.Main"
                 note={
                   <>
-                    your page directly, with no Content or Bleed, and a <code className={join(styles.name, styles.chip, styles.chipInfo)}>PageShell.AsideToggle</code>{" "}
+                    your page directly, with no Content, and a <code className={join(styles.name, styles.chip, styles.chipInfo)}>PageShell.AsideToggle</code>{" "}
                     among its actions
                   </>
                 }
@@ -99,11 +99,11 @@ export function PageShellAnatomy() {
         </li>
         <li>
           <span className={join(styles.swatch, styles.swatchSuccess)} aria-hidden="true" />
-          a Bleed band
+          Content with bleed
         </li>
         <li>
           <span className={join(styles.swatch, styles.swatchWarning)} aria-hidden="true" />
-          a plain section
+          Content with width full
         </li>
         <li>
           <span className={join(styles.swatch, styles.swatchInfo)} aria-hidden="true" />

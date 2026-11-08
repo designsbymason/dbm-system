@@ -88,15 +88,12 @@
   border-block-start: var(--dbm-border-width-1) solid var(--dbm-border-default);
 }
 
-/* A band as wide as the main area: its content is in a `Container`, so it lines up with `Content`. The fill is the page's alternate surface. */
+/* `Content` with `bleed`: a band as wide as the main area. Its content is in a `Container`, so it lines up with the rest of the page; the fill, if any, is
+   the app's own (a token in `style`). */
 .bleed {
   position: relative;
   min-inline-size: 0;
   box-sizing: border-box;
-}
-
-.bleed[data-tone="canvas"] {
-  background-color: var(--dbm-bg-canvas);
 }
 
 /* --- The body and the aside --- */

@@ -26,9 +26,22 @@ const meta: Meta<typeof PageShell.Content> = {
     },
     paddingBlock: {
       control: false,
-      description: "Padding above and below, on the spacing scale.",
+      description: "Padding above and below, on the spacing scale. With bleed it is the band's.",
       table: { defaultValue: { summary: "6" } },
     },
+    bleed: {
+      control: false,
+      description:
+        "Makes the section a band as wide as PageShell.Main (edge to edge) with its content kept to the page's width. className, style, id, the native props and the ref are then on the band, so a token in style tints it.",
+      table: { defaultValue: { summary: "false" } },
+    },
+    as: {
+      control: false,
+      description: "The element: a div, or a section for a part of the page that has a name. A section is a region landmark only when it is named.",
+      table: { defaultValue: { summary: "\"div\"" } },
+    },
+    "aria-label": { control: false, description: "Names a section: it is a region landmark only when it has a name." },
+    "aria-labelledby": { control: false, description: "The id of a visible element that names a section, in place of aria-label." },
     id: { control: false, description: "Standard DOM id." },
     className: { control: false, description: "Additional CSS classes for customization." },
     style: { control: false, description: "Inline styles, merged onto the component's own internal styles." },
