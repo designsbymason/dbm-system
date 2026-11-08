@@ -663,6 +663,49 @@ export const AsideDrawerStaysOnThePageAtItsStep: Story = {
   },
 };
 
+export const FooterSitsAtTheBottomOfAShortPageWithAnAside: Story = {
+  name: "On a page with an aside too short to fill the window the footer still sits at the bottom of the window — layout test",
+  render: () => <DemoPageShell aside rows={1} />,
+  play: async ({ canvasElement }) => {
+    const { footer } = slots(canvasElement);
+    await atTop();
+    await expect(document.documentElement.scrollHeight).toBeLessThanOrEqual(window.innerHeight);
+    await expect(Math.abs(footer.getBoundingClientRect().bottom - window.innerHeight)).toBeLessThan(2);
+  },
+};
+
+export const AsideFocusRingInForcedColours: Story = {
+  tags: ["!dev"],
+  name: "In forced colours a sticky aside that scrolls inside itself is reached by a real Tab and draws a focus ring — forced colours test",
+  render: () => <DemoPageShell aside asideSticky rows={12} />,
+  play: async ({ canvasElement }) => {
+    const aside = asideOf(canvasElement);
+    const emulate = (value: "active" | "none") => send("Emulation.setEmulatedMedia", { features: [{ name: "forced-colors", value }] });
+    await atTop();
+    const tall = document.createElement("div");
+    tall.style.blockSize = "2400px";
+    aside.append(tall);
+    await emulate("active");
+    try {
+      await waitFor(() => expect(window.matchMedia("(forced-colors: active)").matches).toBe(true));
+      await waitFor(() => expect(aside).toHaveAttribute("tabindex", "0"));
+      (document.activeElement as HTMLElement | null)?.blur();
+      for (let step = 0; step < 40 && document.activeElement !== aside; step += 1) {
+        await press("Tab", 9);
+        await nextFrame();
+      }
+      await expect(aside).toHaveFocus();
+      await expect(aside.matches(":focus-visible")).toBe(true);
+      await expect(getComputedStyle(aside).outlineStyle).not.toBe("none");
+      await expect(parseFloat(getComputedStyle(aside).outlineWidth)).toBeGreaterThan(0);
+    } finally {
+      await send("Emulation.setEmulatedMedia", { features: [] });
+      tall.remove();
+      await atTop();
+    }
+  },
+};
+
 export const AsidePrintsUnderThePage: Story = {
   name: "Printed, the aside is in the flow under the page, in full, whether it is a column or a drawer on screen — print test",
   render: () => <DemoPageShell aside asideCollapse="drawer" asideCollapseBelow="3xl" asideSticky rows={6} />,

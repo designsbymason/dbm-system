@@ -32,10 +32,10 @@ export const playgroundOrder = ["dir", "sticky", "hideOnScroll", "customHeader",
 
 **Which shell?** An app with no sidebar uses `PageShell`; one with a sidebar uses [`AppShell`](/docs/templates-application-shells-appshell--docs).
 
-The page frame of an application with no sidebar: a skip link, an optional banner, your header, the page's one `<main>` and a footer. The page
-scrolls as a whole. It is **layout and wiring only**, and it **does not wrap your header**: put a [`Navbar`](/docs/organisms-navigation-navbar--docs) (or
+The page frame of an application with no sidebar: a skip link, an optional banner, your header, the page's one `<main>` (with an optional
+`PageShell.Aside` beside it, in a `PageShell.Body`) and a footer. The page scrolls as a whole. It is **layout and wiring only**, and it **does not wrap your header**: put a [`Navbar`](/docs/organisms-navigation-navbar--docs) (or
 any header) directly in the shell, in the order you want it on the page. The header sticks by its own means: `Navbar`'s `sticky` (with its shadow,
-`hideOnScroll` and a second row of links that scrolls away), or `Affix` around a header of your own. The shell adds the page's one `<main>` landmark, the
+`hideOnScroll` and a second row of links that scrolls away), or `Affix` around a header of your own. The shell adds the page's one `<main>` landmark, an optional `complementary` aside, the
 skip link's target, a footer that sits at the bottom of the window on a page too short to fill it, the page-change handling and the frame.
 
 Given the router's page, the shell moves focus to the new page and announces it. It publishes the device's safe-area insets as `--page-shell-safe-top`
@@ -141,8 +141,9 @@ sticking on your `<header>`), and the shadow once it is stuck comes from `onStic
 ### An aside beside the page
 
 `PageShell.Body` holds `PageShell.Main` and `PageShell.Aside` side by side, and gives them the width and padding that `PageShell.Content` gives a page
-with none (put the `PageShell.Content` inside `Main`, or the page's own markup, and leave its width to the body). The layout follows the order you write
-them: an aside written first is at the start, and in right-to-left text the sides swap. Below `collapseBelow` (`lg` by default) the aside is stacked under
+with none. The layout follows the order you write
+them: an aside written first is at the start, and in right-to-left text the sides swap. Use `PageShell.Body` in place of `PageShell.Content`:
+it is the page's width and padding, so don't put a `PageShell.Content` inside `Main` in a body, which would pad the page twice. Below `collapseBelow` (`lg` by default) the aside is stacked under
 the page, in the same order, with no state: nothing is hidden and nothing needs a button. The aside scrolls with the page unless it is `sticky`.
 
 <Canvas of={PageShellStories.WithAside} />
@@ -209,7 +210,8 @@ Press a link in the bar: its page goes to the shell as `pageKey` and `pageTitle`
 
 ### Content kept to a narrower width
 
-`PageShell.Content` centres the page and limits its width on the `Container` steps; the default is `xl`.
+`PageShell.Content` centres the page and limits its width on the `Container` steps; the default is `xl`. `PageShell.Body` takes the same `width`,
+`size` and padding props for a page with an aside.
 
 <Canvas of={PageShellStories.ContentWidth} />
 
@@ -259,6 +261,8 @@ builds the whole title (`(title) => title + " · dbM"`). The title the document 
   around it is the box it sticks within, so it stops following the window.
 - Don't set `overflow` on an element around the shell, or give it a height: it makes that element the box the header sticks to, so the header stops
   following the window. The shell is as tall as the window already (and taller when the page is).
+- Don't put ids, or content that keeps its own state (a form), in an aside with `collapse="drawer"`: its children are drawn twice while the drawer is open, once
+  in the hidden column and once in the drawer.
 - Don't put the page's primary content in the aside: on a phone it is under the page, or behind a button.
 - Don't use `sticky` on a tall aside and expect it to be read without scrolling: it scrolls inside itself, so keep it short or keep it a plain block.
 - Don't keep a tall banner above the header and expect it to stay: it scrolls away with the page.
@@ -269,7 +273,7 @@ builds the whole title (`(title) => title + " · dbM"`). The title the document 
 
 ## Best practices
 
-- Choose `size` on `PageShell.Content` for the page's reading width: `xl` (the default) suits a page of cards, `md` suits a form or an article. A
+- Choose `size` on `PageShell.Content` (or on `PageShell.Body` for a page with an aside) for the page's reading width: `xl` (the default) suits a page of cards, `md` suits a form or an article. A
   full-bleed section is a page's own element outside the content.
 - Let the footer be small. It holds the links people look for at the end of a page (help, privacy, terms), and it sits at the bottom of the window on a
   short page, so it is always reachable.
@@ -281,7 +285,7 @@ builds the whole title (`(title) => title + " · dbM"`). The title the document 
 
 <Callout tone="info" title="Who provides which landmark">
 
-The shell supplies `PageShell.Main` (the one `main`) and `PageShell.Footer` (the `contentinfo`). The banner `<header>` comes from your header: the `Navbar`
+The shell supplies `PageShell.Main` (the one `main`), `PageShell.Aside` (a `complementary`, when there is one) and `PageShell.Footer` (the `contentinfo`). The banner `<header>` comes from your header: the `Navbar`
 draws its own, and a header of your own is a `<header>`. Each `Navbar.Links` is a named `navigation`; a second row's `<nav>` is a landmark outside the
 banner. All of them are real elements, not roles on divs. The shell wraps no header, so a `Navbar` is never wrapped in a second banner.
 
@@ -292,6 +296,9 @@ banner. All of them are real elements, not roles on divs. The shell wraps no hea
 | `Tab` | Moves through the skip link, then the header, then the main area's content, then the footer, in markup order. |
 | `Tab` into a hidden header | Slides the header back into view (the `Navbar`'s `hideOnScroll`). |
 | `Enter` on a skip link | Moves focus to `PageShell.Main`, past the header. |
+| `Tab` into a sticky aside taller than the window | The aside is a tab stop while it scrolls inside itself, with a focus ring; the arrow keys and Page Up and Down scroll it. |
+| `Enter` on the aside's toggle | Opens the aside's drawer and moves focus into it. |
+| `Escape` in the aside's drawer | Closes it and returns focus to the toggle. |
 | `Escape` in the bar's menu panel | Closes it and returns focus to the menu button (the `Navbar`'s own behaviour below its `collapseBelow` width). |
 
 - `PageShell.Main` takes focus from the skip link and when the page changes (`tabindex="-1"`). A focus ring is drawn just inside its edge whenever

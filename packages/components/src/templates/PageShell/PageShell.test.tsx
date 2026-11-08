@@ -660,6 +660,26 @@ describe("PageShell.Aside", () => {
     });
   });
 
+  it("publishes the header's height while it sticks, and follows it starting and stopping without a resize", async () => {
+    const rect = vi.spyOn(HTMLElement.prototype, "getBoundingClientRect").mockReturnValue({ height: 56 } as DOMRect);
+    function Page({ sticky }: { sticky: boolean }) {
+      return (
+        <PageShell data-testid="shell">
+          <header style={{ position: sticky ? "sticky" : "static" }}>Bar</header>
+          <PageShell.Main>Main</PageShell.Main>
+        </PageShell>
+      );
+    }
+    const { rerender } = render(<Page sticky={false} />);
+    const shell = screen.getByTestId("shell");
+    expect(shell.style.getPropertyValue("--page-shell-header-height")).toBe("0px");
+    rerender(<Page sticky />);
+    await waitFor(() => expect(shell.style.getPropertyValue("--page-shell-header-height")).toBe("56px"));
+    rerender(<Page sticky={false} />);
+    await waitFor(() => expect(shell.style.getPropertyValue("--page-shell-header-height")).toBe("0px"));
+    rect.mockRestore();
+  });
+
   it("throws for the aside or its toggle outside a shell", () => {
     const spy = vi.spyOn(console, "error").mockImplementation(() => undefined);
     expect(() => render(<PageShell.Aside aria-label="x">a</PageShell.Aside>)).toThrow("PageShell parts must be used inside a PageShell.");

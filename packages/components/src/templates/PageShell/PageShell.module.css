@@ -72,6 +72,8 @@
 /* The page and its aside side by side, in the order written (a flex row mirrors in right-to-left text by itself, and nothing is reordered, so the tab
    order is the reading order). */
 .body {
+  /* Takes the room that is left, as `main` does without a body, so the footer is at the bottom of the window on a short page. */
+  flex: 1 0 auto;
   display: flex;
   align-items: flex-start;
   gap: var(--dbm-space-6);

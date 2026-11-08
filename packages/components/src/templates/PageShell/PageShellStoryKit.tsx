@@ -49,6 +49,7 @@ export const demoCopy = {
     open: "Open",
     newProject: "New project",
     asideTitle: "On this page",
+    asideCaption: "Sections",
     asideLinks: ["Overview", "Recent activity", "Members", "Billing", "Danger zone"],
     footerNavigation: "Footer",
     footerLinks: ["Help", "Privacy", "Terms"],
@@ -82,6 +83,7 @@ export const demoCopy = {
     open: "باز کردن",
     newProject: "پروژه جدید",
     asideTitle: "در این صفحه",
+    asideCaption: "بخش‌ها",
     asideLinks: ["نمای کلی", "فعالیت اخیر", "اعضا", "صورت‌حساب", "منطقه خطر"],
     footerNavigation: "پاورقی",
     footerLinks: ["راهنما", "حریم خصوصی", "شرایط"],
@@ -144,6 +146,9 @@ function DemoAsideContent({ language }: { language: Language }) {
   const copy = demoCopy[language];
   return (
     <div style={{ display: "grid", gap: "var(--dbm-space-3)", padding: "var(--dbm-space-4)", border: "var(--dbm-border-width-1) solid var(--dbm-border-default)", borderRadius: "var(--dbm-radius-lg)" }}>
+      <Text size="sm" color="secondary" aria-hidden="true">
+        {copy.asideCaption}
+      </Text>
       <nav aria-label={copy.asideTitle} style={{ display: "grid", gap: "var(--dbm-space-2)" }}>
         {copy.asideLinks.map((label) => (
           <Link key={label} href="#" onClick={preventNavigation}>

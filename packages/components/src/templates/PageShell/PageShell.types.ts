@@ -165,6 +165,7 @@ export interface PageShellAsideProps extends Omit<ComponentPropsWithoutRef<"asid
   /**
    * The aside's content: a table of contents, filters, related links, a details panel. The same children are drawn beside the page and, below
    * `collapseBelow` with `collapse="drawer"`, in the drawer.
+   * With `collapse="drawer"` they are drawn twice while the drawer is open (in the hidden column and in the drawer), so keep ids and local state out of them.
    */
   children?: ReactNode;
   /**

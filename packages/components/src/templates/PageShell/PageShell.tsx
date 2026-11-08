@@ -110,12 +110,18 @@ const PageShellRoot = forwardRef<HTMLDivElement, PageShellProps>(
       const root = rootRef.current;
       if (root === null) return undefined;
       let observed: Element | null = null;
+      // A header whose own class or style changes (a `Navbar` that starts or stops sticking) changes the answer without changing its size.
+      const attributes = typeof MutationObserver === "undefined" ? undefined : new MutationObserver(() => measure());
       const resize = typeof ResizeObserver === "undefined" ? undefined : new ResizeObserver(() => measure());
       function measure() {
         const header = Array.from(root!.children).find((child) => child.tagName === "HEADER") ?? null;
         if (header !== observed) {
           if (observed !== null) resize?.unobserve(observed);
-          if (header !== null) resize?.observe(header);
+          attributes?.disconnect();
+          if (header !== null) {
+            resize?.observe(header);
+            attributes?.observe(header, { attributes: true, attributeFilter: ["class", "style"] });
+          }
           observed = header;
         }
         const height = header !== null && getComputedStyle(header).position === "sticky" ? header.getBoundingClientRect().height : 0;
@@ -126,6 +132,7 @@ const PageShellRoot = forwardRef<HTMLDivElement, PageShellProps>(
       mutations?.observe(root, { childList: true });
       return () => {
         resize?.disconnect();
+        attributes?.disconnect();
         mutations?.disconnect();
         root.style.removeProperty("--page-shell-header-height");
       };

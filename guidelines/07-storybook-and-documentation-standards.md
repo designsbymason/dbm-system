@@ -301,7 +301,7 @@ Foundational components first (prove the template before mass-applying it), then
 | Tour | Organism | Overlay | ✅ | ✅ 2026-11-02 | [Tour.md](component-reviews/Tour.md) |
 | AppShell | Template | Application shells | ✅ | ✅ 2026-11-07 | [AppShell.md](component-reviews/AppShell.md) |
 | Data Table List Page | Template | Data pages | ✅ | ✅ 2026-11-07 | [DataTableListPage.md](component-reviews/DataTableListPage.md) |
-| PageShell | Template | Application shells | ✅ | not yet | [PageShell.md](component-reviews/PageShell.md) |
+| PageShell | Template | Application shells | ✅ | ✅ 2026-11-07 | [PageShell.md](component-reviews/PageShell.md) |
 
 Components not yet built are listed in `04-component-inventory.md`'s build orders, and a row is added here once a component is built, and its Finalized cell is filled when its review pass is declared done. A Docs page is one deliverable inside each component's full `06-engineering-standards.md` §9 review pass, not a separate sweep; components are reviewed one at a time. Tier membership follows [ADR-0012](adr/0012-item-components-are-atom-tier-even-when-their-container-is-a-molecule.md) (`GridItem` and `ListItem` are atoms, `Grid` and `List` are molecules).
 
