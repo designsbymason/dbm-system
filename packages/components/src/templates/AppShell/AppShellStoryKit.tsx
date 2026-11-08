@@ -10,6 +10,7 @@ import { Alert } from "../../molecules/Alert";
 import { Breadcrumb } from "../../molecules/Breadcrumb";
 import { Card } from "../../molecules/Card";
 import { Grid } from "../../molecules/Grid";
+import { PageHeader } from "../../molecules/PageHeader";
 import { Stat } from "../../molecules/Stat";
 import { Table } from "../../molecules/Table";
 import { Navbar } from "../../organisms/Navbar";
@@ -150,12 +151,10 @@ export function DemoPage({ padded = true, language = "en" }: { padded?: boolean;
           <Breadcrumb.Page>{copy.billing}</Breadcrumb.Page>
         </Breadcrumb.Item>
       </Breadcrumb>
-      <div style={{ display: "grid", gap: "var(--dbm-space-1)" }}>
-        <Heading level={1} size="2xl">
-          {copy.billing}
-        </Heading>
-        <Text color="secondary">{copy.intro}</Text>
-      </div>
+      <PageHeader>
+        <PageHeader.Title>{copy.billing}</PageHeader.Title>
+        <PageHeader.Description>{copy.intro}</PageHeader.Description>
+      </PageHeader>
       {/* `minChildWidth` fits as many columns as the main area has room for (the sidebar takes some of the window), where `columns` follows the window; the minimum is wide enough for the longest value. */}
       <Grid minChildWidth="20rem" gap={4}>
         <Stat variant="outlined" tone="brand">
@@ -445,10 +444,10 @@ export function DemoNavigationShell({ framed = false }: { framed?: boolean }) {
       </AppShell.Sidebar>
       <AppShell.Main>
         <div style={{ display: "grid", gap: "var(--dbm-space-4)", padding: "var(--dbm-space-6)" }}>
-          <Heading level={1} size="2xl">
-            {pages[page].title}
-          </Heading>
-          <Text color="secondary">{pages[page].intro}</Text>
+          <PageHeader>
+            <PageHeader.Title>{pages[page].title}</PageHeader.Title>
+            <PageHeader.Description>{pages[page].intro}</PageHeader.Description>
+          </PageHeader>
           {Array.from({ length: 40 }, (_, index) => (
             <Text key={index}>
               Paragraph {index + 1} of the {pages[page].title.toLowerCase()} page: long enough that the page has to scroll.
