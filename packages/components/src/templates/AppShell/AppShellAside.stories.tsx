@@ -16,7 +16,7 @@ const meta: Meta<typeof AppShell.Aside> = {
       control: false,
       description:
         "The width of the column and of the drawer: a number of pixels or any CSS length. Left out it is the app-shell.aside-width token. The drawer is never wider than the window less the sliver of the page it keeps showing.",
-      table: { defaultValue: { summary: "the app-shell.aside-width token" } },
+      table: { defaultValue: { summary: "token" } },
     },
     "aria-label": {
       control: false,
@@ -27,7 +27,7 @@ const meta: Meta<typeof AppShell.Aside> = {
     labels: {
       control: false,
       description: "Text the aside's drawer supplies itself, such as its title and its close button's name. Merged over the English defaults.",
-      table: { defaultValue: { summary: "{ title: 'Details', close: 'Close' }" } },
+      table: { defaultValue: { summary: "English" } },
     },
     drawerContainer: {
       control: false,

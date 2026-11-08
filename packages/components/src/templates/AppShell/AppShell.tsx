@@ -1,15 +1,16 @@
-import { SidebarSimpleIcon, TrayIcon, WarningCircleIcon } from "@dbm-system/icons";
-import { cx, mergeDefined, mergeRefs, useIsScrollable } from "@dbm-system/utils";
+import { TrayIcon, WarningCircleIcon } from "@dbm-system/icons";
+import { cx, mergeDefined, mergeRefs, readPersistentValue, useIsScrollable, writePersistentValue } from "@dbm-system/utils";
 import { Children, forwardRef, isValidElement, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import type { CSSProperties, KeyboardEvent as ReactKeyboardEvent, PointerEvent as ReactPointerEvent } from "react";
 import { Container } from "../../atoms/Container";
 import { DirectionProvider, useDirection } from "../../atoms/DirectionProvider";
-import { IconButton } from "../../atoms/IconButton";
 import { VisuallyHidden } from "../../atoms/VisuallyHidden";
 import { SkipLink } from "../../atoms/SkipLink";
 import { EmptyState } from "../../molecules/EmptyState";
 import { Sidebar } from "../../organisms/Sidebar";
 import { AsideDrawer } from "../../internal/AsideDrawer";
+import { AsideToggleButton } from "../../internal/AsideToggleButton";
+import { SeparatorHandle, startSeparatorDrag } from "../../internal/separator";
 import { minWidthQueries, toLength } from "../../internal/breakpoints";
 import { MainBusy } from "../../internal/MainBusy";
 import { usePageChange } from "../../internal/usePageChange";
@@ -20,7 +21,6 @@ import type {
   AppShellAsideCollapseBelow,
   AppShellAsideLabels,
   AppShellAsideProps,
-  AppShellAsideToggleLabels,
   AppShellAsideToggleProps,
   AppShellBannerProps,
   AppShellContentProps,
@@ -36,7 +36,6 @@ import type {
 } from "./AppShell.types";
 
 const defaultAsideLabels: AppShellAsideLabels = { title: "Details", close: "Close" };
-const defaultAsideToggleLabels: AppShellAsideToggleLabels = { open: "Show details" };
 const defaultSidebarLabels: AppShellSidebarLabels = { resize: "Resize sidebar" };
 const defaultMainLabels: AppShellMainLabels = { loading: "Loading" };
 
@@ -50,9 +49,10 @@ interface StoredLayout {
   width?: number;
 }
 
+/** The layout the reader left, from the shared persistent storage (which falls back to memory where the browser's storage is blocked). Anything unreadable is ignored. */
 function readLayout(key: string): StoredLayout {
   try {
-    const raw = window.localStorage.getItem(`dbm-app-shell:${key}`);
+    const raw = readPersistentValue(`dbm-app-shell:${key}`, "local");
     if (raw === null) return {};
     const parsed: unknown = JSON.parse(raw);
     if (typeof parsed !== "object" || parsed === null) return {};
@@ -62,19 +62,16 @@ function readLayout(key: string): StoredLayout {
       ...(typeof width === "number" && Number.isFinite(width) && width > 0 ? { width } : {}),
     };
   } catch {
+    // Stored text that is not JSON: there is no remembered layout.
     return {};
   }
 }
 
 function writeLayout(key: string, patch: StoredLayout & { clearWidth?: boolean }) {
-  try {
-    const { clearWidth, ...rest } = patch;
-    const next = { ...readLayout(key), ...rest };
-    if (clearWidth) delete next.width;
-    window.localStorage.setItem(`dbm-app-shell:${key}`, JSON.stringify(next));
-  } catch {
-    // storage is full, blocked or disabled: the layout is just not remembered
-  }
+  const { clearWidth, ...rest } = patch;
+  const next = { ...readLayout(key), ...rest };
+  if (clearWidth) delete next.width;
+  writePersistentValue(`dbm-app-shell:${key}`, JSON.stringify(next), "local");
 }
 
 /** The page's `rem` in pixels (16 where the browser reports nothing, as a test document does). */
@@ -461,31 +458,24 @@ const AppShellSidebar = forwardRef<HTMLDivElement, AppShellSidebarProps>(
     // three arrangements flips it.
     const growsRightward = (sidebarSide === "start") === (dir === "ltr");
 
+    const stopDragRef = useRef<(() => void) | null>(null);
+    useEffect(() => () => stopDragRef.current?.(), []);
     const onPointerDown = (event: ReactPointerEvent<HTMLDivElement>) => {
       if (event.button !== 0) return;
       event.preventDefault();
-      try {
-        // The drag keeps hearing the pointer when it leaves the handle. A pointer that has already ended, or a synthetic one (a test's), cannot be
-        // captured, and the drag works without it for as long as the pointer is over the handle.
-        event.currentTarget.setPointerCapture(event.pointerId);
-      } catch {
-        /* see above */
-      }
       setDragging(true);
-    };
-    const onPointerMove = (event: ReactPointerEvent<HTMLDivElement>) => {
-      if (!dragging || slotRef.current === null) return;
-      const rect = slotRef.current.getBoundingClientRect();
-      setSidebarWidth(clamp(growsRightward ? event.clientX - rect.left : rect.right - event.clientX));
-    };
-    const endDrag = (event: ReactPointerEvent<HTMLDivElement>) => {
-      if (!dragging) return;
-      setDragging(false);
-      try {
-        if (event.currentTarget.hasPointerCapture(event.pointerId)) event.currentTarget.releasePointerCapture(event.pointerId);
-      } catch {
-        /* the capture was never taken, or is already gone */
-      }
+      // The drag keeps hearing the pointer when it leaves the handle (`startSeparatorDrag`, shared with `Splitter`).
+      stopDragRef.current = startSeparatorDrag(event, {
+        onMove: (move) => {
+          if (slotRef.current === null) return;
+          const rect = slotRef.current.getBoundingClientRect();
+          setSidebarWidth(clamp(growsRightward ? move.clientX - rect.left : rect.right - move.clientX));
+        },
+        onEnd: () => {
+          stopDragRef.current = null;
+          setDragging(false);
+        },
+      });
     };
     const onKeyDown = (event: ReactKeyboardEvent<HTMLDivElement>) => {
       const { min, max } = bounds();
@@ -515,22 +505,14 @@ const AppShellSidebar = forwardRef<HTMLDivElement, AppShellSidebarProps>(
       >
         {children}
         {showHandle && (
-          // A separator that takes focus and reports a value is the WAI-ARIA window splitter, an interactive widget; the lint rules know it as plain.
-          // eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions
-          <div
-            role="separator"
-            aria-orientation="vertical"
+          <SeparatorHandle
+            orientation="vertical"
             aria-label={labels.resize}
             aria-valuenow={Math.round(slotWidth)}
             aria-valuemin={Math.round(min)}
             aria-valuemax={Math.round(max)}
-            // eslint-disable-next-line jsx-a11y/no-noninteractive-tabindex
-            tabIndex={0}
             className={styles.resizeHandle}
             onPointerDown={onPointerDown}
-            onPointerMove={onPointerMove}
-            onPointerUp={endDrag}
-            onPointerCancel={endDrag}
             onKeyDown={onKeyDown}
             onDoubleClick={() => setSidebarWidth(undefined)}
           />
@@ -679,32 +661,19 @@ AppShellAside.displayName = "AppShell.Aside";
  * The button that opens the aside's drawer below `asideCollapseBelow`: an `IconButton` that sits outside the aside (in the `Navbar`, a page
  * header). Gone while the aside is on the page, and always gone with `asideCollapseTo="hidden"`.
  */
-const AppShellAsideToggle = forwardRef<HTMLButtonElement, AppShellAsideToggleProps>(
-  ({ icon = SidebarSimpleIcon, variant = "ghost", tone, size = "md", labels: labelsProp, className, onClick, "aria-label": ariaLabel, ...props }, ref) => {
-    const { asideOpen, setAsideOpen, asideToggleRef } = useAppShellContext();
-    const labels = mergeDefined(defaultAsideToggleLabels, labelsProp);
-    return (
-      <IconButton
-        {...props}
-        ref={mergeRefs(asideToggleRef, ref)}
-        icon={icon}
-        variant={variant}
-        tone={tone}
-        size={size}
-        aria-label={ariaLabel ?? labels.open}
-        aria-haspopup="dialog"
-        aria-expanded={asideOpen}
-        className={cx(styles.asideToggle, className)}
-        onClick={(event) => {
-          onClick?.(event);
-          if (event.defaultPrevented) return;
-          asideToggleRef.current = event.currentTarget;
-          setAsideOpen(true);
-        }}
-      />
-    );
-  },
-);
+const AppShellAsideToggle = forwardRef<HTMLButtonElement, AppShellAsideToggleProps>(({ className, ...props }, ref) => {
+  const { asideOpen, setAsideOpen, asideToggleRef } = useAppShellContext();
+  return (
+    <AsideToggleButton
+      {...props}
+      ref={ref}
+      asideOpen={asideOpen}
+      onAsideOpen={() => setAsideOpen(true)}
+      toggleRef={asideToggleRef}
+      className={cx(styles.asideToggle, className)}
+    />
+  );
+});
 AppShellAsideToggle.displayName = "AppShell.AsideToggle";
 
 /**

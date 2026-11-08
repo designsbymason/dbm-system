@@ -48,9 +48,9 @@ export const propOrder = [
   "pageKey",
   "pageTitle",
   "labels",
-  "style",
-  "className",
   "id",
+  "className",
+  "style",
   "data-testid",
 ];
 
@@ -115,19 +115,19 @@ Drive the shell's props live; the sidebar, header and page it is filled with sta
 
 `AppShell.SkipLink` also accepts any other native `<a>` attribute.
 
-<PropertiesTable of={AppShellSkipLinkStories} order={["children", "href", "labels", "style", "className", "id", "data-testid"]} />
+<PropertiesTable of={AppShellSkipLinkStories} order={["children", "href", "labels", "id", "className", "style", "data-testid"]} />
 
 ### AppShell.Banner properties
 
 `AppShell.Banner` also accepts any other native `<div>` attribute.
 
-<PropertiesTable of={AppShellBannerStories} order={["children", "sticky", "style", "className", "id", "data-testid"]} />
+<PropertiesTable of={AppShellBannerStories} order={["children", "sticky", "id", "className", "style", "data-testid"]} />
 
 ### AppShell.Header properties
 
 `AppShell.Header` also accepts any other native `<div>` attribute.
 
-<PropertiesTable of={AppShellHeaderStories} order={["children", "as", "style", "className", "id", "data-testid"]} />
+<PropertiesTable of={AppShellHeaderStories} order={["children", "as", "id", "className", "style", "data-testid"]} />
 
 ### AppShell.Sidebar properties
 
@@ -135,26 +135,26 @@ Drive the shell's props live; the sidebar, header and page it is filled with sta
 
 <PropertiesTable
   of={AppShellSidebarStories}
-  order={["children", "resizable", "minWidth", "maxWidth", "labels", "style", "className", "id", "data-testid"]}
+  order={["children", "resizable", "minWidth", "maxWidth", "labels", "id", "className", "style", "data-testid"]}
 />
 
 ### AppShell.Main properties
 
 `AppShell.Main` also accepts any other native `<main>` attribute.
 
-<PropertiesTable of={AppShellMainStories} order={["children", "busy", "labels", "id", "style", "className", "data-testid"]} />
+<PropertiesTable of={AppShellMainStories} order={["children", "busy", "labels", "id", "className", "style", "data-testid"]} />
 
 ### AppShell.State properties
 
 `AppShell.State` also accepts any other native `<div>` attribute.
 
-<PropertiesTable of={AppShellStateStories} order={["title", "description", "kind", "icon", "actions", "level", "style", "className", "id", "data-testid"]} />
+<PropertiesTable of={AppShellStateStories} order={["title", "description", "kind", "icon", "actions", "level", "id", "className", "style", "data-testid"]} />
 
 ### AppShell.Content properties
 
 `AppShell.Content` also accepts any other native `<div>` attribute.
 
-<PropertiesTable of={AppShellContentStories} order={["children", "size", "paddingInline", "paddingBlock", "style", "className", "id", "data-testid"]} />
+<PropertiesTable of={AppShellContentStories} order={["children", "size", "paddingInline", "paddingBlock", "id", "className", "style", "data-testid"]} />
 
 ### AppShell.Aside properties
 
@@ -162,7 +162,7 @@ Drive the shell's props live; the sidebar, header and page it is filled with sta
 
 <PropertiesTable
   of={AppShellAsideStories}
-  order={["children", "width", "aria-label", "aria-labelledby", "labels", "drawerContainer", "style", "className", "id", "data-testid"]}
+  order={["children", "width", "aria-label", "aria-labelledby", "labels", "drawerContainer", "id", "className", "style", "data-testid"]}
 />
 
 ### AppShell.AsideToggle properties
@@ -171,20 +171,23 @@ Drive the shell's props live; the sidebar, header and page it is filled with sta
 
 <PropertiesTable
   of={AppShellAsideToggleStories}
-  order={["icon", "variant", "tone", "size", "aria-label", "labels", "style", "className", "id", "data-testid"]}
+  order={["icon", "variant", "tone", "size", "aria-label", "labels", "id", "className", "style", "data-testid"]}
 />
 
 ### AppShell.Footer properties
 
 `AppShell.Footer` also accepts any other native `<footer>` attribute.
 
-<PropertiesTable of={AppShellFooterStories} order={["children", "sticky", "style", "className", "id", "data-testid"]} />
+<PropertiesTable of={AppShellFooterStories} order={["children", "sticky", "id", "className", "style", "data-testid"]} />
 
 ### useAppShell
 
 `useAppShell()` gives a part of your own, anywhere inside an `AppShell`, the shell's state. It throws outside one.
 
 <ReferenceTable
+  firstColumnWidth="13rem"
+  minWidth="34rem"
+  label="What useAppShell returns"
   columns={["Name", "Meaning"]}
   rows={[
     ["scroll", "What scrolls: `content` (only the main area) or `page`."],
@@ -365,6 +368,8 @@ Resize or collapse the sidebar, then reload the page: with `persistKey` the shel
 
 ## Best practices
 
+- A `Navbar` in `AppShell.Header` can take its own `sticky` and `hideOnScroll` with `scroll="page"`: the shell keeps the header slot in view and the bar slides out inside it on a scroll down and back on a scroll up. With `scroll="content"` the header never scrolls, so they change nothing.
+- The shell, not the `Navbar`, keeps the banner, the header and a sticky footer in view in `scroll="page"`: they share one grid with the sidebar, and a sticky box only stays in view inside a grid area as tall as the shell (`PageShell` has no grid, so its `Navbar` sticks itself).
 - Printing prints the page, not the navigation: the sidebar, the aside and the skip link are left out, the main area is laid out
   in full and the banner, header and footer are ordinary rows. Put your own page breaks and a table's
   repeating header in the page's own CSS.
@@ -411,11 +416,18 @@ own header slot is a plain `div` by default so that a `Navbar` is never wrapped 
 
 </Callout>
 
-| Key | Behaviour |
-|---|---|
-| `Tab` | Moves through the skip link and the header first, then the sidebar, then the main area's content, then the aside, in markup order. |
-| `Enter` on a skip link | Moves focus to `AppShell.Main`, past the header and the sidebar. |
-| `Escape` in the aside's drawer | Closes it and returns focus to `AppShell.AsideToggle`. |
+<ReferenceTable
+  firstColumnWidth="13rem"
+  plainFirstColumn
+  minWidth="34rem"
+  label="Keyboard behaviour"
+  columns={["Key", "Behaviour"]}
+  rows={[
+    ["`Tab`", "Moves through the skip link and the header first, then the sidebar, then the main area's content, then the aside, in markup order."],
+    ["`Enter` on a skip link", "Moves focus to `AppShell.Main`, past the header and the sidebar."],
+    ["`Escape` in the aside's drawer", "Closes it and returns focus to `AppShell.AsideToggle`."],
+  ]}
+/>
 
 - `AppShell.Main` takes focus from the skip link (`tabindex="-1"`). While it scrolls
   (`scroll="content"` and more content than room) it is also a tab stop, so a keyboard user can scroll

@@ -229,6 +229,8 @@ export function DemoShell({
   sidebarCurrent,
   contentWrapper = false,
   stickyFooter = false,
+  navbarSticky = false,
+  navbarHideOnScroll = false,
   busy,
   state,
   ...props
@@ -250,6 +252,10 @@ export function DemoShell({
   contentWrapper?: boolean;
   /** Makes the footer a bar of actions that stays at the bottom of the window while the page scrolls. */
   stickyFooter?: boolean;
+  /** The header's `Navbar` gets its own `sticky` (a check of what that does inside the shell's header slot). */
+  navbarSticky?: boolean;
+  /** The header's `Navbar` gets its own `hideOnScroll` (needs `navbarSticky`). */
+  navbarHideOnScroll?: boolean;
   /** Marks the main area as busy: a bar along its top edge, `aria-busy` and a polite announcement. */
   busy?: boolean;
   /** Puts a whole-page state in the main area in place of the page. */
@@ -270,7 +276,7 @@ export function DemoShell({
         </AppShell.Banner>
       )}
       <AppShell.Header>
-        <Navbar labels={fa ? faLabels.navbar : undefined}>
+        <Navbar labels={fa ? faLabels.navbar : undefined} sticky={navbarSticky} hideOnScroll={navbarSticky && navbarHideOnScroll}>
           {/* In an app a router handles the link; here the click moves focus to the main area itself and keeps the preview's address unchanged. */}
           <Navbar.SkipLink
             onClick={(event) => {

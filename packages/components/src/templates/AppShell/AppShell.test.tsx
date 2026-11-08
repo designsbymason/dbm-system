@@ -788,6 +788,24 @@ describe("AppShell's remembered layout (persistKey)", () => {
     expect(() => render(<Railed persistKey="other" />)).not.toThrow();
   });
 
+  it("keeps the layout for the page's life when the browser's storage is blocked, as the other remembered things do", async () => {
+    const user = userEvent.setup();
+    vi.spyOn(Storage.prototype, "getItem").mockImplementation(() => {
+      throw new Error("blocked");
+    });
+    vi.spyOn(Storage.prototype, "setItem").mockImplementation(() => {
+      throw new Error("blocked");
+    });
+    const { unmount } = render(<Railed persistKey="blocked-storage-key" />);
+    await user.click(screen.getByRole("button", { name: "Collapse sidebar" }));
+    expect(railState()).toBe("rail");
+    unmount();
+    // Drawn again, it is where the reader left it (the shared storage keeps it in memory), where it used to be forgotten.
+    render(<Railed persistKey="blocked-storage-key" />);
+    expect(railState()).toBe("rail");
+    vi.restoreAllMocks();
+  });
+
   it("does nothing with storage without a key", async () => {
     const user = userEvent.setup();
     render(<Railed />);

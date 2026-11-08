@@ -250,12 +250,12 @@ export interface AppShellProps extends Omit<ComponentPropsWithoutRef<"div">, "di
   pageTitle?: string;
   /** Text the sidebar and its menu button supply themselves, such as the collapse button's name. Merged over the English defaults. The shell has no text of its own. */
   labels?: Partial<SidebarLabels>;
-  /** Inline styles, merged onto the component's own internal styles. */
-  style?: CSSProperties;
-  /** Additional CSS classes for customization. */
-  className?: string;
   /** Standard DOM id. */
   id?: string;
+  /** Additional CSS classes for customization. */
+  className?: string;
+  /** Inline styles, merged onto the component's own internal styles. */
+  style?: CSSProperties;
   /**
    * Test identifier for automated testing (e.g. Testing Library's `getByTestId`, Playwright/Cypress selectors).
    * Rendered as the DOM `data-testid` attribute; has no visual or behavioral effect.
@@ -289,17 +289,22 @@ export interface AppShellSidebarProps extends Omit<ComponentPropsWithoutRef<"div
 }
 
 export interface AppShellHeaderProps extends Omit<ComponentPropsWithoutRef<"div">, "children">, AppShellPartBase {
+  /** The `Navbar`, which is the page's banner landmark and holds the skip link and the menu button. */
+  children?: ReactNode;
   /**
    * The element to render. A plain `div` by default, since a `Navbar` draws the page's `<header>` banner itself and a second one around it
    * would nest two. Pass `"header"` for a header built without a `Navbar`, so the page still has its banner landmark.
    * @default 'div'
    */
   as?: AppShellHeaderElement;
-  /** The `Navbar`, which is the page's banner landmark and holds the skip link and the menu button. */
-  children?: ReactNode;
 }
 
 export interface AppShellMainProps extends Omit<ComponentPropsWithoutRef<"main">, "children">, AppShellPartBase {
+  /**
+   * The page's content. The one `<main>` landmark, and the target of the skip link. With `scroll="content"` it scrolls on its own, and
+   * while it does it is a tab stop (with a focus ring) so the keyboard can scroll it.
+   */
+  children?: ReactNode;
   /**
    * Marks the main area as busy: `aria-busy` is set, a thin indeterminate bar runs along its top edge, and a screen reader is told, politely,
    * that it is loading. For a page whose content is on its way (a route change, a refetch). It does not hide the content: the previous page can
@@ -310,11 +315,6 @@ export interface AppShellMainProps extends Omit<ComponentPropsWithoutRef<"main">
   /** Text the main area supplies itself, namely what a screen reader hears while it is busy. Merged over the English defaults. */
   labels?: Partial<AppShellMainLabels>;
   /**
-   * The page's content. The one `<main>` landmark, and the target of the skip link. With `scroll="content"` it scrolls on its own, and
-   * while it does it is a tab stop (with a focus ring) so the keyboard can scroll it.
-   */
-  children?: ReactNode;
-  /**
    * The id the skip link points at: `Navbar.SkipLink` links to `#main` unless you give it another `href`.
    * @default 'main'
    */
@@ -322,14 +322,14 @@ export interface AppShellMainProps extends Omit<ComponentPropsWithoutRef<"main">
 }
 
 export interface AppShellFooterProps extends Omit<ComponentPropsWithoutRef<"footer">, "children">, AppShellPartBase {
+  /** The page's footer: the `contentinfo` landmark, below the main area and outside its scrolling. */
+  children?: ReactNode;
   /**
    * Keeps the footer at the bottom of the window while the page scrolls (`scroll="page"`), for a bar of actions that must stay in reach, such as
    * Save and Cancel. It clears a home indicator. Nothing changes with `scroll="content"`, where the footer is already outside the scrolling.
    * @default false
    */
   sticky?: boolean;
-  /** The page's footer: the `contentinfo` landmark, below the main area and outside its scrolling. */
-  children?: ReactNode;
 }
 
 export interface AppShellAsideProps extends Omit<ComponentPropsWithoutRef<"aside">, "children">, AppShellPartBase {
@@ -449,16 +449,16 @@ export interface AppShellContentProps extends Omit<ComponentPropsWithoutRef<"div
 }
 
 export interface AppShellStateProps extends Omit<ComponentPropsWithoutRef<"div">, "children" | "title">, AppShellPartBase {
+  /** A short statement of what happened or what is missing ("We couldn't load this page", "No invoices yet"). It is the state's heading. */
+  title: ReactNode;
+  /** A sentence of explanation, or what to do next. */
+  description?: ReactNode;
   /**
    * What the state is: `empty` (there is nothing to show yet) or `error` (something failed, shown in the danger tone and announced to a screen
    * reader when it appears).
    * @default 'empty'
    */
   kind?: AppShellStateKind;
-  /** A short statement of what happened or what is missing ("We couldn't load this page", "No invoices yet"). It is the state's heading. */
-  title: ReactNode;
-  /** A sentence of explanation, or what to do next. */
-  description?: ReactNode;
   /**
    * The icon, a component reference. Left out it is a tray for `empty` and a warning for `error`.
    */

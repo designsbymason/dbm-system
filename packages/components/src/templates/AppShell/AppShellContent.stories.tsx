@@ -15,8 +15,8 @@ const meta: Meta<typeof AppShell.Content> = {
     },
     paddingInline: {
       control: false,
-      description: "Padding at the start and end, on the spacing scale: one step, or a map keyed by breakpoint.",
-      table: { defaultValue: { summary: "{ base: 4, md: 6, lg: 8 }" } },
+      description: "Padding at the start and end, on the spacing scale: one step, or a map keyed by breakpoint. The default steps up with the window: 4, then 6 from md, then 8 from lg.",
+      table: { defaultValue: { summary: "responsive" } },
     },
     paddingBlock: {
       control: false,

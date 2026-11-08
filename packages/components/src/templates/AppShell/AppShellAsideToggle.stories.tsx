@@ -7,7 +7,7 @@ const meta: Meta<typeof AppShell.AsideToggle> = {
   component: AppShell.AsideToggle,
   tags: ["!dev"],
   argTypes: {
-    icon: { control: false, description: "The icon, a component reference.", table: { defaultValue: { summary: "SidebarSimpleIcon" } } },
+    icon: { control: false, description: "The icon, a component reference. The default is the sidebar icon (SidebarSimpleIcon).", table: { defaultValue: { summary: "sidebar icon" } } },
     variant: {
       control: false,
       description: "The button's look: any IconButton variant, so it can match the icon buttons beside it.",
@@ -23,7 +23,7 @@ const meta: Meta<typeof AppShell.AsideToggle> = {
     labels: {
       control: false,
       description: "Text the button supplies itself, namely its accessible name. Merged over the English defaults.",
-      table: { defaultValue: { summary: "{ open: 'Show details' }" } },
+      table: { defaultValue: { summary: "English" } },
     },
     id: { control: false, description: "Standard DOM id." },
     className: { control: false, description: "Additional CSS classes for customization." },

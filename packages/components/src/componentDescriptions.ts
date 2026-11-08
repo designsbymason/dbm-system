@@ -9,7 +9,7 @@ export const componentDescriptions: Record<string, string> = {
   Affix: "Keeps an element sticky while its container scrolls.",
   Alert: "An inline message about a state, with a tone, an optional action and a dismiss button.",
   AlertDialog: "A modal that interrupts to ask for a decision, and is not dismissed by accident.",
-  AppShell: "The page frame of an app: sidebar, header, main area and footer, with its landmarks wired up.",
+  AppShell: "The page frame of an app: sidebar, header, main area, aside and footer, wired up.",
   AspectRatio: "Locks its content to a fixed width-to-height ratio.",
   Avatar: "A person or entity as an image, falling back to initials or an icon.",
   AvatarGroup: "A row of overlapping avatars with a +N count for the rest.",

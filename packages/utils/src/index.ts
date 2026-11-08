@@ -1,6 +1,8 @@
 export * from "./hooks/useAnnouncement";
 export * from "./hooks/useIsScrollable";
 export * from "./hooks/usePersistentDismiss";
+export { readStored as readPersistentValue, writeStored as writePersistentValue, removeStored as removePersistentValue } from "./hooks/persistentStorage";
+export type { PersistentStorage } from "./hooks/persistentStorage";
 export * from "./hooks/useRecentCommands";
 export * from "./hooks/useScrollEdges";
 export * from "./hooks/useSortable";

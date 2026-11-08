@@ -1368,3 +1368,46 @@ export const LeftToRightDemoLeavesLangAlone: Story = {
     await expect(shell).not.toHaveAttribute("lang");
   },
 };
+
+/** A real wheel turn over the middle of the page, mapping the test iframe's scale. */
+async function wheel(deltaY: number) {
+  const frame = window.frameElement?.getBoundingClientRect();
+  const scale = frame ? frame.width / window.innerWidth : 1;
+  const x = (frame?.left ?? 0) + (window.innerWidth / 2) * scale;
+  const y = (frame?.top ?? 0) + (window.innerHeight / 2) * scale;
+  await send("Input.dispatchMouseEvent", { type: "mouseWheel", x, y, deltaX: 0, deltaY });
+}
+
+export const NavbarHidesOnScrollInPageMode: Story = {
+  name: "With scroll page, a Navbar with sticky and hideOnScroll in the header slides out on a real wheel scroll down and back on a scroll up — layout test",
+  render: () => <DemoShell scroll="page" navbarSticky navbarHideOnScroll />,
+  play: async ({ canvasElement }) => {
+    await expect(window.innerWidth).toBeGreaterThanOrEqual(1024);
+    const header = within(canvasElement).getByRole("banner");
+    await expect(Math.abs(header.getBoundingClientRect().top)).toBeLessThan(1);
+    await wheel(900);
+    await waitFor(() => expect(window.scrollY).toBeGreaterThan(300));
+    // The shell keeps the slot in view, and the bar inside it slides out of the window.
+    await waitFor(() => expect(header).toHaveAttribute("data-away"));
+    await waitFor(() => expect(header.getBoundingClientRect().bottom).toBeLessThanOrEqual(1));
+    await wheel(-300);
+    await waitFor(() => expect(header).not.toHaveAttribute("data-away"));
+    await waitFor(() => expect(Math.abs(header.getBoundingClientRect().top)).toBeLessThan(1));
+    window.scrollTo(0, 0);
+  },
+};
+
+export const NavbarStickyIsInertInContentMode: Story = {
+  name: "With scroll content, the header never scrolls, so a Navbar's sticky and hideOnScroll change nothing — layout test",
+  render: () => <DemoShell navbarSticky navbarHideOnScroll />,
+  play: async ({ canvasElement }) => {
+    const header = within(canvasElement).getByRole("banner");
+    const main = within(canvasElement).getByRole("main");
+    main.scrollTop = 600;
+    await waitFor(() => expect(main.scrollTop).toBeGreaterThan(300));
+    await new Promise((resolve) => setTimeout(resolve, 500));
+    await expect(Math.abs(header.getBoundingClientRect().top)).toBeLessThan(1);
+    await expect(header).not.toHaveAttribute("data-away");
+    main.scrollTop = 0;
+  },
+};

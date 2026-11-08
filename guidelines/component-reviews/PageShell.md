@@ -134,3 +134,6 @@ One order for a prop everywhere it is listed, held by `PageShell.docs.test.ts` (
 4. **Registrations:** `04` row 18 names the aside's follow-the-header sticking, the three `Content` widths, `navigating`, `focusTarget` and `scrollToTopOnChange`, and links ADRs 0189, 0190 and 0192.
 5. **Bundle headroom** (JS 11.67KB of 12KB, CSS 6.67KB of 7KB) is left as it is until a feature needs more: the budget note in `check-component-bundle-size.mjs` records why it was raised.
 6. **`focusTarget="heading"`:** an `h1` that cannot take focus no longer keeps `tabindex="-1"`, and the main area takes focus instead; a unit test (broken once, it failed).
+
+## Shared aside toggle (2026-11-08, behaviour-preserving, [ADR-0193](../adr/0193-appshell-and-splitter-share-one-separator-the-two-shells-share-one-aside-toggle-and-appshells-remembered-layout-uses-the-shared-storage-helpers-over-each-keeping-its-own-copy.md))
+`PageShell.AsideToggle` wraps `src/internal/AsideToggleButton.tsx` (which `AppShell.AsideToggle` wraps too) with its own stylesheet class. Nothing it draws or does changed; its unit tests and real-browser checks pass unchanged.

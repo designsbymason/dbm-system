@@ -8,11 +8,6 @@ const meta: Meta<typeof AppShell.Main> = {
   tags: ["!dev"],
   argTypes: {
     children: { control: false, description: "The page's content. The one main landmark, and the target of the skip link." },
-    id: {
-      control: false,
-      description: "The id the skip link points at: Navbar.SkipLink links to #main unless you give it another href.",
-      table: { defaultValue: { summary: "'main'" } },
-    },
     busy: {
       control: false,
       description:
@@ -21,7 +16,12 @@ const meta: Meta<typeof AppShell.Main> = {
     labels: {
       control: false,
       description: "Text the part draws or announces, overridable for translation. Keys: `loading`.",
-      table: { defaultValue: { summary: "{ loading: 'Loading' }" } },
+      table: { defaultValue: { summary: "English" } },
+    },
+    id: {
+      control: false,
+      description: "The id the skip link points at: Navbar.SkipLink links to #main unless you give it another href.",
+      table: { defaultValue: { summary: "'main'" } },
     },
     className: { control: false, description: "Additional CSS classes for customization." },
     style: { control: false, description: "Inline styles, merged onto the component's own internal styles." },

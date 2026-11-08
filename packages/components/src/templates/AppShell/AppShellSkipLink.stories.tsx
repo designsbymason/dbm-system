@@ -16,7 +16,7 @@ const meta: Meta<typeof AppShell.SkipLink> = {
     labels: {
       control: false,
       description: "Text the link supplies itself, namely its words when it has no children. Merged over the English defaults.",
-      table: { defaultValue: { summary: "{ skipToContent: 'Skip to content' }" } },
+      table: { defaultValue: { summary: "English" } },
     },
     id: { control: false, description: "Standard DOM id." },
     className: { control: false, description: "Additional CSS classes for customization." },

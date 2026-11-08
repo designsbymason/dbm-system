@@ -42,7 +42,7 @@ const meta: Meta<PlaygroundArgs> = {
       options: ["ltr", "rtl"],
       description:
         "The reading direction of everything inside. The shell sets it on its own element and provides it to the Sidebar, Navbar and everything inside, so none needs a dir of its own. Left out, the nearest DirectionProvider's, else left-to-right; not read from the page.",
-      table: { defaultValue: { summary: "the provider's, else 'ltr'" } },
+      table: { defaultValue: { summary: '"ltr"' } },
     },
     scrolledEdge: {
       control: "boolean",
@@ -88,11 +88,6 @@ const meta: Meta<PlaygroundArgs> = {
       control: false,
       description: "Called with the new width in pixels when the reader resizes the sidebar, and with undefined when they reset it.",
     },
-    showAside: {
-      control: "boolean",
-      description: "Storybook only — not an AppShell prop. Adds an AppShell.Aside with a detail pane, and the toggle that opens it as a drawer.",
-      table: { disable: true },
-    },
     asideCollapseBelow: {
       control: "select",
       options: ["sm", "md", "lg", "xl", "2xl", "3xl", "never"],
@@ -124,11 +119,16 @@ const meta: Meta<PlaygroundArgs> = {
     labels: {
       control: false,
       description: "Text the sidebar and its menu button supply themselves, merged over the English defaults. The shell has no text of its own.",
-      table: { defaultValue: { summary: "the Sidebar's English labels" } },
+      table: { defaultValue: { summary: "English" } },
     },
-    style: { control: false, description: "Inline styles, merged onto the component's own internal styles." },
-    className: { control: false, description: "Additional CSS classes, on the shell's root." },
+    showAside: {
+      control: "boolean",
+      description: "Storybook only — not an AppShell prop. Adds an AppShell.Aside with a detail pane, and the toggle that opens it as a drawer.",
+      table: { disable: true },
+    },
     id: { control: false, description: "Standard DOM id, on the shell's root." },
+    className: { control: false, description: "Additional CSS classes, on the shell's root." },
+    style: { control: false, description: "Inline styles, merged onto the component's own internal styles." },
     "data-testid": {
       control: false,
       description:

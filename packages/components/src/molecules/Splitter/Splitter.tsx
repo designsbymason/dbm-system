@@ -18,6 +18,7 @@ import {
 } from "react";
 import styles from "./Splitter.module.css";
 import { useDirection } from "../../atoms/DirectionProvider";
+import { SeparatorHandle, startSeparatorDrag } from "../../internal/separator";
 import {
   type PaneConstraints,
   adaptLayout,
@@ -500,36 +501,21 @@ const SplitterRoot = forwardRef<HTMLDivElement, SplitterProps>(
       const start = current.horizontal ? event.clientX : event.clientY;
       const direction = current.horizontal && current.dir === "rtl" ? -1 : 1;
       const base = current.layout;
-      const handle = event.currentTarget;
-      const pointerId = event.pointerId;
       setDragging(index);
-      try {
-        handle.setPointerCapture(pointerId);
-      } catch {
-        // A pointer that isn't active (a synthetic event, or one that has just ended) can't be captured; the
-        // window listeners below carry the drag either way.
-      }
       const move = (moveEvent: PointerEvent) => {
         const distance = ((current.horizontal ? moveEvent.clientX : moveEvent.clientY) - start) * direction;
         const percent = share > 0 ? (distance / share) * 100 : 0;
         request(resizePair(base, index, (base[index] ?? 0) + percent, latest.current.constraints));
       };
-      const finish = () => {
-        dragCleanupRef.current?.();
-        latest.current.onLayoutCommit?.(latest.current.layout);
-      };
-      window.addEventListener("pointermove", move);
-      window.addEventListener("pointerup", finish);
-      window.addEventListener("pointercancel", finish);
+      const stop = startSeparatorDrag(event, {
+        onMove: move,
+        onEnd: () => {
+          dragCleanupRef.current?.();
+          latest.current.onLayoutCommit?.(latest.current.layout);
+        },
+      });
       dragCleanupRef.current = () => {
-        window.removeEventListener("pointermove", move);
-        window.removeEventListener("pointerup", finish);
-        window.removeEventListener("pointercancel", finish);
-        try {
-          handle.releasePointerCapture(pointerId);
-        } catch {
-          // Already released, or never captured (see above).
-        }
+        stop();
         dragCleanupRef.current = null;
         setDragging(null);
       };
@@ -638,15 +624,9 @@ const SplitterRoot = forwardRef<HTMLDivElement, SplitterProps>(
       const open = !collapsedFlags[index];
       const percent = Math.round(size);
       items.push(
-        // A focusable separator is a widget (the ARIA window-splitter pattern); the lint rule that treats every
-        // separator as static content doesn't know that.
-        // eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions
-        <div
+        <SeparatorHandle
           key={`handle-${index}`}
-          role="separator"
-          // eslint-disable-next-line jsx-a11y/no-noninteractive-tabindex
-          tabIndex={0}
-          aria-orientation={horizontal ? "vertical" : "horizontal"}
+          orientation={horizontal ? "vertical" : "horizontal"}
           aria-valuenow={percent}
           aria-valuemin={Math.round(range.min)}
           aria-valuemax={Math.round(range.max)}
@@ -663,7 +643,7 @@ const SplitterRoot = forwardRef<HTMLDivElement, SplitterProps>(
           }}
         >
           {variant === "grip" && <span className={styles.gripMark} aria-hidden="true" />}
-        </div>,
+        </SeparatorHandle>,
       );
     });
 

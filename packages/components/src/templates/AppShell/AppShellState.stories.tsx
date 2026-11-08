@@ -21,6 +21,7 @@ const meta: Meta<typeof AppShell.State> = {
       description: "The title's heading level. A state that replaces the whole page is its heading, so 1; one inside a section sits one level below that section's heading.",
       table: { defaultValue: { summary: "1" } },
     },
+    id: { control: false, description: "Standard DOM id." },
     className: { control: false, description: "Additional CSS classes for customization." },
     style: { control: false, description: "Inline styles, merged onto the component's own internal styles." },
     "data-testid": {

@@ -1,14 +1,13 @@
-import { SidebarSimpleIcon } from "@dbm-system/icons";
 import { cx, mergeDefined, mergeRefs, useIsScrollable } from "@dbm-system/utils";
 import { forwardRef, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import type { CSSProperties } from "react";
 import { Container } from "../../atoms/Container";
 import type { ContainerSize } from "../../atoms/Container";
 import { DirectionProvider, useDirection } from "../../atoms/DirectionProvider";
-import { IconButton } from "../../atoms/IconButton";
 import { SkipLink } from "../../atoms/SkipLink";
 import { VisuallyHidden } from "../../atoms/VisuallyHidden";
 import { AsideDrawer } from "../../internal/AsideDrawer";
+import { AsideToggleButton } from "../../internal/AsideToggleButton";
 import { toLength } from "../../internal/breakpoints";
 import { MainBusy } from "../../internal/MainBusy";
 import { warnOnce } from "../../internal/warnOnce";
@@ -19,7 +18,6 @@ import type {
   PageShellAsideCollapseBelow,
   PageShellAsideLabels,
   PageShellAsideProps,
-  PageShellAsideToggleLabels,
   PageShellAsideToggleProps,
   PageShellBannerProps,
   PageShellBodyProps,
@@ -36,7 +34,6 @@ import type {
 const defaultLabels: PageShellLabels = { loading: "Loading" };
 const defaultMainLabels: PageShellMainLabels = { loading: "Loading" };
 const defaultAsideLabels: PageShellAsideLabels = { title: "Details", close: "Close" };
-const defaultAsideToggleLabels: PageShellAsideToggleLabels = { open: "Show details" };
 
 /** The steps of `Container` each width preset of `PageShell.Content` stands for. */
 const widthSizes: Record<PageShellContentWidth, ContainerSize> = { reading: "md", dashboard: "2xl", full: "full" };
@@ -383,32 +380,19 @@ PageShellAside.displayName = "PageShell.Aside";
  * The button that opens the aside's drawer below `collapseBelow`: an `IconButton` you place anywhere in the page (next to a page header's actions, in a
  * `Navbar`). It shows only below the step and only for an aside with `collapse="drawer"`.
  */
-const PageShellAsideToggle = forwardRef<HTMLButtonElement, PageShellAsideToggleProps>(
-  ({ icon = SidebarSimpleIcon, variant = "ghost", tone, size = "md", labels: labelsProp, className, onClick, "aria-label": ariaLabel, ...props }, ref) => {
-    const { asideOpen, setAsideOpen, asideToggleRef } = usePageShellContext();
-    const labels = mergeDefined(defaultAsideToggleLabels, labelsProp);
-    return (
-      <IconButton
-        {...props}
-        ref={mergeRefs(asideToggleRef as React.RefObject<HTMLButtonElement | null>, ref)}
-        icon={icon}
-        variant={variant}
-        tone={tone}
-        size={size}
-        aria-label={ariaLabel ?? labels.open}
-        aria-haspopup="dialog"
-        aria-expanded={asideOpen}
-        className={cx(styles.asideToggle, className)}
-        onClick={(event) => {
-          onClick?.(event);
-          if (event.defaultPrevented) return;
-          asideToggleRef.current = event.currentTarget;
-          setAsideOpen(true);
-        }}
-      />
-    );
-  },
-);
+const PageShellAsideToggle = forwardRef<HTMLButtonElement, PageShellAsideToggleProps>(({ className, ...props }, ref) => {
+  const { asideOpen, setAsideOpen, asideToggleRef } = usePageShellContext();
+  return (
+    <AsideToggleButton
+      {...props}
+      ref={ref}
+      asideOpen={asideOpen}
+      onAsideOpen={() => setAsideOpen(true)}
+      toggleRef={asideToggleRef}
+      className={cx(styles.asideToggle, className)}
+    />
+  );
+});
 PageShellAsideToggle.displayName = "PageShell.AsideToggle";
 
 /**

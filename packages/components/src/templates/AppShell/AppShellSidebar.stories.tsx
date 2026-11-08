@@ -7,6 +7,7 @@ const meta: Meta<typeof AppShell.Sidebar> = {
   component: AppShell.Sidebar,
   tags: ["!dev"],
   argTypes: {
+    children: { control: false, description: "The `Sidebar`. The column is as wide as the sidebar and is absent from the page while the sidebar is in its phone panel." },
     resizable: {
       control: false,
       description:
@@ -26,9 +27,8 @@ const meta: Meta<typeof AppShell.Sidebar> = {
     labels: {
       control: false,
       description: "Text the resize handle supplies itself, namely its accessible name. Merged over the English defaults.",
-      table: { defaultValue: { summary: "{ resize: 'Resize sidebar' }" } },
+      table: { defaultValue: { summary: "English" } },
     },
-    children: { control: false, description: "The `Sidebar`. The column is as wide as the sidebar and is absent from the page while the sidebar is in its phone panel." },
     id: { control: false, description: "Standard DOM id." },
     className: { control: false, description: "Additional CSS classes for customization." },
     style: { control: false, description: "Inline styles, merged onto the component's own internal styles." },
