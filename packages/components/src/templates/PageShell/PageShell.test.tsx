@@ -448,3 +448,229 @@ describe("PageShell", () => {
     });
   });
 });
+
+describe("PageShell.Aside", () => {
+  function WithAside(props: PageShellProps & { aside?: Partial<React.ComponentProps<typeof PageShell.Aside>>; toggle?: boolean }) {
+    const { aside, toggle = true, ...shell } = props;
+    return (
+      <PageShell data-testid="shell" {...shell}>
+        <PageShell.Body data-testid="body">
+          <PageShell.Main>
+            <h1>Projects</h1>
+            {toggle && <PageShell.AsideToggle />}
+          </PageShell.Main>
+          <PageShell.Aside aria-label="On this page" data-testid="aside" {...aside}>
+            <a href="#overview">Overview</a>
+          </PageShell.Aside>
+        </PageShell.Body>
+      </PageShell>
+    );
+  }
+
+  describe("the body and the landmark", () => {
+    it("draws the aside as a complementary landmark beside the main one, not inside it, both in the body", () => {
+      render(<WithAside />);
+      const aside = screen.getByRole("complementary", { name: "On this page" });
+      const main = screen.getByRole("main");
+      expect(main).not.toContainElement(aside);
+      expect(aside.tagName).toBe("ASIDE");
+      expect(aside.parentElement).toBe(screen.getByTestId("body"));
+      expect(main.parentElement).toBe(screen.getByTestId("body"));
+    });
+
+    it("keeps the order the parts are written in, so an aside written first is first", () => {
+      render(
+        <PageShell>
+          <PageShell.Body data-testid="body">
+            <PageShell.Aside aria-label="First">a</PageShell.Aside>
+            <PageShell.Main>m</PageShell.Main>
+          </PageShell.Body>
+        </PageShell>,
+      );
+      const body = screen.getByTestId("body");
+      expect(Array.from(body.children).map((child) => child.tagName)).toEqual(["ASIDE", "MAIN"]);
+    });
+
+    it("keeps the body to the width preset's step, and an explicit size wins", () => {
+      render(
+        <PageShell>
+          <PageShell.Body width="reading" data-testid="reading">
+            <PageShell.Main>m</PageShell.Main>
+          </PageShell.Body>
+          <PageShell.Body width="dashboard" size="sm" data-testid="explicit">
+            <PageShell.Main id="other">m</PageShell.Main>
+          </PageShell.Body>
+        </PageShell>,
+      );
+      expect(screen.getByTestId("reading").className).toContain("sizeMd");
+      expect(screen.getByTestId("explicit").className).toContain("sizeSm");
+    });
+
+    it("warns, once an aside is drawn without a name, in development", () => {
+      const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
+      render(
+        <PageShell>
+          <PageShell.Body>
+            <PageShell.Main>m</PageShell.Main>
+            <PageShell.Aside>unnamed</PageShell.Aside>
+          </PageShell.Body>
+        </PageShell>,
+      );
+      expect(warn.mock.calls.some((call) => String(call[0]).includes("PageShell.Aside: name it"))).toBe(true);
+      warn.mockRestore();
+    });
+
+    it("does not warn for an aside named by aria-labelledby", () => {
+      const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
+      render(
+        <PageShell>
+          <PageShell.Body>
+            <PageShell.Main>m</PageShell.Main>
+            <h2 id="aside-title">Related</h2>
+            <PageShell.Aside aria-labelledby="aside-title">x</PageShell.Aside>
+          </PageShell.Body>
+        </PageShell>,
+      );
+      expect(warn.mock.calls.some((call) => String(call[0]).includes("PageShell.Aside: name it"))).toBe(false);
+      warn.mockRestore();
+    });
+  });
+
+  describe("how it is marked", () => {
+    it("marks the collapse it has and whether it sticks, and stays on the page at every width with collapseBelow never", () => {
+      const { rerender } = render(<WithAside aside={{ sticky: true, collapse: "drawer" }} />);
+      const aside = screen.getByTestId("aside");
+      expect(aside).toHaveAttribute("data-collapse", "drawer");
+      expect(aside).toHaveAttribute("data-sticky");
+      rerender(<WithAside aside={{ collapseBelow: "never" }} />);
+      expect(screen.getByTestId("aside")).not.toHaveAttribute("data-collapse");
+      expect(screen.getByTestId("aside")).not.toHaveAttribute("data-sticky");
+    });
+
+    it("takes its width as a length or a number of pixels, and its sticky offset as a custom property", () => {
+      const { rerender } = render(<WithAside aside={{ width: "24rem", stickyOffset: "5rem" }} />);
+      expect(screen.getByTestId("aside").style.getPropertyValue("--page-shell-aside-size")).toBe("24rem");
+      expect(screen.getByTestId("aside").style.getPropertyValue("--page-shell-aside-offset")).toBe("5rem");
+      rerender(<WithAside aside={{ width: 300 }} />);
+      expect(screen.getByTestId("aside").style.getPropertyValue("--page-shell-aside-size")).toBe("300px");
+    });
+  });
+
+  // jsdom applies the stylesheet but matches no media query, so the toggle (shown only below the step) is `display: none` here, which has no computed name: it is read by its label.
+  describe("the drawer", () => {
+    it("draws the aside's children in a drawer only with collapse drawer, opened from the toggle, and closes it with Escape", async () => {
+      const user = userEvent.setup();
+      render(<WithAside aside={{ collapse: "drawer" }} />);
+      expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+      const toggle = screen.getByLabelText("Show details");
+      expect(toggle).toHaveAttribute("aria-expanded", "false");
+      expect(toggle).toHaveAttribute("aria-haspopup", "dialog");
+      await user.click(toggle);
+      const dialog = await screen.findByRole("dialog", { name: "On this page" });
+      expect(within(dialog).getByRole("link", { name: "Overview" })).toBeInTheDocument();
+      expect(screen.getByLabelText("Show details")).toHaveAttribute("aria-expanded", "true");
+      await user.keyboard("{Escape}");
+      await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
+    });
+
+    it("draws no drawer for a stacked aside, and a toggle that opens nothing", async () => {
+      const user = userEvent.setup();
+      render(<WithAside />);
+      await user.click(screen.getByLabelText("Show details"));
+      expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    });
+
+    it("starts open with defaultAsideOpen, and tells the app when it opens or closes", async () => {
+      const user = userEvent.setup();
+      const onChange = vi.fn();
+      render(<WithAside aside={{ collapse: "drawer" }} defaultAsideOpen onAsideOpenChange={onChange} />);
+      expect(await screen.findByRole("dialog")).toBeInTheDocument();
+      await user.keyboard("{Escape}");
+      expect(onChange).toHaveBeenCalledWith(false);
+    });
+
+    it("is controlled by asideOpen, and a press asks for the change without making it", async () => {
+      const user = userEvent.setup();
+      const onChange = vi.fn();
+      render(<WithAside aside={{ collapse: "drawer" }} asideOpen={false} onAsideOpenChange={onChange} />);
+      await user.click(screen.getByLabelText("Show details"));
+      expect(onChange).toHaveBeenCalledWith(true);
+      expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    });
+
+    it("gives the drawer its title from aria-label, else from its labels, and takes its close button's words from labels", async () => {
+      const { rerender } = render(<WithAside aside={{ collapse: "drawer", labels: { close: "Fermer" } }} defaultAsideOpen />);
+      expect(await screen.findByRole("dialog", { name: "On this page" })).toBeInTheDocument();
+      expect(screen.getByRole("button", { name: "Fermer" })).toBeInTheDocument();
+      rerender(<WithAside aside={{ collapse: "drawer", "aria-label": undefined, "aria-labelledby": "x", labels: { title: "Détails" } }} defaultAsideOpen />);
+      expect(await screen.findByRole("dialog", { name: "Détails" })).toBeInTheDocument();
+    });
+
+    it("takes the toggle's words and icon from its props", () => {
+      render(
+        <PageShell>
+          <PageShell.AsideToggle labels={{ open: "Afficher" }} data-testid="toggle" variant="secondary" />
+          <PageShell.Main>m</PageShell.Main>
+        </PageShell>,
+      );
+      expect(screen.getByLabelText("Afficher")).toBeInTheDocument();
+    });
+
+    it("works under StrictMode", async () => {
+      const user = userEvent.setup();
+      render(
+        <StrictMode>
+          <WithAside aside={{ collapse: "drawer" }} />
+        </StrictMode>,
+      );
+      await user.click(screen.getByLabelText("Show details"));
+      expect(await screen.findByRole("dialog")).toBeInTheDocument();
+    });
+  });
+
+  describe("refs and passthrough", () => {
+    it("forwards a ref to the aside, the body and the toggle", () => {
+      const aside = createRef<HTMLElement>();
+      const body = createRef<HTMLDivElement>();
+      const toggle = createRef<HTMLButtonElement>();
+      render(
+        <PageShell>
+          <PageShell.Body ref={body}>
+            <PageShell.Main>
+              <PageShell.AsideToggle ref={toggle} />
+            </PageShell.Main>
+            <PageShell.Aside ref={aside} aria-label="A">
+              x
+            </PageShell.Aside>
+          </PageShell.Body>
+        </PageShell>,
+      );
+      expect(aside.current?.tagName).toBe("ASIDE");
+      expect(body.current).toBeInstanceOf(HTMLDivElement);
+      expect(toggle.current?.tagName).toBe("BUTTON");
+    });
+
+    it("accepts className, style, id and data-testid, and a native attribute", () => {
+      render(<WithAside aside={{ className: "c", id: "aside-id", title: "extra", style: { color: "red" } }} />);
+      const aside = screen.getByTestId("aside");
+      expect(aside).toHaveClass("c");
+      expect(aside).toHaveAttribute("id", "aside-id");
+      expect(aside).toHaveAttribute("title", "extra");
+      expect(aside).toHaveStyle({ color: "rgb(255, 0, 0)" });
+    });
+  });
+
+  it("throws for the aside or its toggle outside a shell", () => {
+    const spy = vi.spyOn(console, "error").mockImplementation(() => undefined);
+    expect(() => render(<PageShell.Aside aria-label="x">a</PageShell.Aside>)).toThrow("PageShell parts must be used inside a PageShell.");
+    expect(() => render(<PageShell.AsideToggle />)).toThrow("PageShell parts must be used inside a PageShell.");
+    spy.mockRestore();
+  });
+
+  it("has no accessibility violations beside the page, stacked or as a drawer", async () => {
+    const { container, rerender } = render(<WithAside />);
+    expect(await axe(container)).toHaveNoViolations();
+    rerender(<WithAside aside={{ collapse: "drawer", sticky: true }} />);
+    expect(await axe(container)).toHaveNoViolations();
+  });
+});

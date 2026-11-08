@@ -11,13 +11,16 @@ import { Alert } from "../../molecules/Alert";
 import { EmptyState } from "../../molecules/EmptyState";
 import { Navbar } from "../../organisms/Navbar";
 import * as PageShellStories from "./PageShell.stories";
+import * as PageShellAsideStories from "./PageShellAside.stories";
+import * as PageShellAsideToggleStories from "./PageShellAsideToggle.stories";
+import * as PageShellBodyStories from "./PageShellBody.stories";
 import * as PageShellBannerStories from "./PageShellBanner.stories";
 import * as PageShellContentStories from "./PageShellContent.stories";
 import * as PageShellFooterStories from "./PageShellFooter.stories";
 import * as PageShellMainStories from "./PageShellMain.stories";
 import * as PageShellSkipLinkStories from "./PageShellSkipLink.stories";
 
-export const propOrder = ["children", "pageKey", "pageTitle", "documentTitle", "dir", "style", "className", "id", "data-testid"];
+export const propOrder = ["children", "pageKey", "pageTitle", "documentTitle", "asideOpen", "defaultAsideOpen", "onAsideOpenChange", "dir", "style", "className", "id", "data-testid"];
 
 export const playgroundOrder = ["dir", "sticky", "hideOnScroll", "customHeader", "subNav", "banner"];
 
@@ -86,6 +89,24 @@ Drive the shell's props live. The header controls (`sticky`, `hideOnScroll`, a h
 
 <PropertiesTable of={PageShellContentStories} order={["children", "width", "size", "paddingInline", "paddingBlock", "style", "className", "id", "data-testid"]} />
 
+### PageShell.Body properties
+
+`PageShell.Body` also accepts any other native `<div>` attribute.
+
+<PropertiesTable of={PageShellBodyStories} order={["children", "width", "size", "paddingInline", "paddingBlock", "style", "className", "id", "data-testid"]} />
+
+### PageShell.Aside properties
+
+`PageShell.Aside` also accepts any other native `<aside>` attribute.
+
+<PropertiesTable of={PageShellAsideStories} order={["children", "width", "sticky", "stickyOffset", "collapse", "collapseBelow", "labels", "drawerContainer", "aria-label", "aria-labelledby", "style", "className", "id", "data-testid"]} />
+
+### PageShell.AsideToggle properties
+
+`PageShell.AsideToggle` also accepts any other native `<button>` attribute.
+
+<PropertiesTable of={PageShellAsideToggleStories} order={["icon", "variant", "tone", "size", "aria-label", "labels", "style", "className", "id", "data-testid"]} />
+
 ### PageShell.Footer properties
 
 `PageShell.Footer` also accepts any other native `<footer>` attribute.
@@ -116,6 +137,33 @@ The shell does not wrap the header, so any header works, and it sticks by its ow
 sticking on your `<header>`), and the shadow once it is stuck comes from `onStickyChange`. Pad it with `--page-shell-safe-top` to keep clear of a notch.
 
 <Canvas of={PageShellStories.CustomHeader} />
+
+### An aside beside the page
+
+`PageShell.Body` holds `PageShell.Main` and `PageShell.Aside` side by side, and gives them the width and padding that `PageShell.Content` gives a page
+with none (put the `PageShell.Content` inside `Main`, or the page's own markup, and leave its width to the body). The layout follows the order you write
+them: an aside written first is at the start, and in right-to-left text the sides swap. Below `collapseBelow` (`lg` by default) the aside is stacked under
+the page, in the same order, with no state: nothing is hidden and nothing needs a button. The aside scrolls with the page unless it is `sticky`.
+
+<Canvas of={PageShellStories.WithAside} />
+
+### A sticky aside
+
+`sticky` keeps the aside in view under the header while the page scrolls. It sticks at the header's height as the shell measures it
+(`--page-shell-header-height`, the first direct `<header>` while it is sticky), so a `Navbar` of any height works; pass `stickyOffset` when the header's
+height changes (a second row that scrolls away, `hideOnScroll`). An aside taller than the room below the header scrolls inside itself and becomes a tab
+stop while it does. Stacked on a phone it scrolls with the page.
+
+<Canvas of={PageShellStories.StickyAside} />
+
+### An aside as a drawer
+
+`collapse="drawer"` takes the aside off the page below `collapseBelow` and draws its children in a `Drawer` opened from `PageShell.AsideToggle`, which you
+place where you want it (the page's actions are the usual place). The open state is the root's: `asideOpen` or `defaultAsideOpen`. Growing the window past
+the step closes the drawer and shows the aside again. The demo's step is `3xl` so the drawer shows in the framed box; narrow the window to see it at
+`lg`.
+
+<Canvas of={PageShellStories.AsideDrawer} />
 
 ### A banner above the header
 
@@ -187,6 +235,11 @@ builds the whole title (`(title) => title + " · dbM"`). The title the document 
   the skip link is the first stop.
 - Put the `Navbar` (or your header) directly in the shell, and let it stick by its own `sticky` (or `Affix`). Use `Navbar.SkipLink` inside a `Navbar`, and
   `PageShell.SkipLink` when the header is not a `Navbar`: both go to `#main`, which is `PageShell.Main`'s `id`.
+- Name each `PageShell.Aside` with `aria-label` ("On this page", "Related"): it is a `complementary` landmark, and its name is also the title of its
+  drawer.
+- Put what is secondary in the aside (a table of contents, filters, related links) and write it after `PageShell.Main` when it reads second, so a
+  stacked aside lands under the page. Choose `collapse="drawer"` when the aside is a tool the reader reaches for (filters, details), `stack` when it is
+  content that follows the page.
 - Give a second row of links its own `aria-label`, so the page's navigation landmarks are told apart from the bar's.
 - Pad a sticky header with `--page-shell-safe-top` if the page draws under a notch.
 - Pass `pageKey` (the router's pathname) and `pageTitle`, so a screen-reader user and a keyboard user are told about a page change that no browser
@@ -206,6 +259,8 @@ builds the whole title (`(title) => title + " · dbM"`). The title the document 
   around it is the box it sticks within, so it stops following the window.
 - Don't set `overflow` on an element around the shell, or give it a height: it makes that element the box the header sticks to, so the header stops
   following the window. The shell is as tall as the window already (and taller when the page is).
+- Don't put the page's primary content in the aside: on a phone it is under the page, or behind a button.
+- Don't use `sticky` on a tall aside and expect it to be read without scrolling: it scrolls inside itself, so keep it short or keep it a plain block.
 - Don't keep a tall banner above the header and expect it to stay: it scrolls away with the page.
 - Don't put important navigation only in a second row of links on a phone: it scrolls sideways, so keep the few places everyone needs in the bar's menu.
 
@@ -244,6 +299,11 @@ banner. All of them are real elements, not roles on divs. The shell wraps no hea
 - When `pageKey` changes, focus moves to `PageShell.Main` and, with `pageTitle`, the new title is announced politely. Neither happens on the first
   render, so the page's own load is not announced twice, and nothing happens while `pageKey` is left out. The shell does not scroll the window: that
   is the router's.
+- `PageShell.Aside` is an `<aside>`, a `complementary` landmark, and is named. A development warning says so when it has no `aria-label` or
+  `aria-labelledby`. A sticky aside that scrolls inside itself is a tab stop (`tabindex="0"`) so the keyboard can scroll it, with a focus ring.
+- `PageShell.AsideToggle` shows only below the aside's collapse step with `collapse="drawer"`. It has `aria-haspopup="dialog"` and `aria-expanded`. The
+  drawer is a dialog named by the aside's `aria-label` (else `labels.title`): focus moves into it, `Escape` or a press outside closes it and focus
+  returns to the toggle. Growing the window past the step closes it.
 - While `busy` is set the main area has `aria-busy="true"` and a polite status region says "Loading"; when it clears the region empties, so nothing more
   is read out. The bar is decoration and hidden from assistive technology.
 - The sticky header and the page's own sticky parts keep the system's order of layers (the page's content and `Affix` on the `sticky` step, the skip
@@ -255,6 +315,29 @@ banner. All of them are real elements, not roles on divs. The shell wraps no hea
 - The reading direction is the shell's (`dir`, else the nearest `DirectionProvider`'s), and the `Navbar` inside takes it from the shell. Set `lang` beside it.
 
 ## Code examples
+
+```tsx
+// An aside beside the page, sticky under the header, stacked under the page on a phone
+<PageShell>
+  <Navbar contained sticky>…</Navbar>
+  <PageShell.Body>
+    <PageShell.Main>…</PageShell.Main>
+    <PageShell.Aside aria-label="On this page" sticky>…</PageShell.Aside>
+  </PageShell.Body>
+</PageShell>
+```
+
+```tsx
+// The aside as a drawer below lg, opened from a button among the page's actions
+<PageShell>
+  <PageShell.Body>
+    <PageShell.Main>
+      <PageHeader actions={<PageShell.AsideToggle />}>…</PageHeader>
+    </PageShell.Main>
+    <PageShell.Aside aria-label="Details" collapse="drawer">…</PageShell.Aside>
+  </PageShell.Body>
+</PageShell>
+```
 
 ```tsx
 <PageShell pageKey={pathname} pageTitle={title}>
@@ -325,6 +408,8 @@ The skip link is `SkipLink`, which lists its own tokens.
 <TokenRow token="border-width.1" usage="the thickness of that line" />
 <TokenRow token="border-focus" usage="the focus ring drawn inside the main area while the keyboard has focused it" />
 <TokenRow token="border-width.2" usage="the thickness of that ring, and how far it is drawn inside the edge" />
+<TokenRow token="space.6" usage="the gap between the page and the aside beside it, and the space under the page when the aside is stacked" />
+<TokenRow token="app-shell.aside-width" usage="the width of the aside column, and of its drawer, when it is given no width" />
 <TokenRow token="z-index.sticky" usage="the layer of the page's own content (the loading bar), the step a sticky header's own layer is on" />
 
 ## Related components

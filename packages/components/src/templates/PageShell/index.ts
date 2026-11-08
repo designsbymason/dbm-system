@@ -1,6 +1,13 @@
 export { PageShell } from "./PageShell";
 export type {
+  PageShellAsideCollapse,
+  PageShellAsideCollapseBelow,
+  PageShellAsideLabels,
+  PageShellAsideProps,
+  PageShellAsideToggleLabels,
+  PageShellAsideToggleProps,
   PageShellBannerProps,
+  PageShellBodyProps,
   PageShellContentProps,
   PageShellContentWidth,
   PageShellDirection,

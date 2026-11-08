@@ -10,7 +10,17 @@ import { pageShellPlaygroundSnippet, pageShellSnippets } from "./PageShell.snipp
 // A template is a whole page, so every story fills the window (`layout: "fullscreen"`). The page scrolls as a whole, so open a story on its own to
 // see the header stay at the top; on a Docs page the shell sits in a frame instead (see PageShell.mdx).
 /** The shell's props, and the Storybook-only controls of the demo (the header's `sticky` and `hideOnScroll` are the `Navbar`'s, since the shell wraps no header). */
-type PlaygroundArgs = PageShellProps & { subNav: boolean; banner: boolean; sticky: boolean; hideOnScroll: boolean; customHeader: boolean };
+type PlaygroundArgs = PageShellProps & {
+  subNav: boolean;
+  banner: boolean;
+  sticky: boolean;
+  hideOnScroll: boolean;
+  customHeader: boolean;
+  aside: boolean;
+  asideCollapse: "stack" | "drawer";
+  asideSticky: boolean;
+  asideSide: "start" | "end";
+};
 
 const meta: Meta<PlaygroundArgs> = {
   title: "Templates/Application shells/PageShell",
@@ -38,6 +48,20 @@ const meta: Meta<PlaygroundArgs> = {
         "Keeps the browser tab's title (document.title) in step with pageTitle, so a router does not have to. true sets it to pageTitle; a function builds the whole title from it. The title the document had is put back when the shell unmounts. Nothing happens while pageTitle is left out.",
       table: { defaultValue: { summary: "false" } },
     },
+    asideOpen: {
+      control: false,
+      description:
+        "Whether the aside's drawer is open (controlled), for a PageShell.Aside with collapse=\"drawer\" below its collapse step. Always false while the aside is on the page.",
+    },
+    defaultAsideOpen: {
+      control: false,
+      description: "Whether the aside's drawer starts open (uncontrolled).",
+      table: { defaultValue: { summary: "false" } },
+    },
+    onAsideOpenChange: {
+      control: false,
+      description: "Called with the drawer's next state when it opens or closes (the toggle, a close key, a press outside, the window growing past the step).",
+    },
     dir: {
       control: "radio",
       options: ["ltr", "rtl"],
@@ -60,6 +84,28 @@ const meta: Meta<PlaygroundArgs> = {
       description: "Storybook only — not a PageShell prop. Draws a header of the demo's own, a header made sticky by Affix, in place of the Navbar.",
       table: { disable: true },
     },
+    aside: {
+      control: "boolean",
+      description: "Storybook only — not a PageShell prop. Adds a PageShell.Aside (a table of contents) beside the page, in a PageShell.Body.",
+      table: { disable: true },
+    },
+    asideCollapse: {
+      control: "radio",
+      options: ["stack", "drawer"],
+      description: "Storybook only — the aside's collapse: dropped under the page, or a drawer opened from a toggle beside the page's actions.",
+      table: { disable: true },
+    },
+    asideSticky: {
+      control: "boolean",
+      description: "Storybook only — the aside's sticky: it stays in view under the header.",
+      table: { disable: true },
+    },
+    asideSide: {
+      control: "radio",
+      options: ["start", "end"],
+      description: "Storybook only — which end the aside is at: it is written before or after the main area.",
+      table: { disable: true },
+    },
     subNav: {
       control: "boolean",
       description: "Storybook only — not a PageShell prop. Adds a second row of the project's sections to the demo Navbar: a Navbar.Row that scrolls away.",
@@ -79,7 +125,7 @@ const meta: Meta<PlaygroundArgs> = {
         "Test identifier for automated testing (e.g. Testing Library's getByTestId, Playwright/Cypress selectors). Rendered as the DOM data-testid attribute; has no visual or behavioral effect.",
     },
   },
-  args: { dir: "ltr", sticky: true, hideOnScroll: false, customHeader: false, subNav: false, banner: false },
+  args: { dir: "ltr", sticky: true, hideOnScroll: false, customHeader: false, subNav: false, banner: false, aside: false, asideCollapse: "stack", asideSticky: false, asideSide: "end" },
 };
 
 export default meta;
@@ -90,6 +136,10 @@ const noControls = {
   sticky: { control: false },
   hideOnScroll: { control: false },
   customHeader: { control: false },
+  aside: { control: false },
+  asideCollapse: { control: false },
+  asideSticky: { control: false },
+  asideSide: { control: false },
   dir: { control: false },
   subNav: { control: false },
   banner: { control: false },
@@ -133,6 +183,27 @@ export const CustomHeader: Story = {
   parameters: { docs: { source: { code: pageShellSnippets.customHeader } } },
   argTypes: { ...noControls },
   render: (_args, context) => <DemoPageShell customHeader rows={80} framed={docs(context)} />,
+};
+
+export const WithAside: Story = {
+  name: "An aside beside the page",
+  parameters: { docs: { source: { code: pageShellSnippets.aside } } },
+  argTypes: { ...noControls },
+  render: (_args, context) => <DemoPageShell aside rows={12} framed={docs(context)} />,
+};
+
+export const StickyAside: Story = {
+  name: "An aside that stays in view",
+  parameters: { docs: { source: { code: pageShellSnippets.asideSticky } } },
+  argTypes: { ...noControls },
+  render: (_args, context) => <DemoPageShell aside asideSticky rows={80} framed={docs(context)} />,
+};
+
+export const AsideDrawer: Story = {
+  name: "An aside that becomes a drawer",
+  parameters: { docs: { source: { code: pageShellSnippets.asideDrawer } } },
+  argTypes: { ...noControls },
+  render: (_args, context) => <DemoPageShell aside asideCollapse="drawer" asideCollapseBelow="3xl" rows={12} framed={docs(context)} />,
 };
 
 export const ShortPage: Story = {

@@ -68,6 +68,212 @@
   border-block-start: var(--dbm-border-width-1) solid var(--dbm-border-default);
 }
 
+/* --- The body and the aside --- */
+/* The page and its aside side by side, in the order written (a flex row mirrors in right-to-left text by itself, and nothing is reordered, so the tab
+   order is the reading order). */
+.body {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--dbm-space-6);
+}
+
+.body > .main {
+  flex: 1 1 0;
+  min-inline-size: 0;
+}
+
+.aside {
+  position: relative;
+  flex: none;
+  box-sizing: border-box;
+  inline-size: var(--page-shell-aside-size, var(--dbm-app-shell-aside-width));
+  min-inline-size: 0;
+}
+
+.aside:focus-visible {
+  outline: var(--dbm-border-width-2) solid var(--dbm-border-focus);
+  outline-offset: calc(-1 * var(--dbm-border-width-2));
+}
+
+/* `sticky`: stays in view under the header while the page scrolls, and scrolls inside itself when it is taller than the room below the header.
+   The offset is the app's (`stickyOffset`) or the height the shell measured for its sticky header. It is on the layer of the page's own content, below
+   a sticky header, so it never paints over the bar. */
+.sticky {
+  --page-shell-aside-top: var(--page-shell-aside-offset, var(--page-shell-header-height, 0px));
+
+  position: sticky;
+  inset-block-start: var(--page-shell-aside-top);
+  max-block-size: calc(100dvh - var(--page-shell-aside-top));
+  overflow-y: auto;
+}
+
+/* The toggle that opens the drawer is out of sight until an aside with a drawer has left the page (below). */
+button.asideToggle {
+  display: none;
+}
+
+/* Below the `sm` step (40rem): an aside that stacks drops under the page as a block, one that is a drawer leaves the page and shows its toggle,
+   and a sticky one scrolls with the page. */
+@media not all and (min-width: 40rem) {
+  .body:has(> .collapseSm[data-collapse="stack"]) {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .collapseSm[data-collapse="stack"] {
+    inline-size: auto;
+  }
+
+  .collapseSm[data-collapse="drawer"] {
+    display: none;
+  }
+
+  .root:has(.collapseSm[data-collapse="drawer"]) button.asideToggle {
+    display: inline-flex;
+  }
+
+  .sticky.collapseSm {
+    position: static;
+    max-block-size: none;
+    overflow: visible;
+  }
+}
+
+/* Below the `md` step (48rem): an aside that stacks drops under the page as a block, one that is a drawer leaves the page and shows its toggle,
+   and a sticky one scrolls with the page. */
+@media not all and (min-width: 48rem) {
+  .body:has(> .collapseMd[data-collapse="stack"]) {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .collapseMd[data-collapse="stack"] {
+    inline-size: auto;
+  }
+
+  .collapseMd[data-collapse="drawer"] {
+    display: none;
+  }
+
+  .root:has(.collapseMd[data-collapse="drawer"]) button.asideToggle {
+    display: inline-flex;
+  }
+
+  .sticky.collapseMd {
+    position: static;
+    max-block-size: none;
+    overflow: visible;
+  }
+}
+
+/* Below the `lg` step (64rem): an aside that stacks drops under the page as a block, one that is a drawer leaves the page and shows its toggle,
+   and a sticky one scrolls with the page. */
+@media not all and (min-width: 64rem) {
+  .body:has(> .collapseLg[data-collapse="stack"]) {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .collapseLg[data-collapse="stack"] {
+    inline-size: auto;
+  }
+
+  .collapseLg[data-collapse="drawer"] {
+    display: none;
+  }
+
+  .root:has(.collapseLg[data-collapse="drawer"]) button.asideToggle {
+    display: inline-flex;
+  }
+
+  .sticky.collapseLg {
+    position: static;
+    max-block-size: none;
+    overflow: visible;
+  }
+}
+
+/* Below the `xl` step (80rem): an aside that stacks drops under the page as a block, one that is a drawer leaves the page and shows its toggle,
+   and a sticky one scrolls with the page. */
+@media not all and (min-width: 80rem) {
+  .body:has(> .collapseXl[data-collapse="stack"]) {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .collapseXl[data-collapse="stack"] {
+    inline-size: auto;
+  }
+
+  .collapseXl[data-collapse="drawer"] {
+    display: none;
+  }
+
+  .root:has(.collapseXl[data-collapse="drawer"]) button.asideToggle {
+    display: inline-flex;
+  }
+
+  .sticky.collapseXl {
+    position: static;
+    max-block-size: none;
+    overflow: visible;
+  }
+}
+
+/* Below the `2xl` step (96rem): an aside that stacks drops under the page as a block, one that is a drawer leaves the page and shows its toggle,
+   and a sticky one scrolls with the page. */
+@media not all and (min-width: 96rem) {
+  .body:has(> .collapse2xl[data-collapse="stack"]) {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .collapse2xl[data-collapse="stack"] {
+    inline-size: auto;
+  }
+
+  .collapse2xl[data-collapse="drawer"] {
+    display: none;
+  }
+
+  .root:has(.collapse2xl[data-collapse="drawer"]) button.asideToggle {
+    display: inline-flex;
+  }
+
+  .sticky.collapse2xl {
+    position: static;
+    max-block-size: none;
+    overflow: visible;
+  }
+}
+
+/* Below the `3xl` step (120rem): an aside that stacks drops under the page as a block, one that is a drawer leaves the page and shows its toggle,
+   and a sticky one scrolls with the page. */
+@media not all and (min-width: 120rem) {
+  .body:has(> .collapse3xl[data-collapse="stack"]) {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .collapse3xl[data-collapse="stack"] {
+    inline-size: auto;
+  }
+
+  .collapse3xl[data-collapse="drawer"] {
+    display: none;
+  }
+
+  .root:has(.collapse3xl[data-collapse="drawer"]) button.asideToggle {
+    display: inline-flex;
+  }
+
+  .sticky.collapse3xl {
+    position: static;
+    max-block-size: none;
+    overflow: visible;
+  }
+}
+
 /* Printed, the page is its parts in order, nothing kept in view, and no loading bar (the skip link and a `Navbar` print themselves as they do alone). */
 @media print {
   .root {
@@ -77,6 +283,23 @@
   }
 
   .busyBar {
+    display: none !important;
+  }
+
+  /* The aside prints under the page, in full, whether it is a column, a stack or a drawer on screen (a drawer is never drawn on paper). */
+  .body {
+    display: block !important;
+  }
+
+  .aside {
+    position: static !important;
+    display: block !important;
+    inline-size: auto !important;
+    max-block-size: none !important;
+    overflow: visible !important;
+  }
+
+  button.asideToggle {
     display: none !important;
   }
 

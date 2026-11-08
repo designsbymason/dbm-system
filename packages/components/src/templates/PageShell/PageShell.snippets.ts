@@ -78,6 +78,55 @@ ${main()}
 ${footer}
 </PageShell>`,
 
+  aside: `{/* A page with an aside: PageShell.Body (the width and padding PageShell.Content has) holds PageShell.Main and PageShell.Aside side by side, in the
+    order written. The aside is a landmark beside <main>, so name it. It scrolls with the page, and below its step (lg) it drops under the page. */}
+${shell("", [
+  skipLink,
+  header(),
+  `  <PageShell.Body>
+    <PageShell.Main>
+      <h1>Projects</h1>
+    </PageShell.Main>
+    <PageShell.Aside aria-label="On this page">
+      <nav aria-label="On this page">…</nav>
+    </PageShell.Aside>
+  </PageShell.Body>`,
+  footer,
+])}`,
+
+  asideSticky: `{/* sticky keeps the aside in view under the header while the page scrolls (it scrolls inside itself if it is taller than the room), and below
+    its step it scrolls with the page. The offset is the header's height as the shell measures it; pass stickyOffset for a header whose height changes. */}
+${shell("", [
+  skipLink,
+  header(),
+  `  <PageShell.Body>
+    <PageShell.Main>
+      <h1>Projects</h1>
+    </PageShell.Main>
+    <PageShell.Aside aria-label="On this page" sticky>
+      <nav aria-label="On this page">…</nav>
+    </PageShell.Aside>
+  </PageShell.Body>`,
+  footer,
+])}`,
+
+  asideDrawer: `{/* collapse="drawer": below its step the aside leaves the page and its children are drawn in a drawer that PageShell.AsideToggle opens. Place the
+    toggle anywhere in the page, such as beside the page's actions. The open state is on the shell (asideOpen, defaultAsideOpen, onAsideOpenChange). */}
+<PageShell>
+  <PageShell.SkipLink />
+${header()}
+  <PageShell.Body>
+    <PageShell.Main>
+      <h1>Projects</h1>
+      <PageShell.AsideToggle />
+    </PageShell.Main>
+    <PageShell.Aside aria-label="Filters" collapse="drawer">
+      <p>Filters</p>
+    </PageShell.Aside>
+  </PageShell.Body>
+${footer}
+</PageShell>`,
+
   documentTitle: `{/* documentTitle keeps the browser tab's title in step with pageTitle, so the router does not have to: true sets it to pageTitle, a
     function builds the whole title. The title the document had comes back when the shell unmounts. */}
 <PageShell pageKey={pathname} pageTitle="Projects" documentTitle={(title) => \`\${title} · dbM\`}>
@@ -191,6 +240,11 @@ export interface PageShellPlaygroundSnippetArgs {
   customHeader?: boolean;
   subNav?: boolean;
   banner?: boolean;
+  aside?: boolean;
+  asideCollapse?: "stack" | "drawer";
+  asideSticky?: boolean;
+  asideSide?: "start" | "end";
+  asideCollapseBelow?: string;
 }
 
 /** The Playground's snippet, built from the live controls: only the props that differ from their defaults, around a small real shell. */
@@ -211,5 +265,19 @@ export function pageShellPlaygroundSnippet(args: PageShellPlaygroundSnippetArgs)
     <header style={{ background: "var(--dbm-bg-surface)" }}>Your header</header>
   </Affix>`
     : header(args.subNav ? subNav : "", language, navbarAttributes);
-  return shell(attributes.join(" "), [skipLink, ...(banner ? [banner] : []), top, main("", language), footer]);
+  let body = main("", language);
+  if (args.aside) {
+    const asideAttributes = ['aria-label="On this page"'];
+    if (args.asideSticky) asideAttributes.push("sticky");
+    if (args.asideCollapse === "drawer") asideAttributes.push('collapse="drawer"');
+    if (args.asideCollapseBelow !== undefined && args.asideCollapseBelow !== "lg") asideAttributes.push(`collapseBelow="${args.asideCollapseBelow}"`);
+    const asideElement = `    <PageShell.Aside ${asideAttributes.join(" ")}>
+      <nav aria-label="On this page">…</nav>
+    </PageShell.Aside>`;
+    const mainElement = `    <PageShell.Main>
+      <h1>${words[language].title}</h1>${args.asideCollapse === "drawer" ? "\n      <PageShell.AsideToggle />" : ""}
+    </PageShell.Main>`;
+    body = `  <PageShell.Body>\n${args.asideSide === "start" ? `${asideElement}\n${mainElement}` : `${mainElement}\n${asideElement}`}\n  </PageShell.Body>`;
+  }
+  return shell(attributes.join(" "), [skipLink, ...(banner ? [banner] : []), top, body, footer]);
 }

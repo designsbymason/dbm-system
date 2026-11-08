@@ -31,6 +31,16 @@ describe("PageShell on the server", () => {
     expect(html).toContain("data-navbar-trailing");
   });
 
+  it("renders an aside as a sibling landmark of main, marked with its collapse, without a DOM", () => {
+    const html = onTheServer(() => renderToString(<DemoPageShell aside asideSticky asideCollapse="drawer" />));
+    expect(html.match(/<aside/g)).toHaveLength(1);
+    expect(html.match(/<main/g)).toHaveLength(1);
+    expect(html).toContain('data-collapse="drawer"');
+    expect(html).toContain("data-sticky");
+    // The drawer is drawn only once it is open, in a portal, so the server draws none.
+    expect(html).not.toContain('role="dialog"');
+  });
+
   it("renders a right-to-left shell in Persian without a DOM", () => {
     const html = onTheServer(() => renderToString(<DemoPageShell dir="rtl" />));
     expect(html).toContain('dir="rtl"');
@@ -54,6 +64,8 @@ describe("PageShell on the server", () => {
     ["a page", {}],
     ["a right-to-left page", { dir: "rtl" as const }],
     ["a busy page with every part", { subNav: true, banner: true, busy: true }],
+    ["a page with a sticky aside as a drawer", { aside: true, asideSticky: true, asideCollapse: "drawer" as const, defaultAsideOpen: false }],
+    ["a right-to-left page with an aside at the start", { dir: "rtl" as const, aside: true, asideSide: "start" as const }],
   ])("hydrates %s with no mismatch", async (_name, props) => {
     const html = onTheServer(() => renderToString(<DemoPageShell {...props} />));
     // A sticky `Navbar` (an `Affix`) watches a sentinel with an `IntersectionObserver`, which jsdom does not have.

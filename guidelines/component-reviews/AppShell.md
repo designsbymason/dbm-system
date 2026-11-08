@@ -110,3 +110,6 @@ The full `06` §9 pass on the current shell, after the additions of ADR-0180 to 
 
 ## Shared skip link (2026-11-07, at explicit direction)
 The skip link's stylesheet moved to `src/internal/skipLink.module.css`, which `PageShell` now uses too (it was a line-for-line copy). Nothing `AppShell` draws changed, and its unit tests and real-browser checks pass unchanged.
+
+## Shared aside drawer (2026-11-07, behaviour-preserving, [ADR-0189](../adr/0189-pageshell-has-an-aside-beside-main-in-a-body-that-stacks-under-the-page-by-default-with-an-optional-drawer-and-shares-the-aside-drawer-with-appshell-over-an-aside-inside-the-content-or-a-copy-of-the-drawer.md))
+`AppShell.Aside`'s drawer (its breakpoint table, the close-when-wide effect and the `Drawer`) moved to `src/internal/AsideDrawer.tsx`, which `PageShell.Aside` uses too. Nothing `AppShell` draws or does changed; its unit and browser checks pass unchanged.

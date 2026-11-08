@@ -1,9 +1,15 @@
 import { createContext, useContext } from "react";
 import type { RefObject } from "react";
 
-/** What the shell's parts share: the `<main>`, which a page change moves focus to. */
+/** What the shell's parts share: the `<main>`, which a page change moves focus to, and the aside's drawer state. */
 export interface PageShellContextValue {
   mainRef: RefObject<HTMLElement | null>;
+  /** Whether the aside's drawer is open. */
+  asideOpen: boolean;
+  /** Opens or closes the aside's drawer, and reports it through `onAsideOpenChange`. */
+  setAsideOpen: (open: boolean) => void;
+  /** The toggle that opened the drawer, which gets focus back when it closes. */
+  asideToggleRef: RefObject<HTMLElement | null>;
 }
 
 export const PageShellContext = createContext<PageShellContextValue | null>(null);

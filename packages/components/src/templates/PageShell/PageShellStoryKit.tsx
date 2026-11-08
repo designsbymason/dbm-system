@@ -48,6 +48,8 @@ export const demoCopy = {
     cardText: "Updated by the team a few days ago.",
     open: "Open",
     newProject: "New project",
+    asideTitle: "On this page",
+    asideLinks: ["Overview", "Recent activity", "Members", "Billing", "Danger zone"],
     footerNavigation: "Footer",
     footerLinks: ["Help", "Privacy", "Terms"],
     footer: "© dbM",
@@ -79,6 +81,8 @@ export const demoCopy = {
     cardText: "چند روز پیش به‌روزرسانی شد.",
     open: "باز کردن",
     newProject: "پروژه جدید",
+    asideTitle: "در این صفحه",
+    asideLinks: ["نمای کلی", "فعالیت اخیر", "اعضا", "صورت‌حساب", "منطقه خطر"],
     footerNavigation: "پاورقی",
     footerLinks: ["راهنما", "حریم خصوصی", "شرایط"],
     footer: "© dbM",
@@ -135,8 +139,24 @@ function DemoCustomHeader({ language, scrollContainerRef }: { language: Language
   );
 }
 
+/** What a demo's aside holds: "On this page", a table of contents of links. */
+function DemoAsideContent({ language }: { language: Language }) {
+  const copy = demoCopy[language];
+  return (
+    <div style={{ display: "grid", gap: "var(--dbm-space-3)", padding: "var(--dbm-space-4)", border: "var(--dbm-border-width-1) solid var(--dbm-border-default)", borderRadius: "var(--dbm-radius-lg)" }}>
+      <nav aria-label={copy.asideTitle} style={{ display: "grid", gap: "var(--dbm-space-2)" }}>
+        {copy.asideLinks.map((label) => (
+          <Link key={label} href="#" onClick={preventNavigation}>
+            {label}
+          </Link>
+        ))}
+      </nav>
+    </div>
+  );
+}
+
 /** The page a demo shell shows in its main area: a heading, and `rows` cards in a grid (24 is longer than a window, 3 is shorter). */
-export function DemoPage({ language = "en", rows = 24, state }: { language?: Language; rows?: number; state?: "empty" | "error" }) {
+export function DemoPage({ language = "en", rows = 24, state, extraActions }: { language?: Language; rows?: number; state?: "empty" | "error"; extraActions?: ReactNode }) {
   const copy = demoCopy[language];
   if (state !== undefined) {
     return (
@@ -156,6 +176,7 @@ export function DemoPage({ language = "en", rows = 24, state }: { language?: Lan
         <PageHeader.Title>{copy.title}</PageHeader.Title>
         <PageHeader.Description>{copy.intro}</PageHeader.Description>
         <PageHeader.Actions>
+          {extraActions}
           <Button onClick={preventClick}>{copy.newProject}</Button>
         </PageHeader.Actions>
       </PageHeader>
@@ -197,6 +218,18 @@ export interface DemoPageShellProps extends PageShellProps {
   customHeader?: boolean;
   /** The width preset of the page's content. */
   contentWidth?: PageShellContentWidth;
+  /** Adds a `PageShell.Aside` of a table of contents beside the page, in a `PageShell.Body`. */
+  aside?: boolean;
+  /** What the aside becomes below its step: dropped under the page, or a drawer opened from a toggle in the page header. */
+  asideCollapse?: "stack" | "drawer";
+  /** Whether the aside stays in view under the header. */
+  asideSticky?: boolean;
+  /** The sticky aside's own offset, a CSS length, in place of the header's measured height. */
+  asideStickyOffset?: string;
+  /** Which end the aside is at: it is written before or after the main area, and the layout follows. */
+  asideSide?: "start" | "end";
+  /** The step the aside leaves its column at. */
+  asideCollapseBelow?: "sm" | "md" | "lg" | "xl" | "2xl" | "3xl" | "never";
   /** Adds a `PageShell.Banner` with a notice. */
   banner?: boolean;
   /** Marks the main area as busy. */
@@ -222,6 +255,12 @@ export function DemoPageShell({
   hideOnScroll = false,
   customHeader = false,
   contentWidth,
+  aside = false,
+  asideCollapse = "stack",
+  asideSticky = false,
+  asideStickyOffset,
+  asideSide = "end",
+  asideCollapseBelow = "lg",
   banner = false,
   busy,
   rows,
@@ -237,6 +276,7 @@ export function DemoPageShell({
   const sections = useDemoCurrent("overview");
   // In a framed demo the bar sticks within the frame, which is the box that scrolls, so the bar is told which box it is.
   const frameRef = useRef<HTMLDivElement | null>(null);
+  const [frame, setFrame] = useState<HTMLDivElement | null>(null);
   const scrollContainerRef = framed ? frameRef : undefined;
   /** A link of the bar: the current mark follows the choice, and the app is told, as a router would be. */
   const link = (id: "projects" | "reports" | "team" | "settings") => {
@@ -249,6 +289,20 @@ export function DemoPageShell({
       },
     };
   };
+  const asideElement = (
+    <PageShell.Aside
+      aria-label={copy.asideTitle}
+      sticky={asideSticky}
+      stickyOffset={asideStickyOffset}
+      collapse={asideCollapse}
+      collapseBelow={asideCollapseBelow}
+      drawerContainer={framed ? frame : undefined}
+      labels={fa ? { title: copy.asideTitle, close: "بستن" } : undefined}
+    >
+      <DemoAsideContent language={language} />
+    </PageShell.Aside>
+  );
+  const asideToggle = <PageShell.AsideToggle variant="secondary" tone="neutral" labels={fa ? { open: "نمایش جزئیات" } : undefined} />;
   const shell = (
     <PageShell {...props} lang={props.lang ?? (fa ? "fa" : undefined)} style={framed ? { minBlockSize: "100%", ...props.style } : props.style}>
       {/* In an app a router handles the link; here the click moves focus to the main area itself and keeps the preview's address unchanged. */}
@@ -308,9 +362,20 @@ export function DemoPageShell({
           )}
         </Navbar>
       )}
-      <PageShell.Main busy={busy} labels={fa ? mainLabelsFa : undefined}>
-        <PageShell.Content width={contentWidth}>{children ?? <DemoPage language={language} rows={rows} state={state} />}</PageShell.Content>
-      </PageShell.Main>
+      {aside ? (
+        // A page with an aside: the width is the body's, around the main area and the aside, which is a landmark of its own beside `<main>`.
+        <PageShell.Body width={contentWidth}>
+          {asideSide === "start" && asideElement}
+          <PageShell.Main busy={busy} labels={fa ? mainLabelsFa : undefined}>
+            {children ?? <DemoPage language={language} rows={rows} state={state} extraActions={asideCollapse === "drawer" ? asideToggle : undefined} />}
+          </PageShell.Main>
+          {asideSide !== "start" && asideElement}
+        </PageShell.Body>
+      ) : (
+        <PageShell.Main busy={busy} labels={fa ? mainLabelsFa : undefined}>
+          <PageShell.Content width={contentWidth}>{children ?? <DemoPage language={language} rows={rows} state={state} />}</PageShell.Content>
+        </PageShell.Main>
+      )}
       <PageShell.Footer>
         <PageShell.Content paddingBlock={4} style={{ display: "flex", flexWrap: "wrap", gap: "var(--dbm-space-4)", justifyContent: "space-between" }}>
           <Text size="sm" color="secondary">
@@ -330,10 +395,15 @@ export function DemoPageShell({
   if (!framed) return shell;
   return (
     <div
-      ref={frameRef}
+      ref={(element) => {
+        frameRef.current = element;
+        setFrame(element);
+      }}
       style={{
         blockSize: frameHeight,
         overflow: "auto",
+        // The drawer opens inside the frame, so the frame is its containing block.
+        ...(aside && asideCollapse === "drawer" ? { position: "relative", transform: "translateZ(0)" } : undefined),
         border: "var(--dbm-border-width-1) solid var(--dbm-border-default)",
         borderRadius: "var(--dbm-radius-lg)",
       }}

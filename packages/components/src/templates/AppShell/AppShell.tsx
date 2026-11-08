@@ -8,8 +8,9 @@ import { IconButton } from "../../atoms/IconButton";
 import { VisuallyHidden } from "../../atoms/VisuallyHidden";
 import { SkipLink } from "../../atoms/SkipLink";
 import { EmptyState } from "../../molecules/EmptyState";
-import { Drawer } from "../../organisms/Drawer";
 import { Sidebar } from "../../organisms/Sidebar";
+import { AsideDrawer } from "../../internal/AsideDrawer";
+import { minWidthQueries, toLength } from "../../internal/breakpoints";
 import { MainBusy } from "../../internal/MainBusy";
 import { usePageChange } from "../../internal/usePageChange";
 import styles from "./AppShell.module.css";
@@ -88,21 +89,6 @@ function toPixels(value: number | string | undefined, fallback: number): number 
   if (match === null) return fallback;
   const amount = Number.parseFloat(match[1] as string);
   return match[2] === "rem" ? amount * rootFontSize() : amount;
-}
-
-// The widths the aside's collapse steps stand for: the literal values of the breakpoint tokens (a media query can't read a custom property),
-// as `Sidebar` and `Drawer` write them.
-const breakpointQueries: Record<Exclude<AppShellAsideCollapseBelow, "never">, string> = {
-  sm: "(min-width: 40rem)",
-  md: "(min-width: 48rem)",
-  lg: "(min-width: 64rem)",
-  xl: "(min-width: 80rem)",
-  "2xl": "(min-width: 96rem)",
-  "3xl": "(min-width: 120rem)",
-};
-
-function toLength(width: number | string): string {
-  return typeof width === "number" ? `${width}px` : width;
 }
 
 /**
@@ -262,7 +248,7 @@ const AppShellRoot = forwardRef<HTMLDivElement, AppShellProps>(
     changeCollapsedRef.current = changeCollapsed;
     useBeforePaint(() => {
       if (railBelow === "never" || typeof window === "undefined" || typeof window.matchMedia !== "function") return undefined;
-      const query = window.matchMedia(breakpointQueries[railBelow]);
+      const query = window.matchMedia(minWidthQueries[railBelow]);
       if (rememberedCollapsed.current === undefined) changeCollapsedRef.current(!query.matches, "auto");
       const onChange = () => changeCollapsedRef.current(!query.matches, "auto");
       query.addEventListener?.("change", onChange);
@@ -650,22 +636,9 @@ const AppShellAside = forwardRef<HTMLElement, AppShellAsideProps>(
     const { scroll, dir, asideCollapseBelow, asideCollapseTo, asideOpen, setAsideOpen, asideToggleRef } = useAppShellContext();
     const labels = mergeDefined(defaultAsideLabels, labelsProp);
     const innerRef = useRef<HTMLElement>(null);
-    const asideDrawerRef = useRef<HTMLDivElement>(null);
     const scrolls = useIsScrollable(innerRef, "y");
     const size = width !== undefined ? toLength(width) : "var(--dbm-app-shell-aside-width)";
     const asDrawer = asideCollapseTo === "drawer" && asideCollapseBelow !== "never";
-
-    // Past the width where the aside is back on the page, a drawer left open would sit over a column already on show.
-    useEffect(() => {
-      if (!asDrawer || !asideOpen || typeof window === "undefined" || typeof window.matchMedia !== "function") return undefined;
-      const query = window.matchMedia(breakpointQueries[asideCollapseBelow as Exclude<AppShellAsideCollapseBelow, "never">]);
-      const close = () => {
-        if (query.matches) setAsideOpen(false);
-      };
-      close();
-      query.addEventListener?.("change", close);
-      return () => query.removeEventListener?.("change", close);
-    }, [asDrawer, asideOpen, asideCollapseBelow, setAsideOpen]);
 
     return (
       <>
@@ -682,31 +655,19 @@ const AppShellAside = forwardRef<HTMLElement, AppShellAsideProps>(
           {children}
         </aside>
         {asDrawer && (
-          <Drawer open={asideOpen} onOpenChange={(open) => setAsideOpen(open)}>
-            <Drawer.Content
-              side="end"
-              size={size}
-              dir={dir}
-              container={drawerContainer}
-              labels={{ close: labels.close }}
-              aria-describedby={undefined}
-              ref={asideDrawerRef}
-              onCloseAutoFocus={(event) => {
-                // Focus goes back to the toggle only if it is still in the drawer or has fallen to the page; a page change that moved it to the main
-                // area while the drawer was closing has put it where the reader should be (`06` §9).
-                const toggle = asideToggleRef.current;
-                if (toggle === null || !toggle.isConnected) return;
-                event.preventDefault();
-                const active = document.activeElement;
-                if (active === null || active === document.body || asideDrawerRef.current?.contains(active)) toggle.focus();
-              }}
-            >
-              <Drawer.Header>
-                <Drawer.Title>{ariaLabel ?? labels.title}</Drawer.Title>
-              </Drawer.Header>
-              <Drawer.Body>{children}</Drawer.Body>
-            </Drawer.Content>
-          </Drawer>
+          <AsideDrawer
+            open={asideOpen}
+            onOpenChange={setAsideOpen}
+            collapseBelow={asideCollapseBelow as Exclude<AppShellAsideCollapseBelow, "never">}
+            size={size}
+            dir={dir}
+            container={drawerContainer}
+            title={ariaLabel ?? labels.title}
+            closeLabel={labels.close}
+            toggleRef={asideToggleRef}
+          >
+            {children}
+          </AsideDrawer>
         )}
       </>
     );

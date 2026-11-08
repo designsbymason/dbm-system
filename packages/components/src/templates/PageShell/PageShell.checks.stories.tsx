@@ -20,7 +20,7 @@ type Story = StoryObj;
 const nextFrame = () => new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
 
 /** A real key press through the Chrome DevTools Protocol: a synthetic one neither sets `:focus-visible` nor scrolls anything. */
-async function press(key: "Tab" | "Enter", windowsVirtualKeyCode: number, text?: string) {
+async function press(key: "Tab" | "Enter" | "Escape", windowsVirtualKeyCode: number, text?: string) {
   await send("Input.dispatchKeyEvent", { type: "keyDown", key, code: key, windowsVirtualKeyCode, ...(text ? { text } : {}) });
   await send("Input.dispatchKeyEvent", { type: "keyUp", key, code: key, windowsVirtualKeyCode });
 }
@@ -480,5 +480,200 @@ export const CustomHeaderSticksByAffix: Story = {
     await waitFor(() => expect(getComputedStyle(bar).boxShadow).not.toBe("none"));
     await atTop();
     await waitFor(() => expect(getComputedStyle(bar).boxShadow).toBe("none"));
+  },
+};
+
+// --- The aside ---
+
+const asideOf = (canvasElement: HTMLElement) => within(canvasElement).getByRole("complementary");
+
+export const AsideBesideThePage: Story = {
+  name: "On a desktop the aside is a column beside the page at the end edge, as wide as its width, with no page overflow — layout test",
+  render: () => <DemoPageShell aside rows={12} />,
+  play: async ({ canvasElement }) => {
+    await expect(window.innerWidth).toBeGreaterThanOrEqual(1024);
+    const { main } = slots(canvasElement);
+    const aside = asideOf(canvasElement);
+    const body = aside.parentElement as HTMLElement;
+    await expect(main.parentElement).toBe(body);
+    await expect(main.getBoundingClientRect().right).toBeLessThanOrEqual(aside.getBoundingClientRect().left + 1);
+    await expect(Math.abs(aside.getBoundingClientRect().top - main.getBoundingClientRect().top)).toBeLessThan(2);
+    // The width is the token's (a CSS length), the same wherever the page is.
+    const probe = document.createElement("div");
+    probe.style.inlineSize = "var(--dbm-app-shell-aside-width)";
+    document.body.append(probe);
+    const tokenWidth = probe.getBoundingClientRect().width;
+    probe.remove();
+    await expect(Math.abs(aside.getBoundingClientRect().width - tokenWidth)).toBeLessThan(1);
+    await expect(Math.abs(aside.getBoundingClientRect().right - (body.getBoundingClientRect().right - parseFloat(getComputedStyle(body).paddingRight)))).toBeLessThan(2);
+    await expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(window.innerWidth);
+  },
+};
+
+export const AsideStacksUnderThePageOnAPhone: Story = {
+  name: "On a phone an aside that stacks drops under the page, full width, in the order written, with no page overflow — layout test",
+  globals: { viewport: { value: "mobile1", isRotated: false } },
+  render: () => <DemoPageShell aside rows={3} />,
+  play: async ({ canvasElement }) => {
+    await expect(window.innerWidth).toBeLessThan(768);
+    const { main } = slots(canvasElement);
+    const aside = asideOf(canvasElement);
+    await expect(aside.getBoundingClientRect().top).toBeGreaterThanOrEqual(main.getBoundingClientRect().bottom - 1);
+    await expect(Math.abs(aside.getBoundingClientRect().width - main.getBoundingClientRect().width)).toBeLessThan(2);
+    await expect(getComputedStyle(aside).display).not.toBe("none");
+    await expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(window.innerWidth);
+  },
+};
+
+export const AsideFollowsTheOrderWrittenAndMirrors: Story = {
+  name: "An aside written first is at the start, and in right-to-left text the sides swap — direction test",
+  render: () => <DemoPageShell aside asideSide="start" rows={6} />,
+  play: async ({ canvasElement }) => {
+    const { main } = slots(canvasElement);
+    const aside = asideOf(canvasElement);
+    await expect(aside.getBoundingClientRect().right).toBeLessThanOrEqual(main.getBoundingClientRect().left + 1);
+    // The tab order is the written order: the aside comes before the page's content.
+    await expect(aside.compareDocumentPosition(main) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  },
+};
+
+export const AsideMirrorsInRightToLeft: Story = {
+  name: "In right-to-left text an aside written after the page is at the left — direction test",
+  render: () => <DemoPageShell dir="rtl" aside rows={6} />,
+  play: async ({ canvasElement }) => {
+    const { main } = slots(canvasElement);
+    const aside = asideOf(canvasElement);
+    await expect(aside.getBoundingClientRect().right).toBeLessThanOrEqual(main.getBoundingClientRect().left + 1);
+  },
+};
+
+export const AsideScrollsWithThePageUnlessSticky: Story = {
+  name: "An aside scrolls away with the page, and with sticky stays under the Navbar at its measured height — layout test",
+  render: () => <DemoPageShell aside asideSticky rows={80} />,
+  play: async ({ canvasElement }) => {
+    await expect(window.innerWidth).toBeGreaterThanOrEqual(1024);
+    const { bar, shell } = slots(canvasElement);
+    const aside = asideOf(canvasElement);
+    await atTop();
+    const start = aside.getBoundingClientRect().top;
+    await wheel(900);
+    await waitFor(() => expect(window.scrollY).toBeGreaterThan(300));
+    await settled();
+    // Stuck: at the bar's bottom edge (the header's height as the shell measured it), not scrolled away with the page.
+    await expect(Math.abs(aside.getBoundingClientRect().top - bar.getBoundingClientRect().bottom)).toBeLessThan(2);
+    await expect(Math.abs(parseFloat(shell.style.getPropertyValue("--page-shell-header-height")) - bar.getBoundingClientRect().height)).toBeLessThan(1);
+    await expect(start).toBeGreaterThan(bar.getBoundingClientRect().bottom);
+    await atTop();
+  },
+};
+
+export const AsideThatIsNotStickyScrollsAway: Story = {
+  name: "Without sticky the aside scrolls away with the page — layout test",
+  render: () => <DemoPageShell aside rows={80} />,
+  play: async ({ canvasElement }) => {
+    const aside = asideOf(canvasElement);
+    await atTop();
+    await wheel(900);
+    await waitFor(() => expect(window.scrollY).toBeGreaterThan(300));
+    await settled();
+    await expect(aside.getBoundingClientRect().bottom).toBeLessThan(0);
+    await atTop();
+  },
+};
+
+export const StickyOffsetOverridesTheMeasuredHeight: Story = {
+  name: "A sticky aside with its own stickyOffset sticks at that offset — layout test",
+  render: () => <DemoPageShell aside asideSticky asideStickyOffset="120px" rows={80} />,
+  play: async ({ canvasElement }) => {
+    const aside = asideOf(canvasElement);
+    await atTop();
+    await wheel(900);
+    await waitFor(() => expect(window.scrollY).toBeGreaterThan(300));
+    await settled();
+    await expect(Math.abs(aside.getBoundingClientRect().top - 120)).toBeLessThan(2);
+    await atTop();
+  },
+};
+
+export const TallStickyAsideScrollsInsideItself: Story = {
+  name: "A sticky aside taller than the room below the header scrolls inside itself and is a tab stop while it does — layout test",
+  render: () => <DemoPageShell aside asideSticky rows={80} />,
+  play: async ({ canvasElement }) => {
+    const aside = asideOf(canvasElement);
+    await atTop();
+    const tall = document.createElement("div");
+    tall.style.blockSize = "2400px";
+    aside.append(tall);
+    await waitFor(() => expect(aside).toHaveAttribute("tabindex", "0"));
+    await expect(getComputedStyle(aside).overflowY).toBe("auto");
+    await expect(aside.scrollHeight).toBeGreaterThan(aside.clientHeight);
+    await wheel(900);
+    await waitFor(() => expect(window.scrollY).toBeGreaterThan(300));
+    await settled();
+    // Stuck, and no taller than the window less what is above it.
+    await expect(aside.getBoundingClientRect().bottom).toBeLessThanOrEqual(window.innerHeight + 1);
+    tall.remove();
+    await atTop();
+  },
+};
+
+export const StickyAsideScrollsWithThePageOnAPhone: Story = {
+  name: "On a phone a sticky aside is no longer sticky and no longer scrolls inside itself — layout test",
+  globals: { viewport: { value: "mobile1", isRotated: false } },
+  render: () => <DemoPageShell aside asideSticky rows={3} />,
+  play: async ({ canvasElement }) => {
+    const aside = asideOf(canvasElement);
+    await expect(getComputedStyle(aside).position).toBe("static");
+    await expect(getComputedStyle(aside).overflowY).toBe("visible");
+  },
+};
+
+export const AsideDrawerByARealClick: Story = {
+  tags: ["!dev"],
+  name: "An aside that is a drawer leaves the page below its step, a real click on the toggle opens it with focus inside, Escape closes it and focus returns — interaction test",
+  render: () => <DemoPageShell aside asideCollapse="drawer" asideCollapseBelow="3xl" rows={6} framed />,
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const aside = canvasElement.querySelector<HTMLElement>("aside[data-collapse='drawer']")!;
+    await expect(getComputedStyle(aside).display).toBe("none");
+    const toggle = canvas.getByRole("button", { name: "Show details" });
+    await expect(toggle).toBeVisible();
+    await expect(toggle).toHaveAttribute("aria-expanded", "false");
+    await realClick(toggle);
+    const drawer = await within(canvasElement).findByRole("dialog");
+    await waitFor(() => expect(drawer.contains(document.activeElement)).toBe(true));
+    // the drawer eases in: wait for it before reading what is visible
+    await waitFor(() => expect(within(drawer).getByRole("navigation", { name: "On this page" })).toBeVisible());
+    await expect(toggle).toHaveAttribute("aria-expanded", "true");
+    await press("Escape", 27);
+    await waitFor(() => expect(within(canvasElement).queryByRole("dialog")).toBeNull());
+    await waitFor(() => expect(toggle).toHaveFocus());
+    await expect(toggle).toHaveAttribute("aria-expanded", "false");
+  },
+};
+
+export const AsideDrawerStaysOnThePageAtItsStep: Story = {
+  name: "At and above its step an aside that is a drawer is on the page and the toggle is gone — layout test",
+  render: () => <DemoPageShell aside asideCollapse="drawer" asideCollapseBelow="md" rows={6} />,
+  play: async ({ canvasElement }) => {
+    await expect(window.innerWidth).toBeGreaterThanOrEqual(1024);
+    const aside = asideOf(canvasElement);
+    await expect(aside).toBeVisible();
+    await expect(getComputedStyle(within(canvasElement).getByLabelText("Show details")).display).toBe("none");
+  },
+};
+
+export const AsidePrintsUnderThePage: Story = {
+  name: "Printed, the aside is in the flow under the page, in full, whether it is a column or a drawer on screen — print test",
+  render: () => <DemoPageShell aside asideCollapse="drawer" asideCollapseBelow="3xl" asideSticky rows={6} />,
+  play: async ({ canvasElement }) => {
+    const { main } = slots(canvasElement);
+    const aside = canvasElement.querySelector<HTMLElement>("aside")!;
+    await whilePrinting(async () => {
+      await expect(getComputedStyle(aside).display).toBe("block");
+      await expect(getComputedStyle(aside).position).toBe("static");
+      await expect(aside.getBoundingClientRect().top).toBeGreaterThanOrEqual(main.getBoundingClientRect().bottom - 1);
+      await expect(getComputedStyle(within(canvasElement).getByLabelText("Show details")).display).toBe("none");
+    });
   },
 };
