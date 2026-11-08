@@ -17,6 +17,7 @@ Structural primitives everything else is built from.
 | Stack | atom | 🟢 | Vertical/horizontal flex layout with gap token |
 | Grid | molecule | 🟢 | CSS Grid wrapper, responsive column props — meaningless without child items, so molecule-tier per [ADR-0012](adr/0012-item-components-are-atom-tier-even-when-their-container-is-a-molecule.md) |
 | GridItem | atom | 🟢 | A cell within a `Grid`: colSpan/rowSpan/colStart/rowStart placement, plus `order` (visual reordering independent of DOM order). Works standalone (no context coupling to `Grid`), so atom-tier per [ADR-0012](adr/0012-item-components-are-atom-tier-even-when-their-container-is-a-molecule.md) despite typically being used inside a molecule |
+| PageHeader | molecule | 🟡 | The head of a page: an optional trail of breadcrumbs, the title as the page's heading, a description, a row of facts and the page's actions, compound (`PageHeader.Breadcrumbs`/`Title`/`Description`/`Meta`/`Actions`). `size` (`sm`, `md`, `lg`) sets the title's and description's text steps and the gaps, `bordered` draws a line under it, `as` makes it a `header`. The actions sit beside the text and wrap under it where there is no room. No landmark and no tab stop; the title takes a `ref` and a `tabIndex` so an app can move focus to it. Replaces three hand-built copies of the row (`PageShell`'s, `AppShell`'s demo and the Data Table List Page's). Review: [PageHeader.md](component-reviews/PageHeader.md) |
 | Container | atom | 🟢 | Max-width + centered content wrapper |
 | Divider | atom | 🟢 | Horizontal/vertical, with optional label |
 | Spacer | atom | 🟢 | Flex-grow spacer utility |
@@ -266,15 +267,15 @@ Nothing in the list depends on another template, and every component they compos
 | Priority | Count |
 |---|---|
 | 🟢 v1 (core) | 70 |
-| 🟡 v1.5 (comprehensive) | 29 |
+| 🟡 v1.5 (comprehensive) | 30 |
 | ⚪ v2/deferred | 18 |
-| **Total planned** | **117** |
+| **Total planned** | **118** |
 
-Counted directly from the nine category tables above, deduplicated by component name (`Pagination` is listed under both Data Display and Navigation). By tier: 50 atoms, 40 molecules, 27 organisms. Templates (below) are composed patterns, not components, and aren't counted. **When adding or re-prioritizing a component, recount from the tables rather than adjusting these figures by increments** — they drifted from the tables that way before.
+Counted directly from the nine category tables above, deduplicated by component name (`Pagination` is listed under both Data Display and Navigation). By tier: 50 atoms, 41 molecules, 27 organisms. Templates (below) are composed patterns, not components, and aren't counted. **When adding or re-prioritizing a component, recount from the tables rather than adjusting these figures by increments** — they drifted from the tables that way before.
 
 Tier placement follows [ADR-0012](adr/0012-item-components-are-atom-tier-even-when-their-container-is-a-molecule.md): an item component that works standalone (`Radio`, `GridItem`, `ListItem`) is an atom even when its container (`RadioGroup`, `Grid`, `List`) is a molecule.
 
-This puts v1 alone in "real, comprehensive design system" territory (not a 15-component starter kit), with a clear, sequenced path to full coverage rather than trying to build all 117 at once.
+This puts v1 alone in "real, comprehensive design system" territory (not a 15-component starter kit), with a clear, sequenced path to full coverage rather than trying to build all 118 at once.
 
 ## Sequencing recommendation for actual build order
 

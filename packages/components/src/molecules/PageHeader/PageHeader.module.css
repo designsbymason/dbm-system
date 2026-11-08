@@ -1,0 +1,53 @@
+/* The head of a page: its text at the start and its actions at the end, the actions under the text where they do not fit. Every size draws the
+   same row; `size` changes the gaps, and the title's and description's text steps are set on their atoms by the parts. */
+.root {
+  --page-header-gap: var(--dbm-space-4);
+  --page-header-text-gap: var(--dbm-space-1);
+
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--page-header-gap);
+  min-inline-size: 0;
+}
+
+.sizeSm {
+  --page-header-gap: var(--dbm-space-2);
+}
+
+.sizeLg {
+  --page-header-gap: var(--dbm-space-4);
+  --page-header-text-gap: var(--dbm-space-2);
+}
+
+/* A line under the header, with room above it. */
+.bordered {
+  padding-block-end: var(--dbm-space-4);
+  border-block-end: var(--dbm-border-width-1) solid var(--dbm-border-default);
+}
+
+/* The breadcrumbs, the title, the description and the meta, in one column that takes the room the actions leave and wraps them under it when it is
+   narrower than twice `space.32`. */
+.text {
+  display: grid;
+  flex: 1 1 calc(var(--dbm-space-32) * 2);
+  gap: var(--page-header-text-gap);
+  min-inline-size: 0;
+  /* A title or a description with a word that cannot break (an address, a hash) breaks inside the header instead of widening it. */
+  overflow-wrap: anywhere;
+}
+
+.meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--dbm-space-2) var(--dbm-space-4);
+}
+
+.actions {
+  display: flex;
+  flex: none;
+  flex-wrap: wrap;
+  gap: var(--dbm-space-2);
+}

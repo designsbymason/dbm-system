@@ -231,6 +231,7 @@ Foundational components first (prove the template before mass-applying it), then
 | SkipLink | Atom | Utility | ✅ | ✅ 2026-11-07 | [SkipLink.md](component-reviews/SkipLink.md) |
 | DirectionProvider | Atom | Utility | ✅ | ✅ 2026-11-06 | [DirectionProvider.md](component-reviews/DirectionProvider.md) |
 | Grid | Molecule | Layout | ✅ | ✅ 2026-09-12 | [Grid.md](component-reviews/Grid.md) |
+| PageHeader | Molecule | Layout | ✅ | not yet | [PageHeader.md](component-reviews/PageHeader.md) |
 | List | Molecule | Typography | ✅ | ✅ 2026-09-13 | [List.md](component-reviews/List.md) |
 | Select | Molecule | Inputs & Forms | ✅ | ✅ 2026-09-14 (focus ring moved onto the field's own edge 2026-10-11; re-verified: functional verification, Docs) | [Select.md](component-reviews/Select.md) |
 | Radio | Atom | Inputs & Forms | ✅ | ✅ 2026-09-14 | [Radio.md](component-reviews/Radio.md) |

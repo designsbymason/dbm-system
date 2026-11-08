@@ -36,6 +36,7 @@ import { tooltipPlaygroundSnippet } from "./atoms/Tooltip/Tooltip.snippets";
 import { directionProviderPlaygroundSnippet, directionProviderSnippets } from "./atoms/DirectionProvider/DirectionProvider.snippets";
 import { visuallyHiddenPlaygroundSnippet } from "./atoms/VisuallyHidden/VisuallyHidden.snippets";
 import { skipLinkPlaygroundSnippet, skipLinkSnippets } from "./atoms/SkipLink/SkipLink.snippets";
+import { pageHeaderPlaygroundSnippet, pageHeaderSnippets } from "./molecules/PageHeader/PageHeader.snippets";
 import { aspectRatioPlaygroundSnippet } from "./atoms/AspectRatio/AspectRatio.snippets";
 import { bleedPlaygroundSnippet } from "./atoms/Bleed/Bleed.snippets";
 import { boxPlaygroundSnippet } from "./atoms/Box/Box.snippets";
@@ -1418,6 +1419,25 @@ describe("Playground snippets for the eleven media, overlay and utility atoms", 
 
   it.each(Object.entries(skipLinkSnippets))("SkipLink snippet %s is real", (_name, code) => {
     expect(problemsIn(code)).toEqual([]);
+  });
+
+  it.each([{}, { size: "lg" as const, bordered: true, as: "header" as const }, { breadcrumbs: false, meta: false, actions: false, description: false }])(
+    "PageHeader %j is a real snippet",
+    (args) => {
+      expect(problemsIn(pageHeaderPlaygroundSnippet(args))).toEqual([]);
+    },
+  );
+
+  it.each(Object.entries(pageHeaderSnippets))("PageHeader snippet %s is real", (_name, code) => {
+    expect(problemsIn(code)).toEqual([]);
+  });
+
+  it("PageHeader writes only what differs from the defaults and only the parts that are on", () => {
+    const plain = pageHeaderPlaygroundSnippet({ breadcrumbs: false, description: false, meta: false, actions: false });
+    expect(plain).toBe("<PageHeader>\n  <PageHeader.Title>Projects</PageHeader.Title>\n</PageHeader>");
+    expect(pageHeaderPlaygroundSnippet({ size: "sm", bordered: true, as: "header", breadcrumbs: false, description: false, meta: false, actions: false })).toContain(
+      '<PageHeader size="sm" bordered as="header">',
+    );
   });
 
   it("SkipLink writes only what differs from the defaults, and the target it points at", () => {

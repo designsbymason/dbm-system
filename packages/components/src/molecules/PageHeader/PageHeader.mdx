@@ -1,0 +1,249 @@
+import { Canvas, Meta } from "@storybook/addon-docs/blocks";
+import { Callout, ComponentHeader, PlaygroundControls, PropertiesTable, RelatedCard, TokenRow } from "../../../.storybook/blocks";
+import { Heading } from "../../atoms/Heading";
+import { Text } from "../../atoms/Text";
+import { VisuallyHidden } from "../../atoms/VisuallyHidden";
+import { Button } from "../../atoms/Button";
+import { Card } from "../Card";
+import { EmptyState } from "../EmptyState";
+import { Breadcrumb } from "../Breadcrumb";
+import { PageHeader } from "./PageHeader";
+import * as PageHeaderStories from "./PageHeader.stories";
+import * as PageHeaderBreadcrumbsStories from "./PageHeaderBreadcrumbs.stories";
+import * as PageHeaderTitleStories from "./PageHeaderTitle.stories";
+import * as PageHeaderDescriptionStories from "./PageHeaderDescription.stories";
+import * as PageHeaderMetaStories from "./PageHeaderMeta.stories";
+import * as PageHeaderActionsStories from "./PageHeaderActions.stories";
+
+export const propOrder = ["children", "size", "bordered", "as", "id", "className", "style", "data-testid"];
+
+export const playgroundOrder = ["size", "bordered", "as", "breadcrumbs", "description", "meta", "actions"];
+
+<Meta of={PageHeaderStories} />
+
+<VisuallyHidden asChild><h2>Intro</h2></VisuallyHidden>
+
+<ComponentHeader title="PageHeader" tier="Molecule" />
+
+The head of a page: an optional trail of breadcrumbs, the title as the page's heading, a description, a row of facts and the page's actions. A compound
+component, made of named parts you compose: `PageHeader.Breadcrumbs`, `PageHeader.Title`, `PageHeader.Description`, `PageHeader.Meta` and
+`PageHeader.Actions`, any of them optional. The first four stack in one column and `PageHeader.Actions` sits beside it, under it where there is no room
+(a phone), so put the parts directly in the header.
+
+`size` sets the title's and the description's text steps and the gaps (`md` is a page's usual head), and `bordered` draws a line under it. It is a
+`<div>` (or a `<header>` with `as`) and adds no landmark and no tab stop. It is not navigation ([`Navbar`](/docs/organisms-navigation-navbar--docs),
+`Tabs`) and not a card's header (`Card.Header`).
+
+### Import
+
+```tsx
+import { PageHeader } from "@dbm-system/components";
+```
+
+## Playground
+
+Drive the header's props live, and switch its optional parts on and off. Narrow the window to see the actions move under the text.
+
+<div className="dbm-playground-canvas">
+
+<Canvas of={PageHeaderStories.Playground} />
+
+</div>
+<PlaygroundControls of={PageHeaderStories.Playground} exclude={["children", "id", "className", "style", "data-testid"]} order={playgroundOrder} />
+
+## Properties
+
+`PageHeader` also accepts any other native `<div>` attribute beyond what's listed here (e.g. `aria-label`, `onClick`), passed straight through to the root.
+
+<PropertiesTable of={PageHeaderStories} order={propOrder} />
+
+### PageHeader.Breadcrumbs properties
+
+`PageHeader.Breadcrumbs` also accepts any other native `<div>` attribute.
+
+<PropertiesTable of={PageHeaderBreadcrumbsStories} order={["children", "style", "className", "id", "data-testid"]} />
+
+### PageHeader.Title properties
+
+`PageHeader.Title` also accepts any other native heading attribute (e.g. `tabIndex`, `aria-describedby`), and a `ref`.
+
+<PropertiesTable of={PageHeaderTitleStories} order={["children", "level", "style", "className", "id", "data-testid"]} />
+
+### PageHeader.Description properties
+
+`PageHeader.Description` also accepts any other native `<p>` attribute.
+
+<PropertiesTable of={PageHeaderDescriptionStories} order={["children", "style", "className", "id", "data-testid"]} />
+
+### PageHeader.Meta properties
+
+`PageHeader.Meta` also accepts any other native `<div>` attribute.
+
+<PropertiesTable of={PageHeaderMetaStories} order={["children", "style", "className", "id", "data-testid"]} />
+
+### PageHeader.Actions properties
+
+`PageHeader.Actions` also accepts any other native `<div>` attribute.
+
+<PropertiesTable of={PageHeaderActionsStories} order={["children", "style", "className", "id", "data-testid"]} />
+
+## Variants
+
+### A title alone
+
+Every part but the title is optional.
+
+<Canvas of={PageHeaderStories.TitleOnly} />
+
+### Sizes
+
+`sm` for a panel's page, `md` (the default) for a page's usual head, `lg` for a landing page.
+
+<Canvas of={PageHeaderStories.Sizes} />
+
+### With a line under it
+
+`bordered` draws a line under the header, with room above it, to separate it from content that is not a card.
+
+<Canvas of={PageHeaderStories.Bordered} />
+
+### The header of a section
+
+A header inside a section takes the `level` that fits the page's outline, a smaller `size`, and `as="header"` (inside `main` it is no banner).
+
+<Canvas of={PageHeaderStories.Section} />
+
+## Usage guidelines
+
+<div className="dbm-do-dont-grid">
+<Callout tone="success" title="Do">
+
+- Put the parts directly in `PageHeader`, in reading order. `PageHeader.Actions` has to be a direct child, so it can sit beside the text.
+- Keep one `h1` per page: `PageHeader.Title` is `level` 1 by default. Give a section's header `level={2}` (or the level that fits).
+- Put the page's own actions (the one a person came to do) in `PageHeader.Actions`, and keep them few.
+- Put a status or who changed it and when in `PageHeader.Meta`, and the trail in `PageHeader.Breadcrumbs`.
+- Give the title a `ref` and `tabIndex={-1}` if the app moves focus to it when a page's content changes.
+
+</Callout>
+<Callout tone="danger" title="Don't">
+
+- Don't use it for navigation: tabs or a second row of links belong in `Tabs` or the `Navbar`, under the header.
+- Don't wrap the parts in elements of your own: `PageHeader.Actions` inside a `div` is not a direct child and would sit in the text column.
+- Don't use `as="header"` outside `main`: a `header` there is a second banner landmark. Use the default `div`.
+- Don't put a card's title here: `Card.Header` is the head of a card.
+- Don't put many actions in it: a page with a row of buttons wants a `Toolbar` under the header.
+
+</Callout>
+</div>
+
+## Best practices
+
+- Write a title that names the page, and a description that says what a person can do there, in a sentence.
+- Use `size="sm"` for a panel's page and `lg` for a landing page; leave `md` for the rest.
+- Use `bordered` when the content under the header has no surface of its own, so the header is told apart from it.
+- A header has no tab stop of its own: the breadcrumbs and the actions are tabbed in reading order.
+
+## Accessibility
+
+<Callout tone="info" title="What the header says to assistive technology">
+
+`PageHeader` adds no role and no landmark. The title is a real heading (`h1` by default), so it is the page's name and the place a screen-reader user
+jumps to; the breadcrumbs keep their own `nav` and name; the actions are buttons in reading order.
+
+</Callout>
+
+| Key | Behaviour |
+|---|---|
+| `Tab` | Moves through the breadcrumbs, then the actions, in reading order: the text column comes first in the page, and the actions follow it. |
+
+- A `<header>` inside `main` is not a banner, so `as="header"` is safe there; outside `main` it would be a second one, so keep the default `div`.
+- The title's contrast is the primary text colour on the page surface and the description's the secondary one (at least 4.5:1 in every theme); the header
+  adds no colour pairing of its own.
+- It keeps its order in right-to-left text: the text is at the right and the actions at the left.
+- The title takes a `ref` and a `tabIndex`, so an app can send focus to it after a change that removes what had it.
+
+## Code examples
+
+```tsx
+<PageHeader>
+  <PageHeader.Title>Projects</PageHeader.Title>
+  <PageHeader.Description>Everything your team is working on, in one place.</PageHeader.Description>
+  <PageHeader.Actions>
+    <Button>New project</Button>
+  </PageHeader.Actions>
+</PageHeader>
+```
+
+```tsx
+// Native attributes in use: name the header for a screen reader, and let an app send focus to the title
+<PageHeader aria-label="People">
+  <PageHeader.Title ref={headingRef} tabIndex={-1}>
+    People
+  </PageHeader.Title>
+</PageHeader>
+```
+
+```tsx
+// The header of a section: a lower level, a smaller size and no banner inside main
+<PageHeader as="header" size="sm">
+  <PageHeader.Title level={2}>Members</PageHeader.Title>
+  <PageHeader.Actions>
+    <Button size="sm">Invite</Button>
+  </PageHeader.Actions>
+</PageHeader>
+```
+
+## Design tokens used
+
+<TokenRow token="space.1" usage="the gap between the breadcrumbs, the title, the description and the facts" />
+<TokenRow token="space.2" usage="the gap between the actions, and between the facts; the gap between the text and the actions at the small size" />
+<TokenRow token="space.4" usage="the gap between the text and the actions, and the room under the header when it has a line" />
+<TokenRow token="space.32" usage="the room the text column is given before the actions wrap under it (twice this step)" />
+<TokenRow token="border.default" usage="the line under a bordered header" />
+<TokenRow token="border-width.1" usage="the thickness of that line" />
+
+## Related components
+
+<div className="dbm-card-grid">
+<RelatedCard
+  name="Breadcrumb"
+  description="What goes in PageHeader.Breadcrumbs: the trail to the page"
+  href="/?path=/docs/molecules-navigation-breadcrumb--docs"
+>
+  <Breadcrumb>
+    <Breadcrumb.Item>
+      <Breadcrumb.Link href="#">Home</Breadcrumb.Link>
+    </Breadcrumb.Item>
+    <Breadcrumb.Item>
+      <Breadcrumb.Page>Projects</Breadcrumb.Page>
+    </Breadcrumb.Item>
+  </Breadcrumb>
+</RelatedCard>
+<RelatedCard
+  name="Heading"
+  description="What PageHeader.Title is: a heading whose level and size are set apart"
+  href="/?path=/docs/atoms-typography-heading--docs"
+>
+  <Heading level={3} size="lg">A heading</Heading>
+</RelatedCard>
+<RelatedCard
+  name="Card"
+  description="Card.Header is the head of a card; PageHeader is the head of a page"
+  href="/?path=/docs/molecules-data-display-card--docs"
+>
+  <Card variant="outlined">
+    <Card.Header>
+      <Text weight="bold">A card's header</Text>
+    </Card.Header>
+  </Card>
+</RelatedCard>
+<RelatedCard
+  name="EmptyState"
+  description="What the page says under its header when it has nothing to show"
+  href="/?path=/docs/molecules-data-display-emptystate--docs"
+>
+  <EmptyState size="sm">
+    <EmptyState.Title level={3}>Nothing yet</EmptyState.Title>
+  </EmptyState>
+</RelatedCard>
+</div>

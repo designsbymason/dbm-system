@@ -71,6 +71,7 @@ export * from "./molecules/Grid";
 export * from "./molecules/HoverCard";
 export * from "./molecules/List";
 export * from "./molecules/NumberInput";
+export * from "./molecules/PageHeader";
 export * from "./molecules/Pagination";
 export * from "./molecules/PasswordInput";
 export * from "./molecules/PinInput";

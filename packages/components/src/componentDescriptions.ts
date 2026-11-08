@@ -119,6 +119,7 @@ export const componentDescriptions: Record<string, string> = {
   ToggleGroup: "A set of buttons that switch on or off, as one or many choices.",
   Toolbar: "A row of controls that share one tab stop and move with arrow keys.",
   Tooltip: "A short hint shown when hovering or focusing an element.",
+  PageHeader: "The head of a page: breadcrumbs, a title, a description, facts and actions.",
   PageShell: "The page frame of an app with no sidebar: your header, a main area and a footer.",
   Tour: "A guided tour that highlights parts of a page one step at a time.",
   Tree: "An expandable hierarchy of rows, like a file tree.",
