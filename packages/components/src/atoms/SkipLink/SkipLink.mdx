@@ -80,6 +80,7 @@ Put the link first on the page, so it is the first tab stop, and give its target
 - Keep the words short and plain: "Skip to content" is read out in full by a screen reader before anything else on every page.
 - In an app with `Navbar`, `AppShell` or `PageShell`, use their own `SkipLink` (they are this component), and put it first in the shell.
 - Let the target be the page's `<main>`, which the shells already give `id="main"` and `tabIndex={-1}`.
+- The link is a plain hash link, so the browser adds the hash to the address. An app whose router owns the address passes an `onClick` that prevents the default and focuses the target by script (the last example below).
 
 ## Accessibility
 
@@ -114,6 +115,17 @@ a sighted keyboard user sees it the moment it takes focus.
 // Another target, and words of your own
 <SkipLink href="#content" labels={{ skipToContent: "Aller au contenu" }} />
 <article id="content" tabIndex={-1}>…</article>
+```
+
+```tsx
+// Native attributes in use, in an app with a client router: keep the hash out of the address and move focus to the target by script
+<SkipLink
+  aria-describedby="skip-help"
+  onClick={(event) => {
+    event.preventDefault();
+    document.getElementById("main")?.focus();
+  }}
+/>
 ```
 
 ## Design tokens used

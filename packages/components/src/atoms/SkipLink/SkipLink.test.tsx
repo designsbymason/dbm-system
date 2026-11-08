@@ -38,7 +38,7 @@ describe("SkipLink", () => {
     expect(ref.current).toBeInstanceOf(HTMLAnchorElement);
   });
 
-  it("accepts className, style, id, data-testid and native attributes, with the caller's props before the computed ones", () => {
+  it("passes className, style, id, data-testid and native attributes through, merging className with its own", () => {
     render(<SkipLink className="extra" style={{ color: "red" }} id="skip" data-testid="skip" onClick={() => undefined} aria-describedby="note" />);
     const link = screen.getByTestId("skip");
     expect(link).toHaveClass("extra");

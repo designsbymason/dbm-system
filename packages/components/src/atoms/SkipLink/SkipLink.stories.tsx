@@ -1,4 +1,6 @@
 import type { Meta, StoryContext, StoryObj } from "@storybook/react-vite";
+import type { MouseEvent, ReactNode } from "react";
+import { Kbd } from "../Kbd";
 import { Text } from "../Text";
 import { SkipLink } from "./SkipLink";
 import { skipLinkPlaygroundSnippet, skipLinkSnippets } from "./SkipLink.snippets";
@@ -18,7 +20,8 @@ const meta: Meta<typeof SkipLink> = {
     },
     labels: {
       control: false,
-      description: "The words the link supplies itself, in your language: { skipToContent } (default 'Skip to content').",
+      description: "The words the link supplies itself, in your language: { skipToContent }.",
+      table: { defaultValue: { summary: "{ skipToContent: 'Skip to content' }" } },
     },
     id: { control: false, description: "Standard DOM id." },
     className: { control: false, description: "Additional CSS classes for customization." },
@@ -37,19 +40,30 @@ export default meta;
 
 type Story = StoryObj<typeof SkipLink>;
 
-const docs = (context: { viewMode?: string }) => context.viewMode === "docs";
+/**
+ * What a router's click handler does for a skip link: keep the hash out of the address (and the preview on its own page) and move focus to the target
+ * by script. The link itself is a plain hash link; an app that lets the browser follow it needs none of this.
+ */
+const goToTarget = (event: MouseEvent<HTMLAnchorElement>) => {
+  event.preventDefault();
+  const id = event.currentTarget.getAttribute("href")?.replace(/^#/, "");
+  if (id) document.getElementById(id)?.focus();
+};
 
-/** A demo target and what to do: the link is out of sight until a keyboard reaches it, so the demo says to press Tab. */
-function Demo({ children }: { children: React.ReactNode }) {
+/**
+ * A demo target and what to do: the link is out of sight until a keyboard reaches it, so the demo says to press Tab. The target is a `div`, not a
+ * `<main>`, and its id is the story's own, so a Docs page that draws several demos has no duplicate ids and no nested landmarks.
+ */
+function Demo({ children, target }: { children: ReactNode; target: string }) {
   return (
     <div style={{ display: "grid", gap: "var(--dbm-space-3)" }}>
       {children}
       <Text color="secondary">
-        Click here, then press <kbd>Tab</kbd>: the link appears in the top corner of the window.
+        Click here, then press <Kbd>Tab</Kbd>: the link appears in the top corner of the window.
       </Text>
-      <main id="main" tabIndex={-1}>
+      <div id={target} tabIndex={-1}>
         <Text>{"The page's main content, where the link goes."}</Text>
-      </main>
+      </div>
     </div>
   );
 }
@@ -59,9 +73,9 @@ export const Playground: Story = {
   parameters: {
     docs: { source: { type: "dynamic", transform: (_code: string, context: StoryContext) => skipLinkPlaygroundSnippet(context.args) } },
   },
-  render: (args, context) => (
-    <Demo>
-      <SkipLink {...args} onClick={docs(context) ? (event) => event.preventDefault() : undefined} />
+  render: (args) => (
+    <Demo target={(args.href ?? "#main").replace(/^#/, "")}>
+      <SkipLink {...args} onClick={goToTarget} />
     </Demo>
   ),
 };
@@ -71,8 +85,8 @@ export const YourWords: Story = {
   parameters: { docs: { source: { code: skipLinkSnippets.yourWords } } },
   argTypes: { children: { control: false }, href: { control: false } },
   render: () => (
-    <Demo>
-      <SkipLink labels={{ skipToContent: "Aller au contenu" }} onClick={(event) => event.preventDefault()} />
+    <Demo target="skip-link-words-target">
+      <SkipLink href="#skip-link-words-target" labels={{ skipToContent: "Aller au contenu" }} onClick={goToTarget} />
     </Demo>
   ),
 };
@@ -82,8 +96,8 @@ export const WithATarget: Story = {
   parameters: { docs: { source: { code: skipLinkSnippets.withATarget } } },
   argTypes: { children: { control: false }, href: { control: false } },
   render: () => (
-    <Demo>
-      <SkipLink onClick={(event) => event.preventDefault()} />
+    <Demo target="skip-link-page-target">
+      <SkipLink href="#skip-link-page-target" onClick={goToTarget} />
     </Demo>
   ),
 };

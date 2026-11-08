@@ -16,9 +16,13 @@
   inset-inline-start: var(--dbm-space-4);
   z-index: var(--dbm-z-index-fixed);
   inline-size: auto;
+  /* A long translation wraps inside the window, with the same gap at the other edge, and does not run off it. */
+  max-inline-size: calc(100% - 2 * var(--dbm-space-4));
+  box-sizing: border-box;
   block-size: auto;
   overflow: visible;
   clip-path: none;
+  white-space: normal;
   padding-block: var(--dbm-space-2);
   padding-inline: var(--dbm-space-4);
   border: var(--dbm-border-width-1) solid var(--dbm-border-default);

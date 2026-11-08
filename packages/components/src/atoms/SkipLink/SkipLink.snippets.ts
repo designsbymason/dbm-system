@@ -33,7 +33,8 @@ export interface SkipLinkPlaygroundSnippetArgs {
 /** The Playground's snippet, built from its current controls: only what differs from the defaults, beside the page it skips to. */
 export function skipLinkPlaygroundSnippet(args: SkipLinkPlaygroundSnippetArgs): string {
   const href = args.href === undefined || args.href === "#main" ? "" : ` href=${/["&\\]/.test(args.href) ? `{${JSON.stringify(args.href)}}` : `"${args.href}"`}`;
-  const text = typeof args.children === "string" && args.children !== "" ? args.children : undefined;
+  // The default words are the link's own, so they are not written out.
+  const text = typeof args.children === "string" && args.children !== "" && args.children !== "Skip to content" ? args.children : undefined;
   const link = text === undefined ? `<SkipLink${href} />` : `<SkipLink${href}>${escapeJsxText(text)}</SkipLink>`;
   const target = (args.href ?? "#main").replace(/^#/, "") || "main";
   return `${link}\n<main id="${target}" tabIndex={-1}>…</main>`;

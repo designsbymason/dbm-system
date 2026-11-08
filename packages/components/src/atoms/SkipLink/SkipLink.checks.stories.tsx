@@ -24,10 +24,18 @@ async function press(key: "Tab" | "Enter", windowsVirtualKeyCode: number, text?:
 }
 
 /** The page the link skips to, with some content before it, so the link is the first tab stop and sits over something. */
-function Page({ dir }: { dir?: "rtl" }) {
+function Page({ dir, theme, label }: { dir?: "rtl"; theme?: string; label?: string }) {
   return (
-    <div dir={dir} style={{ minBlockSize: "100dvh" }}>
-      <SkipLink onClick={(event) => event.preventDefault()} />
+    <div dir={dir} data-theme={theme} style={{ minBlockSize: "100dvh" }}>
+      {/* A router's click handler stands in for the browser's hash navigation, which would close the test page. */}
+      <SkipLink
+        onClick={(event) => {
+          event.preventDefault();
+          document.getElementById("main")?.focus();
+        }}
+      >
+        {label}
+      </SkipLink>
       <header style={{ padding: "var(--dbm-space-4)", background: "var(--dbm-bg-canvas)" }}>
         <a href="#header-link">A link in the header</a>
       </header>
@@ -38,13 +46,13 @@ function Page({ dir }: { dir?: "rtl" }) {
   );
 }
 
-const link = (canvasElement: HTMLElement) => within(canvasElement).getByRole("link", { name: "Skip to content" });
+const link = (canvasElement: HTMLElement, name: string | RegExp = "Skip to content") => within(canvasElement).getByRole("link", { name });
 
 /** Puts the real keyboard on the link: the first Tab reaches it, because it comes first. */
-async function reveal(canvasElement: HTMLElement) {
+async function reveal(canvasElement: HTMLElement, name?: string | RegExp) {
   (document.activeElement as HTMLElement | null)?.blur();
   await press("Tab", 9);
-  await waitFor(() => expect(document.activeElement).toBe(link(canvasElement)));
+  await waitFor(() => expect(document.activeElement).toBe(link(canvasElement, name)));
 }
 
 export const HiddenUntilFocused: Story = {
@@ -86,8 +94,56 @@ export const RevealedInTheCorner: Story = {
     await expect(style.outlineStyle).toBe("solid");
     await expect(style.outlineWidth).toBe("2px");
     await expect(style.boxShadow).not.toBe("none");
-    // Enter follows it: the page's own click handler stood in for a router's.
+  },
+};
+
+export const EnterGoesToTheTarget: Story = {
+  name: "Enter on the revealed link activates it, and focus lands in the target — behaviour test",
+  render: () => <Page />,
+  play: async ({ canvasElement }) => {
+    await reveal(canvasElement);
     await press("Enter", 13, "\r");
+    await waitFor(() => expect(document.activeElement).toBe(canvasElement.querySelector("#main")));
+    // The next Tab starts at the page, past the header: the target's tabindex is -1, so it is not a stop of its own.
+    await expect(canvasElement.querySelector("#main")).toHaveAttribute("tabindex", "-1");
+    await expect(document.activeElement).not.toBe(link(canvasElement));
+  },
+};
+
+export const LongLabelStaysInTheWindow: Story = {
+  name: "On a phone a long label wraps inside the window and does not run off it — layout test",
+  globals: { viewport: { value: "mobile1", isRotated: false } },
+  render: () => <Page label="Passer directement au contenu principal de la page, en laissant de côté l'en-tête et toute la navigation qui le suit" />,
+  play: async ({ canvasElement }) => {
+    await expect(window.innerWidth).toBeLessThan(768);
+    const skip = link(canvasElement, /Passer/);
+    await reveal(canvasElement, /Passer/);
+    await waitFor(() => expect(getComputedStyle(skip).position).toBe("fixed"));
+    const rect = skip.getBoundingClientRect();
+    await expect(rect.left).toBeGreaterThanOrEqual(15);
+    await expect(window.innerWidth - rect.right).toBeGreaterThanOrEqual(15);
+    await expect(rect.height).toBeGreaterThan(40);
+    await expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(window.innerWidth);
+  },
+};
+
+export const DarkShadow: Story = {
+  name: "In a dark theme the link's shadow is the dark elevation — theme test",
+  render: () => <Page theme="purple-dark" />,
+  play: async ({ canvasElement }) => {
+    const skip = link(canvasElement);
+    await reveal(canvasElement);
+    await waitFor(() => expect(getComputedStyle(skip).position).toBe("fixed"));
+    const probe = (token: string) => {
+      const element = document.createElement("div");
+      element.style.boxShadow = `var(--dbm-shadow-${token})`;
+      document.body.append(element);
+      const value = getComputedStyle(element).boxShadow;
+      element.remove();
+      return value;
+    };
+    await expect(getComputedStyle(skip).boxShadow).toBe(probe("dark-md"));
+    await expect(getComputedStyle(skip).boxShadow).not.toBe(probe("light-md"));
   },
 };
 

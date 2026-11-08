@@ -1422,6 +1422,7 @@ describe("Playground snippets for the eleven media, overlay and utility atoms", 
 
   it("SkipLink writes only what differs from the defaults, and the target it points at", () => {
     expect(skipLinkPlaygroundSnippet({})).toBe('<SkipLink />\n<main id="main" tabIndex={-1}>…</main>');
+    expect(skipLinkPlaygroundSnippet({ children: "Skip to content" })).toBe('<SkipLink />\n<main id="main" tabIndex={-1}>…</main>');
     expect(skipLinkPlaygroundSnippet({ children: "Skip", href: "#content" })).toBe('<SkipLink href="#content">Skip</SkipLink>\n<main id="content" tabIndex={-1}>…</main>');
   });
 
