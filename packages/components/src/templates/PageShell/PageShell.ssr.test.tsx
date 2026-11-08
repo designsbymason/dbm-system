@@ -26,9 +26,9 @@ describe("PageShell on the server", () => {
     expect(html.match(/<footer/g)).toHaveLength(1);
     expect(html).toContain('id="main"');
     expect(html).toContain('href="#main"');
-    expect(html).toContain("data-sticky-header");
-    // The scrolled state is read only after mount: the server never draws it.
-    expect(html).not.toContain("data-scrolled=");
+    // The header is the app's own and a direct child of the shell: one banner, and no box of the shell's around it.
+    expect(html.match(/<header/g)).toHaveLength(1);
+    expect(html).toContain("data-navbar-trailing");
   });
 
   it("renders a right-to-left shell in Persian without a DOM", () => {
@@ -56,6 +56,8 @@ describe("PageShell on the server", () => {
     ["a busy page with every part", { subNav: true, banner: true, busy: true }],
   ])("hydrates %s with no mismatch", async (_name, props) => {
     const html = onTheServer(() => renderToString(<DemoPageShell {...props} />));
+    // A sticky `Navbar` (an `Affix`) watches a sentinel with an `IntersectionObserver`, which jsdom does not have.
+    vi.stubGlobal("IntersectionObserver", class { observe() {} unobserve() {} disconnect() {} takeRecords() { return []; } });
     const container = document.createElement("div");
     container.innerHTML = html;
     document.body.append(container);
@@ -71,5 +73,6 @@ describe("PageShell on the server", () => {
     });
     expect(recoverable).toEqual([]);
     container.remove();
+    vi.unstubAllGlobals();
   });
 });

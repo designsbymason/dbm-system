@@ -20,9 +20,6 @@ export interface PageShellMainLabels {
 /** How far the width presets of `PageShell.Content` reach: a reading page, a dashboard, a page that fills the window. */
 export type PageShellContentWidth = "reading" | "dashboard" | "full";
 
-/** The look of `PageShell.Footer`: the standard footer, a tighter one, or a bar of actions that stays at the bottom of the window. */
-export type PageShellFooterVariant = "default" | "compact" | "actions";
-
 /** Props every part of the shell accepts on top of its own native element's. */
 interface PageShellPartBase {
   /** Standard DOM id. */
@@ -41,24 +38,11 @@ interface PageShellPartBase {
 // Every prop is declared here, in the order the Docs read, and not inherited: the Controls panel lists a type's inherited props before its own.
 export interface PageShellProps extends Omit<ComponentPropsWithoutRef<"div">, "dir" | "children"> {
   /**
-   * The shell's parts: `PageShell.SkipLink`, `PageShell.Banner`, `PageShell.Header` (holding a `Navbar` and, if you like, a
-   * `PageShell.SubNav`), `PageShell.Main` (holding a `PageShell.Content`) and `PageShell.Footer`. They draw in the order you write
-   * them, which is the keyboard's tab order: put the skip link first and the header after it. Only `PageShell.Main` is needed.
+   * The shell's parts and your header, in the order you want them on the page, which is the keyboard's tab order: `PageShell.SkipLink` first, then
+   * `PageShell.Banner` if there is one, your header (a `Navbar`, or any header of your own: the shell does not wrap it, so it sticks by its own
+   * means), `PageShell.Main` (holding a `PageShell.Content`) and `PageShell.Footer`. Only `PageShell.Main` is needed.
    */
   children?: ReactNode;
-  /**
-   * Keeps the header (and the sub-navigation in it) at the top of the window while the page scrolls. Leave the `Navbar` inside it without its
-   * own `sticky`: the shell owns the sticking. `"auto"` also sticks it, but slides it out of view while the reader scrolls down and brings it
-   * back on the first scroll up, at the top of the page, and whenever focus or an open menu is inside it (so the keyboard never loses the bar).
-   * With reduced motion it appears and disappears without sliding.
-   * @default true
-   */
-  stickyHeader?: boolean | "auto";
-  /**
-   * Shows a shadow under the header while the page is scrolled down from its top (a line instead in forced colours, which drop shadows).
-   * @default true
-   */
-  scrolledEdge?: boolean;
   /**
    * The router's page, usually its pathname. When it changes, focus moves to the main area, so the keyboard starts at the new page's top and a
    * screen reader is told where it is, and `pageTitle` is announced. Nothing happens on the first render, or while this is left out.
@@ -109,60 +93,6 @@ export interface PageShellSkipLinkProps extends Omit<ComponentPropsWithoutRef<"a
 export interface PageShellBannerProps extends Omit<ComponentPropsWithoutRef<"div">, "children">, PageShellPartBase {
   /** The notice: an `Alert` with `banner`, or any content. */
   children?: ReactNode;
-}
-
-/** The properties of `PageShell.Header`: the sticky slot that holds a `Navbar` and, if you like, a `PageShell.SubNav`. */
-export interface PageShellHeaderProps extends Omit<ComponentPropsWithoutRef<"div">, "children">, PageShellPartBase {
-  /** The header's content: a `Navbar`, then a `PageShell.SubNav`. */
-  children?: ReactNode;
-  /**
-   * The element the slot is. A `Navbar` draws its own `<header>`, so leave this a `div` around one; use `header` for a header built without one,
-   * so the page still has its banner landmark.
-   * @default 'div'
-   */
-  as?: "div" | "header";
-}
-
-/** The properties of `PageShell.SubNav`: a second row of navigation under the `Navbar`, sticking with it. */
-export interface PageShellSubNavProps extends Omit<ComponentPropsWithoutRef<"div">, "children">, PageShellPartBase {
-  /**
-   * The row's content. With `label` it is the links (`PageShell.SubNavLink`), which the row puts in a `nav` of its own; without it, a `nav`
-   * (a `Tabs` list, or links) you draw yourself, with its own name. It scrolls sideways when it does not fit.
-   */
-  children?: ReactNode;
-  /**
-   * The accessible name of the `nav` the row draws around its children, which tells it apart from the bar's and the footer's navigation
-   * landmarks. Left out, the row draws no `nav` and you put your own in it.
-   */
-  label?: string;
-  /**
-   * Where the links sit in the row when they all fit: `center` (the default) or the `start`. When they do not fit the row scrolls from its start
-   * either way.
-   * @default 'center'
-   */
-  align?: "start" | "center";
-  /**
-   * Draws a line under the row.
-   * @default true
-   */
-  bordered?: boolean;
-  /**
-   * Keeps the row with the bar while the page scrolls. Off, only the bar stays at the top of the window and the row scrolls away with the page,
-   * so the bar must be the header's first child.
-   * @default true
-   */
-  sticky?: boolean;
-}
-
-/** The properties of `PageShell.SubNavLink`: a link of the sub-navigation, a round ghost button, the current one in the subtle tint. */
-export interface PageShellSubNavLinkProps extends Omit<ComponentPropsWithoutRef<"a">, "children" | "aria-current">, PageShellPartBase {
-  /** The link's text. */
-  children?: ReactNode;
-  /**
-   * Marks the link as the page the reader is on: `aria-current="page"` and the subtle tint. The caller decides, from the router.
-   * @default false
-   */
-  current?: boolean;
 }
 
 /** The properties of `PageShell.PageHeader`: the head of a page, with its title, an optional trail of breadcrumbs, a description and actions. */
@@ -229,11 +159,4 @@ export interface PageShellContentProps extends Omit<ComponentPropsWithoutRef<"di
 export interface PageShellFooterProps extends Omit<ComponentPropsWithoutRef<"footer">, "children">, PageShellPartBase {
   /** The footer's content. */
   children?: ReactNode;
-  /**
-   * `default` is the standard footer, with its line above. `compact` pads it tighter. `actions` is a bar of actions (the Save and Cancel of a
-   * form) that stays at the bottom of the window until the page's own end, with a shadow over the page behind it and the device's bottom
-   * inset kept clear.
-   * @default 'default'
-   */
-  variant?: PageShellFooterVariant;
 }

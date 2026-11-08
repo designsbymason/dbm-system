@@ -49,12 +49,12 @@ async function realClick(element: Element) {
   await send("Input.dispatchMouseEvent", { type: "mouseReleased", x, y, button: "left", clickCount: 1 });
 }
 
-/** The shell's pieces. The banner of a `Navbar` is its `<header>`; the slot around it is the shell's header. */
+/** The shell's pieces. The header is the app's own `Navbar`, a direct child of the shell (which wraps nothing), so the bar and the "slot" are one. */
 function slots(canvasElement: HTMLElement) {
   const canvas = within(canvasElement);
-  const shell = canvasElement.querySelector<HTMLElement>("[data-sticky-header], [data-scrolled-edge]") as HTMLElement;
   const bar = canvas.getByRole("banner");
-  const slot = bar.parentElement as HTMLElement;
+  const shell = bar.parentElement as HTMLElement;
+  const slot = bar;
   const main = canvas.getByRole("main");
   const footer = canvas.getByRole("contentinfo");
   return { canvas, shell, bar, slot, main, footer };
@@ -113,27 +113,22 @@ export const TabletLayout: Story = {
 };
 
 export const PhoneLayout: Story = {
-  name: "On a phone the bar's links are behind a menu button, the sub-navigation scrolls inside its own row, and the page does not scroll sideways — layout test",
+  name: "On a phone the bar's links are behind a menu button, the second row of links stays and scrolls inside its own row, and the page does not scroll sideways — layout test",
   globals: { viewport: { value: "mobile1", isRotated: false } },
   render: () => <DemoPageShell subNav banner />,
   play: async ({ canvasElement }) => {
     // Fails loudly if the pinned viewport did not apply.
     await expect(window.innerWidth).toBeLessThan(768);
-    const { canvas, shell, slot } = slots(canvasElement);
+    const { canvas, shell } = slots(canvasElement);
     await expect(canvas.queryByRole("navigation", { name: "Main" })).toBeNull();
     await expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(window.innerWidth);
     await expect(shell.scrollWidth).toBeLessThanOrEqual(window.innerWidth);
-    // The sub-navigation does not fit a phone: it scrolls inside its own row, which is no wider than the window.
-    const row = slot.querySelector<HTMLElement>("[data-sub-nav-scroller]") as HTMLElement;
+    // The second row of links does not fit a phone: it stays in the bar and scrolls inside its own row, which is no wider than the window.
+    const sections = canvas.getByRole("navigation", { name: "Project sections" });
+    const row = sections.querySelector<HTMLElement>("div") as HTMLElement;
     await expect(row.scrollWidth).toBeGreaterThan(row.clientWidth);
     await expect(row.getBoundingClientRect().right).toBeLessThanOrEqual(window.innerWidth);
-    // It fades at the edge that has more links beyond it (the end, at its start), and the fade takes no click.
-    const rowBox = row.parentElement as HTMLElement;
-    await waitFor(() => expect(rowBox).toHaveAttribute("data-overflow-end"));
-    await expect(rowBox).not.toHaveAttribute("data-overflow-start");
-    await waitFor(() => expect(getComputedStyle(rowBox, "::after").opacity).toBe("1"));
-    await expect(getComputedStyle(rowBox, "::after").pointerEvents).toBe("none");
-    await expect(getComputedStyle(rowBox, "::before").opacity).toBe("0");
+    await waitFor(() => expect(sections).toHaveAttribute("data-overflow-end"));
     // The menu button opens the bar's links in a panel, and Escape closes it.
     await userEvent.click(canvas.getByRole("button", { name: "Menu" }));
     const panel = await within(document.body).findByRole("dialog");
@@ -144,48 +139,44 @@ export const PhoneLayout: Story = {
 };
 
 export const HeaderStaysUnderARealWheel: Story = {
-  name: "A real wheel scroll leaves the header and the sub-navigation at the top, with a shadow, and the page back at its top clears it — layout test",
+  name: "A real wheel scroll leaves the Navbar at the top with a shadow while its second row scrolls away, and the page back at its top clears it — layout test",
   render: () => <DemoPageShell subNav rows={80} />,
   play: async ({ canvasElement }) => {
     await expect(window.innerWidth).toBeGreaterThanOrEqual(1024);
-    const { canvas, shell, bar, slot } = slots(canvasElement);
-    const subNav = canvas.getByRole("navigation", { name: "Project sections" });
+    const { canvas, bar } = slots(canvasElement);
+    const sections = canvas.getByRole("navigation", { name: "Project sections" });
     await atTop();
-    await expect(shell).not.toHaveAttribute("data-scrolled");
-    const height = slot.getBoundingClientRect().height;
+    await expect(bar).not.toHaveAttribute("data-stuck");
+    // At the start the second row is under the bar.
+    await expect(sections.getBoundingClientRect().top).toBeGreaterThanOrEqual(bar.getBoundingClientRect().bottom - 1);
     await wheel(900);
     await waitFor(() => expect(window.scrollY).toBeGreaterThan(300));
     await settled();
-    // The slot, the bar in it and the sub-navigation under the bar are all where they were: at the top of the window.
-    await expect(Math.abs(slot.getBoundingClientRect().top)).toBeLessThan(1);
+    // The bar sticks at the top of the window by its own `sticky`, over the page's content, and the row has scrolled away under it.
     await expect(Math.abs(bar.getBoundingClientRect().top)).toBeLessThan(1);
-    await expect(Math.abs(slot.getBoundingClientRect().height - height)).toBeLessThan(1);
-    await expect(subNav.getBoundingClientRect().top).toBeGreaterThanOrEqual(bar.getBoundingClientRect().bottom - 1);
-    await expect(subNav.getBoundingClientRect().bottom).toBeLessThanOrEqual(slot.getBoundingClientRect().bottom + 1);
-    // It is above the page's content as that passes under it, and casts a shadow once the page has scrolled.
-    await expect(getComputedStyle(slot).position).toBe("sticky");
-    await expect(Number(getComputedStyle(slot).zIndex)).toBeGreaterThan(0);
-    await waitFor(() => expect(shell).toHaveAttribute("data-scrolled"));
-    await waitFor(() => expect(getComputedStyle(slot).boxShadow).not.toBe("none"));
+    await expect(getComputedStyle(bar).position).toBe("sticky");
+    await expect(Number(getComputedStyle(bar).zIndex)).toBeGreaterThan(0);
+    await expect(sections.getBoundingClientRect().bottom).toBeLessThanOrEqual(bar.getBoundingClientRect().bottom + 1);
+    await waitFor(() => expect(bar).toHaveAttribute("data-stuck"));
+    await waitFor(() => expect(getComputedStyle(bar).boxShadow).not.toBe("none"));
     await atTop();
-    await waitFor(() => expect(shell).not.toHaveAttribute("data-scrolled"));
-    await waitFor(() => expect(getComputedStyle(slot).boxShadow).toBe("none"));
+    await waitFor(() => expect(bar).not.toHaveAttribute("data-stuck"));
+    await waitFor(() => expect(getComputedStyle(bar).boxShadow).toBe("none"));
   },
 };
 
 export const HeaderScrollsAwayWhenNotSticky: Story = {
-  name: "With stickyHeader off the header scrolls away with the page and there is no shadow — layout test",
-  render: () => <DemoPageShell stickyHeader={false} subNav rows={80} />,
+  name: "A Navbar without sticky scrolls away with the page and has no shadow — layout test",
+  render: () => <DemoPageShell sticky={false} subNav rows={80} />,
   play: async ({ canvasElement }) => {
-    const { shell, slot } = slots(canvasElement);
+    const { bar } = slots(canvasElement);
     await atTop();
     await wheel(900);
     await waitFor(() => expect(window.scrollY).toBeGreaterThan(300));
     await settled();
-    await expect(getComputedStyle(slot).position).toBe("relative");
-    await expect(slot.getBoundingClientRect().bottom).toBeLessThan(0);
-    await expect(getComputedStyle(slot).boxShadow).toBe("none");
-    await expect(shell).not.toHaveAttribute("data-sticky-header");
+    await expect(getComputedStyle(bar).position).not.toBe("sticky");
+    await expect(bar.getBoundingClientRect().bottom).toBeLessThan(0);
+    await expect(getComputedStyle(bar).boxShadow).toBe("none");
     await atTop();
   },
 };
@@ -336,10 +327,10 @@ export const LeftToRightDemoLeavesLangAlone: Story = {
 };
 
 export const ForcedColoursInteraction: Story = {
-  name: "In forced colours the frame takes the system colours, and a scrolled header gets a line of its own, since shadows are dropped — forced colours test",
+  name: "In forced colours the frame takes the system colours — forced colours test",
   render: () => <DemoPageShell subNav rows={80} />,
   play: async ({ canvasElement }) => {
-    const { shell, slot } = slots(canvasElement);
+    const { shell } = slots(canvasElement);
     const emulate = (value: "active" | "none") => send("Emulation.setEmulatedMedia", { features: [{ name: "forced-colors", value }] });
     await atTop();
     await emulate("active");
@@ -352,13 +343,6 @@ export const ForcedColoursInteraction: Story = {
       const canvasColour = getComputedStyle(probe).backgroundColor;
       probe.remove();
       await expect(getComputedStyle(shell).backgroundColor).toBe(canvasColour);
-      await expect(getComputedStyle(slot).borderBlockEndStyle).toBe("none");
-      window.scrollTo(0, 600);
-      await nextFrame();
-      await waitFor(() => expect(shell).toHaveAttribute("data-scrolled"));
-      // The shadow is gone and a one-pixel line in the text colour takes its place.
-      await expect(getComputedStyle(slot).borderBlockEndStyle).toBe("solid");
-      await expect(getComputedStyle(slot).borderBlockEndWidth).toBe("1px");
     } finally {
       // Clear the emulation by sending an empty feature list, not the default value, so it cannot leak into the next story.
       await send("Emulation.setEmulatedMedia", { features: [] });
@@ -367,29 +351,11 @@ export const ForcedColoursInteraction: Story = {
   },
 };
 
-export const ReducedMotionKeepsTheShadowInstant: Story = {
-  name: "With reduced motion the header's shadow appears without a transition — layout test",
-  render: () => <DemoPageShell rows={80} />,
-  play: async ({ canvasElement }) => {
-    const { slot } = slots(canvasElement);
-    const emulate = (value: "reduce" | "no-preference") => send("Emulation.setEmulatedMedia", { features: [{ name: "prefers-reduced-motion", value }] });
-    await atTop();
-    await expect(getComputedStyle(slot).transitionProperty).toContain("box-shadow");
-    await emulate("reduce");
-    try {
-      await waitFor(() => expect(window.matchMedia("(prefers-reduced-motion: reduce)").matches).toBe(true));
-      await expect(getComputedStyle(slot).transitionDuration).toBe("0s");
-    } finally {
-      await send("Emulation.setEmulatedMedia", { features: [] });
-    }
-  },
-};
-
 export const SafeAreaInsetsKeepTheFrameClear: Story = {
-  name: "The frame leaves the device's safe-area insets clear, the header keeps the top inset, and the stylesheet asks the device for them — layout test",
+  name: "The frame leaves the device's safe-area insets clear, the Navbar pads itself with the published top inset, and the stylesheet asks the device for them — layout test",
   render: () => <DemoPageShell subNav rows={80} />,
   play: async ({ canvasElement }) => {
-    const { shell, bar, slot, footer } = slots(canvasElement);
+    const { shell, bar, footer } = slots(canvasElement);
     // The stylesheet reads each side from the device's own inset...
     const source = Array.from(document.styleSheets)
       .flatMap((sheet) => {
@@ -405,19 +371,20 @@ export const SafeAreaInsetsKeepTheFrameClear: Story = {
     await atTop();
     const before = bar.getBoundingClientRect().top;
     await expect(Math.abs(before)).toBeLessThan(1);
+    const row = bar.firstElementChild as HTMLElement;
     shell.style.setProperty("--page-shell-safe-top", "30px");
     shell.style.setProperty("--page-shell-safe-left", "10px");
     shell.style.setProperty("--page-shell-safe-right", "12px");
     shell.style.setProperty("--page-shell-safe-bottom", "20px");
     await nextFrame();
-    // The bar starts below the notch, though the slot is still at the top of the window, stuck or not.
-    await expect(Math.abs(bar.getBoundingClientRect().top - 30)).toBeLessThan(1);
-    await expect(Math.abs(slot.getBoundingClientRect().top)).toBeLessThan(1);
+    // The bar pads itself with the published inset, so its content starts below the notch, while the bar itself is still at the top of the window.
+    await expect(Math.abs(row.getBoundingClientRect().top - 30)).toBeLessThan(1);
+    await expect(Math.abs(bar.getBoundingClientRect().top)).toBeLessThan(1);
     window.scrollTo(0, document.documentElement.scrollHeight);
     await nextFrame();
     await expect(Math.abs(footer.getBoundingClientRect().bottom - (window.innerHeight - 20))).toBeLessThan(1);
-    await expect(Math.abs(slot.getBoundingClientRect().top)).toBeLessThan(1);
-    await expect(Math.abs(bar.getBoundingClientRect().top - 30)).toBeLessThan(1);
+    await expect(Math.abs(bar.getBoundingClientRect().top)).toBeLessThan(1);
+    await expect(Math.abs(row.getBoundingClientRect().top - 30)).toBeLessThan(1);
     await atTop();
   },
 };
@@ -452,7 +419,7 @@ async function whilePrinting(check: () => Promise<void>) {
 }
 
 export const PrintsThePageWithoutKeepingPartsInView: Story = {
-  name: "Printed, the banner, header and footer are in the flow in order, nothing is kept in view, and the skip link and the loading bar are left out — layout test",
+  name: "Printed, the banner, header, main and footer are in the flow in order, and the skip link and the loading bar are left out — layout test",
   render: () => <DemoPageShell banner subNav busy rows={80} />,
   play: async ({ canvasElement }) => {
     const { canvas, shell, slot, main, footer } = slots(canvasElement);
@@ -460,11 +427,8 @@ export const PrintsThePageWithoutKeepingPartsInView: Story = {
     const banner = canvas.getByText(/maintenance/i);
     const bar = main.querySelector<HTMLElement>("[aria-hidden='true']") as HTMLElement;
     await atTop();
-    await expect(getComputedStyle(slot).position).toBe("sticky");
     await whilePrinting(async () => {
-      await expect(getComputedStyle(slot).position).toBe("static");
       await expect(getComputedStyle(footer).position).toBe("static");
-      await expect(getComputedStyle(slot).boxShadow).toBe("none");
       await expect(getComputedStyle(skip).display).toBe("none");
       await expect(getComputedStyle(bar).display).toBe("none");
       await expect(getComputedStyle(shell).minBlockSize).not.toBe(`${window.innerHeight}px`);
@@ -496,124 +460,25 @@ export const StaysTheSameWhenItGrowsATallPage: Story = {
   },
 };
 
-export const SubNavCentresAndKeepsTheCurrentLinkInView: Story = {
-  name: "The sub-navigation's links are centred while they fit, and on a phone the current link is scrolled into view — layout test",
-  render: () => <DemoPageShell subNav />,
+
+export const CustomHeaderSticksByAffix: Story = {
+  name: "A header of the app's own sticks by Affix, with a shadow once stuck, and the shell wraps nothing around it — layout test",
+  render: () => <DemoPageShell customHeader rows={80} />,
   play: async ({ canvasElement }) => {
     await expect(window.innerWidth).toBeGreaterThanOrEqual(1024);
-    const { canvas, slot } = slots(canvasElement);
-    const nav = canvas.getByRole("navigation", { name: "Project sections" });
-    const links = within(nav).getAllByRole("link");
-    // The links sit in the middle of the window, not at its start.
-    const first = links[0]!.getBoundingClientRect();
-    const last = links[links.length - 1]!.getBoundingClientRect();
-    await expect(Math.abs((first.left + last.right) / 2 - window.innerWidth / 2)).toBeLessThan(2);
-    // No line under the row in this demo, and no edge fade, since everything fits.
-    await expect(getComputedStyle(slot.querySelector("[data-sub-nav-scroller]")!.parentElement as HTMLElement).borderBlockEndStyle).toBe("none");
-    await expect(slot.querySelector("[data-overflow-start], [data-overflow-end]")).toBeNull();
-    // The current link is a round ghost button in the subtle tint, and marks itself.
-    const current = within(nav).getByRole("link", { name: "Overview" });
-    await expect(current).toHaveAttribute("aria-current", "page");
-    await expect(getComputedStyle(current).borderRadius).not.toBe("0px");
-    const probe = document.createElement("div");
-    probe.style.backgroundColor = "var(--dbm-bg-brand-subtle)";
-    document.body.append(probe);
-    const tint = getComputedStyle(probe).backgroundColor;
-    probe.remove();
-    await expect(getComputedStyle(current).backgroundColor).toBe(tint);
-    await expect(getComputedStyle(links[1]!).backgroundColor).not.toBe(tint);
-  },
-};
-
-export const SubNavCurrentLinkScrollsIntoViewOnAPhone: Story = {
-  name: "On a phone a current link beyond the edge is scrolled into view when the row appears — layout test",
-  globals: { viewport: { value: "mobile1", isRotated: false } },
-  render: () => (
-    <DemoPageShell subNav>
-      {/* The page is the demo's; the current section is the last one, which a phone cannot show without scrolling. */}
-    </DemoPageShell>
-  ),
-  play: async ({ canvasElement }) => {
-    await expect(window.innerWidth).toBeLessThan(768);
-    const { canvas, slot } = slots(canvasElement);
-    const nav = canvas.getByRole("navigation", { name: "Project sections" });
-    const scroller = slot.querySelector<HTMLElement>("[data-sub-nav-scroller]") as HTMLElement;
-    const last = within(nav).getByRole("link", { name: "Project settings" });
-    await expect(last.getBoundingClientRect().right).toBeGreaterThan(scroller.getBoundingClientRect().right);
-    // A real click on the last link makes it the current one, and the row brings it into view and the fade at the end goes.
-    await realClick(last);
-    await waitFor(() => expect(last).toHaveAttribute("aria-current", "page"));
-    await waitFor(() => expect(last.getBoundingClientRect().right).toBeLessThanOrEqual(scroller.getBoundingClientRect().right + 1));
-    await waitFor(() => expect(scroller.parentElement).toHaveAttribute("data-overflow-start"));
-    // Only the row scrolled: the page did not move.
-    await expect(window.scrollY).toBe(0);
-  },
-};
-
-export const HeaderHidesOnAScrollDownAndReturnsOnAScrollUp: Story = {
-  name: "With stickyHeader auto a real wheel down slides the header out of view, a wheel up brings it back, and focus inside keeps it — layout test",
-  render: () => <DemoPageShell stickyHeader="auto" subNav rows={80} />,
-  play: async ({ canvasElement }) => {
-    await expect(window.innerWidth).toBeGreaterThanOrEqual(1024);
-    const { canvas, shell, slot } = slots(canvasElement);
+    const { canvas, bar, shell } = slots(canvasElement);
+    await expect(canvas.getAllByRole("banner")).toHaveLength(1);
+    await expect(bar.tagName).toBe("HEADER");
+    await expect(bar.parentElement).toBe(shell);
     await atTop();
-    await waitFor(() => expect(shell).not.toHaveAttribute("data-header-hidden"));
+    await expect(getComputedStyle(bar).boxShadow).toBe("none");
     await wheel(900);
     await waitFor(() => expect(window.scrollY).toBeGreaterThan(300));
     await settled();
-    await waitFor(() => expect(shell).toHaveAttribute("data-header-hidden"));
-    // Out of view: its lower edge is at or above the top of the window.
-    await waitFor(() => expect(slot.getBoundingClientRect().bottom).toBeLessThanOrEqual(1));
-    // A key press into it: focus is inside it, so it is back, whatever the scroll did.
-    await press("Tab", 9);
-    await press("Tab", 9);
-    await expect(slot.contains(document.activeElement)).toBe(true);
-    await waitFor(() => expect(slot.getBoundingClientRect().top).toBeGreaterThanOrEqual(-1));
-    (document.activeElement as HTMLElement).blur();
-    // A wheel up brings it back for good.
-    await wheel(-300);
-    await settled();
-    await waitFor(() => expect(shell).not.toHaveAttribute("data-header-hidden"));
-    await waitFor(() => expect(Math.abs(slot.getBoundingClientRect().top)).toBeLessThan(1));
-    await expect(canvas.getByRole("banner")).toBeVisible();
-    await atTop();
-  },
-};
-
-export const SubNavScrollsAwayLeavingTheBar: Story = {
-  name: "With sticky off on the sub-navigation only the bar stays at the top of the window while the row scrolls away — layout test",
-  render: () => <DemoPageShell subNav subNavProps={{ sticky: false }} rows={80} />,
-  play: async ({ canvasElement }) => {
-    await expect(window.innerWidth).toBeGreaterThanOrEqual(1024);
-    const { canvas, bar } = slots(canvasElement);
-    const nav = canvas.getByRole("navigation", { name: "Project sections" });
-    await atTop();
-    await expect(nav.getBoundingClientRect().top).toBeGreaterThanOrEqual(bar.getBoundingClientRect().bottom - 1);
-    await wheel(900);
-    await waitFor(() => expect(window.scrollY).toBeGreaterThan(300));
-    await settled();
+    await expect(getComputedStyle(bar).position).toBe("sticky");
     await expect(Math.abs(bar.getBoundingClientRect().top)).toBeLessThan(1);
-    await expect(nav.getBoundingClientRect().bottom).toBeLessThanOrEqual(bar.getBoundingClientRect().bottom + 1);
+    await waitFor(() => expect(getComputedStyle(bar).boxShadow).not.toBe("none"));
     await atTop();
-  },
-};
-
-export const ActionsFooterStaysAtTheBottomOfTheWindow: Story = {
-  name: "The actions footer stays at the bottom of the window over a long page, and ends the page in place — layout test",
-  render: () => <DemoPageShell footerVariant="actions" rows={60} />,
-  play: async ({ canvasElement }) => {
-    await expect(window.innerWidth).toBeGreaterThanOrEqual(1024);
-    const { footer } = slots(canvasElement);
-    await atTop();
-    await expect(getComputedStyle(footer).position).toBe("sticky");
-    await expect(Math.abs(footer.getBoundingClientRect().bottom - window.innerHeight)).toBeLessThan(1);
-    await wheel(900);
-    await waitFor(() => expect(window.scrollY).toBeGreaterThan(300));
-    await settled();
-    await expect(Math.abs(footer.getBoundingClientRect().bottom - window.innerHeight)).toBeLessThan(1);
-    window.scrollTo(0, document.documentElement.scrollHeight);
-    await nextFrame();
-    await expect(Math.abs(footer.getBoundingClientRect().bottom - window.innerHeight)).toBeLessThan(1);
-    await atTop();
+    await waitFor(() => expect(getComputedStyle(bar).boxShadow).toBe("none"));
   },
 };

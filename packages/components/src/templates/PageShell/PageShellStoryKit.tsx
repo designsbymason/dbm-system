@@ -1,8 +1,10 @@
 // Demo code shared by PageShell's stories, its hidden real-browser checks and its tests: a "Projects" workspace drawn in the shell, with a
-// `Navbar`, a sub-navigation, a page of cards and a footer of links. Docs-only (a stories-support module, not shipped, ADR-0013's way of sharing
+// `Navbar` (and a second row of links under it), a page of cards and a footer of links. Docs-only (a stories-support module, not shipped, ADR-0013's way of sharing
 // code between two stories files); the "Show code" snippets are written by hand in `PageShell.snippets.ts`.
 import { BellIcon, TrayIcon, WarningCircleIcon } from "@dbm-system/icons";
+import { useRef, useState } from "react";
 import type { MouseEvent, ReactNode } from "react";
+import { Affix } from "../../atoms/Affix";
 import { Avatar } from "../../atoms/Avatar";
 import { Button } from "../../atoms/Button";
 import { Heading } from "../../atoms/Heading";
@@ -17,7 +19,7 @@ import { Navbar } from "../../organisms/Navbar";
 import { useDemoCurrent } from "../../organisms/Navbar/NavbarStoryKit";
 import { preventNavigation } from "../../organisms/Sidebar/SidebarStoryKit";
 import { PageShell } from "./PageShell";
-import type { PageShellContentWidth, PageShellFooterVariant, PageShellProps, PageShellSubNavProps } from "./PageShell.types";
+import type { PageShellContentWidth, PageShellProps } from "./PageShell.types";
 
 /** The language of a demo's words: a right-to-left demo is in Persian, so a right-to-left check measures real text and not mirrored English. */
 export type Language = "en" | "fa";
@@ -45,8 +47,6 @@ export const demoCopy = {
     cardText: "Updated by the team a few days ago.",
     open: "Open",
     newProject: "New project",
-    cancel: "Cancel",
-    save: "Save",
     footerNavigation: "Footer",
     footerLinks: ["Help", "Privacy", "Terms"],
     footer: "© dbM",
@@ -78,8 +78,6 @@ export const demoCopy = {
     cardText: "چند روز پیش به‌روزرسانی شد.",
     open: "باز کردن",
     newProject: "پروژه جدید",
-    cancel: "انصراف",
-    save: "ذخیره",
     footerNavigation: "پاورقی",
     footerLinks: ["راهنما", "حریم خصوصی", "شرایط"],
     footer: "© dbM",
@@ -100,24 +98,39 @@ const mainLabelsFa = { loading: "در حال بارگذاری" } as const;
 
 const frameHeight = "36rem";
 
-/** The sub-navigation's row: the project's sections as `PageShell.SubNavLink`s, the current one marked. */
-function DemoSections({ language }: { language: Language }) {
+/**
+ * A header of the demo's own, to show that the shell does not need a `Navbar`: a `<header>` made sticky by `Affix`, with a shadow from the stuck state.
+ * The top inset is the shell's published `--page-shell-safe-top`.
+ */
+function DemoCustomHeader({ language, scrollContainerRef }: { language: Language; scrollContainerRef?: React.RefObject<HTMLElement | null> }) {
   const copy = demoCopy[language];
-  const demo = useDemoCurrent("overview");
-  const sections = [
-    ["overview", copy.overview],
-    ["activity", copy.activity],
-    ["members", copy.members],
-    ["settings", copy.projectSettings],
-  ] as const;
+  const [stuck, setStuck] = useState(false);
   return (
-    <>
-      {sections.map(([id, label]) => (
-        <PageShell.SubNavLink key={id} {...demo.anchor(id)} current={demo.isCurrent(id)}>
-          {label}
-        </PageShell.SubNavLink>
-      ))}
-    </>
+    <Affix asChild scrollContainerRef={scrollContainerRef} onStickyChange={setStuck}>
+      <header
+        style={{
+          display: "flex",
+          alignItems: "center",
+          gap: "var(--dbm-space-6)",
+          paddingBlock: "var(--dbm-space-3)",
+          paddingBlockStart: "calc(var(--dbm-space-3) + var(--page-shell-safe-top))",
+          paddingInline: "var(--dbm-space-4)",
+          background: "var(--dbm-bg-surface)",
+          borderBlockEnd: "var(--dbm-border-width-1) solid var(--dbm-border-default)",
+          boxShadow: stuck ? "var(--dbm-shadow-light-md)" : undefined,
+        }}
+      >
+        <Text weight="bold">{copy.brand}</Text>
+        <nav aria-label={copy.navigation} style={{ display: "flex", gap: "var(--dbm-space-4)" }}>
+          <Link href="#" onClick={preventNavigation}>
+            {copy.projects}
+          </Link>
+          <Link href="#" onClick={preventNavigation}>
+            {copy.reports}
+          </Link>
+        </nav>
+      </header>
+    </Affix>
   );
 }
 
@@ -167,12 +180,14 @@ const preventClick = (event: MouseEvent) => event.preventDefault();
 export interface DemoPageShellProps extends PageShellProps {
   /** Draws the shell in a box of its own, for a Docs page, where a shell as tall as the window would fill the page. */
   framed?: boolean;
-  /** Adds a `PageShell.SubNav` of the project's sections under the bar. */
+  /** Adds a second row of the project's sections under the bar: a `Navbar.Row` that scrolls away, with a scrolling set of links. */
   subNav?: boolean;
-  /** Props for the sub-navigation row (its `align`, `bordered` and `sticky`), when `subNav` is on. */
-  subNavProps?: Partial<PageShellSubNavProps>;
-  /** The footer's look. */
-  footerVariant?: PageShellFooterVariant;
+  /** Whether the `Navbar` sticks (a demo control: the shell does not wrap the header, so this is the bar's own `sticky`). */
+  sticky?: boolean;
+  /** Whether the sticky `Navbar` hides on a scroll down. */
+  hideOnScroll?: boolean;
+  /** Draws a header of the demo's own, a `<header>` made sticky by `Affix`, in place of the `Navbar`. */
+  customHeader?: boolean;
   /** The width preset of the page's content. */
   contentWidth?: PageShellContentWidth;
   /** Adds a `PageShell.Banner` with a notice. */
@@ -190,14 +205,15 @@ export interface DemoPageShellProps extends PageShellProps {
 }
 
 /**
- * A whole shell filled in: a skip link and a `Navbar` (the bar's own links go into a menu behind a button on a phone), an optional banner and
- * sub-navigation, the demo page and a footer of links. A right-to-left shell (`dir="rtl"`) is in Persian, with `lang="fa"`.
+ * A whole shell filled in: a skip link and a `Navbar` direct in the shell (the bar's own links go into a menu behind a button on a phone), an optional
+ * banner and second row of links, the demo page and a footer of links. A right-to-left shell (`dir="rtl"`) is in Persian, with `lang="fa"`.
  */
 export function DemoPageShell({
   framed = false,
   subNav = false,
-  subNavProps,
-  footerVariant,
+  sticky = true,
+  hideOnScroll = false,
+  customHeader = false,
   contentWidth,
   banner = false,
   busy,
@@ -211,6 +227,10 @@ export function DemoPageShell({
   const copy = demoCopy[language];
   const fa = language === "fa";
   const demoLinks = useDemoCurrent("projects");
+  const sections = useDemoCurrent("overview");
+  // In a framed demo the bar sticks within the frame, which is the box that scrolls, so the bar is told which box it is.
+  const frameRef = useRef<HTMLDivElement | null>(null);
+  const scrollContainerRef = framed ? frameRef : undefined;
   /** A link of the bar: the current mark follows the choice, and the app is told, as a router would be. */
   const link = (id: "projects" | "reports" | "team" | "settings") => {
     const own = demoLinks.link(id);
@@ -239,8 +259,18 @@ export function DemoPageShell({
           </Alert>
         </PageShell.Banner>
       )}
-      <PageShell.Header>
-        <Navbar contained labels={fa ? navbarLabelsFa : undefined}>
+      {customHeader ? (
+        <DemoCustomHeader language={language} scrollContainerRef={scrollContainerRef} />
+      ) : (
+        <Navbar
+          contained
+          sticky={sticky}
+          hideOnScroll={sticky && hideOnScroll}
+          scrollContainerRef={scrollContainerRef}
+          labels={fa ? navbarLabelsFa : undefined}
+          // A sticky bar keeps clear of a notch with the inset the shell publishes.
+          style={{ paddingBlockStart: "var(--page-shell-safe-top)" }}
+        >
           {/* Below the step the row is three columns: the menu button at the start, the brand in the centre, the actions at the end. */}
           <Navbar.Row columns="balanced">
             <Navbar.Brand href="#" onClick={preventNavigation}>
@@ -258,25 +288,23 @@ export function DemoPageShell({
             </Navbar.Actions>
             <Navbar.MenuButton variant="tertiary" tone="neutral" size="sm" />
           </Navbar.Row>
+          {subNav && (
+            // A row at the end that scrolls away under the bar, with links that stay in the bar at every width and scroll sideways.
+            <Navbar.Row size="sm" variant="filled" sticky={false}>
+              <Navbar.Links aria-label={copy.sectionsName} scroll rounded currentVariant="subtle">
+                <Navbar.Link {...sections.link("overview")}>{copy.overview}</Navbar.Link>
+                <Navbar.Link {...sections.link("activity")}>{copy.activity}</Navbar.Link>
+                <Navbar.Link {...sections.link("members")}>{copy.members}</Navbar.Link>
+                <Navbar.Link {...sections.link("settings")}>{copy.projectSettings}</Navbar.Link>
+              </Navbar.Links>
+            </Navbar.Row>
+          )}
         </Navbar>
-        {subNav && (
-          <PageShell.SubNav label={copy.sectionsName} bordered={false} {...subNavProps}>
-            <DemoSections language={language} />
-          </PageShell.SubNav>
-        )}
-      </PageShell.Header>
+      )}
       <PageShell.Main busy={busy} labels={fa ? mainLabelsFa : undefined}>
         <PageShell.Content width={contentWidth}>{children ?? <DemoPage language={language} rows={rows} state={state} />}</PageShell.Content>
       </PageShell.Main>
-      <PageShell.Footer variant={footerVariant}>
-        {footerVariant === "actions" ? (
-          <PageShell.Content paddingBlock={3} style={{ display: "flex", justifyContent: "flex-end", gap: "var(--dbm-space-2)" }}>
-            <Button variant="secondary" onClick={preventClick}>
-              {copy.cancel}
-            </Button>
-            <Button onClick={preventClick}>{copy.save}</Button>
-          </PageShell.Content>
-        ) : (
+      <PageShell.Footer>
         <PageShell.Content paddingBlock={4} style={{ display: "flex", flexWrap: "wrap", gap: "var(--dbm-space-4)", justifyContent: "space-between" }}>
           <Text size="sm" color="secondary">
             {copy.footer}
@@ -289,13 +317,13 @@ export function DemoPageShell({
             ))}
           </nav>
         </PageShell.Content>
-        )}
       </PageShell.Footer>
     </PageShell>
   );
   if (!framed) return shell;
   return (
     <div
+      ref={frameRef}
       style={{
         blockSize: frameHeight,
         overflow: "auto",

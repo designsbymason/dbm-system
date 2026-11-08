@@ -10,28 +10,27 @@ const words = {
   fa: { title: "پروژه‌ها", projects: "پروژه‌ها", reports: "گزارش‌ها" },
 };
 
-const header = (extra = "", language: "en" | "fa" = "en") => `  <PageShell.Header>
-    {/* The shell keeps the header in view: leave the Navbar without its own sticky */}
-    <Navbar>
-      {/* On a phone the row is three columns: the menu button at the start, the brand in the centre, the actions at the end */}
-      <Navbar.Row columns="balanced">
-        <Navbar.Brand href="/">dbM</Navbar.Brand>
-        <Navbar.Links aria-label="Main">
-          <Navbar.Link href="/projects" current>${words[language].projects}</Navbar.Link>
-          <Navbar.Link href="/reports">${words[language].reports}</Navbar.Link>
-        </Navbar.Links>
-        <Navbar.MenuButton variant="tertiary" tone="neutral" size="sm" />
-      </Navbar.Row>
-    </Navbar>${extra}
-  </PageShell.Header>`;
+/** The header: a `Navbar` direct in the shell (the shell wraps no header, so the bar sticks itself), with an optional second row of links. */
+const header = (extra = "", language: "en" | "fa" = "en", attributes = "sticky") => `  <Navbar${attributes ? ` ${attributes}` : ""}>
+    {/* On a phone the row is three columns: the menu button at the start, the brand in the centre, the actions at the end */}
+    <Navbar.Row columns="balanced">
+      <Navbar.Brand href="/">dbM</Navbar.Brand>
+      <Navbar.Links aria-label="Main">
+        <Navbar.Link href="/projects" current>${words[language].projects}</Navbar.Link>
+        <Navbar.Link href="/reports">${words[language].reports}</Navbar.Link>
+      </Navbar.Links>
+      <Navbar.MenuButton variant="tertiary" tone="neutral" size="sm" />
+    </Navbar.Row>${extra}
+  </Navbar>`;
 
-const subNavRow = (attributes = "") => `
-    <PageShell.SubNav label="Project sections"${attributes ? ` ${attributes}` : ""}>
-      <PageShell.SubNavLink href="/projects/overview" current>Overview</PageShell.SubNavLink>
-      <PageShell.SubNavLink href="/projects/activity">Activity</PageShell.SubNavLink>
-      <PageShell.SubNavLink href="/projects/members">Members</PageShell.SubNavLink>
-    </PageShell.SubNav>`;
-const subNav = subNavRow();
+const subNav = `
+    <Navbar.Row size="sm" variant="filled" sticky={false}>
+      <Navbar.Links aria-label="Project sections" scroll rounded currentVariant="subtle">
+        <Navbar.Link href="/projects/overview" current>Overview</Navbar.Link>
+        <Navbar.Link href="/projects/activity">Activity</Navbar.Link>
+        <Navbar.Link href="/projects/members">Members</Navbar.Link>
+      </Navbar.Links>
+    </Navbar.Row>`;
 
 const main = (inner = "", language: "en" | "fa" = "en") => `  <PageShell.Main>
     <PageShell.Content>
@@ -48,31 +47,36 @@ const skipLink = `  <PageShell.SkipLink />`;
 export const pageShellSnippets = {
   default: shell("", [skipLink, header(), main(), footer]),
 
-  subNav: `{/* PageShell.SubNav is a second row of navigation inside the header, so it sticks with the bar. With a label it draws the nav, with
-    that name, around its PageShell.SubNavLinks (or leave the label out and put a nav of your own in it). The links are centred while they all
-    fit; when they do not, the row scrolls sideways, fades at the edge that has more and brings the current link into view. */}
+  subNav: `{/* A Navbar.Row at the end with sticky={false} is drawn after the bar's header, so the bar sticks on its own and the row scrolls away under
+    it. scroll keeps its links in the bar at every width: it scrolls sideways when they do not fit, fades at the edge that has more and brings the
+    current link into view. rounded and currentVariant give that set a look of its own beside the bar's. */}
 ${shell("", [skipLink, header(subNav), main(), footer])}`,
 
-  subNavScrollsAway: `{/* sticky={false} keeps only the bar at the top of the window: the row scrolls away with the page. bordered={false} draws no line under
-    it, and align="start" puts the links at the start of the row instead of the centre. */}
-${shell("", [skipLink, header(subNavRow('sticky={false} bordered={false} align="start"')), main(), footer])}`,
+  autoHide: `{/* The shell wraps no header, so hiding on scroll is the Navbar's own: hideOnScroll slides a sticky bar out of view while the reader scrolls
+    down and brings it back on the first scroll up. It stays while focus or an open menu is inside it. */}
+${shell("", [skipLink, header(subNav, "en", "sticky hideOnScroll"), main(), footer])}`,
 
-  autoHide: `{/* stickyHeader="auto" slides the header out of view while the reader scrolls down and brings it back on the first scroll up. It stays
-    while focus or an open menu is inside it, and with reduced motion it appears and disappears without sliding. */}
-${shell('stickyHeader="auto"', [skipLink, header(subNav), main(), footer])}`,
-
-  actionsFooter: `{/* variant="actions" makes the footer a bar of actions that stays at the bottom of the window until the page's own end. */}
-${shell("", [
-  skipLink,
-  header(),
-  main(),
-  `  <PageShell.Footer variant="actions">
-    <PageShell.Content paddingBlock={3} style={{ display: "flex", justifyContent: "flex-end", gap: "var(--dbm-space-2)" }}>
-      <Button variant="secondary">Cancel</Button>
-      <Button>Save</Button>
-    </PageShell.Content>
-  </PageShell.Footer>`,
-])}`,
+  customHeader: `{/* The shell does not wrap your header, so any header works, and it sticks by its own means: a Navbar with sticky, or a header of your own
+    made sticky by Affix, with a shadow once it is stuck. The shell publishes the device's top inset as --page-shell-safe-top, so a sticky header can
+    keep clear of a notch. */}
+<PageShell>
+  <PageShell.SkipLink />
+  <Affix asChild onStickyChange={setStuck}>
+    <header
+      style={{
+        background: "var(--dbm-bg-surface)",
+        paddingBlockStart: "var(--page-shell-safe-top)",
+        boxShadow: stuck ? "var(--dbm-shadow-light-md)" : undefined,
+      }}
+    >
+      <nav aria-label="Main">
+        <a href="/projects">Projects</a>
+      </nav>
+    </header>
+  </Affix>
+${main()}
+${footer}
+</PageShell>`,
 
   pageHeader: `{/* PageShell.PageHeader is the head of a page: the title as its h1, breadcrumbs above it, a description under it and the actions at the
     end of the row (under the title on a phone). */}
@@ -166,9 +170,8 @@ ${shell("", [
   footer,
 ])}`,
 
-  staticHeader: `{/* stickyHeader={false}: the header scrolls away with the page. The shadow under it (scrolledEdge) needs a header that sticks, so it
-    is not drawn. */}
-${shell("stickyHeader={false}", [skipLink, header(), main(), footer])}`,
+  staticHeader: `{/* A Navbar without sticky scrolls away with the page, and so does a header of your own with no Affix. */}
+${shell("", [skipLink, header("", "en", ""), main(), footer])}`,
 
   pageChange: `{/* const { pathname } = useLocation(); // your router's: the key changes when the reader goes to another page */}
 {/* On a change, focus moves to Main, so the keyboard starts at the new page's top, and the title is announced politely. Nothing happens on the
@@ -199,9 +202,10 @@ ${shell('dir="rtl" lang="fa"', [
 };
 
 export interface PageShellPlaygroundSnippetArgs {
-  stickyHeader?: boolean | "auto";
-  scrolledEdge?: boolean;
   dir?: "ltr" | "rtl";
+  sticky?: boolean;
+  hideOnScroll?: boolean;
+  customHeader?: boolean;
   subNav?: boolean;
   banner?: boolean;
 }
@@ -209,9 +213,6 @@ export interface PageShellPlaygroundSnippetArgs {
 /** The Playground's snippet, built from the live controls: only the props that differ from their defaults, around a small real shell. */
 export function pageShellPlaygroundSnippet(args: PageShellPlaygroundSnippetArgs): string {
   const attributes: string[] = [];
-  if (args.stickyHeader === false) attributes.push("stickyHeader={false}");
-  if (args.stickyHeader === "auto") attributes.push('stickyHeader="auto"');
-  if (args.scrolledEdge === false) attributes.push("scrolledEdge={false}");
   if (args.dir === "rtl") attributes.push('dir="rtl"', 'lang="fa"');
   const language = args.dir === "rtl" ? "fa" : "en";
   const banner = args.banner
@@ -221,5 +222,11 @@ export function pageShellPlaygroundSnippet(args: PageShellPlaygroundSnippetArgs)
     </Alert>
   </PageShell.Banner>`
     : undefined;
-  return shell(attributes.join(" "), [skipLink, ...(banner ? [banner] : []), header(args.subNav ? subNav : "", language), main("", language), footer]);
+  const navbarAttributes = [args.sticky === false ? "" : "sticky", args.sticky !== false && args.hideOnScroll ? "hideOnScroll" : ""].filter(Boolean).join(" ");
+  const top = args.customHeader
+    ? `  <Affix asChild>
+    <header style={{ background: "var(--dbm-bg-surface)" }}>Your header</header>
+  </Affix>`
+    : header(args.subNav ? subNav : "", language, navbarAttributes);
+  return shell(attributes.join(" "), [skipLink, ...(banner ? [banner] : []), top, main("", language), footer]);
 }

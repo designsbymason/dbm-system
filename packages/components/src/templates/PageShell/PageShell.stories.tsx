@@ -9,8 +9,8 @@ import { pageShellPlaygroundSnippet, pageShellSnippets } from "./PageShell.snipp
 
 // A template is a whole page, so every story fills the window (`layout: "fullscreen"`). The page scrolls as a whole, so open a story on its own to
 // see the header stay at the top; on a Docs page the shell sits in a frame instead (see PageShell.mdx).
-/** The shell's props, and the two Storybook-only controls (whether the demo has a sub-navigation and a banner). */
-type PlaygroundArgs = PageShellProps & { subNav: boolean; banner: boolean };
+/** The shell's props, and the Storybook-only controls of the demo (the header's `sticky` and `hideOnScroll` are the `Navbar`'s, since the shell wraps no header). */
+type PlaygroundArgs = PageShellProps & { subNav: boolean; banner: boolean; sticky: boolean; hideOnScroll: boolean; customHeader: boolean };
 
 const meta: Meta<PlaygroundArgs> = {
   title: "Templates/Application shells/PageShell",
@@ -21,19 +21,7 @@ const meta: Meta<PlaygroundArgs> = {
     children: {
       control: false,
       description:
-        "The shell's parts: PageShell.SkipLink, PageShell.Banner, PageShell.Header (a Navbar and an optional PageShell.SubNav), PageShell.Main (holding a PageShell.Content) and PageShell.Footer. They draw in the order you write them, which is the keyboard's tab order: put the skip link first and the header after it. Only PageShell.Main is needed.",
-    },
-    stickyHeader: {
-      control: "radio",
-      options: [true, false, "auto"],
-      description:
-        "Keeps the header (and the sub-navigation in it) at the top of the window while the page scrolls. Leave the Navbar inside it without its own sticky: the shell owns the sticking. \"auto\" also sticks it, but slides it out of view while the reader scrolls down and brings it back on the first scroll up, at the top of the page, and whenever focus or an open menu is inside it. With reduced motion it appears and disappears without sliding.",
-      table: { defaultValue: { summary: "true" } },
-    },
-    scrolledEdge: {
-      control: "boolean",
-      description: "Shows a shadow under the header while the page is scrolled down from its top (a line instead in forced colours, which drop shadows).",
-      table: { defaultValue: { summary: "true" } },
+        "The shell's parts and your header, in the order you want them on the page, which is the keyboard's tab order: PageShell.SkipLink first, then PageShell.Banner if there is one, your header (a Navbar, or any header of your own: the shell does not wrap it, so it sticks by its own means), PageShell.Main (holding a PageShell.Content) and PageShell.Footer. Only PageShell.Main is needed.",
     },
     pageKey: {
       control: false,
@@ -57,9 +45,24 @@ const meta: Meta<PlaygroundArgs> = {
         "The reading direction of everything inside. The shell sets it on its own element and provides it to the Navbar and everything inside, so none needs one of its own. Set lang beside it.",
       table: { defaultValue: { summary: "the provider's, else 'ltr'" } },
     },
+    sticky: {
+      control: "boolean",
+      description: "Storybook only — not a PageShell prop. The demo Navbar's own sticky: the shell wraps no header, so the bar sticks itself.",
+      table: { disable: true },
+    },
+    hideOnScroll: {
+      control: "boolean",
+      description: "Storybook only — not a PageShell prop. The demo Navbar's own hideOnScroll (it needs sticky).",
+      table: { disable: true },
+    },
+    customHeader: {
+      control: "boolean",
+      description: "Storybook only — not a PageShell prop. Draws a header of the demo's own, a header made sticky by Affix, in place of the Navbar.",
+      table: { disable: true },
+    },
     subNav: {
       control: "boolean",
-      description: "Storybook only — not a PageShell prop. Adds a PageShell.SubNav of the project's sections under the bar.",
+      description: "Storybook only — not a PageShell prop. Adds a second row of the project's sections to the demo Navbar: a Navbar.Row that scrolls away.",
       table: { disable: true },
     },
     banner: {
@@ -76,7 +79,7 @@ const meta: Meta<PlaygroundArgs> = {
         "Test identifier for automated testing (e.g. Testing Library's getByTestId, Playwright/Cypress selectors). Rendered as the DOM data-testid attribute; has no visual or behavioral effect.",
     },
   },
-  args: { stickyHeader: true, scrolledEdge: true, dir: "ltr", subNav: false, banner: false },
+  args: { dir: "ltr", sticky: true, hideOnScroll: false, customHeader: false, subNav: false, banner: false },
 };
 
 export default meta;
@@ -84,8 +87,9 @@ export default meta;
 type Story = StoryObj<PlaygroundArgs>;
 
 const noControls = {
-  stickyHeader: { control: false },
-  scrolledEdge: { control: false },
+  sticky: { control: false },
+  hideOnScroll: { control: false },
+  customHeader: { control: false },
   dir: { control: false },
   subNav: { control: false },
   banner: { control: false },
@@ -100,11 +104,11 @@ export const Playground: Story = {
       source: { type: "dynamic", transform: (_code: string, context: StoryContext) => pageShellPlaygroundSnippet(context.args) },
     },
   },
-  render: ({ subNav, banner, ...args }, context) => <DemoPageShell {...args} subNav={subNav} banner={banner} framed={docs(context)} />,
+  render: (args, context) => <DemoPageShell {...args} framed={docs(context)} />,
 };
 
 export const WithSubNav: Story = {
-  name: "A second row of navigation",
+  name: "A second row of links",
   parameters: { docs: { source: { code: pageShellSnippets.subNav } } },
   argTypes: { ...noControls },
   render: (_args, context) => <DemoPageShell subNav framed={docs(context)} />,
@@ -117,27 +121,18 @@ export const WithBanner: Story = {
   render: (_args, context) => <DemoPageShell banner subNav framed={docs(context)} />,
 };
 
-export const SubNavScrollsAway: Story = {
-  name: "A sub-navigation that scrolls away",
-  parameters: { docs: { source: { code: pageShellSnippets.subNavScrollsAway } } },
-  argTypes: { ...noControls },
-  render: (_args, context) => (
-    <DemoPageShell subNav subNavProps={{ sticky: false, align: "start" }} rows={80} framed={docs(context)} />
-  ),
-};
-
 export const AutoHide: Story = {
   name: "A header that hides on scroll",
   parameters: { docs: { source: { code: pageShellSnippets.autoHide } } },
   argTypes: { ...noControls },
-  render: (_args, context) => <DemoPageShell stickyHeader="auto" subNav rows={80} framed={docs(context)} />,
+  render: (_args, context) => <DemoPageShell hideOnScroll subNav rows={80} framed={docs(context)} />,
 };
 
-export const ActionsFooter: Story = {
-  name: "A footer of actions",
-  parameters: { docs: { source: { code: pageShellSnippets.actionsFooter } } },
+export const CustomHeader: Story = {
+  name: "A header of your own",
+  parameters: { docs: { source: { code: pageShellSnippets.customHeader } } },
   argTypes: { ...noControls },
-  render: (_args, context) => <DemoPageShell footerVariant="actions" rows={40} framed={docs(context)} />,
+  render: (_args, context) => <DemoPageShell customHeader rows={80} framed={docs(context)} />,
 };
 
 export const ShortPage: Story = {
@@ -172,7 +167,7 @@ export const StaticHeader: Story = {
   name: "A header that scrolls away",
   parameters: { docs: { source: { code: pageShellSnippets.staticHeader } } },
   argTypes: { ...noControls },
-  render: (_args, context) => <DemoPageShell stickyHeader={false} subNav framed={docs(context)} />,
+  render: (_args, context) => <DemoPageShell sticky={false} subNav rows={80} framed={docs(context)} />,
 };
 
 /** The router's part, played by state: choosing a link of the bar changes `pageKey`, as navigating would. */

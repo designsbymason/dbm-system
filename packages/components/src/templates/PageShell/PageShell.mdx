@@ -3,6 +3,7 @@ import { Callout, ComponentHeader, PlaygroundControls, PropertiesTable, RelatedC
 import { BellIcon } from "@dbm-system/icons";
 import { Box } from "../../atoms/Box";
 import { Button } from "../../atoms/Button";
+import { Affix } from "../../atoms/Affix";
 import { Container } from "../../atoms/Container";
 import { IconButton } from "../../atoms/IconButton";
 import { VisuallyHidden } from "../../atoms/VisuallyHidden";
@@ -13,16 +14,13 @@ import * as PageShellStories from "./PageShell.stories";
 import * as PageShellBannerStories from "./PageShellBanner.stories";
 import * as PageShellContentStories from "./PageShellContent.stories";
 import * as PageShellFooterStories from "./PageShellFooter.stories";
-import * as PageShellHeaderStories from "./PageShellHeader.stories";
 import * as PageShellMainStories from "./PageShellMain.stories";
 import * as PageShellPageHeaderStories from "./PageShellPageHeader.stories";
 import * as PageShellSkipLinkStories from "./PageShellSkipLink.stories";
-import * as PageShellSubNavLinkStories from "./PageShellSubNavLink.stories";
-import * as PageShellSubNavStories from "./PageShellSubNav.stories";
 
-export const propOrder = ["children", "stickyHeader", "scrolledEdge", "pageKey", "pageTitle", "documentTitle", "dir", "style", "className", "id", "data-testid"];
+export const propOrder = ["children", "pageKey", "pageTitle", "documentTitle", "dir", "style", "className", "id", "data-testid"];
 
-export const playgroundOrder = ["stickyHeader", "scrolledEdge", "dir", "subNav", "banner"];
+export const playgroundOrder = ["dir", "sticky", "hideOnScroll", "customHeader", "subNav", "banner"];
 
 <Meta of={PageShellStories} />
 
@@ -32,17 +30,15 @@ export const playgroundOrder = ["stickyHeader", "scrolledEdge", "dir", "subNav",
 
 **Which shell?** An app with no sidebar uses `PageShell`; one with a sidebar uses [`AppShell`](/docs/templates-application-shells-appshell--docs).
 
-The page frame of an application with no sidebar: a skip link, an optional banner, a header that stays at the top of the window, the page's
-one `<main>` and a footer. The page scrolls as a whole. It is **layout and wiring only**. You put your own
-[`Navbar`](/docs/organisms-navigation-navbar--docs) in the header and keep every prop it has; the shell adds the sticky slot it sits in, an
-optional second row of navigation that sticks with it, the page's one `<main>` landmark, the skip link's target, and a footer that sits at the
-bottom of the window on a page too short to fill it.
+The page frame of an application with no sidebar: a skip link, an optional banner, your header, the page's one `<main>` and a footer. The page
+scrolls as a whole. It is **layout and wiring only**, and it **does not wrap your header**: put a [`Navbar`](/docs/organisms-navigation-navbar--docs) (or
+any header) directly in the shell, in the order you want it on the page. The header sticks by its own means: `Navbar`'s `sticky` (with its shadow,
+`hideOnScroll` and a second row of links that scrolls away), or `Affix` around a header of your own. The shell adds the page's one `<main>` landmark, the
+skip link's target, a footer that sits at the bottom of the window on a page too short to fill it, the page-change handling and the frame.
 
-The shell keeps the header in view itself, so leave the `Navbar` without its own `sticky`. While the page is scrolled the header casts a shadow on
-it (a line in forced colours), and a notch or a home indicator never covers the header or the footer. Given the router's page, the shell moves focus to
-the new page and announces it. Below the `Navbar`'s own `collapseBelow` width its links move into a menu behind a button, which the `Navbar` draws;
-the sub-navigation scrolls sideways when it does not fit. On this page the live examples sit in a framed box 36rem tall, which is wider than a phone;
-open a story from the sidebar on its own and narrow the window to see the phone layout, and scroll to see the header stay at the top.
+Given the router's page, the shell moves focus to the new page and announces it. It publishes the device's safe-area insets as `--page-shell-safe-top`
+(and `-right`, `-bottom`, `-left`), so a sticky header can keep clear of a notch. On this page the live examples sit in a framed box 36rem tall, which is
+wider than a phone; open a story from the sidebar on its own and narrow the window to see the phone layout, and scroll to see the header stay at the top.
 
 ### Import
 
@@ -52,7 +48,7 @@ import { Navbar, PageShell } from "@dbm-system/components";
 
 ## Playground
 
-Drive the shell's props live; the navbar, the sub-navigation and the page it is filled with stay fixed. Scroll the framed page to see the header stay.
+Drive the shell's props live. The header controls (`sticky`, `hideOnScroll`, a header of your own, a second row) are the demo header's own, since the shell wraps no header. Scroll the framed page to see the header stay.
 
 <div className="dbm-playground-canvas">
 
@@ -79,24 +75,6 @@ Drive the shell's props live; the navbar, the sub-navigation and the page it is 
 
 <PropertiesTable of={PageShellBannerStories} order={["children", "style", "className", "id", "data-testid"]} />
 
-### PageShell.Header properties
-
-`PageShell.Header` also accepts any other native `<div>` attribute.
-
-<PropertiesTable of={PageShellHeaderStories} order={["children", "as", "style", "className", "id", "data-testid"]} />
-
-### PageShell.SubNav properties
-
-`PageShell.SubNav` also accepts any other native `<div>` attribute.
-
-<PropertiesTable of={PageShellSubNavStories} order={["children", "label", "align", "bordered", "sticky", "style", "className", "id", "data-testid"]} />
-
-### PageShell.SubNavLink properties
-
-`PageShell.SubNavLink` also accepts any other native `<a>` attribute.
-
-<PropertiesTable of={PageShellSubNavLinkStories} order={["children", "current", "style", "className", "id", "data-testid"]} />
-
 ### PageShell.PageHeader properties
 
 `PageShell.PageHeader` also accepts any other native `<div>` attribute.
@@ -119,39 +97,32 @@ Drive the shell's props live; the navbar, the sub-navigation and the page it is 
 
 `PageShell.Footer` also accepts any other native `<footer>` attribute.
 
-<PropertiesTable of={PageShellFooterStories} order={["children", "variant", "style", "className", "id", "data-testid"]} />
+<PropertiesTable of={PageShellFooterStories} order={["children", "style", "className", "id", "data-testid"]} />
 
 ## Variants
 
-### A second row of navigation
+### A second row of links
 
-`PageShell.SubNav` is a row inside the header, under the `Navbar`, so it sticks with it. Give it a `label` and it draws a named `nav` around its
-`PageShell.SubNavLink`s (round ghost buttons, the current one in the subtle tint the `Navbar` gives its own current link); or leave the label out and
-put a `nav` of your own in it. The links are centred while they all fit. When they do not, the row scrolls sideways, fades at the edge that has more
-links beyond it, and brings the current link into view. `bordered={false}` drops the line under it, and `align="start"` puts the links at the start.
+A `Navbar.Row` at the end of the bar with `sticky={false}` is drawn after the bar's `<header>`, so the bar sticks on its own and the row scrolls away under
+it. `scroll` on its `Navbar.Links` keeps the links in the bar at every width and scrolls them sideways when they do not fit, with a fade at the edge that
+has more and the current link brought into view; `rounded` and `currentVariant` give that set its own look beside the bar's. This is the `Navbar`'s, so
+its Docs say the rest.
 
 <Canvas of={PageShellStories.WithSubNav} />
 
-### A sub-navigation that scrolls away
-
-`sticky={false}` on the row keeps only the bar at the top of the window; the row scrolls away with the page. The bar must be the header's first
-child (a `Navbar` is). The shadow and, with `stickyHeader="auto"`, the sliding move to the bar.
-
-<Canvas of={PageShellStories.SubNavScrollsAway} />
-
 ### A header that hides on scroll
 
-`stickyHeader="auto"` slides the header out of view while the reader scrolls down and brings it back on the first scroll up, at the top of the page,
-and whenever focus or an open menu is inside it, so the keyboard never loses the bar. With reduced motion it appears and disappears without sliding.
+The `Navbar`'s own `hideOnScroll` slides a sticky bar out of view while the reader scrolls down and brings it back on the first scroll up. It stays while
+focus or an open menu is inside it.
 
 <Canvas of={PageShellStories.AutoHide} />
 
-### A footer of actions
+### A header of your own
 
-`variant="actions"` on `PageShell.Footer` makes it a bar that stays at the bottom of the window until the page's own end: the Save and Cancel of a long
-form. `variant="compact"` pads the ordinary footer tighter. For a footer of several columns, put a `Grid` of link lists in `PageShell.Content` inside it.
+The shell does not wrap the header, so any header works, and it sticks by its own means. A header of your own sticks by `Affix` (`asChild` puts the
+sticking on your `<header>`), and the shadow once it is stuck comes from `onStickyChange`. Pad it with `--page-shell-safe-top` to keep clear of a notch.
 
-<Canvas of={PageShellStories.ActionsFooter} />
+<Canvas of={PageShellStories.CustomHeader} />
 
 ### A banner above the header
 
@@ -185,7 +156,7 @@ An `EmptyState` in the content, with the next step. Its title is the page's `h1`
 
 ### A header that scrolls away
 
-With `stickyHeader={false}` the header scrolls away with the page, and there is no shadow, since the shadow belongs to a header that sticks.
+A `Navbar` without `sticky` (or a header with no `Affix`) scrolls away with the page, and has no shadow, since the shadow belongs to a header that sticks.
 
 <Canvas of={PageShellStories.StaticHeader} />
 
@@ -219,12 +190,12 @@ builds the whole title (`(title) => title + " · dbM"`). The title the document 
 <div className="dbm-do-dont-grid">
 <Callout tone="success" title="Do">
 
-- Put `PageShell.SkipLink` first and `PageShell.Header` after it. The shell draws the parts in the order you write them, which is the keyboard's
-  tab order, so the skip link is the first stop.
-- Put a `Navbar` in `PageShell.Header`, and leave it without its own `sticky`: the shell keeps the whole slot (the bar and the sub-navigation) in
-  view. Use `Navbar.SkipLink` inside a `Navbar`, and `PageShell.SkipLink` when the header is not a `Navbar`: both go to `#main`, which is
-  `PageShell.Main`'s `id`.
-- Give the sub-navigation a `label` (or its own named `nav`), so the page's navigation landmarks are told apart from the bar's.
+- Put `PageShell.SkipLink` first and your header after it. The shell draws the parts in the order you write them, which is the keyboard's tab order, so
+  the skip link is the first stop.
+- Put the `Navbar` (or your header) directly in the shell, and let it stick by its own `sticky` (or `Affix`). Use `Navbar.SkipLink` inside a `Navbar`, and
+  `PageShell.SkipLink` when the header is not a `Navbar`: both go to `#main`, which is `PageShell.Main`'s `id`.
+- Give a second row of links its own `aria-label`, so the page's navigation landmarks are told apart from the bar's.
+- Pad a sticky header with `--page-shell-safe-top` if the page draws under a notch.
 - Pass `pageKey` (the router's pathname) and `pageTitle`, so a screen-reader user and a keyboard user are told about a page change that no browser
   navigation announces.
 - Keep a wide table or a long code block in a component that scrolls on its own (`Table`, `CodeBlock`): the page scrolls vertically and never
@@ -238,12 +209,12 @@ builds the whole title (`(title) => title + " · dbM"`). The title the document 
 - Don't use `PageShell` for an app with a sidebar: [`AppShell`](/docs/templates-application-shells-appshell--docs) has the sidebar, the rail and
   the aside. Don't use it for a page with no header of its own either: a plain
   [`Container`](/docs/atoms-layout-container--docs) with `as="main"` is the page there.
-- Don't put a second `<main>` inside it, and don't wrap a `Navbar` in `PageShell.Header as="header"`: a `Navbar` draws its own `<header>`, and the
-  two would nest.
+- Don't put a second `<main>` inside it, and don't wrap a `Navbar` in a `<header>` or a box of your own: a `Navbar` draws its own `<header>`, and a box
+  around it is the box it sticks within, so it stops following the window.
 - Don't set `overflow` on an element around the shell, or give it a height: it makes that element the box the header sticks to, so the header stops
   following the window. The shell is as tall as the window already (and taller when the page is).
 - Don't keep a tall banner above the header and expect it to stay: it scrolls away with the page.
-- Don't put important navigation only in the sub-navigation of a phone: it scrolls sideways, so keep the few places everyone needs in the bar's menu.
+- Don't put important navigation only in a second row of links on a phone: it scrolls sideways, so keep the few places everyone needs in the bar's menu.
 
 </Callout>
 </div>
@@ -254,28 +225,24 @@ builds the whole title (`(title) => title + " · dbM"`). The title the document 
   full-bleed section is a page's own element outside the content.
 - Let the footer be small. It holds the links people look for at the end of a page (help, privacy, terms), and it sits at the bottom of the window on a
   short page, so it is always reachable.
-- Printing prints the page, not the chrome: the skip link and the loading bar are left out, the banner, header and footer are ordinary rows and nothing
-  sticks. Put your own page breaks in the page's own CSS.
-- Name each `Navbar.Links` and each sub-navigation, so a screen reader's list of navigation landmarks tells them apart.
+- Printing prints the page, not the chrome: the skip link and the loading bar are left out, and the banner, main and footer are ordinary rows. The header
+  prints as it does alone. Put your own page breaks in the page's own CSS.
+- Name each `Navbar.Links`, so a screen reader's list of navigation landmarks tells them apart.
 - Use `busy` for a page that is reloading its content: it keeps what is on screen and says so, where an `EmptyState` replaces it.
-- The shell's shadow under the header marks that the page has scrolled. Keep it on a page that scrolls and turn it off with `scrolledEdge={false}`
-  for a flat look, where the header is already separated from the page by its own surface.
-
 ## Accessibility
 
 <Callout tone="info" title="Who provides which landmark">
 
-The shell supplies `PageShell.Main` (the one `main`) and `PageShell.Footer` (the `contentinfo`). The banner `<header>` comes from the `Navbar` in the
-header slot, or from `PageShell.Header as="header"` for a header built without one; each `Navbar.Links` and your sub-navigation's `nav` is a named
-`navigation`. All of them are real elements, not roles on divs. The shell's own header slot is a plain `div` by default so that a `Navbar` is never
-wrapped in a second banner.
+The shell supplies `PageShell.Main` (the one `main`) and `PageShell.Footer` (the `contentinfo`). The banner `<header>` comes from your header: the `Navbar`
+draws its own, and a header of your own is a `<header>`. Each `Navbar.Links` is a named `navigation`; a second row's `<nav>` is a landmark outside the
+banner. All of them are real elements, not roles on divs. The shell wraps no header, so a `Navbar` is never wrapped in a second banner.
 
 </Callout>
 
 | Key | Behaviour |
 |---|---|
-| `Tab` | Moves through the skip link, then the header (the bar, then the sub-navigation), then the main area's content, then the footer, in markup order. |
-| `Tab` into a hidden header | Slides the header back into view (`stickyHeader="auto"`). |
+| `Tab` | Moves through the skip link, then the header, then the main area's content, then the footer, in markup order. |
+| `Tab` into a hidden header | Slides the header back into view (the `Navbar`'s `hideOnScroll`). |
 | `Enter` on a skip link | Moves focus to `PageShell.Main`, past the header. |
 | `Escape` in the bar's menu panel | Closes it and returns focus to the menu button (the `Navbar`'s own behaviour below its `collapseBelow` width). |
 
@@ -286,15 +253,10 @@ wrapped in a second banner.
   is the router's.
 - While `busy` is set the main area has `aria-busy="true"` and a polite status region says "Loading"; when it clears the region empties, so nothing more
   is read out. The bar is decoration and hidden from assistive technology.
-- The sticky header, the sub-navigation and the page's own sticky parts keep a fixed order of layers, so a bar of yours never paints over the header: the
-  page's content on the system's `sticky` step, the header one step above it, the skip link on the `fixed` step, and every menu, popover and dialog above those.
-- The scrolled-edge shadow is not the only way to tell that a page scrolls, and forced colours, which drop shadows, get a line instead. Motion on it
-  respects `prefers-reduced-motion`.
-- A header that hides on scroll (`stickyHeader="auto"`) never hides while focus is inside it or one of its menus is open, so a keyboard user does not
-  lose the bar; with reduced motion it jumps instead of sliding. The sub-navigation's links are ordinary links in a named `nav`, the current one has
-  `aria-current="page"` and, in forced colours, an underline besides its tint. The edge fades are decoration and never take a click.
-- A notch or a home indicator never covers the shell: the header keeps the top inset clear, the frame the sides and the bottom, and the skip link is drawn
-  below it.
+- The sticky header and the page's own sticky parts keep the system's order of layers (the page's content and `Affix` on the `sticky` step, the skip
+  link on the `fixed` step, and every menu, popover and dialog above those).
+- A notch or a home indicator never covers the shell: the frame keeps the sides and the bottom clear, the skip link is drawn below the top inset, and a
+  sticky header pads itself with the published `--page-shell-safe-top`.
 - The shell adds no colour pairing of its own: the page background is the surface colour, and text inside uses the primary text colour (at least 4.5:1
   on it in every theme).
 - The reading direction is the shell's (`dir`, else the nearest `DirectionProvider`'s), and the `Navbar` inside takes it from the shell. Set `lang` beside it.
@@ -304,18 +266,13 @@ wrapped in a second banner.
 ```tsx
 <PageShell pageKey={pathname} pageTitle={title}>
   <PageShell.SkipLink />
-  <PageShell.Header>
-    <Navbar contained>
-      <Navbar.Brand href="/">Acme</Navbar.Brand>
-      <Navbar.Links aria-label="Main">
-        <Navbar.Link href="/projects" current>Projects</Navbar.Link>
-        <Navbar.Link href="/reports">Reports</Navbar.Link>
-      </Navbar.Links>
-    </Navbar>
-    <PageShell.SubNav>
-      <nav aria-label="Project sections">…</nav>
-    </PageShell.SubNav>
-  </PageShell.Header>
+  <Navbar contained sticky>
+    <Navbar.Brand href="/">Acme</Navbar.Brand>
+    <Navbar.Links aria-label="Main">
+      <Navbar.Link href="/projects" current>Projects</Navbar.Link>
+      <Navbar.Link href="/reports">Reports</Navbar.Link>
+    </Navbar.Links>
+  </Navbar>
   <PageShell.Main>
     <PageShell.Content>
       <h1>Projects</h1>
@@ -345,13 +302,23 @@ return (
 ```
 
 ```tsx
-// A banner, a header that scrolls away and a flat look
-<PageShell stickyHeader={false} scrolledEdge={false}>
+// A banner and a header that scrolls away (a Navbar without sticky)
+<PageShell>
   <PageShell.Banner>
     <Alert banner tone="info"><Alert.Description>Maintenance tonight at 22:00 UTC.</Alert.Description></Alert>
   </PageShell.Banner>
+  <Navbar>…</Navbar>
   …
 </PageShell>
+```
+
+```tsx
+// A header of your own, made sticky by Affix, clear of a notch
+<Affix asChild onStickyChange={setStuck}>
+  <header style={{ background: "var(--dbm-bg-surface)", paddingBlockStart: "var(--page-shell-safe-top)", boxShadow: stuck ? "var(--dbm-shadow-light-md)" : undefined }}>
+    …
+  </header>
+</Affix>
 ```
 
 ## Design tokens used
@@ -361,32 +328,22 @@ The skip link is `SkipLink`, which lists its own tokens.
 <TokenRow token="bg.surface" usage="the frame's background: the page colour behind the header, the main area and the footer" />
 <TokenRow token="text.primary" usage="the colour of text inside the frame that sets none of its own" />
 <TokenRow token="font-family.primary" usage="the typeface of the frame, inherited by everything inside it" />
-<TokenRow token="border.default" usage="the line under the sub-navigation (when `bordered`) and over the footer" />
-<TokenRow token="border-width.1" usage="the thickness of those lines" />
+<TokenRow token="border.default" usage="the line over the footer" />
+<TokenRow token="border-width.1" usage="the thickness of that line" />
 <TokenRow token="border-focus" usage="the focus ring drawn inside the main area while the keyboard has focused it" />
 <TokenRow token="border-width.2" usage="the thickness of that ring, and how far it is drawn inside the edge" />
-<TokenRow token="z-index.sticky" usage="the layer of the page's own content (the loading bar), and, one step up, of the header, so its shadow falls on the page" />
-<TokenRow token="motion-duration.base" usage="how long the header's shadow takes to appear, and how long a header that hides on scroll takes to slide" />
-<TokenRow token="motion-duration.fast" usage="how long the sub-navigation's edge fade takes to appear" />
-<TokenRow token="motion-easing.standard" usage="the easing of those transitions" />
-<TokenRow token="bg.brand-subtle" usage="the tint of the sub-navigation's current link, the one the Navbar gives its own" />
-<TokenRow token="bg.brand-subtle-hover" usage="that tint under the pointer" />
-<TokenRow token="text.brand" usage="the colour of the sub-navigation's current link" />
-<TokenRow token="space.8" usage="how wide the sub-navigation's edge fade is, and how far the current link is kept clear of it" />
+<TokenRow token="z-index.sticky" usage="the layer of the page's own content (the loading bar), the step a sticky header's own layer is on" />
 <TokenRow token="space.32" usage="the room the text of a page header is given before its actions wrap under it (twice this step)" />
-<TokenRow token="space.2" usage="padding above and below the sub-navigation's links; the gap between a page header's actions" />
-<TokenRow token="space.4" usage="the sub-navigation's side padding; the gap between a page header's text and its actions" />
-<TokenRow token="space.1" usage="the gap between the sub-navigation's links and between a page header's lines; a compact footer's padding; how far a current link's underline sits from its text" />
-<TokenRow token="font-size.sm" usage="the compact footer's text size" />
-<TokenRow token="shadow.light-md" usage="the header's shadow while the page is scrolled, in the light themes" />
-<TokenRow token="shadow.dark-md" usage="the same header shadow, in the dark themes" />
+<TokenRow token="space.2" usage="the gap between a page header's actions" />
+<TokenRow token="space.4" usage="the gap between a page header's text and its actions" />
+<TokenRow token="space.1" usage="the gap between a page header's lines" />
 
 ## Related components
 
 <div className="dbm-card-grid">
 <RelatedCard
   name="Navbar"
-  description="The header bar that goes in PageShell.Header, with its links, its menu and its skip link"
+  description="The header bar that goes directly in PageShell, with its links, its menu, its second row of links and its own sticking"
   href="/?path=/docs/organisms-navigation-navbar--docs"
 >
   <Navbar>
@@ -395,6 +352,15 @@ The skip link is `SkipLink`, which lists its own tokens.
       <IconButton icon={BellIcon} aria-label="Notifications" variant="ghost" size="sm" />
     </Navbar.Actions>
   </Navbar>
+</RelatedCard>
+<RelatedCard
+  name="Affix"
+  description="What makes a header of your own stick: it puts the sticky positioning on your header and reports when it is stuck"
+  href="/?path=/docs/atoms-layout-affix--docs"
+>
+  <Affix asChild>
+    <div style={{ background: "var(--dbm-bg-surface)", padding: "var(--dbm-space-2)" }}>Sticks</div>
+  </Affix>
 </RelatedCard>
 <RelatedCard
   name="AppShell"

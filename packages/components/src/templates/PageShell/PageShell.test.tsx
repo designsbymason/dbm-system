@@ -1,4 +1,4 @@
-import { act, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
+import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { axe } from "jest-axe";
 import { createRef, StrictMode, useState } from "react";
@@ -9,28 +9,21 @@ import { PageShell } from "./PageShell";
 import type { PageShellProps } from "./PageShell.types";
 
 // jsdom matches no media query and lays out nothing, so these tests are about structure, wiring and state: the landmarks, the skip link and its
-// target, the page-change handling, `busy`, the scrolled state and the props each part passes through. Sticking, the footer's place, widths and
-// print are in the real-browser checks.
+// target, the page-change handling, `busy` and the props each part passes through. The header is the app's own and is not wrapped, so its sticking is the
+// `Navbar`'s and `Affix`'s; the footer's place, widths and print are in the real-browser checks.
 function Shell(props: PageShellProps) {
   return (
     <PageShell data-testid="shell" {...props}>
       <PageShell.SkipLink />
-      <PageShell.Header>
-        <Navbar>
-          <Navbar.Brand href="/">Acme</Navbar.Brand>
-          <Navbar.Links aria-label="Main">
-            <Navbar.Link href="/" current>
-              Home
-            </Navbar.Link>
-            <Navbar.Link href="/reports">Reports</Navbar.Link>
-          </Navbar.Links>
-        </Navbar>
-        <PageShell.SubNav>
-          <nav aria-label="Sections">
-            <a href="/overview">Overview</a>
-          </nav>
-        </PageShell.SubNav>
-      </PageShell.Header>
+      <Navbar>
+        <Navbar.Brand href="/">Acme</Navbar.Brand>
+        <Navbar.Links aria-label="Main">
+          <Navbar.Link href="/" current>
+            Home
+          </Navbar.Link>
+          <Navbar.Link href="/reports">Reports</Navbar.Link>
+        </Navbar.Links>
+      </Navbar>
       <PageShell.Main>
         <PageShell.Content>
           <h1>Projects</h1>
@@ -45,7 +38,7 @@ function Shell(props: PageShellProps) {
 
 describe("PageShell", () => {
   describe("landmarks", () => {
-    it("has one banner, one main and one contentinfo, and the named navigations", () => {
+    it("has one banner (the Navbar's), one main and one contentinfo, and the named navigation", () => {
       render(<Shell />);
       expect(screen.getAllByRole("banner")).toHaveLength(1);
       expect(screen.getAllByRole("main")).toHaveLength(1);
@@ -53,27 +46,24 @@ describe("PageShell", () => {
       // The bar's links are in the page's tree from the `md` step up; jsdom matches no media query, so the stylesheet hides them as it does on a
       // phone, and a hidden element has no computed name: the names are read from the attribute.
       const navigations = screen.getAllByRole("navigation", { hidden: true }).map((navigation) => navigation.getAttribute("aria-label"));
-      expect(navigations).toEqual(["Main", "Sections"]);
+      expect(navigations).toEqual(["Main"]);
       expect(screen.getAllByRole("heading", { level: 1 })).toHaveLength(1);
     });
 
-    it("draws the header slot as a plain div, so a Navbar is not wrapped in a second banner", () => {
+    it("puts the app's header directly in the shell, with no box around it, so it can stick within the shell's column", () => {
       render(<Shell />);
       const banner = screen.getByRole("banner");
       expect(banner.tagName).toBe("HEADER");
-      expect(banner.parentElement?.tagName).toBe("DIV");
+      expect(banner.parentElement).toBe(screen.getByTestId("shell"));
     });
 
-    it("draws the header slot as the banner with as=\"header\"", () => {
+    it("takes a header of the app's own, which is the page's banner when it is a header", () => {
       render(
         <PageShell>
-          <PageShell.Header as="header" data-testid="header">
-            Brand
-          </PageShell.Header>
+          <header data-testid="header">Brand</header>
           <PageShell.Main>Main</PageShell.Main>
         </PageShell>,
       );
-      expect(screen.getByTestId("header").tagName).toBe("HEADER");
       expect(screen.getByRole("banner")).toBe(screen.getByTestId("header"));
     });
 
@@ -129,76 +119,6 @@ describe("PageShell", () => {
     it("lets the main area take focus from it (tabindex -1), and is not a tab stop of its own", () => {
       render(<Shell />);
       expect(screen.getByRole("main")).toHaveAttribute("tabindex", "-1");
-    });
-  });
-
-  describe("the data attributes", () => {
-    it("sticks the header and shows the scrolled edge by default", () => {
-      render(<Shell />);
-      expect(screen.getByTestId("shell")).toHaveAttribute("data-sticky-header");
-      expect(screen.getByTestId("shell")).toHaveAttribute("data-scrolled-edge");
-      expect(screen.getByTestId("shell")).not.toHaveAttribute("data-scrolled");
-    });
-
-    it("leaves them off when asked", () => {
-      render(<Shell stickyHeader={false} scrolledEdge={false} />);
-      expect(screen.getByTestId("shell")).not.toHaveAttribute("data-sticky-header");
-      expect(screen.getByTestId("shell")).not.toHaveAttribute("data-scrolled-edge");
-    });
-  });
-
-  describe("the scrolled edge", () => {
-    it("is on once the window has scrolled down, and off again at the top", () => {
-      render(<Shell />);
-      Object.defineProperty(window, "scrollY", { configurable: true, value: 120 });
-      act(() => {
-        fireEvent.scroll(document);
-      });
-      expect(screen.getByTestId("shell")).toHaveAttribute("data-scrolled");
-      Object.defineProperty(window, "scrollY", { configurable: true, value: 0 });
-      act(() => {
-        fireEvent.scroll(document);
-      });
-      expect(screen.getByTestId("shell")).not.toHaveAttribute("data-scrolled");
-    });
-
-    it("follows a box the shell is drawn inside, and ignores the scrolling of one it is not in", () => {
-      const { container } = render(
-        <div data-testid="frame" style={{ overflow: "auto" }}>
-          <Shell />
-        </div>,
-      );
-      const frame = container.querySelector<HTMLElement>("[data-testid=frame]") as HTMLElement;
-      const stranger = document.createElement("div");
-      document.body.append(stranger);
-      stranger.scrollTop = 50;
-      act(() => {
-        fireEvent.scroll(stranger);
-      });
-      expect(screen.getByTestId("shell")).not.toHaveAttribute("data-scrolled");
-      frame.scrollTop = 80;
-      act(() => {
-        fireEvent.scroll(frame);
-      });
-      expect(screen.getByTestId("shell")).toHaveAttribute("data-scrolled");
-      stranger.remove();
-    });
-
-    it("never turns on while scrolledEdge is off, and stops listening on unmount", () => {
-      const remove = vi.spyOn(document, "removeEventListener");
-      const { unmount } = render(<Shell scrolledEdge={false} />);
-      Object.defineProperty(window, "scrollY", { configurable: true, value: 200 });
-      act(() => {
-        fireEvent.scroll(document);
-      });
-      expect(screen.getByTestId("shell")).not.toHaveAttribute("data-scrolled");
-      Object.defineProperty(window, "scrollY", { configurable: true, value: 0 });
-      remove.mockClear();
-      const second = render(<Shell />);
-      second.unmount();
-      expect(remove).toHaveBeenCalledWith("scroll", expect.any(Function), true);
-      unmount();
-      remove.mockRestore();
     });
   });
 
@@ -368,8 +288,6 @@ describe("PageShell", () => {
         root: createRef<HTMLDivElement>(),
         skip: createRef<HTMLAnchorElement>(),
         banner: createRef<HTMLDivElement>(),
-        header: createRef<HTMLElement>(),
-        subNav: createRef<HTMLDivElement>(),
         main: createRef<HTMLElement>(),
         content: createRef<HTMLDivElement>(),
         footer: createRef<HTMLElement>(),
@@ -378,9 +296,6 @@ describe("PageShell", () => {
         <PageShell ref={refs.root}>
           <PageShell.SkipLink ref={refs.skip} />
           <PageShell.Banner ref={refs.banner}>Notice</PageShell.Banner>
-          <PageShell.Header ref={refs.header}>
-            <PageShell.SubNav ref={refs.subNav}>Sub</PageShell.SubNav>
-          </PageShell.Header>
           <PageShell.Main ref={refs.main}>
             <PageShell.Content ref={refs.content}>Content</PageShell.Content>
           </PageShell.Main>
@@ -390,8 +305,6 @@ describe("PageShell", () => {
       expect(refs.root.current).toBeInstanceOf(HTMLDivElement);
       expect(refs.skip.current).toBeInstanceOf(HTMLAnchorElement);
       expect(refs.banner.current).toBeInstanceOf(HTMLDivElement);
-      expect(refs.header.current).toBeInstanceOf(HTMLElement);
-      expect(refs.subNav.current).toBeInstanceOf(HTMLDivElement);
       expect(refs.main.current?.tagName).toBe("MAIN");
       expect(refs.content.current).toBeInstanceOf(HTMLDivElement);
       expect(refs.footer.current?.tagName).toBe("FOOTER");
@@ -402,9 +315,6 @@ describe("PageShell", () => {
         <PageShell className="root-class" style={{ color: "red" }} id="shell-id" data-testid="root">
           <PageShell.SkipLink className="c" data-testid="skip" />
           <PageShell.Banner className="c" data-testid="banner" />
-          <PageShell.Header className="c" data-testid="header">
-            <PageShell.SubNav className="c" data-testid="subnav" />
-          </PageShell.Header>
           <PageShell.Main className="c" data-testid="main">
             <PageShell.Content className="c" data-testid="content" id="content-id" />
           </PageShell.Main>
@@ -414,7 +324,7 @@ describe("PageShell", () => {
       expect(screen.getByTestId("root")).toHaveClass("root-class");
       expect(screen.getByTestId("root")).toHaveAttribute("id", "shell-id");
       expect(screen.getByTestId("root")).toHaveStyle({ color: "rgb(255, 0, 0)" });
-      for (const id of ["skip", "banner", "header", "subnav", "main", "content", "footer"]) expect(screen.getByTestId(id)).toHaveClass("c");
+      for (const id of ["skip", "banner", "main", "content", "footer"]) expect(screen.getByTestId(id)).toHaveClass("c");
       expect(screen.getByTestId("content")).toHaveAttribute("id", "content-id");
     });
 
@@ -444,12 +354,11 @@ describe("PageShell", () => {
 
     it("keeps its own direction and attributes when props try to replace them", () => {
       render(
-        <PageShell {...({ "data-scrolled-edge": "no" } as object)} dir="rtl" data-testid="shell">
+        <PageShell {...({ dir: "ltr" } as object)} dir="rtl" data-testid="shell">
           <PageShell.Main>Main</PageShell.Main>
         </PageShell>,
       );
       expect(screen.getByTestId("shell")).toHaveAttribute("dir", "rtl");
-      expect(screen.getByTestId("shell").getAttribute("data-scrolled-edge")).toBe("");
     });
 
     it("sets the content's size and padding through Container", () => {
@@ -461,50 +370,6 @@ describe("PageShell", () => {
         </PageShell>,
       );
       expect(screen.getByTestId("content")).toHaveStyle({ paddingBlock: "var(--dbm-space-8)" });
-    });
-  });
-
-  describe("a header that hides on scroll", () => {
-    const scrollTo = (y: number) => {
-      Object.defineProperty(window, "scrollY", { configurable: true, value: y });
-      act(() => {
-        fireEvent.scroll(document);
-      });
-    };
-
-    it("hides on a scroll down past the first screenful, and comes back on a scroll up and at the top", () => {
-      render(<Shell stickyHeader="auto" />);
-      const shell = screen.getByTestId("shell");
-      expect(shell).toHaveAttribute("data-sticky-header", "auto");
-      expect(shell).not.toHaveAttribute("data-header-hidden");
-      scrollTo(40);
-      expect(shell).not.toHaveAttribute("data-header-hidden");
-      scrollTo(200);
-      expect(shell).toHaveAttribute("data-header-hidden");
-      scrollTo(150);
-      expect(shell).not.toHaveAttribute("data-header-hidden");
-      scrollTo(400);
-      expect(shell).toHaveAttribute("data-header-hidden");
-      scrollTo(0);
-      expect(shell).not.toHaveAttribute("data-header-hidden");
-    });
-
-    it("ignores a tiny move, so a trembling finger does not make the header flicker", () => {
-      render(<Shell stickyHeader="auto" />);
-      scrollTo(300);
-      expect(screen.getByTestId("shell")).toHaveAttribute("data-header-hidden");
-      scrollTo(298);
-      expect(screen.getByTestId("shell")).toHaveAttribute("data-header-hidden");
-    });
-
-    it("never hides a header that is plainly sticky, or one that does not stick", () => {
-      const { rerender } = render(<Shell />);
-      scrollTo(500);
-      expect(screen.getByTestId("shell")).not.toHaveAttribute("data-header-hidden");
-      rerender(<Shell stickyHeader={false} />);
-      scrollTo(900);
-      expect(screen.getByTestId("shell")).not.toHaveAttribute("data-header-hidden");
-      scrollTo(0);
     });
   });
 
@@ -534,86 +399,7 @@ describe("PageShell", () => {
     });
   });
 
-  describe("the sub-navigation", () => {
-    it("draws a named nav around its links when given a label, and the links mark the current one", () => {
-      render(
-        <PageShell>
-          <PageShell.SubNav label="Project sections">
-            <PageShell.SubNavLink href="/a" current>
-              Overview
-            </PageShell.SubNavLink>
-            <PageShell.SubNavLink href="/b">Activity</PageShell.SubNavLink>
-          </PageShell.SubNav>
-          <PageShell.Main>Main</PageShell.Main>
-        </PageShell>,
-      );
-      const nav = screen.getByRole("navigation", { name: "Project sections" });
-      expect(within(nav).getByRole("link", { name: "Overview" })).toHaveAttribute("aria-current", "page");
-      expect(within(nav).getByRole("link", { name: "Activity" })).not.toHaveAttribute("aria-current");
-    });
-
-    it("draws no nav of its own without a label, so a nav you bring is the only one", () => {
-      render(
-        <PageShell>
-          <PageShell.SubNav>
-            <nav aria-label="Mine">
-              <a href="/a">A</a>
-            </nav>
-          </PageShell.SubNav>
-          <PageShell.Main>Main</PageShell.Main>
-        </PageShell>,
-      );
-      expect(screen.getAllByRole("navigation")).toHaveLength(1);
-    });
-
-    it("centres by default, starts at the start on request, and takes a line away", () => {
-      render(
-        <PageShell>
-          <PageShell.SubNav label="One" data-testid="one">
-            x
-          </PageShell.SubNav>
-          <PageShell.SubNav label="Two" align="start" bordered={false} data-testid="two">
-            x
-          </PageShell.SubNav>
-          <PageShell.Main>Main</PageShell.Main>
-        </PageShell>,
-      );
-      expect(screen.getByTestId("one")).toHaveAttribute("data-align", "center");
-      expect(screen.getByTestId("two")).toHaveAttribute("data-align", "start");
-      expect(screen.getByTestId("one").className).toContain("subNavBordered");
-      expect(screen.getByTestId("two").className).not.toContain("subNavBordered");
-    });
-
-    it("tells the shell while it is not sticky, and takes that back when it stops", () => {
-      const row = (sticky: boolean) => (
-        <PageShell data-testid="shell">
-          <PageShell.SubNav label="Sections" sticky={sticky}>
-            x
-          </PageShell.SubNav>
-          <PageShell.Main>Main</PageShell.Main>
-        </PageShell>
-      );
-      const { rerender, unmount } = render(row(false));
-      expect(screen.getByTestId("shell")).toHaveAttribute("data-subnav-static");
-      rerender(row(true));
-      expect(screen.getByTestId("shell")).not.toHaveAttribute("data-subnav-static");
-      rerender(row(false));
-      expect(screen.getByTestId("shell")).toHaveAttribute("data-subnav-static");
-      unmount();
-    });
-  });
-
-  describe("the footer, the content and the page header", () => {
-    it("marks the footer's variant", () => {
-      render(
-        <PageShell>
-          <PageShell.Main>Main</PageShell.Main>
-          <PageShell.Footer variant="actions">Footer</PageShell.Footer>
-        </PageShell>,
-      );
-      expect(screen.getByRole("contentinfo")).toHaveAttribute("data-variant", "actions");
-    });
-
+  describe("the content and the page header", () => {
     it("keeps the content to the width preset's step, and an explicit size wins", () => {
       render(
         <PageShell>
@@ -670,7 +456,7 @@ describe("PageShell", () => {
         <PageShell dir="rtl" lang="fa">
           <PageShell.SkipLink />
           <PageShell.Banner>Notice</PageShell.Banner>
-          <PageShell.Header as="header">Header</PageShell.Header>
+          <header>Header</header>
           <PageShell.Main busy>
             <PageShell.Content>
               <h1>Page</h1>

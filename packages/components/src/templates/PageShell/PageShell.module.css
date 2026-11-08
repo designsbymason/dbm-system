@@ -1,20 +1,18 @@
-/* The frame is a column at least as tall as the window: the banner, the header, the main area, which takes the room that is left, and the
-   footer, so a short page's footer sits at the bottom of the window. The page scrolls as a whole, so the root sets no `overflow` (any box
-   with one would become the scroller the sticky header sticks to, and it would stop sticking to the window). */
+/* The frame is a column at least as tall as the window: the banner, the header (the app's own, a direct child: the shell wraps nothing, so a
+   sticky `Navbar` sticks within this tall column), the main area, which takes the room that is left, and the footer, so a short page's footer sits
+   at the bottom of the window. The page scrolls as a whole, so the root sets no `overflow` (any box with one would become the scroller a sticky
+   header sticks to, and it would stop sticking to the window). */
 .root {
   /* A notch or a home indicator is kept clear: each custom property is the device's inset on that side (zero where a page does not draw under
      them). The names are physical because the device's are (a notch is on the left whatever the reading direction). */
   --page-shell-safe-top: env(safe-area-inset-top, 0px);
-  --template-safe-top: var(--page-shell-safe-top);
   --page-shell-safe-right: env(safe-area-inset-right, 0px);
   --page-shell-safe-bottom: env(safe-area-inset-bottom, 0px);
   --page-shell-safe-left: env(safe-area-inset-left, 0px);
 
-  /* The layers the shell's own parts sit on, lowest first, on the system's scale: the page's content on the `sticky` step (so an app's own
-     sticky bars and `Affix` agree with it), the header a step above it (its shadow falls on the page). The skip link is on the `fixed` step and
-     every floating panel is above that. */
+  /* The layer the shell's own loading strip sits on: the `sticky` step, so an app's own sticky bars and `Affix` agree with it. The skip link is on
+     the `fixed` step and every floating panel is above that. */
   --page-shell-layer-content: var(--dbm-z-index-sticky);
-  --page-shell-layer-header: calc(var(--dbm-z-index-sticky) + 1);
 
   display: flex;
   flex-direction: column;
@@ -32,171 +30,6 @@
 .banner {
   position: relative;
   min-inline-size: 0;
-}
-
-.header {
-  position: relative;
-  z-index: var(--page-shell-layer-header);
-  min-inline-size: 0;
-  /* The top inset belongs to the header, so a notch never covers it, stuck or not. */
-  padding-block-start: var(--page-shell-safe-top);
-  background-color: var(--dbm-bg-surface);
-}
-
-.root[data-sticky-header] .header {
-  position: sticky;
-  inset-block-start: 0;
-}
-
-/* `stickyHeader="auto"`: the header slides out of view while the page is scrolled down and comes back on a scroll up. It stays while focus is
-   inside it or a menu of its own is open, so the keyboard never loses the bar. */
-.root[data-sticky-header="auto"] .header {
-  transition:
-    transform var(--dbm-motion-duration-base) var(--dbm-motion-easing-standard),
-    box-shadow var(--dbm-motion-duration-base) var(--dbm-motion-easing-standard);
-}
-
-.root[data-header-hidden] .header:not(:focus-within):not(:has([aria-expanded="true"])) {
-  transform: translateY(-100%);
-}
-
-/* A sub-navigation that scrolls away (`sticky` off on `PageShell.SubNav`): the slot stops being a box of its own, so the bar, its first child,
-   sticks to the root's column on its own while the row under it goes with the page. The top inset, the layer, the surface, the shadow and the
-   sliding of a header that hides on scroll all move to the bar. */
-.root[data-subnav-static] .header {
-  display: contents;
-}
-
-.root[data-subnav-static][data-sticky-header] .header > :first-child {
-  position: sticky;
-  inset-block-start: 0;
-  z-index: var(--page-shell-layer-header);
-  padding-block-start: var(--page-shell-safe-top);
-  background-color: var(--dbm-bg-surface);
-}
-
-.root[data-subnav-static][data-sticky-header="auto"] .header > :first-child {
-  transition:
-    transform var(--dbm-motion-duration-base) var(--dbm-motion-easing-standard),
-    box-shadow var(--dbm-motion-duration-base) var(--dbm-motion-easing-standard);
-}
-
-.root[data-subnav-static][data-header-hidden] .header > :first-child:not(:focus-within):not(:has([aria-expanded="true"])) {
-  transform: translateY(-100%);
-}
-
-.root[data-subnav-static][data-sticky-header][data-scrolled-edge][data-scrolled] .header > :first-child {
-  box-shadow: var(--dbm-shadow-light-md);
-}
-
-[data-theme$="-dark"] .root[data-subnav-static][data-sticky-header][data-scrolled-edge][data-scrolled] .header > :first-child {
-  box-shadow: var(--dbm-shadow-dark-md);
-}
-
-@media (forced-colors: active) {
-  .root[data-subnav-static][data-sticky-header][data-scrolled-edge][data-scrolled] .header > :first-child {
-    border-block-end: var(--dbm-border-width-1) solid CanvasText;
-  }
-}
-
-/* The second row of navigation, in the header: it scrolls sideways rather than wrapping or widening the page. The row is the box with the line
-   and the fades; the scroller inside it is the box that scrolls. */
-.subNav {
-  /* How wide the fade is at an edge that has more links beyond it, and the room the current link is kept clear of it. */
-  --page-shell-subnav-fade: var(--dbm-space-8);
-
-  position: relative;
-  min-inline-size: 0;
-}
-
-.subNavBordered {
-  border-block-end: var(--dbm-border-width-1) solid var(--dbm-border-default);
-}
-
-.subNavScroller {
-  display: flex;
-  min-inline-size: 0;
-  overflow-x: auto;
-  scroll-padding-inline: var(--page-shell-subnav-fade);
-  /* The scrollbar is not drawn: the fades and the touch of the reader say there is more. Keyboard and wheel still scroll it. */
-  scrollbar-width: none;
-}
-
-.subNavScroller::-webkit-scrollbar {
-  display: none;
-}
-
-/* Centred while everything fits: auto margins take the free room, and take none once the row overflows, so it scrolls from its start. */
-.subNav[data-align="center"] .subNavScroller > * {
-  flex: none;
-  margin-inline: auto;
-}
-
-.subNavList {
-  display: flex;
-  flex: none;
-  gap: var(--dbm-space-1);
-  padding-block: var(--dbm-space-2);
-  padding-inline: var(--dbm-space-4);
-  inline-size: max-content;
-}
-
-.subNavLink {
-  white-space: nowrap;
-}
-
-/* The current link: the tint of the `Navbar`'s current link. The extra class beats the button's own ghost background, hover included. */
-.subNavLink.subNavLinkCurrent,
-.subNavLink.subNavLinkCurrent:hover {
-  background-color: var(--dbm-bg-brand-subtle);
-  color: var(--dbm-text-brand);
-}
-
-.subNavLink.subNavLinkCurrent:hover {
-  background-color: var(--dbm-bg-brand-subtle-hover);
-}
-
-/* The fades: drawn over the row's edge that has links beyond it, and never in the way of a click. */
-.subNav::before,
-.subNav::after {
-  content: "";
-  position: absolute;
-  inset-block: 0;
-  z-index: 1;
-  inline-size: var(--page-shell-subnav-fade);
-  pointer-events: none;
-  opacity: 0;
-  transition: opacity var(--dbm-motion-duration-fast) var(--dbm-motion-easing-standard);
-}
-
-.subNav::before {
-  inset-inline-start: 0;
-  background: linear-gradient(to right, var(--dbm-bg-surface), transparent);
-}
-
-.subNav::after {
-  inset-inline-end: 0;
-  background: linear-gradient(to left, var(--dbm-bg-surface), transparent);
-}
-
-[dir="rtl"] .subNav::before {
-  background: linear-gradient(to left, var(--dbm-bg-surface), transparent);
-}
-
-[dir="rtl"] .subNav::after {
-  background: linear-gradient(to right, var(--dbm-bg-surface), transparent);
-}
-
-.subNav[data-overflow-start]::before,
-.subNav[data-overflow-end]::after {
-  opacity: 1;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .subNav::before,
-  .subNav::after {
-    transition: none;
-  }
 }
 
 /* `main` takes the room that is left, so the footer is at the bottom of the window on a short page. It takes focus from the skip link and when
@@ -235,29 +68,6 @@
   border-block-start: var(--dbm-border-width-1) solid var(--dbm-border-default);
 }
 
-/* `compact`: padded tighter than the footer's own content pads it. */
-.footerCompact {
-  padding-block: var(--dbm-space-1);
-  font-size: var(--dbm-font-size-sm);
-}
-
-/* `actions`: stays at the bottom of the window until the page's own end, over the page behind it, with the device's bottom inset kept clear. The
-   root's bottom padding is the same inset, so the bar takes it up by sitting that much higher. */
-.footerActions {
-  position: sticky;
-  inset-block-end: 0;
-  z-index: var(--page-shell-layer-header);
-  padding-block-end: var(--page-shell-safe-bottom);
-  margin-block-end: calc(-1 * var(--page-shell-safe-bottom));
-  background-color: var(--dbm-bg-surface);
-  box-shadow: var(--dbm-shadow-light-md);
-  clip-path: inset(calc(-1 * var(--dbm-space-8)) 0 0 0);
-}
-
-[data-theme$="-dark"] .footerActions {
-  box-shadow: var(--dbm-shadow-dark-md);
-}
-
 /* The head of a page: its text at the start and its actions at the end, the actions under the text where they do not fit. */
 .pageHeader {
   display: flex;
@@ -281,48 +91,7 @@
   gap: var(--dbm-space-2);
 }
 
-/* The scrolled-edge cue: while the page is scrolled down from its top the header, if it sticks, casts a shadow on it. A header that scrolls away
-   with the page has nothing to mark. */
-.header {
-  transition: box-shadow var(--dbm-motion-duration-base) var(--dbm-motion-easing-standard);
-}
-
-.root[data-sticky-header][data-scrolled-edge][data-scrolled]:not([data-subnav-static]) .header {
-  box-shadow: var(--dbm-shadow-light-md);
-}
-
-[data-theme$="-dark"] .root[data-sticky-header][data-scrolled-edge][data-scrolled]:not([data-subnav-static]) .header {
-  box-shadow: var(--dbm-shadow-dark-md);
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .header {
-    transition: none;
-  }
-}
-
-/* Forced colours drop shadows, so the header gets a line of its own while the page is scrolled. */
-@media (forced-colors: active) {
-  .root[data-sticky-header][data-scrolled-edge][data-scrolled] .header {
-    border-block-end: var(--dbm-border-width-1) solid CanvasText;
-  }
-}
-
-/* Forced colours replace a fill, so the current link of the sub-navigation is underlined as well, and the actions bar, which has lost its shadow,
-   gets a line above it. */
-@media (forced-colors: active) {
-  .subNavLink.subNavLinkCurrent {
-    text-decoration: underline;
-    text-decoration-thickness: var(--dbm-border-width-2);
-    text-underline-offset: var(--dbm-space-1);
-  }
-
-  .footerActions {
-    border-block-start: var(--dbm-border-width-1) solid CanvasText;
-  }
-}
-
-/* Printed, the page is its parts in order, nothing kept in view, and no skip link or loading bar. */
+/* Printed, the page is its parts in order, nothing kept in view, and no loading bar (the skip link and a `Navbar` print themselves as they do alone). */
 @media print {
   .root {
     display: block !important;
@@ -335,17 +104,9 @@
   }
 
   .banner,
-  .header,
   .footer {
     box-shadow: none !important;
     border-color: transparent !important;
     position: static !important;
-    transform: none !important;
-    margin: 0 !important;
-  }
-
-  .subNav::before,
-  .subNav::after {
-    display: none !important;
   }
 }
