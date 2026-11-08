@@ -7,7 +7,7 @@ const meta: Meta<typeof PageShell.AsideToggle> = {
   component: PageShell.AsideToggle,
   tags: ["!dev"],
   argTypes: {
-    icon: { control: false, description: "The icon, a component reference.", table: { defaultValue: { summary: "SidebarSimpleIcon" } } },
+    icon: { control: false, description: "The icon, a component reference. The default is the sidebar icon (SidebarSimpleIcon).", table: { defaultValue: { summary: "sidebar icon" } } },
     variant: { control: false, description: "The button's look: any IconButton variant.", table: { defaultValue: { summary: "\"ghost\"" } } },
     tone: { control: false, description: "The button's colour family: brand or neutral." },
     size: { control: false, description: "The button's size, on the same scale as IconButton.", table: { defaultValue: { summary: "\"md\"" } } },

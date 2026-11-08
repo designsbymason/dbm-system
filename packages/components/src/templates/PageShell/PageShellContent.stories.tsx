@@ -7,6 +7,7 @@ const meta: Meta<typeof PageShell.Content> = {
   component: PageShell.Content,
   tags: ["!dev"],
   argTypes: {
+    children: { control: false, description: "The page's content." },
     width: {
       control: false,
       description:
@@ -18,7 +19,6 @@ const meta: Meta<typeof PageShell.Content> = {
         "The widest the content gets, on the same steps as Container, centred. full is no limit. Takes the place of width when both are given.",
       table: { defaultValue: { summary: "\"xl\"" } },
     },
-    children: { control: false, description: "The page's content." },
     paddingInline: {
       control: false,
       description: "Padding at the start and end, on the spacing scale: one step, or a map keyed by breakpoint.",

@@ -1,5 +1,5 @@
 import { Canvas, Meta } from "@storybook/addon-docs/blocks";
-import { Callout, ComponentHeader, PlaygroundControls, PropertiesTable, RelatedCard, TokenRow } from "../../../.storybook/blocks";
+import { Callout, ComponentHeader, PlaygroundControls, PropertiesTable, ReferenceTable, RelatedCard, TokenRow } from "../../../.storybook/blocks";
 import { BellIcon } from "@dbm-system/icons";
 import { Box } from "../../atoms/Box";
 import { Button } from "../../atoms/Button";
@@ -21,9 +21,9 @@ import * as PageShellFooterStories from "./PageShellFooter.stories";
 import * as PageShellMainStories from "./PageShellMain.stories";
 import * as PageShellSkipLinkStories from "./PageShellSkipLink.stories";
 
-export const propOrder = ["children", "pageKey", "pageTitle", "documentTitle", "focusTarget", "scrollToTopOnChange", "navigating", "labels", "asideOpen", "defaultAsideOpen", "onAsideOpenChange", "dir", "style", "className", "id", "data-testid"];
+export const propOrder = ["children", "pageKey", "pageTitle", "documentTitle", "focusTarget", "scrollToTopOnChange", "navigating", "labels", "asideOpen", "defaultAsideOpen", "onAsideOpenChange", "dir", "id", "className", "style", "data-testid"];
 
-export const playgroundOrder = ["dir", "sticky", "hideOnScroll", "customHeader", "subNav", "banner"];
+export const playgroundOrder = ["dir", "sticky", "hideOnScroll", "customHeader", "subNav", "banner", "aside", "asideCollapse", "asideSticky", "asideSide"];
 
 <Meta of={PageShellStories} />
 
@@ -53,39 +53,25 @@ import { Navbar, PageShell } from "@dbm-system/components";
 
 <PageShellAnatomy />
 
-In text, each part indented inside the one that holds it:
+### Where each part goes
 
-```text
-PageShell                        the frame: a div, as tall as the window; owns focus, announcements, insets
-├─ PageShell.SkipLink            first, so it is the first tab stop
-├─ PageShell.Banner              optional; a notice that scrolls away
-├─ Navbar (or your <header>)     a direct child; it sticks itself
-├─ A) a page with no aside
-│   └─ PageShell.Main            the one <main>; as wide as the window
-│       ├─ PageShell.Content width="full"   edge to edge, content too
-│       ├─ PageShell.Content bleed          a band edge to edge, content kept to the page's width
-│       └─ PageShell.Content                the page's own width-limited box
-├─ B) a page with an aside
-│   └─ PageShell.Body            the page's width and padding, laid out as a row
-│       ├─ PageShell.Aside       a sibling landmark of <main>, never inside it
-│       ├─ PageShell.Main        your page directly: no Content
-│       │   └─ PageShell.AsideToggle   anywhere in the page (usually its actions)
-│       └─ PageShell.Aside       a second one, at the other end
-└─ PageShell.Footer              the contentinfo; at the window's bottom on a short page
-```
+Read it by where you are writing: each row says what belongs there, what you get, and what to leave out. A page with no aside is layout A and a page with
+an aside is layout B.
 
-**How the parts fit**
-
-- **Use `Content` or `Body`, never both.** `Body` is `Content`'s width and padding wrapped around `Main` and `Aside`, so a `Content` inside a `Main` inside a
-  `Body` would pad the page twice.
-- **Several `Content` sections side by side belong to layout A.** `Content` is one part with three ways to span: contained (the default), `width="full"` (no
-  width limit, so its content runs edge to edge) and `bleed` (a band as wide as `Main`, its content kept to the page's width). They sit inside `Main` beside
-  one another, because `Main` is as wide as the window. In layout B `Main` is already inside `Body`'s width limit, so a band there would be held to it. A
-  page with an aside that also needs a full-width band puts the band above or below `Body`, as a plain element.
-- **`Aside` is outside `Main`**, since an `<aside>` landmark cannot be inside `<main>`. The order written is the layout: an aside before `Main` is at the
-  start, one after it is at the end, and the sides swap in right-to-left text.
-- **`AsideToggle` can go anywhere in the shell.** It shows only below the aside's collapse step, and only for an aside with `collapse="drawer"`.
-- **The header is a direct child of `PageShell`.** A box around it stops it sticking.
+<ReferenceTable
+  firstColumnWidth="13rem"
+  plainFirstColumn
+  columns={["Where you write it", "What goes there, and what you get", "Leave out"]}
+  rows={[
+    ["Directly in `PageShell`, at the top", "`PageShell.SkipLink`, then an optional `PageShell.Banner`, then your header: a `Navbar` or a `<header>` of your own. The order written is the tab order, and the header sticks by its own means (`Navbar`'s `sticky`, or `Affix`).", "A box around the header: it stops it sticking, so the header is a direct child."],
+    ["`PageShell.Main`, layout A (no aside)", "`PageShell.Content` sections side by side: contained (the default), `width=\"full\"` or `bleed`, plus plain elements. `Main` is the one `<main>` and as wide as the window, so a section can be edge to edge. `Content` sets the page's width and padding; `bleed` is a band as wide as `Main` whose content stays at the page's width; `as=\"section\"` with a name is a landmark.", "A `bleed` `Content` inside another `Content`: it is held to the parent's width (it warns in development). Each contained `Content` adds its own `paddingBlock`, so set it smaller if the gaps look doubled."],
+    ["`PageShell.Body`, layout B (an aside)", "One `PageShell.Main` and one or two `PageShell.Aside`, in the order you want them. `Body` is the page's width (`width`, `size`) and padding, laid out as a row: an aside written first is at the start, one written last is at the end, and the sides swap in right-to-left text.", "A second `Body`: it would need a second `<main>`. The aside cannot sit beside only part of the page."],
+    ["`PageShell.Main` inside a `Body`", "Your page directly: plain `<section>`s and `<div>`s, `Grid`, `Card`, `PageHeader`. The width and padding come from `Body`.", "`PageShell.Content`: the page is padded twice (it warns in development, unless you give it a narrower `width` on purpose). `bleed` or `width=\"full\"`: they only reach the edges of the `Main` column, not the window."],
+    ["`PageShell.Aside`", "Related content: a table of contents, filters, a details panel, named with `aria-label`. A `complementary` landmark beside `Main`, never inside it (an `<aside>` landmark cannot be inside `<main>`). It stacks under the page below its step, or becomes a drawer. `PageShell.AsideToggle` can go anywhere in the shell: it shows only below the step, and only for `collapse=\"drawer\"`.", "The page's primary content: on a phone it is under the page, or behind a button."],
+    ["Beside the `Body`, in `PageShell`", "`PageShell.Content` in any of its three widths: a hero band, a strip, a call to action. Each has its own width and padding, so edge to edge is possible and nothing is padded twice.", "Primary page content: it is outside `<main>`, so the skip link and landmark navigation go to `Main` and skip it. Keep it to supplementary sections."],
+    ["`PageShell.Footer`, last", "Your footer's content: the `contentinfo` landmark, at the bottom of the window on a page too short to fill it.", "A second footer."],
+  ]}
+/>
 
 ## Playground
 
@@ -96,7 +82,7 @@ Drive the shell's props live. The header controls (`sticky`, `hideOnScroll`, a h
 <Canvas of={PageShellStories.Playground} />
 
 </div>
-<PlaygroundControls of={PageShellStories.Playground} exclude={["children", "pageKey", "pageTitle", "style", "className", "id", "data-testid"]} order={playgroundOrder} />
+<PlaygroundControls of={PageShellStories.Playground} exclude={["children", "pageKey", "pageTitle", "id", "className", "style", "data-testid"]} order={playgroundOrder} />
 
 ## Properties
 
@@ -108,49 +94,49 @@ Drive the shell's props live. The header controls (`sticky`, `hideOnScroll`, a h
 
 `PageShell.SkipLink` also accepts any other native `<a>` attribute.
 
-<PropertiesTable of={PageShellSkipLinkStories} order={["children", "href", "labels", "style", "className", "id", "data-testid"]} />
+<PropertiesTable of={PageShellSkipLinkStories} order={["children", "href", "labels", "id", "className", "style", "data-testid"]} />
 
 ### PageShell.Banner properties
 
 `PageShell.Banner` also accepts any other native `<div>` attribute.
 
-<PropertiesTable of={PageShellBannerStories} order={["children", "style", "className", "id", "data-testid"]} />
+<PropertiesTable of={PageShellBannerStories} order={["children", "id", "className", "style", "data-testid"]} />
 
 ### PageShell.Main properties
 
 `PageShell.Main` also accepts any other native `<main>` attribute.
 
-<PropertiesTable of={PageShellMainStories} order={["children", "busy", "labels", "id", "style", "className", "data-testid"]} />
+<PropertiesTable of={PageShellMainStories} order={["children", "busy", "labels", "id", "className", "style", "data-testid"]} />
 
 ### PageShell.Content properties
 
 `PageShell.Content` also accepts any other native `<div>` attribute (a `<section>`'s, with `as="section"`).
 
-<PropertiesTable of={PageShellContentStories} order={["children", "width", "size", "paddingInline", "paddingBlock", "bleed", "as", "aria-label", "aria-labelledby", "style", "className", "id", "data-testid"]} />
+<PropertiesTable of={PageShellContentStories} order={["children", "width", "size", "paddingInline", "paddingBlock", "bleed", "as", "aria-label", "aria-labelledby", "id", "className", "style", "data-testid"]} />
 
 ### PageShell.Body properties
 
 `PageShell.Body` also accepts any other native `<div>` attribute.
 
-<PropertiesTable of={PageShellBodyStories} order={["children", "width", "size", "paddingInline", "paddingBlock", "style", "className", "id", "data-testid"]} />
+<PropertiesTable of={PageShellBodyStories} order={["children", "width", "size", "paddingInline", "paddingBlock", "id", "className", "style", "data-testid"]} />
 
 ### PageShell.Aside properties
 
 `PageShell.Aside` also accepts any other native `<aside>` attribute.
 
-<PropertiesTable of={PageShellAsideStories} order={["children", "width", "sticky", "stickyOffset", "collapse", "collapseBelow", "labels", "drawerContainer", "aria-label", "aria-labelledby", "style", "className", "id", "data-testid"]} />
+<PropertiesTable of={PageShellAsideStories} order={["children", "width", "sticky", "stickyOffset", "collapse", "collapseBelow", "labels", "drawerContainer", "aria-label", "aria-labelledby", "id", "className", "style", "data-testid"]} />
 
 ### PageShell.AsideToggle properties
 
 `PageShell.AsideToggle` also accepts any other native `<button>` attribute.
 
-<PropertiesTable of={PageShellAsideToggleStories} order={["icon", "variant", "tone", "size", "aria-label", "labels", "style", "className", "id", "data-testid"]} />
+<PropertiesTable of={PageShellAsideToggleStories} order={["icon", "variant", "tone", "size", "aria-label", "labels", "id", "className", "style", "data-testid"]} />
 
 ### PageShell.Footer properties
 
 `PageShell.Footer` also accepts any other native `<footer>` attribute.
 
-<PropertiesTable of={PageShellFooterStories} order={["children", "style", "className", "id", "data-testid"]} />
+<PropertiesTable of={PageShellFooterStories} order={["children", "id", "className", "style", "data-testid"]} />
 
 ## Variants
 
@@ -370,6 +356,8 @@ builds the whole title (`(title) => title + " · dbM"`). The title the document 
   following the window. The shell is as tall as the window already (and taller when the page is).
 - Don't put ids, or content that keeps its own state (a form), in an aside with `collapse="drawer"`: its children are drawn twice while the drawer is open, once
   in the hidden column and once in the drawer.
+- Don't put the page's primary content in a section beside `Body`: it is outside `<main>`, so the skip link skips it. Keep sections beside `Body` to supplementary
+  content such as a hero band or a call to action.
 - Don't put the page's primary content in the aside: on a phone it is under the page, or behind a button.
 - Don't use `sticky` on a tall aside and expect it to be read without scrolling: it scrolls inside itself, so keep it short or keep it a plain block.
 - Don't keep a tall banner above the header and expect it to stay: it scrolls away with the page.
@@ -380,6 +368,7 @@ builds the whole title (`(title) => title + " · dbM"`). The title the document 
 
 ## Best practices
 
+- Use `Content` when there is no aside and `Body` when there is. Use both only for a deliberately narrower column inside a `Body`.
 - Choose `size` on `PageShell.Content` (or on `PageShell.Body` for a page with an aside) for the page's reading width: `xl` (the default) suits a page of cards, `md` suits a form or an article. A
   band that runs edge to edge is `PageShell.Content` with `bleed`.
 - Let the footer be small. It holds the links people look for at the end of a page (help, privacy, terms), and it sits at the bottom of the window on a

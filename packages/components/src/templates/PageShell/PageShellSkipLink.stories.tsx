@@ -7,13 +7,13 @@ const meta: Meta<typeof PageShell.SkipLink> = {
   component: PageShell.SkipLink,
   tags: ["!dev"],
   argTypes: {
+    children: { control: false, description: "The link's text. Left out, labels.skipToContent (\"Skip to content\")." },
     href: {
       control: false,
       description:
         "The link's destination: the main area's id.",
       table: { defaultValue: { summary: "\"#main\"" } },
     },
-    children: { control: false, description: "The link's text. Left out, labels.skipToContent (\"Skip to content\")." },
     labels: { control: false, description: "The words the link supplies itself, merged over the English default." },
     id: { control: false, description: "Standard DOM id." },
     className: { control: false, description: "Additional CSS classes for customization." },

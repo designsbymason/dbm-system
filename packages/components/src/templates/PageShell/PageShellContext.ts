@@ -20,3 +20,11 @@ export function usePageShellContext(): PageShellContextValue {
   if (context === null) throw new Error("PageShell parts must be used inside a PageShell.");
   return context;
 }
+
+/**
+ * Where a part is written, for the development warnings: inside a `Body` (`body`), inside the `Main` of a `Body` (`bodyMain`), or inside a
+ * `Content` (`content`). `null` is anywhere else. Nothing but a warning reads it.
+ */
+export type PageShellPlacement = "body" | "bodyMain" | "content" | null;
+
+export const PageShellPlacementContext = createContext<PageShellPlacement>(null);

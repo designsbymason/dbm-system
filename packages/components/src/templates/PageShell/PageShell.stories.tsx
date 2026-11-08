@@ -86,8 +86,8 @@ const meta: Meta<PlaygroundArgs> = {
       control: "radio",
       options: ["ltr", "rtl"],
       description:
-        "The reading direction of everything inside. The shell sets it on its own element and provides it to the Navbar and everything inside, so none needs one of its own. Set lang beside it.",
-      table: { defaultValue: { summary: "the provider's, else 'ltr'" } },
+        "The reading direction of everything inside. The shell sets it on its own element and provides it to the Navbar and everything inside, so none needs one of its own. Left out, it is the nearest DirectionProvider's, else left to right. Set lang beside it.",
+      table: { defaultValue: { summary: '"ltr"' } },
     },
     sticky: {
       control: "boolean",
@@ -136,9 +136,9 @@ const meta: Meta<PlaygroundArgs> = {
       description: "Storybook only — not a PageShell prop. Adds a PageShell.Banner with a notice above the header.",
       table: { disable: true },
     },
-    style: { control: false, description: "Inline styles, merged onto the component's own internal styles." },
-    className: { control: false, description: "Additional CSS classes, on the shell's root." },
     id: { control: false, description: "Standard DOM id, on the shell's root." },
+    className: { control: false, description: "Additional CSS classes, on the shell's root." },
+    style: { control: false, description: "Inline styles, merged onto the component's own internal styles." },
     "data-testid": {
       control: false,
       description:

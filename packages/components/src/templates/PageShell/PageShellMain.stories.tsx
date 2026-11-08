@@ -7,12 +7,12 @@ const meta: Meta<typeof PageShell.Main> = {
   component: PageShell.Main,
   tags: ["!dev"],
   argTypes: {
+    children: { control: false, description: "The page. Usually one PageShell.Content." },
     busy: {
       control: false,
       description:
         "Marks the main area as loading: aria-busy, a thin bar along its top edge and a polite announcement, without hiding what is already there.",
     },
-    children: { control: false, description: "The page. Usually one PageShell.Content." },
     labels: { control: false, description: "The words the main area supplies itself, merged over the English default (\"Loading\")." },
     id: {
       control: false,

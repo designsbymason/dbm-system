@@ -1,6 +1,6 @@
 import { SidebarSimpleIcon } from "@dbm-system/icons";
 import { cx, mergeDefined, mergeRefs, useIsScrollable } from "@dbm-system/utils";
-import { forwardRef, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { forwardRef, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import type { CSSProperties } from "react";
 import { Container } from "../../atoms/Container";
 import type { ContainerSize } from "../../atoms/Container";
@@ -11,9 +11,10 @@ import { VisuallyHidden } from "../../atoms/VisuallyHidden";
 import { AsideDrawer } from "../../internal/AsideDrawer";
 import { toLength } from "../../internal/breakpoints";
 import { MainBusy } from "../../internal/MainBusy";
+import { warnOnce } from "../../internal/warnOnce";
 import { usePageChange } from "../../internal/usePageChange";
 import styles from "./PageShell.module.css";
-import { PageShellContext, usePageShellContext } from "./PageShellContext";
+import { PageShellContext, PageShellPlacementContext, usePageShellContext } from "./PageShellContext";
 import type {
   PageShellAsideCollapseBelow,
   PageShellAsideLabels,
@@ -186,6 +187,7 @@ PageShellBanner.displayName = "PageShell.Banner";
  */
 const PageShellMain = forwardRef<HTMLElement, PageShellMainProps>(({ id = "main", busy, labels: labelsProp, className, children, ...props }, ref) => {
   const { mainRef } = usePageShellContext();
+  const placement = useContext(PageShellPlacementContext);
   const labels = mergeDefined(defaultMainLabels, labelsProp);
   return (
     <main
@@ -198,7 +200,7 @@ const PageShellMain = forwardRef<HTMLElement, PageShellMainProps>(({ id = "main"
       className={cx(styles.main, className)}
     >
       <MainBusy busy={busy} label={labels.loading} barClassName={styles.busyBar} />
-      {children}
+      <PageShellPlacementContext.Provider value={placement === "body" ? "bodyMain" : null}>{children}</PageShellPlacementContext.Provider>
     </main>
   );
 });
@@ -211,10 +213,26 @@ PageShellMain.displayName = "PageShell.Main";
  */
 const PageShellContent = forwardRef<HTMLElement, PageShellContentProps>(
   (
-    { width, size = width === undefined ? "xl" : widthSizes[width], paddingInline = 4, paddingBlock = 6, bleed = false, as = "div", className, style, children, ...props },
+    { width, size: sizeProp, paddingInline = 4, paddingBlock = 6, bleed = false, as = "div", className, style, children, ...props },
     ref,
   ) => {
     const Element = as;
+    const size = sizeProp ?? (width === undefined ? "xl" : widthSizes[width]);
+    const placement = useContext(PageShellPlacementContext);
+    if (placement === "bodyMain" && bleed) {
+      warnOnce(
+        "PageShell.Content with `bleed` is inside the PageShell.Main of a PageShell.Body, so the band is held to the Body's width and does not reach the window's edges. Write it beside PageShell.Body, not inside it.",
+      );
+    } else if (placement === "bodyMain" && width === undefined && sizeProp === undefined) {
+      warnOnce(
+        "PageShell.Content is inside the PageShell.Main of a PageShell.Body, which already gives the page its width and padding, so the page is padded twice. Remove the PageShell.Content (use plain sections), or give it a narrower `width` on purpose.",
+      );
+    } else if (placement === "content" && bleed) {
+      warnOnce(
+        "PageShell.Content with `bleed` is inside another PageShell.Content, so the band is held to its parent's width and does not run edge to edge. Write it beside the other PageShell.Content, inside PageShell.Main.",
+      );
+    }
+    const inner = <PageShellPlacementContext.Provider value="content">{children}</PageShellPlacementContext.Provider>;
     if (bleed) {
       return (
         <Element
@@ -224,7 +242,7 @@ const PageShellContent = forwardRef<HTMLElement, PageShellContentProps>(
           style={{ paddingBlock: `var(--dbm-space-${paddingBlock})`, ...style }}
         >
           <Container size={size} paddingInline={paddingInline}>
-            {children}
+            {inner}
           </Container>
         </Element>
       );
@@ -239,7 +257,7 @@ const PageShellContent = forwardRef<HTMLElement, PageShellContentProps>(
         className={className}
         style={{ paddingBlock: `var(--dbm-space-${paddingBlock})`, ...style }}
       >
-        {children}
+        {inner}
       </Container>
     );
   },
@@ -252,7 +270,7 @@ PageShellContent.displayName = "PageShell.Content";
  * `PageShell.Content` for a page with an aside: the aside is a landmark of its own and cannot be inside `<main>`, so the width lives around both.
  */
 const PageShellBody = forwardRef<HTMLDivElement, PageShellBodyProps>(
-  ({ width, size = width === undefined ? "xl" : widthSizes[width], paddingInline = 4, paddingBlock = 6, className, style, ...props }, ref) => (
+  ({ width, size = width === undefined ? "xl" : widthSizes[width], paddingInline = 4, paddingBlock = 6, className, style, children, ...props }, ref) => (
     <Container
       {...props}
       ref={ref}
@@ -260,7 +278,9 @@ const PageShellBody = forwardRef<HTMLDivElement, PageShellBodyProps>(
       paddingInline={paddingInline}
       className={cx(styles.body, className)}
       style={{ paddingBlock: `var(--dbm-space-${paddingBlock})`, ...style }}
-    />
+    >
+      <PageShellPlacementContext.Provider value="body">{children}</PageShellPlacementContext.Provider>
+    </Container>
   ),
 );
 PageShellBody.displayName = "PageShell.Body";

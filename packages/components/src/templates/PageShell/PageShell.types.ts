@@ -130,12 +130,12 @@ export interface PageShellProps extends Omit<ComponentPropsWithoutRef<"div">, "d
    * @default "the provider's, else 'ltr'"
    */
   dir?: PageShellDirection;
+  /** Standard DOM id. */
+  id?: string;
   /** Additional CSS classes for customization. */
   className?: string;
   /** Inline styles, merged onto the component's own internal styles. */
   style?: CSSProperties;
-  /** Standard DOM id. */
-  id?: string;
   /**
    * Test identifier for automated testing (e.g. Testing Library's `getByTestId`, Playwright/Cypress selectors).
    * Rendered as the DOM `data-testid` attribute; has no visual or behavioral effect.
@@ -164,7 +164,10 @@ export interface PageShellBannerProps extends Omit<ComponentPropsWithoutRef<"div
 
 /** The properties of `PageShell.Body`: the page's width and padding around `PageShell.Main` and `PageShell.Aside`, side by side. */
 export interface PageShellBodyProps extends Omit<ComponentPropsWithoutRef<"div">, "children">, PageShellPartBase {
-  /** `PageShell.Main` and `PageShell.Aside`, in the order they read: the layout follows it, so an aside written first is at the start. */
+  /**
+   * `PageShell.Main` and `PageShell.Aside`, in the order they read: the layout follows it, so an aside written first is at the start. A
+   * `PageShell.Content` inside the `Main` pads the page twice, since `Body` already gives it its width and padding (a development warning says so).
+   */
   children?: ReactNode;
   /**
    * The width the page is kept to, by what it is: `reading`, `dashboard` or `full`. An explicit `size` replaces it.

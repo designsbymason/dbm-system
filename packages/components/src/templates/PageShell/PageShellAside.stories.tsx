@@ -17,7 +17,7 @@ const meta: Meta<typeof PageShell.Aside> = {
     stickyOffset: {
       control: false,
       description: "How far from the top of the window a sticky aside sticks, a CSS length. The default is the height of the header as the shell measures it, so the aside sticks under it.",
-      table: { defaultValue: { summary: "var(--page-shell-header-height, 0px)" } },
+      table: { defaultValue: { summary: "header height" } },
     },
     collapse: {
       control: false,

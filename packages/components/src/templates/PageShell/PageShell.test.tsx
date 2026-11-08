@@ -358,6 +358,89 @@ describe("PageShell", () => {
     });
   });
 
+  describe("development warnings about where Content is written", () => {
+    const warnings = (spy: { mock: { calls: unknown[][] } }, text: string) => spy.mock.calls.filter(([message]) => String(message).includes(text)).length;
+
+    it("warns once about a Content inside the Main of a Body, and not for a narrower one, one beside the Body or one in an aside", () => {
+      const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
+      // None of these is the mistake, so none warns (each runs before the one that does: a message is warned once per file).
+      render(
+        <PageShell>
+          <PageShell.Content>Beside the body</PageShell.Content>
+          <PageShell.Body>
+            <PageShell.Main>
+              <PageShell.Content width="reading">On purpose</PageShell.Content>
+            </PageShell.Main>
+            <PageShell.Aside aria-label="Related">
+              <PageShell.Content>In the aside</PageShell.Content>
+            </PageShell.Aside>
+          </PageShell.Body>
+        </PageShell>,
+      );
+      expect(warnings(warn, "padded twice")).toBe(0);
+      render(
+        <PageShell>
+          <PageShell.Body>
+            <PageShell.Main>
+              <PageShell.Content>Twice</PageShell.Content>
+            </PageShell.Main>
+          </PageShell.Body>
+        </PageShell>,
+      );
+      expect(warnings(warn, "padded twice")).toBe(1);
+      warn.mockRestore();
+    });
+
+    it("warns about a bleed Content inside the Main of a Body, and not beside it", () => {
+      const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
+      render(
+        <PageShell>
+          <PageShell.Content bleed>Beside the body</PageShell.Content>
+          <PageShell.Body>
+            <PageShell.Main>Main</PageShell.Main>
+          </PageShell.Body>
+        </PageShell>,
+      );
+      expect(warnings(warn, "held to the Body's width")).toBe(0);
+      render(
+        <PageShell>
+          <PageShell.Body>
+            <PageShell.Main>
+              <PageShell.Content bleed>Inside</PageShell.Content>
+            </PageShell.Main>
+          </PageShell.Body>
+        </PageShell>,
+      );
+      expect(warnings(warn, "held to the Body's width")).toBe(1);
+      warn.mockRestore();
+    });
+
+    it("warns about a bleed Content inside another Content, and not beside it", () => {
+      const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
+      render(
+        <PageShell>
+          <PageShell.Main>
+            <PageShell.Content>Contained</PageShell.Content>
+            <PageShell.Content bleed>Beside</PageShell.Content>
+            <PageShell.Content width="full">Full</PageShell.Content>
+          </PageShell.Main>
+        </PageShell>,
+      );
+      expect(warnings(warn, "inside another PageShell.Content")).toBe(0);
+      render(
+        <PageShell>
+          <PageShell.Main>
+            <PageShell.Content>
+              <PageShell.Content bleed>Nested</PageShell.Content>
+            </PageShell.Content>
+          </PageShell.Main>
+        </PageShell>,
+      );
+      expect(warnings(warn, "inside another PageShell.Content")).toBe(1);
+      warn.mockRestore();
+    });
+  });
+
   describe("navigating", () => {
     it("draws a bar and says Loading politely while navigating, and empties the region when it ends", () => {
       const { rerender, container } = render(
