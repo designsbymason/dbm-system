@@ -231,15 +231,19 @@ ${shell("", [
   footer,
 ])}`,
 
-  fullBleed: `{/* A section that runs edge to edge: PageShell.Main is as wide as the window, and PageShell.Content is a box inside it, not around it, so
-    a section written beside Content is outside the page's width. */}
+  fullBleed: `{/* Three widths inside PageShell.Main, which is as wide as the window: a plain element runs edge to edge with its content; PageShell.Bleed is
+    as wide as the window but keeps its children to the page's width and padding (width, size and paddingInline, as PageShell.Content), so they line up;
+    PageShell.Content is the page's own box. tone="canvas" fills a Bleed with the page's alternate surface; paddingBlock is on the spacing scale. */}
 ${shell("", [
   skipLink,
   header(),
   `  <PageShell.Main>
-    <section style={{ background: "var(--dbm-bg-canvas)", padding: "var(--dbm-space-8) var(--dbm-space-4)", textAlign: "center" }}>
-      A section that runs edge to edge.
+    <section style={{ background: "var(--dbm-bg-canvas)", padding: "var(--dbm-space-8) var(--dbm-space-4)" }}>
+      A plain section: its content runs edge to edge.
     </section>
+    <PageShell.Bleed tone="canvas" aria-label="Highlights">
+      A Bleed band: as wide as the window, its content lined up with the page.
+    </PageShell.Bleed>
     <PageShell.Content>
       <h1>Projects</h1>
     </PageShell.Content>

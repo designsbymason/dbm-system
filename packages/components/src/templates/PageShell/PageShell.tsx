@@ -21,6 +21,7 @@ import type {
   PageShellAsideToggleLabels,
   PageShellAsideToggleProps,
   PageShellBannerProps,
+  PageShellBleedProps,
   PageShellBodyProps,
   PageShellContentProps,
   PageShellFooterProps,
@@ -240,6 +241,28 @@ const PageShellBody = forwardRef<HTMLDivElement, PageShellBodyProps>(
 );
 PageShellBody.displayName = "PageShell.Body";
 
+/**
+ * A band as wide as the main area, its content kept to the page's width and padding so it lines up with the rest of the page: a hero, a call to
+ * action, a strip of figures. Write it inside `PageShell.Main`, beside `PageShell.Content`. `tone="canvas"` fills it with the page's alternate
+ * surface. A `section` is a landmark only when named, so name one that matters.
+ */
+const PageShellBleed = forwardRef<HTMLElement, PageShellBleedProps>(
+  ({ tone = "default", width, size = width === undefined ? "xl" : widthSizes[width], paddingInline = 4, paddingBlock = 8, className, style, children, ...props }, ref) => (
+    <section
+      {...props}
+      ref={ref}
+      data-tone={tone === "default" ? undefined : tone}
+      className={cx(styles.bleed, className)}
+      style={{ paddingBlock: `var(--dbm-space-${paddingBlock})`, ...style }}
+    >
+      <Container size={size} paddingInline={paddingInline}>
+        {children}
+      </Container>
+    </section>
+  ),
+);
+PageShellBleed.displayName = "PageShell.Bleed";
+
 const collapseClass: Record<Exclude<PageShellAsideCollapseBelow, "never">, string | undefined> = {
   sm: styles.collapseSm,
   md: styles.collapseMd,
@@ -379,6 +402,7 @@ type PageShellComponent = typeof PageShellRoot & {
   Banner: typeof PageShellBanner;
   Main: typeof PageShellMain;
   Content: typeof PageShellContent;
+  Bleed: typeof PageShellBleed;
   Body: typeof PageShellBody;
   Aside: typeof PageShellAside;
   AsideToggle: typeof PageShellAsideToggle;
@@ -390,6 +414,7 @@ export const PageShell: PageShellComponent = Object.assign(PageShellRoot, {
   Banner: PageShellBanner,
   Main: PageShellMain,
   Content: PageShellContent,
+  Bleed: PageShellBleed,
   Body: PageShellBody,
   Aside: PageShellAside,
   AsideToggle: PageShellAsideToggle,

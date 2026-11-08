@@ -7,6 +7,8 @@ export type {
   PageShellAsideToggleLabels,
   PageShellAsideToggleProps,
   PageShellBannerProps,
+  PageShellBleedProps,
+  PageShellBleedTone,
   PageShellBodyProps,
   PageShellContentProps,
   PageShellContentWidth,

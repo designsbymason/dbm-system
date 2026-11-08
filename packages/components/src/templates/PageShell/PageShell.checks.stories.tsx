@@ -780,6 +780,35 @@ export const DismissedBannerGoesAway: Story = {
   },
 };
 
+export const BleedRunsEdgeToEdgeWithItsContentLinedUp = {
+  name: "A Bleed band is as wide as the main area, has the canvas fill, and its content starts where the page's content starts, while a plain section's runs edge to edge — layout test",
+  // A reading width, narrower than the window, so the page's content is clearly inside the band.
+  render: () => <DemoPageShell fullBleed contentWidth="reading" rows={2} />,
+  play: async ({ canvasElement }: { canvasElement: HTMLElement }) => {
+    await expect(window.innerWidth).toBeGreaterThanOrEqual(1024);
+    const { main } = slots(canvasElement);
+    const band = within(canvasElement).getByText(/band as wide as the window/i).closest("section") as HTMLElement;
+    const page = main.querySelector("h1")!;
+    // As wide as the main area, not as wide as the page's content.
+    await expect(Math.abs(band.getBoundingClientRect().width - main.getBoundingClientRect().width)).toBeLessThan(1);
+    await expect(band.getBoundingClientRect().width).toBeGreaterThan(page.getBoundingClientRect().width + 100);
+    // The fill is the canvas token.
+    const probe = document.createElement("div");
+    probe.style.backgroundColor = "var(--dbm-bg-canvas)";
+    document.body.append(probe);
+    const canvasColour = getComputedStyle(probe).backgroundColor;
+    probe.remove();
+    await expect(getComputedStyle(band).backgroundColor).toBe(canvasColour);
+    // The content starts where the page's content starts.
+    // A plain section beside it runs edge to edge: its content starts at the window's edge, well outside the page's content.
+    const plain = within(canvasElement).getByText(/plain section/i);
+    await expect(plain.getBoundingClientRect().left).toBeLessThan(page.getBoundingClientRect().left - 20);
+    const text = within(band).getByText(/band as wide as the window/i);
+    await expect(Math.abs(text.getBoundingClientRect().left - page.getBoundingClientRect().left)).toBeLessThan(1);
+    await expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(window.innerWidth);
+  },
+} satisfies Story;
+
 export const AsidePrintsUnderThePage: Story = {
   name: "Printed, the aside is in the flow under the page, in full, whether it is a column or a drawer on screen — print test",
   render: () => <DemoPageShell aside asideCollapse="drawer" asideCollapseBelow="3xl" asideSticky rows={6} />,

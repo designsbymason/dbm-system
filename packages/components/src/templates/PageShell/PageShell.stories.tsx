@@ -352,7 +352,7 @@ export const NotFoundPage: Story = {
 };
 
 export const FullBleedSection: Story = {
-  name: "A section that runs edge to edge",
+  name: "Edge to edge: a plain section, a Bleed and Content",
   parameters: { docs: { source: { code: pageShellSnippets.fullBleed } } },
   argTypes: { ...noControls },
   render: (_args, context) => <DemoPageShell fullBleed rows={4} framed={docs(context)} />,

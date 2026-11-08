@@ -68,7 +68,8 @@ export const demoCopy = {
     filtersTitle: "Filters",
     filterLinks: ["All projects", "Mine", "Archived"],
     sectionText: "Details for this section appear here, with the settings and the people it concerns.",
-    fullBleed: "A section that runs edge to edge, outside the page's width.",
+    fullBleed: "A Bleed band as wide as the window, its content lined up with the page.",
+    fullBleedPlain: "A plain section: its content runs edge to edge, outside the page's width.",
   },
   fa: {
     brand: "dbM",
@@ -109,7 +110,8 @@ export const demoCopy = {
     filtersTitle: "فیلترها",
     filterLinks: ["همه پروژه‌ها", "مال من", "بایگانی‌شده"],
     sectionText: "جزئیات این بخش، با تنظیمات و افرادی که به آن مربوط‌اند، اینجا نمایش داده می‌شود.",
-    fullBleed: "بخشی که از لبه تا لبه می‌رود، بیرون از عرض صفحه.",
+    fullBleed: "نوار Bleed به پهنای پنجره، با محتوایی هم‌تراز با صفحه.",
+    fullBleedPlain: "یک بخش ساده: محتوایش از لبه تا لبه می‌رود، بیرون از عرض صفحه.",
   },
 } as const;
 
@@ -191,9 +193,9 @@ function DemoFilters({ language }: { language: Language }) {
   const copy = demoCopy[language];
   return (
     <div style={{ display: "grid", gap: "var(--dbm-space-3)", padding: "var(--dbm-space-4)", border: "var(--dbm-border-width-1) solid var(--dbm-border-default)", borderRadius: "var(--dbm-radius-lg)" }}>
-      <Heading level={2} size="sm">
+      <Text size="sm" color="secondary" aria-hidden="true">
         {copy.filtersTitle}
-      </Heading>
+      </Text>
       <nav aria-label={copy.filtersTitle} style={{ display: "grid", gap: "var(--dbm-space-2)" }}>
         {copy.filterLinks.map((label) => (
           <Link key={label} href="#" onClick={preventNavigation}>
@@ -231,7 +233,19 @@ function DemoArticle({ language }: { language: Language }) {
 /** A banner the reader can dismiss, and that stays dismissed for the rest of the session (`usePersistentDismiss`). */
 function DemoDismissibleBanner({ language }: { language: Language }) {
   const copy = demoCopy[language];
-  const { ready, dismissed, dismiss } = usePersistentDismiss("dbm-demo-page-shell-banner", { storage: "session" });
+  const { ready, dismissed, dismiss, reset } = usePersistentDismiss("dbm-demo-page-shell-banner", { storage: "session" });
+  // The demo only: once dismissed the notice stays gone for the session, so a way to see it again is drawn where it was.
+  if (ready && dismissed) {
+    return (
+      <PageShell.Banner>
+        <div style={{ display: "flex", justifyContent: "flex-end", padding: "var(--dbm-space-2) var(--dbm-space-4)" }}>
+          <Button variant="tertiary" size="sm" onClick={reset}>
+            {language === "fa" ? "نمایش دوباره اعلان" : "Show the notice again"}
+          </Button>
+        </div>
+      </PageShell.Banner>
+    );
+  }
   return (
     <PageShell.Banner>
       <Alert banner tone="info" dismissible open={ready && !dismissed} onOpenChange={(open) => !open && dismiss()}>
@@ -344,7 +358,7 @@ export interface DemoPageShellProps extends PageShellProps {
   secondAside?: boolean;
   /** Draws the banner as a dismissible `Alert`, whose dismissal is remembered for the session. */
   dismissibleBanner?: boolean;
-  /** Adds a section that runs edge to edge, outside the page's width, above the page's content. */
+  /** Adds, above the page's content, a plain section (its content edge to edge) and a `PageShell.Bleed` band (its content lined up with the page). */
   fullBleed?: boolean;
   /** Called with the id of the bar's link that was chosen (`"projects"`, `"reports"`, `"team"`, `"settings"`), as a router would be told. */
   onNavigate?: (id: "projects" | "reports" | "team" | "settings") => void;
@@ -498,10 +512,22 @@ export function DemoPageShell({
       ) : (
         <PageShell.Main busy={busy} labels={fa ? mainLabelsFa : undefined}>
           {fullBleed && (
-            // A section outside the page's width: the main area is as wide as the window, and `Content` is inside it, not around it.
-            <div style={{ padding: "var(--dbm-space-8) var(--dbm-space-4)", background: "var(--dbm-bg-canvas)", textAlign: "center" }}>
-              <Text>{copy.fullBleed}</Text>
-            </div>
+            <>
+              {/* A plain element beside `Content`: as wide as the main area, and so is its content. */}
+              <section
+                style={{
+                  padding: "var(--dbm-space-8) var(--dbm-space-4)",
+                  background: "var(--dbm-bg-canvas)",
+                  borderBlockEnd: "var(--dbm-border-width-1) solid var(--dbm-border-default)",
+                }}
+              >
+                <Text>{copy.fullBleedPlain}</Text>
+              </section>
+              {/* A `Bleed`: as wide as the main area, its content lined up with the page's. */}
+              <PageShell.Bleed tone="canvas" width={contentWidth}>
+                <Text>{copy.fullBleed}</Text>
+              </PageShell.Bleed>
+            </>
           )}
           <PageShell.Content width={contentWidth}>{children ?? (page === "article" ? <DemoArticle language={language} /> : <DemoPage language={language} rows={rows} state={state} />)}</PageShell.Content>
         </PageShell.Main>

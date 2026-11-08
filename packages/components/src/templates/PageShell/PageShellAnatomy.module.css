@@ -1,0 +1,303 @@
+/* Docs only: the anatomy of a PageShell page, drawn as nested boxes. Every colour, space, radius and size is a token, so the diagram follows the
+   theme (light, dark, both brands). A box's colour says what it is: brand for the page itself, success for a Bleed band, warning for a plain section,
+   info for an aside, neutral for the frame and its chrome. Text is `text.primary` and `text.secondary`, which pass AA on every fill used here. */
+.figure {
+  display: grid;
+  gap: var(--dbm-space-8);
+  margin: var(--dbm-space-8) 0;
+  color: var(--dbm-text-primary);
+  font-family: var(--dbm-font-family-primary);
+}
+
+/* One layout to a row. */
+.diagrams {
+  display: grid;
+  gap: var(--dbm-space-10);
+}
+
+.diagram {
+  display: grid;
+  gap: var(--dbm-space-4);
+  min-inline-size: 0;
+}
+
+/* A layout's title and its description are one paragraph, at the Docs' own paragraph size; the title is bold. */
+.figure .lead {
+  margin: 0;
+  padding: 0;
+  font-size: inherit;
+  line-height: inherit;
+  color: inherit;
+}
+
+.figure .lead strong {
+  font-weight: var(--dbm-font-weight-bold);
+}
+
+/* Every box: a head (the part's name and a note on what it does), then whatever it holds. */
+.box {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  align-content: start;
+  gap: var(--dbm-space-3);
+  box-sizing: border-box;
+  min-inline-size: 0;
+  padding: var(--dbm-space-5) var(--dbm-space-6);
+  border: var(--dbm-border-width-2) solid var(--dbm-border-neutral);
+  border-radius: var(--dbm-radius-lg);
+  background-color: var(--dbm-bg-surface);
+}
+
+/* A part's name and what it does are one flowing line of text: the note wraps under the name rather than sitting in a row of its own. */
+.figure .head {
+  margin: 0;
+  padding: 0;
+  font-size: var(--dbm-font-size-sm);
+  line-height: var(--dbm-line-height-relaxed);
+  color: var(--dbm-text-secondary);
+  overflow-wrap: anywhere;
+}
+
+.name {
+  display: inline-block;
+  margin-inline-end: var(--dbm-space-2);
+  padding: 0 var(--dbm-space-2);
+  border: var(--dbm-border-width-1) solid var(--dbm-border-neutral);
+  border-radius: var(--dbm-radius-sm);
+  background-color: var(--dbm-bg-neutral-subtle);
+  font-family: var(--dbm-font-family-mono);
+  font-size: var(--dbm-font-size-sm);
+  font-weight: var(--dbm-font-weight-semibold);
+  line-height: var(--dbm-line-height-relaxed);
+  color: var(--dbm-text-primary);
+  overflow-wrap: anywhere;
+}
+
+.note {
+  font-size: var(--dbm-font-size-sm);
+  line-height: var(--dbm-line-height-relaxed);
+  color: var(--dbm-text-secondary);
+}
+
+/* The frame: the page's window, with no fill of its own. */
+.frame {
+  gap: var(--dbm-space-4);
+  padding: var(--dbm-space-6);
+  border-color: var(--dbm-border-neutral);
+  border-radius: var(--dbm-radius-xl);
+  background-color: transparent;
+}
+
+.chrome {
+  border-color: var(--dbm-border-neutral);
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--dbm-space-3);
+  line-height: var(--dbm-line-height-relaxed);
+}
+
+.chip {
+  padding: 0 var(--dbm-space-3);
+  margin-inline-end: 0;
+  border: var(--dbm-border-width-1) solid var(--dbm-border-neutral);
+  border-radius: var(--dbm-radius-full);
+  background-color: var(--dbm-bg-surface);
+}
+
+.chipInfo {
+  border-color: var(--dbm-border-info);
+  background-color: var(--dbm-bg-info-subtle);
+}
+
+/* The page itself: brand. */
+.main {
+  border-color: var(--dbm-border-brand);
+  background-color: var(--dbm-bg-brand-subtle);
+}
+
+/* A box whose children run to its edges: its own head keeps the inset. */
+.flush {
+  padding-inline: 0;
+}
+
+.flush > .head {
+  padding-inline: var(--dbm-space-6);
+}
+
+.content {
+  justify-self: center;
+  inline-size: min(100%, 70%);
+  border-color: var(--dbm-border-brand);
+  border-radius: var(--dbm-radius-md);
+  background-color: var(--dbm-bg-surface);
+}
+
+/* Layout only: a dashed neutral line, no fill. */
+.body {
+  border-style: dashed;
+  border-color: var(--dbm-border-neutral-strong);
+  background-color: transparent;
+}
+
+.row {
+  display: flex;
+  align-items: stretch;
+  gap: var(--dbm-space-4);
+}
+
+.row > * {
+  min-inline-size: 0;
+}
+
+.row > .grow {
+  flex: 1 1 0;
+}
+
+.row > .aside {
+  flex: 0 0 max(22%, 10rem);
+  padding-inline: var(--dbm-space-4);
+}
+
+.aside {
+  border-color: var(--dbm-border-info);
+  background-color: var(--dbm-bg-info-subtle);
+}
+
+/* Bands as wide as the main area: no side borders, so they touch its edges. A plain one has its content at the edge; a Bleed keeps it to the page's
+   width, in the inner box, which is as wide and as centred as the Content box under it. */
+.band {
+  padding-inline: 0;
+  border-inline-width: 0;
+  border-radius: 0;
+}
+
+/* A plain section has its content at the edge, with only the box's own inset. */
+.plain {
+  padding-inline: var(--dbm-space-6);
+  border-style: dashed;
+  border-color: var(--dbm-border-warning);
+  background-color: var(--dbm-bg-warning-subtle);
+}
+
+.bleed {
+  border-color: var(--dbm-border-success);
+  background-color: var(--dbm-bg-success-subtle);
+}
+
+.inner {
+  display: grid;
+  gap: var(--dbm-space-3);
+  justify-self: center;
+  box-sizing: border-box;
+  inline-size: min(100%, 70%);
+  padding: var(--dbm-space-5) var(--dbm-space-6);
+  border: var(--dbm-border-width-2) dashed var(--dbm-border-success);
+  border-radius: var(--dbm-radius-md);
+  background-color: var(--dbm-bg-surface);
+}
+
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--dbm-space-3) var(--dbm-space-8);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: var(--dbm-font-size-sm);
+  color: var(--dbm-text-secondary);
+}
+
+.figure .legend {
+  margin: 0;
+  padding: 0;
+  font-size: var(--dbm-font-size-sm);
+}
+
+.legend li {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.legend li::marker {
+  content: none;
+}
+
+.figure .swatch {
+  display: inline-block;
+  inline-size: var(--dbm-space-5);
+  block-size: var(--dbm-space-4);
+  margin-inline-end: var(--dbm-space-2);
+  vertical-align: middle;
+  border: var(--dbm-border-width-2) solid var(--dbm-border-neutral);
+  border-radius: var(--dbm-radius-sm);
+  background-color: var(--dbm-bg-surface);
+}
+
+.figure .swatchBrand {
+  border-color: var(--dbm-border-brand);
+  background-color: var(--dbm-bg-brand-subtle);
+}
+
+.figure .swatchSuccess {
+  border-color: var(--dbm-border-success);
+  background-color: var(--dbm-bg-success-subtle);
+}
+
+.figure .swatchWarning {
+  border-color: var(--dbm-border-warning);
+  border-style: dashed;
+  background-color: var(--dbm-bg-warning-subtle);
+}
+
+.figure .swatchInfo {
+  border-color: var(--dbm-border-info);
+  background-color: var(--dbm-bg-info-subtle);
+}
+
+.figure .swatchLayout {
+  border-color: var(--dbm-border-neutral-strong);
+  border-style: dashed;
+  background-color: transparent;
+}
+
+@media (max-width: 40rem) {
+  .frame {
+    padding: var(--dbm-space-4);
+  }
+
+  /* Boxes inside boxes need less inset on a phone, or the text has no room. */
+  .box {
+    padding: var(--dbm-space-3) var(--dbm-space-4);
+  }
+
+  .band,
+  .flush {
+    padding-inline: 0;
+  }
+
+  .flush > .head,
+  .plain {
+    padding-inline: var(--dbm-space-4);
+  }
+
+  .inner {
+    padding: var(--dbm-space-3) var(--dbm-space-4);
+  }
+
+  .row {
+    flex-direction: column;
+  }
+
+  .row > .aside {
+    flex-basis: auto;
+  }
+
+  .inner,
+  .content {
+    inline-size: 100%;
+  }
+}

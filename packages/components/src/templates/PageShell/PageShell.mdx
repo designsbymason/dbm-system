@@ -10,9 +10,11 @@ import { VisuallyHidden } from "../../atoms/VisuallyHidden";
 import { Alert } from "../../molecules/Alert";
 import { EmptyState } from "../../molecules/EmptyState";
 import { Navbar } from "../../organisms/Navbar";
+import { PageShellAnatomy } from "./PageShellAnatomy";
 import * as PageShellStories from "./PageShell.stories";
 import * as PageShellAsideStories from "./PageShellAside.stories";
 import * as PageShellAsideToggleStories from "./PageShellAsideToggle.stories";
+import * as PageShellBleedStories from "./PageShellBleed.stories";
 import * as PageShellBodyStories from "./PageShellBody.stories";
 import * as PageShellBannerStories from "./PageShellBanner.stories";
 import * as PageShellContentStories from "./PageShellContent.stories";
@@ -47,6 +49,43 @@ wider than a phone; open a story from the sidebar on its own and narrow the wind
 ```tsx
 import { Navbar, PageShell } from "@dbm-system/components";
 ```
+
+### Anatomy
+
+<PageShellAnatomy />
+
+In text, each part indented inside the one that holds it:
+
+```text
+PageShell                        the frame: a div, as tall as the window; owns focus, announcements, insets
+├─ PageShell.SkipLink            first, so it is the first tab stop
+├─ PageShell.Banner              optional; a notice that scrolls away
+├─ Navbar (or your <header>)     a direct child; it sticks itself
+├─ A) a page with no aside
+│   └─ PageShell.Main            the one <main>; as wide as the window
+│       ├─ <section> (plain)     edge to edge, content too
+│       ├─ PageShell.Bleed       edge to edge, content kept to the page's width
+│       └─ PageShell.Content     the page's own width-limited box
+├─ B) a page with an aside
+│   └─ PageShell.Body            the page's width and padding, laid out as a row
+│       ├─ PageShell.Aside       a sibling landmark of <main>, never inside it
+│       ├─ PageShell.Main        your page directly: no Content, no Bleed
+│       │   └─ PageShell.AsideToggle   anywhere in the page (usually its actions)
+│       └─ PageShell.Aside       a second one, at the other end
+└─ PageShell.Footer              the contentinfo; at the window's bottom on a short page
+```
+
+**How the parts fit**
+
+- **Use `Content` or `Body`, never both.** `Body` is `Content`'s width and padding wrapped around `Main` and `Aside`, so a `Content` inside a `Main` inside a
+  `Body` would pad the page twice.
+- **`Bleed` and a plain section belong to layout A.** They sit inside `Main` beside `Content`, because `Main` is as wide as the window. In layout B `Main` is
+  already inside `Body`'s width limit, so a band there would be held to it. A page with an aside that also needs a full-width band puts the band above or
+  below `Body`, as a plain element.
+- **`Aside` is outside `Main`**, since an `<aside>` landmark cannot be inside `<main>`. The order written is the layout: an aside before `Main` is at the
+  start, one after it is at the end, and the sides swap in right-to-left text.
+- **`AsideToggle` can go anywhere in the shell.** It shows only below the aside's collapse step, and only for an aside with `collapse="drawer"`.
+- **The header is a direct child of `PageShell`.** A box around it stops it sticking.
 
 ## Playground
 
@@ -106,6 +145,12 @@ Drive the shell's props live. The header controls (`sticky`, `hideOnScroll`, a h
 `PageShell.AsideToggle` also accepts any other native `<button>` attribute.
 
 <PropertiesTable of={PageShellAsideToggleStories} order={["icon", "variant", "tone", "size", "aria-label", "labels", "style", "className", "id", "data-testid"]} />
+
+### PageShell.Bleed properties
+
+`PageShell.Bleed` also accepts any other native `<section>` attribute.
+
+<PropertiesTable of={PageShellBleedStories} order={["children", "tone", "width", "size", "paddingInline", "paddingBlock", "aria-label", "aria-labelledby", "style", "className", "id", "data-testid"]} />
 
 ### PageShell.Footer properties
 
@@ -259,10 +304,15 @@ An `EmptyState` in the content, with the way back: its title is the page's `h1`,
 
 <Canvas of={PageShellStories.NotFoundPage} />
 
-### A section that runs edge to edge
+### Edge to edge: a plain section, a Bleed and Content
 
-`PageShell.Main` is as wide as the window and `PageShell.Content` is a box inside it, not around it, so a section written beside `Content` is outside the
-page's width.
+`PageShell.Bleed` is a band as wide as the main area, with its content kept to the page's width and padding (`width`, `size` and `paddingInline`, as
+`PageShell.Content`), so the text lines up with the rest of the page. `tone="canvas"` fills it with the page's alternate surface and `paddingBlock` is on
+the spacing scale. Write it inside `PageShell.Main`, beside `PageShell.Content`. A band whose content must also run edge to edge is a plain element
+there, since `PageShell.Main` is as wide as the window and `Content` is a box inside it, not around it. The story shows the three: the plain section at the
+top (its text at the window's edge), the `Bleed` under it (the same width, its text lined up with the page) and the page's own `Content`. A `Bleed` and a
+`Content` take their `width`, `size` and `paddingInline` separately, so give both the same ones when the page is not at the defaults. `text.tertiary` does not pass AA on `canvas`, so
+keep tertiary text off a tinted band.
 
 <Canvas of={PageShellStories.FullBleedSection} />
 
@@ -472,6 +522,7 @@ return (
 The skip link is `SkipLink`, which lists its own tokens.
 
 <TokenRow token="bg.surface" usage="the frame's background: the page colour behind the header, the main area and the footer" />
+<TokenRow token="bg.canvas" usage="the fill of a PageShell.Bleed with tone canvas, the page's alternate surface" />
 <TokenRow token="text.primary" usage="the colour of text inside the frame that sets none of its own" />
 <TokenRow token="font-family.primary" usage="the typeface of the frame, inherited by everything inside it" />
 <TokenRow token="border.default" usage="the line over the footer" />

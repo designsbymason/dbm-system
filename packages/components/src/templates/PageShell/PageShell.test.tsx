@@ -291,6 +291,87 @@ describe("PageShell", () => {
     });
   });
 
+  describe("PageShell.Bleed", () => {
+    it("draws a section holding its children in a container, with a tone and padding above and below", () => {
+      render(
+        <PageShell>
+          <PageShell.Main>
+            <PageShell.Bleed tone="canvas" paddingBlock={6} data-testid="band">
+              <p>Band</p>
+            </PageShell.Bleed>
+          </PageShell.Main>
+        </PageShell>,
+      );
+      const band = screen.getByTestId("band");
+      expect(band.tagName).toBe("SECTION");
+      expect(band).toHaveAttribute("data-tone", "canvas");
+      expect(band).toHaveStyle({ paddingBlock: "var(--dbm-space-6)" });
+      expect(within(band).getByText("Band").parentElement).not.toBe(band);
+    });
+
+    it("has no tone attribute by default, and pads by space 8", () => {
+      render(
+        <PageShell>
+          <PageShell.Main>
+            <PageShell.Bleed data-testid="band">Band</PageShell.Bleed>
+          </PageShell.Main>
+        </PageShell>,
+      );
+      expect(screen.getByTestId("band")).not.toHaveAttribute("data-tone");
+      expect(screen.getByTestId("band")).toHaveStyle({ paddingBlock: "var(--dbm-space-8)" });
+    });
+
+    it("is a region landmark only when it is named", () => {
+      const { rerender } = render(
+        <PageShell>
+          <PageShell.Main>
+            <PageShell.Bleed>Band</PageShell.Bleed>
+          </PageShell.Main>
+        </PageShell>,
+      );
+      expect(screen.queryByRole("region")).not.toBeInTheDocument();
+      rerender(
+        <PageShell>
+          <PageShell.Main>
+            <PageShell.Bleed aria-label="Highlights">Band</PageShell.Bleed>
+          </PageShell.Main>
+        </PageShell>,
+      );
+      expect(screen.getByRole("region", { name: "Highlights" })).toBeInTheDocument();
+    });
+
+    it("forwards a ref, passes native props through and puts the caller's style over its own", () => {
+      const ref = createRef<HTMLElement>();
+      render(
+        <PageShell>
+          <PageShell.Main>
+            <PageShell.Bleed ref={ref} id="b" className="c" title="extra" style={{ paddingBlock: "1px" }} data-testid="band">
+              Band
+            </PageShell.Bleed>
+          </PageShell.Main>
+        </PageShell>,
+      );
+      const band = screen.getByTestId("band");
+      expect(ref.current).toBe(band);
+      expect(band).toHaveAttribute("id", "b");
+      expect(band).toHaveAttribute("title", "extra");
+      expect(band).toHaveClass("c");
+      expect(band).toHaveStyle({ paddingBlock: "1px" });
+    });
+
+    it("has no accessibility violations, named and unnamed", async () => {
+      const { container } = render(
+        <PageShell>
+          <PageShell.Main>
+            <PageShell.Bleed tone="canvas">Band</PageShell.Bleed>
+            <PageShell.Bleed aria-label="Highlights">Band</PageShell.Bleed>
+          </PageShell.Main>
+        </PageShell>,
+      );
+      expect(await axe(container)).toHaveNoViolations();
+    });
+  });
+
   describe("navigating", () => {
     it("draws a bar and says Loading politely while navigating, and empties the region when it ends", () => {
       const { rerender, container } = render(
