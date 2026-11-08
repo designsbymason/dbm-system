@@ -369,6 +369,8 @@ once it is stuck, so what scrolls beneath it never shows through the links.
 
 `hideOnScroll` slides a sticky bar out of view while the reader scrolls down and brings it back on a scroll up
 or near the top, so it costs no room while reading. It stays while anything in it has keyboard focus.
+While the bar is slid out its `<header>` carries a `data-away` attribute, which a page frame can read: `PageShell` uses it to let a sticky aside follow
+the bar up and back down.
 
 <Canvas of={NavbarStories.HidesOnScroll} />
 

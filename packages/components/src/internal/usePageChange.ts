@@ -49,6 +49,11 @@ export function usePageChange({
           heading.addEventListener("blur", () => heading.removeAttribute("tabindex"), { once: true });
         }
         heading.focus({ preventScroll: true });
+        // A heading that could not take focus (hidden, say) is not left focusable, and the main area takes it instead.
+        if (document.activeElement !== heading) {
+          if (!hadTabIndex) heading.removeAttribute("tabindex");
+          main.focus({ preventScroll: true });
+        }
       } else {
         main.focus({ preventScroll: true });
       }

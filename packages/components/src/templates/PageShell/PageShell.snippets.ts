@@ -359,6 +359,7 @@ ${shell('dir="rtl" lang="fa"', [
 };
 
 export interface PageShellPlaygroundSnippetArgs {
+  navigating?: boolean;
   dir?: "ltr" | "rtl";
   sticky?: boolean;
   hideOnScroll?: boolean;
@@ -375,6 +376,7 @@ export interface PageShellPlaygroundSnippetArgs {
 /** The Playground's snippet, built from the live controls: only the props that differ from their defaults, around a small real shell. */
 export function pageShellPlaygroundSnippet(args: PageShellPlaygroundSnippetArgs): string {
   const attributes: string[] = [];
+  if (args.navigating) attributes.push("navigating");
   if (args.dir === "rtl") attributes.push('dir="rtl"', 'lang="fa"');
   const language = args.dir === "rtl" ? "fa" : "en";
   const banner = args.banner

@@ -23,6 +23,8 @@ export function ReferenceTable({
   rows,
   plainFirstColumn = false,
   firstColumnWidth,
+  minWidth,
+  label,
 }: {
   columns: string[];
   rows: (string | ReactNode)[][];
@@ -33,12 +35,25 @@ export function ReferenceTable({
    * page, so their first columns line up as the reader scrolls down it; a longer name or list wraps within it.
    */
   firstColumnWidth?: string;
+  /**
+   * A width (a CSS length) the table keeps on a narrow screen, so a table of sentences scrolls sideways inside its frame instead of squeezing every
+   * column to a few words. Left out, the table shrinks to fit, as it always did. With it, give the table a `label` too.
+   */
+  minWidth?: string;
+  /** The name of the frame that scrolls (needed with `minWidth`): the frame is a tab stop, so the keyboard can scroll it, and a named region. */
+  label?: string;
 }) {
+  const scrolls = minWidth !== undefined && label !== undefined;
   return (
-    <div style={{ overflowX: "auto" }}>
+    // A scrolling region is reached by the keyboard (WCAG 2.1.1), so the frame is a tab stop.
+    <div style={{ overflowX: "auto" }} {...(scrolls ? { role: "region", "aria-label": label, tabIndex: 0 } : undefined)}>
       <table
         className={["dbm-proptable", "dbm-reftable", plainFirstColumn && "dbm-reftable-prose", firstColumnWidth && "dbm-reftable-fixed"].filter(Boolean).join(" ")}
-        style={firstColumnWidth ? ({ "--dbm-reftable-first-width": firstColumnWidth } as CSSProperties) : undefined}
+        style={
+          firstColumnWidth || minWidth
+            ? ({ ...(firstColumnWidth ? { "--dbm-reftable-first-width": firstColumnWidth } : undefined), ...(minWidth ? { minInlineSize: minWidth } : undefined) } as CSSProperties)
+            : undefined
+        }
       >
         <thead>
           <tr>

@@ -60,7 +60,7 @@ const meta: Meta<PlaygroundArgs> = {
       table: { defaultValue: { summary: "false" } },
     },
     navigating: {
-      control: false,
+      control: "boolean",
       description:
         "The app is moving between pages: a loading bar along the top of the window, above the header, and a polite \"Loading\" announcement. busy on PageShell.Main is for a page that is reloading its own content.",
     },
@@ -145,7 +145,7 @@ const meta: Meta<PlaygroundArgs> = {
         "Test identifier for automated testing (e.g. Testing Library's getByTestId, Playwright/Cypress selectors). Rendered as the DOM data-testid attribute; has no visual or behavioral effect.",
     },
   },
-  args: { dir: "ltr", sticky: true, hideOnScroll: false, customHeader: false, subNav: false, banner: false, aside: false, asideCollapse: "stack", asideSticky: false, asideSide: "end" },
+  args: { navigating: false, dir: "ltr", sticky: true, hideOnScroll: false, customHeader: false, subNav: false, banner: false, aside: false, asideCollapse: "stack", asideSticky: false, asideSide: "end" },
 };
 
 export default meta;
@@ -153,6 +153,7 @@ export default meta;
 type Story = StoryObj<PlaygroundArgs>;
 
 const noControls = {
+  navigating: { control: false },
   sticky: { control: false },
   hideOnScroll: { control: false },
   customHeader: { control: false },

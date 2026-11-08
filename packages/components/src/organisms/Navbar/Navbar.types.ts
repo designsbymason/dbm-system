@@ -165,7 +165,8 @@ export interface NavbarProps extends Omit<ComponentPropsWithoutRef<"header">, "d
   /**
    * Hides a sticky bar while the reader scrolls down, and brings it back as soon as they scroll up or are near the top, so it
    * costs no room while reading. It stays shown while anything in it has keyboard focus, so a keyboard user never loses it.
-   * Needs `sticky`; without it a development warning says so and nothing happens.
+   * Needs `sticky`; without it a development warning says so and nothing happens. While the bar is slid out its `<header>` carries a `data-away`
+   * attribute, which a page frame can read (`PageShell` lets a sticky aside follow it).
    * @default false
    */
   hideOnScroll?: boolean;

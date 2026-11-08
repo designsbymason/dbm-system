@@ -80,10 +80,10 @@ describe("PageShell's props, in the types, the Docs tables and the Controls pane
     expect(argTypeKeys(file).filter((key) => !demoOnly.includes(key))).toEqual(expected);
   });
 
-  it("the Playground panel lists the demo's switches in the order the root's meta gives them", () => {
+  it("the Playground panel lists the shell's own props, then the demo's switches, in the order the root's meta gives them", () => {
     const panel = /export const playgroundOrder = \[(.*?)\];/s.exec(mdx)?.[1] ?? "";
     const order = [...panel.matchAll(/"([^"]+)"/g)].map((match) => match[1] as string);
-    expect(order).toEqual(["dir", "sticky", "hideOnScroll", "customHeader", "subNav", "banner", "aside", "asideCollapse", "asideSticky", "asideSide"]);
+    expect(order).toEqual(["navigating", "dir", "sticky", "hideOnScroll", "customHeader", "subNav", "banner", "aside", "asideCollapse", "asideSticky", "asideSide"]);
     const source = readFileSync(join(folder, "PageShell.stories.tsx"), "utf8");
     const argsBody = /\n {2}args: \{ (.*?) \},\n/s.exec(source)?.[1] ?? "";
     expect([...argsBody.matchAll(/(\w+): /g)].map((match) => match[1])).toEqual(order);

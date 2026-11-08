@@ -175,7 +175,7 @@ const meta: Meta<PlaygroundArgs> = {
       control: "boolean",
       if: { arg: "sticky" },
       description:
-        "Hides a sticky bar while the reader scrolls down and brings it back on a scroll up. Needs sticky. The Playground's frame doesn't scroll, so see the Hides on scroll story.",
+        "Hides a sticky bar while the reader scrolls down and brings it back on a scroll up. Needs sticky. While the bar is slid out its header carries data-away. The Playground's frame doesn't scroll, so see the Hides on scroll story.",
       table: { defaultValue: { summary: "false" } },
     },
     stickyOffset: {

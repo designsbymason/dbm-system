@@ -23,7 +23,7 @@ import * as PageShellSkipLinkStories from "./PageShellSkipLink.stories";
 
 export const propOrder = ["children", "pageKey", "pageTitle", "documentTitle", "focusTarget", "scrollToTopOnChange", "navigating", "labels", "asideOpen", "defaultAsideOpen", "onAsideOpenChange", "dir", "id", "className", "style", "data-testid"];
 
-export const playgroundOrder = ["dir", "sticky", "hideOnScroll", "customHeader", "subNav", "banner", "aside", "asideCollapse", "asideSticky", "asideSide"];
+export const playgroundOrder = ["navigating", "dir", "sticky", "hideOnScroll", "customHeader", "subNav", "banner", "aside", "asideCollapse", "asideSticky", "asideSide"];
 
 <Meta of={PageShellStories} />
 
@@ -61,6 +61,8 @@ an aside is layout B.
 <ReferenceTable
   firstColumnWidth="13rem"
   plainFirstColumn
+  minWidth="44rem"
+  label="Where each part goes"
   columns={["Where you write it", "What goes there, and what you get", "Leave out"]}
   rows={[
     ["Directly in `PageShell`, at the top", "`PageShell.SkipLink`, then an optional `PageShell.Banner`, then your header: a `Navbar` or a `<header>` of your own. The order written is the tab order, and the header sticks by its own means (`Navbar`'s `sticky`, or `Affix`).", "A box around the header: it stops it sticking, so the header is a direct child."],
@@ -75,7 +77,7 @@ an aside is layout B.
 
 ## Playground
 
-Drive the shell's props live. The header controls (`sticky`, `hideOnScroll`, a header of your own, a second row) are the demo header's own, since the shell wraps no header. Scroll the framed page to see the header stay.
+Drive the shell's props live (`navigating` and `dir` are the shell's own). The header controls (`sticky`, `hideOnScroll`, a header of your own, a second row) are the demo header's own, since the shell wraps no header. Scroll the framed page to see the header stay.
 
 <div className="dbm-playground-canvas">
 
@@ -388,15 +390,22 @@ banner. All of them are real elements, not roles on divs. The shell wraps no hea
 
 </Callout>
 
-| Key | Behaviour |
-|---|---|
-| `Tab` | Moves through the skip link, then the header, then the main area's content, then the footer, in markup order. |
-| `Tab` into a hidden header | Slides the header back into view (the `Navbar`'s `hideOnScroll`). |
-| `Enter` on a skip link | Moves focus to `PageShell.Main`, past the header. |
-| `Tab` into a sticky aside taller than the window | The aside is a tab stop while it scrolls inside itself, with a focus ring; the arrow keys and Page Up and Down scroll it. |
-| `Enter` on the aside's toggle | Opens the aside's drawer and moves focus into it. |
-| `Escape` in the aside's drawer | Closes it and returns focus to the toggle. |
-| `Escape` in the bar's menu panel | Closes it and returns focus to the menu button (the `Navbar`'s own behaviour below its `collapseBelow` width). |
+<ReferenceTable
+  firstColumnWidth="13rem"
+  plainFirstColumn
+  minWidth="34rem"
+  label="Keyboard behaviour"
+  columns={["Key", "Behaviour"]}
+  rows={[
+    ["`Tab`", "Moves through the skip link, then the header, then the main area's content, then the footer, in markup order."],
+    ["`Tab` into a hidden header", "Slides the header back into view (the `Navbar`'s `hideOnScroll`)."],
+    ["`Enter` on a skip link", "Moves focus to `PageShell.Main`, past the header."],
+    ["`Tab` into a sticky aside taller than the window", "The aside is a tab stop while it scrolls inside itself, with a focus ring; the arrow keys and Page Up and Down scroll it."],
+    ["`Enter` on the aside's toggle", "Opens the aside's drawer and moves focus into it."],
+    ["`Escape` in the aside's drawer", "Closes it and returns focus to the toggle."],
+    ["`Escape` in the bar's menu panel", "Closes it and returns focus to the menu button (the `Navbar`'s own behaviour below its `collapseBelow` width)."],
+  ]}
+/>
 
 - `PageShell.Main` takes focus from the skip link and when the page changes (`tabindex="-1"`). A focus ring is drawn just inside its edge whenever
   the keyboard has focused it. The page scrolls as a whole, so the main area is not itself a tab stop.

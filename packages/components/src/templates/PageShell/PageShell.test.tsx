@@ -269,6 +269,17 @@ describe("PageShell", () => {
       expect(heading).not.toHaveAttribute("tabindex");
     });
 
+    it("leaves no tabindex on an h1 that could not take focus, and focuses the main area", async () => {
+      const user = userEvent.setup();
+      render(<Heading focusTarget="heading" />);
+      const heading = screen.getByRole("heading", { name: "Projects" });
+      // A heading that cannot take focus (hidden, say): focus() does nothing.
+      vi.spyOn(heading, "focus").mockImplementation(() => undefined);
+      await user.click(screen.getByRole("button", { name: "Go" }));
+      expect(heading).not.toHaveAttribute("tabindex");
+      expect(screen.getByRole("main")).toHaveFocus();
+    });
+
     it("falls back to the main area when there is no h1", async () => {
       const user = userEvent.setup();
       render(<Heading focusTarget="heading" withHeading={false} />);
