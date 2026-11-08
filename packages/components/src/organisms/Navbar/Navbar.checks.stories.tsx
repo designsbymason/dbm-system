@@ -6,7 +6,7 @@ import { Badge } from "../../atoms/Badge";
 import { IconButton } from "../../atoms/IconButton";
 import { send } from "../../molecules/CodeBlock/browserProtocol";
 import { Navbar } from "./Navbar";
-import { DemoColumnsBars, DemoNavbar, DemoRowsNavbar, GalleryBar, NavbarStage, NavbarViewModeContext, StickyDemo } from "./NavbarStoryKit";
+import { DemoColumnsBars, DemoNavbar, DemoRowsNavbar, DemoSectionsNavbar, GalleryBar, NavbarStage, NavbarViewModeContext, StickyDemo } from "./NavbarStoryKit";
 
 // Hidden real-browser checks (guidelines/adr/0013): what jsdom can't do (layout, the cascade, a breakpoint, stacking, forced
 // colours). They run in the `storybook` (Chromium) project; the test window is 1200px wide unless a story pins another.
@@ -1937,6 +1937,153 @@ export const CountBadgeIsACircleAtEveryLinkSize: Story = {
       // round: as wide as it is tall (a glyph or two wider than the diameter's own room would make an oval)
       expect(Math.abs(box.width - box.height)).toBeLessThanOrEqual(2.5);
       expect(Math.abs(inbox.getBoundingClientRect().height - within(nav).getByRole("link", { name: "Plain" }).getBoundingClientRect().height)).toBeLessThan(1);
+    }
+  },
+};
+
+// --- A second row of links (ADR-0187): the row at the end that scrolls away, and a set that scrolls ---
+
+const sectionsStory = (props: Partial<React.ComponentProps<typeof Navbar>> = {}) =>
+  function Render() {
+    const boxRef = useRef<HTMLDivElement | null>(null);
+    return <StickyDemo boxRef={boxRef}>{(ref) => <DemoSectionsNavbar sticky scrollContainerRef={ref} {...props} />}</StickyDemo>;
+  };
+
+const sectionsOf = (canvasElement: HTMLElement) => within(canvasElement).getByRole("navigation", { name: "Project sections" });
+
+export const SecondRowScrollsAwayLeavingTheBar: Story = {
+  name: "A row at the end scrolls away under the bar, which sticks on its own, with one banner",
+  render: sectionsStory(),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(canvas.getAllByRole("banner")).toHaveLength(1);
+    const header = canvas.getByRole("banner");
+    const scroller = header.parentElement!;
+    const sections = sectionsOf(canvasElement);
+    const top = () => scroller.getBoundingClientRect().top;
+    // outside the banner, under the bar at the start
+    await expect(sections.closest("header")).toBeNull();
+    await expect(sections.getBoundingClientRect().top).toBeGreaterThanOrEqual(header.getBoundingClientRect().bottom - 1);
+    scroller.scrollTop = 300;
+    await waitFor(() => expect(sections.getBoundingClientRect().bottom).toBeLessThanOrEqual(header.getBoundingClientRect().bottom + 1));
+    await expect(Math.abs(header.getBoundingClientRect().top - top())).toBeLessThan(3);
+    await waitFor(() => expect(getComputedStyle(header).boxShadow).not.toBe("none"));
+    scroller.scrollTop = 0;
+    await waitFor(() => expect(sections.getBoundingClientRect().top).toBeGreaterThanOrEqual(header.getBoundingClientRect().bottom - 1));
+  },
+};
+
+export const SecondRowWithHideOnScroll: Story = {
+  name: "A bar that hides on scroll still hides and returns with a row after it",
+  render: sectionsStory({ hideOnScroll: true }),
+  play: async ({ canvasElement }) => {
+    const header = within(canvasElement).getByRole("banner");
+    const scroller = header.parentElement!;
+    const settle = async () => {
+      await waitFor(() => expect(header.getAnimations().every((animation) => animation.playState === "finished")).toBe(true));
+      await nextFrame();
+    };
+    scroller.scrollTop = 300;
+    await waitFor(() => expect(getComputedStyle(header).translate).not.toBe("none"), { timeout: 3000 });
+    await settle();
+    await expect(header.getBoundingClientRect().bottom).toBeLessThanOrEqual(scroller.getBoundingClientRect().top + 1);
+    scroller.scrollTop = 200;
+    await waitFor(() => expect(getComputedStyle(header).translate).toBe("none"), { timeout: 3000 });
+    await settle();
+    await expect(header.getBoundingClientRect().top).toBeLessThan(scroller.getBoundingClientRect().top + 30);
+  },
+};
+
+export const ScrollingSetCentresWhenItFits: Story = {
+  name: "A scrolling set is centred while its links fit, with no fade, and keeps its own look beside the bar's",
+  render: sectionsStory(),
+  play: async ({ canvasElement }) => {
+    await expect(window.innerWidth).toBeGreaterThanOrEqual(1024);
+    const sections = sectionsOf(canvasElement);
+    const links = within(sections).getAllByRole("link");
+    const first = links[0]!.getBoundingClientRect();
+    const last = links[links.length - 1]!.getBoundingClientRect();
+    const row = sections.closest("[data-navbar-trailing]")!.getBoundingClientRect();
+    await expect(Math.abs((first.left + last.right) / 2 - (row.left + row.right) / 2)).toBeLessThan(2);
+    await expect(sections).not.toHaveAttribute("data-overflow-start");
+    await expect(sections).not.toHaveAttribute("data-overflow-end");
+    await expect(getComputedStyle(sections, "::after").opacity).toBe("0");
+    // its own look: the current link is a round tint, where the bar's current link is an underline with no fill
+    const current = within(sections).getByRole("link", { name: "Overview" });
+    const mainCurrent = within(within(canvasElement).getByRole("navigation", { name: "Main" })).getByRole("link", { name: "Projects" });
+    await expect(getComputedStyle(current).backgroundColor).not.toBe("rgba(0, 0, 0, 0)");
+    await expect(px(getComputedStyle(current).borderTopLeftRadius)).toBeGreaterThan(current.getBoundingClientRect().height / 2 - 1);
+    await expect(getComputedStyle(mainCurrent).backgroundColor).toBe("rgba(0, 0, 0, 0)");
+  },
+};
+
+export const ScrollingSetOnAPhone: Story = {
+  name: "On a phone the row stays, scrolls with a fade at the end, and a real click on a link beyond the edge brings it into view, clear of the fade",
+  globals: { viewport: { value: "mobile1", isRotated: false } },
+  render: sectionsStory(),
+  play: async ({ canvasElement }) => {
+    await expect(window.innerWidth).toBeLessThan(768);
+    const canvas = within(canvasElement);
+    const sections = sectionsOf(canvasElement);
+    // the bar's own links went into the menu, and the row of sections did not
+    await expect(canvas.getByRole("button", { name: "Menu" })).toBeVisible();
+    await expect(sections).toBeVisible();
+    const scroller = sections.querySelector<HTMLElement>("div")!;
+    await expect(scroller.scrollWidth).toBeGreaterThan(scroller.clientWidth);
+    await waitFor(() => expect(sections).toHaveAttribute("data-overflow-end"));
+    await expect(sections).not.toHaveAttribute("data-overflow-start");
+    await waitFor(() => expect(getComputedStyle(sections, "::after").opacity).toBe("1"));
+    await expect(getComputedStyle(sections, "::after").pointerEvents).toBe("none");
+    // a link partly beyond the edge, with another after it: choosing it makes it current and scrolls it in, kept clear of the fade (a browser's own
+    // scroll on focus would stop at the edge)
+    const billing = within(sections).getByRole("link", { name: "Billing" });
+    await expect(billing.getBoundingClientRect().right).toBeGreaterThan(scroller.getBoundingClientRect().right - tokenPx("--dbm-space-8"));
+    await userEvent.click(billing);
+    await waitFor(() => expect(billing).toHaveAttribute("aria-current", "page"));
+    await waitFor(() => expect(scroller.getBoundingClientRect().right - billing.getBoundingClientRect().right).toBeGreaterThanOrEqual(tokenPx("--dbm-space-8") - 2));
+    await waitFor(() => expect(sections).toHaveAttribute("data-overflow-start"));
+    await expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(window.innerWidth);
+  },
+};
+
+export const ScrollingSetFadesMirrorInRightToLeft: Story = {
+  name: "In right-to-left text the fade at the end is on the left, and the set starts at the right",
+  globals: { viewport: { value: "mobile1", isRotated: false } },
+  render: sectionsStory({ dir: "rtl" }),
+  play: async ({ canvasElement }) => {
+    const sections = sectionsOf(canvasElement);
+    await waitFor(() => expect(sections).toHaveAttribute("data-overflow-end"));
+    await expect(sections).not.toHaveAttribute("data-overflow-start");
+    // the end edge is the left one: its fade runs from the left edge inward
+    await expect(getComputedStyle(sections, "::after").backgroundImage).toContain("to right");
+    const scroller = sections.querySelector<HTMLElement>("div")!;
+    const first = within(sections).getByRole("link", { name: "Overview" });
+    await expect(first.getBoundingClientRect().right).toBeGreaterThan(scroller.getBoundingClientRect().right - 40);
+  },
+};
+
+export const ScrollingSetInForcedColoursAndPrint: Story = {
+  name: "In forced colours the current pill is still marked, and printed the fades go and the row is printed in order",
+  render: sectionsStory(),
+  play: async ({ canvasElement }) => {
+    const sections = sectionsOf(canvasElement);
+    const current = within(sections).getByRole("link", { name: "Overview" });
+    await send("Emulation.setEmulatedMedia", { features: [{ name: "forced-colors", value: "active" }] });
+    try {
+      await waitFor(() => expect(window.matchMedia("(forced-colors: active)").matches).toBe(true));
+      await expect(getComputedStyle(current).outlineStyle).not.toBe("none");
+    } finally {
+      await send("Emulation.setEmulatedMedia", { features: [] });
+    }
+    await send("Emulation.setEmulatedMedia", { media: "print", features: [] });
+    try {
+      await waitFor(() => expect(window.matchMedia("print").matches).toBe(true));
+      await nextFrame();
+      await expect(getComputedStyle(sections, "::after").display).toBe("none");
+      await expect(sections).toBeVisible();
+    } finally {
+      await send("Emulation.setEmulatedMedia", { media: "", features: [] });
+      await waitFor(() => expect(window.matchMedia("print").matches).toBe(false));
     }
   },
 };

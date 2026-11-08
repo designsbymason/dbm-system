@@ -6,7 +6,7 @@ import type { CSSProperties, ReactNode, RefObject } from "react";
 import type { SpaceValue } from "@dbm-system/utils";
 import { navbarPlaygroundSnippet, navbarSnippets } from "./Navbar.snippets";
 import type { NavbarCollapseBelow, NavbarCurrentVariant, NavbarLinkSize, NavbarProps, NavbarSize, NavbarVariant } from "./Navbar.types";
-import { DemoColumnsBars, DemoNavbar, DemoRowsNavbar, GalleryBar, NavbarStage, RouterDemoNavbar, NavbarViewModeContext, StickyDemo } from "./NavbarStoryKit";
+import { DemoColumnsBars, DemoNavbar, DemoRowsNavbar, DemoSectionsNavbar, GalleryBar, NavbarStage, RouterDemoNavbar, NavbarViewModeContext, StickyDemo } from "./NavbarStoryKit";
 
 // Navbar's root-level args in one Playground, every prop listed in the one order the Docs table uses: the ones a person can
 // edit have a control, and the rest (children, callbacks, refs, objects, the standard attributes) show as "–". Each sub-part
@@ -538,6 +538,20 @@ export const RowsScrollAway: Story = {
     return (
       <StickyDemo boxRef={boxRef}>
         {(ref) => <DemoRowsNavbar sticky labels={false} navigable scrollContainerRef={ref} />}
+      </StickyDemo>
+    );
+  },
+};
+
+export const SectionsRow: Story = {
+  name: "A second row of links that scrolls away",
+  parameters: { docs: { source: { code: navbarSnippets.rowsSections } } },
+  argTypes: { ...noControls },
+  render: function Render() {
+    const boxRef = useRef<HTMLDivElement | null>(null);
+    return (
+      <StickyDemo boxRef={boxRef}>
+        {(ref) => <DemoSectionsNavbar sticky scrollContainerRef={ref} />}
       </StickyDemo>
     );
   },

@@ -67,7 +67,7 @@ export const playgroundOrder = [
 export const brandPropOrder = ["children", "href", "asChild", "column", "aria-label", "id", "className", "style", "data-testid"];
 export const rowPropOrder = ["children", "variant", "size", "linkSize", "contained", "columns", "columnsBelow", "sticky", "id", "className", "style", "data-testid"];
 export const searchPropOrder = ["value", "collapseBelow", "size", "buttonVariant", "buttonTone", "buttonSize", "closeOnSubmit", "column", "aria-label", "id", "className", "style", "data-testid"];
-export const linksPropOrder = ["children", "align", "quiet", "linkSize", "column", "aria-label", "aria-labelledby", "id", "className", "style", "data-testid"];
+export const linksPropOrder = ["children", "align", "quiet", "scroll", "currentVariant", "rounded", "linkSize", "column", "aria-label", "aria-labelledby", "id", "className", "style", "data-testid"];
 export const linkPropOrder = ["children", "href", "icon", "badge", "external", "current", "disabled", "asChild", "aria-label", "id", "className", "style", "data-testid"];
 export const groupPropOrder = ["label", "children", "current", "defaultOpen", "disabled", "align", "aria-label", "id", "className", "style", "data-testid"];
 export const actionPropOrder = ["hideBelow", "children", "id", "className", "style", "data-testid"];
@@ -273,10 +273,22 @@ is written in. Press Enter in the sheet's field and it closes. Here the bar is t
 
 ### A strip that scrolls away
 
-In a sticky bar, a leading row with `sticky={false}` scrolls away while the rest stays at the top. Only leading rows can: the bar sticks
-as one box, so a row that scrolls away can't sit below one that sticks. The icon buttons have no captions here, and choosing a primary link makes it current, as if each were another page.
+In a sticky bar, a leading row with `sticky={false}` scrolls away while the rest stays at the top. Only rows at the start or the end can: the bar sticks
+as one box around the rows between, so a row that scrolls away can't sit between two that stick. The icon buttons have no captions here, and choosing a primary link makes it current, as if each were another page.
 
 <Canvas of={NavbarStories.RowsScrollAway} />
+
+### A second row of links that scrolls away
+
+A row at the end with `sticky={false}` is drawn after the bar's `<header>`, so the bar sticks on its own and the row scrolls away under it. Its `<nav>` is a
+navigation landmark outside the banner, where a sub-navigation belongs. `scroll` on its `Navbar.Links` keeps the links in the bar at every width instead of
+moving them into the menu (they are not copied into the panel, the row stays on a phone, and a bar of only such sets draws no menu button). The set scrolls
+sideways when the links do not fit, with no scrollbar, fades at the edge that has more, and scrolls the current link into view when it changes; `align="center"`
+centres it while everything fits. `currentVariant` and `rounded` on the set give it a look of its own beside the bar's, here round and subtle pills under a bar
+that underlines. `variant="filled"` on the row draws no line under it. Put only `Navbar.Link`s in a scrolling set: a `Navbar.Group`'s floating list would be cut.
+Narrow the window to see the row scroll.
+
+<Canvas of={NavbarStories.SectionsRow} />
 
 ### Link size
 
@@ -705,6 +717,7 @@ This story is shown at a phone's width when opened on its own; on this page, nar
 <TokenRow token="space.1" usage="the gap between links; the room above and below a small bar; the focus ring's offset" />
 <TokenRow token="space.2" usage="the gap inside a link and between actions; the room above and below a bar; a link's vertical padding" />
 <TokenRow token="space.3" usage="a link's inline padding" />
+<TokenRow token="space.8" usage="how wide the edge fade of a scrolling set of links is, and how far its current link is kept clear of it" />
 <TokenRow token="space.4" usage="the gap between the bar's zones, and its inline padding" />
 <TokenRow token="badge.size.xs" usage="the height of a badge you pass in a link, which is `Badge`'s own `xs` by default so a count is its circle; a negative block margin derived from it keeps a badged link as tall as a plain one" />
 <TokenRow token="space.5" usage="the height of the link's own badge, a round mark with 2px of side padding (half of `space.1`) so a one- or two-digit count stays a circle" />

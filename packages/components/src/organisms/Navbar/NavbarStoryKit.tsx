@@ -222,6 +222,38 @@ export interface DemoRowsOptions {
  * smaller row of primary links, centred, in bold capitals, with none marked current to begin with (the visitor is on the home page); with `navigable` the one clicked becomes current.
  * The sets of links are named so each landmark has its own name. The options let a story show a variation of it without changing the others.
  */
+/**
+ * A bar with a second row of links under it: the main links in the bar's own look (an underline) and the project's sections in a row of their own, round
+ * and subtle, that stays in the bar at every width and scrolls sideways when it does not fit, and scrolls away with the page while the bar sticks.
+ */
+export function DemoSectionsNavbar({ menuContainer, ...props }: NavbarProps) {
+  const main = useDemoCurrent("projects");
+  const sections = useDemoCurrent("overview");
+  return (
+    <Navbar menuContainer={menuContainer} {...props}>
+      <Navbar.Row>
+        <Navbar.Brand href="#" onClick={preventNavigation}>
+          dbM
+        </Navbar.Brand>
+        <Navbar.Links aria-label="Main">
+          <Navbar.Link {...main.link("projects")}>Projects</Navbar.Link>
+          <Navbar.Link {...main.link("reports")}>Reports</Navbar.Link>
+          <Navbar.Link {...main.link("team")}>Team</Navbar.Link>
+        </Navbar.Links>
+      </Navbar.Row>
+      <Navbar.Row size="sm" variant="filled" sticky={false}>
+        <Navbar.Links aria-label="Project sections" scroll rounded currentVariant="subtle" align="center">
+          <Navbar.Link {...sections.link("overview")}>Overview</Navbar.Link>
+          <Navbar.Link {...sections.link("activity")}>Activity</Navbar.Link>
+          <Navbar.Link {...sections.link("members")}>Members</Navbar.Link>
+          <Navbar.Link {...sections.link("billing")}>Billing</Navbar.Link>
+          <Navbar.Link {...sections.link("settings")}>Project settings</Navbar.Link>
+        </Navbar.Links>
+      </Navbar.Row>
+    </Navbar>
+  );
+}
+
 export function DemoRowsNavbar({
   menuContainer,
   searchCollapseBelow,

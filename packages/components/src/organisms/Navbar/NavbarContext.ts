@@ -54,6 +54,9 @@ export const NavbarRowContext = createContext<{ size: NavbarSize; linkSize: Navb
 /** What a set of links resolved its link size to (`explicit` when someone set one), for the links and a group inside it to read. */
 export const NavbarLinkSizeContext = createContext<{ size: NavbarLinkSize; explicit: boolean } | null>(null);
 
+/** The look a set of links gave itself (`currentVariant`, `rounded`), for the links and a group inside it in the bar to read; none outside one, or in the panel. */
+export const NavbarLinksLookContext = createContext<{ currentVariant: NavbarCurrentVariant; rounded: boolean } | null>(null);
+
 /** True for the links drawn in the menu panel, which close it when chosen. */
 export const NavbarPanelContext = createContext(false);
 

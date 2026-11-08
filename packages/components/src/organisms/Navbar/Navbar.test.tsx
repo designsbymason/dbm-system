@@ -1435,10 +1435,11 @@ describe("Navbar.Row", () => {
     await user.tab();
   });
 
-  it("warns, once per problem, about two sets of links with the same name, a scroll-away row after one that sticks, and loose parts beside rows", () => {
+  it("warns, once per problem, about two sets of links with the same name, a scroll-away row between rows that stick, and loose parts beside rows", () => {
+    vi.stubGlobal("IntersectionObserver", class { observe() {} unobserve() {} disconnect() {} takeRecords() { return []; } });
     const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
     render(
-      <Navbar>
+      <Navbar sticky>
         <Navbar.Brand href="/">loose</Navbar.Brand>
         <Navbar.Row>
           <Navbar.Links>
@@ -1450,12 +1451,18 @@ describe("Navbar.Row", () => {
             <Navbar.Link href="/b">B</Navbar.Link>
           </Navbar.Links>
         </Navbar.Row>
+        <Navbar.Row>
+          <Navbar.Links aria-label="Third">
+            <Navbar.Link href="/c">C</Navbar.Link>
+          </Navbar.Links>
+        </Navbar.Row>
       </Navbar>,
     );
     const messages = warn.mock.calls.map((call) => String(call[0]));
     expect(messages.some((message) => message.includes("same name"))).toBe(true);
-    expect(messages.some((message) => message.includes("follows one that sticks"))).toBe(true);
+    expect(messages.some((message) => message.includes("sits between rows that stick"))).toBe(true);
     expect(messages.some((message) => message.includes("mixed with"))).toBe(true);
+    vi.stubGlobal("IntersectionObserver", undefined);
   });
 
   it("has no axe violations with rows, or with the panel open", async () => {
@@ -1995,5 +2002,170 @@ describe("Navbar columns", () => {
       </Navbar>,
     );
     expect(document.querySelector('[aria-current="page"]')).toBeNull();
+  });
+});
+
+// A second row of links: a set that scrolls (`scroll`), a look of its own for a set, and a row at the end that scrolls away (ADR-0187).
+describe("a second row of links", () => {
+  const stubObserver = () => vi.stubGlobal("IntersectionObserver", class { observe() {} unobserve() {} disconnect() {} takeRecords() { return []; } });
+
+  function WithSections(props: Partial<React.ComponentProps<typeof Navbar>> & { scroll?: boolean; sectionsProps?: Partial<React.ComponentProps<typeof Navbar.Links>> }) {
+    const { scroll = true, sectionsProps, ...bar } = props;
+    return (
+      <Navbar {...bar}>
+        <Navbar.Row>
+          <Navbar.Brand href="/">Acme</Navbar.Brand>
+          <Navbar.Links aria-label="Main">
+            <Navbar.Link href="/a" current>
+              Products
+            </Navbar.Link>
+            <Navbar.Link href="/b">Pricing</Navbar.Link>
+          </Navbar.Links>
+        </Navbar.Row>
+        <Navbar.Row sticky={false} variant="filled" data-testid="second">
+          <Navbar.Links aria-label="Sections" scroll={scroll} {...sectionsProps}>
+            <Navbar.Link href="/s1" current>
+              Overview
+            </Navbar.Link>
+            <Navbar.Link href="/s2">Activity</Navbar.Link>
+          </Navbar.Links>
+        </Navbar.Row>
+      </Navbar>
+    );
+  }
+
+  afterEach(() => vi.stubGlobal("IntersectionObserver", undefined));
+
+  describe("scroll", () => {
+    it("marks the set and its scroller, and leaves a plain set as it was", () => {
+      render(<WithSections />);
+      const sections = screen.getByRole("navigation", { name: "Sections" });
+      expect(sections).toHaveAttribute("data-scroll");
+      expect(sections).toHaveClass(styles.scrollLinks!);
+      expect(sections.querySelector(`.${styles.scroller}`)).not.toBeNull();
+      // The plain set is hidden below the step in jsdom (no media query matches), so it is read by its attribute.
+      const main = document.querySelector<HTMLElement>("nav[aria-label='Main']") as HTMLElement;
+      expect(main).not.toHaveAttribute("data-scroll");
+      expect(main).not.toHaveClass(styles.scrollLinks!);
+      expect(main.querySelector(`.${styles.scroller}`)).toBeNull();
+    });
+
+    it("is not copied into the menu panel, which holds the plain set's links only", async () => {
+      render(<WithSections defaultMenuOpen />);
+      const dialog = await screen.findByRole("dialog");
+      expect(within(dialog).getByRole("link", { name: "Products" })).toBeInTheDocument();
+      expect(within(dialog).queryByRole("link", { name: "Overview" })).not.toBeInTheDocument();
+      expect(within(dialog).queryByRole("navigation", { name: "Sections" })).not.toBeInTheDocument();
+    });
+
+    it("keeps the same links in the panel for a set that does not scroll", async () => {
+      render(<WithSections defaultMenuOpen scroll={false} />);
+      const dialog = await screen.findByRole("dialog");
+      expect(within(dialog).getByRole("link", { name: "Overview" })).toBeInTheDocument();
+    });
+
+    it("draws no menu button and no panel for a bar whose only links scroll", () => {
+      render(
+        <Navbar>
+          <Navbar.Brand href="/">Acme</Navbar.Brand>
+          <Navbar.Links aria-label="Sections" scroll>
+            <Navbar.Link href="/s1">Overview</Navbar.Link>
+          </Navbar.Links>
+        </Navbar>,
+      );
+      expect(screen.queryByRole("button", { name: "Menu", ...inline })).not.toBeInTheDocument();
+      expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    });
+
+    it("keeps its links as a named list with the current one marked, and has no accessibility violations", async () => {
+      const { container } = render(<WithSections collapseBelow="never" />);
+      const sections = screen.getByRole("navigation", { name: "Sections" });
+      expect(within(sections).getByRole("list")).toBeInTheDocument();
+      expect(within(sections).getByRole("link", { name: "Overview" })).toHaveAttribute("aria-current", "page");
+      expect(await axe(container)).toHaveNoViolations();
+    });
+
+    it("warns, in development, about a group in a scrolling set", () => {
+      const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
+      render(
+        <Navbar>
+          <Navbar.Links aria-label="Sections" scroll>
+            <Navbar.Group label="More">
+              <Navbar.Link href="/x">X</Navbar.Link>
+            </Navbar.Group>
+          </Navbar.Links>
+        </Navbar>,
+      );
+      expect(warn.mock.calls.some((call) => String(call[0]).includes("`Navbar.Group` in `Navbar.Links` with `scroll`"))).toBe(true);
+      warn.mockRestore();
+    });
+  });
+
+  describe("a look of its own for a set", () => {
+    it("marks a set's current link with its own variant and rounds its links, beside the bar's look", () => {
+      render(<WithSections collapseBelow="never" currentVariant="underline" sectionsProps={{ currentVariant: "subtle", rounded: true }} />);
+      const main = within(screen.getByRole("navigation", { name: "Main" })).getByRole("link", { name: "Products" });
+      const sections = within(screen.getByRole("navigation", { name: "Sections" })).getByRole("link", { name: "Overview" });
+      expect(main).toHaveClass(styles.currentUnderline!);
+      expect(main).not.toHaveClass(styles.rounded!);
+      expect(sections).toHaveClass(styles.current!);
+      expect(sections).not.toHaveClass(styles.currentUnderline!);
+      expect(sections).toHaveClass(styles.rounded!);
+    });
+
+    it("takes the bar's look when it sets none", () => {
+      render(<WithSections collapseBelow="never" currentVariant="solid" rounded />);
+      const sections = within(screen.getByRole("navigation", { name: "Sections" })).getByRole("link", { name: "Overview" });
+      expect(sections).toHaveClass(styles.currentSolid!);
+      expect(sections).toHaveClass(styles.rounded!);
+    });
+
+    it("leaves the menu panel's copy of a set with the bar's look", async () => {
+      render(<WithSections defaultMenuOpen scroll={false} currentVariant="underline" sectionsProps={{ currentVariant: "solid", rounded: true }} />);
+      const dialog = await screen.findByRole("dialog");
+      const copy = within(dialog).getByRole("link", { name: "Overview" });
+      expect(copy).not.toHaveClass(styles.currentSolid!);
+      expect(copy).not.toHaveClass(styles.rounded!);
+    });
+  });
+
+  describe("a row at the end that scrolls away", () => {
+    it("is drawn after the header, outside the banner, in a wrapper of its own, with one banner on the page", () => {
+      stubObserver();
+      render(<WithSections sticky />);
+      expect(screen.getAllByRole("banner")).toHaveLength(1);
+      const banner = screen.getByRole("banner");
+      const second = screen.getByTestId("second");
+      expect(banner.contains(second)).toBe(false);
+      const wrapper = second.closest("[data-navbar-trailing]") as HTMLElement;
+      expect(wrapper).not.toBeNull();
+      expect(wrapper.previousElementSibling).toBe(banner.closest("[data-stuck], header") ?? banner);
+      expect(banner).toHaveTextContent("Acme");
+      expect(banner).not.toHaveTextContent("Overview");
+    });
+
+    it("keeps the wrapper in the bar's collapse step and direction", () => {
+      stubObserver();
+      render(<WithSections sticky collapseBelow="lg" dir="rtl" />);
+      const wrapper = screen.getByTestId("second").closest("[data-navbar-trailing]") as HTMLElement;
+      expect(wrapper).toHaveClass(styles.collapseLg!);
+      expect(wrapper).toHaveAttribute("dir", "rtl");
+    });
+
+    it("stays in the header when the bar does not stick, since the whole bar scrolls then", () => {
+      render(<WithSections />);
+      expect(screen.getByRole("banner").contains(screen.getByTestId("second"))).toBe(true);
+      expect(document.querySelector("[data-navbar-trailing]")).toBeNull();
+    });
+
+    it("puts the bar's className, style, ref and data-testid on the header alone", () => {
+      stubObserver();
+      const ref = createRef<HTMLElement>();
+      render(<WithSections sticky ref={ref} className="bar" data-testid="bar" />);
+      expect(ref.current?.tagName).toBe("HEADER");
+      expect(screen.getByTestId("bar")).toBe(ref.current);
+      expect(screen.getByTestId("bar")).toHaveClass("bar");
+      expect(document.querySelector("[data-navbar-trailing]")).not.toHaveClass("bar");
+    });
   });
 });

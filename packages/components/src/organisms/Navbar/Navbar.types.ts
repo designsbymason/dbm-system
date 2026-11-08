@@ -244,9 +244,11 @@ export interface NavbarRowProps extends HTMLAttributes<HTMLDivElement> {
    */
   columnsBelow?: Exclude<Breakpoint, "base">;
   /**
-   * Whether the row sticks with the bar (when the bar is `sticky`). Set it to `false` for a courtesy strip that should scroll away
-   * while the rest stays. Only leading rows can scroll away (a row that sticks can't have one above it that doesn't: the bar
-   * sticks as one), so a `false` after a sticking row warns in development and sticks anyway.
+   * Whether the row sticks with the bar (when the bar is `sticky`). Set it to `false` for a courtesy strip at the start, or a
+   * second row of links at the end, that should scroll away while the rest stays. A row at the end is drawn after the bar's
+   * `<header>`, outside the banner landmark (its `<nav>` is a landmark of its own), so the header sticks on its own. Only rows at the
+   * start or the end can scroll away (the bar sticks as one box around the rows between), so a `false` between rows that stick
+   * warns in development and sticks anyway.
    * @default true
    */
   sticky?: boolean;
@@ -362,6 +364,22 @@ export interface NavbarLinksProps extends Omit<ComponentPropsWithoutRef<"nav">, 
    * @default false
    */
   quiet?: boolean;
+  /**
+   * Keeps this set in the bar at every width, for a second row of links (the sections of a project, the categories of a shop) that should
+   * not hide behind the menu button. It is not copied into the menu panel, a row holding only such sets is not removed below
+   * `collapseBelow`, and a bar with only such sets draws no menu button. When the links do not fit the set scrolls sideways (with no
+   * scrollbar), fades at the edge that has more, and scrolls the current link into view when it changes; `align` still centres it while
+   * everything fits. Put only `Navbar.Link`s in it: a floating list would be cut by the scroller, so a `Navbar.Group` warns.
+   * @default false
+   */
+  scroll?: boolean;
+  /**
+   * How this set marks the current page, in place of the bar's `currentVariant` — so a bar can underline its main links and draw a second
+   * row as pills. The menu panel keeps the bar's. See {@link NavbarCurrentVariant}.
+   */
+  currentVariant?: NavbarCurrentVariant;
+  /** Whether this set's links are pills, in place of the bar's `rounded`. The menu panel keeps the bar's. */
+  rounded?: boolean;
   /** This set's link size, in place of its row's and the bar's `linkSize` — see {@link NavbarProps.linkSize}. */
   linkSize?: NavbarLinkSize;
   /**

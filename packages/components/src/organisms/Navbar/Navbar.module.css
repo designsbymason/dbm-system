@@ -685,6 +685,79 @@ a.brand:focus-visible,
   display: flex;
 }
 
+/* --- `scroll`: a set that stays in the bar at every width and scrolls sideways when it does not fit --- */
+/* The nav is the box that holds the edge fades; the scroller inside it is the box that scrolls, with no scrollbar drawn (the fades, and the touch
+   of the reader, say there is more). Centred while everything fits by the nav's own auto margins (`align`), and scrolling from the start when it
+   does not, since an auto margin takes no room once the content overflows. */
+.scrollLinks {
+  /* How wide the fade is at an edge that has more links beyond it, and the room the current link is kept clear of it. */
+  --navbar-scroll-fade: var(--dbm-space-8);
+
+  position: relative;
+  flex: 0 1 auto;
+}
+
+.scroller {
+  min-inline-size: 0;
+  overflow-x: auto;
+  scroll-padding-inline: var(--navbar-scroll-fade);
+  scrollbar-width: none;
+}
+
+.scroller::-webkit-scrollbar {
+  display: none;
+}
+
+/* The fades: drawn over the edge that has links beyond it, on the bar's surface, and never in the way of a click. */
+.scrollLinks::before,
+.scrollLinks::after {
+  content: "";
+  position: absolute;
+  inset-block: 0;
+  z-index: 1;
+  inline-size: var(--navbar-scroll-fade);
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity var(--dbm-motion-duration-fast) var(--dbm-motion-easing-standard);
+}
+
+.scrollLinks::before {
+  inset-inline-start: 0;
+  background: linear-gradient(to right, var(--dbm-bg-surface), transparent);
+}
+
+.scrollLinks::after {
+  inset-inline-end: 0;
+  background: linear-gradient(to left, var(--dbm-bg-surface), transparent);
+}
+
+[dir="rtl"] .scrollLinks::before {
+  background: linear-gradient(to left, var(--dbm-bg-surface), transparent);
+}
+
+[dir="rtl"] .scrollLinks::after {
+  background: linear-gradient(to right, var(--dbm-bg-surface), transparent);
+}
+
+.scrollLinks[data-overflow-start]::before,
+.scrollLinks[data-overflow-end]::after {
+  opacity: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .scrollLinks::before,
+  .scrollLinks::after {
+    transition: none;
+  }
+}
+
+@media print {
+  .scrollLinks::before,
+  .scrollLinks::after {
+    display: none !important;
+  }
+}
+
 .link {
   display: inline-flex;
   align-items: center;
@@ -971,12 +1044,12 @@ a.brand:focus-visible,
    Below the step the links are out of the bar (and out of the accessibility tree) and the menu button shows; at and above it
    the reverse. Media queries can't read a custom property, so each width is the literal value of the matching breakpoint
    token (sm 640px, md 768px, lg 1024px, xl 1280px, 2xl 1536px, 3xl 1920px, in rem), as `Drawer` and `Stack` write them. */
-.collapseSm .links,
-.collapseMd .links,
-.collapseLg .links,
-.collapseXl .links,
-.collapse2xl .links,
-.collapse3xl .links {
+.collapseSm .links:not(.scrollLinks),
+.collapseMd .links:not(.scrollLinks),
+.collapseLg .links:not(.scrollLinks),
+.collapseXl .links:not(.scrollLinks),
+.collapse2xl .links:not(.scrollLinks),
+.collapse3xl .links:not(.scrollLinks) {
   display: none;
 }
 
@@ -988,43 +1061,43 @@ a.brand:focus-visible,
    below the collapse step the row goes with them instead of staying as an empty band. A row with anything else in it (a brand, a field, a button,
    the menu button) stays, and so does a row whose groups (`columns`) hold anything but links. (`:has()` can't hold another `:has()`, so this is `:not(:has())`: a row with no child that isn't the links.) Each step is the complement of its collapse width, as the media queries below are its own. */
 @media not all and (min-width: 40rem) {
-  .collapseSm .row:not(:has(> .inner > :not(.links):not(.column))):not(:has(> .inner > .column > :not(.links))) {
+  .collapseSm .row:not(:has(> .inner > :not(.links:not(.scrollLinks)):not(.column))):not(:has(> .inner > .column > :not(.links:not(.scrollLinks)))) {
     display: none;
   }
 }
 
 @media not all and (min-width: 48rem) {
-  .collapseMd .row:not(:has(> .inner > :not(.links):not(.column))):not(:has(> .inner > .column > :not(.links))) {
+  .collapseMd .row:not(:has(> .inner > :not(.links:not(.scrollLinks)):not(.column))):not(:has(> .inner > .column > :not(.links:not(.scrollLinks)))) {
     display: none;
   }
 }
 
 @media not all and (min-width: 64rem) {
-  .collapseLg .row:not(:has(> .inner > :not(.links):not(.column))):not(:has(> .inner > .column > :not(.links))) {
+  .collapseLg .row:not(:has(> .inner > :not(.links:not(.scrollLinks)):not(.column))):not(:has(> .inner > .column > :not(.links:not(.scrollLinks)))) {
     display: none;
   }
 }
 
 @media not all and (min-width: 80rem) {
-  .collapseXl .row:not(:has(> .inner > :not(.links):not(.column))):not(:has(> .inner > .column > :not(.links))) {
+  .collapseXl .row:not(:has(> .inner > :not(.links:not(.scrollLinks)):not(.column))):not(:has(> .inner > .column > :not(.links:not(.scrollLinks)))) {
     display: none;
   }
 }
 
 @media not all and (min-width: 96rem) {
-  .collapse2xl .row:not(:has(> .inner > :not(.links):not(.column))):not(:has(> .inner > .column > :not(.links))) {
+  .collapse2xl .row:not(:has(> .inner > :not(.links:not(.scrollLinks)):not(.column))):not(:has(> .inner > .column > :not(.links:not(.scrollLinks)))) {
     display: none;
   }
 }
 
 @media not all and (min-width: 120rem) {
-  .collapse3xl .row:not(:has(> .inner > :not(.links):not(.column))):not(:has(> .inner > .column > :not(.links))) {
+  .collapse3xl .row:not(:has(> .inner > :not(.links:not(.scrollLinks)):not(.column))):not(:has(> .inner > .column > :not(.links:not(.scrollLinks)))) {
     display: none;
   }
 }
 
 @media (min-width: 40rem) {
-  .collapseSm .links {
+  .collapseSm .links:not(.scrollLinks) {
     display: block;
   }
 
@@ -1034,7 +1107,7 @@ a.brand:focus-visible,
 }
 
 @media (min-width: 48rem) {
-  .collapseMd .links {
+  .collapseMd .links:not(.scrollLinks) {
     display: block;
   }
 
@@ -1044,7 +1117,7 @@ a.brand:focus-visible,
 }
 
 @media (min-width: 64rem) {
-  .collapseLg .links {
+  .collapseLg .links:not(.scrollLinks) {
     display: block;
   }
 
@@ -1054,7 +1127,7 @@ a.brand:focus-visible,
 }
 
 @media (min-width: 80rem) {
-  .collapseXl .links {
+  .collapseXl .links:not(.scrollLinks) {
     display: block;
   }
 
@@ -1064,7 +1137,7 @@ a.brand:focus-visible,
 }
 
 @media (min-width: 96rem) {
-  .collapse2xl .links {
+  .collapse2xl .links:not(.scrollLinks) {
     display: block;
   }
 

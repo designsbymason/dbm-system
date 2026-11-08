@@ -1,5 +1,5 @@
 import { ArrowSquareOutIcon, CaretDownIcon, ListIcon } from "@dbm-system/icons";
-import { cx, mergeDefined, mergeRefs } from "@dbm-system/utils";
+import { cx, mergeDefined, mergeRefs, useScrollEdges } from "@dbm-system/utils";
 import { Slot } from "@radix-ui/react-slot";
 import { cloneElement, forwardRef, isValidElement, useCallback, useContext, useEffect, useId, useMemo, useRef, useState } from "react";
 import type { CSSProperties, MouseEvent, ReactElement } from "react";
@@ -19,6 +19,7 @@ import { childrenOf, flattenParts } from "./collectParts";
 import {
   NavbarContext,
   NavbarLinkSizeContext,
+  NavbarLinksLookContext,
   NavbarMenuContext,
   NavbarPanelContext,
   NavbarRowContext,
@@ -36,6 +37,7 @@ import { NavbarRow } from "./NavbarRow";
 import { NavbarSearch } from "./NavbarSearch";
 import { useHideOnScroll } from "./useHideOnScroll";
 import { useLeadingRowsHeight, useScrolledPast } from "./useLeadingRows";
+import { useRevealCurrent } from "./useRevealCurrent";
 import type {
   NavbarActionProps,
   NavbarActionsProps,
@@ -230,7 +232,8 @@ const NavbarRoot = forwardRef<HTMLElement, NavbarProps>(
     const hasRows = rows.length > 0;
     const everyPart = [...children_, ...rows.flatMap((row) => flattenParts(childrenOf(row)))];
     const linksParts = everyPart.filter((part) => part.type === NavbarLinks);
-    const hasLinks = linksParts.length > 0;
+    // A set that scrolls (`scroll`) stays in the bar, so it neither fills the menu panel nor calls for the menu button.
+    const hasLinks = linksParts.some((part) => !(part.props as { scroll?: boolean }).scroll);
     const hasMenuButton = everyPart.some((part) => part.type === NavbarMenuButton);
     const hasPanelActions = everyPart.some((part) => part.type === NavbarPanelActions);
     const showAutomaticMenuButton = hasLinks && !hasMenuButton && collapseBelow !== "never";
@@ -242,6 +245,11 @@ const NavbarRoot = forwardRef<HTMLElement, NavbarProps>(
     let leadingCount = 0;
     while (leadingCount < rows.length && (rows[leadingCount]?.props as { sticky?: boolean }).sticky === false) leadingCount += 1;
     const hasLeading = sticky && leadingCount > 0;
+    // The rows at the end that scroll away are drawn after the `<header>`, as its siblings, so the header can stick on its own and they leave under
+    // it (a sticky box sticks within its parent, which is as tall as its rows). Only a sticky bar has any: a bar that does not stick scrolls whole.
+    let trailingStart = rows.length;
+    while (sticky && trailingStart > leadingCount && (rows[trailingStart - 1]?.props as { sticky?: boolean }).sticky === false) trailingStart -= 1;
+    const trailingRows = sticky ? rows.slice(trailingStart) : [];
     const leadingHeight = useLeadingRowsHeight(hasLeading, barRef, leadingCount);
     const pastLeading = useScrolledPast(leadingHeight, scrollContainerRef);
     const awayFromView = useHideOnScroll(sticky && hideOnScroll, barRef, scrollContainerRef);
@@ -254,8 +262,8 @@ const NavbarRoot = forwardRef<HTMLElement, NavbarProps>(
       if (hasRows && children_.some((child) => child.type !== NavbarRow && child.type !== NavbarSkipLink && child.type !== NavbarPanelActions)) {
         console.warn("Navbar: parts are mixed with `Navbar.Row`s. Put every part in a row (only the skip link and the panel actions go beside them); the loose ones are drawn above the rows.");
       }
-      if (rows.slice(leadingCount).some((row) => (row.props as { sticky?: boolean }).sticky === false)) {
-        console.warn("Navbar: a `Navbar.Row` with `sticky={false}` follows one that sticks. Only leading rows can scroll away, so it sticks.");
+      if (sticky && rows.slice(leadingCount, trailingStart).some((row) => (row.props as { sticky?: boolean }).sticky === false)) {
+        console.warn("Navbar: a `Navbar.Row` with `sticky={false}` sits between rows that stick. Only the rows at the start or the end of the bar can scroll away, so it sticks.");
       }
       const names = linksParts
         .filter((part) => (part.props as { "aria-labelledby"?: string })["aria-labelledby"] === undefined)
@@ -354,7 +362,9 @@ const NavbarRoot = forwardRef<HTMLElement, NavbarProps>(
         style={headerStyle}
       >
         {hasRows
-          ? children_.map((child, position) =>
+          ? children_
+              .filter((child) => !trailingRows.includes(child))
+              .map((child, position) =>
               child.type === NavbarRow ? (
                 <NavbarRowIndexContext.Provider key={child.key ?? position} value={rows.indexOf(child)}>
                   {child}
@@ -380,6 +390,15 @@ const NavbarRoot = forwardRef<HTMLElement, NavbarProps>(
             </Affix>
           ) : (
             header
+          )}
+          {trailingRows.length > 0 && (
+            <div dir={dir} className={cx(styles.root, collapseClass[collapseBelow])} data-navbar-trailing="">
+              {trailingRows.map((row) => (
+                <NavbarRowIndexContext.Provider key={row.key ?? rows.indexOf(row)} value={rows.indexOf(row)}>
+                  {row}
+                </NavbarRowIndexContext.Provider>
+              ))}
+            </div>
           )}
           {hasLinks && (
             <Drawer.Content
@@ -431,26 +450,84 @@ NavbarBrand.displayName = "Navbar.Brand";
 /**
  * The primary navigation: a `<nav>` holding a list of `Navbar.Link`s. Drawn in the bar at and above the `collapseBelow`
  * width, and, below it, as the body of the menu panel the menu button opens. Its children are drawn in both places.
+ *
+ * With `scroll` it is a second row of links that stays in the bar at every width instead: not copied into the panel, scrolling
+ * sideways with edge fades when it does not fit, the current link scrolled into view. `currentVariant` and `rounded` give a set a
+ * look of its own beside the bar's.
  */
 const NavbarLinks = forwardRef<HTMLElement, NavbarLinksProps>(
-  ({ children, className, align = "start", quiet = false, linkSize: ownLinkSize, column: _column, "aria-label": ariaLabel, "aria-labelledby": ariaLabelledBy, ...props }, ref) => {
-    const { labels, panelBody, panelQuietBody, size: barSize, linkSize: barLinkSize, currentVariant, rounded, dir, closeMenu, closeMenuOnNavigate } =
-      useNavbarContext("Navbar.Links");
+  (
+    {
+      children,
+      className,
+      align = "start",
+      quiet = false,
+      scroll = false,
+      linkSize: ownLinkSize,
+      currentVariant: ownCurrentVariant,
+      rounded: ownRounded,
+      column: _column,
+      "aria-label": ariaLabel,
+      "aria-labelledby": ariaLabelledBy,
+      ...props
+    },
+    ref,
+  ) => {
+    const {
+      labels,
+      panelBody,
+      panelQuietBody,
+      size: barSize,
+      linkSize: barLinkSize,
+      currentVariant: barCurrentVariant,
+      rounded: barRounded,
+      dir,
+      closeMenu,
+      closeMenuOnNavigate,
+    } = useNavbarContext("Navbar.Links");
     const row = useContext(NavbarRowContext);
+    // The look this set marks its links with: its own, else the bar's. The menu panel's copy keeps the bar's.
+    const currentVariant = ownCurrentVariant ?? barCurrentVariant;
+    const rounded = ownRounded ?? barRounded;
+    const look = useMemo(() => ({ currentVariant, rounded }), [currentVariant, rounded]);
     // The size a set reads: its own, else its row's, else the bar's; none of them set, it follows the row's height step. A `quiet` set
     // reads one step below that.
     const explicit = ownLinkSize ?? row?.linkSize ?? barLinkSize;
     const baseLinkSize = explicit ?? defaultLinkSize[row?.size ?? barSize];
     const resolvedLinkSize = quiet ? stepDown(baseLinkSize) : baseLinkSize;
     const linkSizeValue = useMemo(() => ({ size: resolvedLinkSize, explicit: explicit !== undefined }), [resolvedLinkSize, explicit]);
-    const panelTarget = quiet ? panelQuietBody : panelBody;
+    // A set that scrolls stays in the bar, so it puts no copy into the menu panel.
+    const panelTarget = scroll ? null : quiet ? panelQuietBody : panelBody;
     const name = ariaLabelledBy === undefined ? (ariaLabel ?? labels.navigation) : ariaLabel;
     // A `NavigationMenu` among the links follows the bar (its look, its direction) and is stacked in the menu panel, where a click on
     // one of its links closes the panel.
     const barEmbed = useMemo(() => ({ currentVariant, rounded, dir, inPanel: false, closePanel: null }), [currentVariant, rounded, dir]);
     const panelEmbed = useMemo(
-      () => ({ currentVariant, rounded, dir, inPanel: true, closePanel: closeMenuOnNavigate ? closeMenu : null }),
-      [currentVariant, rounded, dir, closeMenuOnNavigate, closeMenu],
+      () => ({ currentVariant: barCurrentVariant, rounded: barRounded, dir, inPanel: true, closePanel: closeMenuOnNavigate ? closeMenu : null }),
+      [barCurrentVariant, barRounded, dir, closeMenuOnNavigate, closeMenu],
+    );
+
+    const scrollerRef = useRef<HTMLDivElement | null>(null);
+    const { overflowStart, overflowEnd } = useScrollEdges(scrollerRef, "horizontal", { itemSelector: "a", enabled: scroll });
+    useRevealCurrent(scrollerRef, scroll);
+
+    useEffect(() => {
+      if (process.env.NODE_ENV === "production" || !scroll) return;
+      if (flattenParts(children).some((part) => part.type === NavbarGroup)) {
+        console.warn("Navbar: a `Navbar.Group` in `Navbar.Links` with `scroll`. A floating list would be cut by the scroller, so put only `Navbar.Link`s in it.");
+      }
+    });
+
+    const list = (
+      // `role="list"` and `role="listitem"` are redundant on paper; Safari with VoiceOver drops list semantics under `list-style: none`.
+      // eslint-disable-next-line jsx-a11y/no-redundant-roles
+      <ul role="list" className={styles.list}>
+        <NavbarLinksLookContext.Provider value={look}>
+          <NavbarLinkSizeContext.Provider value={linkSizeValue}>
+            <NavigationEmbedContext.Provider value={barEmbed}>{children}</NavigationEmbedContext.Provider>
+          </NavbarLinkSizeContext.Provider>
+        </NavbarLinksLookContext.Provider>
+      </ul>
     );
 
     return (
@@ -461,15 +538,18 @@ const NavbarLinks = forwardRef<HTMLElement, NavbarLinksProps>(
           aria-label={name}
           aria-labelledby={ariaLabelledBy}
           data-align={align}
-          className={cx(styles.links, quiet && styles.quiet, linkSizeClass[resolvedLinkSize], className)}
+          data-scroll={scroll ? "" : undefined}
+          data-overflow-start={scroll && overflowStart ? "" : undefined}
+          data-overflow-end={scroll && overflowEnd ? "" : undefined}
+          className={cx(styles.links, scroll && styles.scrollLinks, quiet && styles.quiet, linkSizeClass[resolvedLinkSize], className)}
         >
-          {/* `role="list"` and `role="listitem"` are redundant on paper; Safari with VoiceOver drops list semantics under `list-style: none`. */}
-          {/* eslint-disable-next-line jsx-a11y/no-redundant-roles */}
-          <ul role="list" className={styles.list}>
-            <NavbarLinkSizeContext.Provider value={linkSizeValue}>
-              <NavigationEmbedContext.Provider value={barEmbed}>{children}</NavigationEmbedContext.Provider>
-            </NavbarLinkSizeContext.Provider>
-          </ul>
+          {scroll ? (
+            <div ref={scrollerRef} className={styles.scroller}>
+              {list}
+            </div>
+          ) : (
+            list
+          )}
         </nav>
         {/* The menu panel is drawn by the bar, once; each set of links puts its copy into it, in the order they are written. */}
         {panelTarget !== null &&
@@ -516,7 +596,11 @@ const NavbarLink = forwardRef<HTMLAnchorElement, NavbarLinkProps>(
     },
     ref,
   ) => {
-    const { closeMenuOnNavigate, closeMenu, currentVariant, rounded, labels } = useNavbarContext("Navbar.Link");
+    const { closeMenuOnNavigate, closeMenu, currentVariant: barCurrentVariant, rounded: barRounded, labels } = useNavbarContext("Navbar.Link");
+    // The set's own look when it gave itself one (in the bar), else the bar's.
+    const setLook = useContext(NavbarLinksLookContext);
+    const currentVariant = setLook?.currentVariant ?? barCurrentVariant;
+    const rounded = setLook?.rounded ?? barRounded;
     const isExternal = !asChild && (external ?? EXTERNAL_HREF_PATTERN.test(href ?? ""));
     const inPanel = useContext(NavbarPanelContext);
     const closeGroupMenu = useContext(NavbarMenuContext);
@@ -623,7 +707,10 @@ NavbarLink.displayName = "Navbar.Link";
  */
 const NavbarGroup = forwardRef<HTMLButtonElement, NavbarGroupProps>(
   ({ label, current = false, disabled = false, defaultOpen, align = "start", className, children, ...props }, ref) => {
-    const { dir, currentVariant, rounded, menuContainer } = useNavbarContext("Navbar.Group");
+    const { dir, currentVariant: barCurrentVariant, rounded: barRounded, menuContainer } = useNavbarContext("Navbar.Group");
+    const setLook = useContext(NavbarLinksLookContext);
+    const currentVariant = setLook?.currentVariant ?? barCurrentVariant;
+    const rounded = setLook?.rounded ?? barRounded;
     const inPanel = useContext(NavbarPanelContext);
     // The dropdown's items take the link size when one was set; left alone, `Menu`'s own default.
     const linkSize = useContext(NavbarLinkSizeContext);

@@ -26,6 +26,22 @@ const meta: Meta<typeof Navbar.Links> = {
         "A quieter look for secondary links (a courtesy row): smaller text in the secondary colour. The current link is still marked.",
       table: { defaultValue: { summary: "false" } },
     },
+    scroll: {
+      control: "boolean",
+      description:
+        "Keeps the set in the bar at every width, for a second row of links that should not hide behind the menu button: not copied into the menu panel, its row not removed below the collapse width, no menu button for a bar of only such sets. It scrolls sideways when the links do not fit, fades at the edge that has more and scrolls the current link into view. Only Navbar.Link items: a Navbar.Group warns.",
+      table: { defaultValue: { summary: "false" } },
+    },
+    currentVariant: {
+      control: "select",
+      options: ["bar's", "underline", "subtle", "solid"],
+      mapping: { "bar's": undefined },
+      description: "How this set marks the current page, in place of the bar's currentVariant. The menu panel keeps the bar's.",
+    },
+    rounded: {
+      control: "boolean",
+      description: "Whether this set's links are pills, in place of the bar's rounded. The menu panel keeps the bar's.",
+    },
     linkSize: {
       control: "select",
       options: ["auto", "xs", "sm", "md", "lg", "xl"],
