@@ -46,7 +46,8 @@ packages/
                      the `mergeDefined` helper for `labels` props, responsive style
                      helpers, `formatRelativeTime`, the `useAnnouncement` live-region hook, the
                      `useWindowedList`, `useSortable`, `useIsScrollable`, `useScrollEdges` and
-                     `useResolvedResponsiveValue` hooks (internal),
+                     `useResolvedResponsiveValue` hooks (internal), the persistent-storage
+                     helpers `usePersistentDismiss` and `useRecentCommands` share (internal),
                      the `usePersistentDismiss` and `useRecentCommands` hooks, token types) — components import
                      Radix UI Primitives directly, not through this package. What a
                      consumer is meant to call (`usePersistentDismiss`, `useRecentCommands`, `formatRelativeTime`, the `Responsive`/
@@ -54,9 +55,9 @@ packages/
                      components package, so one install covers it
   icons/             Phosphor Icons wrapper
   components/        The actual DBM component library (published npm package) — atoms,
-                     molecules and organisms, plus src/templates/ (application shells that
-                     ship, such as AppShell; page-level templates are story-only examples,
-                     ADR-0179). Also holds its own .storybook/ config, src/foundations/
+                     molecules and organisms, plus src/templates/ (shells that ship,
+                     AppShell and PageShell; page-level templates are story-only
+                     examples, ADR-0179). Shared internals live in src/internal/. Also holds its own .storybook/ config, src/foundations/
                      (Storybook-only token reference pages) and src/guides/ (the Getting
                      started page and guide pages); neither is shipped in the package)
   manifest/          Build tool: generates the JSON component manifest from TS + JSDoc
@@ -92,7 +93,7 @@ Full rationale for each choice: `guidelines/02-tech-stack-and-structure.md`.
 
 To start a session, run `/start [task]` (`.claude/commands/start.md`): with no task it gives a general picture of where the project stands (phase, what is in flight, what is next, flakes and open decisions); with a task it reads only the guidelines that task needs. Either way it verifies against the repo with `pnpm check-guidelines` and reports before any work.
 
-Other project commands, in `.claude/commands/`: `/plan-component <Name>` (propose scope, API and tokens; writes nothing), `/review-component <Name>` (the §9 review as a prioritized list; no edits), `/plan-template <Name>` and `/review-template <Name>` (the same two for a template, a shell or a page), `/refresh-deps` (the §3.2 dependency pass as a plan), and `/after-push` (classify the push, watch CI if it contained code, report per job).
+Other project commands, in `.claude/commands/`: `/plan-component <Name>` (propose scope, API and tokens; writes nothing), `/review-component <Name>` (the §9 review as a prioritized list; no edits), `/plan-template <Name>` and `/review-template <Name>` (the same two for a template, a shell or a page), `/refresh-deps` (the §3.2 dependency pass as a plan), `/verify` (the steps CI runs, one after another, on the working tree; `quick` for lint, guidelines and unit tests; read-only), and `/after-push` (classify the push, watch CI if it contained code, report per job).
 
 ## Component index (planned: auto-synced)
 Once `packages/manifest` exists and generates the JSON component manifest (see `01-vision-and-goals.md`, Phase 10), its build step should also write an up-to-date component index into this file — name, category, tier, and a one-line summary per shipped component, regenerated on every release rather than maintained by hand, so agents discover what's actually available instead of guessing or hallucinating a component that doesn't exist.

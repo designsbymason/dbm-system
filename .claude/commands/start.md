@@ -21,7 +21,7 @@ CLAUDE.md and my memory are already loaded; don't re-read them. Pick the mode:
    - what the inventory and the roadmap say comes next;
    - known flakes, accepted advisories and open decisions that could affect the next task (from my memory index and the guidelines);
    - anything `check-guidelines` or the git state flagged;
-   - the commands that fit the likely next steps: `/plan-component`, `/review-component`, `/plan-template`, `/review-template`, `/refresh-deps`, `/after-push`.
+   - the commands that fit the likely next steps: `/plan-component`, `/review-component`, `/plan-template`, `/review-template`, `/refresh-deps`, `/verify`, `/after-push`.
 
 ## Task mode (a task given)
 
@@ -36,6 +36,6 @@ CLAUDE.md and my memory are already loaded; don't re-read them. Pick the mode:
    - what already exists for it, and what the relevant guidelines require;
    - open decisions, known flakes or accepted advisories that could affect it;
    - anything `check-guidelines` or the git state flagged;
-   - the command that fits next, if one does: `/plan-component` or `/plan-template` before building something new, `/review-component` or `/review-template` for a finished one.
+   - the command that fits next, if one does: `/plan-component` or `/plan-template` before building something new, `/review-component` or `/review-template` for a finished one, `/verify` before a commit or a push.
 
 Then wait for my instruction.

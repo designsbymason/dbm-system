@@ -1,6 +1,6 @@
 # DBM System
 
-> **Status: in active development, not yet published.** The component library is substantial — 118 of a planned 118 components are built, and the first page-level template (`AppShell`, the dashboard shell) — but nothing has shipped to npm yet; the API can still change before the first publish.
+> **Status: in active development, not yet published.** The component library is substantial — 118 of a planned 118 components are built, and four page-level templates (two shells that ship, `AppShell` and `PageShell`, and two story-only example pages, a data table list page and a documentation page) — but nothing has shipped to npm yet; the API can still change before the first publish.
 
 An agentic, standalone React component library built for both AI coding agents and human developers to compose web and enterprise applications quickly, consistently, and accessibly. Token-driven, multi-brand, multi-theme (light/dark), and built with a strong TypeScript + JSDoc contract so AI agents can work against a structured, predictable API.
 
