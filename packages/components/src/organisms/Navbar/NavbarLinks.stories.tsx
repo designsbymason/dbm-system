@@ -32,6 +32,12 @@ const meta: Meta<typeof Navbar.Links> = {
         "Keeps the set in the bar at every width, for a second row of links that should not hide behind the menu button: not copied into the menu panel, its row not removed below the collapse width, no menu button for a bar of only such sets. It scrolls sideways when the links do not fit, fades at the edge that has more and scrolls the current link into view. Only Navbar.Link items: a Navbar.Group warns.",
       table: { defaultValue: { summary: "false" } },
     },
+    hideBelow: {
+      control: "select",
+      options: ["", "sm", "md", "lg", "xl", "2xl", "3xl"],
+      description:
+        "Hides this set from the bar below a width, because the links are offered somewhere else on a phone (a sidebar's menu panel, say). It hides the bar's copy only: the menu panel below collapseBelow still offers them, so set collapseBelow to never on a bar that hides its links.",
+    },
     currentVariant: {
       control: "select",
       options: ["bar's", "underline", "subtle", "solid"],

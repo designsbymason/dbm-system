@@ -1161,6 +1161,42 @@ describe("Navbar.Links align", () => {
   });
 });
 
+describe("Navbar.Links hideBelow", () => {
+  function Hidden(props: { hideBelow?: "lg"; collapseBelow?: "never" | "md" }) {
+    return (
+      <Navbar collapseBelow={props.collapseBelow}>
+        <Navbar.Brand href="/">Acme</Navbar.Brand>
+        <Navbar.Links aria-label="Site" hideBelow={props.hideBelow}>
+          <Navbar.Link href="/products" current>
+            Products
+          </Navbar.Link>
+        </Navbar.Links>
+      </Navbar>
+    );
+  }
+
+  it("marks the bar's copy of the set with the width it leaves the bar at, and a set without it carries no mark", () => {
+    const { rerender } = render(<Hidden collapseBelow="never" />);
+    expect(screen.getByRole("navigation", { name: "Site" })).not.toHaveAttribute("data-hide-below");
+    rerender(<Hidden hideBelow="lg" collapseBelow="never" />);
+    expect(screen.getByRole("navigation", { name: "Site" })).toHaveAttribute("data-hide-below", "lg");
+  });
+
+  it("draws no menu button of its own when the bar never collapses, so a page can keep one menu button", () => {
+    render(<Hidden hideBelow="lg" collapseBelow="never" />);
+    expect(screen.queryByRole("button", { name: "Menu" })).not.toBeInTheDocument();
+  });
+
+  it("leaves the menu panel's copy alone: the panel still offers the links", async () => {
+    const user = userEvent.setup();
+    render(<Hidden hideBelow="lg" collapseBelow="md" />);
+    await user.click(screen.getByRole("button", { name: "Menu" }));
+    const panel = await screen.findByRole("dialog");
+    expect(within(panel).getByRole("link", { name: "Products" })).toBeInTheDocument();
+    expect(panel.querySelector("[data-hide-below]")).toBeNull();
+  });
+});
+
 describe("Navbar hideOnScroll", () => {
   function scrollTo(y: number) {
     Object.defineProperty(window, "scrollY", { value: y, configurable: true });

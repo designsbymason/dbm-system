@@ -67,7 +67,7 @@ export const playgroundOrder = [
 export const brandPropOrder = ["children", "href", "asChild", "column", "aria-label", "id", "className", "style", "data-testid"];
 export const rowPropOrder = ["children", "variant", "size", "linkSize", "contained", "columns", "columnsBelow", "sticky", "id", "className", "style", "data-testid"];
 export const searchPropOrder = ["value", "collapseBelow", "size", "buttonVariant", "buttonTone", "buttonSize", "closeOnSubmit", "column", "aria-label", "id", "className", "style", "data-testid"];
-export const linksPropOrder = ["children", "align", "quiet", "scroll", "currentVariant", "rounded", "linkSize", "column", "aria-label", "aria-labelledby", "id", "className", "style", "data-testid"];
+export const linksPropOrder = ["children", "align", "quiet", "scroll", "hideBelow", "currentVariant", "rounded", "linkSize", "column", "aria-label", "aria-labelledby", "id", "className", "style", "data-testid"];
 export const linkPropOrder = ["children", "href", "icon", "badge", "external", "current", "disabled", "asChild", "aria-label", "id", "className", "style", "data-testid"];
 export const groupPropOrder = ["label", "children", "current", "defaultOpen", "disabled", "align", "aria-label", "id", "className", "style", "data-testid"];
 export const actionPropOrder = ["hideBelow", "children", "id", "className", "style", "data-testid"];
@@ -475,6 +475,8 @@ This story is shown at a phone's width when opened on its own; on this page, nar
 <div className="dbm-do-dont-grid">
 <Callout tone="success" title="Do">
 
+- When a page offers the same links somewhere else on a phone (in a `Sidebar`'s menu panel, say), hide the set with `hideBelow` and set the bar's
+  `collapseBelow` to `"never"`: the bar then has no menu button of its own, and the page keeps one.
 - Use one `Navbar` per page, at the top, for the links a person needs on every screen.
 - Keep the primary links few (five or six) and put the rest in a `Menu` or a footer.
 - Mark the current page with `current`, from your router, so it is right on a server-rendered page.

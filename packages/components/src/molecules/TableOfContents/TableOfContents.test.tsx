@@ -1346,3 +1346,73 @@ describe("TableOfContents — server rendering and hydration", () => {
     container.remove();
   });
 });
+
+describe('TableOfContents layout="row"', () => {
+  const nested: TableOfContentsItem[] = [
+    { id: "intro", label: "Intro" },
+    { id: "setup", label: "Setup", level: 2 },
+    { id: "deep", label: "Deep", level: 3 },
+    { id: "usage", label: "Usage" },
+  ];
+
+  it("draws a pill link for each top-level entry only, and a named button beside the one with entries inside it", () => {
+    render(<TableOfContents layout="row" items={nested} />);
+    const nav = screen.getByRole("navigation", { name: "Table of contents" });
+    expect(within(nav).getAllByRole("link").map((link) => link.textContent)).toEqual(["Intro", "Usage"]);
+    expect(within(nav).getAllByRole("button").map((button) => button.getAttribute("aria-label"))).toEqual(["Subsections of Intro"]);
+    expect(within(nav).queryByText("On this page")).not.toBeInTheDocument();
+  });
+
+  it("opens the entries inside a pill in a panel, in order, with the current one marked as a location, and closes it when one is chosen", async () => {
+    const user = userEvent.setup();
+    render(
+      <>
+        <TableOfContents layout="row" items={nested} activeId="deep" />
+        <h2 id="intro">Intro</h2>
+        <h3 id="setup">Setup</h3>
+        <h3 id="deep">Deep</h3>
+      </>,
+    );
+    const caret = screen.getByRole("button", { name: "Subsections of Intro" });
+    await user.click(caret);
+    await waitFor(() => expect(caret).toHaveAttribute("aria-expanded", "true"));
+    const setup = await screen.findByRole("link", { name: "Setup" });
+    const deep = screen.getByRole("link", { name: "Deep" });
+    expect(setup.compareDocumentPosition(deep) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(deep).toHaveAttribute("aria-current", "location");
+    expect(setup).not.toHaveAttribute("aria-current");
+    await user.click(setup);
+    await waitFor(() => expect(caret).toHaveAttribute("aria-expanded", "false"));
+  });
+
+  it("draws a row at the narrowest width of a width map, and the list from the width that says so", () => {
+    render(<TableOfContents layout={{ base: "row", lg: "list" }} items={nested} />);
+    // jsdom has no media query that matches `lg`, so the first, narrowest layout stands: a row has no title.
+    expect(screen.queryByText("On this page")).not.toBeInTheDocument();
+    expect(screen.getAllByRole("link").map((link) => link.textContent)).toEqual(["Intro", "Usage"]);
+  });
+
+  it("marks the pill that holds the current entry, and puts aria-current only on a link that is the current entry", () => {
+    render(<TableOfContents layout="row" items={nested} activeId="deep" />);
+    const nav = screen.getByRole("navigation", { name: "Table of contents" });
+    const marked = nav.querySelector("[data-toc-marked]");
+    expect(marked).toHaveTextContent("Intro");
+    expect(within(nav).queryByRole("link", { current: "location" })).not.toBeInTheDocument();
+  });
+
+  it("takes a CSS length for stickyOffset and a name of its own", () => {
+    render(<TableOfContents layout="row" sticky stickyOffset="var(--page-shell-header-height, 0px)" aria-label="Contents" items={nested} />);
+    const nav = screen.getByRole("navigation", { name: "Contents" });
+    expect(nav.style.getPropertyValue("--toc-sticky-top")).toBe("var(--page-shell-header-height, 0px)");
+  });
+
+  it("has no accessibility violations", async () => {
+    const { container } = render(<TableOfContents layout="row" items={nested} />);
+    expect(await axe(container)).toHaveNoViolations();
+  });
+
+  it("is left alone as a list: a row's props do not change the default layout", () => {
+    render(<TableOfContents items={nested} />);
+    expect(screen.getAllByRole("link")).toHaveLength(4);
+  });
+});

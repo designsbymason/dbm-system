@@ -1,5 +1,5 @@
 import type { Icon as PhosphorIcon } from "@dbm-system/icons";
-import type { SpaceValue } from "@dbm-system/utils";
+import type { Responsive, SpaceValue } from "@dbm-system/utils";
 import type { ComponentPropsWithoutRef, CSSProperties, ReactNode, RefObject } from "react";
 
 /**
@@ -65,6 +65,17 @@ export type TableOfContentsCollapse = "never" | "auto" | "always";
  *   for a bar that stays in view on a phone.
  */
 export type TableOfContentsFoldedStyle = "inline" | "dropdown";
+
+/**
+ * How the outline is laid out.
+ *
+ * - `"list"` (the default) — a vertical list of links, as a column beside the page.
+ * - `"row"` — one line of pills, drawn by `NavigationMenu`, one for each top-level entry. An entry with deeper entries after it is a
+ *   split pill: its link and a caret that opens a panel holding them. The row scrolls sideways when it is too long (the ends fade
+ *   out), keeps the pill that holds the current entry in view and, with `sticky`, sticks under the page's header. It has no title,
+ *   does not fold, and ignores `tone` and `collapse`.
+ */
+export type TableOfContentsLayout = "list" | "row";
 
 /**
  * The text `TableOfContents` supplies itself, translatable through the `labels` prop (`ADR-0021`).
@@ -152,7 +163,8 @@ export interface TableOfContentsProps
   /**
    * Keeps the outline in view while the page scrolls. `true` is always sticky, as a box built on `Affix`; `"folded"`
    * is sticky only while the outline is folded (see `collapse`) — a bar across the top on a phone, a plain sidebar
-   * above it, drawn on the page's surface with a rule below so content passes cleanly beneath. It sticks to the page,
+   * above it, drawn on the page's surface with a rule below so content passes cleanly beneath. With `layout="row"`
+   * either value sticks the row, drawn the same way. It sticks to the page,
    * or to `scrollContainerRef`, and its parent must be as tall as the content it follows. While it is sticky and
    * folded, the headings are kept clear of it automatically (`scrollOffset` need only cover what is *above* it).
    * Distinct from `scrollOffset`, which is about where the *headings* land.
@@ -160,10 +172,11 @@ export interface TableOfContentsProps
    */
   sticky?: boolean | "folded";
   /**
-   * How far from the top a sticky outline sticks, from the spacing token scale — for a page whose own header is also
-   * sticky. Has no effect without `sticky`.
+   * How far from the top a sticky outline sticks — for a page whose own header is also sticky: a step of the spacing
+   * token scale, or, for `sticky="folded"` and `layout="row"`, any CSS length (`"var(--page-shell-header-height, 0px)"`).
+   * `sticky={true}` takes a step only. Has no effect without `sticky`.
    */
-  stickyOffset?: SpaceValue;
+  stickyOffset?: SpaceValue | string;
   /**
    * Whether, when the page loads with `#id` in its address and `id` is one of the entries, the outline scrolls that
    * section to `scrollOffset` and marks it. The browser's own jump ignores a sticky header, and cannot reach a
@@ -172,7 +185,15 @@ export interface TableOfContentsProps
    */
   scrollToHash?: boolean;
   /**
-   * Folds the outline behind an "On this page" button — see {@link TableOfContentsCollapse}.
+   * The outline's layout, a vertical list or a row of pills — see {@link TableOfContentsLayout}. A width map
+   * (`{ base: "row", lg: "list" }`, mobile-first like every responsive prop) draws one outline that changes by screen width: a
+   * row on a phone and a list from `lg`, with one set of entries, one name and nothing to hide. It is resolved in the browser, so a server render is
+   * the narrowest layout.
+   * @default 'list'
+   */
+  layout?: Responsive<TableOfContentsLayout>;
+  /**
+   * Folds the outline behind an "On this page" button — see {@link TableOfContentsCollapse}. Has no effect with `layout="row"`.
    * @default 'never'
    */
   collapse?: TableOfContentsCollapse;

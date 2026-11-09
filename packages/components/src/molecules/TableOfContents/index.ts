@@ -3,6 +3,7 @@ export type {
   TableOfContentsCollapse,
   TableOfContentsFoldedStyle,
   TableOfContentsItem,
+  TableOfContentsLayout,
   TableOfContentsLabels,
   TableOfContentsProps,
   TableOfContentsSize,

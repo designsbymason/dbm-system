@@ -3,7 +3,6 @@ import { Callout, ComponentHeader, PlaygroundControls, ReferenceTable, RelatedCa
 import { BookOpenIcon } from "@dbm-system/icons";
 import { Button } from "../../atoms/Button";
 import { VisuallyHidden } from "../../atoms/VisuallyHidden";
-import { Breadcrumb } from "../../molecules/Breadcrumb";
 import { TableOfContents } from "../../molecules/TableOfContents";
 import { Navbar } from "../../organisms/Navbar";
 import { Sidebar } from "../../organisms/Sidebar";
@@ -15,7 +14,7 @@ import * as DocumentationPageStories from "./DocumentationPage.stories";
 
 <ComponentHeader title="Documentation Page" tier="Template" />
 
-A page of documentation or long-form content: the site's navigation in a column at the start, the page in the middle (a breadcrumb, its head, sections with
+A page of documentation or long-form content: the site's navigation in a column at the start, the page in the middle (its head, sections with
 a code block, a table and a note, and links to the previous and next page) and a table of contents at the end that follows the reader down the page. It is an
 **example page, not a component**. Nothing here is exported from the package: you copy the page into your app and replace the words. What the page shows you is the
 part that is hard to get right: a navigation column and an outline on either side of a `PageShell` page, both sticking under the header, and what each does on
@@ -29,7 +28,7 @@ box 40rem tall; open a story from the sidebar on its own, and narrow the window,
 
 ```tsx
 import {
-  Alert, Breadcrumb, CodeBlock, Container, Heading, Link, Navbar, PageHeader, PageShell, Sidebar, Table, TableOfContents, Text,
+  Alert, CodeBlock, Container, Heading, Link, Navbar, PageHeader, PageShell, Sidebar, Table, TableOfContents, Text,
 } from "@dbm-system/components";
 ```
 
@@ -56,10 +55,12 @@ A page is not a component, so it has no properties table. These are the pieces i
   label="What the page is made of"
   columns={["Where", "What it is and why"]}
   rows={[
-    ["Header", "A sticky `Navbar` whose links are a navigation named \"Main\", and a `Sidebar.MenuButton`, which opens the navigation panel below `lg`. The header is a direct child of `PageShell`, so it sticks by itself."],
+    ["Header", "A sticky `Navbar` that spans the window: the brand at its start (over the navigation column), the links exactly in the middle and the actions at its end. The brand and the actions are as wide as each other above `lg` (the page's stylesheet), so `Navbar.Links align=\"center\"` puts the links in the middle of the window. Below `lg` the links are hidden from the bar (`hideBelow=\"lg\"`) and the bar never collapses (`collapseBelow=\"never\"`), so it draws no menu button of its own. The header is a direct child of `PageShell`, so it sticks by itself."],
+    ["One drawer", "The `Sidebar.MenuButton` in the header is the page's only menu button. Its panel is the `Sidebar`'s phone panel, and the sidebar holds only the section of the current header link (the components), and in the panel a part that reads `useSidebar().inPanel` draws the header's links too: the current one is a `Sidebar.Group` that holds its section, so the drawer is an expandable menu."],
     ["Navigation column", "A `Sidebar` at the start of `PageShell.Body`, with `sticky` and `stickyOffset=\"var(--page-shell-header-height, 0px)\"`: it sticks under the header at the height the shell measured, and takes the rest of the window. Give its `Sidebar.Nav` a name of its own."],
-    ["The page", "`PageShell.Main` holding a `Container size=\"md\"` (a reading width) with a `Breadcrumb`, a `PageHeader`, one `section` per heading, and links to the previous and next page."],
-    ["Outline", "A sticky `PageShell.Aside` with a `TableOfContents`: its entries link to the sections and the current one follows the scroll. `scrollOffset` keeps a section's heading clear of the header."],
+    ["The page", "`PageShell.Main` holding a `Container size=\"md\"` (a reading width) with a `PageHeader`, one `section` per heading, and links to the previous and next page."],
+    ["Outline", "A sticky `PageShell.Aside` with a `TableOfContents`, from `lg`: its entries link to the sections and the current one follows the scroll. `scrollOffset` keeps a section's heading clear of the header."],
+    ["Outline row", "Below `lg`, where the column has no room, a second `TableOfContents` with `layout=\"row\"` at the top of `PageShell.Main`, above the page's head: a pill for each section, the sections inside one opening in a panel from a caret beside its pill (the row is drawn by `NavigationMenu`, and its ends fade out when it is longer than the room). It sticks under the header (`stickyOffset=\"var(--page-shell-header-height, 0px)\"`) and marks the pill that holds the section being read. The page's stylesheet shows one outline at each width (the other is `display: none`, so it is not in the accessibility tree), and each has its own name."],
     ["Provider", "A `Sidebar.Provider` around the whole shell, with `collapseBelow=\"lg\"`, so the header's menu button reaches the sidebar's panel (`AppShell` does this for you). The body stacks as a whole below the aside's step, so the sidebar leaves for its panel at the same one."],
     ["Footer", "`PageShell.Footer`, at the bottom of the window on a short page."],
   ]}
@@ -84,12 +85,15 @@ A page of a few paragraphs needs no outline: there is no aside, and the page tak
 <div className="dbm-do-dont-grid">
 <Callout tone="success" title="Do">
 
-- Give the sidebar's navigation its own name (`Sidebar.Nav aria-label="Documentation"`), and the sidebar's menu button its own (`labels.menu` on the provider): the header's links
-  are already a navigation named "Main", and its menu button is named "Menu".
+- Give the sidebar's navigation its own name (`Sidebar.Nav aria-label="Documentation"`): the header's links are already a navigation named "Main".
+- Keep one menu button on a phone: hide the header's links below the step the sidebar leaves at (`Navbar.Links hideBelow`), set the bar's `collapseBelow` to `"never"`,
+  and draw the site's links in the sidebar's panel with `useSidebar().inPanel`. Two hamburgers that open two different menus are confusing.
+- Give the header's two ends the same width above that step, so the links are exactly in the middle of the window, not in the middle of what is left.
 - Give the sidebar and the aside the same collapse step. The body stacks as a whole below the aside's step, so a sidebar that is still a column there would sit
   above the page.
 - Write one `section` with its own `h2` for each entry of the outline, with the `id` the entry links to, and keep one `h1` (the `PageHeader`'s title).
 - Set `scrollOffset` on the outline (and `scroll-margin` on a section) to the header's height, so a jump does not hide the heading under the bar.
+- Give the outline row a name of its own (`aria-label`), different from the column outline's, and hide whichever is not for the width with `display: none` rather than drawing both.
 - Leave the sidebar and the outline out of print (the page's own `@media print`), so the paper holds the text.
 
 </Callout>
@@ -122,7 +126,7 @@ list of landmarks tells them apart.
 </Callout>
 
 - The keyboard follows the markup: the skip link, the header, the sidebar, the page, the outline, the footer. The skip link goes to the page's `main`, past the header and the sidebar.
-- On a phone the sidebar is not on the page: the header's menu button opens its panel as a dialog, focus goes into it, `Escape` closes it and focus returns to the button.
+- On a phone the sidebar is not on the page: the header's one menu button opens its panel as a dialog holding the site's links and, under them, the documentation's sections. Focus goes into it, `Escape` closes it and focus returns to the button.
 - Choosing an outline entry scrolls to its section and marks it current (`aria-current="location"`); the mark follows the scroll, and only one entry has it.
 - The sidebar marks the page the reader is on with `aria-current="page"`.
 - The sidebar and the outline are sticky boxes that scroll inside themselves when they are taller than the window, so a long list is never cut off.
@@ -130,16 +134,19 @@ list of landmarks tells them apart.
 ## Code examples
 
 ```tsx
-<Sidebar.Provider collapseBelow="lg" labels={{ menu: "Documentation menu" }}>
+<Sidebar.Provider collapseBelow="lg">
   <PageShell>
     <PageShell.SkipLink />
-    <Navbar sticky contained>
+    <Navbar sticky collapseBelow="never">
       <Navbar.Row columns="balanced">
-        <Navbar.Brand href="/">Acme Docs</Navbar.Brand>
-        <Navbar.Links aria-label="Main">
+        <Sidebar.MenuButton variant="tertiary" tone="brand" size="sm" />
+        <Navbar.Brand href="/" column="center" className={styles.headerStart}>Acme Docs</Navbar.Brand>
+        <Navbar.Links aria-label="Main" align="center" hideBelow="lg">
+          <Navbar.Link href="/docs">Docs</Navbar.Link>
           <Navbar.Link href="/components" current>Components</Navbar.Link>
+          <Navbar.Link href="/foundations">Foundations</Navbar.Link>
         </Navbar.Links>
-        <Sidebar.MenuButton />
+        <Navbar.Actions column="end" className={styles.headerEnd}>…</Navbar.Actions>
       </Navbar.Row>
     </Navbar>
     <PageShell.Body width="full" paddingInline={0} paddingBlock={0}>
@@ -158,11 +165,54 @@ list of landmarks tells them apart.
 ```
 
 ```tsx
-// Leave the navigation out of print: your own stylesheet
+// The sidebar's content: the current header link's section on the page, and in the phone panel the header's links with that section inside the current one
+function SidebarLinks() {
+  const { inPanel } = useSidebar();
+  const items = (
+    <>
+      <Sidebar.Item href="/components/badge">Badge</Sidebar.Item>
+      <Sidebar.Item href="/components/button" current>Button</Sidebar.Item>
+    </>
+  );
+  if (!inPanel) return <Sidebar.Section label="Components">{items}</Sidebar.Section>;
+  return (
+    <Sidebar.Section label="Site">
+      <Sidebar.Item href="/docs">Docs</Sidebar.Item>
+      <Sidebar.Group label="Components" current>{items}</Sidebar.Group>
+      <Sidebar.Item href="/foundations">Foundations</Sidebar.Item>
+    </Sidebar.Section>
+  );
+}
+```
+
+```css
+/* Your own stylesheet: leave the navigation out of print, and give the header's two ends the same width where the links are in the bar */
 @media print {
   .sidebar,
   .outline {
     display: none !important;
+  }
+}
+
+@media (min-width: 64rem) {
+  .headerStart,
+  .headerEnd {
+    min-inline-size: var(--dbm-space-32);
+  }
+
+  .headerEnd {
+    justify-content: flex-end;
+  }
+
+  /* The outline is the column from lg and the row of pills below it */
+  .outlineRow {
+    display: none;
+  }
+}
+
+@media not all and (min-width: 64rem) {
+  .outline {
+    display: none;
   }
 }
 ```
@@ -170,7 +220,7 @@ list of landmarks tells them apart.
 ## Design tokens used
 
 The page is made of components, so every colour, size and radius comes from them. What it draws itself is spacing between its own pieces, in inline styles: `space.4`,
-`space.6` and `space.8`. It has no stylesheet of its own beyond the print rule above.
+`space.6` and `space.8`, and `space.32` in the stylesheet. Its stylesheet is only the print rule and the width of the header's two ends (`space.32`).
 
 ## Related components
 
@@ -203,20 +253,6 @@ The page is made of components, so every colour, size and radius comes from them
   href="/?path=/docs/molecules-navigation-tableofcontents--docs"
 >
   <TableOfContents aria-label="Preview contents" items={[{ id: "a", label: "Overview" }, { id: "b", label: "Usage" }]} defaultActiveId="a" size="sm" />
-</RelatedCard>
-<RelatedCard
-  name="Breadcrumb"
-  description="Where the page is in the site, above its title"
-  href="/?path=/docs/molecules-navigation-breadcrumb--docs"
->
-  <Breadcrumb>
-    <Breadcrumb.Item>
-      <Breadcrumb.Link href="#">Components</Breadcrumb.Link>
-    </Breadcrumb.Item>
-    <Breadcrumb.Item>
-      <Breadcrumb.Page>Button</Breadcrumb.Page>
-    </Breadcrumb.Item>
-  </Breadcrumb>
 </RelatedCard>
 <RelatedCard
   name="Navbar"

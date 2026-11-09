@@ -6,6 +6,7 @@ export type {
   NavigationMenuCurrentVariant,
   NavigationMenuDirection,
   NavigationMenuCurrentMatch,
+  NavigationMenuCurrentType,
   NavigationMenuFeatureProps,
   NavigationMenuFooterProps,
   NavigationMenuGroupProps,

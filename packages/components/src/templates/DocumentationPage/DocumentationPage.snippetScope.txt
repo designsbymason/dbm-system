@@ -1,4 +1,5 @@
 // What the Documentation Page's "Show code" snippets leave undefined (a router's links) and import, so `pnpm check-snippets` can typecheck them as real code.
 // Plain text, not a module: the script writes it above each snippet in a throwaway file beside it. Import every component the snippets use from the package, so a name that does not exist fails.
-import { Alert, Breadcrumb, CodeBlock, Container, Heading, Link, Navbar, PageHeader, PageShell, Sidebar, Table, TableOfContents, Text } from "../../index";
-declare const styles: { sidebar: string; outline: string };
+import { Alert, CodeBlock, Container, Heading, IconButton, Link, Navbar, PageHeader, PageShell, Sidebar, Table, TableOfContents, Text, useSidebar } from "../../index";
+import { MagnifyingGlassIcon } from "@dbm-system/icons";
+declare const styles: { sidebar: string; outline: string; headerStart: string; outlineRow: string; headerEnd: string };

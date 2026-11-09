@@ -637,6 +637,87 @@ a.brand:focus-visible,
   font-weight: var(--dbm-font-weight-medium);
 }
 
+/* A set that leaves the bar below a width (`Navbar.Links`'s `hideBelow`): out of the bar only, so the menu panel's copy is untouched. Media queries can't read
+   a custom property, so each width is the literal value of the matching breakpoint token, as the steps above are. */
+@media not all and (min-width: 40rem) {
+  .links[data-hide-below="sm"] {
+    display: none;
+  }
+}
+
+@media not all and (min-width: 48rem) {
+  .links[data-hide-below="md"] {
+    display: none;
+  }
+}
+
+@media not all and (min-width: 64rem) {
+  .links[data-hide-below="lg"] {
+    display: none;
+  }
+}
+
+@media not all and (min-width: 80rem) {
+  .links[data-hide-below="xl"] {
+    display: none;
+  }
+}
+
+@media not all and (min-width: 96rem) {
+  .links[data-hide-below="2xl"] {
+    display: none;
+  }
+}
+
+@media not all and (min-width: 120rem) {
+  .links[data-hide-below="3xl"] {
+    display: none;
+  }
+}
+
+/* While a set of centred or end-aligned links is out of the bar (`hideBelow`), nothing takes the free room, so the actions take it and sit at the end. */
+@media not all and (min-width: 40rem) {
+  .inner:has(.links[data-hide-below="sm"][data-align="center"]) .actions,
+  .inner:has(.links[data-hide-below="sm"][data-align="end"]) .actions {
+    margin-inline-start: auto;
+  }
+}
+
+@media not all and (min-width: 48rem) {
+  .inner:has(.links[data-hide-below="md"][data-align="center"]) .actions,
+  .inner:has(.links[data-hide-below="md"][data-align="end"]) .actions {
+    margin-inline-start: auto;
+  }
+}
+
+@media not all and (min-width: 64rem) {
+  .inner:has(.links[data-hide-below="lg"][data-align="center"]) .actions,
+  .inner:has(.links[data-hide-below="lg"][data-align="end"]) .actions {
+    margin-inline-start: auto;
+  }
+}
+
+@media not all and (min-width: 80rem) {
+  .inner:has(.links[data-hide-below="xl"][data-align="center"]) .actions,
+  .inner:has(.links[data-hide-below="xl"][data-align="end"]) .actions {
+    margin-inline-start: auto;
+  }
+}
+
+@media not all and (min-width: 96rem) {
+  .inner:has(.links[data-hide-below="2xl"][data-align="center"]) .actions,
+  .inner:has(.links[data-hide-below="2xl"][data-align="end"]) .actions {
+    margin-inline-start: auto;
+  }
+}
+
+@media not all and (min-width: 120rem) {
+  .inner:has(.links[data-hide-below="3xl"][data-align="center"]) .actions,
+  .inner:has(.links[data-hide-below="3xl"][data-align="end"]) .actions {
+    margin-inline-start: auto;
+  }
+}
+
 
 /* `linkSize`: the text size, icon size (in the component) and padding of the links in a set, apart from the bar's height. The text steps
    are `Menu`'s own (xs, sm, base, md, lg); the padding is a link bar's, a little wider than a list row's. A set the menu panel copies

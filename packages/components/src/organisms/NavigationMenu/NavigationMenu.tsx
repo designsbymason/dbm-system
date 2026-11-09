@@ -272,13 +272,13 @@ const SelectableAnchor = forwardRef<HTMLAnchorElement, SelectableAnchorProps>(
     },
     ref,
   ) => {
-    const { stacked, setValue, closePanel } = useNavigationMenuContext("NavigationMenu.Link");
+    const { stacked, setValue, closePanel, currentType } = useNavigationMenuContext("NavigationMenu.Link");
     const intent = useIntent(onIntent);
     const Element = asChild ? Slot : "a";
     const common = {
       ...props,
       ref,
-      "aria-current": current ? ("page" as const) : undefined,
+      "aria-current": current ? currentType : undefined,
       "aria-disabled": disabled || undefined,
       onClickCapture: (event: MouseEvent<HTMLAnchorElement>) => {
         if (!blockDisabledClick(event, disabled)) onClickCapture?.(event);
@@ -375,6 +375,7 @@ const NavigationMenuRoot = forwardRef<HTMLElement, NavigationMenuProps>(
       indicator = false,
       currentPath,
       currentMatch = "exact",
+      currentType = "page",
       size = "md",
       currentVariant: ownCurrentVariant = "underline",
       rounded: ownRounded = false,
@@ -537,6 +538,7 @@ const NavigationMenuRoot = forwardRef<HTMLElement, NavigationMenuProps>(
         delayDuration,
         currentPath,
         currentMatch,
+        currentType,
         value,
         setValue,
         closePanel: embed?.closePanel ?? null,
@@ -561,6 +563,7 @@ const NavigationMenuRoot = forwardRef<HTMLElement, NavigationMenuProps>(
         delayDuration,
         currentPath,
         currentMatch,
+        currentType,
         value,
         setValue,
         embed?.closePanel,

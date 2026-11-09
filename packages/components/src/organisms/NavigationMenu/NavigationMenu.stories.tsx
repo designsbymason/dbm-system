@@ -7,6 +7,7 @@ import { navigationMenuPlaygroundSnippet, navigationMenuSnippets } from "./Navig
 import type {
   NavigationMenuController,
   NavigationMenuCurrentMatch,
+  NavigationMenuCurrentType,
   NavigationMenuCurrentVariant,
   NavigationMenuDirection,
   NavigationMenuOrientation,
@@ -35,6 +36,7 @@ interface PlaygroundArgs {
   indicator: boolean;
   currentPath: string;
   currentMatch: NavigationMenuCurrentMatch;
+  currentType: NavigationMenuCurrentType;
   size: NavigationMenuSize;
   currentVariant: NavigationMenuCurrentVariant;
   rounded: boolean;
@@ -155,6 +157,12 @@ const meta: Meta<PlaygroundArgs> = {
       if: { arg: "currentPath", truthy: true },
       table: { defaultValue: { summary: '"exact"' } },
     },
+    currentType: {
+      control: "radio",
+      options: ["page", "location"],
+      description: "What a current link is announced as (its aria-current): page, for links to pages, or location, for links to places in one page, such as an outline's sections.",
+      table: { defaultValue: { summary: '"page"' } },
+    },
     size: {
       control: "select",
       options: ["xs", "sm", "md", "lg", "xl"],
@@ -212,6 +220,7 @@ const meta: Meta<PlaygroundArgs> = {
     indicator: false,
     currentPath: "/pricing",
     currentMatch: "exact",
+    currentType: "page",
     size: "md",
     currentVariant: "underline",
     rounded: false,

@@ -424,3 +424,51 @@ describe("NavigationMenu", () => {
     expect(screen.getByRole("navigation", { name: "Primary" })).toHaveAttribute("dir", "rtl");
   });
 });
+
+
+describe("NavigationMenu currentType", () => {
+  it('marks a current link as aria-current="page" by default, and as "location" when asked, for a link and a split trigger\'s own link', () => {
+    const { rerender } = render(
+      <NavigationMenu aria-label="Menu">
+        <NavigationMenu.List>
+          <NavigationMenu.Item>
+            <NavigationMenu.Link href="#a" current>
+              A
+            </NavigationMenu.Link>
+          </NavigationMenu.Item>
+          <NavigationMenu.Item>
+            <NavigationMenu.Trigger href="#b" current>
+              B
+            </NavigationMenu.Trigger>
+            <NavigationMenu.Content>
+              <NavigationMenu.Link href="#c">C</NavigationMenu.Link>
+            </NavigationMenu.Content>
+          </NavigationMenu.Item>
+        </NavigationMenu.List>
+      </NavigationMenu>,
+    );
+    expect(screen.getByRole("link", { name: "A" })).toHaveAttribute("aria-current", "page");
+    expect(screen.getByRole("link", { name: "B" })).toHaveAttribute("aria-current", "page");
+    rerender(
+      <NavigationMenu aria-label="Menu" currentType="location">
+        <NavigationMenu.List>
+          <NavigationMenu.Item>
+            <NavigationMenu.Link href="#a" current>
+              A
+            </NavigationMenu.Link>
+          </NavigationMenu.Item>
+          <NavigationMenu.Item>
+            <NavigationMenu.Trigger href="#b" current>
+              B
+            </NavigationMenu.Trigger>
+            <NavigationMenu.Content>
+              <NavigationMenu.Link href="#c">C</NavigationMenu.Link>
+            </NavigationMenu.Content>
+          </NavigationMenu.Item>
+        </NavigationMenu.List>
+      </NavigationMenu>,
+    );
+    expect(screen.getByRole("link", { name: "A" })).toHaveAttribute("aria-current", "location");
+    expect(screen.getByRole("link", { name: "B" })).toHaveAttribute("aria-current", "location");
+  });
+});

@@ -6,7 +6,7 @@ import type { ComponentPropsWithoutRef, ReactNode, Ref } from "react";
 export type NavigationMenuSize = "xs" | "sm" | "md" | "lg" | "xl";
 
 /**
- * How the current page's link (and the item whose panel holds it) is marked, beyond `aria-current="page"`, which is always set:
+ * How the current page's link (and the item whose panel holds it) is marked, beyond its `aria-current` (`"page"`, or the menu's `currentType`), which is always set:
  * `underline` (a brand line under it), `subtle` (a tinted pill with brand-coloured text) or `solid` (a brand fill with the text on
  * it). The names `Navbar` and `Tabs` use.
  */
@@ -40,6 +40,12 @@ export type NavigationMenuContentLayout = "stack" | "columns";
 
 /** How `currentPath` is matched against a link's `href`: the whole path, or the path and everything under it. */
 export type NavigationMenuCurrentMatch = "exact" | "prefix";
+
+/**
+ * What a current link is announced as, the value of its `aria-current`: `"page"` (the default) for a link to the page the reader is on, or
+ * `"location"` for a link to the place in the page they are at, such as the section an outline of the page marks.
+ */
+export type NavigationMenuCurrentType = "page" | "location";
 
 /** What `controllerRef` gives code outside the menu. Its identity never changes, and its methods read the latest state. */
 export interface NavigationMenuController {
@@ -136,6 +142,12 @@ export interface NavigationMenuProps extends Omit<ComponentPropsWithoutRef<"nav"
    * @default 'exact'
    */
   currentMatch?: NavigationMenuCurrentMatch;
+  /**
+   * What a current link is announced as — see {@link NavigationMenuCurrentType}. Use `"location"` when the links lead to places in one page (an outline
+   * of its sections) rather than to pages.
+   * @default 'page'
+   */
+  currentType?: NavigationMenuCurrentType;
   /**
    * The text size, icon size and padding of the triggers and links, on the shared five-step scale. Inside a `Navbar` the bar's
    * link size applies and this one is ignored.

@@ -182,6 +182,7 @@ export function navigationMenuPlaygroundSnippet(args: {
   exclusive?: boolean;
   currentPath?: string;
   currentMatch?: NavigationMenuCurrentMatch;
+  currentType?: "page" | "location";
   size?: NavigationMenuSize;
   currentVariant?: NavigationMenuCurrentVariant;
   rounded?: boolean;
@@ -203,6 +204,7 @@ export function navigationMenuPlaygroundSnippet(args: {
   if (args.exclusive === false) attributes.push("exclusive={false}");
   if (typeof args.currentPath === "string" && args.currentPath !== "") attributes.push(`currentPath=${quote(args.currentPath)}`);
   if (args.currentMatch !== undefined && args.currentMatch !== "exact") attributes.push(`currentMatch=${quote(args.currentMatch)}`);
+  if (args.currentType !== undefined && args.currentType !== "page") attributes.push(`currentType=${quote(args.currentType)}`);
   if (args.size !== undefined && args.size !== "md") attributes.push(`size=${quote(args.size)}`);
   if (args.currentVariant !== undefined && args.currentVariant !== "underline") attributes.push(`currentVariant=${quote(args.currentVariant)}`);
   if (args.rounded === true) attributes.push("rounded");

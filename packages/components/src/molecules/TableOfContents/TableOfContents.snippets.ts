@@ -66,6 +66,11 @@ ${toc(["collapsibleGroups", "groupsDefaultOpen={false}"], nestedItems)}`,
 {/* const boxRef = useRef<HTMLDivElement>(null);  (only if the page isn't what scrolls) */}
 ${toc(['collapse="auto"', 'foldedStyle="dropdown"', 'sticky="folded"', "scrollContainerRef={boxRef}"])}`,
 
+  row: `{/* layout="row": a line of pills, one for each top-level entry. An entry with entries inside it has a button beside its
+    split pill that opens them in a panel. It sticks under a header (any CSS length for stickyOffset) and scrolls sideways when it is too long, the ends that have
+    more fading out. A width map, layout={{ base: "row", lg: "list" }}, makes it a row on a phone and the list from lg. */}
+${toc(['layout="row"', "sticky", 'stickyOffset="var(--page-shell-header-height, 0px)"'], nestedItems)}`,
+
   levels: `{/* minLevel and maxLevel (1 to 4) draw only some levels; the rest are indented from minLevel.
     They apply to items and to headings read from the page alike. */}
 ${toc(["maxLevel={1}"], nestedItems)}

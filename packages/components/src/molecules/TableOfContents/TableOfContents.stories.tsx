@@ -40,6 +40,7 @@ interface PlaygroundArgs {
   selector: string;
   sticky: boolean;
   stickyOffset: TableOfContentsProps["stickyOffset"];
+  layout: TableOfContentsProps["layout"];
   scrollToHash: boolean;
   open: boolean;
   defaultOpen: boolean;
@@ -265,6 +266,12 @@ const meta: Meta<PlaygroundArgs> = {
       control: false,
       description:
         "How far from the top a sticky outline sticks, on the spacing scale: for a page whose own header is also sticky. No effect without sticky.",
+    },
+    layout: {
+      control: false,
+      description:
+        'The outline\'s layout: list (the default, a vertical list) or row (one line of pills drawn by NavigationMenu, a panel for the entries inside a pill, sticky under a header with sticky, the ends fading out when it is longer than the room). A width map such as { base: row, lg: list } changes it by screen width. A row has no title and does not fold.',
+      table: { defaultValue: { summary: '"list"' } },
     },
     scrollToHash: {
       control: false,
@@ -804,6 +811,100 @@ export const Dropdown: Story = {
   argTypes: noControls,
   parameters: { docs: { source: { code: tableOfContentsSnippets.dropdown } } },
   render: () => <DropdownDemo />,
+};
+
+/** A row of pills at the top of a box that scrolls: it sticks, the pill of the section being read is marked, and a pill with sections inside it opens them in a panel. The row is longer than the box, so its end fades out. */
+function RowDemo({ prefix = "row", ...tocProps }: Partial<TableOfContentsProps> & { prefix?: string }) {
+  const boxRef = useRef<HTMLDivElement>(null);
+  const items: TableOfContentsItem[] = sections.map((section) => ({ id: `${prefix}-${section.key}`, label: section.label, level: section.level }));
+  return (
+    // eslint-disable-next-line jsx-a11y/no-noninteractive-tabindex -- a scrollable region must be keyboard-focusable.
+    <div ref={boxRef} tabIndex={0} role="region" aria-label="Article" style={{ ...boxStyle, flex: "none", maxInlineSize: "24rem" }} data-testid="article">
+      <div style={{ padding: "0 var(--dbm-space-4) var(--dbm-space-4)" }}>
+        <TableOfContents layout="row" sticky scrollContainerRef={boxRef} data-testid="row-toc" aria-label="On this page" items={items} {...tocProps} />
+        {sections.map((section) => {
+          const Tag = section.level === 1 ? "h2" : "h3";
+          return (
+            <section key={section.key} style={{ marginBlockEnd: "var(--dbm-space-6)" }}>
+              <Tag id={`${prefix}-${section.key}`} style={{ margin: 0, color: "var(--dbm-text-primary)", fontFamily: "var(--dbm-font-family-primary)" }}>
+                {section.label}
+              </Tag>
+              <p style={{ color: "var(--dbm-text-secondary)", fontFamily: "var(--dbm-font-family-primary)" }}>{filler}</p>
+              <p style={{ color: "var(--dbm-text-secondary)", fontFamily: "var(--dbm-font-family-primary)" }}>{filler}</p>
+            </section>
+          );
+        })}
+        <div style={{ blockSize: "12rem" }} aria-hidden="true" />
+      </div>
+    </div>
+  );
+}
+
+export const Row: Story = {
+  name: "As a row of pills, sticky",
+  argTypes: noControls,
+  parameters: { docs: { source: { code: tableOfContentsSnippets.row } } },
+  render: () => <RowDemo />,
+};
+
+export const RowInteraction: Story = {
+  name: "The row sticks, marks the pill being read, opens a pill's sections and chooses one — interaction test",
+  tags: ["!dev"],
+  argTypes: noControls,
+  render: () => <RowDemo prefix="rw" />,
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const box = canvas.getByTestId("article");
+    const row = canvas.getByTestId("row-toc");
+    const heading = (key: string) => canvasElement.querySelector<HTMLElement>(`#rw-${key}`) as HTMLElement;
+    const topInBox = (element: HTMLElement) => element.getBoundingClientRect().top - box.getBoundingClientRect().top;
+
+    // Only the top-level entries are pills; the ones inside are behind a caret.
+    await expect(within(row).getAllByRole("link").map((link) => link.textContent)).toEqual(["Overview", "Installation", "Usage", "Accessibility", "Related"]);
+    await expect(within(row).getAllByRole("button")).toHaveLength(2);
+    // A pill and its caret are one pill: one list item, and the caret ends inside it.
+    const installation = within(row).getByRole("link", { name: "Installation" });
+    const caret = within(row).getByRole("button", { name: "Subsections of Installation" });
+    await expect(installation.closest("li")).toBe(caret.closest("li"));
+    await expect(caret.getBoundingClientRect().right).toBeLessThanOrEqual((installation.closest("li") as HTMLElement).getBoundingClientRect().right + 1);
+
+    // The row is longer than the room: its end fades out and its start does not, until it is scrolled to the end, where it is the other way round. The fades never take a click.
+    const list = row.querySelector("ul") as HTMLElement;
+    await expect(list.scrollWidth).toBeGreaterThan(list.clientWidth);
+    const fade = (end: "::before" | "::after") => getComputedStyle(row, end).opacity;
+    await waitFor(() => expect(fade("::after")).toBe("1"));
+    await expect(fade("::before")).toBe("0");
+    await expect(getComputedStyle(row, "::after").pointerEvents).toBe("none");
+    list.scrollTo({ left: list.scrollWidth, behavior: "instant" });
+    await waitFor(() => expect(fade("::before")).toBe("1"));
+    await expect(fade("::after")).toBe("0");
+    list.scrollTo({ left: 0, behavior: "instant" });
+    await waitFor(() => expect(fade("::before")).toBe("0"));
+
+    // It sticks while the content scrolls, and the pill that holds the section being read is marked (a section inside Installation marks Installation).
+    box.scrollTo({ top: box.scrollTop + topInBox(heading("setup")) - row.getBoundingClientRect().height, behavior: "instant" });
+    await waitFor(() => expect(row.querySelector("[data-toc-marked] a")).toHaveTextContent("Installation"));
+    await expect(Math.abs(row.getBoundingClientRect().top - box.getBoundingClientRect().top)).toBeLessThan(box.clientTop + 20);
+
+    // A pill's caret opens the sections inside it, with the current one marked as a location; choosing one closes the panel and leaves the section under the row.
+    await userEvent.click(caret);
+    const requirements = await within(document.body).findByRole("link", { name: "Requirements" });
+    const setup = within(document.body).getByRole("link", { name: "Setup" });
+    await expect(caret).toHaveAttribute("aria-expanded", "true");
+    await expect(setup).toHaveAttribute("aria-current", "location");
+    // Every entry is seen and under the pointer, not cut by the row's own scrolling.
+    for (const link of [requirements, setup]) {
+      await expect(link.getBoundingClientRect().width).toBeGreaterThan(60);
+      // (The panel slides in, so it is under the pointer once it has finished.)
+      await waitFor(() => {
+        const rect = link.getBoundingClientRect();
+        expect(link.contains(document.elementFromPoint(rect.left + rect.width / 2, rect.top + rect.height / 2))).toBe(true);
+      });
+    }
+    await userEvent.click(requirements);
+    await waitFor(() => expect(caret).toHaveAttribute("aria-expanded", "false"));
+    await waitFor(() => expect(topInBox(heading("requirements"))).toBeGreaterThanOrEqual(row.getBoundingClientRect().height - 2), { timeout: 3000 });
+  },
 };
 
 export const Sticky: Story = {

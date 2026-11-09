@@ -131,12 +131,15 @@
 /* `a.…` (element-qualified) so each wins over `Link`'s own colour rules, `:visited` included. A long unbroken
    word can't push the outline wider. */
 a.link,
-a.link:visited {
+a.link:visited,
+a.pill,
+a.pill:visited {
   color: var(--dbm-text-secondary);
   overflow-wrap: anywhere;
 }
 
-a.link:hover {
+a.link:hover,
+a.pill:hover {
   color: var(--dbm-text-primary);
 }
 
@@ -321,5 +324,90 @@ a.link:hover {
   a.active,
   a.active:visited {
     color: Highlight;
+  }
+}
+
+/* --- layout="row": one line of pills, drawn by `NavigationMenu` --- */
+/* The row scrolls sideways inside itself when it is too long; the scrollbar is not drawn (the marked pill is kept in view, and the pills are reached by
+   keys) and the ends that have more fade out instead. The sticky form is drawn on the page's surface with a rule below, as the folded bar is. The
+   doubled class wins over the menu's own rules whichever sheet comes last. */
+.row.row {
+  --toc-scroll-fade: var(--dbm-space-8);
+
+  min-inline-size: 0;
+  position: relative;
+}
+
+.stickyRow.stickyRow {
+  background-color: var(--dbm-bg-surface);
+  border-block-end: var(--dbm-border-width-1) solid var(--dbm-border-default);
+  inset-block-start: var(--toc-sticky-top, 0);
+  padding-block: var(--dbm-space-2);
+  position: sticky;
+  z-index: var(--dbm-z-index-sticky);
+}
+
+.rowList.rowList {
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  padding: var(--dbm-space-1);
+  scrollbar-width: none;
+}
+
+.rowList.rowList::-webkit-scrollbar {
+  display: none;
+}
+
+.rowList.rowList > li {
+  flex: none;
+}
+
+/* The faded ends: over the row's own start and end, shown only where the row has more to scroll to, never in the way of a click. */
+.row.row::before,
+.row.row::after {
+  content: "";
+  inline-size: var(--toc-scroll-fade);
+  inset-block: 0;
+  opacity: 0;
+  pointer-events: none;
+  position: absolute;
+  transition: opacity var(--dbm-motion-duration-fast) var(--dbm-motion-easing-standard);
+  z-index: 1;
+}
+
+.row.row::before {
+  background: linear-gradient(to right, var(--dbm-bg-surface), transparent);
+  inset-inline-start: 0;
+}
+
+.row.row::after {
+  background: linear-gradient(to left, var(--dbm-bg-surface), transparent);
+  inset-inline-end: 0;
+}
+
+[dir="rtl"] .row.row::before {
+  background: linear-gradient(to left, var(--dbm-bg-surface), transparent);
+}
+
+[dir="rtl"] .row.row::after {
+  background: linear-gradient(to right, var(--dbm-bg-surface), transparent);
+}
+
+.row.row[data-overflow-start]::before,
+.row.row[data-overflow-end]::after {
+  opacity: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .row.row::before,
+  .row.row::after {
+    transition: none;
+  }
+}
+
+@media print {
+  .row.row::before,
+  .row.row::after {
+    display: none !important;
   }
 }

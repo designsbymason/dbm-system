@@ -1,7 +1,7 @@
 import { useRef } from "react";
+import { MagnifyingGlassIcon } from "@dbm-system/icons";
 import type { CSSProperties, MouseEvent } from "react";
 import { Alert } from "../../molecules/Alert";
-import { Breadcrumb } from "../../molecules/Breadcrumb";
 import { CodeBlock } from "../../molecules/CodeBlock";
 import { PageHeader } from "../../molecules/PageHeader";
 import { Table } from "../../molecules/Table";
@@ -11,38 +11,50 @@ import { Heading } from "../../atoms/Heading";
 import { Link } from "../../atoms/Link";
 import { Text } from "../../atoms/Text";
 import { Navbar } from "../../organisms/Navbar";
-import { Sidebar } from "../../organisms/Sidebar";
+import { Sidebar, useSidebar } from "../../organisms/Sidebar";
+import { IconButton } from "../../atoms/IconButton";
 import { preventNavigation } from "../../organisms/Sidebar/SidebarStoryKit";
 import { PageShell } from "../PageShell";
 import styles from "./DocumentationPage.module.css";
 
 // The page's words, in one place. A documentation page is static, so there is no router and no state: the demo's only controls are how long the page
 // is and whether it has a contents list.
+interface DocumentationSection {
+  id: string;
+  title: string;
+  text: string;
+  /** Sections inside it: headings one level down, which the outline draws as entries inside the section's. */
+  subsections?: Array<{ id: string; title: string; text: string }>;
+}
+
 export const documentationCopy = {
   brand: "dbM Docs",
   mainNavigation: "Main",
-  guides: "Guides",
+  docs: "Docs",
   components: "Components",
   foundations: "Foundations",
+  siteLinks: ["Docs", "Components", "Foundations"],
   sidebarName: "Documentation",
-  sidebarMenu: "Documentation menu",
-  sidebarSections: [
-    { label: "Getting started", items: ["Introduction", "Installation", "Theming"] },
-    { label: "Components", items: ["Badge", "Button", "ButtonGroup", "Card", "Checkbox", "Dialog"] },
-  ],
-  breadcrumbHome: "Components",
+  siteSection: "Site",
+  search: "Search",
+  // The sidebar belongs to the header link that is current: with "Components" current it holds only the components.
+  sidebarItems: ["Badge", "Button", "ButtonGroup", "Card", "Checkbox", "Dialog"],
   title: "Button",
   intro: "A control that starts an action: submit a form, open a dialog, move to the next step.",
   contentsTitle: "On this page",
   contentsName: "Contents",
+  contentsRowName: "Page sections",
   sections: [
     { id: "overview", title: "Overview", text: "A button says what will happen when it is pressed. Give it a short verb as its label, and use one primary button for the main action on a page." },
     { id: "usage", title: "Usage", text: "Import the component and give it a label. A button that only has an icon needs an accessible name, since there is no text to read." },
-    { id: "variants", title: "Variants", text: "Four variants cover most pages: a filled one for the main action, an outlined one for a second choice, a quiet one for toolbars and a link-like one for inline actions." },
+    { id: "variants", title: "Variants", text: "Four variants cover most pages: a filled one for the main action, an outlined one for a second choice, a quiet one for toolbars and a link-like one for inline actions.", subsections: [
+      { id: "solid", title: "Solid", text: "The filled button is for the one action a view is about." },
+      { id: "outlined", title: "Outlined", text: "The outlined button is for a second choice that should not compete with it." },
+    ] },
     { id: "properties", title: "Properties", text: "Every prop has a default, so the smallest button is a label. These are the ones used most." },
     { id: "accessibility", title: "Accessibility", text: "A button is a native button: it is reached by Tab, pressed with Enter or Space, and announced with its name and its state." },
     { id: "related", title: "Related components", text: "A link that looks like a button is still a link: use a button for an action and a link for going somewhere." },
-  ],
+  ] as DocumentationSection[],
   note: "Use one primary button per view. More than one makes it unclear which action matters most.",
   code: 'import { Button } from "@dbm-system/components";\n\n<Button onClick={save}>Save changes</Button>',
   tableName: "Button properties",
@@ -72,8 +84,53 @@ export interface DocumentationPageProps {
 
 const frameHeight = "40rem";
 
+/** The items of the current header link's section, as links. */
+function SectionItems() {
+  return (
+    <>
+      {documentationCopy.sidebarItems.map((item) => (
+        <Sidebar.Item key={item} href="#" current={item === documentationCopy.title || undefined} onClick={preventNavigation}>
+          {item}
+        </Sidebar.Item>
+      ))}
+    </>
+  );
+}
+
 /**
- * A documentation page: the site's navigation in a `Sidebar` at the start, the page in the middle (a breadcrumb, the page's head, sections with a code
+ * The sidebar's content. On the page it is the current header link's section (the components). In the phone panel (`useSidebar().inPanel`) it is the
+ * header's links too, since the header hides them there: each is an item, and the current one is an expandable group holding its section, so one
+ * drawer holds the whole site.
+ */
+function SidebarLinks() {
+  const { inPanel } = useSidebar();
+  const copy = documentationCopy;
+  if (!inPanel) {
+    return (
+      <Sidebar.Section label={copy.components}>
+        <SectionItems />
+      </Sidebar.Section>
+    );
+  }
+  return (
+    <Sidebar.Section label={copy.siteSection}>
+      {copy.siteLinks.map((link) =>
+        link === copy.components ? (
+          <Sidebar.Group key={link} label={link} current>
+            <SectionItems />
+          </Sidebar.Group>
+        ) : (
+          <Sidebar.Item key={link} href="#" onClick={preventNavigation}>
+            {link}
+          </Sidebar.Item>
+        ),
+      )}
+    </Sidebar.Section>
+  );
+}
+
+/**
+ * A documentation page: the site's navigation in a `Sidebar` at the start, the page in the middle (the page's head, sections with a code
  * block, a table and a note, and links to the previous and next page) and a table of contents at the end. All of it is existing components in a
  * `PageShell`; nothing here is drawn by hand. A `Sidebar.Provider` wraps the shell so the header's menu button can open the sidebar's panel on a
  * phone (`AppShell` does that for you).
@@ -82,8 +139,13 @@ export function DocumentationPage({ framed = false, sections = 6, contents = tru
   const copy = documentationCopy;
   const shown = copy.sections.slice(0, Math.max(1, Math.min(sections, copy.sections.length)));
   const frameRef = useRef<HTMLDivElement | null>(null);
+  // The outline's entries, flat: each section and the sections inside it one level down.
+  const contentsItems = shown.flatMap((section) => [
+    { id: section.id, label: section.title, level: 1 as const },
+    ...(section.subsections ?? []).map((sub) => ({ id: sub.id, label: sub.title, level: 2 as const })),
+  ]);
   const page = (
-    <Sidebar.Provider collapseBelow="lg" labels={{ menu: copy.sidebarMenu }}>
+    <Sidebar.Provider collapseBelow="lg">
       <PageShell>
         {/* In an app a router handles the link; here the click moves focus to the main area itself and keeps the preview's address unchanged. */}
         <PageShell.SkipLink
@@ -92,23 +154,27 @@ export function DocumentationPage({ framed = false, sections = 6, contents = tru
             document.getElementById("main")?.focus();
           }}
         />
-        <Navbar sticky contained scrollContainerRef={framed ? frameRef : undefined}>
+        {/* The header spans the window, so its brand lines up with the navigation column below it and its actions with the outline's edge. Its links are
+            hidden below `lg` and offered in the sidebar's panel instead (`hideBelow`, with `collapseBelow="never"` so the bar draws no menu button of its
+            own), so a phone has one menu button and one drawer. */}
+        <Navbar sticky collapseBelow="never" scrollContainerRef={framed ? frameRef : undefined}>
           <Navbar.Row columns="balanced">
-            <Navbar.Brand href="#" onClick={preventNavigation}>
+            {/* The menu button is first so it is at the start of the bar, and the brand in the middle, on a phone, with the search at the end. */}
+            <Sidebar.MenuButton variant="tertiary" tone="brand" size="sm" />
+            <Navbar.Brand href="#" onClick={preventNavigation} column="center" className={styles.headerStart}>
               {copy.brand}
             </Navbar.Brand>
-            <Navbar.Links aria-label={copy.mainNavigation}>
-              <Navbar.Link href="#" current onClick={preventNavigation}>
-                {copy.components}
-              </Navbar.Link>
-              <Navbar.Link href="#" onClick={preventNavigation}>
-                {copy.guides}
-              </Navbar.Link>
-              <Navbar.Link href="#" onClick={preventNavigation}>
-                {copy.foundations}
-              </Navbar.Link>
+            {/* The ends are as wide as each other above `lg`, so the links are exactly in the middle of the window. */}
+            <Navbar.Links aria-label={copy.mainNavigation} align="center" hideBelow="lg">
+              {copy.siteLinks.map((link) => (
+                <Navbar.Link key={link} href="#" current={link === copy.components || undefined} onClick={preventNavigation}>
+                  {link}
+                </Navbar.Link>
+              ))}
             </Navbar.Links>
-            <Sidebar.MenuButton variant="tertiary" tone="neutral" size="sm" />
+            <Navbar.Actions column="end" className={styles.headerEnd}>
+              <IconButton icon={MagnifyingGlassIcon} aria-label={copy.search} variant="tertiary" tone="brand" size="sm" />
+            </Navbar.Actions>
           </Navbar.Row>
         </Navbar>
         {/* The page's width is the columns', so the body spans the window and the page is kept to a reading width inside `Main`. */}
@@ -123,42 +189,44 @@ export function DocumentationPage({ framed = false, sections = 6, contents = tru
           >
             <Sidebar.Content>
               <Sidebar.Nav aria-label={copy.sidebarName}>
-                {copy.sidebarSections.map((section) => (
-                  <Sidebar.Section key={section.label} label={section.label}>
-                    {section.items.map((item) => (
-                      <Sidebar.Item key={item} href="#" current={item === copy.title || undefined} onClick={preventNavigation}>
-                        {item}
-                      </Sidebar.Item>
-                    ))}
-                  </Sidebar.Section>
-                ))}
+                <SidebarLinks />
               </Sidebar.Nav>
             </Sidebar.Content>
           </Sidebar>
           <PageShell.Main>
+            {contents && (
+              // The outline as a row of pills at the top of the page, sticking under the header, where the column has no room (below `lg`; the column takes
+              // over from there). A pill with sections inside it opens them in a panel. Its own name, so the two outlines are told apart.
+              <TableOfContents
+                layout="row"
+                sticky
+                stickyOffset="var(--page-shell-header-height, 0px)"
+                className={styles.outlineRow}
+                style={{ paddingInline: framed ? "var(--dbm-space-4)" : "var(--dbm-space-6)" }}
+                items={contentsItems}
+                scrollContainerRef={framed ? frameRef : undefined}
+                aria-label={copy.contentsRowName}
+              />
+            )}
             <Container size="md" paddingInline={framed ? 4 : 6} style={{ paddingBlock: "var(--dbm-space-8)", display: "grid", gap: "var(--dbm-space-8)" }}>
-              <div style={{ display: "grid", gap: "var(--dbm-space-4)" }}>
-                <Breadcrumb>
-                  <Breadcrumb.Item>
-                    <Breadcrumb.Link href="#" onClick={preventNavigation}>
-                      {copy.breadcrumbHome}
-                    </Breadcrumb.Link>
-                  </Breadcrumb.Item>
-                  <Breadcrumb.Item>
-                    <Breadcrumb.Page>{copy.title}</Breadcrumb.Page>
-                  </Breadcrumb.Item>
-                </Breadcrumb>
-                <PageHeader>
-                  <PageHeader.Title>{copy.title}</PageHeader.Title>
-                  <PageHeader.Description>{copy.intro}</PageHeader.Description>
-                </PageHeader>
-              </div>
+              <PageHeader>
+                <PageHeader.Title>{copy.title}</PageHeader.Title>
+                <PageHeader.Description>{copy.intro}</PageHeader.Description>
+              </PageHeader>
               {shown.map((section) => (
                 <section key={section.id} aria-labelledby={`${section.id}-heading`} id={section.id} style={{ display: "grid", gap: "var(--dbm-space-4)", scrollMarginBlockStart: "5rem" }}>
                   <Heading level={2} size="lg" id={`${section.id}-heading`}>
                     {section.title}
                   </Heading>
                   <Text>{section.text}</Text>
+                  {section.subsections?.map((sub) => (
+                    <div key={sub.id} style={{ display: "grid", gap: "var(--dbm-space-2)", scrollMarginBlockStart: "5rem" }}>
+                      <Heading level={3} size="md" id={sub.id} style={{ scrollMarginBlockStart: "5rem" }}>
+                        {sub.title}
+                      </Heading>
+                      <Text>{sub.text}</Text>
+                    </div>
+                  ))}
                   {section.id === "overview" && (
                     <Alert tone="info">
                       <Alert.Description>{copy.note}</Alert.Description>
@@ -202,7 +270,7 @@ export function DocumentationPage({ framed = false, sections = 6, contents = tru
             // at which the sidebar leaves for its panel: the body stacks as a whole, so the two share a step.
             <PageShell.Aside aria-label={copy.contentsTitle} className={styles.outline} sticky width={framed ? "11rem" : "14rem"} style={{ paddingBlock: "var(--dbm-space-8)", paddingInlineEnd: "var(--dbm-space-4)" }}>
               <TableOfContents
-                items={shown.map((section) => ({ id: section.id, label: section.title }))}
+                items={contentsItems}
                 scrollOffset={80}
                 scrollContainerRef={framed ? frameRef : undefined}
                 aria-label={copy.contentsName}

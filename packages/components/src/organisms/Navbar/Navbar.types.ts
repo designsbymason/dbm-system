@@ -375,6 +375,13 @@ export interface NavbarLinksProps extends Omit<ComponentPropsWithoutRef<"nav">, 
    */
   scroll?: boolean;
   /**
+   * Hides this set from the bar below a width, a breakpoint step: the links are not in the bar on a phone, because they are offered somewhere else
+   * there (in a sidebar's menu panel, say, so a page has one menu button and not two). It hides the bar's copy only: the menu panel below
+   * `collapseBelow` still offers the links, so a bar that hides its links should set `collapseBelow="never"`, and then it draws no menu button of its
+   * own. A `NavigationMenu` in the set is hidden with it.
+   */
+  hideBelow?: Exclude<Breakpoint, "base">;
+  /**
    * How this set marks the current page, in place of the bar's `currentVariant` — so a bar can underline its main links and draw a second
    * row as pills. The menu panel keeps the bar's. See {@link NavbarCurrentVariant}.
    */

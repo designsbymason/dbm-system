@@ -33,11 +33,12 @@ describe("the documentation page", () => {
     }
   });
 
-  it("names the sidebar's menu button apart from the header's own, so the two are told apart", () => {
+  it("has one menu button, the sidebar's, because the header's links are hidden below lg and offered in its panel", () => {
     render(<DocumentationPage />);
-    const names = screen.getAllByRole("button").map((button) => button.getAttribute("aria-label") ?? button.textContent ?? "");
-    expect(names).toContain(documentationCopy.sidebarMenu);
-    expect(new Set(names.filter((name) => /menu/i.test(name))).size).toBe(names.filter((name) => /menu/i.test(name)).length);
+    expect(screen.getAllByRole("button", { name: "Menu" })).toHaveLength(1);
+    const links = screen.getByRole("navigation", { name: documentationCopy.mainNavigation });
+    expect(links).toHaveAttribute("data-hide-below", "lg");
+    expect(within(links).getAllByRole("link").map((link) => link.textContent)).toEqual(documentationCopy.siteLinks);
   });
 
   it("marks the page the reader is on in the sidebar, and no other", () => {
@@ -45,6 +46,13 @@ describe("the documentation page", () => {
     const sidebar = screen.getByRole("navigation", { name: documentationCopy.sidebarName });
     const current = within(sidebar).getAllByRole("link").filter((link) => link.getAttribute("aria-current") === "page");
     expect(current.map((link) => link.textContent)).toEqual([documentationCopy.title]);
+  });
+
+  it("holds only the current header link's section in the sidebar, and has no breadcrumb", () => {
+    render(<DocumentationPage />);
+    const sidebar = screen.getByRole("navigation", { name: documentationCopy.sidebarName });
+    expect(within(sidebar).getAllByRole("link").map((link) => link.textContent)).toEqual(documentationCopy.sidebarItems);
+    expect(screen.queryByRole("navigation", { name: /breadcrumb/i })).not.toBeInTheDocument();
   });
 
   it("takes fewer sections and no outline", () => {

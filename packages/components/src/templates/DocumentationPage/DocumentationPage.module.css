@@ -5,3 +5,31 @@
     display: none !important;
   }
 }
+
+/* The outline is a row of pills at the top of the page below `lg` and a column at the end from there: the sidebar leaves at the same step, so the page
+   always has one of them. */
+@media (min-width: 64rem) {
+  .outlineRow {
+    display: none;
+  }
+}
+
+@media not all and (min-width: 64rem) {
+  .outline {
+    display: none;
+  }
+}
+
+/* The header's two ends (the brand and the actions) are as wide as each other where the links are in the bar, so `align="center"` puts the links exactly in the
+   middle of the window: the room between the ends is then symmetric. */
+@media (min-width: 64rem) {
+  .headerStart,
+  .headerEnd {
+    min-inline-size: var(--dbm-space-32);
+  }
+
+  /* The actions are flush with the window's end edge, not at the start of their room. */
+  .headerEnd {
+    justify-content: flex-end;
+  }
+}

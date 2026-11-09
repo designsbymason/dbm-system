@@ -2087,3 +2087,46 @@ export const ScrollingSetInForcedColoursAndPrint: Story = {
     }
   },
 };
+
+export const LinksHiddenBelowAStepLeaveNoMenuButton: Story = {
+  name: "Links with hideBelow lg are in the bar on a desktop, and on a phone the bar shows neither them nor a menu button of its own — layout test",
+  render: () => (
+    <Navbar collapseBelow="never">
+      <Navbar.Brand href="/">Acme</Navbar.Brand>
+      <Navbar.Links aria-label="Site" hideBelow="lg">
+        <Navbar.Link href="/products" current>
+          Products
+        </Navbar.Link>
+      </Navbar.Links>
+    </Navbar>
+  ),
+  play: async ({ canvasElement }) => {
+    await expect(window.innerWidth).toBeGreaterThanOrEqual(1024);
+    const canvas = within(canvasElement);
+    await expect(canvas.getByRole("navigation", { name: "Site" })).toBeVisible();
+    await expect(canvas.queryByRole("button", { name: "Menu" })).toBeNull();
+  },
+};
+
+export const LinksHiddenBelowAStepOnAPhone: Story = {
+  name: "On a phone a set with hideBelow lg is out of the bar, and the bar has no menu button — layout test",
+  globals: { viewport: { value: "mobile1", isRotated: false } },
+  render: () => (
+    <Navbar collapseBelow="never">
+      <Navbar.Brand href="/">Acme</Navbar.Brand>
+      <Navbar.Links aria-label="Site" hideBelow="lg">
+        <Navbar.Link href="/products" current>
+          Products
+        </Navbar.Link>
+      </Navbar.Links>
+    </Navbar>
+  ),
+  play: async ({ canvasElement }) => {
+    await expect(window.innerWidth).toBeLessThan(768);
+    const canvas = within(canvasElement);
+    const nav = canvasElement.querySelector<HTMLElement>("nav[aria-label='Site']")!;
+    await expect(getComputedStyle(nav).display).toBe("none");
+    await expect(canvas.queryByRole("button", { name: "Menu" })).toBeNull();
+    await expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(window.innerWidth);
+  },
+};

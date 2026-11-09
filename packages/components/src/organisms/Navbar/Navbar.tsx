@@ -464,6 +464,7 @@ const NavbarLinks = forwardRef<HTMLElement, NavbarLinksProps>(
       align = "start",
       quiet = false,
       scroll = false,
+      hideBelow,
       linkSize: ownLinkSize,
       currentVariant: ownCurrentVariant,
       rounded: ownRounded,
@@ -540,6 +541,7 @@ const NavbarLinks = forwardRef<HTMLElement, NavbarLinksProps>(
           aria-labelledby={ariaLabelledBy}
           data-align={align}
           data-scroll={scroll ? "" : undefined}
+          data-hide-below={hideBelow}
           data-overflow-start={scroll && overflowStart ? "" : undefined}
           data-overflow-end={scroll && overflowEnd ? "" : undefined}
           className={cx(styles.links, scroll && styles.scrollLinks, quiet && styles.quiet, linkSizeClass[resolvedLinkSize], className)}

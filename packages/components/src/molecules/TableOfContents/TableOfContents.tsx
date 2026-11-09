@@ -1,5 +1,5 @@
 import { CaretDownIcon, CaretUpIcon } from "@dbm-system/icons";
-import { cx, mergeDefined, mergeRefs } from "@dbm-system/utils";
+import { cx, mergeDefined, mergeRefs, useResolvedResponsiveValue, useScrollEdges } from "@dbm-system/utils";
 import { forwardRef, useCallback, useEffect, useId, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import type { CSSProperties, FocusEvent, KeyboardEvent, MouseEvent } from "react";
 import { Affix } from "../../atoms/Affix";
@@ -9,6 +9,7 @@ import { IconButton } from "../../atoms/IconButton";
 import type { IconSize } from "../../atoms/Icon";
 import { Link } from "../../atoms/Link";
 import { VisuallyHidden } from "../../atoms/VisuallyHidden";
+import { NavigationMenu } from "../../organisms/NavigationMenu";
 import { Popover } from "../Popover";
 import styles from "./TableOfContents.module.css";
 import type {
@@ -155,6 +156,7 @@ export const TableOfContents = forwardRef<HTMLElement, TableOfContentsProps>(
       scrollToHash = true,
       sticky = false,
       stickyOffset,
+      layout = "list",
       collapse = "never",
       foldedStyle = "inline",
       open: controlledOpen,
@@ -203,14 +205,16 @@ export const TableOfContents = forwardRef<HTMLElement, TableOfContentsProps>(
       () => collapse === "auto" && typeof window.matchMedia === "function" && window.matchMedia(NARROW_QUERY).matches,
       () => false,
     );
-    const folded = collapse === "always" || narrow;
+    // A width map is resolved in the browser: the first render is the narrowest layout, as a server render is, and corrects before paint.
+    const isRow = useResolvedResponsiveValue(layout, "list") === "row";
+    const folded = !isRow && (collapse === "always" || narrow);
     /** The room a sticky, folded bar takes at the top of the scrolling area: headings are kept clear of it. */
     const stickyBarHeight = useCallback((): number => {
       const nav = navRef.current;
-      if (!nav || !folded) return 0;
+      if (!nav || !(folded || isRow)) return 0;
       const style = getComputedStyle(nav);
       return style.position === "sticky" ? nav.getBoundingClientRect().height + (parseFloat(style.top) || 0) : 0;
-    }, [folded]);
+    }, [folded, isRow]);
 
     // --- The entries ---
     const [scanned, setScanned] = useState<Entry[]>([]);
@@ -421,7 +425,7 @@ export const TableOfContents = forwardRef<HTMLElement, TableOfContentsProps>(
       if (!isOpenControlled) setInternalOpen(next);
       onOpenChange?.(next);
     };
-    const folds = collapse !== "never";
+    const folds = !isRow && collapse !== "never";
     const dropdown = folds && foldedStyle === "dropdown";
     // The dropdown's panel is only ever open while the outline is folded, whatever the state says at a wide width.
     const popoverOpen = dropdown && folded && isOpen;
@@ -505,12 +509,12 @@ export const TableOfContents = forwardRef<HTMLElement, TableOfContentsProps>(
     }, [movingMarker, placeMarker]);
 
     // --- Following a link ---
-    const follow = (event: MouseEvent<HTMLAnchorElement>, id: string) => {
+    const follow = (event: MouseEvent<HTMLAnchorElement>, id: string, instant = false) => {
       if (event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
       const target = document.getElementById(id);
       if (!target) return;
       event.preventDefault();
-      scrollToTarget(target, smoothScroll && !prefersReducedMotion() ? "smooth" : "auto");
+      scrollToTarget(target, smoothScroll && !instant && !prefersReducedMotion() ? "smooth" : "auto");
       holdingRef.current = true;
       setActive(id);
       try {
@@ -538,12 +542,106 @@ export const TableOfContents = forwardRef<HTMLElement, TableOfContentsProps>(
       toggleRef.current?.focus();
     };
 
+    // --- A row: one line of pills, drawn by `NavigationMenu` ---
+    const rowListRef = useRef<HTMLUListElement>(null);
+    // The ends of a row that is longer than the room fade out, as the ends of a scrolling `Navbar.Links` do.
+    const { overflowStart, overflowEnd } = useScrollEdges(rowListRef, "horizontal", { itemSelector: "li", enabled: isRow });
+    // The pill that holds the current entry is kept in view, by moving the row itself (not the page).
+    useEffect(() => {
+      const row = rowListRef.current;
+      if (!isRow || !row) return;
+      const pill = row.querySelector<HTMLElement>("[data-toc-marked]");
+      if (!pill || pill.getClientRects().length === 0 || row.scrollWidth <= row.clientWidth) return;
+      const box = row.getBoundingClientRect();
+      const rect = pill.getBoundingClientRect();
+      if (rect.left < box.left) row.scrollLeft += rect.left - box.left;
+      else if (rect.right > box.right) row.scrollLeft += rect.right - box.right;
+    }, [isRow, activeId]);
+
     if (entries.length === 0) return null;
 
     const currentIndex = entries.findIndex((entry) => entry.id === activeId);
     const currentEntry = currentIndex >= 0 ? entries[currentIndex] : undefined;
     const navigationName = ariaLabel ?? (ariaLabelledBy === undefined && !showTitle ? text.navigation : undefined);
     const lookClasses = cx(styles.root, sizeClass[size], toneClass[tone], highlightActive && styles.highlighted);
+    const stickyTop = typeof stickyOffset === "string" ? stickyOffset : stickyOffset !== undefined ? `var(--dbm-space-${stickyOffset})` : undefined;
+
+    if (isRow) {
+      const { dir: navDir, onChange: _onChange, defaultValue: _defaultValue, ...navProps } = props as typeof props & { onChange?: unknown; defaultValue?: unknown };
+      return (
+        <NavigationMenu
+          {...(navProps as Record<string, unknown>)}
+          ref={setNavRef}
+          aria-label={ariaLabel ?? text.navigation}
+          dir={navDir === "rtl" ? "rtl" : navDir === "ltr" ? "ltr" : undefined}
+          size={size}
+          rounded
+          currentVariant="subtle"
+          currentType="location"
+          data-overflow-start={overflowStart ? "" : undefined}
+          data-overflow-end={overflowEnd ? "" : undefined}
+          className={cx(styles.row, sticky !== false && styles.stickyRow, className)}
+          style={sticky !== false && stickyTop !== undefined ? ({ "--toc-sticky-top": stickyTop, ...style } as CSSProperties) : style}
+          // A link of the row (a pill, or a pill's own link beside its caret) scrolls to its section as a link in the list does: caught here, since a
+          // split pill's link takes no handler of its own.
+          onClickCapture={(event: MouseEvent<HTMLElement>) => {
+            const anchor = (event.target as HTMLElement).closest<HTMLAnchorElement>("a[href^='#']");
+            const id = anchor?.getAttribute("href")?.slice(1);
+            // A link in a pill's panel jumps instead of gliding: as the panel closes, focus returns to the pill's caret, and that would cut a smooth scroll short.
+            if (anchor && id) follow(event as unknown as MouseEvent<HTMLAnchorElement>, id, !rowListRef.current?.contains(anchor));
+          }}
+          onKeyDown={onKeyDown as never}
+        >
+          <NavigationMenu.List ref={rowListRef} className={styles.rowList}>
+            {entries.map((entry, index) => {
+              if (entry.level !== 1) return null;
+              const end = groupEnd[index] ?? index;
+              const inside = entries.slice(index + 1, end + 1);
+              const isActive = entry.id === activeId;
+              const marked = isActive || (activeIndex > index && activeIndex <= end);
+              const name = typeof entry.label === "string" ? entry.label : "section";
+              const label = (
+                <>
+                  {numbered && <span className={styles.number}>{numbers[index]}</span>}
+                  {entry.label}
+                </>
+              );
+              return (
+                <NavigationMenu.Item key={entry.id} value={entry.id} data-toc-id={entry.id} data-toc-marked={marked ? "" : undefined}>
+                  {inside.length > 0 ? (
+                    <>
+                      {/* `current` only when this is the entry being read: a pill that holds it is marked by its panel, with no `aria-current` of its own. */}
+                      <NavigationMenu.Trigger
+                        href={`#${entry.id}`}
+                        current={isActive || undefined}
+                        disabled={entry.disabled}
+                        aria-label={text.groupToggle(name)}
+                        icon={entry.icon}
+                        badge={entry.trailing}
+                        data-testid={entry.testId}
+                      >
+                        {label}
+                      </NavigationMenu.Trigger>
+                      <NavigationMenu.Content>
+                        {inside.map((child) => (
+                          <NavigationMenu.Link key={child.id} href={`#${child.id}`} current={child.id === activeId} disabled={child.disabled} data-testid={child.testId}>
+                            {child.label}
+                          </NavigationMenu.Link>
+                        ))}
+                      </NavigationMenu.Content>
+                    </>
+                  ) : (
+                    <NavigationMenu.Link href={`#${entry.id}`} current={isActive} disabled={entry.disabled} icon={entry.icon} badge={entry.trailing} data-testid={entry.testId}>
+                      {label}
+                    </NavigationMenu.Link>
+                  )}
+                </NavigationMenu.Item>
+              );
+            })}
+          </NavigationMenu.List>
+        </NavigationMenu>
+      );
+    }
 
     /** The list of links, drawn in the outline itself and, for the dropdown, again in its panel. */
     const renderList = (listElementRef: typeof listRef, id?: string) => (
@@ -629,8 +727,8 @@ export const TableOfContents = forwardRef<HTMLElement, TableOfContentsProps>(
           className,
         )}
         style={
-          sticky === "folded" && stickyOffset !== undefined
-            ? ({ "--toc-sticky-top": `var(--dbm-space-${stickyOffset})`, ...style } as CSSProperties)
+          sticky === "folded" && stickyTop !== undefined
+            ? ({ "--toc-sticky-top": stickyTop, ...style } as CSSProperties)
             : style
         }
         onKeyDown={handleKeyDown}
@@ -709,7 +807,7 @@ export const TableOfContents = forwardRef<HTMLElement, TableOfContentsProps>(
       </nav>
     );
     return sticky === true ? (
-      <Affix asChild offset={stickyOffset} scrollContainerRef={scrollContainerRef}>
+      <Affix asChild offset={typeof stickyOffset === "string" ? undefined : stickyOffset} scrollContainerRef={scrollContainerRef}>
         {nav}
       </Affix>
     ) : (

@@ -32,6 +32,7 @@ export const propOrder = [
   "indicator",
   "currentPath",
   "currentMatch",
+  "currentType",
   "size",
   "currentVariant",
   "rounded",
@@ -56,6 +57,7 @@ export const playgroundOrder = [
   "indicator",
   "currentPath",
   "currentMatch",
+  "currentType",
   "size",
   "currentVariant",
   "rounded",
@@ -314,6 +316,8 @@ suits a side navigation on a wide screen; the stacked form is for a phone.
 Give the menu the page's `currentPath` and the link with that `href` is the current page, and so is the trigger of the panel that holds
 it, with no `current` to write. A link's own `current` (either value) wins, and `currentMatch="prefix"` also matches everything under a
 link's path. Only same-site paths are compared; a hash, a query and a trailing slash are ignored.
+
+A current link says `aria-current="page"`. When the links lead to places in one page rather than to pages (an outline of its sections, as the row of `TableOfContents` is), set `currentType="location"` so a screen reader says so.
 
 <Canvas of={NavigationMenuStories.FromThePath} />
 

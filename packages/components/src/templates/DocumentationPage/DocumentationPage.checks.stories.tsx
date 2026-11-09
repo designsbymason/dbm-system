@@ -81,6 +81,13 @@ export const DesktopLayout: Story = {
     await expect(canvas.getByRole("navigation", { name: documentationCopy.mainNavigation })).toBeVisible();
     await expect(sidebar).not.toBeNull();
     await expect(outline).not.toBeNull();
+    // The row of pills is the outline below lg only: here the column is.
+    await expect(canvas.queryByRole("navigation", { name: documentationCopy.contentsRowName })).toBeNull();
+    // The header spans the window: the brand is at its start edge (over the navigation column) and the links are exactly in the middle of it.
+    const brand = canvas.getByRole("link", { name: documentationCopy.brand });
+    await expect(brand.getBoundingClientRect().left).toBeLessThan(40);
+    const links = canvas.getByRole("navigation", { name: documentationCopy.mainNavigation }).getBoundingClientRect();
+    await expect(Math.abs((links.left + links.right) / 2 - window.innerWidth / 2)).toBeLessThanOrEqual(1);
     const navBox = (sidebar as HTMLElement).getBoundingClientRect();
     const mainBox = main.getBoundingClientRect();
     const outlineBox = (outline as HTMLElement).getBoundingClientRect();
@@ -149,24 +156,34 @@ export const FooterEndsAShortPage: Story = {
 };
 
 export const TabletLayout: Story = {
-  name: "On a tablet the navigation leaves for its panel, the outline drops under the page, and the page does not scroll sideways — layout test",
+  name: "On a tablet the navigation leaves for its panel, the outline is a sticky row of pills under the header, and the page does not scroll sideways — layout test",
   globals: { viewport: { value: "tablet", isRotated: false } },
   render: () => <DocumentationPage />,
   play: async ({ canvasElement }) => {
     await expect(window.innerWidth).toBeGreaterThanOrEqual(768);
     await expect(window.innerWidth).toBeLessThan(1024);
-    const { canvas, main, sidebar, outline } = parts(canvasElement);
+    const { canvas, header, main, sidebar, outline } = parts(canvasElement);
     // The sidebar is out of the page (its column is gone), reached through the header's menu button.
     await expect((sidebar as HTMLElement | null)?.getBoundingClientRect().width ?? 0).toBe(0);
-    await expect(canvas.getByRole("button", { name: documentationCopy.sidebarMenu })).toBeVisible();
-    // The outline is under the page, in the order written, at the page's full width.
-    await expect((outline as HTMLElement).getBoundingClientRect().top).toBeGreaterThanOrEqual(main.getBoundingClientRect().bottom - 1);
+    await expect(canvas.getByRole("button", { name: "Menu" })).toBeVisible();
+    // The header's actions are at the window's end edge even though the links have left the bar.
+    await expect(canvas.getByRole("button", { name: documentationCopy.search }).getBoundingClientRect().right).toBeGreaterThan(window.innerWidth - 40);
+    // The column's outline is gone; the outline is a row of pills at the top of the page, which sticks under the header as the page scrolls.
+    await expect(outline).toBeNull();
+    const row = canvas.getByRole("navigation", { name: documentationCopy.contentsRowName });
+    await expect(row).toBeVisible();
+    await expect(within(row).getAllByRole("link").map((link) => link.textContent)).toEqual(documentationCopy.sections.map((section) => section.title));
+    await expect(row.getBoundingClientRect().top).toBeGreaterThanOrEqual(main.getBoundingClientRect().top - 1);
+    window.scrollTo(0, 600);
+    await nextFrame();
+    await waitFor(() => expect(Math.abs(row.getBoundingClientRect().top - header.getBoundingClientRect().bottom)).toBeLessThan(2));
+    window.scrollTo(0, 0);
     await expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(window.innerWidth);
   },
 };
 
 export const PhonePanelByRealPresses: Story = {
-  name: "On a phone the menu button opens the navigation panel by a real click, focus goes into it, Escape closes it and focus returns to the button — interaction test",
+  name: "On a phone the one menu button opens a panel holding the site's links and then the navigation by a real click, focus goes into it, Escape closes it and focus returns to the button — interaction test",
   tags: ["!dev"],
   globals: { viewport: { value: "mobile1", isRotated: false } },
   render: () => <DocumentationPage />,
@@ -174,11 +191,19 @@ export const PhonePanelByRealPresses: Story = {
     await expect(window.innerWidth).toBeLessThan(768);
     await expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(window.innerWidth);
     const { canvas } = parts(canvasElement);
-    const menu = canvas.getByRole("button", { name: documentationCopy.sidebarMenu });
+    // One menu button: the header's links are not in the bar on a phone, so there is nothing for a second one to open.
+    await expect(canvas.getAllByRole("button", { name: "Menu" })).toHaveLength(1);
+    const menu = canvas.getByRole("button", { name: "Menu" });
     await realClick(menu);
     const panel = await within(document.body).findByRole("dialog");
     await waitFor(() => expect(panel.contains(document.activeElement)).toBe(true));
     await waitFor(() => expect(within(panel).getByRole("link", { name: documentationCopy.title })).toBeVisible());
+    // The one drawer holds both: the site's links first, and the current one (Components) is an expandable group, open, holding its section.
+    const order = within(panel).getAllByRole("link").map((link) => link.textContent);
+    await expect(order.indexOf(documentationCopy.docs)).toBeGreaterThanOrEqual(0);
+    await expect(order.indexOf(documentationCopy.docs)).toBeLessThan(order.indexOf(documentationCopy.sidebarItems[0] as string));
+    const group = within(panel).getByRole("button", { name: documentationCopy.components });
+    await expect(group).toHaveAttribute("aria-expanded", "true");
     await pressEscape();
     await waitFor(() => expect(within(document.body).queryByRole("dialog")).toBeNull());
     await waitFor(() => expect(menu).toHaveFocus());

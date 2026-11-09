@@ -1,6 +1,7 @@
 import { createContext, useContext } from "react";
 import type {
   NavigationMenuCurrentMatch,
+  NavigationMenuCurrentType,
   NavigationMenuCurrentVariant,
   NavigationMenuDirection,
   NavigationMenuLabels,
@@ -41,6 +42,8 @@ export interface NavigationMenuContextValue {
   delayDuration: number;
   currentPath: string | undefined;
   currentMatch: NavigationMenuCurrentMatch;
+  /** The `aria-current` value a current link carries. */
+  currentType: NavigationMenuCurrentType;
   /** The open item's value (`""` for none). */
   value: string;
   setValue: (value: string) => void;

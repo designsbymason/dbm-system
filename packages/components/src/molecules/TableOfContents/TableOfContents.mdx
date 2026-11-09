@@ -25,6 +25,7 @@ export const propOrder = [
   "sticky",
   "stickyOffset",
   "scrollToHash",
+  "layout",
   "collapse",
   "foldedStyle",
   "open",
@@ -198,6 +199,13 @@ setup: `collapse="auto" foldedStyle="dropdown" sticky="folded"`. It is a disclos
 an entry stays a link (it can be opened in a new tab), and the panel closes on a choice, `Escape` or a press outside.
 
 <Canvas of={TableOfContentsStories.Dropdown} />
+
+### A row of pills
+A row (`layout="row"`) is for the top of a page on a phone or tablet, where a column has no room. It is drawn by [`NavigationMenu`](/docs/organisms-navigation-navigationmenu--docs): one rounded pill for each top-level entry, and a pill that has entries inside it is a split pill, its link to its own section and a caret that opens a panel of the entries inside it. The pill that holds the section being read is marked, so the row says where you are even when the section is in a panel. With `sticky` it sticks to the top of the page or the scrolling box (`stickyOffset` takes a CSS length, such as a sticky header's measured height), and the headings are kept clear of it. A row that is longer than the room scrolls sideways inside itself, keeps the marked pill in view and **fades out the end that has more** (and the start, once it has been scrolled), so a pill cut off at the edge reads as "more this way". It has no title, does not fold, and ignores `tone` and `collapse`, so give it a name with `aria-label` or `labels.navigation`.
+
+`layout` also takes a width map, `{ base: "row", lg: "list" }`, which draws one outline that is a row on a phone and the list from `lg`, with one set of entries and one name. It changes the layout where the outline is; it cannot move it, so a page that keeps the column at the end of the page and the row at the top (the [Documentation Page](/docs/templates-application-shells-documentation-page--docs)) draws two outlines from one list of entries and shows one at each width.
+
+<Canvas of={TableOfContentsStories.Row} />
 
 ### Sticky
 
@@ -444,6 +452,7 @@ only about 1.1:1 from it, which is why the bar stays the main cue. The track the
 <TokenRow token="border.default" usage="the track along the start edge (decorative)" />
 <TokenRow token="border.brand" usage="the marker beside the current entry, brand tone" />
 <TokenRow token="border.neutral-strong" usage="the marker beside the current entry, neutral tone" />
+<TokenRow token="space.8" usage="the width of the row's faded ends" />
 <TokenRow token="border-width.2" usage="the track and marker's thickness" />
 <TokenRow token="font-family.primary" usage="the outline's typography" />
 <TokenRow token="font-size.xs" usage="the text size at the xs step" />

@@ -35,6 +35,8 @@ describe("the documentation page on the server", () => {
   ])("hydrates %s with no mismatch", async (_name, props) => {
     const html = onTheServer(() => renderToString(<DocumentationPage {...props} />));
     vi.stubGlobal("IntersectionObserver", class { observe() {} unobserve() {} disconnect() {} takeRecords() { return []; } });
+    // The outline row is drawn by `NavigationMenu`, whose primitive watches its sizes with a `ResizeObserver`, which jsdom does not have either.
+    vi.stubGlobal("ResizeObserver", class { observe() {} unobserve() {} disconnect() {} });
     const container = document.createElement("div");
     container.innerHTML = html;
     document.body.append(container);
