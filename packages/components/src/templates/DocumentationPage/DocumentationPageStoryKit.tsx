@@ -6,6 +6,7 @@ import { CodeBlock } from "../../molecules/CodeBlock";
 import { PageHeader } from "../../molecules/PageHeader";
 import { Table } from "../../molecules/Table";
 import { TableOfContents } from "../../molecules/TableOfContents";
+import { BackToTop } from "../../atoms/BackToTop";
 import { Container } from "../../atoms/Container";
 import { Heading } from "../../atoms/Heading";
 import { Link } from "../../atoms/Link";
@@ -68,6 +69,7 @@ export const documentationCopy = {
   next: "ButtonGroup",
   previousLabel: "Previous",
   nextLabel: "Next",
+  pagesNavigation: "Pages",
   footer: "© dbM Docs",
   footerNavigation: "Footer",
   footerLinks: ["Help", "Privacy", "Terms"],
@@ -83,6 +85,9 @@ export interface DocumentationPageProps {
 }
 
 const frameHeight = "40rem";
+
+/** How far from the top of the page a heading lands after a jump, in pixels: the sticky header's height (59px) and a gap. One value for the sections' `scroll-margin` and the outline's `scrollOffset`, so the browser's jump and the outline's click land alike. */
+const headerClearance = 80;
 
 /** The items of the current header link's section, as links. */
 function SectionItems() {
@@ -186,6 +191,8 @@ export function DocumentationPage({ framed = false, sections = 6, contents = tru
             stickyOffset="var(--page-shell-header-height, 0px)"
             // A Docs page frames the page in a box narrower than a window, so its columns are narrower there.
             width={framed ? "12rem" : "16rem"}
+            // The phone panel is wider than the column, with room for the site's links and the sections under them.
+            panelWidth="20rem"
           >
             <Sidebar.Content>
               <Sidebar.Nav aria-label={copy.sidebarName}>
@@ -214,14 +221,14 @@ export function DocumentationPage({ framed = false, sections = 6, contents = tru
                 <PageHeader.Description>{copy.intro}</PageHeader.Description>
               </PageHeader>
               {shown.map((section) => (
-                <section key={section.id} aria-labelledby={`${section.id}-heading`} id={section.id} style={{ display: "grid", gap: "var(--dbm-space-4)", scrollMarginBlockStart: "5rem" }}>
+                <section key={section.id} aria-labelledby={`${section.id}-heading`} id={section.id} style={{ display: "grid", gap: "var(--dbm-space-4)", scrollMarginBlockStart: headerClearance }}>
                   <Heading level={2} size="lg" id={`${section.id}-heading`}>
                     {section.title}
                   </Heading>
                   <Text>{section.text}</Text>
                   {section.subsections?.map((sub) => (
-                    <div key={sub.id} style={{ display: "grid", gap: "var(--dbm-space-2)", scrollMarginBlockStart: "5rem" }}>
-                      <Heading level={3} size="md" id={sub.id} style={{ scrollMarginBlockStart: "5rem" }}>
+                    <div key={sub.id} style={{ display: "grid", gap: "var(--dbm-space-2)", scrollMarginBlockStart: headerClearance }}>
+                      <Heading level={3} size="md" id={sub.id} style={{ scrollMarginBlockStart: headerClearance }}>
                         {sub.title}
                       </Heading>
                       <Text>{sub.text}</Text>
@@ -255,7 +262,7 @@ export function DocumentationPage({ framed = false, sections = 6, contents = tru
                   )}
                 </section>
               ))}
-              <nav aria-label="Pages" style={{ display: "flex", justifyContent: "space-between", gap: "var(--dbm-space-4)", flexWrap: "wrap" }}>
+              <nav aria-label={copy.pagesNavigation} style={{ display: "flex", justifyContent: "space-between", gap: "var(--dbm-space-4)", flexWrap: "wrap" }}>
                 <Link href="#" onClick={preventNavigation}>
                   {copy.previousLabel}: {copy.previous}
                 </Link>
@@ -271,7 +278,7 @@ export function DocumentationPage({ framed = false, sections = 6, contents = tru
             <PageShell.Aside aria-label={copy.contentsTitle} className={styles.outline} sticky width={framed ? "11rem" : "14rem"} style={{ paddingBlock: "var(--dbm-space-8)", paddingInlineEnd: "var(--dbm-space-4)" }}>
               <TableOfContents
                 items={contentsItems}
-                scrollOffset={80}
+                scrollOffset={headerClearance}
                 scrollContainerRef={framed ? frameRef : undefined}
                 aria-label={copy.contentsName}
               />
@@ -292,6 +299,8 @@ export function DocumentationPage({ framed = false, sections = 6, contents = tru
             </nav>
           </PageShell.Content>
         </PageShell.Footer>
+        {/* Fixed to the window's corner once the page has scrolled; in a Docs page's frame it follows the frame's own scrolling. */}
+        <BackToTop scrollContainerRef={framed ? frameRef : undefined} />
       </PageShell>
     </Sidebar.Provider>
   );

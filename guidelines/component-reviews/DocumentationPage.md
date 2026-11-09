@@ -1,6 +1,6 @@
 # Documentation Page — review findings
 
-**Tier:** Template (a story-only example page, [ADR-0179](../adr/0179-templates-ship-as-composable-shells-in-the-components-package-with-story-only-example-pages-over-shipping-finished-pages-or-keeping-all-templates-storybook-only.md) and [ADR-0184](../adr/0184-a-story-only-template-page-is-a-folder-of-stories-and-a-story-kit-in-templates-with-demo-controls-and-no-playground-over-a-shipped-component-or-a-separate-pages-tree.md)) · **Category:** Data pages · **Finalized:** not yet (the maintainer's to declare)
+**Tier:** Template (a story-only example page, [ADR-0179](../adr/0179-templates-ship-as-composable-shells-in-the-components-package-with-story-only-example-pages-over-shipping-finished-pages-or-keeping-all-templates-storybook-only.md) and [ADR-0184](../adr/0184-a-story-only-template-page-is-a-folder-of-stories-and-a-story-kit-in-templates-with-demo-controls-and-no-playground-over-a-shipped-component-or-a-separate-pages-tree.md)) · **Category:** Data pages · **Finalized 2026-11-09**, at the maintainer's declaration, after review pass 1 below
 
 Planned 2026-11-08 with `/plan-template`, approved by the maintainer with the recommendation on every decision. It is the "Docs or content shell" row of `04-component-inventory.md`, built as a recipe: a page on `PageShell` that an app copies, with nothing imported from it.
 
@@ -37,3 +37,13 @@ Built to the plan above, in `src/templates/DocumentationPage/`: a story kit (`Do
   - **`Sidebar`'s `stickyOffset` took only a spacing step** ([ADR-0195](../adr/0195-sidebars-stickyoffset-takes-any-css-length-as-well-as-a-spacing-step-over-a-custom-property-written-in-style-or-a-second-prop.md)), already widened.
 - **Checks, each broken once and failed:** the sticky offset (back to a step), the shared collapse step (removed) and the print rule: the sticking check, the tablet layout check and the print check failed. The real-browser checks: three columns on a desktop with each landmark once and no page overflow; the navigation and the outline stuck under the header after a real wheel scroll, the navigation as tall as the rest of the window; a real click on an outline entry scrolling to its section and marking it current, then a real scroll moving the mark; the footer ending a short page; the tablet (the navigation gone, the outline under the page); the phone panel by real presses (a click, focus inside, `Escape`, focus back); print; forced colours.
 - **Not verified:** a real phone, Safari and Firefox, a screen reader, a real printer, and right to left (a page needs none).
+
+## Review pass 1 (2026-11-09)
+Five findings, all fixed; not yet Finalized.
+- **`BackToTop` added** (it was in the plan and left out without a note): after the footer, with `scrollContainerRef` on a Docs page's frame.
+- **A docs-token test** (`DocumentationPage.docs.test.ts`) holds the Docs page's token row to the stylesheet's one token (`space.32`); the inline spacing is in the prose.
+- **No hardcoded offsets:** one `headerClearance` (80px: the header's 59px and a gap) is the sections' `scroll-margin` and the outline's `scrollOffset` (a pixel prop, so a CSS variable cannot be passed); the "Pages" navigation's name moved into the page's copy.
+- **A real-keys-only check** (`PrimaryTaskByRealKeys`): `Tab` from the page's start reaches the skip link, the header, the navigation, the page and the outline in that order; `Enter` on an outline entry scrolls to its section, marks it and moves focus onto the section (the outline hands it on); a real wheel then brings up `BackToTop`.
+- **The phone panel is `panelWidth="20rem"`** (the column is 16rem), asserted wider than the column and inside the window, and in the Docs and snippets.
+- **Show code:** the three snippets now write the outline's entries once for the row and the column (the short page's row had listed sections the page does not have), carry the sections' `scroll-margin` and `BackToTop`, and are typechecked (`check-snippets`).
+- Broken once and failed: the panel width (back to 16rem) and `BackToTop` (removed).

@@ -44,6 +44,13 @@ async function pressEscape() {
   await send("Input.dispatchKeyEvent", { type: "keyUp", key: "Escape", code: "Escape", windowsVirtualKeyCode: 27 });
 }
 
+/** A real key press through the Chrome DevTools Protocol (`Tab` and `Enter` carry the text a page's own handlers read). */
+async function pressKey(key: "Tab" | "Enter") {
+  const code = key === "Tab" ? 9 : 13;
+  await send("Input.dispatchKeyEvent", { type: "keyDown", key, code: key, windowsVirtualKeyCode: code, ...(key === "Enter" ? { text: "\r" } : {}) });
+  await send("Input.dispatchKeyEvent", { type: "keyUp", key, code: key, windowsVirtualKeyCode: code });
+}
+
 /** Waits for a smooth scroll to finish: the page has not moved for a few frames. */
 async function settled() {
   let last = -1;
@@ -141,6 +148,50 @@ export const OutlineLinkJumpsAndFollowsTheScroll: Story = {
   },
 };
 
+/** Which part of the page holds focus, by landmark. */
+function where(element: Element | null): string {
+  if (!element) return "none";
+  if (element.closest("header")) return "header";
+  if (element.closest("aside")) return "outline";
+  if (element.closest(`nav[aria-label="${documentationCopy.sidebarName}"]`)) return "sidebar";
+  if (element.closest("main")) return "page";
+  if (element.closest("footer")) return "footer";
+  return element.textContent?.includes("Skip") ? "skip" : "other";
+}
+
+export const PrimaryTaskByRealKeys: Story = {
+  name: "With real keys only, Tab goes from the skip link through the header, the navigation, the page and the outline in markup order, and Enter on an outline entry jumps to its section with focus moved onto the section — interaction test",
+  tags: ["!dev"],
+  render: () => <DocumentationPage />,
+  play: async ({ canvasElement }) => {
+    const { header, outline } = parts(canvasElement);
+    window.scrollTo(0, 0);
+    (document.activeElement as HTMLElement | null)?.blur();
+    // Tab through the page until the outline's "Usage" entry has focus, noting the part each stop is in; the order of the parts is the keyboard's path.
+    const usage = within(outline as HTMLElement).getByRole("link", { name: "Usage" });
+    const path: string[] = [];
+    for (let step = 0; step < 60 && document.activeElement !== usage; step += 1) {
+      await pressKey("Tab");
+      const part = where(document.activeElement);
+      if (path[path.length - 1] !== part) path.push(part);
+    }
+    await expect(document.activeElement).toBe(usage);
+    await expect(path).toEqual(["skip", "header", "sidebar", "page", "outline"]);
+    // Enter follows the link: the section is under the header, the entry is current, and focus moved onto the section (the outline hands it on, so the next Tab reads the section and does not start from the top of the page).
+    await pressKey("Enter");
+    await settled();
+    const section = canvasElement.querySelector<HTMLElement>("#usage")!;
+    await waitFor(() => expect(section.getBoundingClientRect().top).toBeGreaterThanOrEqual(header.getBoundingClientRect().bottom - 2));
+    await waitFor(() => expect(usage).toHaveAttribute("aria-current", "location"));
+    await expect(document.activeElement).toBe(section);
+    // Scrolled well down the page by a real wheel, the back-to-top button is offered.
+    await wheel(1500);
+    await settled();
+    await waitFor(() => expect(within(document.body).getByRole("button", { name: "Back to top" })).toBeVisible());
+    window.scrollTo(0, 0);
+  },
+};
+
 export const FooterEndsAShortPage: Story = {
   name: "On a short page the footer follows the navigation column and ends the page, with no gap under it — layout test",
   render: () => <DocumentationPage sections={1} contents={false} />,
@@ -198,6 +249,14 @@ export const PhonePanelByRealPresses: Story = {
     const panel = await within(document.body).findByRole("dialog");
     await waitFor(() => expect(panel.contains(document.activeElement)).toBe(true));
     await waitFor(() => expect(within(panel).getByRole("link", { name: documentationCopy.title })).toBeVisible());
+    // The panel is `panelWidth` (20rem) wide, or the window less a sliver where that is narrower (the test window can be 320px), and so wider than the column's
+    // 16rem; the page still does not scroll sideways with it open.
+    const rem = parseFloat(getComputedStyle(document.documentElement).fontSize);
+    const panelWidth = panel.getBoundingClientRect().width;
+    await expect(panelWidth).toBeGreaterThan(16 * rem);
+    await expect(panelWidth).toBeLessThanOrEqual(20 * rem);
+    await expect(panelWidth).toBeLessThan(window.innerWidth);
+    await expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(window.innerWidth);
     // The one drawer holds both: the site's links first, and the current one (Components) is an expandable group, open, holding its section.
     const order = within(panel).getAllByRole("link").map((link) => link.textContent);
     await expect(order.indexOf(documentationCopy.docs)).toBeGreaterThanOrEqual(0);

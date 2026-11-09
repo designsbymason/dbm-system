@@ -1,5 +1,5 @@
 import { Canvas, Meta } from "@storybook/addon-docs/blocks";
-import { Callout, ComponentHeader, PlaygroundControls, ReferenceTable, RelatedCard } from "../../../.storybook/blocks";
+import { Callout, ComponentHeader, PlaygroundControls, ReferenceTable, RelatedCard, TokenRow } from "../../../.storybook/blocks";
 import { BookOpenIcon } from "@dbm-system/icons";
 import { Button } from "../../atoms/Button";
 import { VisuallyHidden } from "../../atoms/VisuallyHidden";
@@ -28,7 +28,7 @@ box 40rem tall; open a story from the sidebar on its own, and narrow the window,
 
 ```tsx
 import {
-  Alert, CodeBlock, Container, Heading, IconButton, Link, Navbar, PageHeader, PageShell, Sidebar, Table, TableOfContents, Text, useSidebar,
+  Alert, BackToTop, CodeBlock, Container, Heading, IconButton, Link, Navbar, PageHeader, PageShell, Sidebar, Table, TableOfContents, Text, useSidebar,
 } from "@dbm-system/components";
 ```
 
@@ -57,12 +57,13 @@ A page is not a component, so it has no properties table. These are the pieces i
   rows={[
     ["Header", "A sticky `Navbar` that spans the window: the brand at its start (over the navigation column), the links exactly in the middle and the actions at its end. The brand and the actions are as wide as each other above `lg` (the page's stylesheet), so `Navbar.Links align=\"center\"` puts the links in the middle of the window. Below `lg` the links are hidden from the bar (`hideBelow=\"lg\"`) and the bar never collapses (`collapseBelow=\"never\"`), so it draws no menu button of its own. On a phone the `Sidebar.MenuButton` is at the start (written first in the row), the brand in the middle and the actions at the end (the brand and the actions name their `column`); the actions are a search `IconButton`, tertiary and brand-toned, and they take the room the links left. The header is a direct child of `PageShell`, so it sticks by itself."],
     ["One drawer", "The `Sidebar.MenuButton` in the header is the page's only menu button. Its panel is the `Sidebar`'s phone panel, and the sidebar holds only the section of the current header link (the components), and in the panel a part that reads `useSidebar().inPanel` draws the header's links too: the current one is a `Sidebar.Group` that holds its section, so the drawer is an expandable menu."],
-    ["Navigation column", "A `Sidebar` at the start of `PageShell.Body`, with `sticky` and `stickyOffset=\"var(--page-shell-header-height, 0px)\"`: it sticks under the header at the height the shell measured, and takes the rest of the window. Give its `Sidebar.Nav` a name of its own."],
+    ["Navigation column", "A `Sidebar` at the start of `PageShell.Body`, with `sticky` and `stickyOffset=\"var(--page-shell-header-height, 0px)\"`: it sticks under the header at the height the shell measured, and takes the rest of the window. On a phone its panel is `panelWidth=\"20rem\"` wide (the column is 16rem), with room for the site's links and the sections under them; the panel never passes the window less a sliver. Give its `Sidebar.Nav` a name of its own."],
     ["The page", "`PageShell.Main` holding a `Container size=\"md\"` (a reading width) with a `PageHeader`, one `section` per heading, and links to the previous and next page."],
     ["Outline", "A sticky `PageShell.Aside` with a `TableOfContents`, from `lg`: its entries link to the sections and the current one follows the scroll. `scrollOffset` keeps a section's heading clear of the header."],
     ["Outline row", "Below `lg`, where the column has no room, a second `TableOfContents` with `layout=\"row\"` at the top of `PageShell.Main`, above the page's head: a pill for each section, the sections inside one opening in a panel from a caret beside its pill (the row is drawn by `NavigationMenu`, and its ends fade out when it is longer than the room). It sticks under the header (`stickyOffset=\"var(--page-shell-header-height, 0px)\"`) and marks the pill that holds the section being read. The page's stylesheet shows one outline at each width (the other is `display: none`, so it is not in the accessibility tree), and each has its own name."],
     ["Provider", "A `Sidebar.Provider` around the whole shell, with `collapseBelow=\"lg\"`, so the header's menu button reaches the sidebar's panel (`AppShell` does this for you). The body stacks as a whole below the aside's step, so the sidebar leaves for its panel at the same one."],
     ["Footer", "`PageShell.Footer`, at the bottom of the window on a short page."],
+    ["Back to top", "A `BackToTop` after the footer: fixed to the window's corner once the page has scrolled, and it scrolls the page to the top. Inside a frame of its own scrolling (this Docs page) it takes `scrollContainerRef`."],
   ]}
 />
 
@@ -92,7 +93,7 @@ A page of a few paragraphs needs no outline: there is no aside, and the page tak
 - Give the sidebar and the aside the same collapse step. The body stacks as a whole below the aside's step, so a sidebar that is still a column there would sit
   above the page.
 - Write one `section` with its own `h2` for each entry of the outline, with the `id` the entry links to, and keep one `h1` (the `PageHeader`'s title).
-- Set `scrollOffset` on the outline (and `scroll-margin` on a section) to the header's height, so a jump does not hide the heading under the bar.
+- Set `scrollOffset` on the outline (and `scroll-margin` on a section) to the same distance, the header's height and a gap (the demo's `headerClearance`, 80px), so a jump from the outline and the browser's own jump to `#id` land alike and neither hides the heading under the bar.
 - Give the outline row a name of its own (`aria-label`), different from the column outline's, and hide whichever is not for the width with `display: none` rather than drawing both.
 - Leave the sidebar and the outline out of print (the page's own `@media print`), so the paper holds the text.
 
@@ -155,7 +156,7 @@ one outline at a time.
       </Navbar.Row>
     </Navbar>
     <PageShell.Body width="full" paddingInline={0} paddingBlock={0}>
-      <Sidebar sticky stickyOffset="var(--page-shell-header-height, 0px)" width="16rem">
+      <Sidebar sticky stickyOffset="var(--page-shell-header-height, 0px)" width="16rem" panelWidth="20rem">
         <Sidebar.Content>
           <Sidebar.Nav aria-label="Documentation">…</Sidebar.Nav>
         </Sidebar.Content>
@@ -165,9 +166,11 @@ one outline at a time.
         …
       </PageShell.Main>
       <PageShell.Aside aria-label="On this page" sticky width="14rem">
-        <TableOfContents scrollOffset={80} items={items} />
+        <TableOfContents scrollOffset={80} items={items} />  {/* the sections' scroll-margin is the same 80 */}
       </PageShell.Aside>
     </PageShell.Body>
+    <PageShell.Footer>…</PageShell.Footer>
+    <BackToTop />
   </PageShell>
 </Sidebar.Provider>
 ```
@@ -227,8 +230,10 @@ function SidebarLinks() {
 
 ## Design tokens used
 
-The page is made of components, so every colour, size and radius comes from them. What it draws itself is spacing between its own pieces, in inline styles: `space.4`,
-`space.6` and `space.8`, and `space.32` in the stylesheet. Its stylesheet is only the print rule, the width of the header's two ends (`space.32`) and which of the two outlines shows at a width.
+The page is made of components, so every colour, size and radius comes from them. What it draws itself is spacing between its own pieces, in inline styles (`space.2`,
+`space.4` and `space.8`), and the stylesheet's one token, which keeps the header's two ends the same width. The stylesheet also holds the print rule and says which of the two outlines shows at a width.
+
+<TokenRow token="space.32" usage="the least width of the header's two ends (the brand and the actions) above lg, so the links are exactly in the middle of the window" />
 
 ## Related components
 

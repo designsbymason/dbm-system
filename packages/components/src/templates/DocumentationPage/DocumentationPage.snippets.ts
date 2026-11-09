@@ -19,7 +19,7 @@ const header = `    <Navbar sticky collapseBelow="never">
       </Navbar.Row>
     </Navbar>`;
 
-const sidebar = `      <Sidebar className={styles.sidebar} sticky stickyOffset="var(--page-shell-header-height, 0px)" width="16rem">
+const sidebar = `      <Sidebar className={styles.sidebar} sticky stickyOffset="var(--page-shell-header-height, 0px)" width="16rem" panelWidth="20rem">
         <Sidebar.Content>
           <Sidebar.Nav aria-label="Documentation">
             <Sidebar.Section label="Components">
@@ -30,22 +30,21 @@ const sidebar = `      <Sidebar className={styles.sidebar} sticky stickyOffset="
         </Sidebar.Content>
       </Sidebar>`;
 
-const row = `        <TableOfContents
+// The outline's entries are written once and read by the row and by the column, so the two list the same sections.
+const entries = (ids: string[]) =>
+  `[${ids.map((id) => `{ id: "${id}", label: "${id[0]?.toUpperCase()}${id.slice(1)}" }`).join(", ")}]`;
+
+const row = (ids: string[]) => `        <TableOfContents
           layout="row"
           sticky
           stickyOffset="var(--page-shell-header-height, 0px)"
           className={styles.outlineRow}
           aria-label="Page sections"
-          items={[
-            { id: "overview", label: "Overview" },
-            { id: "usage", label: "Usage" },
-            { id: "properties", label: "Properties" },
-            { id: "sizes", label: "Sizes", level: 2 },
-          ]}
+          items={${entries(ids)}}
         />`;
 
-const page = (body: string) => `      <PageShell.Main>
-${row}
+// Without an outline (`ids` left out) the page has neither the column nor the row.
+const page = (body: string, ids?: string[]) => `      <PageShell.Main>${ids ? `\n${row(ids)}` : ""}
         <Container size="md" paddingInline={6}>
 ${body}
         </Container>
@@ -56,18 +55,18 @@ const head = `          <PageHeader>
             <PageHeader.Description>A control that starts an action.</PageHeader.Description>
           </PageHeader>`;
 
-const sections = `          <section id="overview" aria-labelledby="overview-heading">
+const sections = `          <section id="overview" aria-labelledby="overview-heading" style={{ scrollMarginBlockStart: 80 }}>
             <Heading level={2} size="lg" id="overview-heading">Overview</Heading>
             <Text>A button says what will happen when it is pressed.</Text>
             <Alert tone="info">
               <Alert.Description>Use one primary button per view.</Alert.Description>
             </Alert>
           </section>
-          <section id="usage" aria-labelledby="usage-heading">
+          <section id="usage" aria-labelledby="usage-heading" style={{ scrollMarginBlockStart: 80 }}>
             <Heading level={2} size="lg" id="usage-heading">Usage</Heading>
             <CodeBlock language="tsx" code={'<Button onClick={save}>Save changes</Button>'} />
           </section>
-          <section id="properties" aria-labelledby="properties-heading">
+          <section id="properties" aria-labelledby="properties-heading" style={{ scrollMarginBlockStart: 80 }}>
             <Heading level={2} size="lg" id="properties-heading">Properties</Heading>
             <Table aria-label="Button properties">
               <Table.Header>
@@ -85,18 +84,14 @@ const sections = `          <section id="overview" aria-labelledby="overview-hea
             </Table>
           </section>`;
 
-const contents = `      <PageShell.Aside aria-label="On this page" className={styles.outline} sticky width="14rem">
-        <TableOfContents
-          scrollOffset={80}
-          items={[
-            { id: "overview", label: "Overview" },
-            { id: "usage", label: "Usage" },
-            { id: "properties", label: "Properties" },
-          ]}
-        />
+const outline = (ids: string[]) => `      <PageShell.Aside aria-label="On this page" className={styles.outline} sticky width="14rem">
+        <TableOfContents scrollOffset={80} items={${entries(ids)}} />
       </PageShell.Aside>`;
 
-const footer = `    <PageShell.Footer>© Acme Docs</PageShell.Footer>`;
+const allSections = ["overview", "usage", "properties"];
+
+const footer = `    <PageShell.Footer>© Acme Docs</PageShell.Footer>
+    <BackToTop />`;
 
 const shell = (body: string[]) => `<Sidebar.Provider collapseBelow="lg">
   <PageShell>
@@ -118,22 +113,25 @@ export const documentationPageSnippets = {
     for you). The sidebar sticks under the header at the height the shell measured (--page-shell-header-height); styles.sidebar and styles.outline are your
     own classes that leave the navigation out of print (@media print { display: none }); give the sidebar's navigation a name of its own, since the header's
     links are already a navigation named "Main". The body stacks as a whole below the aside's step (lg), so the sidebar leaves for its panel at the same
-    step (collapseBelow="lg" on the provider): the aside then drops under the page and the page takes the width. */}
-${shell([sidebar, page(`${head}\n${sections}`), contents])}`,
+    step (collapseBelow="lg" on the provider): the aside then drops under the page and the page takes the width. The sections' scroll-margin and the outline's
+    scrollOffset are the same distance (the header's height and a gap), so a jump from the outline and the browser's own jump to #id land alike. BackToTop is fixed
+    to the window's corner once the page has scrolled. */}
+${shell([sidebar, page(`${head}\n${sections}`, allSections), outline(allSections)])}`,
 
   shortPage: `{/* A short page: the footer still sits at the bottom of the window, and the outline has only what the page has. */}
 ${shell([
   sidebar,
-  page(`${head}
-          <section id="overview" aria-labelledby="overview-heading">
+  page(
+    `${head}
+          <section id="overview" aria-labelledby="overview-heading" style={{ scrollMarginBlockStart: 80 }}>
             <Heading level={2} size="lg" id="overview-heading">Overview</Heading>
             <Text>A button says what will happen when it is pressed.</Text>
-          </section>`),
-  `      <PageShell.Aside aria-label="On this page" className={styles.outline} sticky width="14rem">
-        <TableOfContents scrollOffset={80} items={[{ id: "overview", label: "Overview" }]} />
-      </PageShell.Aside>`,
+          </section>`,
+    ["overview"],
+  ),
+  outline(["overview"]),
 ])}`,
 
-  withoutContents: `{/* No outline: a page of a few paragraphs needs none, so there is no aside and the page takes the room. */}
+  withoutContents: `{/* No outline: a page of a few paragraphs needs none, so there is neither the column (no aside) nor the row, and the page takes the room. */}
 ${shell([sidebar, page(`${head}\n${sections}`)])}`,
 };
