@@ -10,7 +10,7 @@ import { DemoLayersShell, DemoNavigationShell, DemoPlainHeaderShell, DemoShell, 
 type PlaygroundArgs = AppShellProps & { showAside: boolean };
 
 const meta: Meta<PlaygroundArgs> = {
-  title: "Templates/Application shells/AppShell",
+  title: "Templates/Shells/AppShell",
   component: AppShell,
   subcomponents: {},
   parameters: { layout: "fullscreen", fullBleed: true },

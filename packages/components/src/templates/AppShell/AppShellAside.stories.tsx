@@ -3,7 +3,7 @@ import { AppShell } from "./AppShell";
 
 // Docs-only (guidelines/adr/0013) — `AppShell.Aside`'s own props get their own Properties table on AppShell.mdx.
 const meta: Meta<typeof AppShell.Aside> = {
-  title: "Templates/Application shells/AppShell/Aside",
+  title: "Templates/Shells/AppShell/Aside",
   component: AppShell.Aside,
   tags: ["!dev"],
   argTypes: {

@@ -6,7 +6,7 @@ import { DocumentationPage, documentationCopy } from "./DocumentationPageStoryKi
 // Hidden real-browser checks (guidelines/adr/0013): what jsdom can't do (layout, a breakpoint, sticking, scrolling, a real press, print). They run in the
 // `storybook` (Chromium) project; the test window is 1200px wide unless a story pins another.
 const meta: Meta = {
-  title: "Templates/Application shells/Documentation Page/Checks",
+  title: "Templates/Data pages/Documentation Page/Checks",
   tags: ["!dev"],
   parameters: { layout: "fullscreen", fullBleed: true },
 };

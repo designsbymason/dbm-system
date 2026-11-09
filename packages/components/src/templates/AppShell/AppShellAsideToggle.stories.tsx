@@ -3,7 +3,7 @@ import { AppShell } from "./AppShell";
 
 // Docs-only (guidelines/adr/0013) — `AppShell.AsideToggle`'s own props get their own Properties table on AppShell.mdx.
 const meta: Meta<typeof AppShell.AsideToggle> = {
-  title: "Templates/Application shells/AppShell/AsideToggle",
+  title: "Templates/Shells/AppShell/AsideToggle",
   component: AppShell.AsideToggle,
   tags: ["!dev"],
   argTypes: {

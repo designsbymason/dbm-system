@@ -191,14 +191,12 @@ Not individual components, but composed patterns — worth planning for since a 
 
 **A template is named in Title Case, and a page ends with the word "Page"** (`Data Table List Page`, `Auth Flow Page`): the Storybook title `Templates/{Group}/{Name}`, its folder (`DataTableListPage`), its files and its review file all use that name. An application shell keeps its component name (`AppShell`, the frame with a sidebar; `PageShell`, the frame without one: each shell's Docs open with that one line saying which to choose). A template's name must not equal a component's. The table below describes what each is in plain words. This is the working list of page-level templates apps commonly need. The first four were planned from the start; the rest were added as candidates, and a candidate is built only when an app needs it. Priority follows the legend above. Nothing here is counted in the summary below.
 
-**Application shells**
+**Shells**
 
 | Template | Priority | Composes |
 |---|---|---|
 | Dashboard shell (Sidebar + Navbar + content area), built as `AppShell` | 🟡 | `Sidebar`, `Navbar`, `Drawer` on a phone, `Breadcrumb` |
 | Page shell (no sidebar), built as `PageShell` | ⚪ | `Navbar`, `Container`, `BackToTop`, a footer; for an app with no sidebar |
-| Marketing or public page shell | ⚪ | `NavigationMenu`, a footer, `Container`, `BackToTop` |
-| Docs or content shell, built as the `Documentation Page` (a story-only example page on `PageShell`) | 🟡 | `Navbar`, `Sidebar`, `TableOfContents`, `PageHeader`, a content column |
 
 **Authentication**
 
@@ -216,6 +214,8 @@ Not individual components, but composed patterns — worth planning for since a 
 | Dashboard or overview page | ⚪ | `Stat`, `Card`, `Grid`, `DataTable`, `Timeline` |
 | Create or edit form page | ⚪ | `Form`, `FieldGroup`, `Card` sections, a sticky action bar, `ConfirmDialog` for discard |
 | Master-detail (inbox style) | ⚪ | `Splitter`, `List`, `ScrollArea`, a detail pane |
+| Marketing or public page (a story-only example page, planned as the `Marketing Page`) | ⚪ | `Navbar` with `NavigationMenu`, a footer, `Container`, `BackToTop` |
+| Docs or content page, built as the `Documentation Page` (a story-only example page on `PageShell`) | 🟡 | `Navbar`, `Sidebar`, `TableOfContents`, `PageHeader`, a content column |
 
 **Settings and account**
 
@@ -238,7 +238,7 @@ Not individual components, but composed patterns — worth planning for since a 
 
 ### Template build order, itemized
 
-Nothing in the list depends on another template, and every component they compose is built, so the order is about what each one proves and what the next one can reuse, not about blocking. **1, 2 and 18 are built, 3–5 are the maintainer's order of interest, and 6 onwards is a proposed sequence** that the maintainer can reorder. One template at a time, each planned first and started only on the maintainer's confirmation ([ADR-0179](adr/0179-templates-ship-as-composable-shells-in-the-components-package-with-story-only-example-pages-over-shipping-finished-pages-or-keeping-all-templates-storybook-only.md)). Application shells ship (API to keep stable); every page is a story-only example.
+Nothing in the list depends on another template, and every component they compose is built, so the order is about what each one proves and what the next one can reuse, not about blocking. **1, 2 and 18 are built, 3–5 are the maintainer's order of interest, and 6 onwards is a proposed sequence** that the maintainer can reorder. One template at a time, each planned first and started only on the maintainer's confirmation ([ADR-0179](adr/0179-templates-ship-as-composable-shells-in-the-components-package-with-story-only-example-pages-over-shipping-finished-pages-or-keeping-all-templates-storybook-only.md)). Shells ship (API to keep stable); every page is a story-only example.
 
 | # | Template | Kind | Why here | Status |
 |---|---|---|---|---|
@@ -259,7 +259,7 @@ Nothing in the list depends on another template, and every component they compos
 | 17 | Onboarding or setup wizard | Page | Needs flow decisions (`Stepper`, `Form`, `ProgressBar`); follows 3 | Planned |
 | 18 | `PageShell` (the shell for an app with no sidebar, renamed from `TopNavShell`, [ADR-0186](adr/0186-the-top-nav-shell-is-renamed-pageshell-over-keeping-topnavshell-or-renaming-appshell-as-well.md)) | Shell (ships) | Public API for an app with no sidebar: the app's own header (a `Navbar`, which sticks itself, or any header, sticking by `Affix`), one `main` with an optional aside beside it (stacked under it on a phone, or a drawer; sticky, following a header that hides), `Content` in three widths (contained, `width="full"`, `bleed`), `navigating` for a bar along the top of the window between pages, `focusTarget` and `scrollToTopOnChange` for a page change, a footer at the window's bottom; shares its page-change handling and loading strip with `AppShell` | Built and Finalized: [review](component-reviews/PageShell.md) ([ADR-0188](adr/0188-pageshell-leaves-its-header-to-the-navbar-and-affix-and-keeps-only-page-level-parts-over-owning-the-header-slot-s-sticking-shadow-and-hiding.md), [ADR-0189](adr/0189-pageshell-has-an-aside-beside-main-in-a-body-that-stacks-under-the-page-by-default-with-an-optional-drawer-and-shares-the-aside-drawer-with-appshell-over-an-aside-inside-the-content-or-a-copy-of-the-drawer.md), [ADR-0190](adr/0190-pageshell-gains-a-window-wide-navigating-bar-a-heading-focus-target-an-opt-in-scroll-to-top-and-an-aside-that-follows-a-hiding-header-over-leaving-each-to-the-app.md), [ADR-0192](adr/0192-pageshell-content-gets-a-bleed-prop-and-an-as-prop-and-pageshell-bleed-is-removed-over-a-separate-part-or-a-single-type-prop.md), [ADR-0185](adr/0185-topnavshell-is-its-own-small-compound-shell-with-two-helpers-extracted-from-appshell-to-internal-over-appshell-without-a-sidebar-or-a-wrapper-around-it.md)) |
 | 19 | Documentation Page (the docs or content shell, as a recipe) | Page | A full-width header with its links exactly in the middle and one menu drawer on a phone, a navigation column and an outline on either side of a `PageShell` page, both sticking under the header, and the outline as a sticky row of pills below `lg` (found: `Sidebar`'s `stickyOffset` took only a spacing step, now a CSS length, [ADR-0195](adr/0195-sidebars-stickyoffset-takes-any-css-length-as-well-as-a-spacing-step-over-a-custom-property-written-in-style-or-a-second-prop.md)) | Built: [review](component-reviews/DocumentationPage.md), not yet Finalized |
-| 20 | Marketing Page (the marketing or public page shell, as a recipe) | Page | A `Navbar` holding a `NavigationMenu`, sections in the three `Content` widths and a footer of columns | Planned: [plan](component-reviews/MarketingPage.md) |
+| 20 | Marketing Page (the marketing or public page, as a recipe) | Page | A `Navbar` holding a `NavigationMenu`, sections in the three `Content` widths and a footer of columns | Planned: [plan](component-reviews/MarketingPage.md) |
 
 ---
 

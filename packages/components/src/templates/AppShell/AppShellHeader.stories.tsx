@@ -3,7 +3,7 @@ import { AppShell } from "./AppShell";
 
 // Docs-only (guidelines/adr/0013) — `AppShell.Header`'s own props get their own Properties table on AppShell.mdx.
 const meta: Meta<typeof AppShell.Header> = {
-  title: "Templates/Application shells/AppShell/Header",
+  title: "Templates/Shells/AppShell/Header",
   component: AppShell.Header,
   tags: ["!dev"],
   argTypes: {

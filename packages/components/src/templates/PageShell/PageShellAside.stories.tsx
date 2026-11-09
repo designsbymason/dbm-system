@@ -3,7 +3,7 @@ import { PageShell } from "./PageShell";
 
 // Docs-only (guidelines/adr/0013) — `PageShell.Aside`'s own props get their own Properties table on PageShell.mdx.
 const meta: Meta<typeof PageShell.Aside> = {
-  title: "Templates/Application shells/PageShell/Aside",
+  title: "Templates/Shells/PageShell/Aside",
   component: PageShell.Aside,
   tags: ["!dev"],
   argTypes: {

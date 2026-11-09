@@ -3,7 +3,7 @@ import { PageShell } from "./PageShell";
 
 // Docs-only (guidelines/adr/0013) — `PageShell.Body`'s own props get their own Properties table on PageShell.mdx.
 const meta: Meta<typeof PageShell.Body> = {
-  title: "Templates/Application shells/PageShell/Body",
+  title: "Templates/Shells/PageShell/Body",
   component: PageShell.Body,
   tags: ["!dev"],
   argTypes: {

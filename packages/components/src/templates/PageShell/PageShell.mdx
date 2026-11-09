@@ -31,7 +31,7 @@ export const playgroundOrder = ["navigating", "dir", "sticky", "hideOnScroll", "
 
 <ComponentHeader title="PageShell" tier="Template" />
 
-**Which shell?** An app with no sidebar uses `PageShell`; one with a sidebar uses [`AppShell`](/docs/templates-application-shells-appshell--docs).
+**Which shell?** An app with no sidebar uses `PageShell`; one with a sidebar uses [`AppShell`](/docs/templates-shells-appshell--docs).
 
 The page frame of an application with no sidebar: a skip link, an optional banner, your header, the page's one `<main>` (with an optional
 `PageShell.Aside` beside it, in a `PageShell.Body`) and a footer. The page scrolls as a whole. It is **layout and wiring only**, and it **does not wrap your header**: put a [`Navbar`](/docs/organisms-navigation-navbar--docs) (or
@@ -349,7 +349,7 @@ builds the whole title (`(title) => title + " · dbM"`). The title the document 
 </Callout>
 <Callout tone="danger" title="Don't">
 
-- Don't use `PageShell` for an app with a sidebar: [`AppShell`](/docs/templates-application-shells-appshell--docs) has the sidebar, the rail and
+- Don't use `PageShell` for an app with a sidebar: [`AppShell`](/docs/templates-shells-appshell--docs) has the sidebar, the rail and
   the aside. Don't use it for a page with no header of its own either: a plain
   [`Container`](/docs/atoms-layout-container--docs) with `as="main"` is the page there.
 - Don't put a second `<main>` inside it, and don't wrap a `Navbar` in a `<header>` or a box of your own: a `Navbar` draws its own `<header>`, and a box
@@ -559,7 +559,7 @@ The skip link is `SkipLink`, which lists its own tokens.
 <RelatedCard
   name="AppShell"
   description="The frame for an app with a sidebar: the sidebar, the aside and a header over them"
-  href="/?path=/docs/templates-application-shells-appshell--docs"
+  href="/?path=/docs/templates-shells-appshell--docs"
 >
   <Button variant="secondary" size="sm">Open shell</Button>
 </RelatedCard>

@@ -3,7 +3,7 @@ import { PageShell } from "./PageShell";
 
 // Docs-only (guidelines/adr/0013) — `PageShell.Banner`'s own props get their own Properties table on PageShell.mdx.
 const meta: Meta<typeof PageShell.Banner> = {
-  title: "Templates/Application shells/PageShell/Banner",
+  title: "Templates/Shells/PageShell/Banner",
   component: PageShell.Banner,
   tags: ["!dev"],
   argTypes: {

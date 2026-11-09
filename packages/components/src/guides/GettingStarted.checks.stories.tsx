@@ -28,9 +28,9 @@ const index: Record<string, RawEntry> = Object.fromEntries([
   docs("Molecules/Navigation/Tabs"),
   docs("Organisms/Data Display/DataTable"),
   docs("Organisms/Navigation/Sidebar"),
-  docs("Templates/Application shells/AppShell"),
+  docs("Templates/Shells/AppShell"),
   // Grouped under a shell group on purpose: the asterisk follows the tag, not the group.
-  docs("Templates/Application shells/Landing page", ["example-page"]),
+  docs("Templates/Shells/Landing page", ["example-page"]),
   docs("Templates/Data pages/Data Table List Page", ["example-page"]),
 ]);
 

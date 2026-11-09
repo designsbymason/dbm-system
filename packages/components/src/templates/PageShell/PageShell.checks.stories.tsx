@@ -8,7 +8,7 @@ import { DemoPageShell } from "./PageShellStoryKit";
 // They run in the `storybook` (Chromium) project; the test window is 1200px wide unless a story pins another. The page scrolls as a whole, so
 // each check that scrolls uses the window.
 const meta: Meta = {
-  title: "Templates/Application shells/PageShell/Checks",
+  title: "Templates/Shells/PageShell/Checks",
   tags: ["!dev"],
   parameters: { layout: "fullscreen", fullBleed: true },
 };

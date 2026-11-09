@@ -1,6 +1,6 @@
 # AppShell — review findings
 
-**Tier:** Template · **Category:** Application shells · **Finalized:** ✅ 2026-11-07 (declared by the owner after the final review below)
+**Tier:** Template · **Category:** Shells · **Finalized:** ✅ 2026-11-07 (declared by the owner after the final review below)
 
 First template, built 2026-11-04 under [ADR-0179](../adr/0179-templates-ship-as-composable-shells-in-the-components-package-with-story-only-example-pages-over-shipping-finished-pages-or-keeping-all-templates-storybook-only.md) with the `06-engineering-standards.md` §9 checklist applied as it was written. **Not Finalized**: that is the maintainer's to declare.
 

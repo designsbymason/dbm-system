@@ -105,8 +105,9 @@ const preview: Preview = {
         // Getting started (the welcome page, with the component index) first,
         // then the written guides, then the token reference, then the tiers
         // (Atoms, then Molecules, Organisms and Templates alphabetically; the template groups come out in the
-        // inventory's own order, Application shells first).
+        // inventory's own order, Shells first).
         const groupPriority = ["Getting started", "Guides", "Foundations", "Atoms"];
+        const templateGroups = ["Shells", "Authentication", "Data pages", "Settings and account", "System and utility pages"];
         const guidesOrder = [
           "Guides/Theming",
           "Guides/Accessibility",
@@ -146,6 +147,14 @@ const preview: Preview = {
         }
         if (aGroup === "Foundations") {
           return foundationsOrder.indexOf(a.title) - foundationsOrder.indexOf(b.title);
+        }
+        if (aGroup === "Templates") {
+          // The template groups in the inventory's own order, not alphabetical (Shells would come out after Data pages).
+          // @ts-expect-error — `title` can't be typed; see comment above
+          const templateGroup = (title) => templateGroups.indexOf(title.split("/")[1] ?? "");
+          const aTemplate = templateGroup(a.title);
+          const bTemplate = templateGroup(b.title);
+          if (aTemplate !== bTemplate) return (aTemplate === -1 ? templateGroups.length : aTemplate) - (bTemplate === -1 ? templateGroups.length : bTemplate);
         }
         if (a.title !== b.title) {
           return a.title.localeCompare(b.title, undefined, { numeric: true });

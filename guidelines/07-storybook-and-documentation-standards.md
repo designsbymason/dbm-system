@@ -28,7 +28,7 @@ Registered in `.storybook/main.ts`'s `addons` array: `@storybook/addon-a11y` (th
 | 8. Media | `Media` |
 | 9. Utility | `Utility` |
 
-There is no catch-all group: every component's category segment matches exactly one inventory category. A template's story `title` is `Templates/{Group}/{Name}` (the name in Title Case, a page ending with "Page", `Data Table List Page`: see `04-component-inventory.md`), where the group is one of the Templates headings in the inventory (`Application shells`, `Authentication`, `Data pages`, `Settings and account`, `System and utility pages`); they come out in that order and after the other tiers, since the default order is alphabetical. A template story sets `parameters: { layout: "fullscreen", fullBleed: true }`: `fullBleed` is opt-in and removes the preview's own padding and minimum height (every story has them otherwise), because the template is the page. On its Docs page (`viewMode === "docs"`) the padding stays and the template is drawn in a frame instead. A top-level **`Foundations`** group (§7) sorts before the tiers via the `groupPriority` array in `preview.tsx`'s `storySort`, since top-level group order isn't alphabetical by default.
+There is no catch-all group: every component's category segment matches exactly one inventory category. A template's story `title` is `Templates/{Group}/{Name}` (the name in Title Case, a page ending with "Page", `Data Table List Page`: see `04-component-inventory.md`), where the group is one of the Templates headings in the inventory (`Shells`, `Authentication`, `Data pages`, `Settings and account`, `System and utility pages`); they come out in that order and after the other tiers, since the default order is alphabetical. A template story sets `parameters: { layout: "fullscreen", fullBleed: true }`: `fullBleed` is opt-in and removes the preview's own padding and minimum height (every story has them otherwise), because the template is the page. On its Docs page (`viewMode === "docs"`) the padding stays and the template is drawn in a frame instead. A top-level **`Foundations`** group (§7) sorts before the tiers via the `groupPriority` array in `preview.tsx`'s `storySort`, since top-level group order isn't alphabetical by default.
 
 ## 4. The Docs page template
 
@@ -299,10 +299,10 @@ Foundational components first (prove the template before mass-applying it), then
 | ImageViewer | Organism | Media | ✅ | ✅ 2026-10-31 | [ImageViewer.md](component-reviews/ImageViewer.md) |
 | ColorPicker | Organism | Inputs & Forms | ✅ | ✅ 2026-10-31 | [ColorPicker.md](component-reviews/ColorPicker.md) |
 | Tour | Organism | Overlay | ✅ | ✅ 2026-11-02 | [Tour.md](component-reviews/Tour.md) |
-| AppShell | Template | Application shells | ✅ | ✅ 2026-11-07 | [AppShell.md](component-reviews/AppShell.md) |
+| AppShell | Template | Shells | ✅ | ✅ 2026-11-07 | [AppShell.md](component-reviews/AppShell.md) |
 | Data Table List Page | Template | Data pages | ✅ | ✅ 2026-11-07 | [DataTableListPage.md](component-reviews/DataTableListPage.md) |
-| PageShell | Template | Application shells | ✅ | ✅ 2026-11-07 | [PageShell.md](component-reviews/PageShell.md) |
-| Documentation Page | Template | Application shells | ✅ | not yet | [DocumentationPage.md](component-reviews/DocumentationPage.md) |
+| PageShell | Template | Shells | ✅ | ✅ 2026-11-07 | [PageShell.md](component-reviews/PageShell.md) |
+| Documentation Page | Template | Data pages | ✅ | not yet | [DocumentationPage.md](component-reviews/DocumentationPage.md) |
 
 Components not yet built are listed in `04-component-inventory.md`'s build orders, and a row is added here once a component is built, and its Finalized cell is filled when its review pass is declared done. A Docs page is one deliverable inside each component's full `06-engineering-standards.md` §9 review pass, not a separate sweep; components are reviewed one at a time. Tier membership follows [ADR-0012](adr/0012-item-components-are-atom-tier-even-when-their-container-is-a-molecule.md) (`GridItem` and `ListItem` are atoms, `Grid` and `List` are molecules).
 

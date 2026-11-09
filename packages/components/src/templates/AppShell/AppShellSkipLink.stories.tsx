@@ -3,7 +3,7 @@ import { AppShell } from "./AppShell";
 
 // Docs-only (guidelines/adr/0013) — `AppShell.SkipLink`'s own props get their own Properties table on AppShell.mdx.
 const meta: Meta<typeof AppShell.SkipLink> = {
-  title: "Templates/Application shells/AppShell/SkipLink",
+  title: "Templates/Shells/AppShell/SkipLink",
   component: AppShell.SkipLink,
   tags: ["!dev"],
   argTypes: {

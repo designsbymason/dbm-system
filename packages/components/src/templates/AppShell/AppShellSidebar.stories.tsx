@@ -3,7 +3,7 @@ import { AppShell } from "./AppShell";
 
 // Docs-only (guidelines/adr/0013) — `AppShell.Sidebar`'s own props get their own Properties table on AppShell.mdx.
 const meta: Meta<typeof AppShell.Sidebar> = {
-  title: "Templates/Application shells/AppShell/Sidebar",
+  title: "Templates/Shells/AppShell/Sidebar",
   component: AppShell.Sidebar,
   tags: ["!dev"],
   argTypes: {
