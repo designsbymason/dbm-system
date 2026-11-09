@@ -30,7 +30,7 @@ open a story from the sidebar on its own, and narrow the window, to see the phon
 
 ```tsx
 import {
-  AppShell, Breadcrumb, Button, Checkbox, CheckboxGroup, ConfirmDialog, DataTable, Drawer, EmptyState, Heading, IconButton, Menu,
+  AppShell, Breadcrumb, Button, Checkbox, CheckboxGroup, ConfirmDialog, DataTable, EmptyState, Heading, IconButton, Menu,
   Pagination, SearchInput, Select, TableToolbar, Toast, Toolbar,
 } from "@dbm-system/components";
 ```
@@ -155,7 +155,8 @@ The table is replaced by a message and a retry, and the heading stays. The messa
 - Lay the toolbar out in three columns: the count at the start, the search taking the room that is left, and the filters
   at the end. A filter is its name as plain text, then a button of a fixed width that shows only the choice, so choosing
   something never changes the button's size or moves what is beside it. Make the table's columns fixed shares of its
-  width, so a longer value never moves one. On a phone, the toolbar is the search and a "Filters" button that opens both
+  width, so a longer value never moves one. Put the filters in a `TableToolbar.Filters`: while the table is
+  narrower than 48rem (the table's own width, not the window's) the toolbar is the search and a "Filters" button that opens both
   filters in a bottom sheet (with "Clear all" and "Done"), then the count; the button says how many filters are in force.
 - Keep the toolbar's search, filters, count and bulk actions inside `DataTable.Toolbar`: the table places it above
   itself and hands it the table's state, so a count or a "select all" cannot disagree with the table. The footer here is

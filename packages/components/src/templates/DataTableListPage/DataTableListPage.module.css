@@ -75,27 +75,28 @@
   grid-column: 2;
 }
 
-/* A filter is its name as plain text, then a button of a fixed width that shows only the choice: the choice at the start, the
-   chevron at the end, so choosing something never changes the button's size or moves what is beside it. */
-.filterGroup {
-  align-items: center;
-  display: flex;
+/* A filter is its name as plain text (`labelPlacement="before"`), then a button of a fixed width that shows only the choice: the choice at the
+   start, the chevron at the end, so choosing something never changes the button's size or moves what is beside it. The class is on the box that
+   holds both, so the button is reached from it. */
+.toolbar .choiceFilter {
   flex: none;
-  gap: var(--dbm-space-2);
 }
 
-.filterLabel {
-  color: var(--dbm-text-secondary);
-  white-space: nowrap;
-}
-
-.toolbar .filterGroup .filter {
+.toolbar .choiceFilter > button {
   flex: none;
   gap: var(--dbm-space-2);
   justify-content: space-between;
   min-inline-size: 0;
   padding-inline: var(--dbm-space-3);
   text-align: start;
+}
+
+.toolbar .statusFilter > button {
+  inline-size: 9rem;
+}
+
+.toolbar .departmentFilter > button {
+  inline-size: 10.5rem;
 }
 
 .panel {
@@ -135,26 +136,10 @@
   white-space: nowrap;
 }
 
-/* The phone's "Filters" button, and what it opens: two sections of checkboxes. The button is only there on a phone. */
-.toolbar .filtersButton {
-  display: none;
-  flex: none;
-}
-
-.sheetSections {
-  display: grid;
-  gap: var(--dbm-space-6);
-}
-
-.sheetSection {
-  display: grid;
-  gap: var(--dbm-space-3);
-}
-
-/* Narrower than 45rem, the toolbar is the search box and a "Filters" button that opens both filters in a bottom sheet, then the
+/* Narrower than 48rem (`TableToolbar.Filters`' default step), the toolbar is the search box and a "Filters" button that opens both filters in a bottom sheet, then the
    count; the chips and the bulk actions take a line each, and the table's footer puts the page controls first and the rows per
    page and the range under them, one at each end. */
-@container (max-width: 45rem) {
+@container not (min-width: 48rem) {
   .toolbar {
     grid-template-columns: minmax(0, 1fr);
   }
@@ -164,13 +149,8 @@
     order: 1;
   }
 
-  .toolbar .filtersButton {
-    display: inline-flex;
-    order: 2;
-  }
-
   .toolbar .filters {
-    display: none;
+    order: 2;
   }
 
   .toolbar .summary {

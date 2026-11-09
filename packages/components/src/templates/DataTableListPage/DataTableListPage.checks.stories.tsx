@@ -241,9 +241,9 @@ export const PhoneToolbarIsASearchAndAFiltersButtonWithASheet: Story = {
     await realClick(within(sheet).getByRole("checkbox", { name: "Design" }));
     await realClick(within(sheet).getByRole("button", { name: "Done" }));
     await waitFor(() => expect(within(document.body).queryByRole("dialog", { name: "Filters" })).toBeNull());
-    await waitFor(() => expect(canvas.getByRole("button", { name: "Filters (2)" })).toBeVisible());
+    await waitFor(() => expect(canvas.getByRole("button", { name: "Filters, 2 active" })).toBeVisible());
     // Closing the sheet hands focus back to the button that opened it.
-    await waitFor(() => expect(canvas.getByRole("button", { name: "Filters (2)" })).toHaveFocus());
+    await waitFor(() => expect(canvas.getByRole("button", { name: "Filters, 2 active" })).toHaveFocus());
     await waitFor(() => expect(canvas.getByRole("list", { name: "Applied filters" })).toBeVisible());
     await expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(window.innerWidth);
 

@@ -13,7 +13,7 @@ import { Toolbar } from "../Toolbar";
 import { TableToolbar } from "./TableToolbar";
 import { tableToolbarPlaygroundSnippet, tableToolbarSnippets } from "./TableToolbar.snippets";
 import type { TableToolbarProps } from "./TableToolbar.types";
-import { OrdersDemo, SelectionBelowDemo, SplitBarDemo } from "./TableToolbarStoryKit";
+import { FiltersDemo, OrdersDemo, SelectionBelowDemo, SplitBarDemo } from "./TableToolbarStoryKit";
 
 const noControls = { control: false } as const;
 const column = { display: "flex", flexDirection: "column", gap: "var(--dbm-space-6)", alignItems: "stretch" } as const;
@@ -255,6 +255,30 @@ export const AllSizes: Story = {
           </TableToolbar.Row>
         </TableToolbar>
       ))}
+    </div>
+  ),
+};
+
+/** A bar narrower than `collapseBelow` draws its filters as one "Filters" button that opens them in a bottom sheet; wider, they are inline. */
+export const FiltersAsASheet: Story = {
+  name: "Filters as a sheet",
+  parameters: { docs: { source: { code: tableToolbarSnippets.filtersSheet } } },
+  argTypes: { "aria-label": noControls },
+  render: (args) => (
+    <div style={{ inlineSize: "24rem" }}>
+      <FiltersDemo size={args.size} />
+    </div>
+  ),
+};
+
+/** With a `value` a filter's button shows the choice, and `labelPlacement="before"` draws the filter's name as plain text before it. */
+export const FilterWithAValue: Story = {
+  name: "A filter that shows its choice",
+  parameters: { docs: { source: { code: tableToolbarSnippets.filterValue } } },
+  argTypes: { "aria-label": noControls },
+  render: (args) => (
+    <div style={{ inlineSize: "60rem" }}>
+      <FiltersDemo size={args.size} labelPlacement="before" />
     </div>
   ),
 };
@@ -615,5 +639,148 @@ export const ForcedColoursInteraction: Story = {
     } finally {
       await emulate("none");
     }
+  },
+};
+
+// ---- `TableToolbar.Filters`: the sheet, by real input in a real browser (ADR-0199). ----
+
+/** A real mouse click through the Chrome DevTools Protocol, mapping the test iframe's scale. */
+async function realClick(element: Element) {
+  const rect = element.getBoundingClientRect();
+  const frame = window.frameElement?.getBoundingClientRect();
+  const scale = frame ? frame.width / window.innerWidth : 1;
+  const x = (frame?.left ?? 0) + (rect.left + rect.width / 2) * scale;
+  const y = (frame?.top ?? 0) + (rect.top + rect.height / 2) * scale;
+  await send("Input.dispatchMouseEvent", { type: "mouseMoved", x, y });
+  await send("Input.dispatchMouseEvent", { type: "mousePressed", x, y, button: "left", clickCount: 1 });
+  await send("Input.dispatchMouseEvent", { type: "mouseReleased", x, y, button: "left", clickCount: 1 });
+}
+
+/** A real key press through the Chrome DevTools Protocol. */
+async function realKey(key: "Tab" | "Enter" | "Escape") {
+  const codes = { Tab: 9, Enter: 13, Escape: 27 } as const;
+  await send("Input.dispatchKeyEvent", { type: "keyDown", key, code: key, windowsVirtualKeyCode: codes[key], ...(key === "Enter" ? { text: "\r" } : {}) });
+  await send("Input.dispatchKeyEvent", { type: "keyUp", key, code: key, windowsVirtualKeyCode: codes[key] });
+}
+
+const isDrawn = (element: Element) => element.getClientRects().length > 0;
+
+export const FiltersInlineWhileTheBarIsWide: Story = {
+  ...hidden,
+  tags: ["!dev"],
+  name: "Filters — inline above the step, no sheet button — layout test",
+  render: () => (
+    <div style={{ inlineSize: "60rem" }}>
+      <FiltersDemo />
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const toolbar = canvas.getByRole("toolbar", { name: "Filters" });
+    await expect(isDrawn(toolbar)).toBe(true);
+    await expect(within(toolbar).getAllByRole("button").map((button) => button.textContent)).toEqual(["Status", "Owner"]);
+    // The sheet's button is in the page but not drawn, so it is out of the tab order and the accessibility tree.
+    const sheetButton = canvasElement.querySelector<HTMLElement>('button[aria-haspopup="dialog"][aria-label="Filters"]')!;
+    await expect(isDrawn(sheetButton)).toBe(false);
+    await expect(canvas.queryByRole("button", { name: "Filters" })).toBeNull();
+  },
+};
+
+export const FiltersSheetByRealClick: Story = {
+  ...hidden,
+  tags: ["!dev"],
+  name: "Filters — below the step the sheet opens by a real click at the bottom edge, a choice follows into the button, Done closes it and focus returns — interaction test",
+  render: () => (
+    <div style={{ inlineSize: "24rem" }}>
+      <FiltersDemo />
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    // Narrow: the inline filters are not drawn and the sheet's button is.
+    await expect(canvas.queryByRole("toolbar", { name: "Filters" })).toBeNull();
+    const button = canvas.getByRole("button", { name: "Filters" });
+    await expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(window.innerWidth);
+    await realClick(button);
+    const sheet = await within(document.body).findByRole("dialog");
+    // The sheet is the window's width and sits on the bottom edge.
+    await waitFor(() => expect(Math.abs(sheet.getBoundingClientRect().bottom - window.innerHeight)).toBeLessThan(2));
+    await expect(Math.round(sheet.getBoundingClientRect().width)).toBe(window.innerWidth);
+    await expect(within(sheet).getByRole("heading", { level: 3, name: "Status" })).toBeVisible();
+    await expect(within(sheet).getByRole("heading", { level: 3, name: "Owner" })).toBeVisible();
+    // A real click on a checkbox in the sheet: the sheet stays open and the button behind it says one filter is applied.
+    await realClick(within(sheet).getByRole("checkbox", { name: "Open" }));
+    await waitFor(() => expect(canvasElement.querySelector('button[aria-label="Filters, 1 active"]')).not.toBeNull());
+    await expect(within(sheet).getByRole("button", { name: "Clear all" })).toBeEnabled();
+    await realClick(within(sheet).getByRole("button", { name: "Done" }));
+    await waitFor(() => expect(within(document.body).queryByRole("dialog")).toBeNull());
+    await waitFor(() => expect(canvasElement.querySelector('button[aria-label="Filters, 1 active"]')).toHaveFocus());
+  },
+};
+
+export const FiltersSheetByRealKeys: Story = {
+  ...hidden,
+  tags: ["!dev"],
+  name: "Filters — the sheet opens with Enter on its button, takes focus, and Escape closes it with focus back on the button — interaction test",
+  render: () => (
+    <div style={{ inlineSize: "24rem" }}>
+      <FiltersDemo />
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const button = canvas.getByRole("button", { name: "Filters" });
+    button.focus();
+    await realKey("Enter");
+    const sheet = await within(document.body).findByRole("dialog");
+    await waitFor(() => expect(sheet.contains(document.activeElement)).toBe(true));
+    await realKey("Escape");
+    await waitFor(() => expect(within(document.body).queryByRole("dialog")).toBeNull());
+    await waitFor(() => expect(button).toHaveFocus());
+  },
+};
+
+export const FiltersSheetClosesWhenTheBarGrows: Story = {
+  ...hidden,
+  tags: ["!dev"],
+  name: "Filters — an open sheet closes when the bar grows past the step, and the filters are inline — interaction test",
+  render: () => (
+    <div style={{ inlineSize: "24rem" }} data-testid="box">
+      <FiltersDemo />
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await realClick(canvas.getByRole("button", { name: "Filters" }));
+    await within(document.body).findByRole("dialog");
+    canvas.getByTestId("box").style.inlineSize = "60rem";
+    await waitFor(() => expect(within(document.body).queryByRole("dialog")).toBeNull());
+    await waitFor(() => expect(canvas.getByRole("toolbar", { name: "Filters" })).toBeVisible());
+    // Wait for the sheet's exit to finish, so the accessibility run that follows sees a settled page.
+    await waitFor(() => expect(document.body.querySelector("[data-radix-focus-guard]")).toBeNull());
+  },
+};
+
+export const FilterShowsItsChoiceBeforeItsName: Story = {
+  ...hidden,
+  tags: ["!dev"],
+  name: "Filter — a value shows the choice, the name is drawn before the button and the button is named by both — layout test",
+  render: () => (
+    <div style={{ inlineSize: "60rem" }}>
+      <FiltersDemo labelPlacement="before" />
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const button = canvas.getByRole("button", { name: "Status: All" });
+    await expect(button).toHaveTextContent("All");
+    const name = canvas.getByText("Status:");
+    // The name is before the button, on the same line, and the button does not shift when the choice changes.
+    await expect(name.getBoundingClientRect().right).toBeLessThanOrEqual(button.getBoundingClientRect().left + 1);
+    await expect(Math.abs(name.getBoundingClientRect().top - button.getBoundingClientRect().top)).toBeLessThan(20);
+    await userEvent.click(button);
+    await userEvent.click(await within(document.body).findByRole("checkbox", { name: "Open" }));
+    await waitFor(() => expect(canvas.getByRole("button", { name: "Status: Open" })).toBeInTheDocument());
+    await userEvent.keyboard("{Escape}");
   },
 };

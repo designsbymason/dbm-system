@@ -62,6 +62,10 @@ export interface TableToolbarFilterLabels {
   activeCount: (count: number) => string;
   /** The panel's accessible name: "Status filter". Takes the filter's `label`. */
   panel: (label: string) => string;
+  /** The button's name while the filter has a `value`: "Status: All". Takes the `label` and the `value`. */
+  named: (label: string, value: string) => string;
+  /** The name drawn before the button with `labelPlacement="before"`: "Status:". Takes the `label`. */
+  before: (label: string) => string;
 }
 
 export interface TableToolbarFilterProps extends Omit<ComponentPropsWithoutRef<"button">, "children" | "aria-label"> {
@@ -72,6 +76,20 @@ export interface TableToolbarFilterProps extends Omit<ComponentPropsWithoutRef<"
    * state is yours; this part only opens and names the panel.
    */
   children?: ReactNode;
+  /**
+   * What the button shows of the choice ("All", "Open", "2 selected"). Left out, the button shows the filter's `label` and the count's badge.
+   * Given, the button shows the choice, is named "Status: All" (holding its visible text as whole words), and the `label` is drawn by
+   * `labelPlacement`.
+   */
+  value?: string;
+  /**
+   * Where the filter's name is drawn when it is given a `value`. `"inside"` writes it in the button ("Status: All"); `"before"` draws it as
+   * plain text before a button that shows only the choice. Without a `value` the name is always in the button. With `"before"` the part is
+   * a box holding the name and the button, so `className` and `style` go on that box and everything else (`ref`, `id`, the handlers, the
+   * `aria-*` props) on the button; size the button from the box (`.box > button`).
+   * @default 'inside'
+   */
+  labelPlacement?: "inside" | "before";
   /**
    * How many values of this filter are applied. Above zero the button shows the count, its accessible name says it
    * ("Status, 2 active"), and the panel offers `onClear`. Zero, the default, shows nothing.
@@ -111,7 +129,7 @@ export interface TableToolbarFilterProps extends Omit<ComponentPropsWithoutRef<"
   align?: "start" | "center" | "end";
   /**
    * Replaces the words this part writes, per key. Any you leave out keep their English default; the counts are written with `formatNumber`.
-   * @default { clear: "Clear", activeCount: (n) => `${n} active`, panel: (label) => `${label} filter` }
+   * @default { clear: "Clear", activeCount: (n) => `${n} active`, panel: (label) => `${label} filter`, named: (label, value) => `${label}: ${value}`, before: (label) => `${label}:` }
    */
   labels?: Partial<TableToolbarFilterLabels>;
   /**
@@ -297,6 +315,72 @@ export interface TableToolbarSelectionProps extends Omit<ComponentPropsWithoutRe
   className?: string;
   /** Inline styles, merged onto the component's own internal styles. */
   style?: CSSProperties;
+  /** Test identifier for automated testing. Rendered as the DOM `data-testid` attribute; no visual or behavioral effect. */
+  "data-testid"?: string;
+}
+
+/** The widths `TableToolbar.Filters` goes to its sheet below, as the bar's own width: the breakpoint tokens' `sm` (40rem) to `xl` (80rem). */
+export type TableToolbarFiltersCollapseBelow = "sm" | "md" | "lg" | "xl" | "never";
+
+/** The words `TableToolbar.Filters` supplies itself. */
+export interface TableToolbarFiltersLabels {
+  /** The inline filters' toolbar's accessible name. */
+  group: string;
+  /** The sheet's button ("Filters"). */
+  button: string;
+  /** Said after the button's name while some filters are applied: "Filters, 2 active". Takes the plain count. */
+  activeCount: (count: number) => string;
+  /** The sheet's title. */
+  title: string;
+  /** The line under the sheet's title. */
+  description: string;
+  /** The sheet's button that clears every filter (shown with `onClearAll`, while some are applied). */
+  clearAll: string;
+  /** The sheet's button that closes it. */
+  done: string;
+}
+
+/**
+ * The properties of `TableToolbar.Filters`: a set of `TableToolbar.Filter`s that are inline buttons above a width of the bar and, below it,
+ * one "Filters" button that opens them all in a bottom sheet.
+ */
+export interface TableToolbarFiltersProps extends Omit<ComponentPropsWithoutRef<"div">, "children"> {
+  /**
+   * The filters: `TableToolbar.Filter`s, direct children (a filter wrapped in your own component is drawn inline and is not in the sheet).
+   * Each is drawn inline inside a `Toolbar.Item`, and in the sheet as a section headed by its `label` holding its `children`.
+   */
+  children?: ReactNode;
+  /**
+   * The width of the bar, below which the filters are one button and a sheet: `"sm"` (40rem) to `"xl"` (80rem), or `"never"` to keep them inline.
+   * The bar becomes a size container while it holds this part, so it is the bar's width that decides, not the window's.
+   * @default 'md'
+   */
+  collapseBelow?: TableToolbarFiltersCollapseBelow;
+  /**
+   * Clears every filter. The sheet shows a "Clear all" button that calls it while any filter's `count` is above zero; left out, there is none.
+   */
+  onClearAll?: () => void;
+  /**
+   * The size of the inline toolbar's buttons and the sheet's button.
+   * @default the bar's `size` ('md')
+   */
+  size?: TableToolbarSize;
+  /**
+   * Replaces the words this part writes, per key. Any you leave out keep their English default; the counts are written with `formatNumber`.
+   * @default { group: "Filters", button: "Filters", activeCount: (n) => `${n} active`, title: "Filters", description: "Narrow what the table shows.", clearAll: "Clear all", done: "Done" }
+   */
+  labels?: Partial<TableToolbarFiltersLabels>;
+  /**
+   * Writes the count in a locale's own numerals. Plain `String` by default; also used by the default `activeCount`.
+   * @default (value) => String(value)
+   */
+  formatNumber?: (value: number) => string;
+  /** Additional CSS classes for customization. */
+  className?: string;
+  /** Inline styles, merged onto the component's own internal styles. */
+  style?: CSSProperties;
+  /** Standard DOM id. */
+  id?: string;
   /** Test identifier for automated testing. Rendered as the DOM `data-testid` attribute; no visual or behavioral effect. */
   "data-testid"?: string;
 }

@@ -6,6 +6,48 @@
 // checks that stays true. See `07-storybook-and-documentation-standards.md` §4.2.
 
 export const tableToolbarSnippets = {
+  filtersSheet: `{/* TableToolbar.Filters draws its filters inline while the bar is wide and, below collapseBelow (the bar's own width, "sm" 40rem to "xl" 80rem),
+    one "Filters" button that opens them all in a bottom sheet: each filter as a section headed by its label, holding the controls you gave it, with Clear all and Done.
+    The filters must be direct children; the state is yours. The bar is a size container while it holds this part, so give it a width of its own. */}
+<TableToolbar aria-label="Orders table tools">
+  <TableToolbar.Row>
+    <TableToolbar.Search>
+      <SearchInput aria-label="Search orders" />
+    </TableToolbar.Search>
+    <TableToolbar.Filters collapseBelow="md" onClearAll={clearAll}>
+      <TableToolbar.Filter label="Status" count={statuses.length} onClear={() => setStatuses([])}>
+        <CheckboxGroup aria-label="Status" value={statuses} onValueChange={setStatuses}>
+          <Checkbox value="open">Open</Checkbox>
+          <Checkbox value="shipped">Shipped</Checkbox>
+        </CheckboxGroup>
+      </TableToolbar.Filter>
+      <TableToolbar.Filter label="Owner" count={owners.length} onClear={() => setOwners([])}>
+        <CheckboxGroup aria-label="Owner" value={owners} onValueChange={setOwners}>
+          <Checkbox value="jane">Jane</Checkbox>
+          <Checkbox value="marcus">Marcus</Checkbox>
+        </CheckboxGroup>
+      </TableToolbar.Filter>
+    </TableToolbar.Filters>
+  </TableToolbar.Row>
+</TableToolbar>`,
+
+  filterValue: `{/* With a value the button shows the choice and is named "Status: All"; labelPlacement="before" draws the name as plain text before it
+    (className and style then go on the box that holds both). */}
+<TableToolbar aria-label="Orders table tools">
+  <TableToolbar.Row>
+    <Toolbar aria-label="Filters" variant="secondary">
+      <Toolbar.Item>
+        <TableToolbar.Filter label="Status" value="2 selected" labelPlacement="before" count={2}>
+          <CheckboxGroup aria-label="Status" defaultValue={["open", "shipped"]}>
+            <Checkbox value="open">Open</Checkbox>
+            <Checkbox value="shipped">Shipped</Checkbox>
+          </CheckboxGroup>
+        </TableToolbar.Filter>
+      </Toolbar.Item>
+    </Toolbar>
+  </TableToolbar.Row>
+</TableToolbar>`,
+
   searchAndActions: `{/* Icons come from @dbm-system/icons: FunnelSimpleIcon, DownloadSimpleIcon.
     The search field is an ordinary tab stop; the filters and the actions are each a Toolbar (one tab stop, arrow keys). */}
 <TableToolbar aria-label="Orders table tools">

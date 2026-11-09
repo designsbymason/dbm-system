@@ -62,44 +62,14 @@ const table = (extra = "") => `    <DataTable
           <TableToolbar.Search>
             <SearchInput aria-label="Search people" placeholder="Search" onSearch={setQuery} />
           </TableToolbar.Search>
-          {/* On a phone the filters are one button that opens a bottom sheet holding both (hide the Toolbar below, and show this,
-              under your own breakpoint); the button says how many filters are in force */}
-          <Drawer>
-            <Drawer.Trigger asChild>
-              <Button variant="secondary">Filters</Button>
-            </Drawer.Trigger>
-            <Drawer.Content side="bottom" size="lg">
-              <Drawer.Header>
-                <Drawer.Title>Filters</Drawer.Title>
-              </Drawer.Header>
-              <Drawer.Body>{/* a heading and the choices (a Checkbox for "All", a CheckboxGroup) for each filter */}</Drawer.Body>
-              <Drawer.Footer>
-                <Button variant="secondary" onClick={clearFilters}>Clear all</Button>
-                <Drawer.Close asChild>
-                  <Button>Done</Button>
-                </Drawer.Close>
-              </Drawer.Footer>
-            </Drawer.Content>
-          </Drawer>
-          <Toolbar aria-label="Filters" variant="secondary">
-            <Toolbar.Item>
-              {/* The filter's name is plain text before a button of a fixed width that shows only the choice ("All",
-                  "Active", "2 selected"); the panel is a CheckboxGroup headed by an "All" checkbox. No icon on the button.
-                  Toolbar.Item takes one child, so the name and the button share a wrapper. */}
-              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                <span id="status-label">Status:</span>
-                <TableToolbar.Filter
-                  id="status-button"
-                  aria-labelledby="status-label status-button"
-                  label={statusChoice}
-                  style={{ inlineSize: "9rem" }}
-                  onClear={() => setStatuses([])}
-                >
-                  {/* a Checkbox for "All" and a CheckboxGroup of the statuses */}
-                </TableToolbar.Filter>
-              </div>
-            </Toolbar.Item>
-          </Toolbar>
+          {/* TableToolbar.Filters draws its filters inline while the table is wide and, below its collapseBelow (the bar's own width, 48rem by default),
+              one "Filters" button that opens them in a bottom sheet with "Clear all" and "Done"; the button says how many filters are in force. Each filter
+              shows its choice ("All", "Active", "2 selected") with its name drawn before the button; the panel is a CheckboxGroup headed by an "All" checkbox. */}
+          <TableToolbar.Filters onClearAll={clearFilters}>
+            <TableToolbar.Filter label="Status" value={statusChoice} labelPlacement="before" count={statuses.length} onClear={() => setStatuses([])}>
+              {/* a Checkbox for "All" and a CheckboxGroup of the statuses */}
+            </TableToolbar.Filter>
+          </TableToolbar.Filters>
         </TableToolbar.Row>
         <TableToolbar.Row>
           <TableToolbar.ActiveFilters items={applied} onRemove={removeFilter} onClearAll={clearFilters} />

@@ -190,3 +190,96 @@
 .textXl {
   font-size: var(--dbm-font-size-md);
 }
+
+/* --- Filter: the name before the button (`labelPlacement="before"`) --- */
+.filterBox {
+  align-items: center;
+  display: inline-flex;
+  gap: var(--dbm-space-2);
+}
+
+.filterName {
+  color: var(--dbm-text-secondary);
+  font-size: var(--dbm-font-size-sm);
+  white-space: nowrap;
+}
+
+/* --- Filters: inline above a width of the bar, one button and a sheet below it --- */
+/* The bar is a size container only while it holds a `Filters`, so a bar that does not use one is unchanged. The part's own box is a flex
+   item that keeps its content's size. */
+.root:has([data-table-toolbar-filters]) {
+  container-type: inline-size;
+}
+
+.filters {
+  display: inline-flex;
+  min-inline-size: 0;
+}
+
+/* The sheet's button is not drawn while the filters are inline. */
+.filtersButton {
+  display: none;
+}
+
+/* Below the step the inline toolbar is `display: none` (out of the tab order and the accessibility tree), and the button is drawn. The steps are
+   the breakpoint tokens' widths; a container query cannot read a custom property, so they are written out. */
+@container not (min-width: 40rem) {
+  .collapseSm .filtersInline {
+    display: none;
+  }
+
+  .collapseSm .filtersButton {
+    display: inline-flex;
+  }
+}
+
+@container not (min-width: 48rem) {
+  .collapseMd .filtersInline {
+    display: none;
+  }
+
+  .collapseMd .filtersButton {
+    display: inline-flex;
+  }
+}
+
+@container not (min-width: 64rem) {
+  .collapseLg .filtersInline {
+    display: none;
+  }
+
+  .collapseLg .filtersButton {
+    display: inline-flex;
+  }
+}
+
+@container not (min-width: 80rem) {
+  .collapseXl .filtersInline {
+    display: none;
+  }
+
+  .collapseXl .filtersButton {
+    display: inline-flex;
+  }
+}
+
+/* The sheet: each filter's controls under its name. */
+.sheetSections {
+  display: grid;
+  gap: var(--dbm-space-6);
+}
+
+.sheetSection {
+  display: grid;
+  gap: var(--dbm-space-3);
+}
+
+/* A section's name in the sheet is drawn as `Menu` draws the heading of a group of items: small capitals in the secondary text colour, in the body
+   font. It stays a real heading (`text-transform` changes how it is drawn, not the text a screen reader gets). Two classes so it outranks `Heading`'s own. */
+.sheetSection .sheetHeading {
+  color: var(--dbm-text-secondary);
+  font-family: var(--dbm-font-family-primary);
+  font-size: var(--dbm-font-size-xs);
+  font-weight: var(--dbm-font-weight-semibold);
+  text-transform: uppercase;
+}

@@ -1,6 +1,6 @@
 import { CaretDownIcon } from "@dbm-system/icons";
 import { cx, mergeDefined, useAnnouncement } from "@dbm-system/utils";
-import { createContext, forwardRef, useContext, useEffect, useLayoutEffect, useRef } from "react";
+import { forwardRef, useContext, useEffect, useLayoutEffect, useRef } from "react";
 import { Badge } from "../../atoms/Badge";
 import { Button } from "../../atoms/Button";
 import type { ButtonSize } from "../../atoms/Button";
@@ -11,6 +11,9 @@ import { Skeleton } from "../../atoms/Skeleton";
 import { VisuallyHidden } from "../../atoms/VisuallyHidden";
 import { Popover } from "../Popover";
 import { focusNearestOutside } from "./focus";
+import { safeCount } from "./safeCount";
+import { TableToolbarContext } from "./tableToolbarContext";
+import { TableToolbarFilters } from "./TableToolbarFilters";
 import styles from "./TableToolbar.module.css";
 import type {
   TableToolbarActiveFiltersLabels,
@@ -27,8 +30,6 @@ import type {
   TableToolbarSummaryProps,
 } from "./TableToolbar.types";
 
-/** What the parts read from the bar they sit in: the size they use unless they say their own. */
-const TableToolbarContext = createContext<{ size: TableToolbarSize }>({ size: "md" });
 
 // A chip is a step smaller than a button of the same size, as `Tag` is wherever it sits beside one.
 const tagSizeFor: Record<TableToolbarSize, TagSize> = { xs: "xs", sm: "xs", md: "sm", lg: "md", xl: "lg" };
@@ -42,7 +43,6 @@ const textClass: Record<TableToolbarSize, string | undefined> = {
 };
 const smallerButton: Record<TableToolbarSize, ButtonSize> = { xs: "xs", sm: "xs", md: "sm", lg: "md", xl: "lg" };
 
-const safeCount = (value: unknown): number => (typeof value === "number" && Number.isFinite(value) && value > 0 ? Math.floor(value) : 0);
 
 /**
  * The bar above a table of data: search, filters, the filters currently applied, a result count, and the bulk actions that
@@ -145,6 +145,8 @@ const makeFilterLabels = (formatNumber: (value: number) => string): TableToolbar
   clear: "Clear",
   activeCount: (count) => `${formatNumber(count)} active`,
   panel: (label) => `${label} filter`,
+  named: (label, value) => `${label}: ${value}`,
+  before: (label) => `${label}:`,
 });
 
 /**
@@ -157,6 +159,8 @@ const TableToolbarFilter = forwardRef<HTMLButtonElement, TableToolbarFilterProps
     {
       label,
       children,
+      value,
+      labelPlacement = "inside",
       count: countProp = 0,
       max = 99,
       onClear,
@@ -170,6 +174,7 @@ const TableToolbarFilter = forwardRef<HTMLButtonElement, TableToolbarFilterProps
       labels: labelOverrides,
       formatNumber = String,
       className,
+      style,
       ...props
     },
     ref,
@@ -187,7 +192,13 @@ const TableToolbarFilter = forwardRef<HTMLButtonElement, TableToolbarFilterProps
       console.warn("TableToolbar.Filter: no `label`, so the button has no name. Pass the filter's name (\"Status\").");
     }
 
-    return (
+    // A `value` makes the button show the choice: the name is then "Status: All" (the visible text as whole words), with the name written in the
+    // button or, with `labelPlacement="before"`, as plain text before it.
+    const hasValue = typeof value === "string";
+    const before = hasValue && labelPlacement === "before";
+    const named = hasValue ? labels.named(label, value) : label;
+
+    const popover = (
       <Popover open={open} defaultOpen={defaultOpen} onOpenChange={onOpenChange}>
         <Popover.Trigger asChild>
           <Button
@@ -200,18 +211,19 @@ const TableToolbarFilter = forwardRef<HTMLButtonElement, TableToolbarFilterProps
             // What the button shows ("Status 2", or "Status 99+" past `max`) is inside this name, as whole words in order, so what the
             // button says is what it is called (WCAG 2.5.3). The true count still follows: "Tags 99+, 1,284 active".
             aria-label={
-              count === 0
-                ? label
+              hasValue || count === 0
+                ? named
                 : count > max
                   ? `${label} ${formatNumber(max)}+, ${labels.activeCount(count)}`
                   : `${label}, ${labels.activeCount(count)}`
             }
             data-active={count > 0 ? "" : undefined}
-            className={className}
+            className={before ? undefined : className}
+            style={before ? undefined : style}
           >
-            {label}
-            {count > 0 && " "}
-            {count > 0 && (
+            {hasValue ? (before ? value : named) : label}
+            {!hasValue && count > 0 && " "}
+            {!hasValue && count > 0 && (
               <span className={cx(styles.filterCount, (size ?? group?.size ?? bar.size) === "xs" && styles.filterCountXs)} aria-hidden="true">
                 <Badge tone="brand" size="xs">
                   {count > max ? `${formatNumber(max)}+` : formatNumber(count)}
@@ -231,6 +243,16 @@ const TableToolbarFilter = forwardRef<HTMLButtonElement, TableToolbarFilterProps
           )}
         </Popover.Content>
       </Popover>
+    );
+    if (!before) return popover;
+    // `className` and `style` go on the outermost box in every form; the name before the button is drawn text, named again by the button.
+    return (
+      <span className={cx(styles.filterBox, className)} style={style}>
+        <span className={styles.filterName} aria-hidden="true">
+          {labels.before(label)}
+        </span>
+        {popover}
+      </span>
     );
   },
 );
@@ -573,6 +595,7 @@ type TableToolbarComponent = typeof TableToolbarRoot & {
   Row: typeof TableToolbarRow;
   Search: typeof TableToolbarSearch;
   Filter: typeof TableToolbarFilter;
+  Filters: typeof TableToolbarFilters;
   ActiveFilters: typeof TableToolbarActiveFilters;
   Summary: typeof TableToolbarSummary;
   Selection: typeof TableToolbarSelection;
@@ -582,6 +605,7 @@ export const TableToolbar: TableToolbarComponent = Object.assign(TableToolbarRoo
   Row: TableToolbarRow,
   Search: TableToolbarSearch,
   Filter: TableToolbarFilter,
+  Filters: TableToolbarFilters,
   ActiveFilters: TableToolbarActiveFilters,
   Summary: TableToolbarSummary,
   Selection: TableToolbarSelection,

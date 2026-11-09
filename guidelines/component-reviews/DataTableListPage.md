@@ -79,3 +79,11 @@ Built 2026-11-07 as template #2 of the build order in `04-component-inventory.md
 ## Finalized (2026-11-07)
 Declared Finalized by the owner after the first `/review-template` pass and its fixes. Accepted as it stands: the blank space between a short table and its footer (the footer stays at the bottom of the table's minimum height so it does not jump). Still not verified: a real phone, Safari and Firefox, a screen reader, a real printer, a failing removal, and a table of thousands of rows. A later change to this page follows the Finalized rules of `06-engineering-standards.md` §9.
 
+
+## Post-Finalization: second `/review-template` run (2026-11-09), fixed at explicit direction
+Defect and compliance fixes only (question 2 of the three-question test), so it stays Finalized.
+- **The breadcrumb is `PageHeader.Breadcrumbs`**, inside the `PageHeader`, where it had been drawn beside it.
+- **Two words moved into the page's copy:** the search box's placeholder and the filter panel's name.
+- **A misindented line** (`totalCount`) is fixed.
+- **The filters are `TableToolbar.Filters`** ([ADR-0199](../adr/0199-tabletoolbar-gets-an-opt-in-filters-group-that-draws-its-filters-inline-and-as-one-bottom-sheet-below-a-container-width-over-a-per-filter-sheet-a-window-step-or-a-page-built-sheet.md)): `FiltersSheet` and `ChoiceFilter` and their styles are gone, each filter is a `TableToolbar.Filter` with a `value` and `labelPlacement="before"`, and the "Filters" button draws its count as a `Badge` (named "Filters, 2 active"). The narrow layout's step is now the bar's 48rem (a container query cannot take a custom length), where it was 45rem. Unit, snippets and the real-browser checks follow (the phone check reads the button by its new name).
+- **Open, with the maintainer:** the footer is drawn by hand beside `DataTable.Pagination` (to be planned next).

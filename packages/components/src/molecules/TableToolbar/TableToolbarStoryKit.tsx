@@ -273,3 +273,60 @@ export function SelectionBelowDemo(barProps: TableToolbarProps) {
     </div>
   );
 }
+
+const statusChoices = ["Open", "Shipped", "Delayed"] as const;
+const ownerChoices = ["Jane", "Marcus", "Priya"] as const;
+const choiceValue = (chosen: string[]) => (chosen.length === 0 ? "All" : chosen.length === 1 ? (chosen[0] as string) : `${chosen.length} selected`);
+
+/**
+ * The search field and two filters as a `TableToolbar.Filters`: inline while the bar is wide and one "Filters" button with a sheet while it is narrow.
+ * The filters' state is the demo's own (the bar owns none). With `labelPlacement` the buttons show the choice and the name is drawn before them.
+ */
+export function FiltersDemo({
+  collapseBelow = "md",
+  labelPlacement,
+  size,
+}: {
+  collapseBelow?: "sm" | "md" | "lg" | "xl" | "never";
+  labelPlacement?: "inside" | "before";
+  size?: TableToolbarProps["size"];
+}) {
+  const [statuses, setStatuses] = useState<string[]>([]);
+  const [owners, setOwners] = useState<string[]>([]);
+  const group = (name: string, choices: readonly string[], chosen: string[], onChange: (next: string[]) => void) => (
+    <TableToolbar.Filter
+      label={name}
+      count={chosen.length}
+      value={labelPlacement ? choiceValue(chosen) : undefined}
+      labelPlacement={labelPlacement}
+      onClear={() => onChange([])}
+    >
+      <CheckboxGroup aria-label={name} value={chosen} onValueChange={(next) => onChange(next as string[])}>
+        {choices.map((choice) => (
+          <Checkbox key={choice} value={choice}>
+            {choice}
+          </Checkbox>
+        ))}
+      </CheckboxGroup>
+    </TableToolbar.Filter>
+  );
+  return (
+    <TableToolbar aria-label="Orders table tools" size={size}>
+      <TableToolbar.Row>
+        <TableToolbar.Search>
+          <SearchInput aria-label="Search orders" size={size} />
+        </TableToolbar.Search>
+        <TableToolbar.Filters
+          collapseBelow={collapseBelow}
+          onClearAll={() => {
+            setStatuses([]);
+            setOwners([]);
+          }}
+        >
+          {group("Status", statusChoices, statuses, setStatuses)}
+          {group("Owner", ownerChoices, owners, setOwners)}
+        </TableToolbar.Filters>
+      </TableToolbar.Row>
+    </TableToolbar>
+  );
+}

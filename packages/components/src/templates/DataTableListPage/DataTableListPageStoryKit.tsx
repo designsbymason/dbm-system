@@ -6,11 +6,11 @@
 // (`usePeopleList`), the rows come from a request that is simulated here, and `DataTable` is driven entirely through its controlled
 // props (`sortMode="manual"`, `sort`, `page`, `selection`, `allSelected`, `totalCount`, `loading`).
 import { DotsThreeIcon, CopySimpleIcon, DownloadSimpleIcon, MagnifyingGlassIcon, PencilSimpleIcon, PlusIcon, TrashIcon, UsersIcon, WarningCircleIcon } from "@dbm-system/icons";
-import { useCallback, useEffect, useId, useMemo, useRef, useState } from "react";
+import { cx } from "@dbm-system/utils";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Badge } from "../../atoms/Badge";
 import { Button } from "../../atoms/Button";
 import { Checkbox } from "../../atoms/Checkbox";
-import { Heading } from "../../atoms/Heading";
 import { IconButton } from "../../atoms/IconButton";
 import { VisuallyHidden } from "../../atoms/VisuallyHidden";
 import { Breadcrumb } from "../../molecules/Breadcrumb";
@@ -23,7 +23,6 @@ import { Select } from "../../molecules/Select";
 import { TableToolbar } from "../../molecules/TableToolbar";
 import { Toolbar } from "../../molecules/Toolbar";
 import { ConfirmDialog } from "../../organisms/ConfirmDialog";
-import { Drawer } from "../../organisms/Drawer";
 import { DataTable } from "../../organisms/DataTable";
 import type { DataTableColumn, DataTableSort } from "../../organisms/DataTable";
 import { Menu } from "../../organisms/Menu";
@@ -76,6 +75,8 @@ export const dataTableListPageCopy = {
   add: "Add person",
   tableName: "People",
   search: "Search people",
+  searchPlaceholder: "Search",
+  filterPanel: (name: string) => `${name} filter`,
   toolsName: "People table tools",
   filtersName: "Filters",
   bulkName: "Bulk actions",
@@ -310,7 +311,7 @@ function filterValue(chosen: string[]): string {
   return copy.selectedCount(chosen.length);
 }
 
-/** The choices of one filter: an "All" checkbox that clears the others, and a checkbox for each option. In a filter's panel and in the sheet. */
+/** The choices of one filter: an "All" checkbox that clears the others, and a checkbox for each option. `TableToolbar.Filters` draws it in the filter's panel and in the sheet. */
 function FilterChoices<T extends string>({
   name,
   options,
@@ -336,101 +337,6 @@ function FilterChoices<T extends string>({
           </Checkbox>
         ))}
       </CheckboxGroup>
-    </div>
-  );
-}
-
-/**
- * On a phone the two filters are one "Filters" button that opens a bottom sheet holding both, so the toolbar is a search box and a
- * button. The button says how many filters are in force.
- */
-function FiltersSheet({ list }: { list: PeopleList }) {
-  const count = list.selectedStatuses.length + list.selectedDepartments.length;
-  return (
-    <Drawer>
-      <Drawer.Trigger asChild>
-        <Button className={styles.filtersButton} variant="secondary">
-          {count > 0 ? copy.filtersButtonCount(count) : copy.filtersButton}
-        </Button>
-      </Drawer.Trigger>
-      <Drawer.Content side="bottom" size="lg">
-        <Drawer.Header>
-          <Drawer.Title>{copy.filtersSheetTitle}</Drawer.Title>
-          <Drawer.Description>{copy.filtersSheetText}</Drawer.Description>
-        </Drawer.Header>
-        <Drawer.Body>
-          <div className={styles.sheetSections}>
-            <section className={styles.sheetSection}>
-              <Heading level={3} size="sm">
-                {copy.statusFilter}
-              </Heading>
-              <FilterChoices name={copy.statusFilter} options={statuses} labels={copy.statusLabels} chosen={list.selectedStatuses} onChange={list.setStatuses} />
-            </section>
-            <section className={styles.sheetSection}>
-              <Heading level={3} size="sm">
-                {copy.departmentFilter}
-              </Heading>
-              <FilterChoices
-                name={copy.departmentFilter}
-                options={departments}
-                labels={copy.departmentLabels}
-                chosen={list.selectedDepartments}
-                onChange={list.setDepartments}
-              />
-            </section>
-          </div>
-        </Drawer.Body>
-        <Drawer.Footer>
-          <Button variant="secondary" disabled={count === 0} onClick={() => { list.setStatuses([]); list.setDepartments([]); }}>
-            {copy.clearAll}
-          </Button>
-          <Drawer.Close asChild>
-            <Button>{copy.done}</Button>
-          </Drawer.Close>
-        </Drawer.Footer>
-      </Drawer.Content>
-    </Drawer>
-  );
-}
-
-/**
- * One toolbar filter: its name as plain text before the button, and a button of a fixed width that shows only the choice, with the
- * choice at the start and the chevron at the end. The panel is a list of checkboxes headed by "All". The button is named by both
- * ("Status: All"), which holds its visible text as whole words (WCAG 2.5.3).
- */
-function ChoiceFilter<T extends string>({
-  name,
-  options,
-  labels,
-  chosen,
-  onChange,
-  width,
-}: {
-  name: string;
-  options: T[];
-  labels: Record<T, string>;
-  chosen: T[];
-  onChange: (next: T[]) => void;
-  width: string;
-}) {
-  const id = useId();
-  const labelId = `${id}-label`;
-  const buttonId = `${id}-button`;
-  return (
-    <div className={styles.filterGroup}>
-      <span className={styles.filterLabel} id={labelId}>
-        {name}:
-      </span>
-      <TableToolbar.Filter
-        id={buttonId}
-        aria-labelledby={`${labelId} ${buttonId}`}
-        label={filterValue(chosen.map((value) => labels[value]))}
-        className={styles.filter}
-        style={{ inlineSize: width }}
-        labels={{ panel: () => `${name} filter` }}
-      >
-        <FilterChoices name={name} options={options} labels={labels} chosen={chosen} onChange={onChange} />
-      </TableToolbar.Filter>
     </div>
   );
 }
@@ -529,17 +435,19 @@ export function PeopleListContent({ list }: { list: PeopleList }) {
 
   return (
     <div className={styles.page}>
-      <Breadcrumb>
-        <Breadcrumb.Item>
-          <Breadcrumb.Link href="#" onClick={preventNavigation}>
-            {copy.home}
-          </Breadcrumb.Link>
-        </Breadcrumb.Item>
-        <Breadcrumb.Item>
-          <Breadcrumb.Page>{copy.people}</Breadcrumb.Page>
-        </Breadcrumb.Item>
-      </Breadcrumb>
       <PageHeader>
+        <PageHeader.Breadcrumbs>
+          <Breadcrumb>
+            <Breadcrumb.Item>
+              <Breadcrumb.Link href="#" onClick={preventNavigation}>
+                {copy.home}
+              </Breadcrumb.Link>
+            </Breadcrumb.Item>
+            <Breadcrumb.Item>
+              <Breadcrumb.Page>{copy.people}</Breadcrumb.Page>
+            </Breadcrumb.Item>
+          </Breadcrumb>
+        </PageHeader.Breadcrumbs>
         {/* Focus goes here when a removal finishes: the row that had it is gone, and the heading is where the page starts. */}
         <PageHeader.Title ref={headingRef} tabIndex={-1}>
           {copy.title}
@@ -576,7 +484,7 @@ export function PeopleListContent({ list }: { list: PeopleList }) {
             onPageChange={list.setPage}
             pageSize={list.pageSize}
             onPageSizeChange={list.setPageSize}
-                        totalCount={list.matching}
+            totalCount={list.matching}
             loading={list.loading}
             loadingRows={list.pageSize}
             selectionMode="multiple"
@@ -625,35 +533,45 @@ export function PeopleListContent({ list }: { list: PeopleList }) {
                 <TableToolbar.Search className={styles.search}>
                   <SearchInput
                     aria-label={copy.search}
-                    placeholder="Search"
+                    placeholder={copy.searchPlaceholder}
                     value={list.query}
                     onChange={(event) => list.setQuery(event.target.value)}
                     onClear={() => list.setQuery("")}
                   />
                 </TableToolbar.Search>
-                <FiltersSheet list={list} />
-                <Toolbar aria-label={copy.filtersName} variant="secondary" className={styles.filters}>
-                  <Toolbar.Item>
-                    <ChoiceFilter
-                      name={copy.statusFilter}
-                      options={statuses}
-                      labels={copy.statusLabels}
-                      chosen={list.selectedStatuses}
-                      onChange={list.setStatuses}
-                      width="9rem"
-                    />
-                  </Toolbar.Item>
-                  <Toolbar.Item>
-                    <ChoiceFilter
+                {/* The filters are inline while the table is wide and one "Filters" button with a bottom sheet while it is narrow (`TableToolbar.Filters`, ADR-0199). */}
+                <TableToolbar.Filters
+                  className={styles.filters}
+                  onClearAll={list.clearFilters}
+                  labels={{ group: copy.filtersName, button: copy.filtersButton, title: copy.filtersSheetTitle, description: copy.filtersSheetText, clearAll: copy.clearAll, done: copy.done }}
+                >
+                  <TableToolbar.Filter
+                    label={copy.statusFilter}
+                    value={filterValue(list.selectedStatuses.map((value) => copy.statusLabels[value]))}
+                    labelPlacement="before"
+                    count={list.selectedStatuses.length}
+                    className={cx(styles.choiceFilter, styles.statusFilter)}
+                    labels={{ panel: () => copy.filterPanel(copy.statusFilter) }}
+                  >
+                    <FilterChoices name={copy.statusFilter} options={statuses} labels={copy.statusLabels} chosen={list.selectedStatuses} onChange={list.setStatuses} />
+                  </TableToolbar.Filter>
+                  <TableToolbar.Filter
+                    label={copy.departmentFilter}
+                    value={filterValue(list.selectedDepartments.map((value) => copy.departmentLabels[value]))}
+                    labelPlacement="before"
+                    count={list.selectedDepartments.length}
+                    className={cx(styles.choiceFilter, styles.departmentFilter)}
+                    labels={{ panel: () => copy.filterPanel(copy.departmentFilter) }}
+                  >
+                    <FilterChoices
                       name={copy.departmentFilter}
                       options={departments}
                       labels={copy.departmentLabels}
                       chosen={list.selectedDepartments}
                       onChange={list.setDepartments}
-                      width="10.5rem"
                     />
-                  </Toolbar.Item>
-                </Toolbar>
+                  </TableToolbar.Filter>
+                </TableToolbar.Filters>
               </TableToolbar.Row>
               <TableToolbar.Row className={styles.chipsRow}>
                 <TableToolbar.ActiveFilters items={applied} onRemove={removeFilter} onClearAll={list.clearFilters} />

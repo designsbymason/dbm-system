@@ -7,6 +7,7 @@ import { SearchInput } from "../SearchInput";
 import { Toolbar } from "../Toolbar";
 import * as TableToolbarStories from "./TableToolbar.stories";
 import * as FilterStories from "./TableToolbarFilter.stories";
+import * as FiltersStories from "./TableToolbarFilters.stories";
 import * as ActiveFiltersStories from "./TableToolbarActiveFilters.stories";
 import * as SummaryStories from "./TableToolbarSummary.stories";
 import * as SelectionStories from "./TableToolbarSelection.stories";
@@ -44,6 +45,8 @@ export const filterPropOrder = [
   "data-testid",
 ];
 
+export const filtersPropOrder = ["children", "collapseBelow", "onClearAll", "size", "labels", "formatNumber", "id", "className", "style", "data-testid"];
+
 export const activeFiltersPropOrder = ["items", "onRemove", "onClearAll", "size", "tone", "announce", "labels", "formatNumber", "id", "className", "style", "data-testid"];
 
 export const summaryPropOrder = ["count", "total", "size", "announce", "labels", "formatNumber", "id", "className", "style", "data-testid"];
@@ -71,7 +74,7 @@ order. It is built from parts you place yourself, so a bar can be as small as a 
 import { TableToolbar } from "@dbm-system/components";
 ```
 
-Its parts are `TableToolbar.Row`, `.Search`, `.Filter`, `.ActiveFilters`, `.Summary` and `.Selection`.
+Its parts are `TableToolbar.Row`, `.Search`, `.Filter`, `.Filters`, `.ActiveFilters`, `.Summary` and `.Selection`.
 
 ## Playground
 
@@ -109,6 +112,12 @@ The parts of the bar:
 
 <PropertiesTable of={FilterStories} order={filterPropOrder} />
 
+### TableToolbar.Filters properties
+
+`TableToolbar.Filters` holds `TableToolbar.Filter`s (see below). It takes the native `<div>` attributes.
+
+<PropertiesTable of={FiltersStories} order={filtersPropOrder} />
+
 ### TableToolbar.ActiveFilters properties
 
 <PropertiesTable of={ActiveFiltersStories} order={activeFiltersPropOrder} />
@@ -139,6 +148,27 @@ it `onClear`. A count above `max` (99 by default) reads "99+" on the badge; the 
 arrow-key order.
 
 <Canvas of={TableToolbarStories.Filters} />
+
+### A filter that shows its choice
+
+A `value` makes the button show the choice ("All", "Open", "2 selected") and names it "Status: All" (the visible text as whole words). `labelPlacement="before"` draws the
+filter's name as plain text before the button, which then shows only the choice. With it the part is a box holding both: `className` and `style` go on the box, and everything else (`ref`, `id`, the handlers, the
+`aria-*` props) on the button, so size the button from the box (`.box > button`).
+
+<Canvas of={TableToolbarStories.FilterWithAValue} />
+
+### Filters as a sheet
+
+A phone has no room for a row of filter buttons. Put the filters in a `TableToolbar.Filters` and, while the bar is wide, they are inline in a `Toolbar` as before; below `collapseBelow` (`"md"`, 48rem, by
+default) the bar draws one **Filters** button, with the number of filters applied, that opens a bottom sheet: each filter as a section headed by its `label` and holding the controls you gave it, with **Clear all**
+(`onClearAll`) and **Done**. The state is still yours. It is **opt-in**: a bar without a `Filters` is unchanged.
+
+- **The bar's width decides, not the window's.** The switch is a container query, so a table beside a sidebar goes to the sheet when it has no room, whatever the window says. The bar becomes a size container
+  while it holds a `Filters`, so give it a width of its own (a block, not a shrink-to-fit flex item). The steps are `"sm"` (40rem) to `"xl"` (80rem); `"never"` keeps the filters inline.
+- **The filters are direct children.** The part reads them by type, so a `TableToolbar.Filter` wrapped in your own component is drawn inline and is not in the sheet.
+- **An open sheet closes** if the bar grows past the step (a window resized, a sidebar closed), and focus returns to the button it was opened from.
+
+<Canvas of={TableToolbarStories.FiltersAsASheet} />
 
 ### Active filters
 
@@ -247,6 +277,8 @@ arrow keys go the way the page reads.
   not a `toolbar`, so the search field keeps its own arrow keys.
 - Tab order is reading order: the search field, each `Toolbar` once (the arrow keys, `Home` and `End` move along it), then the
   chips and **Clear all**. There is no keyboard trap, and the bar adds no key handling of its own.
+- `TableToolbar.Filters` below its step is one button, named "Filters" ("Filters, 3 active" with the sum of the filters' `count`s), that opens a modal dialog titled "Filters" (a `Drawer`): focus goes into it,
+  `Escape` or **Done** closes it, and focus returns to the button. The inline toolbar is `display: none` below the step and the button above it, so only one is in the tab order and the accessibility tree.
 - A filter's button is `aria-haspopup="dialog"` and `aria-expanded`; its panel is a named `dialog` ("Status filter") that returns
   focus to the button on `Escape`. While some of it is applied the name says so ("Status, 2 active"), and the visible word is
   inside the name (WCAG 2.5.3).
@@ -312,20 +344,20 @@ arrow keys go the way the page reads.
 ## Design tokens used
 
 <TokenRow token="space.1" usage="the horizontal padding of the filter count badge on the xs bar" />
-<TokenRow token="space.2" usage="the gap between chips, and the bulk row's vertical padding" />
-<TokenRow token="space.3" usage="the gap between rows and between a row's items, the bulk row's horizontal padding, and the room above a filter panel's footer" />
-<TokenRow token="space.6" usage="the 24px minimum height of the Clear all button" />
-<TokenRow token="text.secondary" usage="the result count" />
+<TokenRow token="space.2" usage="the gap between chips, the bulk row's vertical padding, and between a filter's name and its button" />
+<TokenRow token="space.3" usage="the gap between rows and between a row's items, the bulk row's horizontal padding, the room above a filter panel's footer, and the gap inside a sheet section" />
+<TokenRow token="space.6" usage="the 24px minimum height of the Clear all button, and the gap between the filters' sections in the sheet" />
+<TokenRow token="text.secondary" usage="the result count, and a filter's name drawn before its button" />
 <TokenRow token="text.primary" usage="the bulk row's text" />
 <TokenRow token="bg.brand-subtle" usage="the bulk row's tint" />
 <TokenRow token="border.brand-subtle" usage="the bulk row's border, which also keeps it bounded in forced colours" />
 <TokenRow token="border.default" usage="the rule above a filter panel's Clear button" />
 <TokenRow token="border-width.1" usage="the bulk row's border and the filter panel's rule" />
 <TokenRow token="radius.md" usage="the bulk row's corners" />
-<TokenRow token="font-family.primary" usage="the result count and the bulk row's text" />
-<TokenRow token="font-weight.semibold" usage="the selected count" />
-<TokenRow token="font-size.xs" usage="the count and bulk row text at size xs and sm" />
-<TokenRow token="font-size.sm" usage="the count and bulk row text at size md" />
+<TokenRow token="font-family.primary" usage="the result count and the bulk row's text, and a sheet section's name" />
+<TokenRow token="font-weight.semibold" usage="the selected count, and a sheet section's name" />
+<TokenRow token="font-size.xs" usage="the count and bulk row text at size xs and sm, and a sheet section's name" />
+<TokenRow token="font-size.sm" usage="the count and bulk row text at size md, and a filter's name drawn before its button" />
 <TokenRow token="font-size.base" usage="the count and bulk row text at size lg" />
 <TokenRow token="font-size.md" usage="the count and bulk row text at size xl" />
 <TokenRow token="badge.padding-inline.xs" usage="the badge's side padding, counted into the width reserved for a two-digit filter count" />

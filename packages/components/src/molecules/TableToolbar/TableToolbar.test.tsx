@@ -876,3 +876,209 @@ describe("TableToolbar", () => {
     });
   });
 });
+
+describe("TableToolbar.Filter with a value", () => {
+  it("shows the choice and names the button by it, with the visible text as whole words", () => {
+    render(
+      <TableToolbar aria-label="Tools">
+        <TableToolbar.Filter label="Status" value="All" count={0}>
+          panel
+        </TableToolbar.Filter>
+      </TableToolbar>,
+    );
+    const button = screen.getByRole("button", { name: "Status: All" });
+    expect(button).toHaveTextContent("Status: All");
+  });
+
+  it("draws the name as plain text before a button that shows only the choice, and puts className and style on the box", () => {
+    render(
+      <TableToolbar aria-label="Tools">
+        <TableToolbar.Filter label="Status" value="2 selected" labelPlacement="before" className="box" style={{ width: "9rem" }} data-testid="button">
+          panel
+        </TableToolbar.Filter>
+      </TableToolbar>,
+    );
+    const button = screen.getByRole("button", { name: "Status: 2 selected" });
+    expect(button).toHaveTextContent("2 selected");
+    expect(button).not.toHaveTextContent("Status");
+    expect(button).toHaveAttribute("data-testid", "button");
+    const box = button.parentElement as HTMLElement;
+    expect(box).toHaveClass("box");
+    expect(box).toHaveStyle({ width: "9rem" });
+    // The drawn name is not read twice.
+    expect(within(box).getByText("Status:")).toHaveAttribute("aria-hidden", "true");
+  });
+
+  it("takes its words from labels, and keeps the defaults for a key left undefined", () => {
+    render(
+      <TableToolbar aria-label="Tools">
+        <TableToolbar.Filter label="Status" value="All" labelPlacement="before" labels={{ named: (label, value) => `${value} (${label})`, before: undefined }}>
+          panel
+        </TableToolbar.Filter>
+      </TableToolbar>,
+    );
+    expect(screen.getByRole("button", { name: "All (Status)" })).toBeInTheDocument();
+    expect(screen.getByText("Status:")).toBeInTheDocument();
+  });
+
+  it("is unchanged without a value (the name and the count's badge)", () => {
+    render(
+      <TableToolbar aria-label="Tools">
+        <TableToolbar.Filter label="Status" count={2}>
+          panel
+        </TableToolbar.Filter>
+      </TableToolbar>,
+    );
+    expect(screen.getByRole("button", { name: "Status, 2 active" })).toBeInTheDocument();
+  });
+});
+
+describe("TableToolbar.Filters", () => {
+  // The stylesheet hides the sheet's button while the bar is wide (jsdom applies it, and sizes nothing), and a hidden element has no accessible name
+  // there, so it is found by its class and its name read from the attribute.
+  const sheetButton = (name: string) => {
+    const button = document.querySelector<HTMLButtonElement>(`button.${styles.filtersButton}`);
+    expect(button, "the sheet's button").not.toBeNull();
+    expect(button).toHaveAttribute("aria-label", name);
+    return button as HTMLButtonElement;
+  };
+  const filters = (counts: [number, number] = [0, 0], onClearAll?: () => void, props: Record<string, unknown> = {}) => (
+    <TableToolbar aria-label="Tools">
+      <TableToolbar.Row>
+        <TableToolbar.Filters onClearAll={onClearAll} {...props}>
+          <TableToolbar.Filter label="Status" count={counts[0]}>
+            <label>
+              <input type="checkbox" /> Open
+            </label>
+          </TableToolbar.Filter>
+          <TableToolbar.Filter label="Owner" count={counts[1]}>
+            <label>
+              <input type="checkbox" /> Jane
+            </label>
+          </TableToolbar.Filter>
+        </TableToolbar.Filters>
+      </TableToolbar.Row>
+    </TableToolbar>
+  );
+
+  it("draws the filters inline in a named toolbar and a sheet button, with nothing of the sheet mounted", () => {
+    render(filters());
+    const toolbar = screen.getByRole("toolbar", { name: "Filters" });
+    expect(within(toolbar).getAllByRole("button").map((b) => b.textContent)).toEqual(["Status", "Owner"]);
+    expect(sheetButton("Filters")).toBeInTheDocument();
+    expect(screen.queryByRole("dialog")).toBeNull();
+  });
+
+  it("opens one sheet holding each filter's controls under its name, and its title, description and Done", async () => {
+    const user = userEvent.setup();
+    render(filters());
+    await user.click(sheetButton("Filters"));
+    const sheet = await screen.findByRole("dialog");
+    expect(within(sheet).getByRole("heading", { name: "Filters" })).toBeInTheDocument();
+    expect(within(sheet).getByRole("heading", { level: 3, name: "Status" })).toBeInTheDocument();
+    expect(within(sheet).getByRole("heading", { level: 3, name: "Owner" })).toBeInTheDocument();
+    expect(within(sheet).getByLabelText("Open")).toBeInTheDocument();
+    expect(within(sheet).getByLabelText("Jane")).toBeInTheDocument();
+    expect(within(sheet).queryByRole("button", { name: "Clear all" })).toBeNull();
+    await user.click(within(sheet).getByRole("button", { name: "Done" }));
+    await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
+  });
+
+  it("returns focus to its button when the sheet closes", async () => {
+    const user = userEvent.setup();
+    render(filters());
+    const button = sheetButton("Filters");
+    await user.click(button);
+    await screen.findByRole("dialog");
+    await user.keyboard("{Escape}");
+    await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
+    await waitFor(() => expect(button).toHaveFocus());
+  });
+
+  it("sums the counts into the button's name and badge, and clears all through onClearAll", async () => {
+    const user = userEvent.setup();
+    const onClearAll = vi.fn();
+    render(filters([2, 1], onClearAll));
+    const button = sheetButton("Filters, 3 active");
+    expect(button).toHaveTextContent("Filters 3");
+    await user.click(button);
+    const sheet = await screen.findByRole("dialog");
+    await user.click(within(sheet).getByRole("button", { name: "Clear all" }));
+    expect(onClearAll).toHaveBeenCalledTimes(1);
+  });
+
+  it("disables Clear all while no filter is applied", async () => {
+    const user = userEvent.setup();
+    render(filters([0, 0], vi.fn()));
+    await user.click(sheetButton("Filters"));
+    expect(within(await screen.findByRole("dialog")).getByRole("button", { name: "Clear all" })).toBeDisabled();
+  });
+
+  it("takes its words from labels, keeping the defaults for a key left undefined", async () => {
+    const user = userEvent.setup();
+    render(filters([1, 0], vi.fn(), { labels: { button: "Narrow", done: "Close", clearAll: undefined, group: undefined } }));
+    expect(screen.getByRole("toolbar", { name: "Filters" })).toBeInTheDocument();
+    await user.click(sheetButton("Narrow, 1 active"));
+    const sheet = await screen.findByRole("dialog");
+    // (The drawer's own close button is named "Close" too, so the one with the text is the footer's.)
+    expect(within(sheet).getAllByRole("button", { name: "Close" }).some((button) => button.textContent === "Close")).toBe(true);
+    expect(within(sheet).getByRole("button", { name: "Clear all" })).toBeInTheDocument();
+  });
+
+  it("draws a filter wrapped in another component inline and leaves it out of the sheet", async () => {
+    const user = userEvent.setup();
+    const Wrapped = () => (
+      <TableToolbar.Filter label="Wrapped">
+        <span>w</span>
+      </TableToolbar.Filter>
+    );
+    render(
+      <TableToolbar aria-label="Tools">
+        <TableToolbar.Filters>
+          <TableToolbar.Filter label="Status">s</TableToolbar.Filter>
+          <Wrapped />
+        </TableToolbar.Filters>
+      </TableToolbar>,
+    );
+    expect(within(screen.getByRole("toolbar", { name: "Filters" })).getAllByRole("button")).toHaveLength(2);
+    await user.click(sheetButton("Filters"));
+    const sheet = await screen.findByRole("dialog");
+    expect(within(sheet).queryByRole("heading", { name: "Wrapped" })).toBeNull();
+    expect(within(sheet).getByRole("heading", { name: "Status" })).toBeInTheDocument();
+  });
+
+  it("forwards its ref and passes className, style, id and data-testid, and marks its collapse step", () => {
+    const ref = createRef<HTMLDivElement>();
+    render(
+      <TableToolbar aria-label="Tools">
+        <TableToolbar.Filters ref={ref} className="mine" style={{ color: "red" }} id="f" data-testid="f" collapseBelow="lg">
+          <TableToolbar.Filter label="Status">s</TableToolbar.Filter>
+        </TableToolbar.Filters>
+      </TableToolbar>,
+    );
+    const group = screen.getByTestId("f");
+    expect(ref.current).toBe(group);
+    expect(group).toHaveClass("mine", styles.collapseLg as string);
+    expect(group).toHaveAttribute("id", "f");
+    expect(group.style.color).toBe("red");
+  });
+
+  it("warns once in development with no filter among its children", () => {
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
+    render(
+      <TableToolbar aria-label="Tools">
+        <TableToolbar.Filters>nothing</TableToolbar.Filters>
+      </TableToolbar>,
+    );
+    expect(warn).toHaveBeenCalledWith(expect.stringContaining("TableToolbar.Filters: no `TableToolbar.Filter`"));
+  });
+
+  it("survives StrictMode and has no accessibility violations, closed and open", async () => {
+    const user = userEvent.setup();
+    const { container } = render(<StrictMode>{filters([1, 0], vi.fn())}</StrictMode>);
+    expect(await axe(container)).toHaveNoViolations();
+    await user.click(sheetButton("Filters, 1 active"));
+    const sheet = await screen.findByRole("dialog");
+    expect(await axe(sheet)).toHaveNoViolations();
+  });
+});
