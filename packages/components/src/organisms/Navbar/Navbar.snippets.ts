@@ -101,6 +101,24 @@ ${navbar('currentVariant="solid"')}`,
   </Navbar.PanelActions>
 </Navbar>`,
 
+  hiddenLinks: `{/* Navbar.Links hideBelow takes the set out of the bar below a width, for a page that offers the same links somewhere else on a phone (a sidebar's menu
+    panel, say). The bar's own menu panel is not used, so collapseBelow is "never" and the bar draws no menu button; the actions take the room the links left and sit
+    at the end. This demo uses the widest step ("3xl") so the links are out of the bar on any window narrower than 1920px; an app picks the step that suits it. */}
+<Navbar collapseBelow="never">
+  <Navbar.Brand href="/">dbM</Navbar.Brand>
+  <Navbar.Links aria-label="Main" hideBelow="3xl">
+    <Navbar.Link href="/products" current>
+      Products
+    </Navbar.Link>
+    <Navbar.Link href="/pricing">Pricing</Navbar.Link>
+  </Navbar.Links>
+  <Navbar.Actions>
+    <Navbar.Action>
+      <Button size="sm">Sign in</Button>
+    </Navbar.Action>
+  </Navbar.Actions>
+</Navbar>`,
+
   skipLink: `{/* Put the skip link first in the bar, and the bar first on the page. Its href names the main element's id, which needs
     tabIndex={-1} to receive focus. */}
 <Navbar>

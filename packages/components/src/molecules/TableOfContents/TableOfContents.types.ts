@@ -72,8 +72,10 @@ export type TableOfContentsFoldedStyle = "inline" | "dropdown";
  * - `"list"` (the default) — a vertical list of links, as a column beside the page.
  * - `"row"` — one line of pills, drawn by `NavigationMenu`, one for each top-level entry. An entry with deeper entries after it is a
  *   split pill: its link and a caret that opens a panel holding them. The row scrolls sideways when it is too long (the ends fade
- *   out), keeps the pill that holds the current entry in view and, with `sticky`, sticks under the page's header. It has no title,
- *   does not fold, and ignores `tone` and `collapse`.
+ *   out), keeps the pill that holds the current entry in view and, with `sticky`, sticks under the page's header. It has no title and
+ *   does not fold, so it ignores `tone`, `highlightActive`, `movingMarker`, `collapsibleGroups`, `groupsDefaultOpen`, `collapse`,
+ *   `foldedStyle`, `open`, `defaultOpen` and `showTitle`; `size`, `numbered`, `minLevel`, `maxLevel`, `labels` (the caret's name,
+ *   `groupToggle`), `sticky` and `scrollOffset` all apply.
  */
 export type TableOfContentsLayout = "list" | "row";
 

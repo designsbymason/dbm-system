@@ -172,7 +172,7 @@ const meta: Meta<PlaygroundArgs> = {
     currentVariant: {
       control: "select",
       options: ["underline", "subtle", "solid"],
-      description: "How the current page's link is marked: a brand line under it, a tinted pill, or a brand fill. aria-current is set whichever it is.",
+      description: "How the current page's link is marked: a brand line under it, a tinted pill, or a brand fill. aria-current is set whichever it is (page, or location with currentType).",
       table: { defaultValue: { summary: '"underline"' } },
     },
     rounded: {

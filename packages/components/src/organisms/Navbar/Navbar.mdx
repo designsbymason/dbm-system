@@ -330,6 +330,12 @@ menu panel, where a thumb can reach it. This demo hides its button below the wid
 
 <Canvas of={NavbarStories.ResponsiveActions} />
 
+### Links offered somewhere else
+
+When a page offers the same links somewhere else on a phone (a `Sidebar`'s menu panel, say), `hideBelow` on `Navbar.Links` takes the set out of the bar below a width. The bar's own menu panel is not used then, so set `collapseBelow="never"`: the bar draws no menu button of its own and the page keeps one. The actions take the room the links left and stay at the end. This demo hides its links below the widest step, so they are out of the bar on any window narrower than 1920px.
+
+<Canvas of={NavbarStories.HiddenLinks} />
+
 ### A skip link
 
 `Navbar.SkipLink` is the first thing `Tab` reaches: a link that jumps past the bar to the page's main
@@ -533,7 +539,7 @@ This story is shown at a phone's width when opened on its own; on this page, nar
 - `Navbar.SkipLink` is a real link, the first stop of the page when it is first in the bar: out of sight (clipped to a pixel, not `display: none`, so
   it can take focus) until it has keyboard focus, when it is drawn over the page's top corner with a visible edge and the standard focus ring.
 - `Navbar.PanelActions` puts its children in the menu panel's footer, inside the same modal dialog, so they are in its focus loop and read
-  after the links. A control hidden from the bar by `hideBelow` is `display: none`, so it leaves the tab order and the accessibility tree there.
+  after the links. A control hidden from the bar by `hideBelow` is `display: none`, so it leaves the tab order and the accessibility tree there; a set of `Navbar.Links` hidden with `hideBelow` does the same, so the page must offer those links elsewhere (a landmark named differently from any other navigation).
 - An external link's new tab is announced: a visually hidden "(opens in a new tab)" follows its text, and a count in `badge` is part of the name.
 - `hideOnScroll` never hides a bar that has keyboard focus (focus inside it shows it), and a bar that is hidden still takes focus when `Tab` reaches it,
   which brings it back.

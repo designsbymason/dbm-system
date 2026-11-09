@@ -2,8 +2,10 @@ import type { Meta, StoryContext, StoryObj } from "@storybook/react-vite";
 import { expect, fn, userEvent, waitFor, within } from "storybook/test";
 import { Fragment, useRef, useState } from "react";
 import { Badge } from "../../atoms/Badge";
+import { Button } from "../../atoms/Button";
 import type { CSSProperties, ReactNode, RefObject } from "react";
 import type { SpaceValue } from "@dbm-system/utils";
+import { Navbar } from "./Navbar";
 import { navbarPlaygroundSnippet, navbarSnippets } from "./Navbar.snippets";
 import type { NavbarCollapseBelow, NavbarCurrentVariant, NavbarLinkSize, NavbarProps, NavbarSize, NavbarVariant } from "./Navbar.types";
 import { DemoColumnsBars, DemoNavbar, DemoRowsNavbar, DemoSectionsNavbar, GalleryBar, NavbarStage, RouterDemoNavbar, NavbarViewModeContext, ScrollStage, StickyDemo } from "./NavbarStoryKit";
@@ -640,6 +642,31 @@ export const ResponsiveActions: Story = {
         </Top>
       )}
     </NavbarStage>
+  ),
+};
+
+export const HiddenLinks: Story = {
+  name: "Links offered somewhere else",
+  parameters: { docs: { source: { code: navbarSnippets.hiddenLinks } } },
+  argTypes: { ...noControls },
+  render: () => (
+    // `3xl` is the widest step, so the links leave the bar on any window narrower than 1920px; `collapseBelow="never"` keeps the bar from drawing a menu button of its own.
+    <Top>
+      <Navbar collapseBelow="never" aria-label="Example">
+        <Navbar.Brand href="#">dbM</Navbar.Brand>
+        <Navbar.Links aria-label="Main" hideBelow="3xl">
+          <Navbar.Link href="#products" current>
+            Products
+          </Navbar.Link>
+          <Navbar.Link href="#pricing">Pricing</Navbar.Link>
+        </Navbar.Links>
+        <Navbar.Actions>
+          <Navbar.Action>
+            <Button size="sm">Sign in</Button>
+          </Navbar.Action>
+        </Navbar.Actions>
+      </Navbar>
+    </Top>
   ),
 };
 

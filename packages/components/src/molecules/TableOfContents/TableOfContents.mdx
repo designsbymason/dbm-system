@@ -3,6 +3,7 @@ import { Callout, ComponentHeader, PlaygroundControls, PropertiesTable, RelatedC
 import { Affix } from "../../atoms/Affix";
 import { Badge } from "../../atoms/Badge";
 import { Link } from "../../atoms/Link";
+import { NavigationMenu } from "../../organisms/NavigationMenu";
 import { VisuallyHidden } from "../../atoms/VisuallyHidden";
 import { Breadcrumb } from "../Breadcrumb";
 import * as TableOfContentsStories from "./TableOfContents.stories";
@@ -283,6 +284,7 @@ the prop decides; while `activeId` is set, scrolling no longer changes the mark 
 - Use `scrollOffset` whenever a sticky header covers the top of the page, so a section isn't left under it.
 - Pass `items` for a server-rendered page, or one whose outline must be there before scripts run.
 - Name each outline with `aria-label` when a page holds more than one.
+- Where a column has no room (a phone or tablet), use `layout="row"` at the top of the page, with `sticky` so it stays under the header; sections inside a section are in a panel from the pill.
 - Put a `"brand"` outline on `bg.surface`; use `"neutral"` on `bg.canvas`.
 
 </Callout>
@@ -295,6 +297,7 @@ the prop decides; while `activeId` is set, scrolling no longer changes the mark 
 - Don't list every heading. Pick the level (`selector`) that gives a scannable list.
 - Don't point entries at elements that aren't on the page: a link to nowhere does nothing.
 - Don't put the outline inside the scrolling content it outlines, where it scrolls away.
+- Don't draw a column and a row of the same page at the same width, or leave both in the accessibility tree: show one at each width (a width map for `layout`, or `display: none` on the one that is not for the width), and give each its own name.
 
 </Callout>
 </div>
@@ -330,6 +333,9 @@ the prop decides; while `activeId` is set, scrolling no longer changes the mark 
 - **On a phone**, use `collapse="auto" foldedStyle="dropdown" sticky="folded"`: one line that always says where
   you are, a list a tap away, and nothing at all taken from the content above the breakpoint. A plain
   `collapse="auto"` (inline) suits a phone outline that sits above the content and doesn't need to follow you.
+- On a phone there are two answers, and one of them is enough: a row of pills (`layout="row"`, with the sections inside a pill in a panel) or the folded dropdown above. The row shows the whole top level at once and suits a page with a handful of sections; the dropdown shows one line and suits a long outline. `tone`, `collapse` and `foldedStyle` have no effect on a row.
+- A row is longer than the room when its pills do not fit: the end that has more fades out, and the pill that holds the section being read is scrolled into view. Put a row on `bg.surface`: its ends fade into that colour, so on another background the fade shows as a band.
+- A link in a pill's panel jumps to its section instead of gliding, since focus returns to the pill's caret as the panel closes and would cut a smooth scroll short.
 - Don't also put `sticky` (true) on a folded outline: its box would cover the content. `sticky="folded"` is the
   one that is drawn as a bar.
 - Use `disabled` for a section the reader can't use yet, rather than leaving it out, so the outline still
@@ -365,6 +371,8 @@ Setup"), and folding never takes the entry that has focus out of the page. A clo
 shows the bar on its heading, and does not claim `aria-current`, which belongs to the entry itself. The moving
 marker is decorative (`aria-hidden`) — `aria-current` says it in words — and stays still for a person who prefers
 reduced motion. A number is plain text in the link, so it is part of its accessible name.
+
+**The row layout** is a `<nav>` named by your `aria-label` (or `labels.navigation`, since it has no heading), drawn by `NavigationMenu`: a list of pills. A pill with sections inside it is a split pill: its link goes to its own section, and a caret button beside it (named by `labels.groupToggle`, "Subsections of Setup") opens a panel of the sections inside it, as a disclosure with `aria-expanded`. In it `Tab` moves through the pills and carets in order, `Enter`, `Space` or `ArrowDown` opens a caret's panel, `Escape` closes it and gives focus back to the caret, and choosing a link scrolls to its section and closes the panel. Only the entry being read carries `aria-current="location"`; the pill that holds it is marked by its fill (and a border where forced colours drop the fill) and has no `aria-current` of its own. A row longer than the room fades its ends out, which is decorative and never takes a click. The pills' contrast is `NavigationMenu`'s.
 
 When the outline is folded, the button is a disclosure: it carries `aria-expanded` and `aria-controls`, and
 closing the list — by choosing an entry or with `Escape` — never leaves focus on something that has just
@@ -416,6 +424,12 @@ only about 1.1:1 from it, which is why the bar stays the main cue. The track the
 {/* Folded behind a button below the sm breakpoint */}
 <TableOfContents contentRef={articleRef} collapse="auto" />
 
+{/* A sticky row of pills at the top of the page, under a header whose height is measured; sections inside a pill open in a panel */}
+<TableOfContents layout="row" sticky stickyOffset="var(--page-shell-header-height, 0px)" aria-label="Page sections" items={items} />
+
+{/* One outline that is a row on a phone and the list from lg */}
+<TableOfContents layout={{ base: "row", lg: "list" }} items={items} />
+
 {/* Only the first two levels, with an icon, a badge and a disabled entry */}
 <TableOfContents
   maxLevel={2}
@@ -446,7 +460,7 @@ only about 1.1:1 from it, which is why the bar stays the main cue. The track the
 <TokenRow token="text.brand" usage="the current entry in the brand tone" />
 <TokenRow token="bg.brand-subtle" usage="the current entry's background with highlightActive, brand tone" />
 <TokenRow token="bg.neutral-subtle" usage="the current entry's background with highlightActive, neutral tone" />
-<TokenRow token="bg.surface" usage="the bar's background while it is sticky and folded" />
+<TokenRow token="bg.surface" usage="the bar's background while it is sticky and folded, and the sticky row's, which is also the colour a row's faded ends fade into" />
 <TokenRow token="z-index.sticky" usage="the sticky, folded bar's layer" />
 <TokenRow token="border-width.1" usage="the rule under the sticky, folded bar" />
 <TokenRow token="border.default" usage="the track along the start edge (decorative)" />
@@ -491,6 +505,22 @@ only about 1.1:1 from it, which is why the bar stays the main cue. The track the
   </Breadcrumb>
 </RelatedCard>
 <RelatedCard
+  name="NavigationMenu"
+  description="What the row layout is drawn with: pills, with a panel of links from a split pill"
+  href="/?path=/docs/organisms-navigation-navigationmenu--docs"
+>
+  <NavigationMenu aria-label="Example" size="xs" rounded currentVariant="subtle">
+    <NavigationMenu.List>
+      <NavigationMenu.Item>
+        <NavigationMenu.Link href="#a" current>Overview</NavigationMenu.Link>
+      </NavigationMenu.Item>
+      <NavigationMenu.Item>
+        <NavigationMenu.Link href="#b">Usage</NavigationMenu.Link>
+      </NavigationMenu.Item>
+    </NavigationMenu.List>
+  </NavigationMenu>
+</RelatedCard>
+<RelatedCard
   name="Affix"
   description="What a sticky outline is built on, for keeping any box in view"
   href="/?path=/docs/atoms-layout-affix--docs"
@@ -499,7 +529,7 @@ only about 1.1:1 from it, which is why the bar stays the main cue. The track the
 </RelatedCard>
 <RelatedCard
   name="Link"
-  description="The anchor each entry is built on, for a link anywhere else"
+  description="The anchor each entry of the list layout is built on, for a link anywhere else"
   href="/?path=/docs/atoms-typography-link--docs"
 >
   <Link href="/docs">Docs</Link>

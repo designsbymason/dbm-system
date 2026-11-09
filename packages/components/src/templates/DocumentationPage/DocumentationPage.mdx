@@ -17,8 +17,8 @@ import * as DocumentationPageStories from "./DocumentationPage.stories";
 A page of documentation or long-form content: the site's navigation in a column at the start, the page in the middle (its head, sections with
 a code block, a table and a note, and links to the previous and next page) and a table of contents at the end that follows the reader down the page. It is an
 **example page, not a component**. Nothing here is exported from the package: you copy the page into your app and replace the words. What the page shows you is the
-part that is hard to get right: a navigation column and an outline on either side of a `PageShell` page, both sticking under the header, and what each does on
-a tablet and a phone.
+part that is hard to get right: a full-width header with its links exactly in the middle, a navigation column and an outline on either side of a `PageShell` page, both
+sticking under the header, one menu drawer on a phone, and the outline as a sticky row of pills where the column has no room.
 
 It is a [`PageShell`](/docs/templates-application-shells-pageshell--docs) with a `PageShell.Body` that holds a [`Sidebar`](/docs/organisms-navigation-sidebar--docs),
 `PageShell.Main` and a `PageShell.Aside` with a [`TableOfContents`](/docs/molecules-navigation-tableofcontents--docs). On this page the live examples sit in a framed
@@ -28,7 +28,7 @@ box 40rem tall; open a story from the sidebar on its own, and narrow the window,
 
 ```tsx
 import {
-  Alert, CodeBlock, Container, Heading, Link, Navbar, PageHeader, PageShell, Sidebar, Table, TableOfContents, Text,
+  Alert, CodeBlock, Container, Heading, IconButton, Link, Navbar, PageHeader, PageShell, Sidebar, Table, TableOfContents, Text, useSidebar,
 } from "@dbm-system/components";
 ```
 
@@ -55,7 +55,7 @@ A page is not a component, so it has no properties table. These are the pieces i
   label="What the page is made of"
   columns={["Where", "What it is and why"]}
   rows={[
-    ["Header", "A sticky `Navbar` that spans the window: the brand at its start (over the navigation column), the links exactly in the middle and the actions at its end. The brand and the actions are as wide as each other above `lg` (the page's stylesheet), so `Navbar.Links align=\"center\"` puts the links in the middle of the window. Below `lg` the links are hidden from the bar (`hideBelow=\"lg\"`) and the bar never collapses (`collapseBelow=\"never\"`), so it draws no menu button of its own. The header is a direct child of `PageShell`, so it sticks by itself."],
+    ["Header", "A sticky `Navbar` that spans the window: the brand at its start (over the navigation column), the links exactly in the middle and the actions at its end. The brand and the actions are as wide as each other above `lg` (the page's stylesheet), so `Navbar.Links align=\"center\"` puts the links in the middle of the window. Below `lg` the links are hidden from the bar (`hideBelow=\"lg\"`) and the bar never collapses (`collapseBelow=\"never\"`), so it draws no menu button of its own. On a phone the `Sidebar.MenuButton` is at the start (written first in the row), the brand in the middle and the actions at the end (the brand and the actions name their `column`); the actions are a search `IconButton`, tertiary and brand-toned, and they take the room the links left. The header is a direct child of `PageShell`, so it sticks by itself."],
     ["One drawer", "The `Sidebar.MenuButton` in the header is the page's only menu button. Its panel is the `Sidebar`'s phone panel, and the sidebar holds only the section of the current header link (the components), and in the panel a part that reads `useSidebar().inPanel` draws the header's links too: the current one is a `Sidebar.Group` that holds its section, so the drawer is an expandable menu."],
     ["Navigation column", "A `Sidebar` at the start of `PageShell.Body`, with `sticky` and `stickyOffset=\"var(--page-shell-header-height, 0px)\"`: it sticks under the header at the height the shell measured, and takes the rest of the window. Give its `Sidebar.Nav` a name of its own."],
     ["The page", "`PageShell.Main` holding a `Container size=\"md\"` (a reading width) with a `PageHeader`, one `section` per heading, and links to the previous and next page."],
@@ -114,6 +114,8 @@ A page of a few paragraphs needs no outline: there is no aside, and the page tak
 - Keep the page's reading width to `md` (about 48rem), so a line is short enough to read and the outline has room beside it on a laptop.
 - The sidebar scrolls inside itself when its list is longer than the window, so the page's own scroll is never the sidebar's.
 - A code block and a wide table scroll in their own frames: the page never scrolls sideways.
+- The column and the row are two outlines of one list of entries, one at each width. A width map for `TableOfContents`' `layout` cannot do this on its own, because the column is at the end of the body and the row at the top of the main, and an element cannot be in both places; write the entries once and pass them to both.
+- A sticky row clears the header itself (`stickyOffset` is the header's measured height) and keeps the headings it jumps to clear of its own bar, so it takes no `scrollOffset`; the column's outline does.
 
 ## Accessibility
 
@@ -121,12 +123,14 @@ A page of a few paragraphs needs no outline: there is no aside, and the page tak
 
 One `banner` (the header), the header's `navigation` named "Main", the sidebar's `navigation` (named "Documentation"), one `main`, a `complementary` aside named "On this page"
 holding the outline's `navigation`, a `navigation` for the previous and next links, and one `contentinfo`. Every navigation has its own name, so a screen reader's
-list of landmarks tells them apart.
+list of landmarks tells them apart. Below `lg` the aside is not on the page and the outline is a `navigation` named "Page sections" at the top of the `main`, so a page has
+one outline at a time.
 
 </Callout>
 
 - The keyboard follows the markup: the skip link, the header, the sidebar, the page, the outline, the footer. The skip link goes to the page's `main`, past the header and the sidebar.
 - On a phone the sidebar is not on the page: the header's one menu button opens its panel as a dialog holding the site's links and, under them, the documentation's sections. Focus goes into it, `Escape` closes it and focus returns to the button.
+- The outline row's pills and carets are in the tab order at the top of the page, after the header and before the page's head; a caret opens a panel of the sections inside its pill, `Escape` closes it and focus returns to the caret. The row is named by its own `aria-label`, and the one that is hidden for the width is `display: none`, so it is out of the tab order and the accessibility tree.
 - Choosing an outline entry scrolls to its section and marks it current (`aria-current="location"`); the mark follows the scroll, and only one entry has it.
 - The sidebar marks the page the reader is on with `aria-current="page"`.
 - The sidebar and the outline are sticky boxes that scroll inside themselves when they are taller than the window, so a long list is never cut off.
@@ -134,6 +138,7 @@ list of landmarks tells them apart.
 ## Code examples
 
 ```tsx
+// items: the outline's entries, written once and passed to the row and to the column
 <Sidebar.Provider collapseBelow="lg">
   <PageShell>
     <PageShell.SkipLink />
@@ -155,9 +160,12 @@ list of landmarks tells them apart.
           <Sidebar.Nav aria-label="Documentation">…</Sidebar.Nav>
         </Sidebar.Content>
       </Sidebar>
-      <PageShell.Main>…</PageShell.Main>
+      <PageShell.Main>
+        <TableOfContents layout="row" sticky stickyOffset="var(--page-shell-header-height, 0px)" className={styles.outlineRow} aria-label="Page sections" items={items} />
+        …
+      </PageShell.Main>
       <PageShell.Aside aria-label="On this page" sticky width="14rem">
-        <TableOfContents scrollOffset={80} items={[{ id: "overview", label: "Overview" }]} />
+        <TableOfContents scrollOffset={80} items={items} />
       </PageShell.Aside>
     </PageShell.Body>
   </PageShell>
@@ -220,7 +228,7 @@ function SidebarLinks() {
 ## Design tokens used
 
 The page is made of components, so every colour, size and radius comes from them. What it draws itself is spacing between its own pieces, in inline styles: `space.4`,
-`space.6` and `space.8`, and `space.32` in the stylesheet. Its stylesheet is only the print rule and the width of the header's two ends (`space.32`).
+`space.6` and `space.8`, and `space.32` in the stylesheet. Its stylesheet is only the print rule, the width of the header's two ends (`space.32`) and which of the two outlines shows at a width.
 
 ## Related components
 

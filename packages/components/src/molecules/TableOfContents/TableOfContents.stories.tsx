@@ -209,7 +209,7 @@ const meta: Meta<PlaygroundArgs> = {
       control: "select",
       options: ["brand", "neutral"],
       description:
-        "The colour of the current entry and its marker: brand (the brand theme's accent) or neutral (primary text and a strong neutral marker). Place a brand outline on a surface, not on the canvas; neutral is safe on either.",
+        "The colour of the current entry and its marker: brand (the brand theme's accent) or neutral (primary text and a strong neutral marker). Place a brand outline on a surface, not on the canvas; neutral is safe on either. No effect with the row layout.",
       table: { defaultValue: { summary: '"brand"' } },
     },
     numbered: {
@@ -259,16 +259,17 @@ const meta: Meta<PlaygroundArgs> = {
     sticky: {
       control: false,
       description:
-        'Keeps the outline in view while the page scrolls: true is always sticky (a box built on Affix), "folded" only while the outline is folded (a bar across the top on a phone, drawn on the page\'s surface). It sticks to the page, or to scrollContainerRef, and its parent must be as tall as the content. While sticky and folded, headings are kept clear of it automatically.',
+        'Keeps the outline in view while the page scrolls (with layout row, true and "folded" both stick the row): true is always sticky (a box built on Affix), "folded" only while the outline is folded (a bar across the top on a phone, drawn on the page\'s surface). It sticks to the page, or to scrollContainerRef, and its parent must be as tall as the content. While sticky and folded, headings are kept clear of it automatically.',
       table: { defaultValue: { summary: "false" } },
     },
     stickyOffset: {
       control: false,
       description:
-        "How far from the top a sticky outline sticks, on the spacing scale: for a page whose own header is also sticky. No effect without sticky.",
+        "How far from the top a sticky outline sticks: a step of the spacing scale, or, for sticky=\"folded\" and the row layout, any CSS length (such as the sticky header's measured height). sticky={true} takes a step only. No effect without sticky.",
     },
     layout: {
       control: false,
+      options: ["list", "row"],
       description:
         'The outline\'s layout: list (the default, a vertical list) or row (one line of pills drawn by NavigationMenu, a panel for the entries inside a pill, sticky under a header with sticky, the ends fading out when it is longer than the room). A width map such as { base: row, lg: list } changes it by screen width. A row has no title and does not fold.',
       table: { defaultValue: { summary: '"list"' } },
@@ -283,7 +284,7 @@ const meta: Meta<PlaygroundArgs> = {
       control: "select",
       options: ["never", "auto", "always"],
       description:
-        'Folds the outline behind an "On this page" button: never (the default), auto (below the sm breakpoint) or always. A list with keyboard focus inside it stays open while it does.',
+        'Folds the outline behind an "On this page" button: never (the default), auto (below the sm breakpoint) or always. A list with keyboard focus inside it stays open while it does. No effect with the row layout.',
       table: { defaultValue: { summary: '"never"' } },
     },
     foldedStyle: {
@@ -291,7 +292,7 @@ const meta: Meta<PlaygroundArgs> = {
       options: ["inline", "dropdown"],
       if: { arg: "collapse", neq: "never" },
       description:
-        'How a folded outline looks: inline (an "On this page" button opening the list in place) or dropdown (a select-like button that always shows the entry being read and opens the list as an overlay). Pair dropdown with sticky="folded" for a bar that stays in view on a phone.',
+        'How a folded outline looks: inline (an "On this page" button opening the list in place) or dropdown (a select-like button that always shows the entry being read and opens the list as an overlay). Pair dropdown with sticky="folded" for a bar that stays in view on a phone. No effect with the row layout.',
       table: { defaultValue: { summary: '"inline"' } },
     },
     open: {
@@ -315,7 +316,7 @@ const meta: Meta<PlaygroundArgs> = {
     },
     showTitle: {
       control: "boolean",
-      description: "Shows the heading above the list. Hidden, the list keeps its name for screen readers.",
+      description: "Shows the heading above the list. Hidden, the list keeps its name for screen readers. The row layout has no heading.",
       table: { defaultValue: { summary: "true" } },
     },
     activeId: {

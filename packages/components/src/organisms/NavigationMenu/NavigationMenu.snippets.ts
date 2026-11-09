@@ -55,7 +55,7 @@ ${menu('viewport={false} panelAlign="center"')}`,
 ${menu('presentation="stacked"')}`,
 
   currentVariants: `{/* currentVariant: "underline" (default) | "subtle" | "solid" — how the current page is marked.
-    aria-current="page" is set whichever it is. */}
+    aria-current is set whichever it is ("page", or "location" with currentType="location"). */}
 ${menu('currentVariant="solid"')}`,
 
   sizes: `{/* size: "xs" | "sm" | "md" (default) | "lg" | "xl" */}

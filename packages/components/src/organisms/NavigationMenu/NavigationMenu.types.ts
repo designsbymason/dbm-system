@@ -324,7 +324,7 @@ export interface NavigationMenuLinkProps extends Omit<ComponentPropsWithoutRef<"
   /** Where the link goes. Not used with `asChild`, where the child element has its own. */
   href?: string;
   /**
-   * Marks the page the reader is on (`aria-current="page"`), drawn in the menu's `currentVariant` when the link is a top-level item.
+   * Marks the page the reader is on (`aria-current`: `"page"`, or the menu's `currentType`), drawn in the menu's `currentVariant` when the link is a top-level item.
    * @default false
    */
   current?: boolean;

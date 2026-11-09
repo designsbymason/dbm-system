@@ -255,8 +255,8 @@ it, for a phone or a side panel. One item is open at a time. A width map chooses
 
 ### Marking the current page
 
-`current` on a link, or on the trigger of the item whose panel holds the page, marks it. `aria-current="page"` is set on a link
-whichever look is chosen. Inside a `Navbar` the bar's choice applies.
+`current` on a link, or on the trigger of the item whose panel holds the page, marks it. `aria-current` is set on a link
+whichever look is chosen: `"page"`, or `"location"` with `currentType="location"` for links to places in one page. Inside a `Navbar` the bar's choice applies.
 
 <Canvas of={NavigationMenuStories.CurrentVariants} />
 
@@ -392,7 +392,7 @@ it is the stacked list, and choosing a link closes the menu.
 
 - The root is a `<nav>` named by `aria-label` (`labels.navigation`, "Main", otherwise), holding a `role="list"` list whose items are `role="listitem"`, which keeps list semantics under Safari with VoiceOver, where a list without markers loses them. Inside a `Navbar` the bar's own navigation is the landmark and the menu is one of its list items.
 - A trigger is a `<button>` with `aria-expanded` and `aria-controls` pointing at its panel. It is not `role="menu"` or `aria-haspopup`: the panel is links, not menu items.
-- The current page is `aria-current="page"`. A trigger with `current` is only drawn as current: it has no `aria-current`, since a button is not a page. A disabled link is `aria-disabled` and stays focusable, with its click blocked; a disabled trigger is a native disabled button and leaves the tab order.
+- The current page is `aria-current="page"`, or `"location"` when the menu is given `currentType="location"` (links to places in one page, such as the row of a `TableOfContents`). A trigger with `current` is only drawn as current: it has no `aria-current`, since a button is not a page. A disabled link is `aria-disabled` and stays focusable, with its click blocked; a disabled trigger is a native disabled button and leaves the tab order.
 - A link's description and badge are part of its name, and an external link's new tab is announced by a visually hidden "(opens in a new tab)".
 - A split trigger is a link and a caret `<button>` named by `labels.togglePanel` ("Products menu"), each its own tab stop; the link has no `aria-expanded`, the button does.
 - A group heading that is a link names the list of links beneath it. A featured block is a link as a whole when it has an `href`, and plain content when it does not.

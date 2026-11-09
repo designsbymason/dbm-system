@@ -20,7 +20,7 @@ const meta: Meta<typeof NavigationMenu.Link> = {
     },
     current: {
       control: "boolean",
-      description: "Marks the page the reader is on (aria-current=\"page\"), drawn in the menu's currentVariant when the link is a top-level item.",
+      description: "Marks the page the reader is on (aria-current, \"page\" unless the menu's currentType says \"location\"), drawn in the menu's currentVariant when the link is a top-level item.",
       table: { defaultValue: { summary: "false" } },
     },
     disabled: {
