@@ -344,7 +344,7 @@ export interface TableToolbarFiltersLabels {
  * The properties of `TableToolbar.Filters`: a set of `TableToolbar.Filter`s that are inline buttons above a width of the bar and, below it,
  * one "Filters" button that opens them all in a bottom sheet.
  */
-export interface TableToolbarFiltersProps extends Omit<ComponentPropsWithoutRef<"div">, "children"> {
+export interface TableToolbarFiltersProps extends Omit<ComponentPropsWithoutRef<"div">, "children" | "dir"> {
   /**
    * The filters: `TableToolbar.Filter`s, direct children (a filter wrapped in your own component is drawn inline and is not in the sheet).
    * Each is drawn inline inside a `Toolbar.Item`, and in the sheet as a section headed by its `label` holding its `children`.
@@ -356,6 +356,12 @@ export interface TableToolbarFiltersProps extends Omit<ComponentPropsWithoutRef<
    * @default 'md'
    */
   collapseBelow?: TableToolbarFiltersCollapseBelow;
+  /**
+   * The direction of the inline filters' toolbar, whose arrow keys follow it. Left out, the nearest `DirectionProvider`'s, else left to right (it is not
+   * read from the page). The sheet and the rest of the bar follow the page's own direction.
+   * @default 'ltr'
+   */
+  dir?: "ltr" | "rtl";
   /**
    * Clears every filter. The sheet shows a "Clear all" button that calls it while any filter's `count` is above zero; left out, there is none.
    */

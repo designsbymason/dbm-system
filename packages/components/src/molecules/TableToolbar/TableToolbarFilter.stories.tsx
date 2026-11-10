@@ -17,6 +17,18 @@ const meta: Meta<typeof TableToolbar.Filter> = {
       description:
         "The filter controls in the panel: a CheckboxGroup, a RadioGroup, a Select, a range. They are yours and their state is yours; this part only opens and names the panel.",
     },
+    value: {
+      control: "text",
+      description:
+        "What the button shows of the choice (\"All\", \"Open\", \"2 selected\"). Left out, the button shows the filter's label and the count's badge. Given, the button shows the choice, is named \"Status: All\" (holding its visible text as whole words), and the label is drawn by labelPlacement.",
+    },
+    labelPlacement: {
+      control: "select",
+      options: ["inside", "before"],
+      description:
+        "Where the filter's name is drawn when it is given a value. inside writes it in the button (\"Status: All\"); before draws it as plain text before a button that shows only the choice. With before the part is a box holding the name and the button, so className and style go on that box and everything else on the button.",
+      table: { defaultValue: { summary: "inside" } },
+    },
     count: {
       control: { type: "number", min: 0 },
       description:
@@ -50,7 +62,7 @@ const meta: Meta<typeof TableToolbar.Filter> = {
       description: "Which edge of the button the panel lines up with.",
       table: { defaultValue: { summary: "start" } },
     },
-    labels: { control: false, description: "Replaces the words this part writes, per key: clear, activeCount (takes the plain count) and panel (takes the label)." },
+    labels: { control: false, description: "Replaces the words this part writes, per key: clear, activeCount (takes the plain count), panel (takes the label), named (takes the label and the value: \"Status: All\") and before (takes the label: \"Status:\")." },
     formatNumber: { control: false, description: "Writes the count in a locale's own numerals. Plain String by default; also used by the default activeCount." },
     disabled: { control: "boolean", description: "Disables the button, so the panel can't be opened.", table: { defaultValue: { summary: "false" } } },
     id: { control: false, description: "Standard DOM id, on the button." },

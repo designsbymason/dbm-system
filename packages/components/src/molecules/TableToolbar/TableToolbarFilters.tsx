@@ -1,8 +1,9 @@
-import { cx, mergeDefined } from "@dbm-system/utils";
-import { Children, forwardRef, isValidElement, useContext, useEffect, useRef, useState } from "react";
+import { cx, mergeDefined, mergeRefs } from "@dbm-system/utils";
+import { Children, forwardRef, isValidElement, useContext, useEffect, useMemo, useRef, useState } from "react";
 import type { ReactElement, ReactNode } from "react";
 import { Badge } from "../../atoms/Badge";
 import { Button } from "../../atoms/Button";
+import { useDirection } from "../../atoms/DirectionProvider";
 import { Heading } from "../../atoms/Heading";
 import { Drawer } from "../../organisms/Drawer";
 import { Toolbar } from "../Toolbar";
@@ -53,16 +54,24 @@ const isFilter = (child: ReactNode): child is ReactElement<TableToolbarFilterPro
  * ```
  */
 export const TableToolbarFilters = forwardRef<HTMLDivElement, TableToolbarFiltersProps>(
-  ({ children, collapseBelow = "md", onClearAll, size: sizeProp, labels: labelOverrides, formatNumber = String, className, ...props }, ref) => {
+  ({ children, collapseBelow = "md", onClearAll, size: sizeProp, labels: labelOverrides, formatNumber = String, className, dir: dirProp, onFocus, onBlur, ...props }, ref) => {
+    const dir = useDirection(dirProp);
     const bar = useContext(TableToolbarContext);
     const size = sizeProp ?? bar.size;
     const labels = mergeDefined(makeLabels(formatNumber), labelOverrides);
     const [open, setOpen] = useState(false);
     const buttonRef = useRef<HTMLButtonElement | null>(null);
     const rootRef = useRef<HTMLDivElement | null>(null);
+    const inlineRef = useRef<HTMLDivElement | null>(null);
+    // Which form keyboard focus is in, kept from the focus events: the form it is in can be taken out of the page by a change of width, and
+    // reading where focus is at that moment is unreliable (the browser drops it from a hidden element only on its next render).
+    const focusIn = useRef<"inline" | "button" | null>(null);
 
+    const mergedRef = useMemo(() => mergeRefs(rootRef, ref), [ref]);
     const filters = Children.toArray(children).filter(isFilter);
     const total = filters.reduce((sum, filter) => sum + safeCount(filter.props.count), 0);
+    // A disabled filter is drawn inline as a disabled button, and has no section in the sheet: its controls are not for choosing from.
+    const sheetFilters = filters.filter((filter) => !filter.props.disabled);
 
     const warned = useRef(false);
     if (process.env.NODE_ENV !== "production" && filters.length === 0 && !warned.current) {
@@ -83,18 +92,55 @@ export const TableToolbarFilters = forwardRef<HTMLDivElement, TableToolbarFilter
       return () => observer.disconnect();
     }, [open]);
 
+    // A change of width hides the form that has keyboard focus: hand focus to the same place in the other form, so the keyboard user keeps their place
+    // (06 §9). Only focus that was in the filters, and only when it has not moved on to somewhere that is still on the page.
+    useEffect(() => {
+      const root = rootRef.current;
+      if (!root || typeof ResizeObserver === "undefined") return undefined;
+      const observer = new ResizeObserver(() => {
+        const side = focusIn.current;
+        if (!side) return;
+        const from = side === "inline" ? inlineRef.current : buttonRef.current;
+        if (!from || from.getClientRects().length > 0) return;
+        const active = document.activeElement;
+        if (active && active !== document.body && !from.contains(active)) {
+          focusIn.current = null;
+          return;
+        }
+        const to = side === "inline" ? buttonRef.current : inlineRef.current?.querySelector<HTMLElement>("button:not([disabled])");
+        if (to && to.getClientRects().length > 0) {
+          to.focus();
+          focusIn.current = side === "inline" ? "button" : "inline";
+        }
+      });
+      observer.observe(root);
+      return () => observer.disconnect();
+    }, []);
+
     return (
       <div
-        ref={(node) => {
-          rootRef.current = node;
-          if (typeof ref === "function") ref(node);
-          else if (ref) ref.current = node;
-        }}
+        ref={mergedRef}
         {...props}
+        // The caller's handlers first, then ours (05 §3). A focus event from the sheet (portaled, but React bubbles it here) is neither form.
+        onFocus={(event) => {
+          onFocus?.(event);
+          const target = event.target as Node;
+          focusIn.current = inlineRef.current?.contains(target) ? "inline" : buttonRef.current === target ? "button" : null;
+        }}
+        onBlur={(event) => {
+          onBlur?.(event);
+          // A blur to nowhere is either a real one or the form being hidden; once the page has settled, the form still being drawn means it was real.
+          window.setTimeout(() => {
+            const side = focusIn.current;
+            const from = side === "inline" ? inlineRef.current : side === "button" ? buttonRef.current : null;
+            const active = document.activeElement;
+            if (from && from.getClientRects().length > 0 && !(active && rootRef.current?.contains(active))) focusIn.current = null;
+          }, 0);
+        }}
         data-table-toolbar-filters=""
         className={cx(styles.filters, collapseClass[collapseBelow], className)}
       >
-        <Toolbar aria-label={labels.group} variant="secondary" size={size} className={styles.filtersInline}>
+        <Toolbar ref={inlineRef} dir={dir} aria-label={labels.group} variant="secondary" size={size} className={styles.filtersInline}>
           {Children.map(children, (child) => (isFilter(child) ? <Toolbar.Item>{child}</Toolbar.Item> : child))}
         </Toolbar>
         <Drawer open={open} onOpenChange={setOpen}>
@@ -124,14 +170,25 @@ export const TableToolbarFilters = forwardRef<HTMLDivElement, TableToolbarFilter
             </Drawer.Header>
             <Drawer.Body>
               <div className={styles.sheetSections}>
-                {filters.map((filter, index) => (
-                  <section key={filter.key ?? index} className={styles.sheetSection}>
-                    <Heading level={3} size="sm" className={styles.sheetHeading}>
-                      {filter.props.label}
-                    </Heading>
-                    {filter.props.children}
-                  </section>
-                ))}
+                {sheetFilters.map((filter, index) => {
+                  const clear = filter.props.labels?.clear ?? "Clear";
+                  return (
+                    <section key={filter.key ?? index} className={styles.sheetSection}>
+                      <div className={styles.sheetSectionHead}>
+                        <Heading level={3} size="sm" className={styles.sheetHeading}>
+                          {filter.props.label}
+                        </Heading>
+                        {/* The same Clear the filter's own panel offers: while some of it is applied and it was given `onClear`. */}
+                        {safeCount(filter.props.count) > 0 && filter.props.onClear && (
+                          <Button variant="ghost" size="sm" onClick={filter.props.onClear} aria-label={`${clear} ${filter.props.label}`}>
+                            {clear}
+                          </Button>
+                        )}
+                      </div>
+                      {filter.props.children}
+                    </section>
+                  );
+                })}
               </div>
             </Drawer.Body>
             <Drawer.Footer>

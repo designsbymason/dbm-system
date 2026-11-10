@@ -21,6 +21,12 @@ const meta: Meta<typeof TableToolbar.Filters> = {
         "The width of the bar, below which the filters are one button and a sheet: sm (40rem) to xl (80rem), or never to keep them inline. The bar becomes a size container while it holds this part, so it is the bar's width that decides, not the window's.",
       table: { defaultValue: { summary: "md" } },
     },
+    dir: {
+      control: "select",
+      options: ["ltr", "rtl"],
+      description: "The direction of the inline filters' toolbar, whose arrow keys follow it. Left out, the nearest DirectionProvider's, else left to right (it is not read from the page).",
+      table: { defaultValue: { summary: "ltr" } },
+    },
     onClearAll: {
       control: false,
       description: "Clears every filter. The sheet shows a Clear all button that calls it while any filter's count is above zero; left out, there is none.",

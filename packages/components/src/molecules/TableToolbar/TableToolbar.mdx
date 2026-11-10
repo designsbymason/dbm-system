@@ -27,7 +27,10 @@ export const propOrder = [
 export const filterPropOrder = [
   "label",
   "children",
+  "value",
+  "labelPlacement",
   "count",
+  "max",
   "onClear",
   "open",
   "defaultOpen",
@@ -45,7 +48,7 @@ export const filterPropOrder = [
   "data-testid",
 ];
 
-export const filtersPropOrder = ["children", "collapseBelow", "onClearAll", "size", "labels", "formatNumber", "id", "className", "style", "data-testid"];
+export const filtersPropOrder = ["children", "collapseBelow", "onClearAll", "size", "dir", "labels", "formatNumber", "id", "className", "style", "data-testid"];
 
 export const activeFiltersPropOrder = ["items", "onRemove", "onClearAll", "size", "tone", "announce", "labels", "formatNumber", "id", "className", "style", "data-testid"];
 
@@ -167,6 +170,9 @@ default) the bar draws one **Filters** button, with the number of filters applie
   while it holds a `Filters`, so give it a width of its own (a block, not a shrink-to-fit flex item). The steps are `"sm"` (40rem) to `"xl"` (80rem); `"never"` keeps the filters inline.
 - **The filters are direct children.** The part reads them by type, so a `TableToolbar.Filter` wrapped in your own component is drawn inline and is not in the sheet.
 - **An open sheet closes** if the bar grows past the step (a window resized, a sidebar closed), and focus returns to the button it was opened from.
+- **Focus keeps its place when the form changes.** If keyboard focus is on an inline filter when the bar narrows, it goes to the "Filters" button; when the bar widens it goes back to a filter. Focus that was somewhere else is left alone.
+- **A filter's own `onClear` is offered in its section** ("Clear Status") while some of it is applied, and a `disabled` filter is drawn inline, disabled, with no section in the sheet.
+- **`dir`** is the direction of the inline toolbar's arrow keys (left out, the nearest `DirectionProvider`'s, else left to right); put a `DirectionProvider` around a right-to-left page so the sheet, which is drawn into the body, follows it too.
 
 <Canvas of={TableToolbarStories.FiltersAsASheet} />
 

@@ -2,6 +2,7 @@ import { DownloadSimpleIcon, FunnelSimpleIcon, TrashIcon } from "@dbm-system/ico
 import type { Meta, StoryContext, StoryObj } from "@storybook/react-vite";
 import { useState } from "react";
 import { expect, userEvent, waitFor, within } from "storybook/test";
+import { DirectionProvider } from "../../atoms/DirectionProvider";
 import { Checkbox } from "../../atoms/Checkbox";
 import { Radio } from "../../atoms/Radio";
 import { Spacer } from "../../atoms/Spacer";
@@ -761,6 +762,38 @@ export const FiltersSheetClosesWhenTheBarGrows: Story = {
   },
 };
 
+export const FiltersHandFocusOnWhenTheFormChanges: Story = {
+  ...hidden,
+  tags: ["!dev"],
+  name: "Filters — focus on an inline filter goes to the sheet's button when the bar narrows, and back to a filter when it widens — interaction test",
+  render: () => (
+    <div style={{ inlineSize: "60rem" }} data-testid="box">
+      <FiltersDemo />
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const box = canvas.getByTestId("box");
+    // A real Tab from the search field lands on the filters' toolbar (one tab stop), on its first filter.
+    canvas.getByRole("searchbox", { name: "Search orders" }).focus();
+    await realKey("Tab");
+    const status = canvas.getByRole("button", { name: "Status" });
+    await waitFor(() => expect(status).toHaveFocus());
+    // Narrow: the inline filters are not drawn, so focus goes to the one button that stands for them, not to the top of the page.
+    box.style.inlineSize = "24rem";
+    const sheetButton = () => canvasElement.querySelector<HTMLElement>('button[aria-haspopup="dialog"][aria-label="Filters"]')!;
+    await waitFor(() => expect(sheetButton()).toHaveFocus());
+    // Wide again: it goes back to a filter.
+    box.style.inlineSize = "60rem";
+    await waitFor(() => expect(canvas.getByRole("toolbar", { name: "Filters" }).contains(document.activeElement)).toBe(true));
+    // Focus that was somewhere else is left where it is.
+    canvas.getByRole("searchbox", { name: "Search orders" }).focus();
+    box.style.inlineSize = "24rem";
+    await new Promise((resolve) => setTimeout(resolve, 300));
+    await expect(canvas.getByRole("searchbox", { name: "Search orders" })).toHaveFocus();
+  },
+};
+
 export const FilterShowsItsChoiceBeforeItsName: Story = {
   ...hidden,
   tags: ["!dev"],
@@ -782,5 +815,48 @@ export const FilterShowsItsChoiceBeforeItsName: Story = {
     await userEvent.click(await within(document.body).findByRole("checkbox", { name: "Open" }));
     await waitFor(() => expect(canvas.getByRole("button", { name: "Status: Open" })).toBeInTheDocument());
     await userEvent.keyboard("{Escape}");
+  },
+};
+
+export const FiltersInRightToLeft: Story = {
+  ...hidden,
+  tags: ["!dev"],
+  name: "Filters — in right to left a filter's name is at the start (the right), the sheet's names are at the right edge and their Clear is at the left — layout test",
+  // A `DirectionProvider` gives the toolbar's keys and the sheet (drawn into the body, outside the story's own `dir`) their direction, as an app would.
+  render: () => (
+    <DirectionProvider dir="rtl">
+      <div dir="rtl" style={{ inlineSize: "60rem" }} data-testid="box">
+        <FiltersDemo labelPlacement="before" />
+      </div>
+    </DirectionProvider>
+  ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const button = canvas.getByRole("button", { name: "Status: All" }).getBoundingClientRect();
+    const name = canvas.getByText("Status:").getBoundingClientRect();
+    // The name comes first in reading order, so in right to left it is the one on the right.
+    await expect(name.left).toBeGreaterThanOrEqual(button.right - 1);
+    // Choose one value so the section has a Clear, then narrow the bar and open the sheet.
+    await userEvent.click(canvas.getByRole("button", { name: "Status: All" }));
+    await userEvent.click(await within(document.body).findByRole("checkbox", { name: "Open" }));
+    await userEvent.keyboard("{Escape}");
+    await waitFor(() => expect(within(document.body).queryByRole("dialog")).toBeNull());
+    canvas.getByTestId("box").style.inlineSize = "24rem";
+    const sheetButton = await waitFor(() => {
+      const found = canvasElement.querySelector<HTMLElement>('button[aria-haspopup="dialog"][aria-label="Filters, 1 active"]');
+      if (!found || found.getClientRects().length === 0) throw new Error("the sheet's button is not drawn yet");
+      return found;
+    });
+    await realClick(sheetButton);
+    const sheet = await within(document.body).findByRole("dialog");
+    await waitFor(() => expect(Math.abs(sheet.getBoundingClientRect().bottom - window.innerHeight)).toBeLessThan(2));
+    const heading = within(sheet).getByRole("heading", { level: 3, name: "Status" }).getBoundingClientRect();
+    const clear = within(sheet).getByRole("button", { name: "Clear Status" }).getBoundingClientRect();
+    const box = sheet.getBoundingClientRect();
+    // The name is at the right edge, and the section's Clear is at the other end of its line.
+    await expect(box.right - heading.right).toBeLessThan(box.width / 3);
+    await expect(clear.right).toBeLessThanOrEqual(heading.left + 1);
+    await realKey("Escape");
+    await waitFor(() => expect(within(document.body).queryByRole("dialog")).toBeNull());
   },
 };

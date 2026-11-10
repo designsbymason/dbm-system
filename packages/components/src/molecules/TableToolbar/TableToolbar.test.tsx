@@ -1063,6 +1063,87 @@ describe("TableToolbar.Filters", () => {
     expect(group.style.color).toBe("red");
   });
 
+  it("offers each filter's own Clear in its section while some of it is applied, and not otherwise", async () => {
+    const user = userEvent.setup();
+    const clearStatus = vi.fn();
+    const clearOwner = vi.fn();
+    render(
+      <TableToolbar aria-label="Tools">
+        <TableToolbar.Filters>
+          <TableToolbar.Filter label="Status" count={2} onClear={clearStatus}>
+            s
+          </TableToolbar.Filter>
+          <TableToolbar.Filter label="Owner" count={0} onClear={clearOwner}>
+            o
+          </TableToolbar.Filter>
+          <TableToolbar.Filter label="Tags" count={1}>
+            t
+          </TableToolbar.Filter>
+        </TableToolbar.Filters>
+      </TableToolbar>,
+    );
+    await user.click(sheetButton("Filters, 3 active"));
+    const sheet = await screen.findByRole("dialog");
+    // Named by what it clears, with its visible word first.
+    const clear = within(sheet).getByRole("button", { name: "Clear Status" });
+    expect(clear).toHaveTextContent("Clear");
+    expect(within(sheet).queryByRole("button", { name: "Clear Owner" })).toBeNull();
+    expect(within(sheet).queryByRole("button", { name: "Clear Tags" })).toBeNull();
+    await user.click(clear);
+    expect(clearStatus).toHaveBeenCalledTimes(1);
+    expect(clearOwner).not.toHaveBeenCalled();
+  });
+
+  it("takes a section's Clear word from that filter's labels", async () => {
+    const user = userEvent.setup();
+    render(
+      <TableToolbar aria-label="Tools">
+        <TableToolbar.Filters>
+          <TableToolbar.Filter label="Status" count={1} onClear={() => undefined} labels={{ clear: "Reset" }}>
+            s
+          </TableToolbar.Filter>
+        </TableToolbar.Filters>
+      </TableToolbar>,
+    );
+    await user.click(sheetButton("Filters, 1 active"));
+    expect(within(await screen.findByRole("dialog")).getByRole("button", { name: "Reset Status" })).toBeInTheDocument();
+  });
+
+  it("draws a disabled filter inline, disabled, and leaves it out of the sheet", async () => {
+    const user = userEvent.setup();
+    render(
+      <TableToolbar aria-label="Tools">
+        <TableToolbar.Filters>
+          <TableToolbar.Filter label="Status">s</TableToolbar.Filter>
+          <TableToolbar.Filter label="Owner" disabled>
+            o
+          </TableToolbar.Filter>
+        </TableToolbar.Filters>
+      </TableToolbar>,
+    );
+    expect(within(screen.getByRole("toolbar", { name: "Filters" })).getByRole("button", { name: "Owner" })).toBeDisabled();
+    await user.click(sheetButton("Filters"));
+    const sheet = await screen.findByRole("dialog");
+    expect(within(sheet).getByRole("heading", { name: "Status" })).toBeInTheDocument();
+    expect(within(sheet).queryByRole("heading", { name: "Owner" })).toBeNull();
+  });
+
+  it("attaches a callback ref once, not on every render", () => {
+    const ref = vi.fn();
+    const bar = (
+      <TableToolbar aria-label="Tools">
+        <TableToolbar.Filters ref={ref}>
+          <TableToolbar.Filter label="Status">s</TableToolbar.Filter>
+        </TableToolbar.Filters>
+      </TableToolbar>
+    );
+    const { rerender } = render(bar);
+    rerender(bar);
+    rerender(bar);
+    expect(ref).toHaveBeenCalledTimes(1);
+    expect(ref).toHaveBeenCalledWith(expect.any(HTMLDivElement));
+  });
+
   it("warns once in development with no filter among its children", () => {
     const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
     render(

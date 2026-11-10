@@ -274,6 +274,14 @@
   gap: var(--dbm-space-3);
 }
 
+/* A section's name, and at its end the filter's own Clear while some of it is applied. */
+.sheetSectionHead {
+  align-items: center;
+  display: flex;
+  gap: var(--dbm-space-2);
+  justify-content: space-between;
+}
+
 /* A section's name in the sheet is drawn as `Menu` draws the heading of a group of items: small capitals in the secondary text colour, in the body
    font. It stays a real heading (`text-transform` changes how it is drawn, not the text a screen reader gets). Two classes so it outranks `Heading`'s own. */
 .sheetSection .sheetHeading {

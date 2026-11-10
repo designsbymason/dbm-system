@@ -8,7 +8,7 @@ filters, the filters currently applied, a result count and bulk actions. Built 2
 ## What it is
 
 A compound component: `TableToolbar` (a named `role="group"`, with a `size` the parts read) plus `Row` (a wrapping row),
-`Search` (sizes the search field), `Filter` (a `Popover` button with a count and a Clear), `ActiveFilters` (removable chips and
+`Search` (sizes the search field), `Filter` (a `Popover` button with a count and a Clear, or showing its choice with `value`), `Filters` (an opt-in group of filters that are one button and a bottom `Drawer` below a width of the bar, [ADR-0199](../adr/0199-tabletoolbar-gets-an-opt-in-filters-group-that-draws-its-filters-inline-and-as-one-bottom-sheet-below-a-container-width-over-a-per-filter-sheet-a-window-step-or-a-page-built-sheet.md)), `ActiveFilters` (removable chips and
 "Clear all"), `Summary` ("128 results", "12 of 128 results") and `Selection` (the bulk row). It owns no data: everything is
 props and callbacks. The search field, the toolbars and the spacer are existing components placed in slots. Text the parts
 write is a `labels` object and numbers go through `formatNumber` (ADR-0021). No new dependency; two component tokens
@@ -172,3 +172,13 @@ Built to the Decisions above, with two small departures: the group takes no `ari
 - **Budgets:** `TableToolbar` 23.95KB JS and 10.81KB CSS (25KB and 11.5KB), `DataTable` 38.31KB and 14.16KB (40KB and 15KB), the notes in `scripts/check-component-bundle-size.mjs`.
 - **Not verified:** a real phone, Safari and Firefox (container queries and `:has` are in all current ones), a screen reader reading the sheet, a table inside a flex row (the bar needs a width of its own, as the Docs say).
 - **The review** (`/review-component`) comes before this is re-confirmed as Finalized.
+
+## Review of the `Filters` group (2026-11-10), six findings fixed at explicit direction
+- **The Filter Docs table** lacked `value` and `labelPlacement` (and listed `max` last, with a stale `labels` description); the Docs-only story and the order list now have them.
+- **The sheet ignored a filter's `onClear` and `disabled`.** A section now offers the filter's own Clear (named "Clear Status", with its visible word first, from that filter's `labels.clear`) while some of it is applied; a disabled filter is drawn inline, disabled, and has no section.
+- **Focus across the swap (the maintainer chose to hand it on).** Focus in the inline filters goes to the sheet's button when the bar narrows, and back to a filter when it widens; kept from the focus events (not read from `document.activeElement` at the change), and left alone if focus had moved on. A real-key check fails without it. This changes what [ADR-0199](../adr/0199-tabletoolbar-gets-an-opt-in-filters-group-that-draws-its-filters-inline-and-as-one-bottom-sheet-below-a-container-width-over-a-per-filter-sheet-a-window-step-or-a-page-built-sheet.md) accepted ("a resize hides a focused inline filter").
+- **The ref** is merged once (`mergeRefs` in a `useMemo`), not recreated each render.
+- **Right to left:** the toolbar inside `Filters` did not follow a right-to-left page (a `Toolbar` reads `dir` from its own prop or a `DirectionProvider`, not the page), found by the new check. `Filters` takes `dir` (resolved through `useDirection`) and gives it to its toolbar. The check, under a `DirectionProvider`: the name is at the start (right), the sheet's names at the right edge and their Clear at the left.
+- **The inventory row and this file's "What it is"** name the new part and `Drawer`.
+- Broken once and failed: the focus hand-off (its `focus()` call commented out) and the sheet heading row's direction. Not verified: a screen reader in the sheet, a real phone, Safari and Firefox, and the tablet width by eye.
+

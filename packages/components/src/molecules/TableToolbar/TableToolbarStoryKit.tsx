@@ -286,10 +286,12 @@ export function FiltersDemo({
   collapseBelow = "md",
   labelPlacement,
   size,
+  dir,
 }: {
   collapseBelow?: "sm" | "md" | "lg" | "xl" | "never";
   labelPlacement?: "inside" | "before";
   size?: TableToolbarProps["size"];
+  dir?: "ltr" | "rtl";
 }) {
   const [statuses, setStatuses] = useState<string[]>([]);
   const [owners, setOwners] = useState<string[]>([]);
@@ -318,6 +320,7 @@ export function FiltersDemo({
         </TableToolbar.Search>
         <TableToolbar.Filters
           collapseBelow={collapseBelow}
+          dir={dir}
           onClearAll={() => {
             setStatuses([]);
             setOwners([]);
