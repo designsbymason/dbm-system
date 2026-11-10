@@ -1,6 +1,6 @@
 # 0199 — `TableToolbar` gets an opt-in `Filters` group that draws its filters inline and as one bottom sheet below a container width, over a per-filter sheet, a window step or a page-built sheet
 
-**Status:** Accepted · **Date:** 2026-11-09
+**Status:** Accepted · **Date:** 2026-11-09 · **Corrected 2026-11-10** before it was pushed: the focus clause (it first accepted a resize hiding a focused filter), the per-section Clear and disabled filters, and `dir`
 
 ## Context
 A bar of popover filter buttons has no room on a phone. The Data Table List Page built its own answer: below a width the two filters leave the bar and a "Filters" button opens one bottom `Drawer` holding both as sections, with "Clear all" and "Done" (`FiltersSheet`), and a `ChoiceFilter` that puts the filter's name before a button showing the choice. Both are page code beside `TableToolbar.Filter`, which a second list page would copy. [ADR-0034](./0034-tabletoolbar-is-a-stateless-group-of-parts-with-toolbars-inside-it-not-one-toolbar.md) makes the bar a stateless group of parts that owns no data, and says a part grows when a consumer finds a seam missing. `Navbar` and `Sidebar` ([ADR-0091](./0091-navbar-collapses-by-a-css-breakpoint-and-draws-its-links-in-the-bar-and-in-the-menu-panel-over-measuring-its-width-or-writing-two-lists.md), [ADR-0105](./0105-sidebar-is-drawn-on-the-page-and-in-a-drawer-panel-below-a-css-step-and-the-panel-is-never-a-rail-over-measuring-its-width-or-moving-one-rendered-copy.md)) draw one set of children in two forms by a CSS step on the window.
@@ -10,6 +10,8 @@ A bar of popover filter buttons has no room on a phone. The Data Table List Page
 - **The switch is a container query on the bar's own width**, `collapseBelow` of `"sm"`, `"md"`, `"lg"`, `"xl"` or `"never"` (default `"md"`), the token breakpoints' widths. The bar becomes a size container only while it holds a `Filters` (`:has`). It is the bar's width that decides, since a table in an `AppShell` is far narrower than the window. Nothing is measured to draw, so a server render is right at first paint. An open sheet closes if the bar grows past the step (a `ResizeObserver` that runs only while it is open).
 - **The group finds its filters by reading its direct children by type**, as `Navbar` finds its links. A `Filter` wrapped in another component is drawn inline and is not in the sheet, which the Docs say. The sheet's copy of a filter's controls is mounted only while the sheet is open.
 - **`Filter` gains two optional props** (and two `labels` keys, `named` and `before`)**:** `value` (the button shows the choice, "All" or "2 selected", and is named "Status: All") and `labelPlacement` (`"inside"`, the default, or `"before"`, the name drawn as plain text before the button). Together they draw what the list page's `ChoiceFilter` drew.
+- **Focus keeps its place when the form changes.** Focus on an inline filter goes to the sheet's button when the bar narrows, and back to a filter when it widens, so a keyboard user is not dropped to the top of the page. It is kept from the focus events (the browser drops focus from a hidden element only on its next render, so reading where focus is at the change is unreliable), and focus that had moved elsewhere is left alone.
+- **The sheet is what a filter says it is.** A section offers the filter's own `onClear` ("Clear Status") while some of it is applied, and a `disabled` filter is drawn inline, disabled, with no section. `Filters` takes `dir` (resolved through `useDirection`) for its toolbar's arrow keys; the sheet, drawn into the body, follows a `DirectionProvider`.
 - **The words are a `labels` object** (`group`, `button`, `activeCount`, `title`, `description`, `clearAll`, `done`), merged with `mergeDefined`, and counts go through `formatNumber` ([ADR-0021](./0021-labels-object-and-optional-formatnumber-over-an-implicit-intl-default.md)).
 
 ## Alternatives considered
@@ -22,7 +24,7 @@ A bar of popover filter buttons has no room on a phone. The Data Table List Page
 ## Consequences
 - `TableToolbar`, and so `DataTable`, carry `Drawer` in their bundles once the compound is imported, so their budgets in the bundle check rise.
 - A container query cannot take a custom length, so the list page's 45rem becomes `md` (48rem).
-- The sheet's focus, scrim, scroll lock and `Escape` are `Drawer`'s; a window resize across the step hides a focused inline filter with the rest of the form, as any responsive layout does.
+- The sheet's focus, scrim, scroll lock and `Escape` are `Drawer`'s. A resize across the step hands focus on (above), so the part carries a small `ResizeObserver` for as long as it is mounted, and not only while the sheet is open.
 
 ## Related
 `04-component-inventory.md` (item 28), `component-reviews/TableToolbar.md`, `component-reviews/DataTableListPage.md`, ADR-0034, ADR-0053, ADR-0061, ADR-0091, ADR-0105, ADR-0021.

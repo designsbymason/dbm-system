@@ -209,7 +209,7 @@ Not individual components, but composed patterns — worth planning for since a 
 
 | Template | Priority | Composes |
 |---|---|---|
-| Data table list page (a table with its toolbar, filters, paging and row actions) | ⚪ | `DataTable`, `TableToolbar`, `Pagination`, `Menu` for row actions, `EmptyState` |
+| Data table list page (a table with its toolbar, filters, paging and row actions) | ⚪ | `DataTable` (with its `Pagination` footer), `TableToolbar` (with its `Filters` sheet), `Menu` for row actions, `EmptyState` |
 | Detail page | ⚪ | `Breadcrumb`, `Tabs`, `DescriptionList`, `Card`, `Timeline` for activity |
 | Dashboard or overview page | ⚪ | `Stat`, `Card`, `Grid`, `DataTable`, `Timeline` |
 | Create or edit form page | ⚪ | `Form`, `FieldGroup`, `Card` sections, a sticky action bar, `ConfirmDialog` for discard |
@@ -243,7 +243,7 @@ Nothing in the list depends on another template, and every component they compos
 | # | Template | Kind | Why here | Status |
 |---|---|---|---|---|
 | 1 | Dashboard shell | Shell (ships) | Fixes the pattern every page sits in | Built and Finalized: `AppShell` ([review](component-reviews/AppShell.md)) |
-| 2 | Data Table List Page | Page | Heaviest composition (`DataTable`, `TableToolbar`, `Pagination`, row menus, `EmptyState`); tests `AppShell` with large content; later data pages reuse its parts | Built and Finalized: [review](component-reviews/DataTableListPage.md) ([ADR-0184](adr/0184-a-story-only-template-page-is-a-folder-of-stories-and-a-story-kit-in-templates-with-demo-controls-and-no-playground-over-a-shipped-component-or-a-separate-pages-tree.md)) |
+| 2 | Data Table List Page | Page | Heaviest composition (`DataTable` with its `Pagination` footer, `TableToolbar` with its `Filters` sheet, row menus, `EmptyState`); tests `AppShell` with large content; later data pages reuse its parts | Built and Finalized: [review](component-reviews/DataTableListPage.md) ([ADR-0184](adr/0184-a-story-only-template-page-is-a-folder-of-stories-and-a-story-kit-in-templates-with-demo-controls-and-no-playground-over-a-shipped-component-or-a-separate-pages-tree.md)) |
 | 3 | Auth flow (with reset-password and verify-code variants) | Page | Standalone, outside `AppShell`: tests a centred-card layout with `Form`, `PasswordInput`, `PinInput`, `Alert` | Planned |
 | 4 | Dashboard or overview page | Page | Reuses 2's `DataTable` and adds `Stat`, `Card`, `Grid`, `Timeline` | Planned |
 | 5 | Settings page | Page | Form sections in a nav (`Sidebar` or `Tabs`), `Switch`, `ConfirmDialog` for destructive actions; 9 and 10 reuse its pattern | Planned |
