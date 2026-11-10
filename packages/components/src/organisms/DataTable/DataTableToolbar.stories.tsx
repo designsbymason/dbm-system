@@ -10,7 +10,7 @@ const meta: Meta<typeof DataTable.Toolbar> = {
   tags: ["!dev"],
   argTypes: {
     children: { control: false, description: "The bar's rows: TableToolbar.Row of the search, filters and summary, then DataTable.Selection." },
-    size: { control: false, description: "The size every part that draws text or controls itself uses unless it sets its own.", table: { defaultValue: { summary: "md" } } },
+    size: { control: "select", options: ["xs", "sm", "md", "lg", "xl"], description: "The size every part that draws text or controls itself uses unless it sets its own.", table: { defaultValue: { summary: "md" } } },
     "aria-label": { control: false, description: "Names the bar for assistive tech. Required unless aria-labelledby points at a visible label." },
     "aria-labelledby": { control: false, description: "The id of an already-visible element that names the bar, in place of aria-label." },
     "aria-describedby": { control: false, description: "The id of a helper text or description for the bar." },

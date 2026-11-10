@@ -1305,4 +1305,83 @@ describe("DataTable", () => {
       vi.unstubAllGlobals();
     });
   });
+
+  describe("the centred footer (ADR-0200)", () => {
+    const many: Person[] = Array.from({ length: 37 }, (_, index) => ({ id: `r${index}`, name: `Person ${index + 1}`, age: index }));
+    const centred = (footer: Record<string, unknown> = {}, table: Partial<DataTableProps<Person>> = {}) =>
+      render(
+        <DataTable<Person> columns={columns} data={many} aria-label="People" defaultPageSize={10} {...table}>
+          <DataTable.Pagination compact="never" layout="centered" data-testid="footer" {...footer} />
+        </DataTable>,
+      );
+
+    it("draws the page size, the page controls and the range in that order, inside a box that holds the attributes", () => {
+      centred({ className: "mine", style: { color: "red" }, id: "foot" });
+      const box = screen.getByTestId("footer");
+      expect(box).toHaveClass("mine", styles.paginationBox as string);
+      expect(box).toHaveAttribute("id", "foot");
+      expect(box.style.color).toBe("red");
+      const order = [screen.getByRole("combobox", { name: "Rows per page" }), screen.getByRole("navigation", { name: "Pagination" }), screen.getByText(rangeText("1–10 of 37"))];
+      for (let index = 1; index < order.length; index += 1) {
+        expect(order[index - 1]!.compareDocumentPosition(order[index]!) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+      }
+    });
+
+    it("keeps the split layout's DOM when asked for nothing", () => {
+      render(
+        <DataTable<Person> columns={columns} data={many} aria-label="People" defaultPageSize={10}>
+          <DataTable.Pagination compact="never" data-testid="footer" />
+        </DataTable>,
+      );
+      expect(screen.getByTestId("footer")).toHaveClass(styles.pagination as string);
+      expect(screen.getByTestId("footer")).not.toHaveClass(styles.paginationBox as string);
+    });
+
+    it("leaves the page size's or the range's column empty rather than moving the controls", () => {
+      centred({ showSummary: false, showPageSize: false });
+      expect(screen.queryByRole("combobox", { name: "Rows per page" })).toBeNull();
+      expect(screen.queryByText(rangeText("1–10 of 37"))).toBeNull();
+      expect(screen.getByRole("navigation", { name: "Pagination" })).toBeInTheDocument();
+      expect(screen.getByTestId("footer").querySelector(`.${styles.paginationCentered}`)?.children).toHaveLength(3);
+    });
+
+    it("marks its collapse step", () => {
+      centred({ collapseBelow: "lg" });
+      expect(screen.getByTestId("footer").querySelector(`.${styles.paginationCentered}`)).toHaveClass(styles.collapseLg as string);
+    });
+
+    it("announces a change of page size through the table, in a status region", async () => {
+      const user = userEvent.setup();
+      centred();
+      await user.click(screen.getByRole("combobox", { name: "Rows per page" }));
+      await user.click(await screen.findByRole("option", { name: "25" }));
+      expect(await screen.findByText("Showing 25 of 37 rows")).toBeInTheDocument();
+      expect(screen.getByText(rangeText("1–25 of 37"))).toBeInTheDocument();
+    });
+
+    it("takes the labels, and the formatted numbers, as the split footer does", () => {
+      centred({ labels: { pageSize: "Per page", summary: (first: number, last: number, total: number) => `${first} to ${last} of ${total}` } });
+      expect(screen.getByRole("combobox", { name: "Per page" })).toBeInTheDocument();
+      expect(screen.getByText("1 to 10 of 37")).toBeInTheDocument();
+    });
+
+    it("warns once in development that collapseBelow does nothing with the split layout, and not for the centred one", () => {
+      const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
+      const { unmount } = render(
+        <DataTable<Person> columns={columns} data={many} aria-label="People" defaultPageSize={10}>
+          <DataTable.Pagination compact="never" collapseBelow="lg" />
+        </DataTable>,
+      );
+      expect(warn).toHaveBeenCalledWith(expect.stringContaining("`collapseBelow` has no effect with `layout=\"split\"`"));
+      unmount();
+      warn.mockClear();
+      centred({ collapseBelow: "lg" });
+      expect(warn).not.toHaveBeenCalledWith(expect.stringContaining("`collapseBelow` has no effect"));
+    });
+
+    it("has no accessibility violations", async () => {
+      const { container } = centred();
+      expect(await axe(container)).toHaveNoViolations();
+    });
+  });
 });

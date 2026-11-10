@@ -15,8 +15,8 @@ const meta: Meta<typeof DataTable.Selection> = {
       description:
         "Called to choose every row, for a table whose data holds only one page (a manual one). A client table chooses every selectable row itself when this is left out.",
     },
-    size: { control: false, description: "The size of the row's text and controls. The default follows the bar it sits in.", table: { defaultValue: { summary: "md" } } },
-    announce: { control: false, description: "Announces the selection count to a screen reader as it changes.", table: { defaultValue: { summary: "true" } } },
+    size: { control: "select", options: ["xs", "sm", "md", "lg", "xl"], description: "The size of the row's text and controls. The default follows the bar it sits in.", table: { defaultValue: { summary: "md" } } },
+    announce: { control: "boolean", type: { name: "boolean" }, description: "Announces the selection count to a screen reader as it changes.", table: { defaultValue: { summary: "true" } } },
     labels: { control: false, description: "Text the row writes, replacing the English defaults one by one." },
     formatNumber: { control: false, description: "Writes the counts the row displays.", table: { defaultValue: { summary: "String" } } },
     id: { control: false, description: "Standard DOM id." },

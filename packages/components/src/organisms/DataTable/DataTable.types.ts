@@ -458,6 +458,20 @@ export interface DataTablePaginationProps
    */
   size?: PaginationProps["size"];
   /**
+   * How the footer is arranged. `"split"` puts the range and the page size at the start and the page controls at the end, wrapping when there is no
+   * room. `"centered"` puts the page size at the start, the page controls in the middle (centred whatever the range says) and the range at the end;
+   * below `collapseBelow` the controls take the first row and the page size and the range sit at the two ends under them. `showSummary` and
+   * `showPageSize` leave their column empty. In `"centered"` the part draws a box around the footer, which holds `className`, `style`, `id` and `data-testid`.
+   * @default 'split'
+   */
+  layout?: "split" | "centered";
+  /**
+   * The width of the footer, below which `layout="centered"` stacks: `"sm"` (40rem) to `"xl"` (80rem), or `"never"` to keep three columns. A container
+   * query on the footer's own width, so it follows the room the table has, not the window's. Has no effect with `layout="split"`.
+   * @default 'md'
+   */
+  collapseBelow?: "sm" | "md" | "lg" | "xl" | "never";
+  /**
    * Shows "1–10 of 47" beside the page numbers.
    * @default true
    */

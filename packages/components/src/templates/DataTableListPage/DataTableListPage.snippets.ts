@@ -80,20 +80,11 @@ const table = (extra = "") => `    <DataTable
           </Toolbar>
         </DataTable.Selection>
       </DataTable.Toolbar>
+      {/* The footer is the table's own: the page size at the start, the page controls centred and the range at the end, stacking below the table's 48rem
+          (layout="centered", with the table's pageSizeOptions); the table announces a change of page size itself. Left out while there is nothing to page. */}
+      <DataTable.Pagination layout="centered" size="sm" />
     </DataTable>
-    {/* The footer, from the page's own state, in three columns: the rows-per-page button (a small fixed width) at the start, the
-        page controls in the middle, the range right-aligned at the end */}
-    <div style={{ display: "grid", gridTemplateColumns: "1fr auto 1fr", alignItems: "center", gap: 16 }}>
-      <div style={{ inlineSize: "5rem" }}>
-        <Select size="sm" value={String(pageSize)} onValueChange={(next) => setPageSize(Number(next))} aria-label="Rows per page">
-          <Select.Option value="10">10</Select.Option>
-          <Select.Option value="25">25</Select.Option>
-          <Select.Option value="50">50</Select.Option>
-        </Select>
-      </div>
-      <Pagination size="sm" pageCount={Math.ceil(matching / pageSize)} value={page} onValueChange={setPage} />
-      <span style={{ justifySelf: "end" }}>{\`\${first}–\${last} of \${matching}\`}</span>
-    </div>`;
+`;
 
 const confirm = `    <ConfirmDialog
       open={pending !== null}

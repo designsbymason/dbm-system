@@ -876,3 +876,109 @@ export const RowActionsHeadingStaysInsideTheScrollFrame: Story = {
     await expect(getComputedStyle(frame).position).toBe("relative");
   },
 };
+
+// ---- `DataTable.Pagination layout="centered"` (ADR-0200) ----
+const centred = (width: string, footer: { collapseBelow?: "sm" | "md" | "lg" | "xl" | "never"; dir?: "rtl" } = {}) => (
+  <div style={{ inlineSize: width }} data-testid="box" dir={footer.dir}>
+    <DataTable<Employee> aria-label="Team" columns={employeeColumns} data={makeEmployees(87)} defaultPageSize={10} pageSizeOptions={[5, 10, 25]}>
+      <DataTable.Pagination layout="centered" compact="never" data-testid="footer" collapseBelow={footer.collapseBelow} dir={footer.dir} />
+    </DataTable>
+  </div>
+);
+
+/** The footer's three parts, and whether the controls have a row of their own above the page size and the range. */
+function footerParts(canvasElement: HTMLElement) {
+  const canvas = within(canvasElement);
+  const box = canvas.getByTestId("footer").getBoundingClientRect();
+  const pages = canvas.getByRole("navigation", { name: "Pagination" }).getBoundingClientRect();
+  const select = canvas.getByRole("combobox", { name: "Rows per page" }).getBoundingClientRect();
+  const range = canvas.getByText((content) => /^\d+–\d+ of \d+$/.test(content.replace(/[\u2068\u2069]/g, ""))).getBoundingClientRect();
+  return { box, pages, select, range, stacked: pages.bottom <= select.top + 1 };
+}
+
+export const CentredFooterKeepsTheControlsInTheMiddle: Story = {
+  name: "Centred footer — the page controls stay in the middle of the footer as the range changes, the page size at the start and the range at the end — layout test",
+  render: () => centred("60rem"),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const footer = canvas.getByTestId("footer").getBoundingClientRect();
+    const middle = () => {
+      const pages = canvas.getByRole("navigation", { name: "Pagination" }).getBoundingClientRect();
+      return pages.left + pages.width / 2;
+    };
+    const clean = (text: string | null) => (text ?? "").replace(/[⁨⁩]/g, "");
+    const range = () => canvas.getByText((content) => /^\d+–\d+ of \d+$/.test(clean(content)));
+    await expect(Math.abs(middle() - (footer.left + footer.width / 2))).toBeLessThan(2);
+    const select = canvas.getByRole("combobox", { name: "Rows per page" }).getBoundingClientRect();
+    await expect(select.left - footer.left).toBeLessThan(4);
+    await expect(footer.right - range().getBoundingClientRect().right).toBeLessThan(4);
+    // A wider range ("81–87 of 87" against "1–10 of 87") does not move the controls.
+    for (let index = 0; index < 8; index += 1) await userEvent.click(canvas.getByRole("button", { name: "Next page" }));
+    await waitFor(() => expect(clean(range().textContent)).toBe("81–87 of 87"));
+    await expect(Math.abs(middle() - (footer.left + footer.width / 2))).toBeLessThan(2);
+    await expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(window.innerWidth);
+  },
+};
+
+export const CentredFooterStacksWhenNarrow: Story = {
+  name: "Centred footer — below the step the controls take the first row and the page size and the range sit at the two ends under them — layout test",
+  render: () => centred("24rem"),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const box = canvas.getByTestId("footer").getBoundingClientRect();
+    const pages = canvas.getByRole("navigation", { name: "Pagination" }).getBoundingClientRect();
+    const select = canvas.getByRole("combobox", { name: "Rows per page" }).getBoundingClientRect();
+    const range = canvas.getByText((content) => /^\d+–\d+ of \d+$/.test(content.replace(/[⁨⁩]/g, ""))).getBoundingClientRect();
+    await expect(pages.bottom).toBeLessThanOrEqual(select.top + 1);
+    await expect(Math.abs(select.top - range.top)).toBeLessThan(20);
+    await expect(select.left - box.left).toBeLessThan(4);
+    await expect(box.right - range.right).toBeLessThan(4);
+    await expect(select.right).toBeLessThan(range.left);
+    await expect(pages.right).toBeLessThanOrEqual(box.right + 1);
+    await expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(window.innerWidth);
+  },
+};
+
+export const CentredFooterChangesThePageSizeByRealClick: Story = {
+  tags: ["!dev"],
+  name: "Centred footer — a real click on the page size changes it, the range follows and the table announces it — interaction test",
+  render: () => centred("60rem"),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await realClick(canvas.getByRole("combobox", { name: "Rows per page" }));
+    await realClick(await body.findByRole("option", { name: "25" }));
+    await waitFor(() => expect(canvas.getByText((content) => content.replace(/[⁨⁩]/g, "") === "1–25 of 87")).toBeInTheDocument());
+    await waitFor(() => expect(canvas.getByText("Showing 25 of 87 rows")).toBeInTheDocument());
+  },
+};
+
+export const CentredFooterInRightToLeft: Story = {
+  name: "Centred footer — in right to left the page size is at the right edge, the range at the left and the controls in the middle — layout test",
+  render: () => centred("60rem", { dir: "rtl" }),
+  play: async ({ canvasElement }) => {
+    const { box, pages, select, range } = footerParts(canvasElement);
+    await expect(box.right - select.right).toBeLessThan(4);
+    await expect(range.left - box.left).toBeLessThan(4);
+    await expect(Math.abs(pages.left + pages.width / 2 - (box.left + box.width / 2))).toBeLessThan(2);
+    await expect(select.left).toBeGreaterThan(range.right);
+  },
+};
+
+export const CentredFooterCollapseBelowLgStacks: Story = {
+  name: "Centred footer — collapseBelow \"lg\" stacks a 60rem footer, which the default step (48rem) would not — layout test",
+  render: () => centred("60rem", { collapseBelow: "lg" }),
+  play: async ({ canvasElement }) => {
+    // 60rem is under the lg step (64rem), so the controls take a row of their own.
+    await expect(footerParts(canvasElement).stacked).toBe(true);
+  },
+};
+
+export const CentredFooterCollapseBelowNeverStaysInOneLine: Story = {
+  name: "Centred footer — collapseBelow \"never\" keeps one line in a 24rem footer, where the default step would stack it — layout test",
+  render: () => centred("24rem", { collapseBelow: "never" }),
+  play: async ({ canvasElement }) => {
+    const { stacked, select, range } = footerParts(canvasElement);
+    await expect(stacked).toBe(false);
+    await expect(Math.abs(select.top - range.top)).toBeLessThan(20);
+  },
+};

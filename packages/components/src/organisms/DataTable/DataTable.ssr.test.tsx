@@ -38,6 +38,7 @@ const variants: Array<[string, Partial<DataTableProps<Employee>>]> = [
   ["a sort by several columns", { defaultSort: [{ columnId: "department", direction: "ascending" }, { columnId: "salary", direction: "descending" }] }],
   ["all rows of a server table chosen", { sortMode: "manual", totalCount: 137, selectionMode: "multiple", allSelected: true }],
   ["with the column menu", { children: <DataTable.ColumnMenu />, defaultHiddenColumns: ["started"] }],
+  ["a centred footer", { children: <DataTable.Pagination layout="centered" compact="never" />, defaultPageSize: 5 }],
   ["every new feature together", { children: [<DataTable.ColumnMenu key="menu" />, <DataTable.Pagination key="pagination" />], renderExpandedRow: (row) => <p>Detail of {row.name}</p>, defaultExpanded: ["e1"], resizable: true, stickyFirstColumn: 1, selectionMode: "multiple", defaultPageSize: 5 }],
 ];
 

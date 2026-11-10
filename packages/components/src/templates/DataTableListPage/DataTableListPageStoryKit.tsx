@@ -12,14 +12,11 @@ import { Badge } from "../../atoms/Badge";
 import { Button } from "../../atoms/Button";
 import { Checkbox } from "../../atoms/Checkbox";
 import { IconButton } from "../../atoms/IconButton";
-import { VisuallyHidden } from "../../atoms/VisuallyHidden";
 import { Breadcrumb } from "../../molecules/Breadcrumb";
 import { CheckboxGroup } from "../../molecules/CheckboxGroup";
 import { EmptyState } from "../../molecules/EmptyState";
 import { PageHeader } from "../../molecules/PageHeader";
-import { Pagination } from "../../molecules/Pagination";
 import { SearchInput } from "../../molecules/SearchInput";
-import { Select } from "../../molecules/Select";
 import { TableToolbar } from "../../molecules/TableToolbar";
 import { Toolbar } from "../../molecules/Toolbar";
 import { ConfirmDialog } from "../../organisms/ConfirmDialog";
@@ -341,47 +338,6 @@ function FilterChoices<T extends string>({
   );
 }
 
-/**
- * The table's footer, drawn from the page's own state: rows per page at the start, the page controls in the middle and the range
- * ("1–10 of 137") at the end. The page already holds the page and the page size, so it draws the footer itself.
- */
-function ListFooter({ list }: { list: PeopleList }) {
-  // A change of page is announced by `Pagination`; a change of page size is not, so the footer says what the list now shows.
-  const [pageSizeNote, setPageSizeNote] = useState("");
-  const first = Math.min((list.page - 1) * list.pageSize + 1, list.matching);
-  const last = Math.min(list.page * list.pageSize, list.matching);
-  return (
-    <div className={styles.footer}>
-      <div className={styles.pageSize}>
-        <Select
-          size="sm"
-          value={String(list.pageSize)}
-          onValueChange={(next) => {
-            list.setPageSize(Number(next));
-            setPageSizeNote(`${copy.rowsPerPage}: ${next}. ${copy.range(1, Math.min(Number(next), list.matching), list.matching)}`);
-          }}
-          aria-label={copy.rowsPerPage}
-        >
-          {pageSizes.map((option) => (
-            <Select.Option key={option} value={String(option)}>
-              {option}
-            </Select.Option>
-          ))}
-        </Select>
-      </div>
-      <Pagination
-        className={styles.footerPages}
-        size="sm"
-        pageCount={Math.max(1, Math.ceil(list.matching / list.pageSize))}
-        value={list.page}
-        onValueChange={list.setPage}
-      />
-      <span className={styles.range}>{copy.range(first, last, list.matching)}</span>
-      <VisuallyHidden role="status">{pageSizeNote}</VisuallyHidden>
-    </div>
-  );
-}
-
 /** What the page is asking the person to confirm: removing these people, or everyone matching the filters. */
 type PendingRemoval = { ids: string[] | "all"; count: number; name?: string } | null;
 
@@ -483,6 +439,7 @@ export function PeopleListContent({ list }: { list: PeopleList }) {
             page={list.page}
             onPageChange={list.setPage}
             pageSize={list.pageSize}
+            pageSizeOptions={pageSizes}
             onPageSizeChange={list.setPageSize}
             totalCount={list.matching}
             loading={list.loading}
@@ -593,8 +550,10 @@ export function PeopleListContent({ list }: { list: PeopleList }) {
                 </Toolbar>
               </DataTable.Selection>
             </DataTable.Toolbar>
+            {/* The footer is the table's own: the page size at the start, the page controls centred and the range at the end (`layout="centered"`, ADR-0200),
+                stacking below the table's 48rem. It is drawn only while there are rows to page, and the table announces a change of page size itself. */}
+            {!nothingAtAll && !noResults && <DataTable.Pagination layout="centered" size="sm" compact="never" className={styles.footer} labels={{ pageSize: copy.rowsPerPage, summary: copy.range }} />}
           </DataTable>
-          {!nothingAtAll && !noResults && <ListFooter list={list} />}
         </div>
       )}
 

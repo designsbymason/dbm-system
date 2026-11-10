@@ -1,6 +1,6 @@
 import { ColumnsIcon } from "@dbm-system/icons";
 import { cx, mergeDefined } from "@dbm-system/utils";
-import { forwardRef, useContext } from "react";
+import { forwardRef, useContext, useRef } from "react";
 import { Button } from "../../atoms/Button";
 import { Pagination } from "../../molecules/Pagination";
 import { Select } from "../../molecules/Select";
@@ -22,6 +22,8 @@ import { useDirection } from "../../atoms/DirectionProvider";
 // Each number is wrapped in a bidirectional isolate (U+2068 … U+2069): in a script with right-to-left digits the dash between two
 // numbers joins their run and a left-to-right page reads "1–10" as "10-1" (`05-component-api-conventions.md` §3).
 const isolate = (text: string) => `\u2068${text}\u2069`;
+
+const collapseClass = { sm: styles.collapseSm, md: styles.collapseMd, lg: styles.collapseLg, xl: styles.collapseXl, never: undefined } as const;
 
 const makePaginationLabels = (formatNumber: (value: number) => string): DataTablePaginationLabels => ({
   summary: (first, last, total) => `${isolate(formatNumber(first))}–${isolate(formatNumber(last))} of ${isolate(formatNumber(total))}`,
@@ -84,16 +86,26 @@ DataTableSelection.displayName = "DataTable.Selection";
  * The footer of a `DataTable`: the page controls, "1–10 of 47" and a page size select, all read from the table's own
  * page. Place it as a direct child of the `DataTable`; it is drawn below the table, and its presence turns paging on.
  *
+ * `layout` arranges it: `"split"` (the default) puts the range and the page size at the start and the controls at the end;
+ * `"centered"` puts the page size at the start, the controls in the middle and the range at the end, and stacks them below
+ * `collapseBelow` (a width of the footer itself, not the window's). A change of page size is announced by the table in
+ * either layout.
+ *
  * @example
  * ```tsx
  * <DataTable aria-label="Team" columns={columns} data={rows} defaultPageSize={10} pageSizeOptions={[5, 10, 25]}>
  *   <DataTable.Pagination />
  * </DataTable>
+ *
+ * // the centred layout
+ * <DataTable.Pagination layout="centered" collapseBelow="md" />
  * ```
  */
 const DataTablePagination = forwardRef<HTMLDivElement, DataTablePaginationProps>(
   (
     {
+      layout = "split",
+      collapseBelow: collapseBelowProp,
       showSummary = true,
       showPageSize = true,
       labels: labelOverrides,
@@ -110,6 +122,12 @@ const DataTablePagination = forwardRef<HTMLDivElement, DataTablePaginationProps>
     ref,
   ) => {
     const dir = useDirection(dirProp);
+    const collapseBelow = collapseBelowProp ?? "md";
+    const warnedStep = useRef(false);
+    if (process.env.NODE_ENV !== "production" && collapseBelowProp !== undefined && layout !== "centered" && !warnedStep.current) {
+      warnedStep.current = true;
+      console.warn('DataTable.Pagination: `collapseBelow` has no effect with `layout="split"`; the split footer wraps by itself. Set `layout="centered"` to use it.');
+    }
     const table = useContext(DataTableContext);
     if (!table) throw new Error("DataTable.Pagination must be used inside a DataTable, as one of its children.");
     const labels = mergeDefined(makePaginationLabels(formatNumber), labelOverrides);
@@ -121,6 +139,50 @@ const DataTablePagination = forwardRef<HTMLDivElement, DataTablePaginationProps>
       ? table.pageSizeOptions
       : [...table.pageSizeOptions, table.pageSize].sort((a, b) => a - b);
 
+    const pageSizeSelect = (
+      <span className={styles.pageSize}>
+        <Select
+          size={size}
+          value={String(table.pageSize)}
+          onValueChange={(next) => table.setPageSize(Number(next))}
+          dir={dir}
+          aria-label={labels.pageSize}
+          className={styles.pageSizeSelect}
+        >
+          {options.map((option) => (
+            <Select.Option key={option} value={String(option)}>
+              {formatNumber(option)}
+            </Select.Option>
+          ))}
+        </Select>
+      </span>
+    );
+    const pages = (
+      <Pagination
+        {...paginationProps}
+        className={layout === "centered" ? styles.paginationPages : undefined}
+        size={size}
+        pageCount={table.pageCount}
+        value={table.page}
+        onValueChange={table.setPage}
+        labels={paginationLabels}
+        formatNumber={formatNumber}
+      />
+    );
+
+    if (layout === "centered") {
+      // The box around the footer is the container the narrow layout asks about (an element cannot query itself); the grid inside is the footer.
+      return (
+        <div ref={ref} id={id} data-testid={dataTestId} className={cx(styles.paginationBox, className)} style={style}>
+          <div className={cx(styles.paginationCentered, collapseClass[collapseBelow])}>
+            <div className={styles.paginationSize}>{showPageSize && pageSizeSelect}</div>
+            {pages}
+            <span className={styles.paginationRange}>{showSummary && summary}</span>
+          </div>
+        </div>
+      );
+    }
+
     return (
       <div ref={ref} id={id} data-testid={dataTestId} className={cx(styles.pagination, className)} style={style}>
         <div className={styles.paginationMeta}>
@@ -129,34 +191,9 @@ const DataTablePagination = forwardRef<HTMLDivElement, DataTablePaginationProps>
               {summary}
             </span>
           )}
-          {showPageSize && (
-            <span className={styles.pageSize}>
-              <Select
-                size={size}
-                value={String(table.pageSize)}
-                onValueChange={(next) => table.setPageSize(Number(next))}
-                dir={dir}
-                aria-label={labels.pageSize}
-                className={styles.pageSizeSelect}
-              >
-                {options.map((option) => (
-                  <Select.Option key={option} value={String(option)}>
-                    {formatNumber(option)}
-                  </Select.Option>
-                ))}
-              </Select>
-            </span>
-          )}
+          {showPageSize && pageSizeSelect}
         </div>
-        <Pagination
-          {...paginationProps}
-          size={size}
-          pageCount={table.pageCount}
-          value={table.page}
-          onValueChange={table.setPage}
-          labels={paginationLabels}
-          formatNumber={formatNumber}
-        />
+        {pages}
       </div>
     );
   },

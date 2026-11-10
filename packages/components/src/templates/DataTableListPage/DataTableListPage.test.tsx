@@ -113,7 +113,7 @@ describe("the data-table list page", () => {
     expect(within(screen.getByRole("list", { name: /applied filters/i })).getAllByRole("listitem")).toHaveLength(1);
   });
 
-  it("draws the footer from the page's state: rows per page, the page controls and the range", async () => {
+  it("draws the table's centred footer: rows per page, the page controls and the range", async () => {
     const user = userEvent.setup();
     render(<Page />);
     await loaded();
@@ -123,8 +123,8 @@ describe("the data-table list page", () => {
     await user.click(screen.getByRole("combobox", { name: "Rows per page" }));
     await user.click(await screen.findByRole("option", { name: "25" }));
     await screen.findAllByText("1–25 of 37");
-    // The change of page size is announced (the range text alone is not a live region).
-    expect(screen.getAllByRole("status").some((region) => region.textContent === "Rows per page: 25. 1–25 of 37")).toBe(true);
+    // The change of page size is announced by the table (the range text alone is not a live region).
+    await waitFor(() => expect(screen.getAllByRole("status").some((region) => region.textContent === "Showing 25 of 37 rows")).toBe(true));
   });
 
   it("sorts by a column through the request, and starts again at page 1", async () => {

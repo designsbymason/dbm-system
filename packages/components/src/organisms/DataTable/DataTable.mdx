@@ -109,6 +109,8 @@ export const selectionPropOrder = ["children", "onSelectAll", "size", "announce"
 export const columnMenuPropOrder = ["variant", "size", "icon", "align", "dir", "labels", "id", "className", "style", "data-testid"];
 
 export const paginationPropOrder = [
+  "layout",
+  "collapseBelow",
   "showSummary",
   "showPageSize",
   "size",
@@ -262,7 +264,8 @@ and the last column still drawn can't be turned off. Place it anywhere in the ta
 ### DataTable.Pagination properties
 
 The footer: the page controls, "1–10 of 47" and a page size select, read from the table's own page. Its presence turns paging
-on. It takes `Pagination`'s presentation props; the page, the page count and the change handler come from the table.
+on. It takes `Pagination`'s presentation props; the page, the page count and the change handler come from the table. `layout` is `"split"` (the default: the range and the
+page size at the start, the controls at the end) or `"centered"` (the page size at the start, the controls centred and the range at the end, stacking below `collapseBelow`).
 
 <PropertiesTable of={PaginationStories} order={paginationPropOrder} />
 
@@ -315,6 +318,16 @@ cell empty. Rows of different heights can't be drawn a window at a time, so such
 to the last one.
 
 <Canvas of={DataTableStories.Pagination} />
+
+### A centred footer
+
+`layout="centered"` arranges the footer as the page size at the start, the page controls in the middle and the range at the end. The two outer columns are equal, so the controls stay
+centred whatever the range says (`showSummary` and `showPageSize` leave their column empty rather than moving them). Below `collapseBelow` (`"md"`, 48rem, by default; `"sm"` to `"xl"`, or `"never"`)
+the controls take the first row and the page size and the range sit at the two ends under them. The switch is a container query on the footer's own width, so a table beside a sidebar stacks when it has no
+room, whatever the window says; in this layout the part draws a box around the footer that is the container, and it takes `className`, `style`, `id` and `data-testid`. The box needs a width of its own (it is a block in the table's column, so it fills it); a table placed as a shrink-to-fit flex item would give it none. `collapseBelow` is ignored with `layout="split"`, and says so once in development. A change of page size is announced by the
+table ("Showing 25 of 87 rows"), as with the default layout.
+
+<Canvas of={DataTableStories.CentredFooter} />
 
 ### With a toolbar and paging
 
@@ -481,7 +494,7 @@ doesn't read the page's direction, so wrap the app in a `DirectionProvider` (or 
 - Row checkboxes are named for the row ("Select Ada Lovelace"), and the header checkbox is "Select all rows" and exposes the mixed
   state. A chosen row sets `data-selected` and no `aria-selected`, which a plain table row doesn't support.
 - A paged or windowed table sets `aria-rowcount` and each row's `aria-rowindex` across the whole set, so a screen reader hears the
-  real size and position. The page controls announce the page and the footer's size select announces the new count.
+  real size and position. The page controls announce the page, and a change of page size (from either layout of the footer) is announced by the table itself ("Showing 25 of 87 rows").
 - `onRowClick` makes each row a tab stop, activated by Enter or Space on the row itself; a press on a control inside the row is
   that control's.
 - `rowContextMenu` opens a menu named "Actions for" and the row's label on a right-click, a long press, and the context-menu key
@@ -590,7 +603,7 @@ const columns: DataTableColumn<Employee>[] = [
 <TokenRow token="data-table.row-height.xl" usage="the fixed height of every row at size xl" />
 <TokenRow token="space.1" usage="the gap between a sort heading and its arrow" />
 <TokenRow token="space.2" usage="the gap between the page size select and its neighbours" />
-<TokenRow token="space.3" usage="the gap between the toolbar, the table and the footer, and between footer items" />
+<TokenRow token="space.3" usage="the gap between the toolbar, the table and the footer, between footer items, and between the rows of a stacked centred footer" />
 <TokenRow token="space.4" usage="the horizontal gap between footer items" />
 <TokenRow token="space.6" usage="the 24px minimum size of the sort button" />
 <TokenRow token="bg.neutral-subtle" usage="the fill of an open row's detail, which a stripe and the pointer leave alone" />
@@ -603,7 +616,7 @@ const columns: DataTableColumn<Employee>[] = [
 <TokenRow token="border-width.1" usage="the outline of the row a context menu is open on" />
 <TokenRow token="border.neutral-strong" usage="the colour of that outline" />
 <TokenRow token="border-width.4" usage="the width of that marker, held (transparent) for every row so choosing one moves nothing" />
-<TokenRow token="text.secondary" usage="the footer's range" />
+<TokenRow token="text.secondary" usage="the footer's range, in either layout" />
 <TokenRow token="font-family.primary" usage="the type of the toolbar, table and footer" />
 <TokenRow token="font-size.sm" usage="the footer's range and page size label" />
 <TokenRow token="font-size.xs" usage="the number that says a column's place in a sort by several" />

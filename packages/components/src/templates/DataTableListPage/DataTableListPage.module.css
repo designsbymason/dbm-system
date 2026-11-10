@@ -18,7 +18,7 @@
 .table {
   container-type: inline-size;
   display: grid;
-  grid-template-rows: minmax(0, 1fr) auto;
+  grid-template-rows: minmax(0, 1fr);
   min-block-size: 38rem;
 }
 
@@ -105,40 +105,14 @@
   min-inline-size: 11rem;
 }
 
-/* The footer, in three columns: the rows-per-page button at the start (a small fixed width, not the room that is left), the page
-   controls in the middle, and the range at the end, right-aligned. The outer columns are equal, so the controls are centred
-   whatever the range says. */
+/* The table's footer (`DataTable.Pagination layout="centered"`) stays at the bottom of the table's minimum height, so it does not jump as a page
+   of rows is full, short or loading. */
 .footer {
-  align-items: center;
-  display: grid;
-  gap: var(--dbm-space-3) var(--dbm-space-4);
-  grid-template-areas: "size pages range";
-  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
-  padding-block-start: var(--dbm-space-3);
-}
-
-.pageSize {
-  grid-area: size;
-  inline-size: var(--dbm-space-20);
-}
-
-.footerPages {
-  grid-area: pages;
-  justify-self: center;
-}
-
-.range {
-  color: var(--dbm-text-secondary);
-  font-size: var(--dbm-font-size-sm);
-  font-variant-numeric: tabular-nums;
-  grid-area: range;
-  justify-self: end;
-  white-space: nowrap;
+  margin-block-start: auto;
 }
 
 /* Narrower than 48rem (`TableToolbar.Filters`' default step), the toolbar is the search box and a "Filters" button that opens both filters in a bottom sheet, then the
-   count; the chips and the bulk actions take a line each, and the table's footer puts the page controls first and the rows per
-   page and the range under them, one at each end. */
+   count; the chips and the bulk actions take a line each. The table's footer stacks at the same step by itself. */
 @container not (min-width: 48rem) {
   .toolbar {
     grid-template-columns: minmax(0, 1fr);
@@ -161,12 +135,5 @@
 
   .toolbar .bulk {
     grid-column: 1;
-  }
-
-  .footer {
-    grid-template-areas:
-      "pages pages"
-      "size range";
-    grid-template-columns: auto minmax(0, 1fr);
   }
 }

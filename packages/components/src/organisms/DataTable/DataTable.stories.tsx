@@ -230,6 +230,16 @@ export const Pagination: Story = {
   ),
 };
 
+export const CentredFooter: Story = {
+  name: "A centred footer",
+  parameters: { docs: { source: { code: dataTableSnippets.centredFooter } } },
+  render: ({ maxHeight, ...args }) => (
+    <DataTable<Employee> {...args} maxHeight={maxHeight || undefined} data={makeEmployees(87)} defaultPageSize={10} pageSizeOptions={[5, 10, 25]}>
+      <DataTable.Pagination layout="centered" />
+    </DataTable>
+  ),
+};
+
 export const WithToolbar: Story = {
   name: "With a toolbar and paging",
   parameters: { docs: { source: { code: dataTableSnippets.withToolbar } } },

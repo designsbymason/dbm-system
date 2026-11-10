@@ -198,6 +198,69 @@ tr[data-selected] > .selectCell {
   font-variant-numeric: tabular-nums;
 }
 
+/* `layout="centered"`: the page size at the start, the page controls in the middle and the range at the end, in three columns whose outer two are
+   equal, so the controls are centred whatever the range says. The box around it is the container the narrow layout asks about. */
+.paginationBox {
+  container-type: inline-size;
+}
+
+.paginationCentered {
+  align-items: center;
+  color: var(--dbm-text-secondary);
+  display: grid;
+  font-size: var(--dbm-font-size-sm);
+  gap: var(--dbm-space-3) var(--dbm-space-4);
+  grid-template-areas: "size pages range";
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+}
+
+.paginationSize {
+  grid-area: size;
+  justify-self: start;
+}
+
+.paginationPages {
+  grid-area: pages;
+  justify-self: center;
+}
+
+.paginationRange {
+  font-variant-numeric: tabular-nums;
+  grid-area: range;
+  justify-self: end;
+  white-space: nowrap;
+}
+
+/* Below the step the controls take the first row, and the page size and the range sit at the two ends under them. A container query cannot read a
+   custom property, so the breakpoint tokens' widths are written out. */
+@container not (min-width: 40rem) {
+  .collapseSm {
+    grid-template-areas: "pages pages" "size range";
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+}
+
+@container not (min-width: 48rem) {
+  .collapseMd {
+    grid-template-areas: "pages pages" "size range";
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+}
+
+@container not (min-width: 64rem) {
+  .collapseLg {
+    grid-template-areas: "pages pages" "size range";
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+}
+
+@container not (min-width: 80rem) {
+  .collapseXl {
+    grid-template-areas: "pages pages" "size range";
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+}
+
 .pageSize {
   align-items: center;
   display: inline-flex;
