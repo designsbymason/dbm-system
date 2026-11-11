@@ -1,0 +1,16 @@
+/* The strip of figures: each figure is at least as wide as `space.32` and, below `lg`, grows to share the row's room (two to a row on a phone, filling
+   the width) with its label and value centred in it. From `lg` it stays that width, its content at the start, and the row is spread to the container's
+   two ends (`justify="between"`). The doubled class is for the specificity to win over the `Stat`'s own alignment, whatever order the stylesheets load in. */
+.figure.figure {
+  align-items: center;
+  flex: 1 1 var(--dbm-space-32);
+  text-align: center;
+}
+
+@media (min-width: 64rem) {
+  .figure.figure {
+    align-items: flex-start;
+    flex: 0 1 var(--dbm-space-32);
+    text-align: start;
+  }
+}

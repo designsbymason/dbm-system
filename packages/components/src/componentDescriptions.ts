@@ -41,6 +41,7 @@ export const componentDescriptions: Record<string, string> = {
   ContextMenu: "A menu that opens where a person right-clicks or long-presses.",
   DataTable: "A table of data with sorting, selection, paging and a toolbar.",
   "Documentation Page": "An example docs page: a navigation column, the page, and a contents list that follows it.",
+  "Marketing Page": "An example public page: a header with a mega menu, a hero, features and a footer.",
   "Data Table List Page": "An example list page: search, filters, paging, chosen rows and a confirmed removal.",
   DatePicker: "A date field you type into, with a calendar to pick from.",
   DateRangePicker: "Two date fields and a calendar for choosing a start and an end date.",

@@ -1,0 +1,221 @@
+import { Canvas, Meta } from "@storybook/addon-docs/blocks";
+import { Callout, ComponentHeader, PlaygroundControls, ReferenceTable, RelatedCard, TokenRow } from "../../../.storybook/blocks";
+import { Button } from "../../atoms/Button";
+import { VisuallyHidden } from "../../atoms/VisuallyHidden";
+import { Navbar } from "../../organisms/Navbar";
+import { NavigationMenu } from "../../organisms/NavigationMenu";
+import * as MarketingPageStories from "./MarketingPage.stories";
+
+<Meta of={MarketingPageStories} />
+
+<VisuallyHidden asChild><h2>Intro</h2></VisuallyHidden>
+
+<ComponentHeader title="Marketing Page" tier="Template" />
+
+A public product page: a header with grouped navigation, a hero, a row of features, a strip of figures, a call to action and a footer of link columns. It is an
+**example page, not a component**. Nothing here is exported from the package: you copy the page into your app and replace the words. What the page shows you is the
+part that is hard to get right: a header whose navigation opens panels, sections in the three widths `PageShell.Content` offers, a `bleed` band that is as wide as the
+window with its content kept to the page, and a footer whose columns wrap on a phone.
+
+It is a [`PageShell`](/docs/templates-shells-pageshell--docs) with a [`Navbar`](/docs/organisms-navigation-navbar--docs) holding a
+[`NavigationMenu`](/docs/organisms-navigation-navigationmenu--docs), a `PageShell.Main` of sections and a `PageShell.Footer`. On this page the live examples sit in a
+framed box 40rem tall; open a story from the sidebar on its own, and narrow the window, to see the tablet and phone layouts.
+
+### Import
+
+```tsx
+import {
+  BackToTop, Button, Card, Container, Divider, Grid, Heading, Icon, Link, Navbar, NavigationMenu, PageShell, Stack, Stat, Text,
+} from "@dbm-system/components";
+```
+
+## Playground
+
+A page has no props to drive. The controls below change what the page holds: how many feature cards it has, and whether the strip of figures is there. Scroll the framed
+page, open the Product menu, and narrow the window to see the header collapse to one menu button.
+
+<div className="dbm-playground-canvas">
+
+<Canvas of={MarketingPageStories.Default} />
+
+</div>
+<PlaygroundControls of={MarketingPageStories.Default} order={["features", "proof"]} />
+
+## Properties
+
+A page is not a component, so it has no properties table. These are the pieces it is made of, and what each is for.
+
+<ReferenceTable
+  firstColumnWidth="13rem"
+  plainFirstColumn
+  minWidth="34rem"
+  label="What the page is made of"
+  columns={["Where", "What it is and why"]}
+  rows={[
+    ["Header", "A sticky `Navbar` (`collapseBelow=\"md\"`) with the brand, `Navbar.Links` and `Navbar.Actions`. It is a direct child of `PageShell`, so it sticks by itself and the shell measures it. Below `md` the bar shows one menu button and its panel."],
+    ["Menu", "A `NavigationMenu` inside `Navbar.Links`: it takes the bar's look, rounding and direction, and in the phone panel it is the stacked form, where a chosen link closes the panel. One item (Product) opens a panel with a `Group` of links and a `Feature`; the other two are plain links."],
+    ["Header actions", "`Sign in` and `Get started` in `Navbar.Action hideBelow=\"md\"`, and the same two as full-width buttons in `Navbar.PanelActions`, which is drawn only in the phone panel."],
+    ["Hero", "A `PageShell.Content width=\"reading\"`: a `Heading` level 1, a `Text` and two `Button`s, centred. A reading width keeps a headline short enough to read."],
+    ["Features", "A `PageShell.Content as=\"section\" width=\"dashboard\"` holding a `Grid` of `Card`s: one column on a phone, two from `md` and three from `lg` (`columns={{ base: 1, md: 2, lg: 3 }}`). Each card is a `Card.Header` with an `Icon` and an `h3`, and a `Card.Body`."],
+    ["Figures", "A `PageShell.Content as=\"section\" width=\"full\"` holding a centred `Container` with a `Stack` of `Stat`s. Every `Stat` has no padding of its own and a class from the page's stylesheet: below `lg` it grows to share the row (`flex: 1 1 space.32`) with its content centred, and from `lg` it keeps that width (`flex: 0 1 space.32`) with its content at the start, so the figures are equal cells. The `Stack` wraps: all four sit on one row from a tablet up (centred on a tablet, `justify=\"between\"` from `lg`, so the first is at the container's start and the last at its end) and two to a row on a phone, filling the width. The `Stat`s are one `size`, so every figure is the same size, and none widens the page."],
+    ["Call to action", "A `PageShell.Content bleed` section: the band is as wide as `PageShell.Main`, tinted by a token in `style`, and its content is kept to a reading width. `style` lands on the band, so the content's own layout is a grid in a `div` inside it."],
+    ["Footer", "`PageShell.Footer` holding a `Grid` of columns, each a `nav` named by `aria-label` with a `Text` for its title and a `Link` for each entry, and a `Divider` above the legal line. Two columns across on a phone, four from `md`."],
+    ["Back to top", "A `BackToTop` after the footer: fixed to the window's corner once the page has scrolled. Inside a frame of its own scrolling (this Docs page) it takes `scrollContainerRef`."],
+  ]}
+/>
+
+## Variants
+
+### A short page
+
+One feature and no strip of figures: the call to action follows the features and the footer ends the page.
+
+<Canvas of={MarketingPageStories.ShortPage} />
+
+## Usage guidelines
+
+<div className="dbm-do-dont-grid">
+<Callout tone="success" title="Do">
+
+- Give each of the page's sections a name (`aria-labelledby` its heading, or `aria-label` where it has none) so the landmark list tells them apart, and keep one `h1`.
+- Give each footer column its own `nav` and its own name, so a screen reader's list of landmarks does not hold four navigations called "Navigation".
+- Put `bleed` on the section that should be edge to edge, and write it inside `PageShell.Main`, not inside a `PageShell.Body`, whose width and padding it would be inside of.
+- Lay out a `bleed` section's content in an element inside it: `style` and `className` are the band's, not its content's.
+- Pair every action that leaves the bar below a width (`Navbar.Action hideBelow`) with the same control in `Navbar.PanelActions`, so a phone still has it.
+- Give the figures one `size` and one width that fit the narrowest column, and keep the values short (`12K+`): `fitValue` shrinks only the long values, so the figures end up in different sizes.
+
+</Callout>
+<Callout tone="danger" title="Don't">
+
+- Don't draw a navigation of your own beside `Navbar` and `NavigationMenu`: a sub-navigation with its own fades and current-link look is a second copy of one.
+- Don't make every section `full` width: a line of text longer than a reading width is hard to read, so the hero's text stays narrow and only the strip of figures is wide.
+- Don't hide the call to action on a phone: the bar's menu button opens a panel with it at the foot.
+- Don't give a `Navbar.Link` or a `NavigationMenu` an `id`: the same items are drawn in the bar and in the phone panel.
+
+</Callout>
+</div>
+
+## Best practices
+
+- A hero is a heading, a line of text and one or two buttons; there is no hero component, so write it with `Heading`, `Text` and `Button`.
+- Keep the Product-style panel to one group and one featured link, so it opens without a scroll; a longer list is a page of its own.
+- A button that is a link is `Button asChild` around an `<a>`, so it is a real link with a button's look.
+- The page is static, so there is no router and no state; the words are in one place (`marketingCopy` in the story kit) to be replaced.
+
+## Accessibility
+
+<Callout tone="info" title="The landmarks, once each">
+
+One `banner` (the header), its `navigation` named "Main", one `main` holding named `region`s (the features, the figures and the call to action), and one `contentinfo` holding
+a `navigation` for each footer column, each named by its column's title. There is one `h1` (the hero), an `h2` for each section and an `h3` for each feature card.
+
+</Callout>
+
+- The keyboard follows the markup: the skip link, the header (the brand, each menu item, the actions), the page, the footer. The skip link goes to the page's `main`, past the header.
+- A menu item that opens a panel is a button: `Enter`, `Space` or `Down` opens it, the arrow keys move through its links, and `Escape` closes it and returns focus to the item. A panel also opens by hover and by click.
+- On a phone the header's links and actions are in the bar's one menu button's panel, a dialog: focus goes into it, `Escape` closes it and focus returns to the button.
+- The back-to-top button is offered after the page has scrolled and returns the page to its top.
+- In forced colours the band's tint is dropped and the page takes the system colours; nothing is told apart by colour alone.
+
+## Code examples
+
+```tsx
+<PageShell>
+  <PageShell.SkipLink />
+  <Navbar sticky collapseBelow="md">
+    <Navbar.Brand href="/">dbM</Navbar.Brand>
+    <Navbar.Links aria-label="Main">
+      <NavigationMenu>
+        <NavigationMenu.List>
+          <NavigationMenu.Item value="product">
+            <NavigationMenu.Trigger>Product</NavigationMenu.Trigger>
+            <NavigationMenu.Content layout="columns">
+              <NavigationMenu.Group label="Platform">…</NavigationMenu.Group>
+              <NavigationMenu.Feature title="What's new" href="/changelog">…</NavigationMenu.Feature>
+            </NavigationMenu.Content>
+          </NavigationMenu.Item>
+          <NavigationMenu.Item>
+            <NavigationMenu.Link href="/pricing">Pricing</NavigationMenu.Link>
+          </NavigationMenu.Item>
+        </NavigationMenu.List>
+      </NavigationMenu>
+    </Navbar.Links>
+    <Navbar.Actions>
+      <Navbar.Action hideBelow="md"><Button size="sm" asChild><a href="/signup">Get started</a></Button></Navbar.Action>
+    </Navbar.Actions>
+    <Navbar.PanelActions>
+      <Button fullWidth asChild><a href="/signup">Get started</a></Button>
+    </Navbar.PanelActions>
+  </Navbar>
+  <PageShell.Main>
+    <PageShell.Content width="reading">…hero…</PageShell.Content>
+    <PageShell.Content as="section" width="dashboard">…features…</PageShell.Content>
+    <PageShell.Content as="section" width="full">…figures…</PageShell.Content>
+    {/* style is the band's: lay the content out in an element inside it */}
+    <PageShell.Content as="section" bleed width="reading" style={{ background: "var(--dbm-bg-brand-subtle)" }}>
+      <div style={{ display: "grid", justifyItems: "center" }}>…call to action…</div>
+    </PageShell.Content>
+  </PageShell.Main>
+  <PageShell.Footer>…columns…</PageShell.Footer>
+  <BackToTop />
+</PageShell>
+```
+
+```css
+/* Your own stylesheet: below lg the figures grow to fill the row with their content centred; from lg they keep one width, content at the start.
+   The doubled class wins over the Stat's own alignment whatever order the stylesheets load in. */
+.figure.figure {
+  align-items: center;
+  flex: 1 1 var(--dbm-space-32);
+  text-align: center;
+}
+
+@media (min-width: 64rem) {
+  .figure.figure {
+    align-items: flex-start;
+    flex: 0 1 var(--dbm-space-32);
+    text-align: start;
+  }
+}
+```
+
+## Design tokens used
+
+The page is made of components, so every colour, size and radius comes from them. What it draws itself is spacing between its own pieces, in inline styles (`space.2`, `space.3`,
+`space.4`, `space.6` and `space.8`), and one colour in an inline style: `bg.brand-subtle`, the tint behind the call to action's band (dropped in forced colours). The stylesheet holds one token, the figures' width.
+
+<TokenRow token="space.32" usage="the width of each figure in the strip: it grows from this below lg and keeps it from lg" />
+
+## Related components
+
+<div className="dbm-card-grid">
+<RelatedCard
+  name="PageShell"
+  description="The frame the page sits in: the skip link, the header, the page's one main with its three widths, and the footer"
+  href="/?path=/docs/templates-shells-pageshell--docs"
+>
+  <Button variant="secondary" size="sm">Open shell</Button>
+</RelatedCard>
+<RelatedCard
+  name="Navbar"
+  description="The header: its links, its menu button and panel, and its own sticking"
+  href="/?path=/docs/organisms-navigation-navbar--docs"
+>
+  <Navbar>
+    <Navbar.Brand href="#">dbM</Navbar.Brand>
+  </Navbar>
+</RelatedCard>
+<RelatedCard
+  name="NavigationMenu"
+  description="The mega menu in the header: panels of grouped links that open by hover, click and keys"
+  href="/?path=/docs/organisms-navigation-navigationmenu--docs"
+>
+  <NavigationMenu aria-label="Preview">
+    <NavigationMenu.List>
+      <NavigationMenu.Item>
+        <NavigationMenu.Link href="#" current>Pricing</NavigationMenu.Link>
+      </NavigationMenu.Item>
+    </NavigationMenu.List>
+  </NavigationMenu>
+</RelatedCard>
+</div>

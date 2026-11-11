@@ -1,0 +1,5 @@
+// What the Marketing Page's "Show code" snippets import, so `pnpm check-snippets` can typecheck them as real code.
+// Plain text, not a module: the script writes it above each snippet in a throwaway file beside it. Import every component the snippets use from the package, so a name that does not exist fails.
+import { BackToTop, Button, Card, Container, Divider, Grid, Heading, Icon, Link, Navbar, NavigationMenu, PageShell, Stack, Stat, Text } from "../../index";
+import { ChartBarIcon, LightningIcon, UsersIcon } from "@dbm-system/icons";
+declare const styles: { figure: string };

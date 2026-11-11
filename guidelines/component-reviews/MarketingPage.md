@@ -2,7 +2,7 @@
 
 **Tier:** Template (a story-only example page, [ADR-0179](../adr/0179-templates-ship-as-composable-shells-in-the-components-package-with-story-only-example-pages-over-shipping-finished-pages-or-keeping-all-templates-storybook-only.md) and [ADR-0184](../adr/0184-a-story-only-template-page-is-a-folder-of-stories-and-a-story-kit-in-templates-with-demo-controls-and-no-playground-over-a-shipped-component-or-a-separate-pages-tree.md)) · **Category:** Data pages · **Finalized:** not yet (the maintainer's to declare)
 
-Planned 2026-11-08 with `/plan-template`, approved by the maintainer with the recommendation on every decision. It is the "Marketing or public page" row of `04-component-inventory.md`, built as a recipe: a page on `PageShell` that an app copies. It follows the [Documentation Page](DocumentationPage.md).
+Planned 2026-11-08 with `/plan-template`, approved by the maintainer with the recommendation on every decision; re-planned and re-approved 2026-11-11 with the five decisions below. It is the "Marketing or public page" row of `04-component-inventory.md`, built as a recipe: a page on `PageShell` that an app copies. It follows the [Documentation Page](DocumentationPage.md).
 
 ## Decisions
 - **Kind and place:** a story-only example page in `src/templates/MarketingPage/`, titled `Templates/Data pages/Marketing Page`, tagged `example-page`, not exported.
@@ -14,3 +14,27 @@ Planned 2026-11-08 with `/plan-template`, approved by the maintainer with the re
 - **Landmarks:** one `banner`, the header's named `navigation`, one `main` with named `section`s where they matter, one `contentinfo` holding named `navigation`s for its columns; one `h1`.
 - **Checks planned, each broken once to see it fail:** the landmark tree; the layout at phone, tablet and desktop widths with no page overflow; a `NavigationMenu` panel by a real click and real keys; the phone menu by real presses; the edge-to-edge bands (a `bleed` band's content lines up with the page); a hydration and `StrictMode` test; print; forced colours; the snippets typechecked as real code (from its `MarketingPage.snippetScope.txt`).
 - **Registrations:** a `07` §6 row, this file, the `04` row (built as a page, with the "Marketing or public page" row marked as built as this recipe), and the `example-page` tag.
+
+## Decisions approved 2026-11-11 (the re-plan)
+- **Demo controls:** `features` (1 to 3 cards), `proof` (the strip or not) and `framed` (a Docs-page box). The page holds no state.
+- **Shared helpers move to `src/templates/_shared/` now** (the second consumer, `05` §1): the skip link's click handler and the framed scroll box that `Navbar` and `BackToTop` take as `scrollContainerRef`. The Documentation Page's kit is changed to import them, with no change in behaviour; its checks must still pass.
+- **Header:** a `Button` in `Navbar.Actions` on a desktop; on a phone it moves into the menu panel or stays by the button, whichever the preview shows fits.
+- **Footer columns:** each a `nav` named by `aria-label`, with no heading, so the heading tree stays the hero's `h1` and the sections' `h2`s.
+- **Menu:** one Product panel (`Feature`s and `Group`s) and two plain links.
+- **Hero:** `Heading`, `Text` and `Button`s in the kit; no hero component.
+- **No change to a Finalized component is planned**; one found while building is surfaced and confirmed first.
+
+## Built (2026-11-11)
+Built to the plan and the decisions above, in `src/templates/MarketingPage/`: a story kit (`MarketingPage`, with `features` and `proof` as its demo controls, and `framed` for the Docs page), two stories (the page, a short page), two typechecked snippets, the Docs page, unit tests (5), a server render and hydration under `StrictMode` (3), and 10 real-browser checks. It has no stylesheet, so no docs-token test.
+- **Composition only:** `PageShell` (skip link, a sticky `Navbar` direct in it, `Main`, `Footer`), `NavigationMenu` in `Navbar.Links` (a Product panel with a `Group` and a `Feature`, and two plain links), `Navbar.Action hideBelow` with the same two buttons in `Navbar.PanelActions`, `PageShell.Content` in `reading`, `dashboard` and `full` and a `bleed` band, `Grid`, `Card`, `Icon`, `Stat` (`fitValue`), `Heading`, `Text`, `Button asChild`, `Link`, `Divider` and `BackToTop`. Nothing is drawn by hand; the only layout it writes is token-valued inline styles and one tint (`bg.brand-subtle`).
+- **Shared helpers moved to `src/templates/_shared/`** (the second consumer): `skipToMain` and `PageFrame` (the scrolling box and its `scrollContainerRef`), and the Documentation Page's kit now imports them with no change in behaviour (its 7 unit, 4 server and 8 real-browser checks still pass).
+- **Found while building it:**
+  - **`PageShell.Content bleed` puts `style` on the band, not on its content**, so a `display: grid` there lays the band's one inner container out, not the heading and the button (they ran together on one line). The content's layout is a `div` inside the band; the Docs page and the snippet say so. Not a defect (the prop's JSDoc says `style` tints the band), recorded because it is easy to miss.
+  - **A `Stat` at `size="lg"` widened the page at 320px** ("12,000+" in a two-column grid, 5px of sideways scroll): `fitValue` shrinks it to fit, and the phone check asserts it.
+  - **The card header spreads its children along the row**, so an icon and a title written side by side sat at opposite ends: they are one group in a `div`.
+  - **Print:** the `Navbar` stays `position: sticky` in print (it is in the flow there and does not repeat), and `BackToTop` is fixed but transparent until the page scrolls, so the print check asserts what is true (the header prints once at the top; nothing visible is fixed) rather than the plan's "nothing sticky". A print rule on the `Navbar` is the maintainer's call; none was added.
+  - **A hero heading at `4xl` filled a 375px window edge to edge**; it is `3xl`.
+- **Checks, each broken once and failed:** `bleed` (removed), the features' `lg` column count (3 to 2), the footer's phone columns (2 to 1) and `fitValue` (removed): the band-widths check, the desktop and forced-colours checks, the phone check and the phone check failed. The real-browser checks: each landmark once and the cards in one row at a desktop; the band edge to edge, the figures full width and the hero centred; a real click and real `Enter` on Product opening its panel, and `Escape` returning focus to it; the keyboard path in markup order and the skip link's `Enter` reaching `main`; the footer ending the page and a real wheel bringing up `BackToTop`; the tablet (two columns, the links kept in the bar); the phone (one column, two footer columns, one menu button, a panel with the links and both buttons, `Escape` and focus back); print; forced colours.
+- **Looked at** in the browser pane at 1280, 820 and 375px, and at 320px for overflow; the phone menu opened by a real click.
+- **Not verified:** a real phone, Safari and Firefox, a screen reader, a real printer, right to left (a page needs none), and the dark and second-brand themes beyond the stories' own switch (to be looked at in the review).
+

@@ -1,6 +1,5 @@
-import { useRef } from "react";
 import { MagnifyingGlassIcon } from "@dbm-system/icons";
-import type { CSSProperties, MouseEvent } from "react";
+import type { RefObject } from "react";
 import { Alert } from "../../molecules/Alert";
 import { CodeBlock } from "../../molecules/CodeBlock";
 import { PageHeader } from "../../molecules/PageHeader";
@@ -16,6 +15,8 @@ import { Sidebar, useSidebar } from "../../organisms/Sidebar";
 import { IconButton } from "../../atoms/IconButton";
 import { preventNavigation } from "../../organisms/Sidebar/SidebarStoryKit";
 import { PageShell } from "../PageShell";
+import { PageFrame } from "../_shared/PageFrame";
+import { skipToMain } from "../_shared/skipToMain";
 import styles from "./DocumentationPage.module.css";
 
 // The page's words, in one place. A documentation page is static, so there is no router and no state: the demo's only controls are how long the page
@@ -84,8 +85,6 @@ export interface DocumentationPageProps {
   contents?: boolean;
 }
 
-const frameHeight = "40rem";
-
 /** How far from the top of the page a heading lands after a jump, in pixels: the sticky header's height (59px) and a gap. One value for the sections' `scroll-margin` and the outline's `scrollOffset`, so the browser's jump and the outline's click land alike. */
 const headerClearance = 80;
 
@@ -143,26 +142,20 @@ function SidebarLinks() {
 export function DocumentationPage({ framed = false, sections = 6, contents = true }: DocumentationPageProps) {
   const copy = documentationCopy;
   const shown = copy.sections.slice(0, Math.max(1, Math.min(sections, copy.sections.length)));
-  const frameRef = useRef<HTMLDivElement | null>(null);
   // The outline's entries, flat: each section and the sections inside it one level down.
   const contentsItems = shown.flatMap((section) => [
     { id: section.id, label: section.title, level: 1 as const },
     ...(section.subsections ?? []).map((sub) => ({ id: sub.id, label: sub.title, level: 2 as const })),
   ]);
-  const page = (
+  const page = (frameRef: RefObject<HTMLDivElement | null> | undefined) => (
     <Sidebar.Provider collapseBelow="lg">
       <PageShell>
         {/* In an app a router handles the link; here the click moves focus to the main area itself and keeps the preview's address unchanged. */}
-        <PageShell.SkipLink
-          onClick={(event: MouseEvent) => {
-            event.preventDefault();
-            document.getElementById("main")?.focus();
-          }}
-        />
+        <PageShell.SkipLink onClick={skipToMain} />
         {/* The header spans the window, so its brand lines up with the navigation column below it and its actions with the outline's edge. Its links are
             hidden below `lg` and offered in the sidebar's panel instead (`hideBelow`, with `collapseBelow="never"` so the bar draws no menu button of its
             own), so a phone has one menu button and one drawer. */}
-        <Navbar sticky collapseBelow="never" scrollContainerRef={framed ? frameRef : undefined}>
+        <Navbar sticky collapseBelow="never" scrollContainerRef={frameRef}>
           <Navbar.Row columns="balanced">
             {/* The menu button is first so it is at the start of the bar, and the brand in the middle, on a phone, with the search at the end. */}
             <Sidebar.MenuButton variant="tertiary" tone="brand" size="sm" />
@@ -211,7 +204,7 @@ export function DocumentationPage({ framed = false, sections = 6, contents = tru
                 className={styles.outlineRow}
                 style={{ paddingInline: framed ? "var(--dbm-space-4)" : "var(--dbm-space-6)" }}
                 items={contentsItems}
-                scrollContainerRef={framed ? frameRef : undefined}
+                scrollContainerRef={frameRef}
                 aria-label={copy.contentsRowName}
               />
             )}
@@ -279,7 +272,7 @@ export function DocumentationPage({ framed = false, sections = 6, contents = tru
               <TableOfContents
                 items={contentsItems}
                 scrollOffset={headerClearance}
-                scrollContainerRef={framed ? frameRef : undefined}
+                scrollContainerRef={frameRef}
                 aria-label={copy.contentsName}
               />
             </PageShell.Aside>
@@ -300,24 +293,9 @@ export function DocumentationPage({ framed = false, sections = 6, contents = tru
           </PageShell.Content>
         </PageShell.Footer>
         {/* Fixed to the window's corner once the page has scrolled; in a Docs page's frame it follows the frame's own scrolling. */}
-        <BackToTop scrollContainerRef={framed ? frameRef : undefined} />
+        <BackToTop scrollContainerRef={frameRef} />
       </PageShell>
     </Sidebar.Provider>
   );
-  if (!framed) return page;
-  return (
-    <div
-      ref={frameRef}
-      style={
-        {
-          blockSize: frameHeight,
-          overflow: "auto",
-          border: "var(--dbm-border-width-1) solid var(--dbm-border-default)",
-          borderRadius: "var(--dbm-radius-lg)",
-        } as CSSProperties
-      }
-    >
-      {page}
-    </div>
-  );
+  return <PageFrame framed={framed}>{page}</PageFrame>;
 }
