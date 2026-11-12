@@ -837,6 +837,17 @@ a.brand:focus-visible,
   .scrollLinks::after {
     display: none !important;
   }
+
+  /* Printed, the bar is one row at the top of the page like any other: not kept in view, with no shadow from having been stuck, and not slid away by `hideOnScroll`
+     (a bar hidden when the reader prints would otherwise be left off the paper). `!important` because print must win over the screen rules whatever their
+     specificity, as in `AppShell`'s print block (ADR-0183). */
+  .sticky,
+  .ghostBar.sticky {
+    position: static !important;
+    translate: none !important;
+    box-shadow: none !important;
+    transition: none !important;
+  }
 }
 
 .link {

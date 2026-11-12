@@ -1150,7 +1150,17 @@ export const PrintsStickyPartsWhereTheyBelong: Story = {
     // Sticky is applied part by part as each one is measured, so wait for all three.
     for (const name of ["data-header-measured", "data-banner-measured", "data-footer-measured"]) await waitFor(() => expect(shell).toHaveAttribute(name));
     const parts = [slotOf(shell, header), slotOf(shell, footer), shell.querySelector<HTMLElement>("[class*='banner']")!];
-    for (const part of parts) await expect(getComputedStyle(part).position).toBe("sticky");
+    // Each part is waited for rather than read at once, and a part that never sticks is named with the shell's attributes, so a failure under a busy run says which
+    // part and what state the shell was in (it failed once or twice in full runs with `relative` where `sticky` was expected, and did not reproduce alone).
+    for (const [index, part] of parts.entries()) {
+      await waitFor(
+        () => {
+          const position = getComputedStyle(part).position;
+          if (position !== "sticky") throw new Error(`part ${index} (<${part.tagName.toLowerCase()} class="${part.className}">) is ${position}, not sticky; the shell has ${[...shell.attributes].map((attribute) => attribute.name).join(", ")}`);
+        },
+        { timeout: 4000 },
+      );
+    }
     await whilePrinting(async () => {
       for (const part of parts) await expect(getComputedStyle(part).position).toBe("static");
       // In order down the paper: banner, header, main, footer, each below the one before.

@@ -2088,6 +2088,74 @@ export const ScrollingSetInForcedColoursAndPrint: Story = {
   },
 };
 
+/** Prints (the print media type emulated) while `check` runs, then clears the emulation, as the other print checks do. */
+async function whilePrinting(check: () => Promise<void>) {
+  await send("Emulation.setEmulatedMedia", { media: "print", features: [] });
+  try {
+    await waitFor(() => expect(window.matchMedia("print").matches).toBe(true));
+    await nextFrame();
+    await check();
+  } finally {
+    await send("Emulation.setEmulatedMedia", { media: "", features: [] });
+    await waitFor(() => expect(window.matchMedia("print").matches).toBe(false));
+  }
+}
+
+function PrintPage({ hideOnScroll }: { hideOnScroll: boolean }) {
+  return (
+    <div>
+      <Navbar sticky hideOnScroll={hideOnScroll} aria-label="Printed bar">
+        <Navbar.Brand href="#">Acme</Navbar.Brand>
+        <Navbar.Links aria-label="Site">
+          <Navbar.Link href="#">Products</Navbar.Link>
+        </Navbar.Links>
+      </Navbar>
+      <div style={{ blockSize: "3000px" }}>A page tall enough to scroll.</div>
+    </div>
+  );
+}
+
+export const PrintsAStuckBarInTheFlowWithNoShadow: Story = {
+  name: "Printed, a sticky bar that has stuck is in the flow at the top with no shadow — print test",
+  parameters: { layout: "fullscreen" },
+  render: () => <PrintPage hideOnScroll={false} />,
+  play: async ({ canvasElement }) => {
+    const bar = within(canvasElement).getByRole("banner");
+    window.scrollTo(0, 800);
+    await waitFor(() => expect(bar).toHaveAttribute("data-stuck"));
+    // On screen it is kept in view and has the shadow of a stuck bar.
+    await expect(getComputedStyle(bar).position).toBe("sticky");
+    await expect(getComputedStyle(bar).boxShadow).not.toBe("none");
+    await whilePrinting(async () => {
+      await expect(getComputedStyle(bar).position).toBe("static");
+      await expect(getComputedStyle(bar).boxShadow).toBe("none");
+    });
+    window.scrollTo(0, 0);
+  },
+};
+
+export const PrintsABarThatHidOnScrollAtTheTop: Story = {
+  name: "Printed, a hide-on-scroll bar that has slid out of view is back in the flow at the top of the page — print test",
+  parameters: { layout: "fullscreen" },
+  render: () => <PrintPage hideOnScroll />,
+  play: async ({ canvasElement }) => {
+    const bar = within(canvasElement).getByRole("banner");
+    window.scrollTo(0, 400);
+    await nextFrame();
+    window.scrollTo(0, 900);
+    // It slides out of view while the reader scrolls down: above the window on screen.
+    await waitFor(() => expect(bar.getBoundingClientRect().bottom).toBeLessThanOrEqual(1), { timeout: 3000 });
+    await whilePrinting(async () => {
+      await expect(getComputedStyle(bar).translate).toBe("none");
+      await expect(getComputedStyle(bar).position).toBe("static");
+      // Back in the flow, at the top of the page (the page's own scroll is not what prints).
+      await expect(bar.getBoundingClientRect().top + window.scrollY).toBeGreaterThanOrEqual(-1);
+      await expect(bar.getBoundingClientRect().height).toBeGreaterThan(0);
+    });
+    window.scrollTo(0, 0);
+  },
+};
+
 export const LinksHiddenBelowAStepLeaveNoMenuButton: Story = {
   name: "Links with hideBelow lg are in the bar on a desktop, and on a phone the bar shows neither them nor a menu button of its own — layout test",
   render: () => (

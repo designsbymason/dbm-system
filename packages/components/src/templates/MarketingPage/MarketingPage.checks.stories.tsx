@@ -122,9 +122,14 @@ export const MegaMenuByRealClickAndKeys: Story = {
     window.scrollTo(0, 0);
     // The real pointer is shared by every check in the run, so park it somewhere neutral first: a pointer left over the bar by an earlier check starts the
     // menu's hover timer (200ms), and a press that lands as it fires would be read as closing the panel it just opened.
-    await send("Input.dispatchMouseEvent", { type: "mouseMoved", x: 2, y: 2 });
-    await new Promise<void>((resolve) => setTimeout(resolve, 400));
-    await realClick(trigger);
+    // The real pointer and the page's window are shared with whatever else a full run is doing, so a press can land when the menu's hover timer has just opened it and read
+    // as closing it: try again, from a parked pointer, up to three times, and a press that never opens it fails the check.
+    for (let attempt = 0; attempt < 3 && trigger.getAttribute("aria-expanded") !== "true"; attempt += 1) {
+      await send("Input.dispatchMouseEvent", { type: "mouseMoved", x: 2, y: 2 });
+      await new Promise<void>((resolve) => setTimeout(resolve, 400));
+      await realClick(trigger);
+      await new Promise<void>((resolve) => setTimeout(resolve, 600));
+    }
     await waitFor(() => expect(trigger).toHaveAttribute("aria-expanded", "true"), { timeout: slow });
     // The panel is the element the trigger controls; the footer has its own "Analytics", so the links are read inside the panel.
     const panel = document.getElementById(trigger.getAttribute("aria-controls") as string) as HTMLElement;
@@ -294,8 +299,9 @@ export const PrintsFromTheTop: Story = {
       await waitFor(() => expect(window.matchMedia("print").matches).toBe(true));
       await nextFrame();
       window.scrollTo(0, 0);
-      // A fixed element would print on every sheet; only the back-to-top button is fixed, and it is transparent until the page has scrolled. A sticky header
-      // is laid out in the flow in print (it does not repeat), so what is asserted is that it prints once, at the top.
+      // A fixed element would print on every sheet; only the back-to-top button is fixed, and it is transparent until the page has scrolled. The `Navbar` prints
+      // as a row in the flow (its own print rule), not kept in view.
+      await expect(getComputedStyle(header).position).toBe("static");
       const shown = [...canvasElement.querySelectorAll<HTMLElement>("*")].filter((element) => getComputedStyle(element).position === "fixed" && getComputedStyle(element).opacity !== "0");
       await expect(shown.map((element) => element.tagName + "." + element.className)).toEqual([]);
       await expect(main.getBoundingClientRect().left).toBeLessThan(2);

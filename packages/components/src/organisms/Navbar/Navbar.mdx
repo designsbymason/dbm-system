@@ -524,6 +524,7 @@ This story is shown at a phone's width when opened on its own; on this page, nar
 - Only the links collapse by themselves. A bar with a search field, an account menu and a button can overflow a phone: wrap the ones that
   should leave in `Navbar.Action hideBelow` and repeat them in `Navbar.PanelActions`.
 - Put a skip link first in the bar and the bar first on the page; the main element needs `tabIndex={-1}`.
+- Printed, the bar is one row at the top of the page: not kept in view (`position: static`), with no shadow from having been stuck, and not slid away by `hideOnScroll` (a bar hidden when the reader prints is printed all the same); the scroll fades of a `scroll` set are left out too.
 - `hideOnScroll` reads the scroll position from a passive listener, one read per frame, and never hides a bar that has focus; in a scrolling box
   of your own name it with `scrollContainerRef`.
 
