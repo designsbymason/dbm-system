@@ -4,6 +4,13 @@ import { send } from "../../molecules/CodeBlock/browserProtocol";
 import { nextFrame, realClick } from "../_shared/realInput";
 import { DataTableListPage } from "./DataTableListPageStoryKit";
 
+/** The element with matching text that is drawn: the footer holds a second, compact pager behind `display: none` (`DataTable.Pagination`'s `compactBelow`), so a text query finds the range twice. */
+function visibleText(root: ReturnType<typeof within>, matcher: string | RegExp | ((content: string) => boolean)): HTMLElement {
+  const found = root.queryAllByText(matcher as never).find((element: HTMLElement) => element.checkVisibility());
+  if (!found) throw new Error("no visible element has that text");
+  return found;
+}
+
 // Hidden real-browser checks (guidelines/adr/0013): what jsdom can't do (layout at a width, direction, forced colours, print, a real
 // pointer, where focus lands). They run in the `storybook` (Chromium) project; the test window is 1200px wide unless a story pins another.
 const meta: Meta = {
@@ -167,7 +174,7 @@ export const FooterHasRowsPerPageCentredPagesAndRangeAtTheEnd: Story = {
     const { canvas, frame } = await loaded(canvasElement);
     const pages = canvas.getByRole("navigation", { name: "Pagination" });
     const size = canvas.getByRole("combobox", { name: "Rows per page" });
-    const range = canvas.getByText(/^1–10 of 137$/);
+    const range = visibleText(canvas, /^1–10 of 137$/);
     const tableBox = frame.getBoundingClientRect();
     const sizeBox = size.getBoundingClientRect();
     // The button is a small fixed width at the start, not the room that is left.
@@ -188,7 +195,7 @@ export const FooterHasRowsPerPageCentredPagesAndRangeAtTheEnd: Story = {
     // A different page size changes the range and neither the button's width nor where the controls are.
     await realClick(size);
     await realClick(await within(document.body).findByRole("option", { name: "25" }));
-    await canvas.findByText(/^1–25 of 137$/);
+    await waitFor(() => expect(visibleText(canvas, /^1–25 of 137$/)).toBeInTheDocument());
     await nextFrame();
     await expect(Math.abs(canvas.getByRole("combobox", { name: "Rows per page" }).getBoundingClientRect().width - sizeBox.width)).toBeLessThan(1);
     await expect(centred()).toBeLessThan(2);
@@ -197,7 +204,7 @@ export const FooterHasRowsPerPageCentredPagesAndRangeAtTheEnd: Story = {
 
 export const PhoneToolbarIsASearchAndAFiltersButtonWithASheet: Story = {
   tags: ["!dev"],
-  name: "On a phone the toolbar is the search and a Filters button that opens both filters in a bottom sheet — layout and interaction test",
+  name: "On a phone the toolbar is the search and a Filters button that opens both filters in a bottom sheet, and the footer is one row — layout and interaction test",
   globals: { viewport: { value: "mobile1", isRotated: false } },
   render: () => <DataTableListPage latency={0} />,
   play: async ({ canvasElement }) => {
@@ -234,13 +241,16 @@ export const PhoneToolbarIsASearchAndAFiltersButtonWithASheet: Story = {
     await waitFor(() => expect(canvas.getByRole("list", { name: "Applied filters" })).toBeVisible());
     await expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(window.innerWidth);
 
-    // The footer puts the page controls first, and the rows per page and the range at the two ends under them.
+    // The footer is one row: the rows per page at the start, then the page controls with the range between the arrows (the numbers are not drawn).
     const pages = canvas.getByRole("navigation", { name: "Pagination" });
     const size = canvas.getByRole("combobox", { name: "Rows per page" });
-    const range = canvas.getByText(/^\d+–\d+ of \d+$/);
-    await expect(pages.getBoundingClientRect().bottom).toBeLessThanOrEqual(size.getBoundingClientRect().top + 1);
-    await expect(Math.abs(size.getBoundingClientRect().top - range.getBoundingClientRect().top)).toBeLessThan(20);
-    await expect(size.getBoundingClientRect().right).toBeLessThan(range.getBoundingClientRect().left);
+    const range = visibleText(canvas, /^\d+–\d+ of \d+$/);
+    const pagesBox = pages.getBoundingClientRect();
+    const sizeBox = size.getBoundingClientRect();
+    await expect(Math.abs(sizeBox.top + sizeBox.height / 2 - (pagesBox.top + pagesBox.height / 2))).toBeLessThan(8);
+    await expect(sizeBox.right).toBeLessThan(pagesBox.left);
+    await expect(pages.contains(range)).toBe(true);
+    await expect(within(pages).queryAllByRole("button", { name: /^Page \d+/ })).toHaveLength(0);
   },
 };
 

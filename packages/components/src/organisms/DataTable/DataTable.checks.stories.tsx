@@ -19,6 +19,14 @@ export default meta;
 type Story = StoryObj;
 
 const body = within(document.body);
+
+/** The first element with matching text that is drawn: the footer holds a second, compact pager behind `display: none` (`compactBelow`), so a text query finds the range twice. */
+function visibleMatch(root: ReturnType<typeof within>, matcher: string | RegExp | ((content: string) => boolean)): HTMLElement {
+  const found = root.queryAllByText(matcher as never).find((element: HTMLElement) => element.checkVisibility());
+  if (!found) throw new Error("no visible element has that text");
+  return found;
+}
+const rangeMatcher = (content: string) => /^\d+–\d+ of \d+$/.test(content.replace(/[\u2068\u2069]/g, ""));
 const nextFrame = () => new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
 
 /** A length token such as `2.75rem` in pixels. */
@@ -400,7 +408,7 @@ function channelsCss(value: string): string {
 const rgbOf = (computed: string): string => (computed.match(/[\d.]+/g) ?? []).slice(0, 3).join(",");
 
 export const OnAPhone: Story = {
-  name: "On a phone: the table scrolls inside its frame, the page doesn't, and the footer wraps",
+  name: "On a phone: the table scrolls inside its frame, the page doesn't, and the footer is one row, the page size then the range between the arrows",
   globals: { viewport: { value: "mobile1", isRotated: false } },
   render: () => <TeamDemo size="sm" />,
   play: async () => {
@@ -410,13 +418,18 @@ export const OnAPhone: Story = {
     const frame = table.parentElement as HTMLElement;
     await expect(frame.scrollWidth).toBeGreaterThan(frame.clientWidth);
     await expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(window.innerWidth);
-    const footer = body.getByRole("navigation").parentElement as HTMLElement;
+    // The one navigation in the accessibility tree is the compact pager (the numbered one is not drawn), after the page size on the same line.
+    const pager = body.getByRole("navigation", { name: "Pagination" });
+    const select = body.getByRole("combobox", { name: "Rows per page" });
+    const footer = pager.closest('[class*="paginationBox"]') as HTMLElement;
     for (const child of footer.querySelectorAll<HTMLElement>("*")) {
-      await expect(child.getBoundingClientRect().right).toBeLessThanOrEqual(window.innerWidth + 1);
+      if (child.checkVisibility()) await expect(child.getBoundingClientRect().right).toBeLessThanOrEqual(window.innerWidth + 1);
     }
-    // the range and the controls stack instead of squeezing: the page controls sit under the range
-    const range = footer.firstElementChild as HTMLElement;
-    await expect(body.getByRole("navigation").getBoundingClientRect().top).toBeGreaterThanOrEqual(range.getBoundingClientRect().bottom - 1);
+    await expect(Math.abs(pager.getBoundingClientRect().top - select.getBoundingClientRect().top)).toBeLessThan(24);
+    await expect(select.getBoundingClientRect().right).toBeLessThan(pager.getBoundingClientRect().left);
+    // The range is between the arrows, and the separate range is not drawn.
+    await expect(within(pager).getByText(rangeMatcher)).toBeVisible();
+    await expect(body.queryAllByText(rangeMatcher).filter((element) => element.checkVisibility())).toHaveLength(1);
   },
 };
 
@@ -768,7 +781,7 @@ export const SavedViewsRecipeRoundTrips: Story = {
     await userEvent.click(await body.findByRole("option", { name: "Payroll" }));
     await waitFor(() => expect(within(table).queryByRole("columnheader", { name: /^Started/ })).toBeNull());
     await expect(within(table).getByRole("columnheader", { name: /^Salary/ })).toHaveAttribute("aria-sort", "descending");
-    await expect(body.getByText((content) => content.replace(/[\u2068\u2069]/g, "") === "1–5 of 24")).toBeInTheDocument();
+    await expect(visibleMatch(body, (content) => content.replace(/[\u2068\u2069]/g, "") === "1–5 of 24")).toBeInTheDocument();
     // change the current state (sort by name), save it, and the new view is chosen and keeps it
     await userEvent.click(within(table).getByRole("button", { name: /^Name/ }));
     await userEvent.click(body.getByRole("button", { name: "Save current view" }));
@@ -878,10 +891,11 @@ export const RowActionsHeadingStaysInsideTheScrollFrame: Story = {
 };
 
 // ---- `DataTable.Pagination layout="centered"` (ADR-0200) ----
+// (These checks are about the centred layout and its stacked step, so they leave the compact one-row form off; `compactBelow` has its own checks below.)
 const centred = (width: string, footer: { collapseBelow?: "sm" | "md" | "lg" | "xl" | "never"; dir?: "rtl" } = {}) => (
   <div style={{ inlineSize: width }} data-testid="box" dir={footer.dir}>
     <DataTable<Employee> aria-label="Team" columns={employeeColumns} data={makeEmployees(87)} defaultPageSize={10} pageSizeOptions={[5, 10, 25]}>
-      <DataTable.Pagination layout="centered" compact="never" data-testid="footer" collapseBelow={footer.collapseBelow} dir={footer.dir} />
+      <DataTable.Pagination layout="centered" compact="never" compactBelow="never" data-testid="footer" collapseBelow={footer.collapseBelow} dir={footer.dir} />
     </DataTable>
   </div>
 );
@@ -892,7 +906,7 @@ function footerParts(canvasElement: HTMLElement) {
   const box = canvas.getByTestId("footer").getBoundingClientRect();
   const pages = canvas.getByRole("navigation", { name: "Pagination" }).getBoundingClientRect();
   const select = canvas.getByRole("combobox", { name: "Rows per page" }).getBoundingClientRect();
-  const range = canvas.getByText((content) => /^\d+–\d+ of \d+$/.test(content.replace(/[\u2068\u2069]/g, ""))).getBoundingClientRect();
+  const range = visibleMatch(canvas, rangeMatcher).getBoundingClientRect();
   return { box, pages, select, range, stacked: pages.bottom <= select.top + 1 };
 }
 
@@ -907,7 +921,7 @@ export const CentredFooterKeepsTheControlsInTheMiddle: Story = {
       return pages.left + pages.width / 2;
     };
     const clean = (text: string | null) => (text ?? "").replace(/[⁨⁩]/g, "");
-    const range = () => canvas.getByText((content) => /^\d+–\d+ of \d+$/.test(clean(content)));
+    const range = () => visibleMatch(canvas, rangeMatcher);
     await expect(Math.abs(middle() - (footer.left + footer.width / 2))).toBeLessThan(2);
     const select = canvas.getByRole("combobox", { name: "Rows per page" }).getBoundingClientRect();
     await expect(select.left - footer.left).toBeLessThan(4);
@@ -928,7 +942,7 @@ export const CentredFooterStacksWhenNarrow: Story = {
     const box = canvas.getByTestId("footer").getBoundingClientRect();
     const pages = canvas.getByRole("navigation", { name: "Pagination" }).getBoundingClientRect();
     const select = canvas.getByRole("combobox", { name: "Rows per page" }).getBoundingClientRect();
-    const range = canvas.getByText((content) => /^\d+–\d+ of \d+$/.test(content.replace(/[⁨⁩]/g, ""))).getBoundingClientRect();
+    const range = visibleMatch(canvas, rangeMatcher).getBoundingClientRect();
     await expect(pages.bottom).toBeLessThanOrEqual(select.top + 1);
     await expect(Math.abs(select.top - range.top)).toBeLessThan(20);
     await expect(select.left - box.left).toBeLessThan(4);
@@ -947,7 +961,7 @@ export const CentredFooterChangesThePageSizeByRealClick: Story = {
     const canvas = within(canvasElement);
     await realClick(canvas.getByRole("combobox", { name: "Rows per page" }));
     await realClick(await body.findByRole("option", { name: "25" }));
-    await waitFor(() => expect(canvas.getByText((content) => content.replace(/[⁨⁩]/g, "") === "1–25 of 87")).toBeInTheDocument());
+    await waitFor(() => expect(visibleMatch(canvas, (content) => content.replace(/[⁨⁩]/g, "") === "1–25 of 87")).toBeInTheDocument());
     await waitFor(() => expect(canvas.getByText("Showing 25 of 87 rows")).toBeInTheDocument());
   },
 };
@@ -980,5 +994,168 @@ export const CentredFooterCollapseBelowNeverStaysInOneLine: Story = {
     const { stacked, select, range } = footerParts(canvasElement);
     await expect(stacked).toBe(false);
     await expect(Math.abs(select.top - range.top)).toBeLessThan(20);
+  },
+};
+
+// ---- `DataTable.Pagination compactBelow` (ADR-0201): one row below a footer width ----
+const compactFooter = (width: string, footer: { layout?: "split" | "centered"; compactBelow?: "sm" | "md" | "lg" | "xl" | "never"; showSummary?: boolean } = {}) => (
+  <div style={{ inlineSize: width }} data-testid="box">
+    <DataTable<Employee> aria-label="Team" columns={employeeColumns} data={makeEmployees(87)} defaultPageSize={10} pageSizeOptions={[5, 10, 25]}>
+      <DataTable.Pagination compact="never" data-testid="footer" {...footer} />
+    </DataTable>
+  </div>
+);
+
+/** The footer's drawn parts: the page size, the one navigation in the accessibility tree and the ranges that are drawn. */
+function compactParts(canvasElement: HTMLElement) {
+  const canvas = within(canvasElement);
+  const footer = canvas.getByTestId("footer");
+  const select = canvas.getByRole("combobox", { name: "Rows per page" });
+  const pager = canvas.getByRole("navigation", { name: "Pagination" });
+  const ranges = canvas.queryAllByText(rangeMatcher).filter((element: HTMLElement) => element.checkVisibility());
+  return { canvas, footer, select, pager, ranges };
+}
+
+async function expectOneRow(canvasElement: HTMLElement, width: string) {
+  const { footer, select, pager, ranges } = compactParts(canvasElement);
+  const rem = Number.parseFloat(getComputedStyle(document.documentElement).fontSize);
+  const box = footer.getBoundingClientRect();
+  const selectBox = select.getBoundingClientRect();
+  const pagerBox = pager.getBoundingClientRect();
+  await expect(box.width).toBeCloseTo(width.endsWith("rem") ? Number.parseFloat(width) * rem : Number.parseFloat(width), 0);
+  // One row: the page size, then the page controls on the same line, inside the footer; the footer is no taller than its tallest control.
+  await expect(Math.abs(selectBox.top + selectBox.height / 2 - (pagerBox.top + pagerBox.height / 2))).toBeLessThan(8);
+  await expect(selectBox.right).toBeLessThan(pagerBox.left);
+  await expect(pagerBox.right).toBeLessThanOrEqual(box.right + 1);
+  await expect(box.height).toBeLessThan(Math.max(selectBox.height, pagerBox.height) + 8);
+  // The range is between the arrows and is the only one drawn; the numbers and "Page 1 of 9" are not.
+  await expect(ranges).toHaveLength(1);
+  await expect(pager.contains(ranges[0] as HTMLElement)).toBe(true);
+  await expect(within(pager).queryAllByRole("button", { name: /^Page \d+/ })).toHaveLength(0);
+  await expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(window.innerWidth);
+}
+
+export const CompactFooterSplitIsOneRowAtAPhoneWidth: Story = {
+  name: "Compact footer — the split layout is one row in a 20rem (320px) and a 21.4rem (343px) footer: the page size, then the range between the arrows — layout test",
+  render: () => compactFooter("20rem"),
+  play: async ({ canvasElement }) => {
+    await expectOneRow(canvasElement, "20rem");
+    // The widest range ("81–87 of 87") in a footer a phone gives it: still one row.
+    for (let index = 0; index < 8; index += 1) await userEvent.click(within(canvasElement).getByRole("button", { name: "Next page" }));
+    await waitFor(() => expect(compactParts(canvasElement).ranges[0]?.textContent?.replace(/[⁨⁩]/g, "")).toBe("81–87 of 87"));
+    await expectOneRow(canvasElement, "20rem");
+  },
+};
+
+export const CompactFooterCentredIsOneRowAtAPhoneWidth: Story = {
+  name: "Compact footer — the centred layout is one row in a 20rem footer, where it would otherwise stack in three — layout test",
+  render: () => compactFooter("20rem", { layout: "centered" }),
+  play: async ({ canvasElement }) => {
+    await expectOneRow(canvasElement, "20rem");
+  },
+};
+
+export const CompactFooterSplitIsOneRowIn343px: Story = {
+  name: "Compact footer — the split layout is one row in a 343px footer (a 375px phone less its gutters) — layout test",
+  render: () => compactFooter("343px"),
+  play: async ({ canvasElement }) => {
+    await expectOneRow(canvasElement, "343px");
+  },
+};
+
+export const CompactFooterCentredIsOneRowIn343px: Story = {
+  name: "Compact footer — the centred layout is one row in a 343px footer — layout test",
+  render: () => compactFooter("343px", { layout: "centered" }),
+  play: async ({ canvasElement }) => {
+    await expectOneRow(canvasElement, "343px");
+  },
+};
+
+/** From the step up the footer is as it was: the numbered pager and the separate range are drawn, and the compact pager (still in the page) is not. */
+async function expectUnchanged(canvasElement: HTMLElement) {
+  const { canvas, pager, ranges } = compactParts(canvasElement);
+  await expect(canvas.getByRole("button", { name: "Page 3" })).toBeVisible();
+  await expect(canvas.queryAllByText(rangeMatcher)).toHaveLength(2);
+  await expect(ranges).toHaveLength(1);
+  // The drawn range is outside the pager.
+  await expect(pager.contains(ranges[0] as HTMLElement)).toBe(false);
+}
+
+export const SplitFooterIsUnchangedFromTheStepUp: Story = {
+  name: "Compact footer — from the step up (40rem) the split footer has the numbered pager and the separate range as before — layout test",
+  render: () => compactFooter("40rem"),
+  play: async ({ canvasElement }) => {
+    await expectUnchanged(canvasElement);
+  },
+};
+
+export const CentredFooterIsUnchangedFromTheStepUp: Story = {
+  name: "Compact footer — from the step up (40rem) the centred footer has the numbered pager and the separate range as before — layout test",
+  render: () => compactFooter("48rem", { layout: "centered" }),
+  play: async ({ canvasElement }) => {
+    await expectUnchanged(canvasElement);
+  },
+};
+
+export const CompactBelowNeverKeepsTheLayoutAndDrawsOnePager: Story = {
+  name: "Compact footer — compactBelow \"never\" keeps the footer as it was at 20rem and draws only one pager — layout test",
+  render: () => compactFooter("20rem", { compactBelow: "never" }),
+  play: async ({ canvasElement }) => {
+    const { footer, pager } = compactParts(canvasElement);
+    await expect(footer.querySelector('[style*="display: none"]')).toBeNull();
+    await expect(within(pager).getAllByRole("button", { name: /^Page \d+/ }).length + within(pager).queryAllByText(/Page 1 of/).length).toBeGreaterThan(0);
+  },
+};
+
+export const CompactBelowLgIsOneRowIn60rem: Story = {
+  name: "Compact footer — compactBelow \"lg\" makes a 60rem footer one row with the range between the arrows — layout test",
+  render: () => compactFooter("60rem", { compactBelow: "lg", layout: "centered" }),
+  play: async ({ canvasElement }) => {
+    await expectOneRow(canvasElement, "60rem");
+  },
+};
+
+export const CompactFooterNextAndPageSizeByRealClick: Story = {
+  tags: ["!dev"],
+  name: "Compact footer — a real click on Next turns the page and the range follows with focus staying on Next, and the page size changes by a real click — interaction test",
+  render: () => compactFooter("20rem"),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const next = canvas.getByRole("button", { name: "Next page" });
+    await realClick(next);
+    await waitFor(() => expect(compactParts(canvasElement).ranges[0]?.textContent?.replace(/[⁨⁩]/g, "")).toBe("11–20 of 87"));
+    await expect(canvas.getByRole("button", { name: "Next page" })).toHaveFocus();
+    await realClick(canvas.getByRole("combobox", { name: "Rows per page" }));
+    await realClick(await body.findByRole("option", { name: "25" }));
+    await waitFor(() => expect(compactParts(canvasElement).ranges[0]?.textContent?.replace(/[⁨⁩]/g, "")).toBe("1–25 of 87"));
+    await waitFor(() => expect(canvas.getByText("Showing 25 of 87 rows")).toBeInTheDocument());
+  },
+};
+
+export const CompactFooterKeepsFocusWhenItCrossesTheStep: Story = {
+  tags: ["!dev"],
+  name: "Compact footer — focus on Next stays on Next when the footer narrows below the step and when it widens again, and a focused page number moves to Next — interaction test",
+  render: () => compactFooter("60rem"),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const box = canvas.getByTestId("box");
+    const visibleNext = () => canvas.getAllByRole("button", { name: "Next page" }).find((button: HTMLElement) => button.checkVisibility()) as HTMLElement;
+    // Next in the numbered pager has focus (a real click), then the footer narrows to a phone's width.
+    await realClick(visibleNext());
+    await waitFor(() => expect(visibleNext()).toHaveFocus());
+    const wideNext = visibleNext();
+    box.style.inlineSize = "20rem";
+    await waitFor(() => expect(wideNext.checkVisibility()).toBe(false));
+    await waitFor(() => expect(visibleNext()).toHaveFocus(), { timeout: 3000 });
+    await expect(visibleNext()).not.toBe(wideNext);
+    // And back: focus goes back to the numbered pager's Next.
+    box.style.inlineSize = "60rem";
+    await waitFor(() => expect(visibleNext()).toHaveFocus(), { timeout: 3000 });
+    await expect(visibleNext()).toBe(wideNext);
+    // A focused page number has no counterpart in the compact pager: focus goes to Next.
+    await realClick(canvas.getByRole("button", { name: "Page 3" }));
+    box.style.inlineSize = "20rem";
+    await waitFor(() => expect(visibleNext()).toHaveFocus(), { timeout: 3000 });
+    box.style.inlineSize = "60rem";
   },
 };

@@ -240,6 +240,19 @@ export const CentredFooter: Story = {
   ),
 };
 
+export const CompactFooter: Story = {
+  name: "A footer that is one row on a phone",
+  parameters: { docs: { source: { code: dataTableSnippets.compactFooter } } },
+  render: ({ maxHeight, ...args }) => (
+    // A phone's width: below `compactBelow` the footer is one row, whatever the window is.
+    <div style={{ inlineSize: "20rem", maxInlineSize: "100%" }}>
+      <DataTable<Employee> {...args} maxHeight={maxHeight || undefined} data={makeEmployees(87)} defaultPageSize={10} pageSizeOptions={[5, 10, 25]}>
+        <DataTable.Pagination />
+      </DataTable>
+    </div>
+  ),
+};
+
 export const WithToolbar: Story = {
   name: "With a toolbar and paging",
   parameters: { docs: { source: { code: dataTableSnippets.withToolbar } } },

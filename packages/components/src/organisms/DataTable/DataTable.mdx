@@ -111,6 +111,7 @@ export const columnMenuPropOrder = ["variant", "size", "icon", "align", "dir", "
 export const paginationPropOrder = [
   "layout",
   "collapseBelow",
+  "compactBelow",
   "showSummary",
   "showPageSize",
   "size",
@@ -265,7 +266,7 @@ and the last column still drawn can't be turned off. Place it anywhere in the ta
 
 The footer: the page controls, "1–10 of 47" and a page size select, read from the table's own page. Its presence turns paging
 on. It takes `Pagination`'s presentation props; the page, the page count and the change handler come from the table. `layout` is `"split"` (the default: the range and the
-page size at the start, the controls at the end) or `"centered"` (the page size at the start, the controls centred and the range at the end, stacking below `collapseBelow`).
+page size at the start, the controls at the end) or `"centered"` (the page size at the start, the controls centred and the range at the end, stacking below `collapseBelow`). Below `compactBelow` (the footer's own width, `"sm"`, 40rem, by default) both layouts are one row, for a phone.
 
 <PropertiesTable of={PaginationStories} order={paginationPropOrder} />
 
@@ -328,6 +329,14 @@ room, whatever the window says; in this layout the part draws a box around the f
 table ("Showing 25 of 87 rows"), as with the default layout.
 
 <Canvas of={DataTableStories.CentredFooter} />
+
+### A footer that is one row on a phone
+
+Below `compactBelow` (`"sm"`, 40rem, by default; `"md"` to `"xl"`, or `"never"`) the footer of either layout is one row: the page size at the start, then the page controls with the range between the arrows ("‹ 1–10 of 87 ›"). The page numbers, "Page 1 of 9" and the separate range are not drawn there, and the row needs about 225px, so it fits a 320px phone. It is a container query on the footer's own width, so a table beside a sidebar follows the room it has; both layouts draw a box around the footer that is the container, and it takes `className`, `style`, `id` and `data-testid`. With `showSummary` off the controls between the arrows read "Page 1 of 9". A page change is announced with the range ("11–20 of 87"). `compactBelow="never"` keeps the footer as it is at every width and draws only one pager.
+
+The part draws two pagers and CSS shows one: the compact one is hidden by an inline `display: none` that the stylesheet overrides below the step, so the accessibility tree, the tab order, a print and a server render hold one. A text query in a test finds the range twice; read the one that is drawn. If keyboard focus is in the pager being hidden when the footer crosses the step, it moves to the control with the same name in the other (a page number moves to Next).
+
+<Canvas of={DataTableStories.CompactFooter} />
 
 ### With a toolbar and paging
 

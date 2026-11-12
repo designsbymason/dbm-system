@@ -461,7 +461,7 @@ export interface DataTablePaginationProps
    * How the footer is arranged. `"split"` puts the range and the page size at the start and the page controls at the end, wrapping when there is no
    * room. `"centered"` puts the page size at the start, the page controls in the middle (centred whatever the range says) and the range at the end;
    * below `collapseBelow` the controls take the first row and the page size and the range sit at the two ends under them. `showSummary` and
-   * `showPageSize` leave their column empty. In `"centered"` the part draws a box around the footer, which holds `className`, `style`, `id` and `data-testid`.
+   * `showPageSize` leave their column empty. The part draws a box around the footer, which holds `className`, `style`, `id` and `data-testid`.
    * @default 'split'
    */
   layout?: "split" | "centered";
@@ -471,6 +471,14 @@ export interface DataTablePaginationProps
    * @default 'md'
    */
   collapseBelow?: "sm" | "md" | "lg" | "xl" | "never";
+  /**
+   * The width of the footer, below which both layouts are one row: the page size at the start, then the page controls with the range between the arrows
+   * ("‹ 1–10 of 47 ›", the page numbers and "Page 1 of 9" left out), so a phone keeps the footer on one line. `"sm"` (40rem) to `"xl"` (80rem), or
+   * `"never"` to keep the layout as it is at every width (and draw only one pager). A container query on the footer's own width, so it follows the room
+   * the table has, not the window's. With `showSummary` off the controls between the arrows read "Page 1 of 9".
+   * @default 'sm'
+   */
+  compactBelow?: "sm" | "md" | "lg" | "xl" | "never";
   /**
    * Shows "1–10 of 47" beside the page numbers.
    * @default true

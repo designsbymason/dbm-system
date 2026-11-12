@@ -18,6 +18,10 @@ const styles_detailRow = () => (styles as Record<string, string>).detailRow as s
 
 const rangeText = (text: string) => (content: string) => content.replace(/[\u2068\u2069]/g, "") === text;
 
+/** The range text that is drawn, not the copy the compact pager holds behind an inline `display: none` (`compactBelow`): a text query sees both. */
+const visibleText = (matcher: Parameters<typeof screen.queryAllByText>[0]) =>
+  screen.queryAllByText(matcher).find((element) => !element.closest('[style*="display: none"]')) ?? null;
+
 interface Person {
   id: string;
   name: string;
@@ -308,10 +312,10 @@ describe("DataTable", () => {
       );
       expect(names()).toHaveLength(10);
       expect(names()[0]).toBe("Person 01");
-      expect(screen.getByText(rangeText("1–10 of 25"))).toBeInTheDocument();
+      expect(visibleText(rangeText("1–10 of 25"))).toBeInTheDocument();
       await user.click(screen.getByRole("button", { name: "Next page" }));
       expect(names()[0]).toBe("Person 11");
-      expect(screen.getByText(rangeText("11–20 of 25"))).toBeInTheDocument();
+      expect(visibleText(rangeText("11–20 of 25"))).toBeInTheDocument();
     });
 
     it("sorts the whole set before taking the page", async () => {
@@ -350,7 +354,7 @@ describe("DataTable", () => {
       await user.click(await screen.findByRole("option", { name: "25" }));
       expect(onPageSizeChange).toHaveBeenCalledWith(25);
       expect(names()).toHaveLength(25);
-      expect(screen.getByText(rangeText("1–25 of 25"))).toBeInTheDocument();
+      expect(visibleText(rangeText("1–25 of 25"))).toBeInTheDocument();
     });
 
     it("holds a page that is past the end to the last page", () => {
@@ -359,7 +363,7 @@ describe("DataTable", () => {
           <DataTable.Pagination compact="never" />
         </DataTable>,
       );
-      expect(screen.getByText(rangeText("21–25 of 25"))).toBeInTheDocument();
+      expect(visibleText(rangeText("21–25 of 25"))).toBeInTheDocument();
     });
 
     it("draws data as given in manual mode and takes the count from totalCount", async () => {
@@ -371,7 +375,7 @@ describe("DataTable", () => {
         </DataTable>,
       );
       expect(names()).toHaveLength(10);
-      expect(screen.getByText(rangeText("1–10 of 95"))).toBeInTheDocument();
+      expect(visibleText(rangeText("1–10 of 95"))).toBeInTheDocument();
       await user.click(screen.getByRole("button", { name: "Next page" }));
       expect(onPageChange).toHaveBeenCalledWith(2);
     });
@@ -550,7 +554,7 @@ describe("DataTable", () => {
           <DataTable.Pagination compact="never" />
         </DataTable>,
       );
-      expect(screen.getByText(rangeText("1–2 of 4")).textContent).toBe("\u20681\u2069–\u20682\u2069 of \u20684\u2069");
+      expect(visibleText(rangeText("1–2 of 4"))?.textContent).toBe("\u20681\u2069–\u20682\u2069 of \u20684\u2069");
     });
 
     it("gives the page size select the footer's direction", () => {
@@ -591,7 +595,7 @@ describe("DataTable", () => {
           />
         </DataTable>,
       );
-      expect(screen.getByText("1 à 2 sur 4")).toBeInTheDocument();
+      expect(visibleText("1 à 2 sur 4")).toBeInTheDocument();
       expect(screen.getByRole("combobox", { name: "Lignes par page" })).toBeInTheDocument();
     });
 
@@ -601,7 +605,7 @@ describe("DataTable", () => {
           <DataTable.Pagination compact="never" formatNumber={(value) => `#${value}`} />
         </DataTable>,
       );
-      expect(screen.getByText(rangeText("#1–#2 of #4"))).toBeInTheDocument();
+      expect(visibleText(rangeText("#1–#2 of #4"))).toBeInTheDocument();
     });
 
     it("keeps a default footer label when it is given as undefined", () => {
@@ -1321,28 +1325,31 @@ describe("DataTable", () => {
       expect(box).toHaveClass("mine", styles.paginationBox as string);
       expect(box).toHaveAttribute("id", "foot");
       expect(box.style.color).toBe("red");
-      const order = [screen.getByRole("combobox", { name: "Rows per page" }), screen.getByRole("navigation", { name: "Pagination" }), screen.getByText(rangeText("1–10 of 37"))];
+      const order = [screen.getByRole("combobox", { name: "Rows per page" }), screen.getByRole("navigation", { name: "Pagination" }), visibleText(rangeText("1–10 of 37"))];
       for (let index = 1; index < order.length; index += 1) {
         expect(order[index - 1]!.compareDocumentPosition(order[index]!) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
       }
     });
 
-    it("keeps the split layout's DOM when asked for nothing", () => {
+    it("draws the split footer inside a box that holds the attributes (the container the compact form asks about)", () => {
       render(
         <DataTable<Person> columns={columns} data={many} aria-label="People" defaultPageSize={10}>
-          <DataTable.Pagination compact="never" data-testid="footer" />
+          <DataTable.Pagination compact="never" data-testid="footer" className="mine" />
         </DataTable>,
       );
-      expect(screen.getByTestId("footer")).toHaveClass(styles.pagination as string);
-      expect(screen.getByTestId("footer")).not.toHaveClass(styles.paginationBox as string);
+      const box = screen.getByTestId("footer");
+      expect(box).toHaveClass(styles.paginationBox as string);
+      expect(box).toHaveClass("mine");
+      expect(box.firstElementChild).toHaveClass(styles.pagination as string);
     });
 
     it("leaves the page size's or the range's column empty rather than moving the controls", () => {
       centred({ showSummary: false, showPageSize: false });
       expect(screen.queryByRole("combobox", { name: "Rows per page" })).toBeNull();
-      expect(screen.queryByText(rangeText("1–10 of 37"))).toBeNull();
+      expect(visibleText(rangeText("1–10 of 37"))).toBeNull();
       expect(screen.getByRole("navigation", { name: "Pagination" })).toBeInTheDocument();
-      expect(screen.getByTestId("footer").querySelector(`.${styles.paginationCentered}`)?.children).toHaveLength(3);
+      // The page size, the controls, the compact pager held behind an inline `display: none`, and the range.
+      expect(screen.getByTestId("footer").querySelector(`.${styles.paginationCentered}`)?.children).toHaveLength(4);
     });
 
     it("marks its collapse step", () => {
@@ -1356,13 +1363,13 @@ describe("DataTable", () => {
       await user.click(screen.getByRole("combobox", { name: "Rows per page" }));
       await user.click(await screen.findByRole("option", { name: "25" }));
       expect(await screen.findByText("Showing 25 of 37 rows")).toBeInTheDocument();
-      expect(screen.getByText(rangeText("1–25 of 37"))).toBeInTheDocument();
+      expect(visibleText(rangeText("1–25 of 37"))).toBeInTheDocument();
     });
 
     it("takes the labels, and the formatted numbers, as the split footer does", () => {
       centred({ labels: { pageSize: "Per page", summary: (first: number, last: number, total: number) => `${first} to ${last} of ${total}` } });
       expect(screen.getByRole("combobox", { name: "Per page" })).toBeInTheDocument();
-      expect(screen.getByText("1 to 10 of 37")).toBeInTheDocument();
+      expect(visibleText("1 to 10 of 37")).toBeInTheDocument();
     });
 
     it("warns once in development that collapseBelow does nothing with the split layout, and not for the centred one", () => {
@@ -1381,6 +1388,62 @@ describe("DataTable", () => {
 
     it("has no accessibility violations", async () => {
       const { container } = centred();
+      expect(await axe(container)).toHaveNoViolations();
+    });
+  });
+
+  describe("the one-row footer below a width (ADR-0201)", () => {
+    const many: Person[] = Array.from({ length: 37 }, (_, index) => ({ id: `r${index}`, name: `Person ${index + 1}`, age: index }));
+    const footer = (props: Record<string, unknown> = {}, table: Partial<DataTableProps<Person>> = {}) =>
+      render(
+        <DataTable<Person> columns={columns} data={many} aria-label="People" defaultPageSize={10} {...table}>
+          <DataTable.Pagination data-testid="footer" {...props} />
+        </DataTable>,
+      );
+    /** The compact pager's wrapper: held in the page behind an inline `display: none` that the stylesheet overrides below the step. */
+    const compactWrapper = () => screen.getByTestId("footer").querySelector<HTMLElement>('[style*="display: none"]') as HTMLElement;
+
+    it("holds a second, always-compact pager whose summary is the range, hidden until the stylesheet shows it", () => {
+      footer();
+      const wrapper = compactWrapper();
+      expect(wrapper).toBeInTheDocument();
+      // Hidden from the accessibility tree and the text a person sees, so a render without the stylesheet shows one pager.
+      expect(screen.getAllByRole("navigation", { name: "Pagination" })).toHaveLength(1);
+      expect(within(wrapper).getByText(rangeText("1–10 of 37"))).toBeInTheDocument();
+    });
+
+    it("turns the page from the compact pager and says the new range", async () => {
+      const user = userEvent.setup();
+      footer();
+      await user.click(within(compactWrapper()).getByRole("button", { name: "Next page", hidden: true }));
+      expect(within(compactWrapper()).getByText(rangeText("11–20 of 37"))).toBeInTheDocument();
+      expect(visibleText(rangeText("11–20 of 37"))).toBeInTheDocument();
+    });
+
+    it("reads 'Page 1 of 4' in the compact pager when the range is turned off", () => {
+      footer({ showSummary: false });
+      expect(within(compactWrapper()).getByText("Page 1 of 4")).toBeInTheDocument();
+      expect(visibleText(rangeText("1–10 of 37"))).toBeNull();
+    });
+
+    it("draws only one pager with compactBelow never, in either layout", () => {
+      const { unmount } = footer({ compactBelow: "never" });
+      expect(screen.getByTestId("footer").querySelector('[style*="display: none"]')).toBeNull();
+      unmount();
+      footer({ compactBelow: "never", layout: "centered" });
+      expect(screen.getByTestId("footer").querySelector('[style*="display: none"]')).toBeNull();
+    });
+
+    it("marks its step on the footer in both layouts, 'sm' by default", () => {
+      const { unmount } = footer();
+      expect(screen.getByTestId("footer").querySelector(`.${styles.pagination}`)).toHaveClass(styles.compactSm as string);
+      unmount();
+      footer({ layout: "centered", compactBelow: "lg" });
+      expect(screen.getByTestId("footer").querySelector(`.${styles.paginationCentered}`)).toHaveClass(styles.compactLg as string);
+    });
+
+    it("has no accessibility violations with both pagers in the page", async () => {
+      const { container } = footer();
       expect(await axe(container)).toHaveNoViolations();
     });
   });

@@ -46,6 +46,15 @@ export const dataTableSnippets = {
   <DataTable.Pagination layout="centered" />
 </DataTable>`,
 
+  compactFooter: `${columnsNote}
+{/* Below compactBelow (the footer's own width: "sm", 40rem, by default) the footer is one row in both layouts: the page size at the start, then the page
+    controls with the range between the arrows ("‹ 1–10 of 87 ›"), so a phone keeps it on one line. compactBelow="never" keeps the footer as it is at every width. */}
+<div style={{ inlineSize: "20rem" }}>
+  <DataTable aria-label="Team" columns={columns} data={rows} defaultPageSize={10} pageSizeOptions={[5, 10, 25]}>
+    <DataTable.Pagination compactBelow="sm" />
+  </DataTable>
+</div>`,
+
   withToolbar: `${columnsNote}
 {/* query, setQuery and the filtered rows are the app's own state. */}
 <DataTable

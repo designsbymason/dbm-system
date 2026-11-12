@@ -1,6 +1,7 @@
 import { ColumnsIcon } from "@dbm-system/icons";
 import { cx, mergeDefined } from "@dbm-system/utils";
-import { forwardRef, useContext, useRef } from "react";
+import { forwardRef, useCallback, useContext, useEffect, useRef, useState } from "react";
+import type { FocusEvent } from "react";
 import { Button } from "../../atoms/Button";
 import { Pagination } from "../../molecules/Pagination";
 import { Select } from "../../molecules/Select";
@@ -18,12 +19,63 @@ import type {
 } from "./DataTable.types";
 import { rangeOf } from "./DataTable.page";
 import { useDirection } from "../../atoms/DirectionProvider";
+import { warnOnce } from "../../internal/warnOnce";
 
 // Each number is wrapped in a bidirectional isolate (U+2068 … U+2069): in a script with right-to-left digits the dash between two
 // numbers joins their run and a left-to-right page reads "1–10" as "10-1" (`05-component-api-conventions.md` §3).
 const isolate = (text: string) => `\u2068${text}\u2069`;
 
 const collapseClass = { sm: styles.collapseSm, md: styles.collapseMd, lg: styles.collapseLg, xl: styles.collapseXl, never: undefined } as const;
+const compactClass = { sm: styles.compactSm, md: styles.compactMd, lg: styles.compactLg, xl: styles.compactXl, never: undefined } as const;
+
+/** The widths the compact step names, in rem (the breakpoint tokens `sm` to `xl`; a container query cannot read a custom property, so the stylesheet writes them out too). */
+const compactStepRem = { sm: 40, md: 48, lg: 64, xl: 80 } as const;
+
+/**
+ * Keeps keyboard focus in the footer when it crosses the compact step. The numbered pager and the compact one are both in the page, one hidden by CSS, so a
+ * control that has focus in the one being hidden would drop focus to the top of the document. The box's focus events say which control had it (not read at
+ * the moment of the change, when the browser may already have dropped it), and once the width has crossed the step and focus has gone, it moves to the
+ * control with the same name in the other pager (Previous, Next, First, Last), or to the last control (Next) for one that has no counterpart (a page number).
+ */
+function useCompactFocusHand(box: HTMLElement | null, step: keyof typeof compactStepRem | "never") {
+  const lastFocus = useRef<HTMLElement | null>(null);
+  const narrow = useRef<boolean | null>(null);
+  const onFocus = useCallback((event: FocusEvent<HTMLElement>) => {
+    lastFocus.current = event.target;
+  }, []);
+  const onBlur = useCallback((event: FocusEvent<HTMLElement>) => {
+    // Focus going somewhere outside the footer ends the memory; focus dropped by something being hidden (no related target) does not.
+    if (event.relatedTarget instanceof Node && !event.currentTarget.contains(event.relatedTarget)) lastFocus.current = null;
+  }, []);
+  useEffect(() => {
+    if (!box || step === "never" || typeof ResizeObserver === "undefined") return undefined;
+    const observer = new ResizeObserver(() => {
+      const rem = Number.parseFloat(getComputedStyle(document.documentElement).fontSize) || 16;
+      const nowNarrow = box.getBoundingClientRect().width < compactStepRem[step] * rem;
+      const before = narrow.current;
+      narrow.current = nowNarrow;
+      if (before === null || before === nowNarrow) return;
+      requestAnimationFrame(() => {
+        const from = lastFocus.current;
+        if (!from || !box.contains(from) || from.checkVisibility()) return;
+        // Focus is still on the hidden control or has been dropped to the page (the browser drops it at its next style pass, which may not have run yet);
+        // anywhere else means the reader moved it on purpose.
+        const active = document.activeElement;
+        if (active && active !== document.body && active !== from) return;
+        const buttons = [...box.querySelectorAll<HTMLElement>("button")].filter((button) => button.checkVisibility() && !button.hasAttribute("disabled"));
+        const name = from.getAttribute("aria-label");
+        const target = (name ? buttons.find((button) => button.getAttribute("aria-label") === name) : undefined) ?? buttons.filter((button) => button.closest("nav")).at(-1);
+        if (target) {
+          target.focus();
+          lastFocus.current = target;
+        }
+      });
+    });
+    observer.observe(box);
+    return () => observer.disconnect();
+  }, [box, step]);
+  return { onFocus, onBlur };
+}
 
 const makePaginationLabels = (formatNumber: (value: number) => string): DataTablePaginationLabels => ({
   summary: (first, last, total) => `${isolate(formatNumber(first))}–${isolate(formatNumber(last))} of ${isolate(formatNumber(total))}`,
@@ -106,6 +158,7 @@ const DataTablePagination = forwardRef<HTMLDivElement, DataTablePaginationProps>
     {
       layout = "split",
       collapseBelow: collapseBelowProp,
+      compactBelow = "sm",
       showSummary = true,
       showPageSize = true,
       labels: labelOverrides,
@@ -122,11 +175,19 @@ const DataTablePagination = forwardRef<HTMLDivElement, DataTablePaginationProps>
     ref,
   ) => {
     const dir = useDirection(dirProp);
+    // The footer's own box, held in state so the focus handoff can watch it, and handed on to the forwarded ref.
+    const [box, setBox] = useState<HTMLDivElement | null>(null);
+    const setBoxRef = useCallback(
+      (node: HTMLDivElement | null) => {
+        setBox(node);
+        if (typeof ref === "function") ref(node);
+        else if (ref) ref.current = node;
+      },
+      [ref],
+    );
     const collapseBelow = collapseBelowProp ?? "md";
-    const warnedStep = useRef(false);
-    if (process.env.NODE_ENV !== "production" && collapseBelowProp !== undefined && layout !== "centered" && !warnedStep.current) {
-      warnedStep.current = true;
-      console.warn('DataTable.Pagination: `collapseBelow` has no effect with `layout="split"`; the split footer wraps by itself. Set `layout="centered"` to use it.');
+    if (collapseBelowProp !== undefined && layout !== "centered") {
+      warnOnce('DataTable.Pagination: `collapseBelow` has no effect with `layout="split"`; the split footer wraps by itself. Set `layout="centered"` to use it.');
     }
     const table = useContext(DataTableContext);
     if (!table) throw new Error("DataTable.Pagination must be used inside a DataTable, as one of its children.");
@@ -160,7 +221,6 @@ const DataTablePagination = forwardRef<HTMLDivElement, DataTablePaginationProps>
     const pages = (
       <Pagination
         {...paginationProps}
-        className={layout === "centered" ? styles.paginationPages : undefined}
         size={size}
         pageCount={table.pageCount}
         value={table.page}
@@ -169,31 +229,63 @@ const DataTablePagination = forwardRef<HTMLDivElement, DataTablePaginationProps>
         formatNumber={formatNumber}
       />
     );
+    // Below `compactBelow` the footer is one row: the page size, then the page controls with the range between the arrows (a second pager, always compact,
+    // whose summary is the range, and which also says it when the page changes). A container query cannot change what is drawn, so both are in the page: the
+    // numbered one shows from the step up, and this one is hidden by an inline style (so a render without the stylesheet, a server render and a print show
+    // only the first) that the stylesheet overrides below the step. Left out entirely with `compactBelow="never"`.
+    const compactPages =
+      compactBelow === "never" ? null : (
+        <Pagination
+          {...paginationProps}
+          compact="always"
+          size={size}
+          pageCount={table.pageCount}
+          value={table.page}
+          onValueChange={table.setPage}
+          labels={{ ...paginationLabels, ...(showSummary ? { summary: () => summary } : undefined) }}
+          formatNumber={formatNumber}
+        />
+      );
+    const compactClassName = compactClass[compactBelow];
+    const handoff = useCompactFocusHand(box, compactBelow);
 
     if (layout === "centered") {
       // The box around the footer is the container the narrow layout asks about (an element cannot query itself); the grid inside is the footer.
       return (
-        <div ref={ref} id={id} data-testid={dataTestId} className={cx(styles.paginationBox, className)} style={style}>
-          <div className={cx(styles.paginationCentered, collapseClass[collapseBelow])}>
+        <div ref={setBoxRef} id={id} data-testid={dataTestId} className={cx(styles.paginationBox, className)} style={style} onFocus={handoff.onFocus} onBlur={handoff.onBlur}>
+          <div className={cx(styles.paginationCentered, collapseClass[collapseBelow], compactClassName)}>
             <div className={styles.paginationSize}>{showPageSize && pageSizeSelect}</div>
-            {pages}
+            <div className={styles.paginationPages}>{pages}</div>
+            {compactPages && (
+              <div className={styles.paginationPagesCompact} style={{ display: "none" }}>
+                {compactPages}
+              </div>
+            )}
             <span className={styles.paginationRange}>{showSummary && summary}</span>
           </div>
         </div>
       );
     }
 
+    // The box around the footer is the container the compact form asks about (an element cannot query itself), as in `centered`.
     return (
-      <div ref={ref} id={id} data-testid={dataTestId} className={cx(styles.pagination, className)} style={style}>
-        <div className={styles.paginationMeta}>
-          {showSummary && (
-            <span className={styles.summary} style={{ minInlineSize: `${widest}ch` }}>
-              {summary}
-            </span>
+      <div ref={setBoxRef} id={id} data-testid={dataTestId} className={cx(styles.paginationBox, className)} style={style} onFocus={handoff.onFocus} onBlur={handoff.onBlur}>
+        <div className={cx(styles.pagination, compactClassName)}>
+          <div className={styles.paginationMeta}>
+            {showSummary && (
+              <span className={styles.summary} style={{ minInlineSize: `${widest}ch` }}>
+                {summary}
+              </span>
+            )}
+            {showPageSize && pageSizeSelect}
+          </div>
+          <div className={styles.pagerWide}>{pages}</div>
+          {compactPages && (
+            <div className={styles.pagerCompact} style={{ display: "none" }}>
+              {compactPages}
+            </div>
           )}
-          {showPageSize && pageSizeSelect}
         </div>
-        {pages}
       </div>
     );
   },

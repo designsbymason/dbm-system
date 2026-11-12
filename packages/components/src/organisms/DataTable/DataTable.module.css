@@ -204,6 +204,17 @@ tr[data-selected] > .selectCell {
   container-type: inline-size;
 }
 
+/* The two pagers: the numbered one (or the summary on a phone, as `Pagination` decides) is drawn from the step up; the compact one, with the range between
+   the arrows, is drawn below `compactBelow` (hidden by an inline style until then, so the stylesheet overrides it with `!important`). In the split layout
+   the wrappers take no box of their own. */
+.pagerWide {
+  display: contents;
+}
+
+.pagerCompact {
+  display: contents;
+}
+
 .paginationCentered {
   align-items: center;
   color: var(--dbm-text-secondary);
@@ -257,6 +268,89 @@ tr[data-selected] > .selectCell {
 @container not (min-width: 80rem) {
   .collapseXl {
     grid-template-areas: "pages pages" "size range";
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+}
+
+.paginationPagesCompact {
+  grid-area: pages;
+  justify-self: end;
+}
+
+/* Below `compactBelow` the footer is one row in both layouts: the page size at the start, then the compact pager (the range between the arrows) at the end,
+   and the separate range and numbered pager are not drawn. After the collapse rules above, and doubled in specificity, so it wins where both apply. */
+@container not (min-width: 40rem) {
+  .compactSm .pagerWide,
+  .compactSm .paginationPages,
+  .compactSm .paginationRange,
+  .compactSm .summary {
+    display: none;
+  }
+
+  .compactSm .pagerCompact,
+  .compactSm .paginationPagesCompact {
+    display: block !important;
+  }
+
+  .paginationCentered.compactSm {
+    grid-template-areas: "size pages";
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+}
+
+@container not (min-width: 48rem) {
+  .compactMd .pagerWide,
+  .compactMd .paginationPages,
+  .compactMd .paginationRange,
+  .compactMd .summary {
+    display: none;
+  }
+
+  .compactMd .pagerCompact,
+  .compactMd .paginationPagesCompact {
+    display: block !important;
+  }
+
+  .paginationCentered.compactMd {
+    grid-template-areas: "size pages";
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+}
+
+@container not (min-width: 64rem) {
+  .compactLg .pagerWide,
+  .compactLg .paginationPages,
+  .compactLg .paginationRange,
+  .compactLg .summary {
+    display: none;
+  }
+
+  .compactLg .pagerCompact,
+  .compactLg .paginationPagesCompact {
+    display: block !important;
+  }
+
+  .paginationCentered.compactLg {
+    grid-template-areas: "size pages";
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+}
+
+@container not (min-width: 80rem) {
+  .compactXl .pagerWide,
+  .compactXl .paginationPages,
+  .compactXl .paginationRange,
+  .compactXl .summary {
+    display: none;
+  }
+
+  .compactXl .pagerCompact,
+  .compactXl .paginationPagesCompact {
+    display: block !important;
+  }
+
+  .paginationCentered.compactXl {
+    grid-template-areas: "size pages";
     grid-template-columns: auto minmax(0, 1fr);
   }
 }

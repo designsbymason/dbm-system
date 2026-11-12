@@ -117,9 +117,9 @@ describe("the data-table list page", () => {
     const user = userEvent.setup();
     render(<Page />);
     await loaded();
-    expect(screen.getByText("1–10 of 37")).toBeInTheDocument();
+    expect(screen.getAllByText("1–10 of 37").length).toBeGreaterThan(0);
     await user.click(screen.getByRole("button", { name: "Next page" }));
-    await screen.findByText("11–20 of 37");
+    await waitFor(() => expect(screen.getAllByText("11–20 of 37").length).toBeGreaterThan(0));
     await user.click(screen.getByRole("combobox", { name: "Rows per page" }));
     await user.click(await screen.findByRole("option", { name: "25" }));
     await screen.findAllByText("1–25 of 37");
