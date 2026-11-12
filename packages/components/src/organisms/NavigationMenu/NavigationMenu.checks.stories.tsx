@@ -152,6 +152,51 @@ export const PanelsResizeBetweenItems: Story = {
   },
 };
 
+/** A real key press through the Chrome DevTools Protocol: Storybook's `userEvent` types synthetic keys, which skip what a real press does. */
+async function pressRealKey(name: "Enter" | "Space" | "ArrowDown") {
+  const keys = {
+    Enter: { key: "Enter", code: "Enter", windowsVirtualKeyCode: 13, text: "\r" },
+    Space: { key: " ", code: "Space", windowsVirtualKeyCode: 32, text: " " },
+    ArrowDown: { key: "ArrowDown", code: "ArrowDown", windowsVirtualKeyCode: 40 },
+  };
+  const { text, ...key } = keys[name] as { key: string; code: string; windowsVirtualKeyCode: number; text?: string };
+  await send("Input.dispatchKeyEvent", { type: "keyDown", ...key, ...(text ? { text } : {}) });
+  await send("Input.dispatchKeyEvent", { type: "keyUp", ...key });
+}
+
+export const EnterAndSpaceOpenAPanelAndDownEntersItButDoesNotOpenOne: Story = {
+  name: "With real keys, Enter and Space open a panel, the Down arrow then moves into it, and on a closed trigger the Down arrow does not open it but moves to the next trigger",
+  render: () => (
+    <MenuStage>
+      <DemoMenu />
+    </MenuStage>
+  ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const products = canvas.getByRole("button", { name: "Products" });
+    const solutions = canvas.getByRole("button", { name: "Solutions" });
+    await parkPointer();
+    // A closed trigger: the Down arrow is not an opening key. The primitive treats it as it treats Right and moves focus to the next trigger.
+    products.focus();
+    await pressRealKey("ArrowDown");
+    await waitFor(() => expect(solutions).toHaveFocus(), { timeout: 3000 });
+    await expect(products).toHaveAttribute("aria-expanded", "false");
+    await expect(solutions).toHaveAttribute("aria-expanded", "false");
+    // Enter and Space open the panel; with it open the Down arrow moves into it, onto its first link; Escape closes it and hands focus back.
+    for (const key of ["Enter", "Space"] as const) {
+      products.focus();
+      await pressRealKey(key);
+      await waitFor(() => expect(products).toHaveAttribute("aria-expanded", "true"), { timeout: 3000 });
+      await pressRealKey("ArrowDown");
+      await waitFor(() => expect(document.activeElement?.tagName === "A" && canvasElement.contains(document.activeElement)).toBe(true), { timeout: 3000 });
+      await expect(document.activeElement?.textContent).toContain("Analytics");
+      await closeAndWait(canvasElement);
+      await waitFor(() => expect(products).toHaveFocus(), { timeout: 3000 });
+      await waitFor(() => expect(products).toHaveAttribute("aria-expanded", "false"), { timeout: 3000 });
+    }
+  },
+};
+
 export const KeyboardLeavesAndEntersThePanel: Story = {
   name: "Tab goes into the open panel, Escape returns to the trigger, and once closed the triggers are ordinary tab stops",
   render: () => (

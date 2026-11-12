@@ -167,7 +167,7 @@ import { NavigationMenu } from "@dbm-system/components";
 ## Playground
 
 Each demo is drawn inside a dashed box so that an open panel stays inside it and not over this page. Rest the
-pointer on **Products** or press it, and choose a link: in these demos the link you choose becomes the current page, so you can see the current-page look move. With the keyboard, `Enter`, `Space` or the Down arrow opens it and `Escape`
+pointer on **Products** or press it, and choose a link: in these demos the link you choose becomes the current page, so you can see the current-page look move. With the keyboard, `Enter` or `Space` opens it, the Down arrow then moves into the open panel, and `Escape`
 closes it.
 
 <div className="dbm-playground-canvas">
@@ -398,7 +398,7 @@ it is the stacked list, and choosing a link closes the menu.
 - A group heading that is a link names the list of links beneath it. A featured block is a link as a whole when it has an `href`, and plain content when it does not.
 - A panel taller than the room scrolls inside itself, and the browser scrolls a focused link into view.
 - In the vertical form the arrow keys that move between triggers are `ArrowUp` and `ArrowDown`.
-- Keys: `Tab` and `Shift+Tab` move through the triggers and links in order, and `Tab` from an open trigger goes into its panel. `Enter`, `Space` or `ArrowDown` opens a panel; `ArrowLeft` and `ArrowRight` move between the triggers and links of the bar; `Escape` closes the panel and returns focus to its trigger; `Enter` follows a link.
+- Keys: `Tab` and `Shift+Tab` move through the triggers and links in order, and `Tab` from an open trigger goes into its panel. `Enter` or `Space` opens a panel and, with it open, `ArrowDown` moves into it (on a closed trigger `ArrowDown` moves to the next one, like `ArrowRight`); `ArrowLeft` and `ArrowRight` move between the triggers and links of the bar; `Escape` closes the panel and returns focus to its trigger; `Enter` follows a link.
 - The primitive keeps a hidden, focusable stop beside an open trigger to hand focus into the panel. An accessibility checker that runs while a panel is open reports it (`aria-hidden-focus`); the stop is how `Tab` gets into the panel and is gone when the panel closes.
 - The stacked form's panels open and close with a height transition, and a closed one is removed from the page, so its links leave the tab order and the accessibility tree.
 - A link in an exiting panel stays in the page until its exit animation ends, a fraction of a second, as for any animated panel.

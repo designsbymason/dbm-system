@@ -333,8 +333,8 @@ SelectableAnchor.displayName = "NavigationMenu.SelectableAnchor";
  * link that goes straight to a page. It follows the disclosure-navigation pattern (a `<nav>` of a list, buttons with
  * `aria-expanded`), not `role="menu"`: use `Menu` for a list of actions and `Navbar.Group` for a short dropdown of links.
  *
- * Opens on hover (after a short rest), on a press, or with Enter, Space or the Down arrow; `Escape` closes it and returns focus to
- * its trigger. Left and Right move between the triggers and top-level links; `Tab` goes into the open panel.
+ * Opens on hover (after a short rest), on a press, or with Enter or Space; with a panel open the Down arrow moves into it, and `Escape`
+ * closes it and returns focus to its trigger. Left and Right move between the triggers and top-level links; `Tab` goes into the open panel.
  *
  * Drawn on its own it is a bar of triggers. Put it inside `Navbar.Links` and it follows the bar's look, and in the bar's phone menu
  * it becomes the stacked form (`presentation="stacked"`), a vertical list of disclosure buttons, so one set of items serves both.
