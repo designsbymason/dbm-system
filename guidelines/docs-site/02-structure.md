@@ -17,7 +17,7 @@ The site is `https://dbm-system.com` (the apex is canonical; `www` redirects). T
 | `/docs/accessibility-statement` | The WCAG target, the known exceptions, supported browsers | MDX |
 | `/components` | The component index: a table with search, Tier and Category filters and sortable columns | Generated from the manifest |
 | `/components/<name>` | One component (flat, for example `/components/button`) | Manifest for facts, MDX for prose |
-| `/templates`, `/templates/<name>` | The page-level templates | Placeholder until templates exist |
+| `/templates`, `/templates/<name>` | The page-level templates | Placeholder until the site is built; five templates exist (two shells and three example pages) |
 | `/storybook/` | Storybook | The `storybook-static` build |
 | `/manifest.json`, `/llms.txt`, `/llms-full.txt` | The agent files | Generated at build; not committed |
 | `/sitemap.xml`, `/robots.txt`, `/404` | Standard files | Generated |

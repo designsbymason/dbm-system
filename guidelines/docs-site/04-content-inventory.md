@@ -17,7 +17,7 @@ Storybook sources are in `packages/components/src/guides/` and `packages/compone
 | Guides / Icons | `/docs/guides/icons` | Port; the gallery is a hand-kept snapshot of the 35 most-used icons |
 | Foundations (ten pages) | Stay in Storybook, their one home; `/docs/foundations` is a short overview with cards linking to them | They are theme-specific and read `@dbm-system/tokens` through Storybook's Brand and Mode toolbar, which the docs website does not have |
 | Components (115 Docs pages) | Storybook keeps them; `/components/<name>` pages are built from the manifest | Each links to its Storybook page |
-| Templates | `/templates` | None built yet |
+| Templates | `/templates` | Five built in the components package (two shells that ship, `AppShell` and `PageShell`, and three story-only example pages); their docs pages wait for the site |
 
 ## 2. Storybook-only blocks to port or replace
 
@@ -45,7 +45,7 @@ These are in `packages/components/.storybook/blocks/` and depend on Storybook's 
 | Changelog | The publish pipeline (Changesets) |
 | Accessibility statement and browser support | The WCAG target and known exceptions (from the token spec) and the supported browsers (`06-engineering-standards.md` §6) |
 | Component pages | The manifest |
-| Templates index | Placeholder until a template exists |
+| Templates index | Placeholder until the site is built; the templates exist and are listed from Storybook's index |
 | 404 | A short page with a path back |
 
 ## 4. Old links
