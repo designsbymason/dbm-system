@@ -42,7 +42,10 @@ const header = `    <Navbar sticky collapseBelow="md">
 const hero = `      <PageShell.Content width="reading" paddingBlock={16} style={{ display: "grid", gap: "var(--dbm-space-6)", justifyItems: "center", textAlign: "center" }}>
         <Heading level={1} size="3xl">Run your whole team from one place</Heading>
         <Text size="lg" color="secondary">Planning, reporting and automation together.</Text>
-        <Button size="lg" asChild><a href="/signup">Get started</a></Button>
+        <div style={{ display: "flex", flexWrap: "wrap", gap: "var(--dbm-space-3)", justifyContent: "center" }}>
+          <Button size="lg" asChild><a href="/signup">Get started</a></Button>
+          <Button size="lg" variant="secondary" asChild><a href="/contact">Talk to sales</a></Button>
+        </div>
       </PageShell.Content>`;
 
 const features = (cards: number) => `      <PageShell.Content as="section" aria-labelledby="features-heading" width="dashboard" paddingBlock={12} style={{ display: "grid", gap: "var(--dbm-space-8)" }}>
@@ -82,11 +85,14 @@ ${[
         </Grid>
       </PageShell.Content>`;
 
-const proof = `      <PageShell.Content as="section" aria-label="dbM in numbers" width="full" paddingBlock={10}>
+const proof = `      {/* styles.figure is the stylesheet rule under "Code examples": the figures share the row below lg and keep one width from lg */}
+      <PageShell.Content as="section" aria-label="dbM in numbers" width="full" paddingBlock={10}>
         <Container size="lg" paddingInline={0}>
           <Stack direction="row" align="start" wrap justify={{ base: "center", lg: "between" }} gap={{ base: 6, md: 10, lg: 20 }}>
             <Stat size="sm" className={styles.figure} style={{ padding: 0 }}><Stat.Label>Teams</Stat.Label><Stat.Value>12K+</Stat.Value></Stat>
             <Stat size="sm" className={styles.figure} style={{ padding: 0 }}><Stat.Label>Countries</Stat.Label><Stat.Value>90</Stat.Value></Stat>
+            <Stat size="sm" className={styles.figure} style={{ padding: 0 }}><Stat.Label>Uptime</Stat.Label><Stat.Value>99.9%</Stat.Value></Stat>
+            <Stat size="sm" className={styles.figure} style={{ padding: 0 }}><Stat.Label>Tasks a day</Stat.Label><Stat.Value>4.2M</Stat.Value></Stat>
           </Stack>
         </Container>
       </PageShell.Content>`;
@@ -112,6 +118,16 @@ const footer = `    <PageShell.Footer>
             <Link href="/about" size="sm">About</Link>
             <Link href="/careers" size="sm">Careers</Link>
           </nav>
+          <nav aria-label="Resources" style={{ display: "grid", gap: "var(--dbm-space-2)", alignContent: "start" }}>
+            <Text weight="semibold">Resources</Text>
+            <Link href="/guides" size="sm">Guides</Link>
+            <Link href="/status" size="sm">Status</Link>
+          </nav>
+          <nav aria-label="Legal" style={{ display: "grid", gap: "var(--dbm-space-2)", alignContent: "start" }}>
+            <Text weight="semibold">Legal</Text>
+            <Link href="/privacy" size="sm">Privacy</Link>
+            <Link href="/terms" size="sm">Terms</Link>
+          </nav>
         </Grid>
         <Divider />
         <Text size="sm" color="secondary">© dbM</Text>
@@ -128,7 +144,21 @@ ${footer}
   <BackToTop />
 </PageShell>`;
 
+/** The Playground's live controls, as far as the snippet cares. */
+export interface MarketingPagePlaygroundSnippetArgs {
+  /** How many of the three feature cards the page has. */
+  features?: number;
+  /** Whether the strip of figures is there. */
+  proof?: boolean;
+}
+
+/** The page's snippet, built from the demo's current controls: only the feature cards and the strip that are on screen. */
+export function marketingPagePlaygroundSnippet({ features: cards = 3, proof: withProof = true }: MarketingPagePlaygroundSnippetArgs): string {
+  const count = Math.max(1, Math.min(Math.round(cards), 3));
+  return page([hero, features(count), ...(withProof ? [proof] : []), band]);
+}
+
 export const marketingPageSnippets = {
-  default: page([hero, features(3), proof, band]),
-  shortPage: page([hero, features(1), band]),
+  default: marketingPagePlaygroundSnippet({ features: 3, proof: true }),
+  shortPage: marketingPagePlaygroundSnippet({ features: 1, proof: false }),
 };

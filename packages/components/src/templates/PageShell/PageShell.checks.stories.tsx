@@ -2,6 +2,7 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 import { useState } from "react";
 import { expect, userEvent, waitFor, within } from "storybook/test";
 import { send } from "../../molecules/CodeBlock/browserProtocol";
+import { nextFrame, settled, wheel } from "../_shared/realInput";
 import { DemoPageShell } from "./PageShellStoryKit";
 
 // Hidden real-browser checks (guidelines/adr/0013): what jsdom can't do (layout, a breakpoint, scrolling, forced colours, print, a real wheel).
@@ -17,21 +18,10 @@ export default meta;
 
 type Story = StoryObj;
 
-const nextFrame = () => new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
-
 /** A real key press through the Chrome DevTools Protocol: a synthetic one neither sets `:focus-visible` nor scrolls anything. */
 async function press(key: "Tab" | "Enter" | "Escape", windowsVirtualKeyCode: number, text?: string) {
   await send("Input.dispatchKeyEvent", { type: "keyDown", key, code: key, windowsVirtualKeyCode, ...(text ? { text } : {}) });
   await send("Input.dispatchKeyEvent", { type: "keyUp", key, code: key, windowsVirtualKeyCode });
-}
-
-/** A real wheel turn over the middle of the page, mapping the test iframe's scale. */
-async function wheel(deltaY: number) {
-  const frame = window.frameElement?.getBoundingClientRect();
-  const scale = frame ? frame.width / window.innerWidth : 1;
-  const x = (frame?.left ?? 0) + (window.innerWidth / 2) * scale;
-  const y = (frame?.top ?? 0) + (window.innerHeight / 2) * scale;
-  await send("Input.dispatchMouseEvent", { type: "mouseWheel", x, y, deltaX: 0, deltaY });
 }
 
 /** A real mouse click through the Chrome DevTools Protocol, mapping the test iframe's scale. */
@@ -58,20 +48,6 @@ function slots(canvasElement: HTMLElement) {
   const main = canvas.getByRole("main");
   const footer = canvas.getByRole("contentinfo");
   return { canvas, shell, bar, slot, main, footer };
-}
-
-/** Waits for a smooth scroll (a wheel turn) to finish: the page has not moved for a few frames. */
-async function settled() {
-  let last = -1;
-  let still = 0;
-  while (still < 4) {
-    await nextFrame();
-    if (window.scrollY === last) still += 1;
-    else {
-      still = 0;
-      last = window.scrollY;
-    }
-  }
 }
 
 /** Waits for the page to be back at its top before a check that measures from there. */
@@ -459,7 +435,6 @@ export const StaysTheSameWhenItGrowsATallPage: Story = {
     await atTop();
   },
 };
-
 
 export const CustomHeaderSticksByAffix: Story = {
   name: "A header of the app's own sticks by Affix, with a shadow once stuck, and the shell wraps nothing around it — layout test",

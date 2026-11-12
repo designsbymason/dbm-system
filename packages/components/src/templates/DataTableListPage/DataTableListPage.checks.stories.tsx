@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { expect, waitFor, within } from "storybook/test";
 import { send } from "../../molecules/CodeBlock/browserProtocol";
+import { nextFrame, realClick } from "../_shared/realInput";
 import { DataTableListPage } from "./DataTableListPageStoryKit";
 
 // Hidden real-browser checks (guidelines/adr/0013): what jsdom can't do (layout at a width, direction, forced colours, print, a real
@@ -14,8 +15,6 @@ const meta: Meta = {
 export default meta;
 
 type Story = StoryObj;
-
-const nextFrame = () => new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
 
 /** The page's pieces, once the first page of rows has arrived. */
 async function loaded(canvasElement: HTMLElement) {
@@ -33,18 +32,6 @@ async function loaded(canvasElement: HTMLElement) {
 async function settled() {
   await Promise.all(document.getAnimations().map((animation) => animation.finished.catch(() => undefined)));
   await nextFrame();
-}
-
-/** A real mouse click through the Chrome DevTools Protocol, mapping the test iframe's scale. */
-async function realClick(element: Element) {
-  const rect = element.getBoundingClientRect();
-  const frame = window.frameElement?.getBoundingClientRect();
-  const scale = frame ? frame.width / window.innerWidth : 1;
-  const x = (frame?.left ?? 0) + (rect.left + rect.width / 2) * scale;
-  const y = (frame?.top ?? 0) + (rect.top + rect.height / 2) * scale;
-  await send("Input.dispatchMouseEvent", { type: "mouseMoved", x, y });
-  await send("Input.dispatchMouseEvent", { type: "mousePressed", x, y, button: "left", clickCount: 1 });
-  await send("Input.dispatchMouseEvent", { type: "mouseReleased", x, y, button: "left", clickCount: 1 });
 }
 
 export const DesktopLayout: Story = {

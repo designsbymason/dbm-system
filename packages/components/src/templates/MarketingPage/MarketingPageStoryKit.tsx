@@ -217,7 +217,7 @@ export function MarketingPage({ framed = false, features = 3, proof = true }: Ma
         {proof && (
           // `full`: no limit on the width, so the figures use the whole window.
           <PageShell.Content as="section" aria-label={copy.proofName} width="full" paddingBlock={10}>
-            {/* The section is `full`; the figures are a group centred in it (a `Container`, with no padding of its own since the section pads), each stat's own text left-aligned. */}
+            {/* The section is `full`; the figures are a group centred in it (a `Container`, with no padding of its own since the section pads), each stat's own text centred below `lg` and at the start from it (the stylesheet). */}
             <Container size="lg" paddingInline={0}>
               <Stack direction="row" align="start" wrap justify={{ base: "center", lg: "between" }} gap={{ base: 6, md: 10, lg: 20 }}>
                 {copy.proof.map((figure) => (

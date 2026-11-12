@@ -1,6 +1,7 @@
 import { render, screen, within } from "@testing-library/react";
 import { axe } from "jest-axe";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { marketingPagePlaygroundSnippet } from "./MarketingPage.snippets";
 import { MarketingPage, marketingCopy } from "./MarketingPageStoryKit";
 
 // jsdom lays nothing out, so these tests are about structure: the landmarks and their names, the headings, the optional parts and accessibility. Where the
@@ -56,5 +57,15 @@ describe("the marketing page", () => {
     expect(await axe(container)).toHaveNoViolations();
     rerender(<MarketingPage features={1} proof={false} />);
     expect(await axe(container)).toHaveNoViolations();
+  });
+
+  it("builds its code from the demo's controls: the cards and the strip that are on screen", () => {
+    const full = marketingPagePlaygroundSnippet({});
+    expect(full.match(/<Card>/g)).toHaveLength(3);
+    expect(full).toContain("<Stat ");
+    const short = marketingPagePlaygroundSnippet({ features: 1, proof: false });
+    expect(short.match(/<Card>/g)).toHaveLength(1);
+    expect(short).not.toContain("<Stat ");
+    expect(marketingPagePlaygroundSnippet({ features: 9 }).match(/<Card>/g)).toHaveLength(3);
   });
 });

@@ -112,7 +112,7 @@ a `navigation` for each footer column, each named by its column's title. There i
 </Callout>
 
 - The keyboard follows the markup: the skip link, the header (the brand, each menu item, the actions), the page, the footer. The skip link goes to the page's `main`, past the header.
-- A menu item that opens a panel is a button: `Enter`, `Space` or `Down` opens it, the arrow keys move through its links, and `Escape` closes it and returns focus to the item. A panel also opens by hover and by click.
+- A menu item that opens a panel is a button: `Enter` or `Space` opens it, the arrow keys move through its links once it is open, and `Escape` closes it and returns focus to the item. A panel also opens by hover and by click.
 - On a phone the header's links and actions are in the bar's one menu button's panel, a dialog: focus goes into it, `Escape` closes it and focus returns to the button.
 - The back-to-top button is offered after the page has scrolled and returns the page to its top.
 - In forced colours the band's tint is dropped and the page takes the system colours; nothing is told apart by colour alone.
@@ -159,6 +159,21 @@ a `navigation` for each footer column, each named by its column's title. There i
   <PageShell.Footer>…columns…</PageShell.Footer>
   <BackToTop />
 </PageShell>
+```
+
+```tsx
+// The strip of figures: a row that wraps, each figure the same width (the class below) with no padding of its own, centred on a tablet and spread to the container's two ends from lg
+<PageShell.Content as="section" aria-label="dbM in numbers" width="full">
+  <Container size="lg" paddingInline={0}>
+    <Stack direction="row" align="start" wrap justify={{ base: "center", lg: "between" }} gap={{ base: 6, md: 10, lg: 20 }}>
+      <Stat size="sm" className={styles.figure} style={{ padding: 0 }}>
+        <Stat.Label>Teams</Stat.Label>
+        <Stat.Value>12K+</Stat.Value>
+      </Stat>
+      …
+    </Stack>
+  </Container>
+</PageShell.Content>
 ```
 
 ```css

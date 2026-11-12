@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { expect, userEvent, waitFor, within } from "storybook/test";
 import { send } from "../../molecules/CodeBlock/browserProtocol";
+import { nextFrame, pressEscape, pressKey, realClick, settled, wheel } from "../_shared/realInput";
 import { MarketingPage, marketingCopy } from "./MarketingPageStoryKit";
 
 // Hidden real-browser checks (guidelines/adr/0013): what jsdom can't do (layout, a breakpoint, sticking, scrolling, a real press, print). They run in the
@@ -14,56 +15,6 @@ const meta: Meta = {
 export default meta;
 
 type Story = StoryObj;
-
-const nextFrame = () => new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
-
-/** A real wheel turn over the middle of the page, mapping the test iframe's scale. */
-async function wheel(deltaY: number) {
-  const frame = window.frameElement?.getBoundingClientRect();
-  const scale = frame ? frame.width / window.innerWidth : 1;
-  const x = (frame?.left ?? 0) + (window.innerWidth / 2) * scale;
-  const y = (frame?.top ?? 0) + (window.innerHeight / 2) * scale;
-  await send("Input.dispatchMouseEvent", { type: "mouseWheel", x, y, deltaX: 0, deltaY });
-}
-
-/** A real mouse click through the Chrome DevTools Protocol, mapping the test iframe's scale. */
-async function realClick(element: Element) {
-  const rect = element.getBoundingClientRect();
-  const frame = window.frameElement?.getBoundingClientRect();
-  const scale = frame ? frame.width / window.innerWidth : 1;
-  const x = (frame?.left ?? 0) + (rect.left + rect.width / 2) * scale;
-  const y = (frame?.top ?? 0) + (rect.top + rect.height / 2) * scale;
-  await send("Input.dispatchMouseEvent", { type: "mouseMoved", x, y });
-  await send("Input.dispatchMouseEvent", { type: "mousePressed", x, y, button: "left", clickCount: 1 });
-  await send("Input.dispatchMouseEvent", { type: "mouseReleased", x, y, button: "left", clickCount: 1 });
-}
-
-/** A real key press through the Chrome DevTools Protocol. */
-async function pressEscape() {
-  await send("Input.dispatchKeyEvent", { type: "keyDown", key: "Escape", code: "Escape", windowsVirtualKeyCode: 27 });
-  await send("Input.dispatchKeyEvent", { type: "keyUp", key: "Escape", code: "Escape", windowsVirtualKeyCode: 27 });
-}
-
-/** A real key press through the Chrome DevTools Protocol (`Tab` and `Enter` carry the text a page's own handlers read). */
-async function pressKey(key: "Tab" | "Enter") {
-  const code = key === "Tab" ? 9 : 13;
-  await send("Input.dispatchKeyEvent", { type: "keyDown", key, code: key, windowsVirtualKeyCode: code, ...(key === "Enter" ? { text: "\r" } : {}) });
-  await send("Input.dispatchKeyEvent", { type: "keyUp", key, code: key, windowsVirtualKeyCode: code });
-}
-
-/** Waits for a smooth scroll to finish: the page has not moved for a few frames. */
-async function settled() {
-  let last = -1;
-  let still = 0;
-  while (still < 4) {
-    await nextFrame();
-    if (window.scrollY === last) still += 1;
-    else {
-      still = 0;
-      last = window.scrollY;
-    }
-  }
-}
 
 /** The page's parts. */
 function parts(canvasElement: HTMLElement) {
@@ -143,6 +94,11 @@ export const BandsHaveTheirWidths: Story = {
     await expect(Math.abs(band.left - mainBox.left)).toBeLessThan(1);
     await expect(Math.abs(band.right - mainBox.right)).toBeLessThan(1);
     await expect(Math.abs(band.width - window_)).toBeLessThan(2);
+    // The band's content lines up with the page: the same reading width and the same edges as the hero's, which is not a band.
+    const heroContent = canvas.getByRole("heading", { level: 1 }).parentElement as HTMLElement;
+    const bandContent = cta.firstElementChild as HTMLElement;
+    await expect(Math.abs(bandContent.getBoundingClientRect().left - heroContent.getBoundingClientRect().left)).toBeLessThan(1);
+    await expect(Math.abs(bandContent.getBoundingClientRect().width - heroContent.getBoundingClientRect().width)).toBeLessThan(1);
     const ctaHeading = within(cta).getByRole("heading", { level: 2 }).getBoundingClientRect();
     await expect(ctaHeading.width).toBeLessThan(band.width);
     await expect(Math.abs((ctaHeading.left + ctaHeading.right) / 2 - window_ / 2)).toBeLessThan(2);
@@ -157,7 +113,7 @@ export const BandsHaveTheirWidths: Story = {
 };
 
 export const MegaMenuByRealClickAndKeys: Story = {
-  name: "A real click on Product opens its panel with the links, Escape closes it and returns focus to Product, and Enter on Product from the keyboard does the same — interaction test",
+  name: "A real click on Product opens its panel with the links, Escape closes it and returns focus to Product, and Enter and Space on Product from the keyboard do the same — interaction test",
   tags: ["!dev"],
   render: () => <MarketingPage />,
   play: async ({ canvasElement }) => {
@@ -178,12 +134,16 @@ export const MegaMenuByRealClickAndKeys: Story = {
     await pressEscape();
     await waitFor(() => expect(trigger).toHaveAttribute("aria-expanded", "false"), { timeout: slow });
     await waitFor(() => expect(trigger).toHaveFocus(), { timeout: slow });
-    // From the keyboard: focus is on the trigger, and Enter opens the panel again.
-    await pressKey("Enter");
-    await waitFor(() => expect(trigger).toHaveAttribute("aria-expanded", "true"), { timeout: slow });
-    await pressEscape();
-    await waitFor(() => expect(trigger).toHaveAttribute("aria-expanded", "false"), { timeout: slow });
-    await waitFor(() => expect(trigger).toHaveFocus(), { timeout: slow });
+    // From the keyboard, with the pointer parked away from the bar so a hover can't be what opens it: focus is on the trigger, and each of Enter and Space opens the panel and Escape closes it with focus back on the trigger.
+    await send("Input.dispatchMouseEvent", { type: "mouseMoved", x: 2, y: 2 });
+    await new Promise<void>((resolve) => setTimeout(resolve, 400));
+    for (const key of ["Enter", "Space"] as const) {
+      await pressKey(key);
+      await waitFor(() => expect(trigger).toHaveAttribute("aria-expanded", "true"), { timeout: slow });
+      await pressEscape();
+      await waitFor(() => expect(trigger).toHaveAttribute("aria-expanded", "false"), { timeout: slow });
+      await waitFor(() => expect(trigger).toHaveFocus(), { timeout: slow });
+    }
   },
 };
 
@@ -310,6 +270,13 @@ export const PhonePanelByRealPresses: Story = {
     await waitFor(() => expect(within(panel).getByRole("link", { name: marketingCopy.signIn })).toBeVisible(), { timeout: slow });
     await expect(panel.getBoundingClientRect().width).toBeLessThanOrEqual(window.innerWidth);
     await expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(window.innerWidth);
+    await pressEscape();
+    await waitFor(() => expect(within(document.body).queryByRole("dialog")).toBeNull(), { timeout: slow });
+    await waitFor(() => expect(menu).toHaveFocus(), { timeout: slow });
+    // And from the keyboard: Enter on the menu button opens the panel again, focus goes into it, and Escape closes it with focus back on the button.
+    await pressKey("Enter");
+    const again = await within(document.body).findByRole("dialog");
+    await waitFor(() => expect(again.contains(document.activeElement)).toBe(true), { timeout: slow });
     await pressEscape();
     await waitFor(() => expect(within(document.body).queryByRole("dialog")).toBeNull(), { timeout: slow });
     await waitFor(() => expect(menu).toHaveFocus(), { timeout: slow });

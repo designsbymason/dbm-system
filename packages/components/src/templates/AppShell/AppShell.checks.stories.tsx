@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { expect, userEvent, waitFor, within } from "storybook/test";
 import { send } from "../../molecules/CodeBlock/browserProtocol";
+import { nextFrame, wheel } from "../_shared/realInput";
 import { AppShell } from "./AppShell";
 import { DemoLayersShell, DemoNavigationShell, DemoPlainHeaderShell, DemoShell, DemoStickyBarShell } from "./AppShellStoryKit";
 
@@ -15,8 +16,6 @@ const meta: Meta = {
 export default meta;
 
 type Story = StoryObj;
-
-const nextFrame = () => new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
 
 /** A real key press through the Chrome DevTools Protocol: a synthetic one neither sets `:focus-visible` nor scrolls anything. */
 async function press(key: "Tab" | "ArrowDown", windowsVirtualKeyCode: number) {
@@ -1368,15 +1367,6 @@ export const LeftToRightDemoLeavesLangAlone: Story = {
     await expect(shell).not.toHaveAttribute("lang");
   },
 };
-
-/** A real wheel turn over the middle of the page, mapping the test iframe's scale. */
-async function wheel(deltaY: number) {
-  const frame = window.frameElement?.getBoundingClientRect();
-  const scale = frame ? frame.width / window.innerWidth : 1;
-  const x = (frame?.left ?? 0) + (window.innerWidth / 2) * scale;
-  const y = (frame?.top ?? 0) + (window.innerHeight / 2) * scale;
-  await send("Input.dispatchMouseEvent", { type: "mouseWheel", x, y, deltaX: 0, deltaY });
-}
 
 export const NavbarHidesOnScrollInPageMode: Story = {
   name: "With scroll page, a Navbar with sticky and hideOnScroll in the header slides out on a real wheel scroll down and back on a scroll up — layout test",

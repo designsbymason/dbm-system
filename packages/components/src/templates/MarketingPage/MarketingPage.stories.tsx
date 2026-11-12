@@ -1,7 +1,7 @@
-import type { Meta, StoryObj } from "@storybook/react-vite";
+import type { Meta, StoryContext, StoryObj } from "@storybook/react-vite";
 import { MarketingPage } from "./MarketingPageStoryKit";
 import type { MarketingPageProps } from "./MarketingPageStoryKit";
-import { marketingPageSnippets } from "./MarketingPage.snippets";
+import { marketingPagePlaygroundSnippet, marketingPageSnippets } from "./MarketingPage.snippets";
 
 // A page-level template is a whole page, so every story fills the window (`layout: "fullscreen"`, `fullBleed`). On a Docs page the page sits in a
 // frame instead (see MarketingPage.mdx). It is a story-only example: there is no component and no props list to document, so the Controls are
@@ -36,7 +36,8 @@ type Story = StoryObj<DemoArgs>;
 
 export const Default: Story = {
   name: "Default",
-  parameters: { docs: { source: { code: marketingPageSnippets.default } } },
+  // The demo controls change what the page holds, so its code is built from them.
+  parameters: { docs: { source: { transform: (_code: string, context: StoryContext<DemoArgs>) => marketingPagePlaygroundSnippet(context.args) } } },
   render: (args, context) => <MarketingPage {...args} framed={context.viewMode === "docs"} />,
 };
 

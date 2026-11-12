@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { expect, userEvent, waitFor, within } from "storybook/test";
 import { send } from "../../molecules/CodeBlock/browserProtocol";
+import { nextFrame, pressEscape, pressKey, realClick, settled, wheel } from "../_shared/realInput";
 import { DocumentationPage, documentationCopy } from "./DocumentationPageStoryKit";
 
 // Hidden real-browser checks (guidelines/adr/0013): what jsdom can't do (layout, a breakpoint, sticking, scrolling, a real press, print). They run in the
@@ -14,56 +15,6 @@ const meta: Meta = {
 export default meta;
 
 type Story = StoryObj;
-
-const nextFrame = () => new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
-
-/** A real wheel turn over the middle of the page, mapping the test iframe's scale. */
-async function wheel(deltaY: number) {
-  const frame = window.frameElement?.getBoundingClientRect();
-  const scale = frame ? frame.width / window.innerWidth : 1;
-  const x = (frame?.left ?? 0) + (window.innerWidth / 2) * scale;
-  const y = (frame?.top ?? 0) + (window.innerHeight / 2) * scale;
-  await send("Input.dispatchMouseEvent", { type: "mouseWheel", x, y, deltaX: 0, deltaY });
-}
-
-/** A real mouse click through the Chrome DevTools Protocol, mapping the test iframe's scale. */
-async function realClick(element: Element) {
-  const rect = element.getBoundingClientRect();
-  const frame = window.frameElement?.getBoundingClientRect();
-  const scale = frame ? frame.width / window.innerWidth : 1;
-  const x = (frame?.left ?? 0) + (rect.left + rect.width / 2) * scale;
-  const y = (frame?.top ?? 0) + (rect.top + rect.height / 2) * scale;
-  await send("Input.dispatchMouseEvent", { type: "mouseMoved", x, y });
-  await send("Input.dispatchMouseEvent", { type: "mousePressed", x, y, button: "left", clickCount: 1 });
-  await send("Input.dispatchMouseEvent", { type: "mouseReleased", x, y, button: "left", clickCount: 1 });
-}
-
-/** A real key press through the Chrome DevTools Protocol. */
-async function pressEscape() {
-  await send("Input.dispatchKeyEvent", { type: "keyDown", key: "Escape", code: "Escape", windowsVirtualKeyCode: 27 });
-  await send("Input.dispatchKeyEvent", { type: "keyUp", key: "Escape", code: "Escape", windowsVirtualKeyCode: 27 });
-}
-
-/** A real key press through the Chrome DevTools Protocol (`Tab` and `Enter` carry the text a page's own handlers read). */
-async function pressKey(key: "Tab" | "Enter") {
-  const code = key === "Tab" ? 9 : 13;
-  await send("Input.dispatchKeyEvent", { type: "keyDown", key, code: key, windowsVirtualKeyCode: code, ...(key === "Enter" ? { text: "\r" } : {}) });
-  await send("Input.dispatchKeyEvent", { type: "keyUp", key, code: key, windowsVirtualKeyCode: code });
-}
-
-/** Waits for a smooth scroll to finish: the page has not moved for a few frames. */
-async function settled() {
-  let last = -1;
-  let still = 0;
-  while (still < 4) {
-    await nextFrame();
-    if (window.scrollY === last) still += 1;
-    else {
-      still = 0;
-      last = window.scrollY;
-    }
-  }
-}
 
 /** The page's parts. */
 function parts(canvasElement: HTMLElement) {
