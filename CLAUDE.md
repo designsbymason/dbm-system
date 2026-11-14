@@ -41,7 +41,7 @@ apps/
                      Storybook actually used today lives in packages/components/.storybook/,
                      not here)
 scripts/            Repo-level checks CI runs from the root: `check-publish` (publint and attw on each
-                     packed public package, its packed package.json and the consumer guide's imports) `check-radix-single-copy` (one version of each shared
+                     packed public package, its packed package.json and the consumer guide's imports and install line) `check-radix-single-copy` (one version of each shared
                      Radix package in the lockfile) `check-manifest` (the component manifest builds,
                      nothing is undocumented, what the build shipped matches the source, and
                      the generated list in packages/components/AGENTS.md is current and what its

@@ -153,6 +153,22 @@ for (const guide of GUIDE_FILES) {
     if (!existsSync(join(root, "packages", "tokens", "build", "css", `${theme}.bundled.css`))) fail(guide, `shows data-theme="${theme}", which has no bundled token file`);
   }
 }
+// The install line: the same everywhere, naming components, and every package the file's text has an app import from, and neither utils nor
+// the private tools (ADR-0209). A strict package manager only lets an app import a package it depends on.
+const INSTALL = /^pnpm add (@dbm-system\/components[^\n]*)$/m;
+const installLines = new Map();
+for (const guide of GUIDE_FILES) {
+  const text = readFileSync(join(root, guide), "utf8");
+  const line = text.match(INSTALL)?.[1];
+  if (!line) continue;
+  installLines.set(guide, line);
+  const installed = new Set([...line.matchAll(/@dbm-system\/([a-z-]+)/g)].map((match) => match[1]));
+  const rest = text.replace(INSTALL, "");
+  for (const name of ["tokens", "icons"]) if (!installed.has(name) && rest.includes(`@dbm-system/${name}`)) fail(guide, `names @dbm-system/${name} but its install line does not include it: ${line}`);
+  for (const name of ["utils", "manifest", "eslint-config", "tsconfig"]) if (installed.has(name)) fail(guide, `its install line includes @dbm-system/${name}, which an app does not install: ${line}`);
+}
+if (new Set(installLines.values()).size > 1) fail("the consumer guide", `the install line differs between files: ${[...installLines].map(([guide, line]) => `${guide}: ${line}`).join("; ")}`);
+
 const FONT_LINK = /https:\/\/fonts\.googleapis\.com\/css2\?[^"\s]+/;
 const guideFonts = readFileSync(join(root, "packages", "components", "README.md"), "utf8").match(FONT_LINK)?.[0];
 const previewFonts = readFileSync(join(root, "packages", "components", ".storybook", "preview-head.html"), "utf8").match(FONT_LINK)?.[0];
