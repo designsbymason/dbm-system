@@ -119,6 +119,9 @@ describe("agentsProblems", () => {
     expect(agentsProblems("`PlusIcon`, `Responsive` and `--dbm-bg-*`", known, tokens, new Set(["PlusIcon", "Responsive"]))).toEqual([]);
     expect(check("`--dbm-nope-*`")).toEqual(["`--dbm-nope-` is not a token the token CSS declares"]);
   });
+  it("lets the manifest's own field names through", () => {
+    expect(check("`forwardsRef` and `refElement` in a component's file")).toEqual([]);
+  });
   it("lets the <Name> placeholder in a path through", () => {
     expect(check("`manifest/components/<Name>.json`")).toEqual([]);
   });

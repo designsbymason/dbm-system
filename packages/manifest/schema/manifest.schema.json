@@ -131,6 +131,14 @@
           "items": {
             "$ref": "#/$defs/example"
           }
+        },
+        "forwardsRef": {
+          "type": "boolean",
+          "description": "Whether a `ref` passed to it reaches an element: it is made with `forwardRef`. A component with no single root element (a provider, `Tooltip`) takes none. Added without raising schemaVersion: a manifest without it is still valid."
+        },
+        "refElement": {
+          "type": "string",
+          "description": "The element type a ref gives (`HTMLButtonElement`), when it forwards one."
         }
       }
     },
@@ -162,6 +170,14 @@
           "items": {
             "$ref": "#/$defs/prop"
           }
+        },
+        "forwardsRef": {
+          "type": "boolean",
+          "description": "Whether a `ref` passed to it reaches an element: it is made with `forwardRef`. A component with no single root element (a provider, `Tooltip`) takes none. Added without raising schemaVersion: a manifest without it is still valid."
+        },
+        "refElement": {
+          "type": "string",
+          "description": "The element type a ref gives (`HTMLButtonElement`), when it forwards one."
         }
       }
     },

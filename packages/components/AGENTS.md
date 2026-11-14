@@ -41,7 +41,7 @@ The manifest files are inside `@dbm-system/components`; there is no separate pac
 ## Use the components
 
 - Import by name: `import { Button } from "@dbm-system/components"`. The parts of a compound component hang off it: `Menu.Trigger`, `Menu.Content`, `Menu.Item`.
-- Native props pass through: `Button` takes every `<button>` prop, and `extends` in its file says so. `className`, `style`, `id` and `data-testid` are accepted by nearly every component, and a ref reaches the root element (a component with no single root, such as `Tooltip`, takes none).
+- Native props pass through: `Button` takes every `<button>` prop, and `extends` in its file says so. `className`, `style`, `id` and `data-testid` are accepted by nearly every component, and a ref reaches the root element when `forwardsRef` is true in the component's file (`refElement` says which element type); a component with no element of its own, such as `Tooltip`, `Dialog` or a provider, takes none.
 - `as` changes the element a layout or text component renders (`<Stack as="ul">`, also `Box`, `Text`, `Heading`). `asChild` renders a component's behaviour onto your own element (`<Button asChild><a href="/pay">Pay</a></Button>`, also `IconButton`, `Link`, `Card`). The component's file says which it takes.
 - Icons are component references from `@dbm-system/icons`, never strings: `<Button leadingIcon={PlusIcon}>Add</Button>`. An icon-only control needs an accessible name: `IconButton` requires `aria-label`.
 - State: components that hold a value take `value`, `defaultValue` and `onValueChange` (`Tabs`); components that open take `open`, `defaultOpen` and `onOpenChange` (`Dialog`). Pass `value` or `open` to control one, or only the default to leave it to the component.

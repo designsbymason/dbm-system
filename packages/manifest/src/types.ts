@@ -38,6 +38,10 @@ export interface ManifestPart {
   name: string;
   /** The first paragraph of the part's JSDoc. */
   summary: string;
+  /** Whether a `ref` passed to it reaches an element: it is made with `forwardRef`. */
+  forwardsRef?: boolean;
+  /** The element type a ref gives (`HTMLDivElement`), when it forwards one. */
+  refElement?: string;
   /** The native or library prop types it inherits, by name. */
   extends: string[];
   /** The props it declares or overrides, sorted by name. */
@@ -56,6 +60,10 @@ export interface ManifestComponent {
   summary: string;
   /** The rest of the JSDoc, when there is more than the summary. */
   description?: string;
+  /** Whether a `ref` passed to it reaches an element (the root one): it is made with `forwardRef`. A component with no single root takes none. */
+  forwardsRef?: boolean;
+  /** The element type a ref gives (`HTMLButtonElement`), when it forwards one. */
+  refElement?: string;
   /** What to import from `@dbm-system/components`. */
   importName: string;
   /**

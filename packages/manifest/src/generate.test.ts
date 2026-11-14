@@ -45,6 +45,21 @@ describe("generateManifest on the components package", () => {
     expect(variant?.description).not.toBe("");
   });
 
+  it("says whether a ref reaches an element, and which", () => {
+    const find = (name: string) => result.manifest.components.find((component) => component.name === name);
+    expect(find("Button")).toMatchObject({ forwardsRef: true, refElement: "HTMLButtonElement" });
+    expect(find("Input")).toMatchObject({ forwardsRef: true, refElement: "HTMLInputElement" });
+    // Roots with no element of their own take no ref, and neither do providers.
+    for (const name of ["Tooltip", "Dialog", "Menu", "TooltipProvider"]) expect(find(name)?.forwardsRef, name).toBe(false);
+    expect(result.manifest.components.filter((component) => component.forwardsRef).length).toBeGreaterThan(100);
+    // A polymorphic component's ref type is a type parameter, which says nothing, so it is left out.
+    expect(find("Box")).toMatchObject({ forwardsRef: true });
+    expect(find("Box")?.refElement).toBeUndefined();
+    const parts = result.manifest.components.flatMap((component) => component.parts);
+    expect(parts.find((part) => part.name === "Menu.Item")?.forwardsRef).toBe(true);
+    expect(parts.find((part) => part.name === "Menu.Sub")?.forwardsRef).toBe(false);
+  });
+
   it("lists only the props this system declares, not the native ones, and not ref", () => {
     const button = result.manifest.components.find((component) => component.name === "Button");
     const names = button?.props.map((prop) => prop.name) ?? [];

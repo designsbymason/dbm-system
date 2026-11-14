@@ -62,6 +62,21 @@ export function generateManifest({ packageRoot }: GenerateOptions): GenerateResu
     return declaration ? checker.getTypeOfSymbolAtLocation(symbol, declaration) : undefined;
   };
 
+  // Whether a ref passed to a component reaches an element: its call signature takes a `ref` prop (`forwardRef` adds `RefAttributes<Element>`),
+  // and the element type is the one in that prop's `Ref<…>`.
+  const refInfo = (symbol: ts.Symbol): { forwardsRef: boolean; refElement?: string } => {
+    const parameter = typeOf(symbol)?.getCallSignatures()[0]?.getParameters()[0];
+    const declaration = parameter && declarationOf(parameter);
+    const propsType = parameter && declaration && checker.getTypeOfSymbolAtLocation(parameter, declaration);
+    const ref = propsType ? checker.getPropertiesOfType(propsType).find((member) => member.name === "ref") : undefined;
+    const refDeclaration = ref && declarationOf(ref);
+    if (!ref || !refDeclaration) return { forwardsRef: false };
+    const written = checker.typeToString(checker.getTypeOfSymbolAtLocation(ref, refDeclaration));
+    // Only a DOM element type is worth saying: a polymorphic component's `Ref<E>` names a type parameter, not an element.
+    const element = /<\s*((?:HTML|SVG)[A-Za-z0-9]*Element|Element)\s*>/.exec(written)?.[1];
+    return { forwardsRef: true, ...(element ? { refElement: element } : {}) };
+  };
+
   // 1. The public components: capitalised value exports that can be called with props.
   const components: { name: string; symbol: ts.Symbol }[] = [];
   for (const exported of checker.getExportsOfModule(moduleSymbol)) {
@@ -261,7 +276,7 @@ export function generateManifest({ packageRoot }: GenerateOptions): GenerateResu
       if (partSummary === "") diagnostics.push({ level: "warning", subject: partName, message: "no description in the JSDoc" });
       const partProps = byName(read.props);
       for (const prop of partProps) if (prop.description === "") diagnostics.push({ level: "error", subject: `${partName}.${prop.name}`, message: "prop has no description" });
-      partEntries.push({ name: partName, summary: partSummary, extends: read.extends, props: partProps });
+      partEntries.push({ name: partName, summary: partSummary, ...refInfo(part.symbol), extends: read.extends, props: partProps });
     }
 
     manifest.components.push({
@@ -270,6 +285,7 @@ export function generateManifest({ packageRoot }: GenerateOptions): GenerateResu
       category: story?.category ?? "",
       summary,
       ...(description ? { description } : {}),
+      ...refInfo(symbol),
       importName: name,
       source: relative(root, file),
       asChild: props.some((prop) => prop.name === "asChild"),

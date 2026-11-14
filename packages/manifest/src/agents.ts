@@ -69,6 +69,9 @@ const NOT_COMPONENTS = new Set(["Nunito", "Lora"]);
 /** `<Name>` in a path such as `manifest/components/<Name>.json` stands for a component name; it is not an element. */
 const PLACEHOLDERS = new Set(["Name"]);
 
+/** Field names of the manifest's own files, which the text may name: `forwardsRef` says whether a component takes a ref. */
+const MANIFEST_FIELDS = new Set(["forwardsRef", "refElement", "importName"]);
+
 /** Attributes in the text that belong to the page, not to a component: `data-theme` on the root element chooses a theme. */
 const NOT_PROPS = new Set(["data-theme"]);
 
@@ -104,7 +107,7 @@ export function agentsProblems(text: string, manifest: Manifest, tokenNames: Rea
   for (const span of spans) {
     const inner = span.replace(/^`+|`+$/g, "").trim();
     if (/^[A-Z][A-Za-z0-9]*(\.[A-Z][A-Za-z0-9]*)?$/.test(inner) && !NOT_COMPONENTS.has(inner) && !parts.has(inner) && !otherNames.has(inner)) problem(`\`${inner}\` is not a component or part in the manifest, or a name another package exports`);
-    if (/^[a-z][A-Za-z0-9]*[A-Z][A-Za-z0-9]*$/.test(inner) && !everyProp.has(inner) && !utilities.has(inner) && !otherNames.has(inner)) problem(`\`${inner}\` is not a prop of any component or a hook or function in the manifest`);
+    if (/^[a-z][A-Za-z0-9]*[A-Z][A-Za-z0-9]*$/.test(inner) && !everyProp.has(inner) && !utilities.has(inner) && !otherNames.has(inner) && !MANIFEST_FIELDS.has(inner)) problem(`\`${inner}\` is not a prop of any component or a hook or function in the manifest`);
     if (/^(aria|data)-[a-z-]+$/.test(inner) && !NOT_PROPS.has(inner) && !everyProp.has(inner)) problem(`\`${inner}\` is not a prop of any component in the manifest`);
     for (const [token] of span.matchAll(/--dbm-[a-z0-9-]+/g)) {
       // `--dbm-bg-*` names a family: some declared token must start with it.
