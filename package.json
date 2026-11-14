@@ -15,6 +15,7 @@
     "check-publish": "node scripts/check-publish.mjs",
     "check-radix-single-copy": "node scripts/check-radix-single-copy.mjs",
     "check-manifest": "node scripts/check-manifest.mjs",
+    "check-fresh-app": "node scripts/check-fresh-app.mjs",
     "dev": "turbo run dev",
     "changeset": "changeset",
     "version-packages": "changeset version",
@@ -23,6 +24,7 @@
   "devDependencies": {
     "@arethetypeswrong/cli": "^0.18.5",
     "@changesets/cli": "^2.31.1",
+    "esbuild": "^0.28.2",
     "publint": "^0.3.25",
     "turbo": "^2.11.11"
   }
