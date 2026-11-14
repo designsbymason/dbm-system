@@ -1,6 +1,6 @@
 {
   "name": "@dbm-system/tokens",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "Design tokens (primitive, semantic, and component layers) for the DBM System.",
   "license": "MIT",
   "repository": {
