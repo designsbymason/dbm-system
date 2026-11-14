@@ -2,7 +2,8 @@
 /**
  * Installs the packed packages into a fresh app and checks that they work there (ADR-0175, ADR-0207), after `pnpm build`:
  *   1. packs the five public packages with pnpm, as a publish would;
- *   2. installs them into an empty app with npm, which is not this repository's workspace (so nothing resolves by accident);
+ *   2. installs them into an empty app with npm, which is not this repository's workspace (so nothing resolves by accident), and finds
+ *      AGENTS.md and the manifest files where an agent looks for them;
  *   3. bundles a small entry with esbuild for production: React, a `Button`, `@dbm-system/components/styles.css` and the light and dark
  *      bundled token files, the way the consumer guide says;
  *   4. builds the same entry with webpack in production mode and requires the component stylesheet's rules to be in the output. esbuild
@@ -78,6 +79,17 @@ try {
     }
   }
   console.log("  installed into a fresh app");
+
+  // What an agent looks for in the installed package (ADR-0208, ADR-0206): AGENTS.md at its root, and the manifest through its exports.
+  const installed = createRequire(join(app, "package.json"));
+  if (!existsSync(join(app, "node_modules", "@dbm-system", "components", "AGENTS.md"))) fail("AGENTS.md is not at the root of the installed components package");
+  for (const entry of ["@dbm-system/components/manifest/index.json", "@dbm-system/components/manifest/components/Button.json", "@dbm-system/components/manifest.json"]) {
+    try {
+      installed.resolve(entry);
+    } catch {
+      fail(`${entry} does not resolve in the installed package`);
+    }
+  }
 
   // 3. Bundle for production.
   writeFileSync(

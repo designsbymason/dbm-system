@@ -109,7 +109,7 @@ The package ships a machine-readable index of every component, its props and par
 | `@dbm-system/components/manifest.json` | All of the above in one file |
 | `@dbm-system/components/manifest.schema.json` | The shape of each file |
 
-The manifest is for the version you installed.
+`AGENTS.md`, at the root of this package, is the short guide for a coding agent: where to look, how to set up, the rules that hold across components, and every public name. The manifest is for the version you installed.
 
 ## Links
 

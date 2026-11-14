@@ -37,7 +37,7 @@ The themes are `purple-light`, `purple-dark`, `emerald-light` and `emerald-dark`
 - `size` is `xs`, `sm`, `md` (the default), `lg` or `xl` wherever a component has it (`Button`, `Input`). A field's invalid state is `hasError`; `FormField` wires a label, helper text and error to the control inside it: `<FormField label="Email">{(fieldProps) => <Input {...fieldProps} />}</FormField>`.
 - Layout props take a value or a mobile-first map keyed by `base`, `sm`, `md`, `lg`, `xl`, `2xl` and `3xl`: `<Stack gap={{ base: 2, md: 4 }}>`. Spacing steps are 0 to 6, 8, 10, 12, 16, 20, 24 and 32.
 - Text a component writes itself (labels, announcements) is replaceable through a partial `labels` object, and numbers it shows go through `formatNumber` (`Pagination`). English is the default. For right-to-left, pass `dir="rtl"` or wrap the app in `DirectionProvider`, and read it with `useDirection`.
-- Components do not read `window` or `document` while rendering, so they render on the server; wrap your own browser-only code in `ClientOnly`.
+- Components are built to render on the server: they do not read `window` or `document` during the first render. Wrap your own browser-only code in `ClientOnly`.
 
 ## Style and theme
 

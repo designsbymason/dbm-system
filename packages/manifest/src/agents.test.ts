@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { AGENTS_END, AGENTS_START, renderAgentsList, updateAgentsBlock } from "./agents";
+import { AGENTS_END, AGENTS_START, agentsProblems, renderAgentsList, updateAgentsBlock } from "./agents";
 import type { Manifest, ManifestComponent } from "./types";
 
 const component = (name: string, tier: ManifestComponent["tier"], category: string): ManifestComponent => ({
@@ -59,5 +59,52 @@ describe("updateAgentsBlock", () => {
     expect(() => updateAgentsBlock("# no markers", "x")).toThrow(/exactly one/);
     expect(() => updateAgentsBlock(`${AGENTS_START}\n${AGENTS_START}\n${AGENTS_END}`, "x")).toThrow(/exactly one/);
     expect(() => updateAgentsBlock(`${AGENTS_END}\n${AGENTS_START}`, "x")).toThrow(/exactly one/);
+  });
+});
+
+describe("agentsProblems", () => {
+  const withProps = (name: string, props: string[], parts: { name: string; props: string[] }[] = []): ManifestComponent => ({
+    ...component(name, "atom", "Inputs"),
+    props: props.map((prop) => ({ name: prop, type: "string", required: false, description: "x" })),
+    parts: parts.map((part) => ({ name: part.name, summary: "x", extends: [], props: part.props.map((prop) => ({ name: prop, type: "string", required: false, description: "x" })) })),
+  });
+  const known: Manifest = {
+    ...manifest,
+    components: [withProps("Button", ["asChild", "leadingIcon", "className", "aria-label"]), withProps("Menu", [], [{ name: "Menu.Item", props: ["onSelect"] }])],
+    utilities: [{ name: "useTheme", kind: "hook", summary: "x", signature: "", params: [], returns: "", examples: [] }],
+  };
+  const tokens = new Set(["--dbm-bg-brand"]);
+  const check = (text: string) => agentsProblems(text, known, tokens);
+
+  it("accepts text whose names, props, tokens and examples the manifest backs", () => {
+    expect(check("Use `Button` and `Menu.Item` with `asChild`, `useTheme`, `aria-label` and `var(--dbm-bg-brand)`: `<Button asChild leadingIcon={X}>Go</Button>` and `Nunito`.")).toEqual([]);
+  });
+  it("leaves the generated block alone", () => {
+    expect(check(`${AGENTS_START}\n\n\`Imaginary\`\n\n${AGENTS_END}`)).toEqual([]);
+  });
+  it("names a component or part that is not in the manifest", () => {
+    expect(check("`Imaginary` and `Menu.Nope`")).toEqual(["`Imaginary` is not a component or part in the manifest", "`Menu.Nope` is not a component or part in the manifest"]);
+  });
+  it("names a camelCase prop or hook that nothing has", () => {
+    expect(check("`asChildd` and `useNope`")).toEqual(["`asChildd` is not a prop of any component or a hook or function in the manifest", "`useNope` is not a prop of any component or a hook or function in the manifest"]);
+  });
+  it("names an aria or data attribute that nothing takes, and a token the CSS lacks", () => {
+    expect(check("`aria-nope` and `var(--dbm-bg-nope)`")).toEqual(["`aria-nope` is not a prop of any component in the manifest", "`--dbm-bg-nope` is not a token the token CSS declares"]);
+  });
+  it("checks the components and camelCase props in an example, in a span or a fence", () => {
+    expect(check("`<Nope />` and `<Button asChildd>`")).toEqual(["<Nope> in the examples is not a component or part in the manifest", "<Button asChildd=…> in the examples: asChildd is not a prop of Button in the manifest"]);
+    expect(check("```tsx\n<Menu.Item onSelects={f} />\n```")).toEqual(["<Menu.Item onSelects=…> in the examples: onSelects is not a prop of Menu.Item in the manifest"]);
+  });
+  it("reads past expressions in braces and spread props", () => {
+    expect(check("`<Button leadingIcon={{ isOpen }} {...rest}>x</Button>`")).toEqual([]);
+  });
+  it("lets the <Name> placeholder in a path through", () => {
+    expect(check("`manifest/components/<Name>.json`")).toEqual([]);
+  });
+  it("lets the page's own data-theme attribute through", () => {
+    expect(check("`data-theme` on the root element")).toEqual([]);
+  });
+  it("does not check plain lower-case words", () => {
+    expect(check("`size` is `xs`, `light` or `ref`")).toEqual([]);
   });
 });

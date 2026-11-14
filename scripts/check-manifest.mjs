@@ -3,8 +3,8 @@
  * Checks the manifest the components package ships (ADR-0204, ADR-0205). It generates the manifest again from the source into a
  * temporary folder, which fails on a schema problem, anything undocumented or an export the manifest cannot place, and then compares
  * the result with every file the build shipped (`manifest.json`, its schema copy and the `manifest` folder of ADR-0206), so a shipped
- * file that is out of date, was edited by hand or has no source any more is caught; and the generated list in
- * `packages/components/AGENTS.md` (ADR-0208) must be the one the manifest generates. Nothing is written into the repository. Needs the packages built first (`@dbm-system/utils` is read from its
+ * file that is out of date, was edited by hand or has no source any more is caught; and `packages/components/AGENTS.md`
+ * (ADR-0208) must carry the generated list the manifest generates, and name nothing the manifest and the token CSS do not back. Nothing is written into the repository. Needs the packages built first (`@dbm-system/utils` is read from its
  * `dist`, and the generator runs from its own).
  *
  * Run from the repository root: `pnpm check-manifest`.
@@ -13,7 +13,7 @@ import { spawnSync } from "node:child_process";
 import { copyFileSync, existsSync, mkdtempSync, readFileSync, readdirSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
-import { fileURLToPath } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const cli = join(root, "packages", "manifest", "dist", "cli.js");
@@ -52,6 +52,15 @@ try {
   }
   if (readFileSync(agentsFile, "utf8") !== readFileSync(agentsCopy, "utf8")) {
     console.error("  FAIL  packages/components/AGENTS.md: its generated list is not what the manifest generates: run `pnpm sync-agents` and commit the result");
+    failed = true;
+  }
+  // What the hand-written text of AGENTS.md names must be in the manifest and the token CSS (ADR-0208).
+  const { agentsProblems } = await import(pathToFileURL(join(root, "packages", "manifest", "dist", "index.js")).href);
+  const tokenCss = readFileSync(join(root, "packages", "tokens", "build", "css", "purple-light.bundled.css"), "utf8");
+  const tokenNames = new Set([...tokenCss.matchAll(/^\s*(--dbm-[a-z0-9-]+):/gm)].map((match) => match[1]));
+  const freshManifest = JSON.parse(readFileSync(join(out, "manifest.json"), "utf8"));
+  for (const message of agentsProblems(readFileSync(agentsFile, "utf8"), freshManifest, tokenNames)) {
+    console.error(`  FAIL  packages/components/AGENTS.md: ${message}`);
     failed = true;
   }
   if (failed) process.exit(1);

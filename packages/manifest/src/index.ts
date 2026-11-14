@@ -1,5 +1,5 @@
 export { generateManifest } from "./generate";
-export { AGENTS_END, AGENTS_START, renderAgentsList, updateAgentsBlock } from "./agents";
+export { AGENTS_END, AGENTS_START, agentsProblems, renderAgentsList, updateAgentsBlock } from "./agents";
 export { firstSentence, splitManifest } from "./split";
 export type { SplitFiles } from "./split";
 export { manifestSchema, validateManifest, validateManifestFile } from "./validate";

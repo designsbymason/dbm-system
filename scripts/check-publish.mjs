@@ -22,8 +22,8 @@ const PACKAGES = ["components", "tokens", "utils", "icons", "manifest"];
 
 /** Files every tarball must hold, and path patterns none may. */
 const REQUIRED = ["package.json", "README.md", "LICENSE", "dist/index.js", "dist/index.cjs", "dist/index.d.ts", "dist/index.d.cts"];
-/** Extra files a package must hold: the components package ships its stylesheet (ADR-0175) and the manifest with its schema (ADR-0204). */
-const REQUIRED_EXTRA = { components: ["dist/index.css", "dist/manifest.json", "dist/manifest.schema.json", "dist/manifest/index.json", "dist/manifest/utilities.json"] };
+/** Extra files a package must hold: the components package ships its stylesheet (ADR-0175), the manifest with its schema (ADR-0204) and AGENTS.md (ADR-0208). */
+const REQUIRED_EXTRA = { components: ["AGENTS.md", "dist/index.css", "dist/manifest.json", "dist/manifest.schema.json", "dist/manifest/index.json", "dist/manifest/utilities.json"] };
 const FORBIDDEN = [/^src\//, /(^|\/)__tests__\//, /\.(test|spec|stories)\.[cm]?[jt]sx?$/, /^\.env/, /^\.local\//, /^tsconfig/, /^node_modules\//, /^storybook-static\//];
 
 /** The sections of a package.json whose entries an installer reads. */
@@ -125,7 +125,7 @@ for (const name of PACKAGES) {
 }
 
 // 5. The consumer guide (ADR-0175): what it tells an app to import and set must exist.
-const GUIDE_FILES = [...PACKAGES.map((name) => join("packages", name, "README.md")), join("packages", "components", "src", "guides", "GettingStarted.mdx"), join("packages", "components", "src", "guides", "Theming.mdx")];
+const GUIDE_FILES = [...PACKAGES.map((name) => join("packages", name, "README.md")), join("packages", "components", "AGENTS.md"), join("packages", "components", "src", "guides", "GettingStarted.mdx"), join("packages", "components", "src", "guides", "Theming.mdx")];
 
 /** The file in `directory` that `exports` maps `subpath` (`./css/purple-light.bundled.css`) to, or `undefined` when it does not. */
 function resolveExport(directory, exportsMap, subpath) {
