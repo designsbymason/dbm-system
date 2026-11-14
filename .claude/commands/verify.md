@@ -22,7 +22,7 @@ From the repo root, in this order (each stops the run on a failure you can't exp
 11. `pnpm test` (unit)
 12. `pnpm --filter @dbm-system/components test:storybook` (real browser: stories, `play` functions, axe)
 13. `pnpm --filter @dbm-system/components test:visual` (run it from `packages/components`, as CI does; the root has no such script; the Playwright visual-regression suite; it needs the Storybook dev server, so start it with `preview_start` if it is not running, and report a snapshot difference with the story it is on, never update snapshots)
-14. `pnpm check-fresh-app` (packs the five packages, installs them into an empty app with npm, bundles a `Button` with the stylesheet and a bundled theme with esbuild and with webpack, and checks the page in Chromium; needs the network and Playwright's Chromium, as `browser-tests` has)
+14. `pnpm check-fresh-app` (packs the four public packages, installs them into an empty app with npm, bundles a `Button` with the stylesheet and a bundled theme with esbuild and with webpack, and checks the page in Chromium; needs the network and Playwright's Chromium, as `browser-tests` has)
 
 With `quick`, run only 3, 9 and 11. With a step name, run just that step.
 

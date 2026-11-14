@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Checks that each public package would publish correctly, after `pnpm build`:
+ * Checks that each public package (the four that are published; ADR-0209) would publish correctly, after `pnpm build`:
  *   1. the packed file list holds the README, the LICENSE, package.json and the build, and none of the
  *      source, tests, stories or private files;
  *   2. publint finds nothing wrong with `exports`, `main` and the files they point at;
@@ -18,7 +18,7 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
-const PACKAGES = ["components", "tokens", "utils", "icons", "manifest"];
+const PACKAGES = ["components", "tokens", "utils", "icons"];
 
 /** Files every tarball must hold, and path patterns none may. */
 const REQUIRED = ["package.json", "README.md", "LICENSE", "dist/index.js", "dist/index.cjs", "dist/index.d.ts", "dist/index.d.cts"];
@@ -29,7 +29,7 @@ const FORBIDDEN = [/^src\//, /(^|\/)__tests__\//, /\.(test|spec|stories)\.[cm]?[
 /** The sections of a package.json whose entries an installer reads. */
 const DEPENDENCY_SECTIONS = ["dependencies", "devDependencies", "peerDependencies", "optionalDependencies"];
 /** The workspace packages that are never published; a published package must not depend on one. */
-const PRIVATE = ["@dbm-system/eslint-config", "@dbm-system/tsconfig"];
+const PRIVATE = ["@dbm-system/eslint-config", "@dbm-system/tsconfig", "@dbm-system/manifest"];
 
 /**
  * What is wrong with the package.json that `pnpm pack` put in a tarball: a `workspace:` specifier it did not rewrite (a publish through

@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
  * Installs the packed packages into a fresh app and checks that they work there (ADR-0175, ADR-0207), after `pnpm build`:
- *   1. packs the five public packages with pnpm, as a publish would;
+ *   1. packs the four public packages with pnpm, as a publish would;
  *   2. installs them into an empty app with npm, which is not this repository's workspace (so nothing resolves by accident), and finds
  *      AGENTS.md and the manifest files where an agent looks for them;
  *   3. bundles a small entry with esbuild for production: React, a `Button`, `@dbm-system/components/styles.css` and the light and dark
@@ -25,7 +25,7 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 import { build } from "esbuild";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
-const PACKAGES = ["components", "tokens", "utils", "icons", "manifest"];
+const PACKAGES = ["components", "tokens", "utils", "icons"];
 const failures = [];
 const fail = (message) => failures.push(message);
 

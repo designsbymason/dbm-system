@@ -68,7 +68,8 @@ packages/
                      examples, ADR-0179). Shared internals live in src/internal/. Also holds its own .storybook/ config, src/foundations/
                      (Storybook-only token reference pages) and src/guides/ (the Getting
                      started page and guide pages); neither is shipped in the package)
-  manifest/          Build tool: generates the JSON component manifest from TS + JSDoc
+  manifest/          Private build tool (not published): generates the JSON component manifest
+                     from TS + JSDoc; the components build runs it
   eslint-config/      Shared lint rules
   tsconfig/           Shared TypeScript configs
 guidelines/          Internal reference docs — current-state specs, inventories, conventions.

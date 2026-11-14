@@ -1,6 +1,6 @@
 # 0202 — The five public packages are versioned together and the first release is 0.1.0, over independent versions or a first release at 1.0.0
 
-**Status:** Accepted · **Date:** 2026-11-13
+**Status:** Superseded by [0209](./0209-four-packages-are-published-and-versioned-together-and-the-manifest-generator-is-a-private-tool-over-publishing-it-as-a-fifth-package.md) · **Date:** 2026-11-13
 
 ## Context
 Nothing is published and every package is at `0.0.0`. Changesets can version packages independently, together (`fixed`) or loosely together (`linked`), and `.changeset/config.json` had both lists empty. `@dbm-system/components` depends on `@dbm-system/tokens`, `@dbm-system/utils` and `@dbm-system/icons`, and the manifest describes the components, so a consumer or an agent reading the manifest needs to know which versions belong together.

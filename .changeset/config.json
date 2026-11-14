@@ -7,13 +7,16 @@
       "@dbm-system/components",
       "@dbm-system/tokens",
       "@dbm-system/utils",
-      "@dbm-system/icons",
-      "@dbm-system/manifest"
+      "@dbm-system/icons"
     ]
   ],
   "linked": [],
   "access": "public",
   "baseBranch": "main",
   "updateInternalDependencies": "patch",
-  "ignore": []
+  "ignore": [],
+  "privatePackages": {
+    "version": false,
+    "tag": false
+  }
 }

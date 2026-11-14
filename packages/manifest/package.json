@@ -1,6 +1,7 @@
 {
   "name": "@dbm-system/manifest",
   "version": "0.0.0",
+  "private": true,
   "description": "Build tool that generates the agent-readable JSON component manifest from TypeScript + JSDoc.",
   "license": "MIT",
   "repository": {
@@ -38,9 +39,6 @@
     "schema"
   ],
   "sideEffects": false,
-  "publishConfig": {
-    "access": "public"
-  },
   "scripts": {
     "build": "tsup",
     "dev": "tsup --watch",
