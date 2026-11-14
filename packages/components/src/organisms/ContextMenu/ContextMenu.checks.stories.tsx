@@ -58,15 +58,26 @@ const stillRect = async (element: HTMLElement) => {
 // A sheet is pinned to the bottom edge. Wait for it to be there (a slow runner can take many frames to start the entrance, so "has stopped
 // moving" alone can be true while it is still where it begins, or before it is placed at all), then for it to stop moving. The rectangle is in
 // the failure message, so a failure says where the sheet was.
-const sheetAtTheBottom = async (element: HTMLElement) => {
+// Pass a function to look the sheet up again on every poll: a submenu can be replaced after it is first found, and a node held from before
+// stays at 0x0 for the whole wait (CI, 2026-11-14), so the check would fail on a sheet that is where it should be.
+const sheetAtTheBottom = async (sheet: HTMLElement | (() => HTMLElement)) => {
+  const current = () => (typeof sheet === "function" ? sheet() : sheet);
   await waitFor(
     () => {
-      const rect = element.getBoundingClientRect();
+      const rect = current().getBoundingClientRect();
       expect(Math.abs(rect.bottom - window.innerHeight), `the sheet is at ${JSON.stringify(rect)} in a ${window.innerWidth}x${window.innerHeight} window`).toBeLessThan(1);
     },
     { timeout: 8000 },
   );
-  return stillRect(element);
+  return stillRect(current());
+};
+// The submenu is the menu that holds the Back row: not "the second menu in the document", which a slow runner can order or fill differently.
+// Found again each time it is called, so a re-rendered submenu is followed.
+const submenuUnderBack = () => {
+  const back = body.queryByRole("menuitem", { name: "Back" });
+  const sub = back?.closest<HTMLElement>('[role="menu"]');
+  if (!sub) throw new Error("no submenu with a Back row is open");
+  return sub;
 };
 const waitClosed = () => waitFor(() => expect(body.queryByRole("menu")).toBeNull());
 
@@ -538,10 +549,10 @@ export const SheetIsPinnedToTheBottomEdge: Story = {
     }
     // the submenu covers it under a Back row, and Back returns
     await leftClick(within(menu).getByRole("menuitem", { name: "Share" }));
-    // The submenu is the menu that holds the Back row, not "the second menu in the document".
-    const sub = (await body.findByRole("menuitem", { name: "Back" })).closest<HTMLElement>('[role="menu"]')!;
-    await settled(sub);
-    await sheetAtTheBottom(sub);
+    await body.findByRole("menuitem", { name: "Back" });
+    await settled(submenuUnderBack());
+    await sheetAtTheBottom(submenuUnderBack);
+    const sub = submenuUnderBack();
     await expect(getComputedStyle(menu).opacity).toBe("0");
     await leftClick(within(sub).getByRole("menuitem", { name: "Back" }));
     await waitFor(() => expect(body.queryByRole("menuitem", { name: "Email" })).toBeNull());
