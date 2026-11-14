@@ -38,19 +38,19 @@ Recorded here so they are not re-asked; the detail is in the file named.
 
 ## 3. Questions not yet decided
 
-All of these wait on work that has not started, and each is decided when that work does.
+Each of these is decided when the work it waits on starts.
 
 | Question | Waits on |
 |---|---|
 | How social images are generated | The social-image build step; the tool is chosen when it is built |
-| Component page layout | The manifest schema (Phase 8) |
+| Component page layout | The docs site skeleton (Phase 9); the manifest, its schema and its per-component files exist ([ADR-0206](../adr/0206-the-manifest-is-also-shipped-as-an-index-and-one-file-per-component-beside-the-whole-file-over-the-single-file-alone-or-waiting-for-an-mcp-server.md)) |
 | How the changelog page reads Changesets | The release pipeline (Phase 8) |
 | The hero's visual concept and the page's length | The first landing review |
 
 ## 4. Gaps this plan depends on
 
-- **Phase 8 outputs:** the manifest schema, the publish pipeline, the Changesets wiring and the consumer stylesheet and token loading decision (`01-vision-and-goals.md` §12 and §13).
-- **Templates:** none built; the Templates pages wait on them.
+- **Phase 8 outputs:** the manifest and its schema are built and ship in the package; the publish pipeline, the Changesets wiring and the consumer stylesheet and token loading (decided, not built, [ADR-0175](../adr/0175-a-consumer-imports-an-explicit-stylesheet-and-one-bundled-theme-file-and-supplies-the-fonts-over-implicit-css-or-shipped-fonts.md)) are not (`01-vision-and-goals.md` §12 and §13).
+- **Templates:** two shells ship and three story-only pages are built (`04-component-inventory.md`); the rest of the Templates pages wait on the templates still to build.
 - **Ports:** every guide uses Storybook-only blocks ([04-content-inventory.md](./04-content-inventory.md)); the port is real work.
 - **Local development:** how a contributor runs the docs app and Storybook side by side (ports, a launch entry) is decided with the skeleton.
 - **No analytics** means no reader numbers. A later change needs a new ADR.

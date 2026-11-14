@@ -140,7 +140,7 @@ Not a string enum (`icon="wallet"`) — this keeps tree-shaking intact (unused i
 
 ## 7. Documentation requirement (definition of "typed")
 
-Every exported component gets a component-level JSDoc block with a usage example; every prop gets an inline JSDoc description. This is what the manifest generator (`packages/manifest`) reads to build the agent-facing component index — undocumented props are invisible to that tooling, not just "less polished."
+Every exported component gets a component-level JSDoc block with a usage example; every prop gets an inline JSDoc description. This is what the manifest generator (`packages/manifest`) reads to build the agent-facing component index, and the build enforces it: the components build and `pnpm check-manifest` fail on a prop, component, part, hook or function without a description, on a component without an `@example`, and on an export the manifest cannot place ([ADR-0205](adr/0205-manifest-version-1-describes-components-and-their-parts-then-hooks-and-functions-records-the-native-props-a-component-inherits-by-name-and-fails-on-an-undocumented-prop-over-listing-every-native-prop.md)). A compound component's JSDoc goes on its root, and a part is documented where it is declared.
 
 ## 8. Definition of done (per component)
 
