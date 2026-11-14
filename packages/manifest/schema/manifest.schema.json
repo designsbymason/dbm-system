@@ -95,7 +95,7 @@
         },
         "source": {
           "type": "string",
-          "description": "The component file, relative to the package root."
+          "description": "The component file. This is the path in the repository, relative to packages/components. The published package ships only dist, so it does not exist in an installed copy; it is for linking to the source, not for opening."
         },
         "asChild": {
           "type": "boolean",
@@ -293,7 +293,7 @@
         },
         "source": {
           "type": "string",
-          "description": "The file it is written in, relative to the package root; left out when it comes from another package."
+          "description": "The file it is written in; left out when it comes from another package. This is the path in the repository, relative to packages/components. The published package ships only dist, so it does not exist in an installed copy; it is for linking to the source, not for opening."
         },
         "examples": {
           "type": "array",
@@ -324,7 +324,7 @@
         },
         "source": {
           "type": "string",
-          "description": "The file it is written in, relative to the package root; left out when it comes from another package."
+          "description": "The file it is written in; left out when it comes from another package. This is the path in the repository, relative to packages/components. The published package ships only dist, so it does not exist in an installed copy; it is for linking to the source, not for opening."
         }
       }
     },

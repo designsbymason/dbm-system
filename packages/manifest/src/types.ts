@@ -58,7 +58,10 @@ export interface ManifestComponent {
   description?: string;
   /** What to import from `@dbm-system/components`. */
   importName: string;
-  /** The component file, relative to the package root. */
+  /**
+   * The component file's path in the repository, relative to `packages/components`. The published package ships only `dist`, so
+   * the path does not exist in an installed copy: it is for linking to the source, not for opening.
+   */
   source: string;
   /** Whether it merges its props onto a single child element. */
   asChild: boolean;
@@ -102,7 +105,7 @@ export interface ManifestUtility {
   params: ManifestParameter[];
   /** The type it returns. */
   returns: string;
-  /** The file it is written in, relative to the package root; left out when it comes from another package. */
+  /** The file it is written in, as a path in the repository (see `ManifestComponent.source`); left out when it comes from another package. */
   source?: string;
   /** Examples from the JSDoc. */
   examples: ManifestExample[];
@@ -116,7 +119,7 @@ export interface ManifestConstant {
   type: string;
   /** The first paragraph of the JSDoc. */
   summary: string;
-  /** The file it is written in, relative to the package root; left out when it comes from another package. */
+  /** The file it is written in, as a path in the repository (see `ManifestComponent.source`); left out when it comes from another package. */
   source?: string;
 }
 
