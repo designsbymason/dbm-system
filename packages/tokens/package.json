@@ -37,7 +37,8 @@
     "access": "public"
   },
   "scripts": {
-    "build": "node style-dictionary.config.js && tsup"
+    "build": "node style-dictionary.config.js && tsup",
+    "test": "node scripts/check-css.mjs"
   },
   "devDependencies": {
     "@dbm-system/tsconfig": "workspace:*",

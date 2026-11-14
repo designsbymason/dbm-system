@@ -1,6 +1,6 @@
 import { basename, dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { writeFileSync } from 'node:fs';
+import { readFileSync, writeFileSync } from 'node:fs';
 import StyleDictionary from 'style-dictionary';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -37,6 +37,26 @@ StyleDictionary.registerParser({
     if (filename === 'shadow.json') delete data._note;
     const namespace = NAMESPACE_BY_FILENAME[filename];
     return namespace ? { [namespace]: data } : data;
+  },
+});
+
+// A token's `$description` is long and holds internal history, and Style Dictionary copies it into the CSS as a comment (85% of the
+// token CSS, ADR-0207). The descriptions live in the source JSON and are shown by Storybook's Foundations pages, so they are removed
+// before anything is generated and no output carries them.
+StyleDictionary.registerPreprocessor({
+  name: 'dbm/drop-descriptions',
+  preprocessor: (dictionary) => {
+    const strip = (node) => {
+      if (node === null || typeof node !== 'object') return node;
+      if (Array.isArray(node)) return node.map(strip); // a font stack or a cubic-bezier value is an array
+      const copy = {};
+      for (const [key, value] of Object.entries(node)) {
+        if (key === '$description' || key === 'description' || key === 'comment') continue;
+        copy[key] = strip(value);
+      }
+      return copy;
+    };
+    return strip(dictionary);
   },
 });
 
@@ -120,6 +140,7 @@ const THEMES = ['purple-light', 'purple-dark', 'emerald-light', 'emerald-dark'];
 async function buildPrimitives() {
   const sd = new StyleDictionary({
     parsers: ['dbm/namespace-primitives'],
+    preprocessors: ['dbm/drop-descriptions'],
     source: [PRIMITIVE_SOURCE],
     platforms: {
       css: {
@@ -157,6 +178,7 @@ async function buildPrimitives() {
 async function buildComponents() {
   const sd = new StyleDictionary({
     parsers: ['dbm/namespace-primitives'],
+    preprocessors: ['dbm/drop-descriptions'],
     source: [PRIMITIVE_SOURCE, COMPONENT_SOURCE],
     platforms: {
       css: {
@@ -195,6 +217,7 @@ async function buildTheme(theme) {
 
   const sd = new StyleDictionary({
     parsers: ['dbm/namespace-primitives'],
+    preprocessors: ['dbm/drop-descriptions'],
     source: [PRIMITIVE_SOURCE, join(SRC_DIR, 'semantic', `${theme}.json`)],
     platforms: {
       css: {
@@ -228,6 +251,30 @@ async function buildTheme(theme) {
   await sd.buildAllPlatforms();
 }
 
+// One file per brand and mode (ADR-0175, ADR-0207): the primitives, the component tokens and that theme's semantic tokens, in that order,
+// under their own selectors. Each source file starts with the same generated-file header, which is kept once at the top.
+const GENERATED_HEADER = /^\/\*\*\n \* Do not edit directly, this file was auto-generated\.\n \*\/\n\n/;
+function writeBundles() {
+  const cssDir = join(BUILD_DIR, 'css');
+  const body = (file) => readFileSync(join(cssDir, file), 'utf8').replace(GENERATED_HEADER, '').trimEnd();
+  for (const theme of THEMES) {
+    const bundle = [
+      '/**',
+      ' * Do not edit directly, this file was auto-generated.',
+      ` * ${theme}: the primitives, the component tokens and this theme's tokens in one file.`,
+      ' */',
+      '',
+      body('primitives.css'),
+      '',
+      body('component-tokens.css'),
+      '',
+      body(`${theme}.css`),
+      '',
+    ].join('\n');
+    writeFileSync(join(cssDir, `${theme}.bundled.css`), bundle);
+  }
+}
+
 function writeTsBarrel() {
   // Extensionless specifiers match the "Bundler" moduleResolution used across this
   // monorepo's tsconfig (see packages/tsconfig/tsconfig.base.json).
@@ -245,6 +292,7 @@ async function buildAll() {
   for (const theme of THEMES) {
     await buildTheme(theme);
   }
+  writeBundles();
   writeTsBarrel();
 }
 

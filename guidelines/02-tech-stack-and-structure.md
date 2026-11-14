@@ -98,7 +98,7 @@ dbm-system/
 | Framework target | React 18+ | Your stated target; keep an eye on RSC/Server Component compatibility for components that don't need interactivity |
 | Accessibility/interaction primitives | Radix UI Primitives | See section 1 — foundational, unstyled, industry-standard |
 | Styling | CSS Modules + CSS Custom Properties | Scoped classnames at build time, zero runtime cost, tokens flow in as CSS vars |
-| Token pipeline | Style Dictionary | Single JSON source → CSS vars (web), TS constants (typed token access), future RN output |
+| Token pipeline | Style Dictionary | Single JSON source → CSS vars (web, as separate files and as one bundle per brand and mode, without the token descriptions), TS constants (typed token access), future RN output |
 | Icons | Phosphor Icons (`@phosphor-icons/react`), wrapped | Wrap in a typed `Icon` component so swapping/theming icon weight & size is centralized |
 | Animation | CSS transitions and keyframes driven by the motion tokens; no animation library in the published packages ([ADR-0140](adr/0140-the-design-system-takes-no-animation-library-and-animates-with-css-and-the-motion-tokens-over-keeping-motion-as-an-optional-peer-dependency.md)) | Keeps the core dependency-light. Every animation in the library (an entrance, a fill, a fan, a collapse) is a CSS transition or keyframe, and `prefers-reduced-motion` is handled in the stylesheet. A library is reconsidered only if a component needs a sequence CSS cannot express, with a new ADR. |
 | Build (component packages) | tsup (esbuild-based) | Fast, simple ESM+CJS+d.ts output, minimal config |
