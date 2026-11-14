@@ -94,7 +94,7 @@
   "devDependencies": {
     "@dbm-system/eslint-config": "workspace:*",
     "@dbm-system/tsconfig": "workspace:*",
-    "@playwright/test": "^1.62.0",
+    "@playwright/test": "^1.65.0",
     "@storybook/addon-a11y": "^10.6.7",
     "@storybook/addon-docs": "^10.6.7",
     "@storybook/addon-vitest": "^10.6.7",
@@ -112,7 +112,7 @@
     "eslint": "^10.14.0",
     "jest-axe": "^10.0.0",
     "jsdom": "^29.1.1",
-    "playwright": "^1.62.0",
+    "playwright": "^1.65.0",
     "react": "^19.2.7",
     "react-dom": "^19.2.7",
     "remark-gfm": "^4.0.1",
