@@ -22,7 +22,10 @@ export interface SearchInputProps
    * @default false
    */
   hasError?: boolean;
-  /** @default 'md' */
+  /**
+   * The field's size: one step on the shared size scale (`xs` to `xl`), which sets its height, padding and text size together.
+   * @default 'md'
+   */
   size?: InputSize;
   /**
    * Swaps the leading search icon for a spinner — set while an async

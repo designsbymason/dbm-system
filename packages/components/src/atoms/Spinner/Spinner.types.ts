@@ -4,7 +4,10 @@ import type { IconTone } from "../Icon";
 export type SpinnerSize = "xs" | "sm" | "md" | "lg" | "xl";
 
 export interface SpinnerProps extends ComponentPropsWithoutRef<"span"> {
-  /** @default 'md' */
+  /**
+   * The spinner's size: one step on the shared size scale (`xs` to `xl`).
+   * @default 'md'
+   */
   size?: SpinnerSize;
   /**
    * Color, from the same scale `Icon`'s `tone` uses. Defaults to

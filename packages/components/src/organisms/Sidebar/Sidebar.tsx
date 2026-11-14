@@ -1110,16 +1110,16 @@ const SidebarGroup = forwardRef<HTMLButtonElement, SidebarGroupProps>(
 );
 SidebarGroup.displayName = "Sidebar.Group";
 
+// The default avatar is as wide as an item at every step (its own `xs` is 36px, an item's `md` box), so the rail's account is one item wide and
+// its button is as wide as the picture in it.
+const accountAvatarStyle = { "--avatar-dimension-base": "var(--sidebar-item-box)" } as CSSProperties;
+
 /**
  * An account or workspace switcher: a button with an avatar, a name and a quieter line beneath it, which opens a `Menu` of the items you
  * put inside it (the account's profile, a workspace to switch to, sign out). It goes in a `Sidebar.Header` or `Sidebar.Footer`. In the rail
  * it is the avatar alone, with the name as its tooltip and its accessible name, and the menu opens beside the rail. With no children it is a
  * plain button for your own `onClick`.
  */
-// The default avatar is as wide as an item at every step (its own `xs` is 36px, an item's `md` box), so the rail's account is one item wide and
-// its button is as wide as the picture in it.
-const accountAvatarStyle = { "--avatar-dimension-base": "var(--sidebar-item-box)" } as CSSProperties;
-
 const SidebarAccount = forwardRef<HTMLButtonElement, SidebarAccountProps>(
   ({ name, description, avatar, src, menuSide, children, className, ...props }, ref) => {
     const { railed, dir, menuContainer } = useSidebarContext("Sidebar.Account");

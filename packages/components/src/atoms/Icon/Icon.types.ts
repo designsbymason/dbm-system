@@ -43,10 +43,12 @@ export interface IconProps extends Omit<
    */
   icon: PhosphorIcon;
   /**
+   * The icon's size: one step on the icon-size token scale (`xs` to `3xl`).
    * @default 'md'
    */
   size?: IconSize;
   /**
+   * The Phosphor weight the icon is drawn in: `thin`, `light`, `regular`, `bold`, `fill` or `duotone`.
    * @default 'bold'
    */
   weight?: IconWeight;

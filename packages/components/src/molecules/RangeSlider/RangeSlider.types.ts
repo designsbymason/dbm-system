@@ -33,7 +33,10 @@ export interface RangeSliderProps
     ComponentPropsWithoutRef<"span">,
     "value" | "defaultValue" | "onChange" | "dir"
   > {
-  /** @default 'md' */
+  /**
+   * The slider's size: one step on the shared size scale (`xs` to `xl`), the same as `Slider`'s.
+   * @default 'md'
+   */
   size?: RangeSliderSize;
   /**
    * Marks the slider as invalid, visually (a danger-colored range and thumbs)

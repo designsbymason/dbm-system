@@ -5,7 +5,7 @@ const oneLine = (text: string): string => text.replace(/\s*\n\s*/g, " ").trim();
 
 /**
  * Splits a JSDoc description into its summary (the first paragraph) and the rest. Paragraphs are separated by a blank line; the
- * lines inside one are joined with a space.
+ * lines inside each one are joined with a space.
  */
 export function splitDescription(text: string): { summary: string; description?: string } {
   const paragraphs = text
@@ -14,7 +14,7 @@ export function splitDescription(text: string): { summary: string; description?:
     .filter(Boolean);
   const [first, ...rest] = paragraphs;
   const summary = oneLine(first ?? "");
-  return rest.length > 0 ? { summary, description: rest.join("\n\n") } : { summary };
+  return rest.length > 0 ? { summary, description: rest.map(oneLine).join("\n\n") } : { summary };
 }
 
 /** One line of a prop's description. */

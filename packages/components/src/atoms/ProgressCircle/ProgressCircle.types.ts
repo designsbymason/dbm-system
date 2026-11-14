@@ -36,9 +36,15 @@ export interface ProgressCircleProps
    * @default 100
    */
   max?: number;
-  /** @default 'md' */
+  /**
+   * The circle's size: one step on the shared size scale (`xs` to `xl`).
+   * @default 'md'
+   */
   size?: ProgressCircleSize;
-  /** @default 'brand' */
+  /**
+   * The colour of the filled arc: the brand colour or one of the status colours (`info`, `success`, `warning`, `danger`).
+   * @default 'brand'
+   */
   tone?: ProgressCircleTone;
   /**
    * Accessible label (e.g. `"Uploading file.zip"`). The ring has no

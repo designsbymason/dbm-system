@@ -5,7 +5,7 @@ import type { ComponentDoc, PropItem } from "react-docgen-typescript";
 import ts from "typescript";
 import { describeProp, parseExamples, splitDescription, unquote } from "./jsdoc";
 import { readStoryTitle } from "./storyTitle";
-import type { Manifest, ManifestComponent, ManifestPart, ManifestProp } from "./types";
+import type { Manifest, ManifestComponent, ManifestParameter, ManifestPart, ManifestProp, ManifestUtility } from "./types";
 
 /** One finding about the source: an error means the manifest entry is incomplete, a warning means it is thinner than it should be. */
 export interface ManifestDiagnostic {
@@ -72,6 +72,20 @@ export function generateManifest({ packageRoot }: GenerateOptions): GenerateResu
     components.push({ name: exported.name, symbol });
   }
 
+  // `typeof shared.Item` names a property of an object, not the component: follow it to the variable it was assigned from.
+  const followToVariable = (symbol: ts.Symbol): ts.Symbol => {
+    let current = symbol;
+    for (let depth = 0; depth < 4; depth++) {
+      const declaration = current.valueDeclaration;
+      let next: ts.Symbol | undefined;
+      if (declaration && ts.isShorthandPropertyAssignment(declaration)) next = checker.getShorthandAssignmentValueSymbol(declaration);
+      else if (declaration && ts.isPropertyAssignment(declaration) && ts.isIdentifier(declaration.initializer)) next = checker.getSymbolAtLocation(declaration.initializer);
+      if (!next) return current;
+      current = resolveAlias(next);
+    }
+    return current;
+  };
+
   // 2. The parts of a compound component: its capitalised static members, each found through the variable it was assigned from.
   const partsOf = (symbol: ts.Symbol): FoundPart[] => {
     const found: FoundPart[] = [];
@@ -83,7 +97,7 @@ export function generateManifest({ packageRoot }: GenerateOptions): GenerateResu
       else if (declaration && ts.isPropertyAssignment(declaration) && ts.isIdentifier(declaration.initializer)) target = declaration.initializer;
       else if (declaration && ts.isShorthandPropertyAssignment(declaration)) target = declaration.name;
       const targetSymbol = target && checker.getSymbolAtLocation(target);
-      if (targetSymbol) found.push({ key: member.name, symbol: resolveAlias(targetSymbol) });
+      if (targetSymbol) found.push({ key: member.name, symbol: followToVariable(resolveAlias(targetSymbol)) });
     }
     return found;
   };
@@ -105,13 +119,26 @@ export function generateManifest({ packageRoot }: GenerateOptions): GenerateResu
   const docs = new Map<string, ComponentDoc>();
   for (const doc of parser.parse([...files].filter(Boolean).sort())) docs.set(`${doc.filePath}::${doc.displayName}`, doc);
 
+  // A compound component is `Object.assign(Root, { ...parts })`, and its JSDoc is written on the root it is built from.
+  const rootOf = (symbol: ts.Symbol): ts.Symbol | undefined => {
+    const declaration = declarationOf(symbol);
+    const call = declaration && ts.isVariableDeclaration(declaration) ? declaration.initializer : undefined;
+    const first = call && ts.isCallExpression(call) && call.expression.getText() === "Object.assign" ? call.arguments[0] : undefined;
+    const target = first && ts.isIdentifier(first) ? checker.getSymbolAtLocation(first) : undefined;
+    return target && resolveAlias(target);
+  };
   const jsdocOf = (symbol: ts.Symbol) => {
-    const text = ts.displayPartsToString(symbol.getDocumentationComment(checker));
-    const examples = symbol
-      .getJsDocTags(checker)
-      .filter((tag) => tag.name === "example")
-      .flatMap((tag) => parseExamples(ts.displayPartsToString(tag.text)));
-    return { ...splitDescription(text), examples };
+    const read = (from: ts.Symbol) => ({
+      text: ts.displayPartsToString(from.getDocumentationComment(checker)),
+      examples: from
+        .getJsDocTags(checker)
+        .filter((tag) => tag.name === "example")
+        .flatMap((tag) => parseExamples(ts.displayPartsToString(tag.text))),
+    });
+    const own = read(symbol);
+    const root = rootOf(symbol);
+    const fromRoot = root ? read(root) : undefined;
+    return { ...splitDescription(own.text.trim() === "" && fromRoot ? fromRoot.text : own.text), examples: own.examples.length === 0 && fromRoot ? fromRoot.examples : own.examples };
   };
 
   const toProp = (prop: PropItem): ManifestProp => {
@@ -211,7 +238,7 @@ export function generateManifest({ packageRoot }: GenerateOptions): GenerateResu
   };
 
   // 4. The manifest.
-  const manifest: Manifest = { schemaVersion: 1, package: "@dbm-system/components", version: pkg.version, components: [] };
+  const manifest: Manifest = { schemaVersion: 1, package: "@dbm-system/components", version: pkg.version, components: [], utilities: [] };
   for (const { name, symbol, parts } of compounds) {
     const file = sourceOf(symbol);
     const story = readStoryTitle(dirname(file), name);
@@ -254,5 +281,35 @@ export function generateManifest({ packageRoot }: GenerateOptions): GenerateResu
     } satisfies ManifestComponent);
   }
   manifest.components = byName(manifest.components);
+
+  // 5. The hooks and functions: lowercase value exports that can be called.
+  for (const exported of checker.getExportsOfModule(moduleSymbol)) {
+    const symbol = resolveAlias(exported);
+    if (!(symbol.flags & ts.SymbolFlags.Value) || !/^[a-z][A-Za-z0-9]*$/.test(exported.name)) continue;
+    const signature = typeOf(symbol)?.getCallSignatures()[0];
+    if (!signature) continue;
+    const { summary, description, examples } = jsdocOf(symbol);
+    if (summary === "") diagnostics.push({ level: "warning", subject: exported.name, message: "no description in the JSDoc" });
+    const params: ManifestParameter[] = signature.getParameters().map((parameter) => {
+      const declaration = declarationOf(parameter);
+      const optional = !!declaration && ts.isParameter(declaration) && (declaration.questionToken !== undefined || declaration.initializer !== undefined);
+      const written = declaration && ts.isParameter(declaration) && declaration.type ? declaration.type.getText().replace(/\s+/g, " ") : checker.typeToString(declaration ? checker.getTypeOfSymbolAtLocation(parameter, declaration) : checker.getAnyType());
+      return { name: parameter.name, type: written, required: !optional, description: describeProp(ts.displayPartsToString(parameter.getDocumentationComment(checker))) };
+    });
+    const file = sourceOf(symbol);
+    const local = file !== "" && !isExternal(file) && !relative(root, file).startsWith("..");
+    manifest.utilities.push({
+      name: exported.name,
+      kind: exported.name.startsWith("use") ? "hook" : "function",
+      summary,
+      ...(description ? { description } : {}),
+      signature: checker.signatureToString(signature, undefined, ts.TypeFormatFlags.NoTruncation),
+      params,
+      returns: checker.typeToString(signature.getReturnType(), undefined, ts.TypeFormatFlags.NoTruncation),
+      ...(local ? { source: relative(root, file) } : {}),
+      examples,
+    } satisfies ManifestUtility);
+  }
+  manifest.utilities = byName(manifest.utilities);
   return { manifest, diagnostics };
 }

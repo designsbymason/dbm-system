@@ -74,6 +74,40 @@ export interface ManifestComponent {
   examples: ManifestExample[];
 }
 
+/** One parameter of a hook or function. */
+export interface ManifestParameter {
+  /** The parameter's name. */
+  name: string;
+  /** The type as written. */
+  type: string;
+  /** Whether the parameter must be passed. */
+  required: boolean;
+  /** The `@param` text from the JSDoc. */
+  description: string;
+}
+
+/** One exported hook or function (`useToast`, `formatRelativeTime`). */
+export interface ManifestUtility {
+  /** The name, as imported. */
+  name: string;
+  /** `hook` for a `use…` function, otherwise `function`. */
+  kind: "hook" | "function";
+  /** The first paragraph of the JSDoc. */
+  summary: string;
+  /** The rest of the JSDoc, when there is more than the summary. */
+  description?: string;
+  /** The call signature as TypeScript writes it. */
+  signature: string;
+  /** The first overload's parameters, in order. */
+  params: ManifestParameter[];
+  /** The type it returns. */
+  returns: string;
+  /** The file it is written in, relative to the package root; left out when it comes from another package. */
+  source?: string;
+  /** Examples from the JSDoc. */
+  examples: ManifestExample[];
+}
+
 /** The whole manifest for one release of `@dbm-system/components`. */
 export interface Manifest {
   /** Raised only by a change that removes or renames a field, or changes what one means. */
@@ -84,4 +118,6 @@ export interface Manifest {
   version: string;
   /** Every public component, sorted by name. */
   components: ManifestComponent[];
+  /** Every exported hook and function, sorted by name. */
+  utilities: ManifestUtility[];
 }

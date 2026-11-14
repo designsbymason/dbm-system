@@ -11,7 +11,10 @@ export interface TextareaProps
    * @default false
    */
   hasError?: boolean;
-  /** @default 'md' */
+  /**
+   * The field's size: one step on the shared size scale (`xs` to `xl`), which sets its height, padding and text size together.
+   * @default 'md'
+   */
   size?: TextareaSize;
   /**
    * Grows the textarea's height to fit its content as the user types,

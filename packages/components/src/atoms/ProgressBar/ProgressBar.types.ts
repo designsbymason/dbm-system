@@ -32,9 +32,15 @@ export interface ProgressBarProps
    * @default 100
    */
   max?: number;
-  /** @default 'md' */
+  /**
+   * The bar's size: one step on the shared size scale (`xs` to `xl`).
+   * @default 'md'
+   */
   size?: ProgressBarSize;
-  /** @default 'brand' */
+  /**
+   * The colour of the filled part: the brand colour or one of the status colours (`info`, `success`, `warning`, `danger`).
+   * @default 'brand'
+   */
   tone?: ProgressBarTone;
   /**
    * Accessible label (e.g. `"Uploading file.zip"`). The progress bar has

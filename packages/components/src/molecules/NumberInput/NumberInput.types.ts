@@ -32,7 +32,10 @@ export interface NumberInputProps
    * @default false
    */
   hasError?: boolean;
-  /** @default 'md' */
+  /**
+   * The field's size: one step on the shared size scale (`xs` to `xl`), which sets its height, padding and text size together.
+   * @default 'md'
+   */
   size?: InputSize;
   /**
    * The controlled value, as a real number — not a string to parse

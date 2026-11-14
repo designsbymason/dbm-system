@@ -7,7 +7,10 @@ export interface SliderProps
     ComponentPropsWithoutRef<"span">,
     "value" | "defaultValue" | "onChange" | "dir"
   > {
-  /** @default 'md' */
+  /**
+   * The slider's size: one step on the shared size scale (`xs` to `xl`).
+   * @default 'md'
+   */
   size?: SliderSize;
   /**
    * Marks the slider as invalid, visually (a danger-colored track/thumb)

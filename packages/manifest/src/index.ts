@@ -4,7 +4,9 @@ export type {
   Manifest,
   ManifestComponent,
   ManifestExample,
+  ManifestParameter,
   ManifestPart,
   ManifestProp,
   ManifestTier,
+  ManifestUtility,
 } from "./types";

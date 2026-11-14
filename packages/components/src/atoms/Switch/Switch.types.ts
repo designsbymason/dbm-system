@@ -13,7 +13,10 @@ export interface SwitchProps
    * `aria-label` instead (matches `IconButton`'s icon-only convention).
    */
   children?: ReactNode;
-  /** @default 'md' */
+  /**
+   * The switch's size: one step on the shared size scale (`xs` to `xl`).
+   * @default 'md'
+   */
   size?: SwitchSize;
   /**
    * Marks the switch as invalid, visually (a danger-colored ring) and via

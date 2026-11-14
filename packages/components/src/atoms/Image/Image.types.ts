@@ -36,6 +36,7 @@ export type ImageRadius =
 
 export interface ImageProps
   extends Omit<ComponentPropsWithoutRef<"img">, "alt" | "onError"> {
+  /** The image's address. When it is missing, or the image fails to load, `fallback` is shown in its place. */
   src?: string;
   /**
    * Required — pass `""` for a purely decorative image. `Image` always
@@ -74,7 +75,10 @@ export interface ImageProps
    * dev-mode warning, so this doesn't silently do nothing.
    */
   aspectRatio?: number;
-  /** @default 'cover' */
+  /**
+   * How the picture fills its box when its shape differs from the box's: the CSS `object-fit` values.
+   * @default 'cover'
+   */
   objectFit?: ImageObjectFit;
   /**
    * Where the image anchors within its box when it's cropped — only
@@ -85,9 +89,15 @@ export interface ImageProps
    * @default 'center'
    */
   position?: ImageObjectPosition;
-  /** @default 'none' */
+  /**
+   * The corner radius, one step on the radius scale (`xs` to `3xl`), or `full` for a circle or pill.
+   * @default 'none'
+   */
   radius?: ImageRadius;
-  /** @default 'lazy' */
+  /**
+   * `lazy` waits until the image is near the viewport before fetching it; `eager` fetches it at once, which suits an image at the top of the page.
+   * @default 'lazy'
+   */
   loading?: "lazy" | "eager";
   /**
    * Fired when `src` fails to load, after the component has already

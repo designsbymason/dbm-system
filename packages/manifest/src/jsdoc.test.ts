@@ -3,9 +3,9 @@ import { describeProp, parseExamples, splitDescription, unquote } from "./jsdoc"
 
 describe("splitDescription", () => {
   it("takes the first paragraph as the summary and joins its lines", () => {
-    expect(splitDescription("A button.\nIt acts.\n\nMore detail.\n\nEven more.")).toEqual({
+    expect(splitDescription("A button.\nIt acts.\n\nMore detail,\nover two lines.\n\nEven more.")).toEqual({
       summary: "A button. It acts.",
-      description: "More detail.\n\nEven more.",
+      description: "More detail, over two lines.\n\nEven more.",
     });
   });
   it("leaves the description out when there is one paragraph", () => {

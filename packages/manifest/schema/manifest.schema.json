@@ -2,80 +2,298 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://dbm-system.com/manifest.schema.json",
   "title": "DBM System component manifest",
-  "description": "The agent-readable index of the components in one release of @dbm-system/components. Version 1 describes components and their parts (ADR-0205).",
+  "description": "The agent-readable index of the components, hooks and functions in one release of @dbm-system/components (ADR-0205).",
   "type": "object",
-  "required": ["schemaVersion", "package", "version", "components"],
+  "required": [
+    "schemaVersion",
+    "package",
+    "version",
+    "components"
+  ],
   "additionalProperties": false,
   "properties": {
     "schemaVersion": {
       "const": 1,
       "description": "Raised only by a change that removes or renames a field, or changes what one means. Adding an optional field keeps it."
     },
-    "package": { "const": "@dbm-system/components" },
-    "version": { "type": "string", "description": "The version of @dbm-system/components this manifest describes." },
+    "package": {
+      "const": "@dbm-system/components"
+    },
+    "version": {
+      "type": "string",
+      "description": "The version of @dbm-system/components this manifest describes."
+    },
     "components": {
       "type": "array",
       "description": "Every public component, sorted by name.",
-      "items": { "$ref": "#/$defs/component" }
+      "items": {
+        "$ref": "#/$defs/component"
+      }
+    },
+    "utilities": {
+      "type": "array",
+      "description": "Every exported hook and function, sorted by name. Added without raising schemaVersion: a manifest without it is still valid.",
+      "items": {
+        "$ref": "#/$defs/utility"
+      }
     }
   },
   "$defs": {
     "component": {
       "type": "object",
-      "required": ["name", "tier", "category", "summary", "importName", "source", "asChild", "as", "extends", "props", "parts", "examples"],
+      "required": [
+        "name",
+        "tier",
+        "category",
+        "summary",
+        "importName",
+        "source",
+        "asChild",
+        "as",
+        "extends",
+        "props",
+        "parts",
+        "examples"
+      ],
       "additionalProperties": false,
       "properties": {
-        "name": { "type": "string", "description": "The component's name, as imported (`Button`)." },
-        "tier": { "enum": ["atom", "molecule", "organism", "template"], "description": "From the story title's first segment." },
-        "category": { "type": "string", "description": "From the story title's second segment (`Inputs`)." },
-        "summary": { "type": "string", "description": "The first paragraph of the component's JSDoc." },
-        "description": { "type": "string", "description": "The rest of the component's JSDoc, when there is more than the summary." },
-        "importName": { "type": "string", "description": "What to import from `@dbm-system/components`." },
-        "source": { "type": "string", "description": "The component file, relative to the package root." },
-        "asChild": { "type": "boolean", "description": "Whether it merges its props onto a single child element." },
-        "as": { "type": "boolean", "description": "Whether it renders as another element through an `as` prop." },
+        "name": {
+          "type": "string",
+          "description": "The component's name, as imported (`Button`)."
+        },
+        "tier": {
+          "enum": [
+            "atom",
+            "molecule",
+            "organism",
+            "template"
+          ],
+          "description": "From the story title's first segment."
+        },
+        "category": {
+          "type": "string",
+          "description": "From the story title's second segment (`Inputs`)."
+        },
+        "summary": {
+          "type": "string",
+          "description": "The first paragraph of the component's JSDoc."
+        },
+        "description": {
+          "type": "string",
+          "description": "The rest of the component's JSDoc, when there is more than the summary."
+        },
+        "importName": {
+          "type": "string",
+          "description": "What to import from `@dbm-system/components`."
+        },
+        "source": {
+          "type": "string",
+          "description": "The component file, relative to the package root."
+        },
+        "asChild": {
+          "type": "boolean",
+          "description": "Whether it merges its props onto a single child element."
+        },
+        "as": {
+          "type": "boolean",
+          "description": "Whether it renders as another element through an `as` prop."
+        },
         "extends": {
           "type": "array",
-          "items": { "type": "string" },
+          "items": {
+            "type": "string"
+          },
           "description": "The native or library prop types it inherits, by name (`ComponentPropsWithoutRef<\"button\">`). Not listed in `props`."
         },
-        "props": { "type": "array", "items": { "$ref": "#/$defs/prop" }, "description": "Only the props this system declares or overrides, sorted by name." },
-        "parts": { "type": "array", "items": { "$ref": "#/$defs/part" }, "description": "The parts of a compound component (`Menu.Item`), sorted by name." },
-        "examples": { "type": "array", "items": { "$ref": "#/$defs/example" } }
+        "props": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/prop"
+          },
+          "description": "Only the props this system declares or overrides, sorted by name."
+        },
+        "parts": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/part"
+          },
+          "description": "The parts of a compound component (`Menu.Item`), sorted by name."
+        },
+        "examples": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/example"
+          }
+        }
       }
     },
     "part": {
       "type": "object",
-      "required": ["name", "summary", "extends", "props"],
+      "required": [
+        "name",
+        "summary",
+        "extends",
+        "props"
+      ],
       "additionalProperties": false,
       "properties": {
-        "name": { "type": "string", "description": "The public name (`Menu.Item`)." },
-        "summary": { "type": "string" },
-        "extends": { "type": "array", "items": { "type": "string" } },
-        "props": { "type": "array", "items": { "$ref": "#/$defs/prop" } }
+        "name": {
+          "type": "string",
+          "description": "The public name (`Menu.Item`)."
+        },
+        "summary": {
+          "type": "string"
+        },
+        "extends": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "props": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/prop"
+          }
+        }
       }
     },
     "prop": {
       "type": "object",
-      "required": ["name", "type", "required", "description"],
+      "required": [
+        "name",
+        "type",
+        "required",
+        "description"
+      ],
       "additionalProperties": false,
       "properties": {
-        "name": { "type": "string" },
-        "type": { "type": "string", "description": "The type as written (`ButtonVariant`, `MouseEventHandler<HTMLButtonElement>`)." },
-        "required": { "type": "boolean" },
-        "default": { "type": "string", "description": "The `@default` from the JSDoc, as written." },
-        "description": { "type": "string" },
-        "values": { "type": "array", "items": { "type": "string" }, "description": "The allowed values when the type is a union of literals." },
-        "deprecated": { "type": "string", "description": "Present when the prop is deprecated; the text says what to use instead." }
+        "name": {
+          "type": "string"
+        },
+        "type": {
+          "type": "string",
+          "description": "The type as written (`ButtonVariant`, `MouseEventHandler<HTMLButtonElement>`)."
+        },
+        "required": {
+          "type": "boolean"
+        },
+        "default": {
+          "type": "string",
+          "description": "The `@default` from the JSDoc, as written."
+        },
+        "description": {
+          "type": "string"
+        },
+        "values": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "The allowed values when the type is a union of literals."
+        },
+        "deprecated": {
+          "type": "string",
+          "description": "Present when the prop is deprecated; the text says what to use instead."
+        }
       }
     },
     "example": {
       "type": "object",
-      "required": ["code"],
+      "required": [
+        "code"
+      ],
       "additionalProperties": false,
       "properties": {
-        "title": { "type": "string" },
-        "code": { "type": "string", "description": "TSX source." }
+        "title": {
+          "type": "string"
+        },
+        "code": {
+          "type": "string",
+          "description": "TSX source."
+        }
+      }
+    },
+    "parameter": {
+      "type": "object",
+      "required": [
+        "name",
+        "type",
+        "required",
+        "description"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "type": {
+          "type": "string"
+        },
+        "required": {
+          "type": "boolean"
+        },
+        "description": {
+          "type": "string",
+          "description": "The `@param` text from the JSDoc."
+        }
+      }
+    },
+    "utility": {
+      "type": "object",
+      "required": [
+        "name",
+        "kind",
+        "summary",
+        "signature",
+        "params",
+        "returns",
+        "examples"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "The name, as imported."
+        },
+        "kind": {
+          "enum": [
+            "hook",
+            "function"
+          ],
+          "description": "`hook` for a `use\u2026` function, otherwise `function`."
+        },
+        "summary": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "signature": {
+          "type": "string",
+          "description": "The call signature as TypeScript writes it."
+        },
+        "params": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/parameter"
+          },
+          "description": "The first overload's parameters, in order."
+        },
+        "returns": {
+          "type": "string",
+          "description": "The type it returns."
+        },
+        "source": {
+          "type": "string",
+          "description": "The file it is written in, relative to the package root; left out when it comes from another package."
+        },
+        "examples": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/example"
+          }
+        }
       }
     }
   }

@@ -11,6 +11,8 @@ export type BadgeOverlap = "rectangular" | "circular";
 
 export interface BadgeProps extends ComponentPropsWithoutRef<"span"> {
   /**
+   * The colour family: one of the status tones (`info`, `success`, `warning`, `danger`), `neutral`, or one of the two identity tones
+   * (`brand`, `highlight`).
    * @default 'danger'
    */
   tone?: BadgeTone;

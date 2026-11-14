@@ -110,6 +110,32 @@ describe("generateManifest on the components package", () => {
     expect(result.manifest.components.find((component) => component.name === "ConfirmDialog")?.tier).toBe("organism");
   });
 
+  it("reads a compound component's summary and example from the root it is built from, and a shared part's from the part it points at", () => {
+    const menu = result.manifest.components.find((component) => component.name === "Menu");
+    expect(menu?.summary).not.toBe("");
+    expect(menu?.examples.length).toBeGreaterThan(0);
+    const shared = result.manifest.components.find((component) => component.name === "ContextMenu")?.parts.find((part) => part.name === "ContextMenu.Item");
+    expect(shared?.summary).not.toBe("");
+  });
+
+  it("lists the hooks and functions with their parameters, sorted by name", () => {
+    const { utilities } = result.manifest;
+    const names = utilities.map((utility) => utility.name);
+    expect(names).toEqual([...names].sort((a, b) => (a < b ? -1 : 1)));
+    const dismiss = utilities.find((utility) => utility.name === "usePersistentDismiss");
+    expect(dismiss).toMatchObject({ kind: "hook" });
+    expect(dismiss?.params.length).toBeGreaterThan(0);
+    expect(dismiss?.source).toBeUndefined();
+    const toast = utilities.find((utility) => utility.name === "useToast");
+    expect(toast).toMatchObject({ kind: "hook", source: "src/organisms/Toast/Toast.tsx" });
+    expect(utilities.find((utility) => utility.name === "formatRelativeTime")?.kind).toBe("function");
+    expect(utilities.every((utility) => utility.summary !== "")).toBe(true);
+  });
+
+  it("finds nothing undocumented: no prop without a description, no component, part or function without a summary or example", () => {
+    expect(result.diagnostics).toEqual([]);
+  });
+
   it("is deterministic: a second run gives the same text", () => {
     const again = generateManifest({ packageRoot });
     expect(JSON.stringify(again.manifest)).toBe(JSON.stringify(result.manifest));
