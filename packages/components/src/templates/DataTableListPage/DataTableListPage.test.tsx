@@ -21,6 +21,9 @@ function Page(options: PeopleListOptions) {
 
 const loaded = async () => screen.findByRole("checkbox", { name: "Select Ada Lovelace" });
 const rowsShown = () => screen.getAllByRole("row").length - 1;
+// The count the toolbar shows, not the table's hidden live region that says the same thing a moment after a change (a timer-based announcement,
+// so on a slow runner both are in the document and a plain `getByText` finds two).
+const shownSummary = (text: string) => screen.getAllByText(text).filter((element) => !element.closest('[role="status"]'));
 
 describe("the data-table list page", () => {
   it("loads the first page and says how many people match", async () => {
@@ -28,7 +31,7 @@ describe("the data-table list page", () => {
     expect(screen.getByRole("heading", { level: 1, name: "People" })).toBeInTheDocument();
     await loaded();
     expect(rowsShown()).toBe(10);
-    expect(screen.getByText("37 results")).toBeInTheDocument();
+    expect(shownSummary("37 results")).toHaveLength(1);
   });
 
   it("draws placeholder rows while the request is in flight", () => {
@@ -147,7 +150,7 @@ describe("the data-table list page", () => {
     await user.click(within(dialog).getByRole("button", { name: "Remove" }));
     await waitFor(() => expect(screen.queryByRole("checkbox", { name: "Select Ada Lovelace" })).not.toBeInTheDocument());
     expect(await screen.findByText("Ada Lovelace was removed")).toBeInTheDocument();
-    expect(screen.getByText("36 results")).toBeInTheDocument();
+    expect(shownSummary("36 results")).toHaveLength(1);
     await waitFor(() => expect(screen.getByRole("heading", { level: 1 })).toHaveFocus());
   });
 
@@ -159,7 +162,7 @@ describe("the data-table list page", () => {
     await user.click(await screen.findByRole("menuitem", { name: "Remove" }));
     await user.click(within(await screen.findByRole("alertdialog")).getByRole("button", { name: "Cancel" }));
     await waitFor(() => expect(screen.queryByRole("alertdialog")).not.toBeInTheDocument());
-    expect(screen.getByText("37 results")).toBeInTheDocument();
+    expect(shownSummary("37 results")).toHaveLength(1);
   });
 
   it("chooses every matching person across pages and removes them all after a confirmation that says how many", async () => {
