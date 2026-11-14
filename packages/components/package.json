@@ -27,6 +27,7 @@
         "default": "./dist/index.cjs"
       }
     },
+    "./styles.css": "./dist/index.css",
     "./manifest.json": "./dist/manifest.json",
     "./manifest.schema.json": "./dist/manifest.schema.json",
     "./manifest/*": "./dist/manifest/*"
@@ -34,7 +35,9 @@
   "files": [
     "dist"
   ],
-  "sideEffects": false,
+  "sideEffects": [
+    "*.css"
+  ],
   "publishConfig": {
     "access": "public"
   },

@@ -4,7 +4,7 @@
  *   1. the packed file list holds the README, the LICENSE, package.json and the build, and none of the
  *      source, tests, stories or private files;
  *   2. publint finds nothing wrong with `exports`, `main` and the files they point at;
- *   3. @arethetypeswrong/cli finds the types resolving for ESM, CommonJS and bundler consumers (JSON data exports are left out of this one);
+ *   3. @arethetypeswrong/cli finds the types resolving for ESM, CommonJS and bundler consumers (JSON and CSS data exports are left out of this one);
  *   4. the package.json inside the tarball `pnpm pack` makes has no `workspace:` specifier left, depends on a sibling public package at
  *      exactly this package's version (the packages are one fixed group, ADR-0202), and depends on no private package.
  * Exits non-zero on any failure, so CI fails the build.
@@ -22,8 +22,8 @@ const PACKAGES = ["components", "tokens", "utils", "icons", "manifest"];
 
 /** Files every tarball must hold, and path patterns none may. */
 const REQUIRED = ["package.json", "README.md", "LICENSE", "dist/index.js", "dist/index.cjs", "dist/index.d.ts", "dist/index.d.cts"];
-/** Extra files a package must hold: the components package ships the manifest and its schema (ADR-0204). */
-const REQUIRED_EXTRA = { components: ["dist/manifest.json", "dist/manifest.schema.json", "dist/manifest/index.json", "dist/manifest/utilities.json"] };
+/** Extra files a package must hold: the components package ships its stylesheet (ADR-0175) and the manifest with its schema (ADR-0204). */
+const REQUIRED_EXTRA = { components: ["dist/index.css", "dist/manifest.json", "dist/manifest.schema.json", "dist/manifest/index.json", "dist/manifest/utilities.json"] };
 const FORBIDDEN = [/^src\//, /(^|\/)__tests__\//, /\.(test|spec|stories)\.[cm]?[jt]sx?$/, /^\.env/, /^\.local\//, /^tsconfig/, /^node_modules\//, /^storybook-static\//];
 
 /** The sections of a package.json whose entries an installer reads. */
@@ -60,6 +60,13 @@ for (const name of PACKAGES) {
   const pkg = JSON.parse(readFileSync(join(dir, "package.json"), "utf8"));
   console.log(`\n${pkg.name}`);
 
+  // A package that exposes CSS through `exports` must not say it has no side effects: a bundler is then free to drop `import "pkg/styles.css"`
+  // from a production build, which leaves the app unstyled without an error (ADR-0207).
+  const exposesCss = Object.values(pkg.exports ?? {}).some((target) => typeof target === "string" && target.endsWith(".css"));
+  if (exposesCss && (pkg.sideEffects === false || (Array.isArray(pkg.sideEffects) && !pkg.sideEffects.some((entry) => entry.endsWith(".css"))))) {
+    fail(pkg.name, `exports CSS but its sideEffects (${JSON.stringify(pkg.sideEffects)}) lets a bundler drop an import of it; list the CSS, or leave sideEffects out`);
+  }
+
   // 1. The packed file list.
   const packed = JSON.parse(execFileSync("npm", ["pack", "--dry-run", "--json", "--ignore-scripts"], { cwd: dir, encoding: "utf8" }));
   const files = packed[0].files.map((file) => file.path);
@@ -93,9 +100,9 @@ for (const name of PACKAGES) {
     rmSync(packFolder, { recursive: true, force: true });
   }
 
-  // A JSON file exposed through `exports` (the schema, later the manifest) is data, not a module: it has no types or module format for
+  // A JSON or CSS file exposed through `exports` (the schema, the stylesheet) is data, not a module: it has no types or module format for
   // attw to resolve, so it is left out of that check. publint still checks that the file exists.
-  const dataEntrypoints = Object.keys(pkg.exports ?? {}).filter((entry) => entry.endsWith(".json"));
+  const dataEntrypoints = Object.keys(pkg.exports ?? {}).filter((entry) => entry.endsWith(".json") || entry.endsWith(".css"));
   const attwArgs = ["exec", "attw", "--pack", ".", ...(dataEntrypoints.length ? ["--exclude-entrypoints", ...dataEntrypoints] : [])];
 
   // 2 and 3. publint, then are-the-types-wrong, each on the packed package.
