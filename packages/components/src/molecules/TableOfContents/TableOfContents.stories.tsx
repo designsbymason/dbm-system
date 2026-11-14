@@ -905,6 +905,17 @@ export const RowInteraction: Story = {
     await userEvent.click(requirements);
     await waitFor(() => expect(caret).toHaveAttribute("aria-expanded", "false"));
     await waitFor(() => expect(topInBox(heading("requirements"))).toBeGreaterThanOrEqual(row.getBoundingClientRect().height - 2), { timeout: 3000 });
+    // While a pill is open the navigation menu keeps a visually hidden, focusable, `aria-hidden` proxy in the page, which is right then and a
+    // violation for the axe run that follows every story. It goes as the panel closes, so settle before returning: a slow runner has failed this
+    // check on that run (a proxy still there), and the message now says which pills were open instead of an axe report.
+    await waitFor(
+      () =>
+        expect(
+          document.querySelectorAll('span[aria-hidden="true"][tabindex="0"]').length,
+          `a pill's focus proxy is still in the page; expanded carets: ${Array.from(row.querySelectorAll('[aria-expanded="true"]')).map((element) => element.getAttribute("aria-label")).join(", ") || "none"}`,
+        ).toBe(0),
+      { timeout: 5000 },
+    );
   },
 };
 
@@ -1310,7 +1321,7 @@ export const DropdownInteraction: Story = {
 
     // Choosing one closes the panel and leaves the section just under the bar, not behind it.
     await userEvent.click(within(panel).getByRole("link", { name: "Section 8" }));
-    await waitFor(() => expect(within(document.body).queryByRole("dialog")).toBeNull());
+    await waitFor(() => expect(within(document.body).queryByRole("dialog")).toBeNull(), { timeout: 5000 });
     await waitFor(() => expect(trigger).toHaveAccessibleName("On this page: Section 8"), { timeout: 3000 });
     await waitFor(() => expect(topInBox(heading("8"))).toBeGreaterThanOrEqual(bar.getBoundingClientRect().height - 2), { timeout: 3000 });
   },
@@ -1330,14 +1341,14 @@ export const DropdownKeyboardInteraction: Story = {
     // Focus went into the list.
     await waitFor(() => expect(panel.contains(document.activeElement)).toBe(true));
     await userEvent.keyboard("{Escape}");
-    await waitFor(() => expect(within(document.body).queryByRole("dialog")).toBeNull());
+    await waitFor(() => expect(within(document.body).queryByRole("dialog")).toBeNull(), { timeout: 5000 });
     await expect(trigger).toHaveFocus();
     // Choosing a link with Enter leaves focus on the section, not the button.
     await userEvent.keyboard("{Enter}");
     const link = await within(document.body).findByRole("link", { name: "Section 3" });
     link.focus();
     await userEvent.keyboard("{Enter}");
-    await waitFor(() => expect(within(document.body).queryByRole("dialog")).toBeNull());
+    await waitFor(() => expect(within(document.body).queryByRole("dialog")).toBeNull(), { timeout: 5000 });
     // Long enough for the panel's own focus return to have happened, had it not been told to stand down.
     await new Promise((resolve) => setTimeout(resolve, 400));
     await expect(canvasElement.querySelector("#dk-s3")).toHaveFocus();
