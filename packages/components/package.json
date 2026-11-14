@@ -30,7 +30,8 @@
     "./styles.css": "./dist/index.css",
     "./manifest.json": "./dist/manifest.json",
     "./manifest.schema.json": "./dist/manifest.schema.json",
-    "./manifest/*": "./dist/manifest/*"
+    "./manifest/*": "./dist/manifest/*",
+    "./package.json": "./package.json"
   },
   "files": [
     "dist"

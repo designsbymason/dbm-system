@@ -5,11 +5,12 @@
  *   2. installs them into an empty app with npm, which is not this repository's workspace (so nothing resolves by accident);
  *   3. bundles a small entry with esbuild for production: React, a `Button`, `@dbm-system/components/styles.css` and the light and dark
  *      bundled token files, the way the consumer guide says;
- *   4. loads the page in Chromium and requires no errors, the component styles and the token CSS to have reached the bundle, and the
+ *   4. builds the same entry with webpack in production mode and requires the component stylesheet's rules to be in the output. esbuild
+ *      and Vite keep a CSS import even when the package says `sideEffects: false`; webpack drops it, which leaves an app unstyled with
+ *      no error (Next.js builds on it), so only this build can show that the package's `sideEffects` still keeps the stylesheet;
+ *   5. loads the page in Chromium and requires no errors, the component styles and the token CSS to have reached the bundle, and the
  *      button to be drawn from the theme's tokens, in light and again after `data-theme` changes to dark.
- * What it cannot show: esbuild keeps a CSS import even when the package says `sideEffects: false`, where webpack drops it, so that rule
- * is guarded statically by `check-publish`, not here.
- * Needs the packages built, a Chromium for Playwright and the network (`npm install` of React and the packages' dependencies). Nothing is
+ * Needs the packages built, a Chromium for Playwright and the network (`npm install` of React, webpack and the packages' dependencies). Nothing is
  * written into the repository. Exits non-zero on a failure.
  *
  * Run from the repository root: `pnpm check-fresh-app`.
@@ -61,6 +62,8 @@ try {
         "@dbm-system/utils": file("utils"),
         "@dbm-system/icons": file("icons"),
       },
+      // Only the temporary app has these; none of them is a dependency of this repository.
+      devDependencies: { webpack: "5.101.0", "css-loader": "7.1.2", "style-loader": "4.0.0" },
     }),
   );
   const install = () => execFileSync("npm", ["install", "--no-audit", "--no-fund", "--ignore-scripts"], { cwd: app, stdio: "pipe", encoding: "utf8" });
@@ -109,7 +112,42 @@ createRoot(document.getElementById("root")).render(<Button>Save</Button>);
   );
   console.log(`  bundled for production (${Math.round(css.length / 1024)} KB of CSS)`);
 
-  // 4. Load it.
+  // 4. webpack, production mode: the stylesheet's rules must survive its tree-shaking.
+  writeFileSync(
+    join(app, "entry-webpack.js"),
+    `import "@dbm-system/components/styles.css";
+import "@dbm-system/tokens/css/purple-light.bundled.css";
+import { createElement } from "react";
+import { createRoot } from "react-dom/client";
+import { Button } from "@dbm-system/components";
+
+createRoot(document.getElementById("root")).render(createElement(Button, null, "Save"));
+`,
+  );
+  const webpack = createRequire(join(app, "package.json"))("webpack");
+  const stats = await new Promise((resolve, reject) =>
+    webpack(
+      {
+        mode: "production",
+        context: app,
+        entry: "./entry-webpack.js",
+        output: { path: join(app, "out-webpack"), filename: "app.js" },
+        module: { rules: [{ test: /\.css$/, use: ["style-loader", "css-loader"] }] },
+        performance: { hints: false },
+      },
+      (error, result) => (error ? reject(error) : resolve(result)),
+    ),
+  );
+  if (stats.hasErrors()) fail(`the webpack build failed: ${stats.toString({ all: false, errors: true })}`);
+  else {
+    const bundle = readFileSync(join(app, "out-webpack", "app.js"), "utf8");
+    const before = failures.length;
+    if (!/\.Button_root ?\{/.test(bundle)) fail("webpack dropped the component stylesheet: `@dbm-system/components/styles.css` is not kept by the package's sideEffects");
+    if (!bundle.includes("--dbm-bg-brand:")) fail("webpack dropped the token CSS");
+    if (failures.length === before) console.log(`  webpack production build keeps the stylesheet (${Math.round(bundle.length / 1024)} KB)`);
+  }
+
+  // 5. Load it.
   const browser = await chromium.launch();
   try {
     const page = await browser.newPage();

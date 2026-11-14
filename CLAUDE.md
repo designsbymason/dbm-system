@@ -45,7 +45,7 @@ scripts/            Repo-level checks CI runs from the root: `check-publish` (pu
                      Radix package in the lockfile) `check-manifest` (the component manifest builds,
                      nothing is undocumented, and what the build shipped matches the source) and
                      `check-fresh-app` (the packed packages install into an empty app and style a
-                     component; needs Chromium and the network)
+                     component, bundled with esbuild and webpack; needs Chromium and the network)
 packages/
   tokens/           Source of truth for all design tokens (primitive + semantic + component layers)
   utils/             Small framework-agnostic utils (classname merging, ref merging,

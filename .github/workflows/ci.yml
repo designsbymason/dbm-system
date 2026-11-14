@@ -141,7 +141,8 @@ jobs:
         run: pnpm test:storybook
 
       # Packs the five packages, installs them into an empty app with npm, bundles a Button with the stylesheet and a bundled theme for
-      # production, and checks the page in Chromium (ADR-0175, ADR-0207). Needs the network; npm install is tried twice.
+      # production (esbuild, then webpack, which is the one that drops a stylesheet a package does not mark as a side effect), and
+      # checks the page in Chromium (ADR-0175, ADR-0207). Needs the network; npm install is tried twice.
       - name: Check a fresh app installs and styles the packed packages
         if: ${{ !cancelled() }}
         run: pnpm check-fresh-app

@@ -30,7 +30,8 @@
         "default": "./dist/index.cjs"
       }
     },
-    "./manifest.schema.json": "./schema/manifest.schema.json"
+    "./manifest.schema.json": "./schema/manifest.schema.json",
+    "./package.json": "./package.json"
   },
   "files": [
     "dist",

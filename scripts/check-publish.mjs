@@ -60,6 +60,10 @@ for (const name of PACKAGES) {
   const pkg = JSON.parse(readFileSync(join(dir, "package.json"), "utf8"));
   console.log(`\n${pkg.name}`);
 
+  // Tools and bundlers read `pkg/package.json`, which a package with an `exports` map must list or `require` throws
+  // ERR_PACKAGE_PATH_NOT_EXPORTED.
+  if (pkg.exports?.["./package.json"] !== "./package.json") fail(pkg.name, `exports does not list "./package.json"`);
+
   // A package that exposes CSS through `exports` must not say it has no side effects: a bundler is then free to drop `import "pkg/styles.css"`
   // from a production build, which leaves the app unstyled without an error (ADR-0207).
   const exposesCss = Object.values(pkg.exports ?? {}).some((target) => typeof target === "string" && target.endsWith(".css"));

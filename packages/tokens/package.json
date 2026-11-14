@@ -27,7 +27,8 @@
         "default": "./dist/index.cjs"
       }
     },
-    "./css/*.css": "./build/css/*.css"
+    "./css/*.css": "./build/css/*.css",
+    "./package.json": "./package.json"
   },
   "files": [
     "dist",
