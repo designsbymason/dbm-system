@@ -11,8 +11,10 @@ React components for web and enterprise apps. Every component, prop and part is 
 ## Set up
 
 ```bash
-pnpm add @dbm-system/components @dbm-system/tokens
+pnpm add @dbm-system/components @dbm-system/tokens @dbm-system/icons
 ```
+
+Tokens and icons are installed beside the components because your app imports from them (the theme CSS, the icons) and the components package does not re-export either.
 
 Import the stylesheet and one theme once, in the app's entry, and choose the theme on the root element:
 

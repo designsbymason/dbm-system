@@ -10,10 +10,10 @@ An agentic React component library for building web and enterprise applications 
 ## Install
 
 ```bash
-pnpm add @dbm-system/components @dbm-system/tokens
+pnpm add @dbm-system/components @dbm-system/tokens @dbm-system/icons
 ```
 
-React 18 or newer is a peer dependency (`react` and `react-dom`). `@dbm-system/tokens` holds the theme CSS you import below, so install it beside the components: a strict package manager such as pnpm only lets your app import a package it depends on.
+React 18 or newer is a peer dependency (`react` and `react-dom`). `@dbm-system/tokens` holds the theme CSS you import below and `@dbm-system/icons` the icons you pass to components (`import { PlusIcon } from "@dbm-system/icons"`), so install both beside the components: the components package does not re-export either, and a strict package manager such as pnpm only lets your app import a package it depends on. Everything else an app calls comes from `@dbm-system/components`, which brings its own dependencies.
 
 ## Set it up
 
