@@ -4,13 +4,16 @@
  *   1. the packed file list holds the README, the LICENSE, package.json and the build, and none of the
  *      source, tests, stories or private files;
  *   2. publint finds nothing wrong with `exports`, `main` and the files they point at;
- *   3. @arethetypeswrong/cli finds the types resolving for ESM, CommonJS and bundler consumers (JSON data exports are left out of this one).
+ *   3. @arethetypeswrong/cli finds the types resolving for ESM, CommonJS and bundler consumers (JSON data exports are left out of this one);
+ *   4. the package.json inside the tarball `pnpm pack` makes has no `workspace:` specifier left, depends on a sibling public package at
+ *      exactly this package's version (the packages are one fixed group, ADR-0202), and depends on no private package.
  * Exits non-zero on any failure, so CI fails the build.
  *
  * Run from the repository root: `pnpm check-publish`.
  */
 import { execFileSync, spawnSync } from "node:child_process";
-import { readFileSync } from "node:fs";
+import { mkdtempSync, readFileSync, readdirSync, rmSync } from "node:fs";
+import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -22,6 +25,29 @@ const REQUIRED = ["package.json", "README.md", "LICENSE", "dist/index.js", "dist
 /** Extra files a package must hold: the components package ships the manifest and its schema (ADR-0204). */
 const REQUIRED_EXTRA = { components: ["dist/manifest.json", "dist/manifest.schema.json", "dist/manifest/index.json", "dist/manifest/utilities.json"] };
 const FORBIDDEN = [/^src\//, /(^|\/)__tests__\//, /\.(test|spec|stories)\.[cm]?[jt]sx?$/, /^\.env/, /^\.local\//, /^tsconfig/, /^node_modules\//, /^storybook-static\//];
+
+/** The sections of a package.json whose entries an installer reads. */
+const DEPENDENCY_SECTIONS = ["dependencies", "devDependencies", "peerDependencies", "optionalDependencies"];
+/** The workspace packages that are never published; a published package must not depend on one. */
+const PRIVATE = ["@dbm-system/eslint-config", "@dbm-system/tsconfig"];
+
+/**
+ * What is wrong with the package.json that `pnpm pack` put in a tarball: a `workspace:` specifier it did not rewrite (a publish through
+ * npm would leave one, and installs of it fail), a sibling public package at a version other than the package's own, or a dependency on
+ * a private package.
+ */
+function packedManifestProblems(packed, version, publicNames) {
+  const problems = [];
+  for (const section of DEPENDENCY_SECTIONS) {
+    for (const [dependency, range] of Object.entries(packed[section] ?? {})) {
+      if (String(range).startsWith("workspace:")) problems.push(`${section}.${dependency} is still "${range}" in the tarball`);
+      if (section === "devDependencies") continue;
+      if (PRIVATE.includes(dependency)) problems.push(`${section}.${dependency} is a private package, which is never published`);
+      if (publicNames.includes(dependency) && range !== version) problems.push(`${section}.${dependency} is "${range}", not exactly ${version}`);
+    }
+  }
+  return problems;
+}
 
 let failed = false;
 const fail = (pkg, message) => {
@@ -49,6 +75,23 @@ for (const name of PACKAGES) {
   }
   for (const path of files) if (FORBIDDEN.some((pattern) => pattern.test(path))) fail(pkg.name, `the tarball holds ${path}`);
   console.log(`  ${files.length} files in the tarball`);
+
+  // 4. The package.json inside the tarball pnpm makes (the one a publish through pnpm sends).
+  const packFolder = mkdtempSync(join(tmpdir(), "dbm-pack-"));
+  try {
+    execFileSync("pnpm", ["pack", "--pack-destination", packFolder], { cwd: dir, stdio: "pipe" });
+    const tarball = readdirSync(packFolder).find((file) => file.endsWith(".tgz"));
+    if (!tarball) {
+      fail(pkg.name, "pnpm pack made no tarball");
+    } else {
+      const packed = JSON.parse(execFileSync("tar", ["-xzOf", join(packFolder, tarball), "package/package.json"], { encoding: "utf8" }));
+      const problems = packedManifestProblems(packed, pkg.version, PACKAGES.map((entry) => `@dbm-system/${entry}`));
+      for (const problem of problems) fail(pkg.name, `the packed package.json: ${problem}`);
+      if (problems.length === 0) console.log("  packed package.json ok");
+    }
+  } finally {
+    rmSync(packFolder, { recursive: true, force: true });
+  }
 
   // A JSON file exposed through `exports` (the schema, later the manifest) is data, not a module: it has no types or module format for
   // attw to resolve, so it is left out of that check. publint still checks that the file exists.

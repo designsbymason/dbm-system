@@ -13,7 +13,7 @@ From the repo root, in this order (each stops the run on a failure you can't exp
 2. `pnpm check-radix-single-copy` (the lockfile holds one version of each shared Radix package; `02` §3.2 step 4)
 3. `pnpm lint` (ESLint, then both type checks)
 4. `pnpm build`
-5. `pnpm check-publish` (packs each public package, then publint and @arethetypeswrong/cli; needs the build)
+5. `pnpm check-publish` (packs each public package, then publint, @arethetypeswrong/cli and a look at the packed package.json; needs the build)
 6. `pnpm check-manifest` (generates the component manifest and fails on a schema problem or anything undocumented; needs the build)
 7. `pnpm --filter @dbm-system/components check-component-bundle-size`
 8. `pnpm --filter @dbm-system/components check-foundations-token-coverage`
