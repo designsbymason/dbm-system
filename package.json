@@ -13,6 +13,7 @@
     "test": "turbo run test",
     "check-guidelines": "pnpm --filter @dbm-system/components check-guidelines",
     "check-publish": "node scripts/check-publish.mjs",
+    "check-radix-single-copy": "node scripts/check-radix-single-copy.mjs",
     "dev": "turbo run dev",
     "changeset": "changeset",
     "version-packages": "changeset version",

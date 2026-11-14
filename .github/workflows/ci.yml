@@ -28,6 +28,10 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      # Fails when the lockfile resolves two versions of a shared Radix package (two layer or focus stacks).
+      - name: Check one copy of each shared Radix package
+        run: pnpm check-radix-single-copy
+
       # Any documented, accepted-risk exception (e.g. a vulnerability with no patched version
       # upstream yet) is configured once in pnpm-workspace.yaml's own auditConfig.ignoreGhsas,
       # not as a flag here — pnpm audit reads it automatically, so this step and a local
