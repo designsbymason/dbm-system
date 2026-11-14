@@ -41,8 +41,9 @@ apps/
                      Storybook actually used today lives in packages/components/.storybook/,
                      not here)
 scripts/            Repo-level checks CI runs from the root: `check-publish` (publint and attw on each
-                     packed public package) and `check-radix-single-copy` (one version of each shared
-                     Radix package in the lockfile)
+                     packed public package) `check-radix-single-copy` (one version of each shared
+                     Radix package in the lockfile) and `check-manifest` (the component manifest builds
+                     and nothing is undocumented)
 packages/
   tokens/           Source of truth for all design tokens (primitive + semantic + component layers)
   utils/             Small framework-agnostic utils (classname merging, ref merging,

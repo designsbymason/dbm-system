@@ -1,0 +1,10 @@
+{
+  "$schema": "https://turbo.build/schema.json",
+  "extends": ["//"],
+  "tasks": {
+    "test": {
+      "dependsOn": ["^build", "@dbm-system/utils#build", "@dbm-system/icons#build", "@dbm-system/tokens#build"],
+      "outputs": []
+    }
+  }
+}

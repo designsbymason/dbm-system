@@ -1,11 +1,11 @@
-import { readFileSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { dirname, join, relative, resolve } from "node:path";
 import { withCustomConfig } from "react-docgen-typescript";
 import type { ComponentDoc, PropItem } from "react-docgen-typescript";
 import ts from "typescript";
 import { describeProp, parseExamples, splitDescription, unquote } from "./jsdoc";
 import { readStoryTitle } from "./storyTitle";
-import type { Manifest, ManifestComponent, ManifestParameter, ManifestPart, ManifestProp, ManifestUtility } from "./types";
+import type { Manifest, ManifestComponent, ManifestConstant, ManifestParameter, ManifestPart, ManifestProp, ManifestUtility } from "./types";
 
 /** One finding about the source: an error means the manifest entry is incomplete, a warning means it is thinner than it should be. */
 export interface ManifestDiagnostic {
@@ -238,7 +238,7 @@ export function generateManifest({ packageRoot }: GenerateOptions): GenerateResu
   };
 
   // 4. The manifest.
-  const manifest: Manifest = { schemaVersion: 1, package: "@dbm-system/components", version: pkg.version, components: [], utilities: [] };
+  const manifest: Manifest = { schemaVersion: 1, package: "@dbm-system/components", version: pkg.version, components: [], utilities: [], constants: [] };
   for (const { name, symbol, parts } of compounds) {
     const file = sourceOf(symbol);
     const story = readStoryTitle(dirname(file), name);
@@ -311,5 +311,41 @@ export function generateManifest({ packageRoot }: GenerateOptions): GenerateResu
     } satisfies ManifestUtility);
   }
   manifest.utilities = byName(manifest.utilities);
+
+  // 6. Every other exported value, and a check that nothing the package exports was left out of the manifest.
+  const listed = new Set([...manifest.components.map((component) => component.name), ...manifest.utilities.map((utility) => utility.name)]);
+  for (const exported of checker.getExportsOfModule(moduleSymbol)) {
+    const symbol = resolveAlias(exported);
+    if (!(symbol.flags & ts.SymbolFlags.Value) || listed.has(exported.name)) continue;
+    const callable = (typeOf(symbol)?.getCallSignatures().length ?? 0) > 0;
+    if (callable) {
+      diagnostics.push({ level: "error", subject: exported.name, message: "an exported function that is neither a component (capitalised) nor a hook or function (lower case), so the manifest cannot place it" });
+      continue;
+    }
+    const declaration = declarationOf(symbol);
+    const file = sourceOf(symbol);
+    const written = declaration && ts.isVariableDeclaration(declaration) && declaration.type ? declaration.type.getText().replace(/\s+/g, " ") : checker.typeToString(typeOf(symbol) ?? checker.getAnyType());
+    const { summary } = jsdocOf(symbol);
+    if (summary === "") diagnostics.push({ level: "warning", subject: exported.name, message: "no description in the JSDoc" });
+    manifest.constants.push({
+      name: exported.name,
+      type: written,
+      summary,
+      ...(file !== "" && !isExternal(file) && !relative(root, file).startsWith("..") ? { source: relative(root, file) } : {}),
+    } satisfies ManifestConstant);
+  }
+  manifest.constants = byName(manifest.constants);
+
+  // A component folder whose exports reach the manifest nowhere has dropped out of it (a component no longer callable, say).
+  const described = [...manifest.components.map((entry) => entry.source), ...manifest.utilities.flatMap((entry) => (entry.source ? [entry.source] : [])), ...manifest.constants.flatMap((entry) => (entry.source ? [entry.source] : []))];
+  for (const tier of ["atoms", "molecules", "organisms", "templates"]) {
+    const tierDirectory = join(root, "src", tier);
+    if (!existsSync(tierDirectory)) continue;
+    for (const folder of readdirSync(tierDirectory, { withFileTypes: true })) {
+      if (!folder.isDirectory() || !existsSync(join(tierDirectory, folder.name, "index.ts"))) continue;
+      const prefix = `src/${tier}/${folder.name}/`;
+      if (!described.some((source) => source.startsWith(prefix))) diagnostics.push({ level: "error", subject: folder.name, message: `src/${tier}/${folder.name} has an index.ts but nothing from it reaches the manifest` });
+    }
+  }
   return { manifest, diagnostics };
 }

@@ -50,6 +50,11 @@ jobs:
       - name: Check the packages publish correctly
         run: pnpm check-publish
 
+      # Generates the component manifest into a temporary folder; fails on a schema problem, an undocumented prop, component or
+      # function, or an export it cannot place. Needs the build above.
+      - name: Check the component manifest
+        run: pnpm check-manifest
+
       - name: Check per-component bundle size
         run: pnpm --filter @dbm-system/components check-component-bundle-size
 

@@ -14,15 +14,16 @@ From the repo root, in this order (each stops the run on a failure you can't exp
 3. `pnpm lint` (ESLint, then both type checks)
 4. `pnpm build`
 5. `pnpm check-publish` (packs each public package, then publint and @arethetypeswrong/cli; needs the build)
-6. `pnpm --filter @dbm-system/components check-component-bundle-size`
-7. `pnpm --filter @dbm-system/components check-foundations-token-coverage`
-8. `pnpm --filter @dbm-system/components check-guidelines` (report the warning count)
-9. `pnpm --filter @dbm-system/components build-storybook`, then `pnpm --filter @dbm-system/components check-storybook-bundle-size` (report the size against its budget)
-10. `pnpm test` (unit)
-11. `pnpm --filter @dbm-system/components test:storybook` (real browser: stories, `play` functions, axe)
-12. `pnpm --filter @dbm-system/components test:visual` (run it from `packages/components`, as CI does; the root has no such script; the Playwright visual-regression suite; it needs the Storybook dev server, so start it with `preview_start` if it is not running, and report a snapshot difference with the story it is on, never update snapshots)
+6. `pnpm check-manifest` (generates the component manifest and fails on a schema problem or anything undocumented; needs the build)
+7. `pnpm --filter @dbm-system/components check-component-bundle-size`
+8. `pnpm --filter @dbm-system/components check-foundations-token-coverage`
+9. `pnpm --filter @dbm-system/components check-guidelines` (report the warning count)
+10. `pnpm --filter @dbm-system/components build-storybook`, then `pnpm --filter @dbm-system/components check-storybook-bundle-size` (report the size against its budget)
+11. `pnpm test` (unit)
+12. `pnpm --filter @dbm-system/components test:storybook` (real browser: stories, `play` functions, axe)
+13. `pnpm --filter @dbm-system/components test:visual` (run it from `packages/components`, as CI does; the root has no such script; the Playwright visual-regression suite; it needs the Storybook dev server, so start it with `preview_start` if it is not running, and report a snapshot difference with the story it is on, never update snapshots)
 
-With `quick`, run only 3, 8 and 10. With a step name, run just that step.
+With `quick`, run only 3, 9 and 11. With a step name, run just that step.
 
 For a failure: say whether it is a known flake (my memory notes and the "Post-Finalization" entries in `guidelines/component-reviews/`) and rerun that one test or folder alone to see; a failure on code the working tree changed, or one that repeats alone, is not a flake until shown. Reproduce before proposing a fix, and propose it without applying it.
 

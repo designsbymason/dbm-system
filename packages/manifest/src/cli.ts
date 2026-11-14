@@ -2,8 +2,9 @@
 import { mkdirSync, writeFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { generateManifest } from "./generate";
+import { validateManifest } from "./validate";
 
-const USAGE = "Usage: dbm-manifest --root <components package folder> --out <manifest.json> [--quiet]";
+const USAGE = "Usage: dbm-manifest --root <components package folder> --out <manifest.json> [--quiet]\n\nExits 1 when the manifest breaks its schema or anything is undocumented or unplaced, and 0 when there is nothing to report.";
 
 function read(flag: string): string | undefined {
   const index = process.argv.indexOf(flag);
@@ -13,7 +14,7 @@ function read(flag: string): string | undefined {
 const root = read("--root");
 const out = read("--out");
 if (!root || !out) {
-  console.error(USAGE);
+  process.stderr.write(`${USAGE}\n`);
   process.exit(2);
 }
 
@@ -21,9 +22,15 @@ const { manifest, diagnostics } = generateManifest({ packageRoot: root });
 mkdirSync(dirname(resolve(out)), { recursive: true });
 writeFileSync(resolve(out), `${JSON.stringify(manifest, null, 2)}\n`);
 
+const problems = validateManifest(manifest);
 const errors = diagnostics.filter((entry) => entry.level === "error");
 const warnings = diagnostics.filter((entry) => entry.level === "warning");
-process.stdout.write(`dbm-manifest: ${manifest.components.length} components written to ${out} (${errors.length} errors, ${warnings.length} warnings)\n`);
+process.stdout.write(
+  `dbm-manifest: ${manifest.components.length} components, ${manifest.utilities.length} functions and ${manifest.constants.length} constants written to ${out} (${errors.length} errors, ${warnings.length} warnings, ${problems.length} schema problems)\n`,
+);
 if (!process.argv.includes("--quiet")) {
   for (const entry of diagnostics) process.stdout.write(`  ${entry.level === "error" ? "error  " : "warning"} ${entry.subject}: ${entry.message}\n`);
 }
+for (const problem of problems) process.stdout.write(`  schema  ${problem}\n`);
+// A missing description or example fails the same as a missing prop description: the manifest is the contract agents read.
+if (diagnostics.length > 0 || problems.length > 0) process.exit(1);

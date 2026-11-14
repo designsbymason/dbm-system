@@ -11,7 +11,7 @@ The manifest has to be complete enough that an agent can use a component without
 - **Each prop** carries its type as a string, whether it is required, its default, its description, and the allowed values when its type is a union of literals.
 - **Props come from react-docgen-typescript, except for a part its file does not export**, which the library cannot see; those are read from the TypeScript checker the same way (declared in this repository, with the JSDoc description and `@default`). A `ref` prop is left out of every entry: every component forwards it and none documents it.
 - **Tier and category come from the story title** (`Atoms/Inputs/Button`), and the summary from the first paragraph of the component's JSDoc, so nothing is written twice.
-- **Documentation is checked.** A prop without a description fails the build; a component without a description or an `@example` warns until the gaps are filled, then fails.
+- **Documentation is checked, and any gap fails.** `pnpm check-manifest` (and the `dbm-manifest` CLI) exits non-zero for a prop, component, part or function without a description, a component without an `@example`, an export the manifest cannot place, a component folder that reaches the manifest nowhere, or a manifest that breaks its schema. The gaps were filled first, so there is no warning-only stage. Every other exported value (the code-language grammars) is a `constants` entry, so nothing the package exports is left out.
 - **The output is deterministic**: stable key order, no timestamps, so two builds are byte-identical.
 
 ## Alternatives considered
@@ -21,7 +21,8 @@ The manifest has to be complete enough that an agent can use a component without
 - **A hand-written summary file** (the docs-only `componentDescriptions.ts`). A second source that drifts. Rejected as the source.
 
 ## Consequences
-- The 30 undocumented props are fixed before the check can fail the build.
+- The undocumented props were fixed before the check could fail the build.
+- A test compares the manifest with Storybook's own docgen (`react-docgen`, a dev dependency of the manifest package at the version Storybook uses): every prop it shows for a component is in the manifest, which is how the two are kept from disagreeing the wrong way (the first run found none missing).
 - A component's JSDoc first paragraph becomes its public summary, so it is written for a reader of the manifest.
 - `componentDescriptions.ts` stays: it holds the one short line of the Getting started table, and a JSDoc summary runs to a paragraph, so the manifest does not replace it.
 

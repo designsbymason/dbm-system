@@ -108,6 +108,18 @@ export interface ManifestUtility {
   examples: ManifestExample[];
 }
 
+/** One exported value that is neither a component nor a function (`pythonLanguage`). */
+export interface ManifestConstant {
+  /** The name, as imported. */
+  name: string;
+  /** The type as written, shortened when it is long. */
+  type: string;
+  /** The first paragraph of the JSDoc. */
+  summary: string;
+  /** The file it is written in, relative to the package root; left out when it comes from another package. */
+  source?: string;
+}
+
 /** The whole manifest for one release of `@dbm-system/components`. */
 export interface Manifest {
   /** Raised only by a change that removes or renames a field, or changes what one means. */
@@ -120,4 +132,6 @@ export interface Manifest {
   components: ManifestComponent[];
   /** Every exported hook and function, sorted by name. */
   utilities: ManifestUtility[];
+  /** Every other exported value, sorted by name. */
+  constants: ManifestConstant[];
 }

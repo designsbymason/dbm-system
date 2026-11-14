@@ -14,6 +14,7 @@
     "check-guidelines": "pnpm --filter @dbm-system/components check-guidelines",
     "check-publish": "node scripts/check-publish.mjs",
     "check-radix-single-copy": "node scripts/check-radix-single-copy.mjs",
+    "check-manifest": "node scripts/check-manifest.mjs",
     "dev": "turbo run dev",
     "changeset": "changeset",
     "version-packages": "changeset version",

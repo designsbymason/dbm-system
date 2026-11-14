@@ -4,50 +4,10 @@ import { fileURLToPath } from "node:url";
 import { beforeAll, describe, expect, it } from "vitest";
 import { generateManifest } from "./generate";
 import type { GenerateResult } from "./generate";
+import { validateManifest } from "./validate";
 
 // Runs against the real components package, so what is checked is what ships. One run takes a few seconds, more on a slow runner.
 const packageRoot = join(dirname(fileURLToPath(import.meta.url)), "..", "..", "components");
-const schema = JSON.parse(readFileSync(join(dirname(fileURLToPath(import.meta.url)), "..", "schema", "manifest.schema.json"), "utf8")) as Schema;
-
-interface Schema {
-  type?: string;
-  const?: unknown;
-  enum?: unknown[];
-  required?: string[];
-  properties?: Record<string, Schema>;
-  additionalProperties?: boolean;
-  items?: Schema;
-  $ref?: string;
-  $defs?: Record<string, Schema>;
-}
-
-/** The part of JSON Schema the manifest schema uses: type, const, enum, required, properties, no extra keys, items and local references. */
-function conforms(value: unknown, node: Schema, path: string, problems: string[]): void {
-  const resolved = node.$ref ? (schema.$defs?.[node.$ref.replace("#/$defs/", "")] as Schema) : node;
-  if (resolved.const !== undefined) {
-    if (value !== resolved.const) problems.push(`${path}: expected ${JSON.stringify(resolved.const)}`);
-    return;
-  }
-  if (resolved.enum) {
-    if (!resolved.enum.includes(value)) problems.push(`${path}: ${JSON.stringify(value)} is not one of ${JSON.stringify(resolved.enum)}`);
-    return;
-  }
-  if (resolved.type === "array") {
-    if (!Array.isArray(value)) return void problems.push(`${path}: expected an array`);
-    value.forEach((item, index) => conforms(item, resolved.items as Schema, `${path}[${index}]`, problems));
-  } else if (resolved.type === "object") {
-    if (typeof value !== "object" || value === null) return void problems.push(`${path}: expected an object`);
-    const record = value as Record<string, unknown>;
-    for (const key of resolved.required ?? []) if (!(key in record)) problems.push(`${path}.${key}: missing`);
-    for (const [key, child] of Object.entries(record)) {
-      const childSchema = resolved.properties?.[key];
-      if (!childSchema) problems.push(`${path}.${key}: not in the schema`);
-      else conforms(child, childSchema, `${path}.${key}`, problems);
-    }
-  } else if (resolved.type === "string" || resolved.type === "boolean") {
-    if (typeof value !== resolved.type) problems.push(`${path}: expected a ${resolved.type}`);
-  }
-}
 
 describe("generateManifest on the components package", () => {
   let result: GenerateResult;
@@ -56,9 +16,7 @@ describe("generateManifest on the components package", () => {
   }, 180_000);
 
   it("conforms to the schema", () => {
-    const problems: string[] = [];
-    conforms(result.manifest, schema, "manifest", problems);
-    expect(problems).toEqual([]);
+    expect(validateManifest(result.manifest)).toEqual([]);
   });
 
   it("describes the package and its version", () => {
@@ -130,6 +88,15 @@ describe("generateManifest on the components package", () => {
     expect(toast).toMatchObject({ kind: "hook", source: "src/organisms/Toast/Toast.tsx" });
     expect(utilities.find((utility) => utility.name === "formatRelativeTime")?.kind).toBe("function");
     expect(utilities.every((utility) => utility.summary !== "")).toBe(true);
+  });
+
+  it("accounts for every value the package exports: a component, a function or a constant", () => {
+    const { constants, utilities, components } = result.manifest;
+    expect(constants.map((constant) => constant.name)).toEqual(expect.arrayContaining(["pythonLanguage", "yamlLanguage"]));
+    expect(constants.every((constant) => constant.summary !== "" && constant.type !== "")).toBe(true);
+    const all = [...components.map((entry) => entry.name), ...utilities.map((entry) => entry.name), ...constants.map((entry) => entry.name)];
+    expect(new Set(all).size).toBe(all.length);
+    expect(all.length).toBeGreaterThan(150);
   });
 
   it("finds nothing undocumented: no prop without a description, no component, part or function without a summary or example", () => {
