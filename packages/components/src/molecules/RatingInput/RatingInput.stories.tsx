@@ -434,6 +434,14 @@ const resolved = (property: "color" | "backgroundColor", value: string) => {
   probe.remove();
   return colour;
 };
+// A real mouse a neighbouring story left over the page sends a `pointerenter` to whichever star is drawn under it, after a check has
+// cleared its own hover. Storybook's `userEvent` is synthetic and never moves that mouse, so the checks that read the hover state park it
+// in the corner of the story first (the frame is scaled in the test page, so the point is mapped to the page).
+const parkPointer = () => {
+  const frame = window.frameElement?.getBoundingClientRect();
+  const scale = frame ? frame.width / window.innerWidth : 1;
+  return send("Input.dispatchMouseEvent", { type: "mouseMoved", x: (frame?.left ?? 0) + 2 * scale, y: (frame?.top ?? 0) + 2 * scale });
+};
 const checkedValue = (canvasElement: HTMLElement) =>
   (Array.from(canvasElement.querySelectorAll<HTMLInputElement>("input[type=radio]")).find((radio) => radio.checked) ?? { value: "" }).value;
 
@@ -442,13 +450,14 @@ export const ChooseInteraction: Story = {
   tags: ["!dev"],
   args: { defaultValue: 0, onValueChange: fn() },
   play: async ({ args, canvasElement }) => {
+    await parkPointer();
     const radios = within(canvasElement).getAllByRole("radio");
     await userEvent.click(radios[3] as HTMLElement);
     await expect(checkedValue(canvasElement)).toBe("4");
     await expect(args.onValueChange).toHaveBeenCalledWith(4);
     await userEvent.keyboard("{ArrowLeft}");
     await expect(checkedValue(canvasElement)).toBe("3");
-    await expect(fills(canvasElement)).toEqual([1, 1, 1, 0, 0]);
+    await waitFor(() => expect(fills(canvasElement)).toEqual([1, 1, 1, 0, 0]));
   },
 };
 
@@ -457,6 +466,7 @@ export const HoverPreviewCheck: Story = {
   tags: ["!dev"],
   args: { defaultValue: 1 },
   play: async ({ canvasElement }) => {
+    await parkPointer();
     const radios = within(canvasElement).getAllByRole("radio");
     await userEvent.hover(radios[3] as HTMLElement);
     // The chosen star stays solid; the stars the pointer would add are the preview.
@@ -465,7 +475,7 @@ export const HoverPreviewCheck: Story = {
     await expect(checkedValue(canvasElement)).toBe("1");
     await userEvent.unhover(radios[3] as HTMLElement);
     await waitFor(() => expect(fills(canvasElement)).toEqual([1, 0, 0, 0, 0]));
-    await expect(previews(canvasElement)).toEqual([undefined, undefined, undefined, undefined, undefined]);
+    await waitFor(() => expect(previews(canvasElement)).toEqual([undefined, undefined, undefined, undefined, undefined]));
   },
 };
 
@@ -679,6 +689,7 @@ export const ForcedColorsCheck: Story = {
     await emulate("active");
     try {
       await waitFor(() => expect(window.matchMedia("(forced-colors: active)").matches).toBe(true));
+      await parkPointer();
       await userEvent.tab();
       const item = (document.activeElement as HTMLElement).closest("[data-fill]") as HTMLElement;
       await expect(getComputedStyle(item).outlineStyle).toBe("solid");
