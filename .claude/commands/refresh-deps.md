@@ -16,4 +16,4 @@ Dependabot version updates are off and nothing prompts a refresh, so this is a d
    - for each: the package, from and to, what depends on it, the risk, and anything Storybook-chrome or Playwright-related that `guidelines/07-storybook-and-documentation-standards.md` §9 says to re-verify by hand;
    - anything you recommend skipping or deferring, and why.
 
-After I approve, apply it in small commits and run the full pipeline after each with `/verify` (audit, lint, build, the bundle and token-coverage checks, `check-guidelines`, the Storybook build and its size check, `pnpm test`, `test:storybook` and `test:visual`, one after another). Never push without showing me exactly what is being pushed and getting an explicit go-ahead.
+After I approve, apply it in small commits and run the full pipeline after each with `/verify` (audit, the single-Radix-copy check, lint, build, `check-publish`, the bundle and token-coverage checks, `check-guidelines`, the Storybook build and its size check, `pnpm test`, `test:storybook` and `test:visual`, one after another). Never push without showing me exactly what is being pushed and getting an explicit go-ahead.
