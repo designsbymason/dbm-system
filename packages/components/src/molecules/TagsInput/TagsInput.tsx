@@ -14,6 +14,9 @@ import { TagsInputChip } from "./TagsInputChip";
 import { fitCount } from "./fitCount";
 import type { TagsInputAddSource, TagsInputLabels, TagsInputProps } from "./TagsInput.types";
 
+/** The sizer chip is never pressed; without a handler `Tag` would print its development warning about a remove button that does nothing. */
+const noop = () => undefined;
+
 const sizeClass: Record<InputSize, string | undefined> = {
   xs: styles.sizeXs,
   sm: styles.sizeSm,
@@ -549,7 +552,7 @@ export const TagsInput = forwardRef<HTMLInputElement, TagsInputProps>(
             {/* A chip drawn but never seen, so the row is as tall as a chip with none in it and adding the first
                 does not move what is below. Hidden from everything: no tab stop, no accessible name, no width. */}
             <li aria-hidden="true" className={styles.sizer}>
-              <Tag removable removeTabStop={false} size={tagSizeFor[size]}>
+              <Tag removable onRemove={noop} removeTabStop={false} size={tagSizeFor[size]}>
                 {" "}
               </Tag>
             </li>
