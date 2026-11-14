@@ -70,7 +70,7 @@ const NOT_COMPONENTS = new Set(["Nunito", "Lora"]);
 const PLACEHOLDERS = new Set(["Name"]);
 
 /** Field names of the manifest's own files, which the text may name: `forwardsRef` says whether a component takes a ref. */
-const MANIFEST_FIELDS = new Set(["forwardsRef", "refElement", "importName"]);
+const MANIFEST_FIELDS = new Set(["usedBy", "forwardsRef", "refElement", "importName"]);
 
 /** Attributes in the text that belong to the page, not to a component: `data-theme` on the root element chooses a theme. */
 const NOT_PROPS = new Set(["data-theme"]);

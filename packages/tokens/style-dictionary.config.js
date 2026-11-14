@@ -1,6 +1,6 @@
 import { basename, dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync, statSync, writeFileSync } from 'node:fs';
 import StyleDictionary from 'style-dictionary';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -286,6 +286,90 @@ function writeTsBarrel() {
   writeFileSync(join(BUILD_DIR, 'ts', 'index.ts'), lines.join('\n'));
 }
 
+// The token index (ADR-0210): one JSON file listing every token with its layer, group, type, resolved value in each theme, the primitive
+// it aliases and a one-sentence purpose, so an agent can choose a token without reading the CSS. It is built from sources that still hold
+// the descriptions (the CSS builds drop them). A description ships only as its first sentence and only when that sentence carries no
+// dated or historical note; the rest is internal history that stays in the source.
+const HISTORY = /\b20\d\d-\d\d-\d\d\b|\b(moved from|new token|token consolidation|redefined|retired|renamed|consolidat\w*|explicit direction|replaces?|replaced|previously|formerly|was)\b/i;
+function purposeOf(description) {
+  if (typeof description !== 'string') return undefined;
+  const text = description.replace(/\s+/g, ' ').trim();
+  const sentence = text.split(/(?<=[.!?])\s+(?=[A-Z`"(])/)[0];
+  if (!sentence || sentence.length > 200 || HISTORY.test(sentence)) return undefined;
+  return sentence.endsWith('.') ? sentence : `${sentence}.`;
+}
+
+const cssName = (path) => `--dbm-${path.join('-')}`;
+const aliasOf = (value) => {
+  const match = typeof value === 'string' ? /^\{([^{}]+)\}$/.exec(value) : null;
+  return match ? cssName(match[1].split('.')) : undefined;
+};
+
+// Which components use a token: the components whose own stylesheets reference it. The shared internals (src/internal) are not attributed to a
+// component, so a token only they use has no list. This is a fact read from the code, so it does not go stale the way a description does.
+const COMPONENTS_SRC = join(__dirname, '..', 'components', 'src');
+function usageByToken() {
+  const usedBy = new Map();
+  const visit = (dir) => {
+    for (const entry of readdirSync(dir)) {
+      const path = join(dir, entry);
+      if (statSync(path).isDirectory()) {
+        if (entry !== 'node_modules') visit(path);
+        continue;
+      }
+      if (!entry.endsWith('.css')) continue;
+      const owner = /[\\/](?:atoms|molecules|organisms|templates)[\\/]([^\\/]+)[\\/]/.exec(path.slice(COMPONENTS_SRC.length))?.[1];
+      if (!owner) continue;
+      for (const [, name] of readFileSync(path, 'utf8').matchAll(/var\((--dbm-[a-z0-9-]+)/g)) {
+        if (!usedBy.has(name)) usedBy.set(name, new Set());
+        usedBy.get(name).add(owner);
+      }
+    }
+  };
+  if (existsSync(COMPONENTS_SRC)) visit(COMPONENTS_SRC);
+  return usedBy;
+}
+
+async function writeIndex() {
+  const usedBy = usageByToken();
+  const index = new Map();
+  for (const theme of THEMES) {
+    const sd = new StyleDictionary({
+      parsers: ['dbm/namespace-primitives'],
+      source: [PRIMITIVE_SOURCE, COMPONENT_SOURCE, join(SRC_DIR, 'semantic', `${theme}.json`)],
+      platforms: { css: { transforms: CSS_TRANSFORMS, prefix: 'dbm' } },
+    });
+    const { allTokens } = await sd.getPlatformTokens('css');
+    for (const token of allTokens) {
+      const name = cssName(token.path);
+      const layer = isSemanticToken(token) ? 'semantic' : isComponentToken(token) ? 'component' : 'primitive';
+      if (layer !== 'semantic' && theme !== THEMES[0]) continue;
+      let entry = index.get(name);
+      if (!entry) {
+        const purpose = purposeOf(token.original.$description);
+        entry = { name, layer, group: token.path[0], type: token.$type, ...(purpose ? { purpose } : {}) };
+        index.set(name, entry);
+      }
+      const alias = aliasOf(token.original.$value);
+      if (layer === 'semantic') {
+        (entry.values ??= {})[theme] = token.$value;
+        if (alias) (entry.aliases ??= {})[theme] = alias;
+      } else {
+        entry.value = token.$value;
+        if (alias) entry.alias = alias;
+      }
+    }
+  }
+  for (const entry of index.values()) {
+    const users = usedBy.get(entry.name);
+    if (users) entry.usedBy = [...users].sort();
+  }
+  const tokens = [...index.values()];
+  const order = { semantic: 0, component: 1, primitive: 2 };
+  tokens.sort((a, b) => order[a.layer] - order[b.layer] || a.name.localeCompare(b.name));
+  writeFileSync(join(BUILD_DIR, 'tokens.json'), `${JSON.stringify({ version: 1, themes: THEMES, tokens }, null, 2)}\n`);
+}
+
 async function buildAll() {
   await buildPrimitives();
   await buildComponents();
@@ -294,6 +378,7 @@ async function buildAll() {
   }
   writeBundles();
   writeTsBarrel();
+  await writeIndex();
 }
 
 await buildAll();

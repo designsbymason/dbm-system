@@ -28,11 +28,13 @@
       }
     },
     "./css/*.css": "./build/css/*.css",
+    "./tokens.json": "./build/tokens.json",
     "./package.json": "./package.json"
   },
   "files": [
     "dist",
-    "build/css"
+    "build/css",
+    "build/tokens.json"
   ],
   "publishConfig": {
     "access": "public"

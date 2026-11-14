@@ -5,7 +5,9 @@
  *      theme, in that order, so it cannot drift from the separate files it is made from;
  *   2. every bundle is self-contained: each `var(--dbm-…)` in it names a custom property the bundle defines;
  *   3. no token description is left: each file has its one generated-file header comment and no other;
- *   4. no value is empty or `[object Object]`, and the four themes define the same semantic tokens.
+ *   4. the token index (`build/tokens.json`, ADR-0210) lists exactly the custom properties the CSS defines, a semantic one with a value for each theme,
+ *      and no purpose carries a date or is longer than a sentence;
+ *   5. no value is empty or `[object Object]`, and the four themes define the same semantic tokens.
  * Exits non-zero on the first kind of problem it finds, listing them.
  */
 import { readFileSync } from "node:fs";
@@ -62,9 +64,32 @@ for (const theme of THEMES.slice(1)) {
   if (lacking.length + extra.length > 0) fail(`${theme}.css`, `does not define the same semantic tokens as ${THEMES[0]} (lacks ${lacking.length}, adds ${extra.length})`);
 }
 
+// The token index against the CSS: the same names, the same values, per theme for the semantic tokens.
+const index = JSON.parse(readFileSync(join(cssDir, "..", "tokens.json"), "utf8"));
+const byName = new Map(index.tokens.map((token) => [token.name, token]));
+if (byName.size !== index.tokens.length) fail("tokens.json", "lists a token twice");
+const shared = new Map(declarations(read("primitives.css")).concat(declarations(read("component-tokens.css"))).map(([, name, value]) => [name, value]));
+for (const [name, value] of shared) {
+  const entry = byName.get(name);
+  if (!entry) fail("tokens.json", `lacks ${name}`);
+  else if (entry.layer === "semantic") fail("tokens.json", `${name} has the wrong layer`);
+}
+for (const theme of THEMES) {
+  for (const [, name] of declarations(read(`${theme}.css`))) {
+    const entry = byName.get(name);
+    if (!entry) fail("tokens.json", `lacks ${name}`);
+    else if (entry.layer !== "semantic" || !entry.values?.[theme]) fail("tokens.json", `${name} has no value for ${theme}`);
+  }
+}
+const cssTotal = shared.size + names(THEMES[0]).size;
+if (index.tokens.length !== cssTotal) fail("tokens.json", `lists ${index.tokens.length} tokens; the CSS defines ${cssTotal}`);
+for (const token of index.tokens) {
+  if (token.purpose && (/\b20\d\d-\d\d-\d\d\b/.test(token.purpose) || token.purpose.length > 200)) fail("tokens.json", `${token.name} has a purpose that is dated or too long`);
+}
+
 if (problems.length > 0) {
   console.error(problems.map((problem) => `  FAIL  ${problem}`).join("\n"));
   console.error("\ncheck-css: failed");
   process.exit(1);
 }
-console.log(`check-css: ${files.length} files, ${THEMES.length} bundles self-contained and equal to their parts, no descriptions left`);
+console.log(`check-css: ${files.length} files, ${THEMES.length} bundles self-contained and equal to their parts, no descriptions left, ${index.tokens.length} tokens in the index`);

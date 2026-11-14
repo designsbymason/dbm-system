@@ -58,6 +58,8 @@ Tokens are CSS custom properties that all start with `--dbm-`, in three layers:
 - Primitive tokens are the raw scales and are the same in every theme: `--dbm-space-4`, `--dbm-radius-md`, and the font, motion, shadow, z-index and breakpoint scales. Use them for every non-colour value. The colour scales (`--dbm-color-purple-600`) are what the semantic tokens are made from; do not use them, or they will not follow the theme.
 - Component tokens belong to one component (`--dbm-avatar-size-md`). Do not use them.
 
+`@dbm-system/tokens/tokens.json` lists every token with its layer, type, value in each theme, the primitive it aliases, the components that use it (`usedBy`) and, where the source has a clean one, a one-sentence `purpose`. Read it instead of the CSS to choose a token.
+
 Never write a colour, a spacing value or a duration as a literal. The same values are typed constants in `@dbm-system/tokens` for code that needs a number or a string instead of CSS (`primitives`, `componentTokens`, `purpleLight`, `purpleDark`, `emeraldLight`, `emeraldDark`, for example `purpleLight.bg.brand`).
 
 To switch themes at runtime, set `data-theme` yourself, or wrap the app in `ThemeProvider` (`brand` is `purple` or `emerald`, `mode` is `light`, `dark` or `system`) and read it with `useTheme`.
