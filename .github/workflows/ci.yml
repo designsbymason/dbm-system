@@ -41,6 +41,11 @@ jobs:
       - name: Build
         run: pnpm build
 
+      # Packs each public package and checks the file list, `exports` (publint) and the types for ESM,
+      # CommonJS and bundler consumers (@arethetypeswrong/cli). Needs the build above.
+      - name: Check the packages publish correctly
+        run: pnpm check-publish
+
       - name: Check per-component bundle size
         run: pnpm --filter @dbm-system/components check-component-bundle-size
 

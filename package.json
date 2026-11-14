@@ -12,13 +12,16 @@
     "lint": "turbo run lint",
     "test": "turbo run test",
     "check-guidelines": "pnpm --filter @dbm-system/components check-guidelines",
+    "check-publish": "node scripts/check-publish.mjs",
     "dev": "turbo run dev",
     "changeset": "changeset",
     "version-packages": "changeset version",
     "release": "changeset publish"
   },
   "devDependencies": {
+    "@arethetypeswrong/cli": "^0.18.5",
     "@changesets/cli": "^2.31.1",
+    "publint": "^0.3.25",
     "turbo": "^2.10.5"
   }
 }
