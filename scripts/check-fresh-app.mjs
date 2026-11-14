@@ -2,7 +2,7 @@
 /**
  * Installs the packed packages into a fresh app and checks that they work there (ADR-0175, ADR-0207), after `pnpm build`:
  *   1. packs the four public packages with pnpm, as a publish would;
- *   2. installs them into an empty app with npm, which is not this repository's workspace (so nothing resolves by accident), and finds
+ *   2. installs them into an empty app with pnpm (the install line the guide gives, literally: components, tokens and icons; utils comes in only as a dependency), which is not this repository's workspace (so nothing resolves by accident), and finds
  *      AGENTS.md and the manifest files where an agent looks for them;
  *   3. bundles a small entry with esbuild for production: React, a `Button`, `@dbm-system/components/styles.css` and the light and dark
  *      bundled token files, the way the consumer guide says;
@@ -11,7 +11,7 @@
  *      no error (Next.js builds on it), so only this build can show that the package's `sideEffects` still keeps the stylesheet;
  *   5. loads the page in Chromium and requires no errors, the component styles and the token CSS to have reached the bundle, and the
  *      button to be drawn from the theme's tokens, in light and again after `data-theme` changes to dark.
- * Needs the packages built, a Chromium for Playwright and the network (`npm install` of React, webpack and the packages' dependencies). Nothing is
+ * Needs the packages built, a Chromium for Playwright and the network (`pnpm install` of React, webpack and the packages' dependencies). Nothing is
  * written into the repository. Exits non-zero on a failure.
  *
  * Run from the repository root: `pnpm check-fresh-app`.
@@ -60,14 +60,16 @@ try {
         "react-dom": reactVersion,
         "@dbm-system/components": file("components"),
         "@dbm-system/tokens": file("tokens"),
-        "@dbm-system/utils": file("utils"),
         "@dbm-system/icons": file("icons"),
       },
       // Only the temporary app has these; none of them is a dependency of this repository.
       devDependencies: { webpack: "5.101.0", "css-loader": "7.1.2", "style-loader": "4.0.0" },
     }),
   );
-  const install = () => execFileSync("npm", ["install", "--no-audit", "--no-fund", "--ignore-scripts"], { cwd: app, stdio: "pipe", encoding: "utf8" });
+  // The packed packages depend on each other at the release version, which is not on the registry yet, so each is pointed at its tarball
+  // (pnpm 11 reads overrides from pnpm-workspace.yaml, not package.json).
+  writeFileSync(join(app, "pnpm-workspace.yaml"), `overrides:\n${PACKAGES.map((name) => `  "@dbm-system/${name}": ${JSON.stringify(file(name))}`).join("\n")}\n`);
+  const install = () => execFileSync("pnpm", ["install", "--ignore-scripts"], { cwd: app, stdio: "pipe", encoding: "utf8" });
   try {
     install();
   } catch (first) {
@@ -75,13 +77,18 @@ try {
     try {
       install();
     } catch (second) {
-      throw new Error(`npm install failed twice:\n${second.stderr ?? second.message}`);
+      throw new Error(`pnpm install failed twice:\n${second.stderr ?? second.message}`);
     }
   }
   console.log("  installed into a fresh app");
 
   // What an agent looks for in the installed package (ADR-0208, ADR-0206): AGENTS.md at its root, and the manifest through its exports.
   const installed = createRequire(join(app, "package.json"));
+  // Under pnpm's strict layout an app reaches only what it depends on: utils is internal, so it must not be importable from the app.
+  try {
+    installed.resolve("@dbm-system/utils");
+    fail("@dbm-system/utils is importable from the app; it should only be a dependency of the components");
+  } catch {}
   if (!existsSync(join(app, "node_modules", "@dbm-system", "components", "AGENTS.md"))) fail("AGENTS.md is not at the root of the installed components package");
   for (const entry of ["@dbm-system/components/manifest/index.json", "@dbm-system/components/manifest/components/Button.json", "@dbm-system/components/manifest.json"]) {
     try {

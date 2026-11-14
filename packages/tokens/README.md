@@ -35,6 +35,10 @@ An app that offers several themes imports `primitives.css` and `component-tokens
 
 The package ships no fonts. The tokens name `Nunito` and `Lora`, which the app loads; the components package's README has the snippets.
 
+## Token index
+
+`@dbm-system/tokens/tokens.json` lists every token, so an agent can choose one without reading the CSS: its CSS name, layer (`semantic`, `component` or `primitive`), group, type and value (a semantic token has a value and the primitive it aliases for each theme), the components that use it (`usedBy`) and, where the source has a clean one, a one-sentence `purpose`.
+
 ## Links
 
 - Documentation: https://dbm-system.com

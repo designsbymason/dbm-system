@@ -22,8 +22,8 @@ const PACKAGES = ["components", "tokens", "utils", "icons"];
 
 /** Files every tarball must hold, and path patterns none may. */
 const REQUIRED = ["package.json", "README.md", "LICENSE", "dist/index.js", "dist/index.cjs", "dist/index.d.ts", "dist/index.d.cts"];
-/** Extra files a package must hold: the components package ships its stylesheet (ADR-0175), the manifest with its schema (ADR-0204) and AGENTS.md (ADR-0208). */
-const REQUIRED_EXTRA = { components: ["AGENTS.md", "dist/index.css", "dist/manifest.json", "dist/manifest.schema.json", "dist/manifest/index.json", "dist/manifest/utilities.json"] };
+/** Extra files a package must hold: the components package ships its stylesheet (ADR-0175), the manifest with its schema (ADR-0204) and AGENTS.md (ADR-0208), the tokens package its token index (ADR-0210). */
+const REQUIRED_EXTRA = { tokens: ["build/tokens.json"], components: ["AGENTS.md", "dist/index.css", "dist/manifest.json", "dist/manifest.schema.json", "dist/manifest/index.json", "dist/manifest/utilities.json"] };
 const FORBIDDEN = [/^src\//, /(^|\/)__tests__\//, /\.(test|spec|stories)\.[cm]?[jt]sx?$/, /^\.env/, /^\.local\//, /^tsconfig/, /^node_modules\//, /^storybook-static\//];
 
 /** The sections of a package.json whose entries an installer reads. */
