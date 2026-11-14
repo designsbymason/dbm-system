@@ -43,7 +43,7 @@
   "devDependencies": {
     "@dbm-system/eslint-config": "workspace:*",
     "@dbm-system/tsconfig": "workspace:*",
-    "eslint": "^10.7.0",
+    "eslint": "^10.14.0",
     "tsup": "^8.5.1",
     "typescript": "5.9.3"
   }
