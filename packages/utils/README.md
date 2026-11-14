@@ -1,22 +1,8 @@
 # @dbm-system/utils
 
-Small framework-agnostic utilities and shared hooks for the DBM System: class-name and ref merging, responsive-value helpers, and hooks for announcements, scroll edges, sortable lists and persistent dismissal.
+Helpers the DBM System components are built on: class-name and ref merging, responsive-value helpers, and hooks for announcements, scroll edges, sortable lists and persistent dismissal.
 
-`@dbm-system/components` re-exports the parts an app is meant to call (`usePersistentDismiss`, `useRecentCommands`, `formatRelativeTime` and the `Responsive`, `SpaceValue` and `Breakpoint` types), so an app that uses the components needs no separate install.
-
-## Install
-
-```bash
-pnpm add @dbm-system/utils
-```
-
-React 18 or newer is a peer dependency.
-
-## Use
-
-```ts
-import { cx, formatRelativeTime } from "@dbm-system/utils";
-```
+**An app does not install this package.** It is published because `@dbm-system/components` depends on it. An app imports what it needs from `@dbm-system/components`, which re-exports the parts meant to be called: `formatRelativeTime`, `usePersistentDismiss`, `useRecentCommands` and the `Responsive`, `SpaceValue` and `Breakpoint` types. Everything else here is internal and can change in any release without notice.
 
 ## Links
 

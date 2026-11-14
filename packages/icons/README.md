@@ -1,6 +1,6 @@
 # @dbm-system/icons
 
-The typed icon set for the DBM System, a wrapper over [Phosphor Icons](https://phosphoricons.com) (MIT). The components use it for every icon, so an app gets one icon family.
+The typed icon set for the DBM System, a wrapper over [Phosphor Icons](https://phosphoricons.com) (MIT): every Phosphor icon, named like `PlusIcon`, with the `Icon` and `IconWeight` types. The components use it for every icon of their own, so an app gets one icon family.
 
 ## Install
 
@@ -8,15 +8,15 @@ The typed icon set for the DBM System, a wrapper over [Phosphor Icons](https://p
 pnpm add @dbm-system/icons
 ```
 
-React 18 or newer is a peer dependency. `@phosphor-icons/react` is installed with it.
+Install it beside `@dbm-system/components`, which does not re-export it: the components take icons as references (`<Button leadingIcon={PlusIcon}>`), and an app that passes one imports it from here. React 18 or newer is a peer dependency, and `@phosphor-icons/react` is installed with it.
 
 ## Use
 
 ```tsx
-import { Plus } from "@dbm-system/icons";
+import { PlusIcon } from "@dbm-system/icons";
 
 export function Example() {
-  return <Plus size={16} aria-hidden />;
+  return <PlusIcon size={16} aria-hidden />;
 }
 ```
 

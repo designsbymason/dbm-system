@@ -1,20 +1,20 @@
 # DBM System
 
-> **Status: in active development, not yet published.** The component library is substantial — 118 of a planned 118 components are built, and four page-level templates (two shells that ship, `AppShell` and `PageShell`, and two story-only example pages, a data table list page and a documentation page) — but nothing has shipped to npm yet; the API can still change before the first publish.
+> **Status: in active development, not yet published.** The component library is substantial — 118 of a planned 118 components are built, and five page-level templates (two shells that ship, `AppShell` and `PageShell`, and three story-only example pages: a data table list page, a documentation page and a marketing page) — but nothing has shipped to npm yet; the API can still change before the first publish.
 
 An agentic, standalone React component library built for both AI coding agents and human developers to compose web and enterprise applications quickly, consistently, and accessibly. Token-driven, multi-brand, multi-theme (light/dark), and built with a strong TypeScript + JSDoc contract so AI agents can work against a structured, predictable API.
 
 ## Packages
 
-This is a monorepo. Once published, packages will live under the `@dbm-system` npm scope:
+This is a monorepo. Once published, the packages live under the `@dbm-system` npm scope. An app installs three of them:
 
-- `@dbm-system/tokens` — design tokens (primitive, semantic, and component layers)
-- `@dbm-system/utils` — small shared utilities (class-name and ref merging, responsive-value helpers, and shared hooks like `useAnnouncement` and `usePersistentDismiss`)
-- `@dbm-system/icons` — Phosphor Icons wrapper
-- `@dbm-system/components` — the component library itself
-- `@dbm-system/manifest` — agent-readable component manifest generator (not yet built — Phase 8)
+- `@dbm-system/components` — the component library, its stylesheet and the machine-readable manifest of every component
+- `@dbm-system/tokens` — the design tokens: the theme CSS and typed constants
+- `@dbm-system/icons` — the typed Phosphor icon set
 
-None of these are published yet.
+`@dbm-system/utils` is published because the components depend on it; an app does not install it. `@dbm-system/manifest` (the manifest generator), `@dbm-system/eslint-config` and `@dbm-system/tsconfig` are private tools of this repository and are not published.
+
+None of these are published yet. The install steps are in the components package's README.
 
 ## Documentation
 
