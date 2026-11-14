@@ -4,7 +4,8 @@ import { fileURLToPath } from "node:url";
 import { beforeAll, describe, expect, it } from "vitest";
 import { generateManifest } from "./generate";
 import type { GenerateResult } from "./generate";
-import { validateManifest } from "./validate";
+import { splitManifest } from "./split";
+import { validateManifest, validateManifestFile } from "./validate";
 
 // Runs against the real components package, so what is checked is what ships. One run takes a few seconds, more on a slow runner.
 const packageRoot = join(dirname(fileURLToPath(import.meta.url)), "..", "..", "components");
@@ -101,6 +102,25 @@ describe("generateManifest on the components package", () => {
 
   it("finds nothing undocumented: no prop without a description, no component, part or function without a summary or example", () => {
     expect(result.diagnostics).toEqual([]);
+  });
+
+  it("splits into an index and one file per component that are small enough to read, and match the whole manifest", () => {
+    const files = splitManifest(result.manifest);
+    const index = files["index.json"];
+    expect(validateManifestFile("index", index)).toEqual([]);
+    expect(Object.keys(files)).toHaveLength(result.manifest.components.length + 2);
+    // What an agent reads first, and the most it reads for one component, in characters (about four to a token).
+    expect(JSON.stringify(index).length).toBeLessThan(45_000);
+    for (const component of result.manifest.components) {
+      const file = files[`components/${component.name}.json`];
+      expect(file).toBe(component);
+      expect(validateManifestFile("component", file)).toEqual([]);
+      expect(JSON.stringify(file).length).toBeLessThan(70_000);
+    }
+    expect(validateManifestFile("utilitiesFile", files["utilities.json"])).toEqual([]);
+    const rows = (index as { components: { name: string; summary: string }[] }).components;
+    expect(rows.map((row) => row.name)).toEqual(result.manifest.components.map((component) => component.name));
+    expect(rows.every((row) => row.summary !== "")).toBe(true);
   });
 
   it("is deterministic: a second run gives the same text", () => {

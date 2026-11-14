@@ -42,13 +42,17 @@ Reference semantic tokens (`color.bg.brand`, `space.4`) and never hardcode a col
 
 ## For AI agents
 
-The package ships a machine-readable index of every component, its props and parts, and its hooks and functions:
+The package ships a machine-readable index of every component, its props and parts, and its hooks and functions. It is 1.8 MB in one file, so it is also split:
 
-```ts
-import manifest from "@dbm-system/components/manifest.json" with { type: "json" };
-```
+| File | What it holds |
+|---|---|
+| `@dbm-system/components/manifest/index.json` | Every component (name, tier, category, one sentence) and the path of its file; read this first, about 35 KB |
+| `@dbm-system/components/manifest/components/<Name>.json` | One component in full: its props, parts and examples |
+| `@dbm-system/components/manifest/utilities.json` | Every hook, function and constant |
+| `@dbm-system/components/manifest.json` | All of the above in one file |
+| `@dbm-system/components/manifest.schema.json` | The shape of each file |
 
-`@dbm-system/components/manifest.schema.json` describes its shape. The manifest is for the version you installed.
+The manifest is for the version you installed.
 
 ## Links
 

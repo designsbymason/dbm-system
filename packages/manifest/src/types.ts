@@ -135,3 +135,57 @@ export interface Manifest {
   /** Every other exported value, sorted by name. */
   constants: ManifestConstant[];
 }
+
+/** One component's row in `manifest/index.json`. */
+export interface ManifestIndexComponent {
+  /** The component's name, as imported. */
+  name: string;
+  /** From the story title's first segment. */
+  tier: ManifestTier;
+  /** From the story title's second segment. */
+  category: string;
+  /** The first sentence of the component's summary. */
+  summary: string;
+  /** Where the whole entry is, relative to the `manifest` folder (`components/Button.json`). */
+  file: string;
+}
+
+/** One hook's or function's row in `manifest/index.json`; the whole entry is in `utilities.json`. */
+export interface ManifestIndexUtility {
+  /** The name, as imported. */
+  name: string;
+  /** `hook` for a `use…` function, otherwise `function`. */
+  kind: "hook" | "function";
+  /** The first sentence of the summary. */
+  summary: string;
+}
+
+/** `manifest/index.json`: what there is, in a few thousand tokens, and where to read each in full. */
+export interface ManifestIndex {
+  /** The same schema version as `manifest.json`. */
+  schemaVersion: 1;
+  /** The package this describes. */
+  package: "@dbm-system/components";
+  /** The version of `@dbm-system/components` this describes. */
+  version: string;
+  /** Every public component, sorted by name. */
+  components: ManifestIndexComponent[];
+  /** Every exported hook and function, sorted by name; each is in full in `utilities.json`. */
+  utilities: ManifestIndexUtility[];
+  /** Where the hooks, functions and constants are in full, relative to the `manifest` folder. */
+  utilitiesFile: "utilities.json";
+}
+
+/** `manifest/utilities.json`: every hook, function and constant in full. */
+export interface ManifestUtilitiesFile {
+  /** The same schema version as `manifest.json`. */
+  schemaVersion: 1;
+  /** The package this describes. */
+  package: "@dbm-system/components";
+  /** The version of `@dbm-system/components` this describes. */
+  version: string;
+  /** Every exported hook and function, sorted by name. */
+  utilities: ManifestUtility[];
+  /** Every other exported value, sorted by name. */
+  constants: ManifestConstant[];
+}

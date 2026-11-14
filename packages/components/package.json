@@ -28,7 +28,8 @@
       }
     },
     "./manifest.json": "./dist/manifest.json",
-    "./manifest.schema.json": "./dist/manifest.schema.json"
+    "./manifest.schema.json": "./dist/manifest.schema.json",
+    "./manifest/*": "./dist/manifest/*"
   },
   "files": [
     "dist"
@@ -38,7 +39,7 @@
     "access": "public"
   },
   "scripts": {
-    "build": "tsup && node ../manifest/dist/cli.js --root . --out dist/manifest.json --with-schema --quiet",
+    "build": "tsup && node ../manifest/dist/cli.js --root . --out dist/manifest.json --with-schema --split dist/manifest --quiet",
     "dev": "tsup --watch",
     "lint": "eslint . && pnpm typecheck && pnpm typecheck:storybook",
     "typecheck": "tsc --noEmit",

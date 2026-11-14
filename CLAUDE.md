@@ -42,8 +42,8 @@ apps/
                      not here)
 scripts/            Repo-level checks CI runs from the root: `check-publish` (publint and attw on each
                      packed public package) `check-radix-single-copy` (one version of each shared
-                     Radix package in the lockfile) and `check-manifest` (the component manifest builds
-                     and nothing is undocumented)
+                     Radix package in the lockfile) and `check-manifest` (the component manifest builds,
+                     nothing is undocumented, and what the build shipped matches the source)
 packages/
   tokens/           Source of truth for all design tokens (primitive + semantic + component layers)
   utils/             Small framework-agnostic utils (classname merging, ref merging,

@@ -20,7 +20,7 @@ const PACKAGES = ["components", "tokens", "utils", "icons", "manifest"];
 /** Files every tarball must hold, and path patterns none may. */
 const REQUIRED = ["package.json", "README.md", "LICENSE", "dist/index.js", "dist/index.cjs", "dist/index.d.ts", "dist/index.d.cts"];
 /** Extra files a package must hold: the components package ships the manifest and its schema (ADR-0204). */
-const REQUIRED_EXTRA = { components: ["dist/manifest.json", "dist/manifest.schema.json"] };
+const REQUIRED_EXTRA = { components: ["dist/manifest.json", "dist/manifest.schema.json", "dist/manifest/index.json", "dist/manifest/utilities.json"] };
 const FORBIDDEN = [/^src\//, /(^|\/)__tests__\//, /\.(test|spec|stories)\.[cm]?[jt]sx?$/, /^\.env/, /^\.local\//, /^tsconfig/, /^node_modules\//, /^storybook-static\//];
 
 let failed = false;
@@ -42,6 +42,10 @@ for (const name of PACKAGES) {
     // The manifest says which release it describes, so a stale one is caught here.
     const shipped = JSON.parse(readFileSync(join(dir, "dist", "manifest.json"), "utf8"));
     if (shipped.version !== pkg.version) fail(pkg.name, `dist/manifest.json describes version ${shipped.version}, not ${pkg.version}`);
+    // One file per component, and none for a component that is gone (ADR-0206).
+    const expectedFiles = new Set(shipped.components.map((component) => `dist/manifest/components/${component.name}.json`));
+    for (const file of expectedFiles) if (!files.includes(file)) fail(pkg.name, `the tarball is missing ${file}`);
+    for (const file of files) if (file.startsWith("dist/manifest/components/") && !expectedFiles.has(file)) fail(pkg.name, `the tarball holds ${file}, which no component in the manifest has`);
   }
   for (const path of files) if (FORBIDDEN.some((pattern) => pattern.test(path))) fail(pkg.name, `the tarball holds ${path}`);
   console.log(`  ${files.length} files in the tarball`);
