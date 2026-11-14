@@ -1,11 +1,10 @@
-# Version updates are deliberately off (open-pull-requests-limit: 0): pull
-# requests are disabled on this repo, so Dependabot could only push branches
-# nobody sees or CI-tests. Dependency updates are taken by hand in a periodic
-# refresh pass instead. Vulnerability alerts and security updates are separate
-# repo settings and stay on; `pnpm audit` in CI backstops them. See
+# Version updates are deliberately off (open-pull-requests-limit: 0):
+# dependency updates are taken by hand in a periodic refresh pass instead
+# (ADR-0022). Vulnerability alerts and security updates are separate repo
+# settings and stay on; `pnpm audit` in CI backstops them. See
 # guidelines/02-tech-stack-and-structure.md, "Dependency vulnerability
-# remediation pattern". To turn version updates back on, enable pull requests
-# on the repo and raise these limits (npm's was 10).
+# remediation pattern". To turn version updates back on, raise these limits
+# (npm's was 10).
 version: 2
 updates:
   - package-ecosystem: "npm"

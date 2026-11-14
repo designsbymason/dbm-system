@@ -8,6 +8,10 @@
     "url": "git+https://github.com/designsbymason/dbm-system.git",
     "directory": "packages/icons"
   },
+  "homepage": "https://dbm-system.com",
+  "bugs": {
+    "url": "https://github.com/designsbymason/dbm-system/issues"
+  },
   "type": "module",
   "main": "./dist/index.js",
   "module": "./dist/index.js",

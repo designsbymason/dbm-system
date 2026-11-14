@@ -171,7 +171,7 @@ A template (a shell or a page, [ADR-0179](adr/0179-templates-ship-as-composable-
 
 ## 9. Commit & release convention
 
-Conventional Commits format (`feat(button): add loading state`) — this is what lets Changesets generate accurate changelogs. Changesets is configured (`.changeset/config.json`) but not yet wired into a release pipeline, and pull requests are disabled on the repo, so no per-change changeset is written today. Building the release flow is Phase 8 (`01-vision-and-goals.md` §13); once it lands, every change that affects the public API includes a changeset describing the change from the consumer's point of view.
+Conventional Commits format (`feat(button): add loading state`) — this is what lets Changesets generate accurate changelogs. Changesets is configured (`.changeset/config.json`, all packages versioned together, [ADR-0202](adr/0202-the-five-public-packages-are-versioned-together-and-the-first-release-is-0-1-0-over-independent-versions-or-a-first-release-at-1-0-0.md)) but not yet wired into a release pipeline, so no per-change changeset is written today. Building the release flow is Phase 8 (`01-vision-and-goals.md` §13); once it lands, every change that affects the public API includes a changeset describing the change from the consumer's point of view.
 
 ## 10. `CloseButton` vs. a local, component-specific remove control
 

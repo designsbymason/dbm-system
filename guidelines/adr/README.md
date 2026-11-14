@@ -261,3 +261,4 @@ A superseded ADR's `Status` line becomes: `Status: Superseded by [NNNN](./NNNN-n
 ## This folder is public and permanent
 
 Same rule as the rest of `guidelines/` (see its own `README.md`): the repo is public and git history doesn't forget. Never record secrets, credentials, personal identifying information, or client/business-sensitive details in an ADR.
+| [0202](./0202-the-five-public-packages-are-versioned-together-and-the-first-release-is-0-1-0-over-independent-versions-or-a-first-release-at-1-0-0.md) | The five public packages are versioned together and the first release is 0.1.0, over independent versions or a first release at 1.0.0 | Accepted |
