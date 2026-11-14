@@ -5,15 +5,6 @@ allowBuilds:
   esbuild: true
 auditConfig:
   ignoreGhsas:
-    # braces' stack-overflow DoS (CVE-2026-93687), no patched version exists upstream as of
-    # 2026-10-02 — an override can't pin to a fix that doesn't exist, so this is the only way to
-    # stop `pnpm audit` (both locally and in CI's "Audit dependencies" step, which reads this same
-    # file) from hard-failing on an already-assessed, accepted risk. Full exploitability assessment,
-    # why no override was added, and the Dependabot alert's own status: §3.1 of
-    # guidelines/02-tech-stack-and-structure.md. Remove this entry the same day a real fix ships and
-    # gets pinned via a normal override below — leaving it in place after a fix exists would mask a
-    # genuine regression instead of a known, accepted gap.
-    - GHSA-vfj7-8cjw-p6xm
     # deepmerge's mergeObject() prototype poisoning (GHSA-gcqx-w48m-w2h4, low), vulnerable
     # `>=4.2.0 <=4.3.1`, patched in 4.3.2 — but 4.3.1 is the latest release on the registry as of
     # 2026-10-28, so an override cannot pin to a fix that does not exist yet. Reached only via
@@ -22,15 +13,6 @@ auditConfig:
     # guidelines/02-tech-stack-and-structure.md. Remove this entry the same day a patched release
     # ships and gets pinned via a capped override below.
     - GHSA-gcqx-w48m-w2h4
-    # minimatch's potential DoS via globparts amplification (GHSA-g3hv-75wg-m249, moderate), vulnerable `<11.0.1`, patched in
-    # 11.0.1. Every 10.x copy is pinned to the 11 line by an override below; what remains is `minimatch@3.1.5` (the last 3.x
-    # release) under `eslint-plugin-jsx-a11y@6.10.2` and `eslint-plugin-react@7.37.5`, both their latest releases, which call
-    # it as a function that 11 no longer exports, so it can neither be overridden nor removed from the tree. Dev-only linting,
-    # never shipped; the patterns it receives are static rule options in this repo's own ESLint config (the matched strings are
-    # component and prop names), so exploiting it needs write access to that config already. Assessment and exit condition:
-    # §3.1 of guidelines/02-tech-stack-and-structure.md. Remove this entry the same day either plugin drops minimatch 3 or
-    # moves to a release that takes minimatch 11.
-    - GHSA-g3hv-75wg-m249
 # pnpm's default minimum release age holds back a version that is only days old. `qs@6.16.2` is the
 # patched release for GHSA-6pq8-jhm2-2vcw (see the `qs` override below), so it is let through now,
 # 2026-10-28. Remove this entry once the release is older than the minimum age.
