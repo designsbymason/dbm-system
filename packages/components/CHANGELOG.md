@@ -1,5 +1,15 @@
 # @dbm-system/components
 
+## 0.1.1
+
+### Patch Changes
+
+- de93e6b: No functional changes. This is the first release published through the automated release workflow, so it carries an npm provenance attestation that links each package to the commit and workflow run that built it (0.1.0 was published by hand and has none).
+- Updated dependencies [de93e6b]
+  - @dbm-system/tokens@0.1.1
+  - @dbm-system/utils@0.1.1
+  - @dbm-system/icons@0.1.1
+
 ## 0.1.0
 
 ### Minor Changes
