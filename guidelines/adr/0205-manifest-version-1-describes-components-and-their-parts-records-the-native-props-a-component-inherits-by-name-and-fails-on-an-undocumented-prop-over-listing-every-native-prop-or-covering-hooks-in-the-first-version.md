@@ -9,6 +9,7 @@ The manifest has to be complete enough that an agent can use a component without
 - **Version 1 describes components.** Per component: name, tier, category, summary, import name, source path, whether it takes `asChild` or `as`, its props, its parts (with their own props), and its examples. Hooks and utilities are a later, additive section.
 - **Inherited native props are recorded by name** in an `extends` list (for example `ComponentPropsWithoutRef<"button">`), and `props` lists only what this system declares or overrides.
 - **Each prop** carries its type as a string, whether it is required, its default, its description, and the allowed values when its type is a union of literals.
+- **Props come from react-docgen-typescript, except for a part its file does not export**, which the library cannot see; those are read from the TypeScript checker the same way (declared in this repository, with the JSDoc description and `@default`). A `ref` prop is left out of every entry: every component forwards it and none documents it.
 - **Tier and category come from the story title** (`Atoms/Inputs/Button`), and the summary from the first paragraph of the component's JSDoc, so nothing is written twice.
 - **Documentation is checked.** A prop without a description fails the build; a component without a description or an `@example` warns until the gaps are filled, then fails.
 - **The output is deterministic**: stable key order, no timestamps, so two builds are byte-identical.

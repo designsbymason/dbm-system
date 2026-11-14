@@ -16,6 +16,9 @@
   "main": "./dist/index.js",
   "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
+  "bin": {
+    "dbm-manifest": "./dist/cli.js"
+  },
   "exports": {
     ".": {
       "import": {
@@ -40,13 +43,22 @@
   "scripts": {
     "build": "tsup",
     "dev": "tsup --watch",
-    "lint": "eslint ."
+    "lint": "eslint .",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "react-docgen-typescript": "^2.4.0"
+  },
+  "peerDependencies": {
+    "typescript": ">=5.0.0"
   },
   "devDependencies": {
     "@dbm-system/eslint-config": "workspace:*",
     "@dbm-system/tsconfig": "workspace:*",
+    "@types/node": "^24.13.3",
     "eslint": "^10.14.0",
     "tsup": "^8.5.1",
-    "typescript": "5.9.3"
+    "typescript": "5.9.3",
+    "vitest": "^4.1.12"
   }
 }
