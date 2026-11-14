@@ -44,8 +44,8 @@ scripts/            Repo-level checks CI runs from the root: `check-publish` (pu
                      packed public package, its packed package.json and the consumer guide's imports and install line) `check-radix-single-copy` (one version of each shared
                      Radix package in the lockfile) `check-manifest` (the component manifest builds,
                      nothing is undocumented, what the build shipped matches the source, and
-                     the generated list in packages/components/AGENTS.md is current and what its
-                     text names exists; `sync-agents` rewrites that list) and
+                     the generated lists in packages/components/AGENTS.md and below in this file are
+                     current and what AGENTS.md's text names exists; `sync-agents` rewrites them) and
                      `check-fresh-app` (the packed packages install into an empty app and style a
                      component, bundled with esbuild and webpack; needs Chromium and the network)
 packages/
@@ -104,13 +104,50 @@ To start a session, run `/start [task]` (`.claude/commands/start.md`): with no t
 
 Other project commands, in `.claude/commands/`: `/plan-component <Name>` (propose scope, API and tokens; writes nothing), `/review-component <Name>` (the §9 review as a prioritized list; no edits), `/plan-template <Name>` and `/review-template <Name>` (the same two for a template, a shell or a page), `/refresh-deps` (the §3.2 dependency pass as a plan), `/verify` (the steps CI runs, one after another, on the working tree; `quick` for lint, guidelines and unit tests; read-only), and `/after-push` (classify the push, watch CI if it contained code, report per job).
 
-## Component index (planned: auto-synced)
-Once `packages/manifest` exists and generates the JSON component manifest (see `01-vision-and-goals.md`, Phase 10), its build step should also write an up-to-date component index into this file — name, category, tier, and a one-line summary per shipped component, regenerated on every release rather than maintained by hand, so agents discover what's actually available instead of guessing or hallucinating a component that doesn't exist.
-
-Until that tooling exists, treat `guidelines/04-component-inventory.md` as the authoritative (manually maintained) list.
+## Component index (auto-synced)
+The list below is generated from the component manifest: every public component by tier and category, then the hooks and functions, names only. `pnpm sync-agents` rewrites it (the same list is in `packages/components/AGENTS.md`) and `pnpm check-manifest` fails in CI when it is stale, so never hand-edit between the markers. Read it before building anything, to see what exists instead of guessing or hallucinating a component; `guidelines/04-component-inventory.md` has each one's tier and scope, and after a build `packages/components/dist/manifest/index.json` has a sentence on each.
 
 <!-- AUTO-GENERATED-COMPONENT-INDEX:START -->
-<!-- This block will be replaced by the manifest build step once packages/manifest ships. Do not hand-edit between these markers. -->
+
+**Atoms**
+
+- Data Display: Avatar, Badge, Skeleton, Tag
+- Feedback: ProgressBar, ProgressCircle, Spinner
+- Inputs: Button, Checkbox, CloseButton, FieldError, FieldHelperText, FieldLabel, IconButton, Input, Radio, Switch, Textarea
+- Layout: Affix, AspectRatio, Bleed, Box, Center, Container, Divider, GridItem, Spacer, Stack
+- Media: Icon, Image, Indicators
+- Navigation: BackToTop
+- Overlay: Backdrop, Collapse, Tooltip, TooltipProvider
+- Typography: Blockquote, Code, Heading, Highlight, Kbd, Link, ListItem, Text
+- Utility: ClientOnly, DirectionProvider, FocusTrap, Portal, SkipLink, ThemeProvider, VisuallyHidden
+
+**Molecules**
+
+- Data Display: AvatarGroup, Card, DescriptionList, EmptyState, Pagination, Stat, Table, TableToolbar
+- Feedback: Alert
+- Inputs: ButtonGroup, Calendar, CheckboxGroup, EditableText, FieldGroup, FormField, NumberInput, PasswordInput, PinInput, RadioGroup, RangeSlider, RatingInput, SearchInput, Select, Slider, TagsInput, TimePicker, TimeRangePicker, ToggleGroup, Toolbar
+- Layout: Grid, PageHeader, ScrollArea, Splitter
+- Navigation: Breadcrumb, TableOfContents, Tabs
+- Overlay: Accordion, HoverCard, HoverCardProvider, Popover
+- Typography: CodeBlock, List
+
+**Organisms**
+
+- Data Display: DataTable, Timeline, Tree
+- Feedback: Toast
+- Inputs: ColorPicker, Combobox, DatePicker, DateRangePicker, FileUpload, Form, MultiSelect
+- Media: Carousel, ImageViewer, ImageViewerButton
+- Navigation: CommandPalette, EditorTabs, Menu, Menubar, Navbar, NavigationMenu, Sidebar, Stepper
+- Overlay: AlertDialog, ConfirmDialog, ContextMenu, Dialog, Drawer, Tour
+
+**Templates**
+
+- Shells: AppShell, PageShell
+
+**Hooks:** useAppShell, useCommandPaletteController, useContextMenuController, useDataTable, useDirection, useFormController, useFormState, useImageViewerController, useMenubarController, usePersistentDismiss, useRecentCommands, useSidebar, useTheme, useToast
+
+**Functions:** createToaster, filterTree, formatRelativeTime, registerCodeLanguage
+
 <!-- AUTO-GENERATED-COMPONENT-INDEX:END -->
 
 If a task requires a decision that isn't covered in `guidelines/`, flag it rather than guessing — these documents are meant to be the standing source of truth, and gaps should get filled in explicitly, not improvised silently.

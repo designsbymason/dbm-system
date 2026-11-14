@@ -4,6 +4,10 @@ import type { Manifest, ManifestTier } from "./types";
 export const AGENTS_START = "<!-- components:start -->";
 export const AGENTS_END = "<!-- components:end -->";
 
+/** The two lines that fence the same list in the repository's own `CLAUDE.md`. */
+export const CLAUDE_INDEX_START = "<!-- AUTO-GENERATED-COMPONENT-INDEX:START -->";
+export const CLAUDE_INDEX_END = "<!-- AUTO-GENERATED-COMPONENT-INDEX:END -->";
+
 const TIERS: { tier: ManifestTier; heading: string }[] = [
   { tier: "atom", heading: "Atoms" },
   { tier: "molecule", heading: "Molecules" },
@@ -38,19 +42,28 @@ export function renderAgentsList(manifest: Manifest): string {
 }
 
 /**
- * `file` with the text between the two markers replaced by `list`, and everything outside them left exactly as it was. Throws when the
+ * `file` with the text between `start` and `end` replaced by `list`, and everything outside them left exactly as it was. Throws when the
  * markers are missing, repeated or out of order, so a damaged file is never guessed at.
  */
-export function updateAgentsBlock(file: string, list: string): string {
-  const start = file.indexOf(AGENTS_START);
-  const end = file.indexOf(AGENTS_END);
-  if (start === -1 || end === -1 || end < start || file.indexOf(AGENTS_START, start + 1) !== -1 || file.indexOf(AGENTS_END, end + 1) !== -1) {
-    throw new Error(`AGENTS.md needs exactly one ${AGENTS_START} followed by one ${AGENTS_END}`);
+export function updateMarkedBlock(file: string, list: string, start: string, end: string): string {
+  const first = file.indexOf(start);
+  const last = file.indexOf(end);
+  if (first === -1 || last === -1 || last < first || file.indexOf(start, first + 1) !== -1 || file.indexOf(end, last + 1) !== -1) {
+    throw new Error(`The file needs exactly one ${start} followed by one ${end}`);
   }
-  return `${file.slice(0, start + AGENTS_START.length)}\n\n${list}\n\n${file.slice(end)}`;
+  return `${file.slice(0, first + start.length)}\n\n${list}\n\n${file.slice(last)}`;
 }
 
-/** Names in the hand-written text that are not components: the fonts the guide tells an app to load. */
+/** `AGENTS.md` with its generated list replaced (ADR-0208). */
+export function updateAgentsBlock(file: string, list: string): string {
+  return updateMarkedBlock(file, list, AGENTS_START, AGENTS_END);
+}
+
+/** `CLAUDE.md` with its generated component index replaced. */
+export function updateClaudeIndex(file: string, list: string): string {
+  return updateMarkedBlock(file, list, CLAUDE_INDEX_START, CLAUDE_INDEX_END);
+}
+
 const NOT_COMPONENTS = new Set(["Nunito", "Lora"]);
 
 /** `<Name>` in a path such as `manifest/components/<Name>.json` stands for a component name; it is not an element. */

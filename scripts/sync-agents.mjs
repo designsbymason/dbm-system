@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 /**
- * Rewrites the generated component list in `packages/components/AGENTS.md` from a fresh generation of the manifest (ADR-0208). Run it
- * after adding, renaming or removing a component or a hook, and commit the result; `pnpm check-manifest` fails while the committed list
- * is out of date. Needs the packages built first.
+ * Rewrites the generated component list in `packages/components/AGENTS.md` and in the repository's `CLAUDE.md` from a fresh generation of
+ * the manifest (ADR-0208). Run it after adding, renaming or removing a component or a hook, and commit the result; `pnpm check-manifest`
+ * fails while a committed list is out of date. Needs the packages built first.
  *
  * Run from the repository root: `pnpm sync-agents`.
  */
@@ -21,7 +21,7 @@ if (!existsSync(cli) || !existsSync(join(root, "packages", "utils", "dist", "ind
 
 const out = mkdtempSync(join(tmpdir(), "dbm-agents-"));
 try {
-  const result = spawnSync("node", [cli, "--root", join(root, "packages", "components"), "--out", join(out, "manifest.json"), "--agents", join(root, "packages", "components", "AGENTS.md"), "--quiet"], { stdio: "inherit" });
+  const result = spawnSync("node", [cli, "--root", join(root, "packages", "components"), "--out", join(out, "manifest.json"), "--agents", join(root, "packages", "components", "AGENTS.md"), "--claude", join(root, "CLAUDE.md"), "--quiet"], { stdio: "inherit" });
   process.exit(result.status ?? 1);
 } finally {
   rmSync(out, { recursive: true, force: true });

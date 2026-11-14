@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { AGENTS_END, AGENTS_START, agentsProblems, renderAgentsList, updateAgentsBlock } from "./agents";
+import { AGENTS_END, AGENTS_START, CLAUDE_INDEX_END, CLAUDE_INDEX_START, agentsProblems, renderAgentsList, updateAgentsBlock, updateClaudeIndex } from "./agents";
 import type { Manifest, ManifestComponent } from "./types";
 
 const component = (name: string, tier: ManifestComponent["tier"], category: string): ManifestComponent => ({
@@ -59,6 +59,16 @@ describe("updateAgentsBlock", () => {
     expect(() => updateAgentsBlock("# no markers", "x")).toThrow(/exactly one/);
     expect(() => updateAgentsBlock(`${AGENTS_START}\n${AGENTS_START}\n${AGENTS_END}`, "x")).toThrow(/exactly one/);
     expect(() => updateAgentsBlock(`${AGENTS_END}\n${AGENTS_START}`, "x")).toThrow(/exactly one/);
+  });
+});
+
+describe("updateClaudeIndex", () => {
+  it("rewrites the block between its own markers and leaves AGENTS.md's alone", () => {
+    const file = `intro\n\n${CLAUDE_INDEX_START}\nold\n${CLAUDE_INDEX_END}\n\n${AGENTS_START}\nkept\n${AGENTS_END}\noutro\n`;
+    expect(updateClaudeIndex(file, "list")).toBe(`intro\n\n${CLAUDE_INDEX_START}\n\nlist\n\n${CLAUDE_INDEX_END}\n\n${AGENTS_START}\nkept\n${AGENTS_END}\noutro\n`);
+  });
+  it("refuses a file without them", () => {
+    expect(() => updateClaudeIndex("# none", "x")).toThrow(/exactly one/);
   });
 });
 

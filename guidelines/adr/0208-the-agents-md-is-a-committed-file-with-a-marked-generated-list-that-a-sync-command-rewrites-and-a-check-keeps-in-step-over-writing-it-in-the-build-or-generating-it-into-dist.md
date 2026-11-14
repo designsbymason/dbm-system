@@ -22,7 +22,7 @@
 ## Consequences
 - Adding or removing a component changes `AGENTS.md`, in the same commit, by running one command; CI fails otherwise.
 - The rules are maintained here and in the internal guidelines, so a change to a consumption rule updates both ([ADR-0203](./0203-the-consumer-agents-md-is-hand-written-and-shipped-in-the-package-with-the-component-list-generated-from-the-manifest-over-generating-the-whole-file.md)).
-- The repository's own `CLAUDE.md` component index (Phase 10) can reuse the same renderer.
+- The repository's own `CLAUDE.md` carries the same generated list between its own markers: `pnpm sync-agents` rewrites both files and `pnpm check-manifest` checks both.
 
 ## Related
 `01-vision-and-goals.md` §13.1. [ADR-0204](./0204-the-manifest-ships-inside-the-components-package-as-manifest-json-with-its-schema-and-the-generator-stays-in-the-manifest-package-over-a-separate-package-that-holds-the-file.md), [ADR-0206](./0206-the-manifest-is-also-shipped-as-an-index-and-one-file-per-component-beside-the-whole-file-over-the-single-file-alone-or-waiting-for-an-mcp-server.md).
