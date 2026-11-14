@@ -30,10 +30,32 @@ components themselves.
 
 <Callout tone="info" title="In active development, not yet published">
 
-The package is not on npm yet. It will be published under the `@dbm-system` scope, and the steps to
-install it, load the stylesheet and tokens, choose a theme and load the fonts will appear here when it is.
+The package is not on npm yet. These are the steps for when it is, and they are checked on every
+change against the packed packages installed into an empty app.
 
 </Callout>
+
+Install the components and the tokens (React 18 or newer is a peer dependency):
+
+```bash
+pnpm add @dbm-system/components @dbm-system/tokens
+```
+
+Import the stylesheet and one theme once, in your app's entry, and choose the theme on the root element:
+
+```ts
+import "@dbm-system/components/styles.css";
+import "@dbm-system/tokens/css/purple-light.bundled.css";
+```
+
+```html
+<html data-theme="purple-light">
+```
+
+The themes are `purple-light`, `purple-dark`, `emerald-light` and `emerald-dark`. The package ships no
+fonts: load `Nunito` and `Lora` from Google Fonts or host them yourself, or the browser's fallback fonts
+are used. The package README has the `<link>` and `@font-face` snippets, and the Theming guide covers
+switching themes at runtime.
 
 ## Guides
 
@@ -84,8 +106,9 @@ The design tokens behind every component: each is a named value, read live from 
 
 <Callout tone="info" title="In active development, not yet published">
 
-A machine-readable manifest of every component (its props, variants and constraints as JSON) and a usage
-guide written for coding agents are planned, followed by an MCP server. Until they ship, every
-component page has full types and a snippet for each example.
+The package ships a machine-readable manifest of every component, its props and parts, and every hook and
+function: `@dbm-system/components/manifest/index.json` lists them, with one file per component beside it.
+Every component page here has full types and a snippet for each example. A usage guide written for coding
+agents and an MCP server are planned.
 
 </Callout>

@@ -135,10 +135,11 @@ and one file per theme in use:
   ]}
 />
 
-This Storybook imports all of them. A consuming app loads the ones for the themes it offers. The token
-package names the `Nunito` and `Lora` font families but ships no font files, so load them yourself. How
-a consumer loads these files is not settled yet; this page will link to the Installation page when it
-exists.
+This Storybook imports all of them. A consuming app imports one bundled file per theme it offers
+(`purple-light.bundled.css` holds the primitives, the component tokens and that theme in one file), or the
+shared files once and one theme file per theme. The token package names the `Nunito` and `Lora` font
+families but ships no font files, so load them yourself. The Installation section of the Getting started
+page has the imports, the root attribute and the font snippets.
 
 ## Usage guidelines
 

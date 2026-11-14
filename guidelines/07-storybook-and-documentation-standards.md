@@ -402,7 +402,6 @@ A guide's code samples are fenced code in the MDX, so nothing compiles them: **c
 
 | Page | Covers | Waits on |
 |---|---|---|
-| The Installation section's content (a placeholder today) | Loading the stylesheet, the tokens, one theme and the `Nunito` and `Lora` fonts | The consumer-CSS decision in `01-vision-and-goals.md` §12 (Phase 8) |
 | Guides: Agent usage and contributing | The consumer-facing usage guide from `01-vision-and-goals.md` §13.1, shown where a person looks for it | The manifest and the published package (Phase 8) |
 | Guides: Changelog and migration | Generated from Changesets | The release pipeline (Phase 8) |
 

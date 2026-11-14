@@ -12,7 +12,7 @@
  * Run from the repository root: `pnpm check-publish`.
  */
 import { execFileSync, spawnSync } from "node:child_process";
-import { mkdtempSync, readFileSync, readdirSync, rmSync } from "node:fs";
+import { existsSync, mkdtempSync, readFileSync, readdirSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -123,6 +123,42 @@ for (const name of PACKAGES) {
     }
   }
 }
+
+// 5. The consumer guide (ADR-0175): what it tells an app to import and set must exist.
+const GUIDE_FILES = [...PACKAGES.map((name) => join("packages", name, "README.md")), join("packages", "components", "src", "guides", "GettingStarted.mdx"), join("packages", "components", "src", "guides", "Theming.mdx")];
+
+/** The file in `directory` that `exports` maps `subpath` (`./css/purple-light.bundled.css`) to, or `undefined` when it does not. */
+function resolveExport(directory, exportsMap, subpath) {
+  for (const [key, target] of Object.entries(exportsMap)) {
+    if (typeof target !== "string") continue;
+    if (key === subpath) return join(directory, target);
+    const star = key.indexOf("*");
+    if (star === -1) continue;
+    const [prefix, suffix] = [key.slice(0, star), key.slice(star + 1)];
+    if (subpath.startsWith(prefix) && subpath.endsWith(suffix) && subpath.length >= key.length - 1) return join(directory, target.replace("*", subpath.slice(prefix.length, subpath.length - suffix.length)));
+  }
+  return undefined;
+}
+
+for (const guide of GUIDE_FILES) {
+  const text = readFileSync(join(root, guide), "utf8");
+  for (const [, pkgName, subpath] of text.matchAll(/import "@dbm-system\/([a-z]+)\/([^"]+)"/g)) {
+    const directory = join(root, "packages", pkgName);
+    const exportsMap = JSON.parse(readFileSync(join(directory, "package.json"), "utf8")).exports ?? {};
+    const target = resolveExport(directory, exportsMap, `./${subpath}`);
+    if (!target) fail(guide, `imports "@dbm-system/${pkgName}/${subpath}", which the package's exports do not expose`);
+    else if (!existsSync(target)) fail(guide, `imports "@dbm-system/${pkgName}/${subpath}", but ${target.replace(`${root}/`, "")} does not exist (run \`pnpm build\`?)`);
+  }
+  for (const [, theme] of text.matchAll(/data-theme="([a-z]+-(?:light|dark))"/g)) {
+    if (!existsSync(join(root, "packages", "tokens", "build", "css", `${theme}.bundled.css`))) fail(guide, `shows data-theme="${theme}", which has no bundled token file`);
+  }
+}
+const FONT_LINK = /https:\/\/fonts\.googleapis\.com\/css2\?[^"\s]+/;
+const guideFonts = readFileSync(join(root, "packages", "components", "README.md"), "utf8").match(FONT_LINK)?.[0];
+const previewFonts = readFileSync(join(root, "packages", "components", ".storybook", "preview-head.html"), "utf8").match(FONT_LINK)?.[0];
+if (!guideFonts) fail("packages/components/README.md", "has no Google Fonts link");
+else if (guideFonts !== previewFonts) fail("packages/components/README.md", `its Google Fonts link differs from the one Storybook loads (.storybook/preview-head.html): ${guideFonts} against ${previewFonts}`);
+if (!failed) console.log(`\nguide: ${GUIDE_FILES.length} files, every import and theme it shows resolves, and the font link is Storybook's`);
 
 if (failed) {
   console.error("\ncheck-publish: failed");

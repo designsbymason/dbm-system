@@ -10,25 +10,71 @@ An agentic React component library for building web and enterprise applications 
 ## Install
 
 ```bash
-pnpm add @dbm-system/components
+pnpm add @dbm-system/components @dbm-system/tokens
 ```
 
-React 18 or newer is a peer dependency (`react` and `react-dom`). The package brings `@dbm-system/tokens`, `@dbm-system/utils` and `@dbm-system/icons` with it.
+React 18 or newer is a peer dependency (`react` and `react-dom`). `@dbm-system/tokens` holds the theme CSS you import below, so install it beside the components: a strict package manager such as pnpm only lets your app import a package it depends on.
 
-## Use
+## Set it up
 
-Import the stylesheet once, import one theme, set `data-theme` on the root element, and supply the fonts:
+Your bundler must support importing CSS (Vite, webpack and esbuild do). The steps below are checked on every change by installing the packed packages into an empty app and building it with esbuild and with webpack.
+
+**1. Import the stylesheet and one theme, once, in your app's entry.**
 
 ```ts
 import "@dbm-system/components/styles.css";
 import "@dbm-system/tokens/css/purple-light.bundled.css";
 ```
 
+The stylesheet holds the components' styles. A bundled theme file holds the design tokens for one brand and mode, about 19 KB:
+
+| Theme | File |
+|---|---|
+| Purple, light | `purple-light.bundled.css` |
+| Purple, dark | `purple-dark.bundled.css` |
+| Emerald, light | `emerald-light.bundled.css` |
+| Emerald, dark | `emerald-dark.bundled.css` |
+
+**2. Choose the theme on the root element.**
+
 ```html
 <html data-theme="purple-light">
 ```
 
-The fonts are `Nunito` (primary) and `Lora` (secondary). The package does not ship them, so load them from Google Fonts or self-host them.
+Writing it into the HTML means the first paint is already themed. To switch at runtime, import the bundles for every theme you offer and set the attribute from your code, or wrap the app in `ThemeProvider` (`brand="purple" mode="system"`), which sets it for you.
+
+**3. Load the fonts.** The components use `Nunito` (the primary family) and `Lora` (the secondary), and the package does not ship them. Without them the browser's fallback fonts are used. Either load them from Google Fonts, in the `<head>`:
+
+```html
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link
+  href="https://fonts.googleapis.com/css2?family=Lora:wght@400;500;600;700&family=Nunito:wght@400;500;600;700&display=swap"
+  rel="stylesheet"
+/>
+```
+
+or host them yourself. Both families are open source (SIL Open Font License); download the variable `.woff2` files and declare them:
+
+```css
+@font-face {
+  font-family: "Nunito";
+  font-style: normal;
+  font-weight: 400 700;
+  font-display: swap;
+  src: url("/fonts/nunito-variable.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "Lora";
+  font-style: normal;
+  font-weight: 400 700;
+  font-display: swap;
+  src: url("/fonts/lora-variable.woff2") format("woff2");
+}
+```
+
+**4. Use a component.**
 
 ```tsx
 import { Button } from "@dbm-system/components";
@@ -39,6 +85,17 @@ export function Example() {
 ```
 
 Reference semantic tokens (`color.bg.brand`, `space.4`) and never hardcode a colour, spacing value or duration.
+
+### Offering more than one theme
+
+Each bundled file includes the primitives and the component tokens, so importing two repeats those declarations, which is harmless. To avoid it, import the shared files once and one file per theme:
+
+```ts
+import "@dbm-system/tokens/css/primitives.css";
+import "@dbm-system/tokens/css/component-tokens.css";
+import "@dbm-system/tokens/css/purple-light.css";
+import "@dbm-system/tokens/css/purple-dark.css";
+```
 
 ## For AI agents
 
