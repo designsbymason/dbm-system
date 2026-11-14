@@ -4,7 +4,7 @@
  *   1. the packed file list holds the README, the LICENSE, package.json and the build, and none of the
  *      source, tests, stories or private files;
  *   2. publint finds nothing wrong with `exports`, `main` and the files they point at;
- *   3. @arethetypeswrong/cli finds the types resolving for ESM, CommonJS and bundler consumers.
+ *   3. @arethetypeswrong/cli finds the types resolving for ESM, CommonJS and bundler consumers (JSON data exports are left out of this one).
  * Exits non-zero on any failure, so CI fails the build.
  *
  * Run from the repository root: `pnpm check-publish`.
@@ -39,10 +39,15 @@ for (const name of PACKAGES) {
   for (const path of files) if (FORBIDDEN.some((pattern) => pattern.test(path))) fail(pkg.name, `the tarball holds ${path}`);
   console.log(`  ${files.length} files in the tarball`);
 
+  // A JSON file exposed through `exports` (the schema, later the manifest) is data, not a module: it has no types or module format for
+  // attw to resolve, so it is left out of that check. publint still checks that the file exists.
+  const dataEntrypoints = Object.keys(pkg.exports ?? {}).filter((entry) => entry.endsWith(".json"));
+  const attwArgs = ["exec", "attw", "--pack", ".", ...(dataEntrypoints.length ? ["--exclude-entrypoints", ...dataEntrypoints] : [])];
+
   // 2 and 3. publint, then are-the-types-wrong, each on the packed package.
   for (const [label, command, args] of [
     ["publint", "pnpm", ["exec", "publint", "--pack", "pnpm", "--strict"]],
-    ["attw", "pnpm", ["exec", "attw", "--pack", "."]],
+    ["attw", "pnpm", attwArgs],
   ]) {
     const result = spawnSync(command, args, { cwd: dir, encoding: "utf8" });
     if (result.status !== 0) {
