@@ -214,6 +214,13 @@ export const RightToLeft: Story = {
   },
 };
 
+// A real pointer stays where an earlier check left it, and over the button the forced-colours rule draws the box (`ButtonText`), so a
+// check of the box at rest first moves the pointer off the page, as the Button checks do.
+async function pointAway() {
+  const frame = window.frameElement?.getBoundingClientRect();
+  await send("Input.dispatchMouseEvent", { type: "mouseMoved", x: (frame?.left ?? 0) - 10, y: (frame?.top ?? 0) - 10 });
+}
+
 export const ForcedColors: Story = {
   name: "In forced colours the box is drawn with a system colour when the text can be pressed",
   render: () => <EditableText aria-label="Name" defaultValue="Apollo" />,
@@ -221,6 +228,7 @@ export const ForcedColors: Story = {
     const emulate = (value: "active" | "none") =>
       send("Emulation.setEmulatedMedia", { features: [{ name: "forced-colors", value }] });
     const button = within(canvasElement).getByRole("button");
+    await pointAway();
     await emulate("active");
     try {
       await waitFor(() => expect(window.matchMedia("(forced-colors: active)").matches).toBe(true));
