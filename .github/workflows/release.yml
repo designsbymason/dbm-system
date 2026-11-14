@@ -60,9 +60,8 @@ jobs:
       - name: Test
         run: pnpm test
 
-      # Action v1 is the line that works with Changesets CLI 2 (v2 of the action requires CLI 3, which the repository has not moved to).
       - name: Version Packages pull request, or publish
-        uses: changesets/action@v1
+        uses: changesets/action@v2.1.2
         with:
           version: pnpm version-packages
           publish: pnpm release

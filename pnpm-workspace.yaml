@@ -101,25 +101,6 @@ overrides:
   # subresource-integrity bypass with non-lowercase algorithms), all patched in
   # 7.30.1, the latest 7.x. Same dev/test-only path, same `<8.0.0` cap.
   undici: ">=7.30.1 <8.0.0"
-  # GHSA-hp3w-g68c-fv3c: sprintf-js DoS through unbounded precision specifiers,
-  # vulnerable `<= 1.1.3` with no patched release (1.1.3 is the latest). Its only
-  # consumer was argparse@1, reached through js-yaml@3 <- read-yaml-file@1 <-
-  # @manypkg/get-packages <- @changesets/cli (dev-only release tooling, never
-  # shipped). read-yaml-file@2 is the same API (a callable default plus `.sync`,
-  # which is all get-packages uses) on js-yaml@4, whose argparse@2 has no
-  # sprintf-js, so this takes sprintf-js and js-yaml@3 out of the tree
-  # altogether. It also retires the js-yaml@3 floors that GHSA-5p4m-2wfm-xmqj and
-  # GHSA-2883-xcg3-v3hh needed. Capped below 3, whose next major is unchecked.
-  read-yaml-file: ">=2.1.0 <3.0.0"
-  # GHSA-r3ph-w7gj-g6xm: a second, unrelated js-yaml advisory (maxTotalMergeKeys
-  # doesn't count empty mappings, CPU exhaustion), vulnerable range >=5.0.0
-  # <=5.4.0, patched in 5.4.1. The floor below had no upper cap — exactly the
-  # undici mistake this file's own §3.1 commentary already warns about — so
-  # pnpm's resolver floated this past the 4.x line @changesets/parse@0.4.3
-  # actually declares (js-yaml: "^4.1.1") and onto the now-vulnerable 5.2.3.
-  # Capped to match.
-  # Found via a GitHub Dependabot alert, 2026-10-02.
-  "@changesets/parse>js-yaml": ">=4.3.1 <5.0.0"
   # GHSA-...-nanoid-zero-size (nanoid): custom generators can loop
   # indefinitely when size is 0, patched in 3.3.17. Dev-only, pulled in
   # transitively by the Vite/Storybook toolchain. Found via `pnpm audit`,

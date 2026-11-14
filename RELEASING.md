@@ -20,4 +20,4 @@ How a release of the four public packages (`@dbm-system/components`, `tokens`, `
 
 - **The publish step ends with `TypeError: Cannot read properties of undefined (reading 'includes')`:** npm refused the publish and Changesets 2.31.1 hid the reason. Check each package's trusted publisher (the settings above).
 - **The Test step fails with `window is not defined` after the tests pass:** a known slow-runner flake; rerun the failed job.
-- **`changesets/action` says it needs Changesets CLI 3:** the workflow must use `changesets/action@v1` while the repository is on CLI 2.
+- **`changesets/action` says it is for another Changesets CLI version:** action v2 goes with Changesets CLI 3 (action v1 with CLI 2), and the repository is on CLI 3, so keep the two in step.
