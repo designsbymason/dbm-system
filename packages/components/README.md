@@ -40,6 +40,16 @@ export function Example() {
 
 Reference semantic tokens (`color.bg.brand`, `space.4`) and never hardcode a colour, spacing value or duration.
 
+## For AI agents
+
+The package ships a machine-readable index of every component, its props and parts, and its hooks and functions:
+
+```ts
+import manifest from "@dbm-system/components/manifest.json" with { type: "json" };
+```
+
+`@dbm-system/components/manifest.schema.json` describes its shape. The manifest is for the version you installed.
+
 ## Links
 
 - Documentation and Storybook: https://dbm-system.com

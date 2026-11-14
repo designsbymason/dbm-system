@@ -19,6 +19,8 @@ const PACKAGES = ["components", "tokens", "utils", "icons", "manifest"];
 
 /** Files every tarball must hold, and path patterns none may. */
 const REQUIRED = ["package.json", "README.md", "LICENSE", "dist/index.js", "dist/index.cjs", "dist/index.d.ts", "dist/index.d.cts"];
+/** Extra files a package must hold: the components package ships the manifest and its schema (ADR-0204). */
+const REQUIRED_EXTRA = { components: ["dist/manifest.json", "dist/manifest.schema.json"] };
 const FORBIDDEN = [/^src\//, /(^|\/)__tests__\//, /\.(test|spec|stories)\.[cm]?[jt]sx?$/, /^\.env/, /^\.local\//, /^tsconfig/, /^node_modules\//, /^storybook-static\//];
 
 let failed = false;
@@ -35,7 +37,12 @@ for (const name of PACKAGES) {
   // 1. The packed file list.
   const packed = JSON.parse(execFileSync("npm", ["pack", "--dry-run", "--json", "--ignore-scripts"], { cwd: dir, encoding: "utf8" }));
   const files = packed[0].files.map((file) => file.path);
-  for (const required of REQUIRED) if (!files.includes(required)) fail(pkg.name, `the tarball is missing ${required}`);
+  for (const required of [...REQUIRED, ...(REQUIRED_EXTRA[name] ?? [])]) if (!files.includes(required)) fail(pkg.name, `the tarball is missing ${required}`);
+  if (name === "components" && files.includes("dist/manifest.json")) {
+    // The manifest says which release it describes, so a stale one is caught here.
+    const shipped = JSON.parse(readFileSync(join(dir, "dist", "manifest.json"), "utf8"));
+    if (shipped.version !== pkg.version) fail(pkg.name, `dist/manifest.json describes version ${shipped.version}, not ${pkg.version}`);
+  }
   for (const path of files) if (FORBIDDEN.some((pattern) => pattern.test(path))) fail(pkg.name, `the tarball holds ${path}`);
   console.log(`  ${files.length} files in the tarball`);
 

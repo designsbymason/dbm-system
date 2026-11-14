@@ -50,8 +50,8 @@ jobs:
       - name: Check the packages publish correctly
         run: pnpm check-publish
 
-      # Generates the component manifest into a temporary folder; fails on a schema problem, an undocumented prop, component or
-      # function, or an export it cannot place. Needs the build above.
+      # Generates the component manifest again into a temporary folder (a schema problem, an undocumented prop, component or
+      # function, or an export it cannot place fails) and requires the one the build shipped to match it. Needs the build above.
       - name: Check the component manifest
         run: pnpm check-manifest
 

@@ -1,5 +1,5 @@
 export { generateManifest } from "./generate";
-export { validateManifest } from "./validate";
+export { manifestSchema, validateManifest } from "./validate";
 export type { GenerateOptions, GenerateResult, ManifestDiagnostic } from "./generate";
 export type {
   Manifest,

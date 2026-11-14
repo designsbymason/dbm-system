@@ -14,6 +14,9 @@ interface SchemaNode {
 
 const root = schema as SchemaNode;
 
+/** The schema the manifest is checked against, as the JSON it is published as. */
+export const manifestSchema: unknown = schema;
+
 function check(value: unknown, node: SchemaNode, path: string, problems: string[]): void {
   const resolved = node.$ref ? (root.$defs?.[node.$ref.replace("#/$defs/", "")] ?? node) : node;
   if (resolved.const !== undefined) {

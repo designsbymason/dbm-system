@@ -140,6 +140,9 @@ importers:
       '@dbm-system/eslint-config':
         specifier: workspace:*
         version: link:../eslint-config
+      '@dbm-system/manifest':
+        specifier: workspace:*
+        version: link:../manifest
       '@dbm-system/tsconfig':
         specifier: workspace:*
         version: link:../tsconfig

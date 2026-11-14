@@ -1,10 +1,10 @@
 #!/usr/bin/env node
 import { mkdirSync, writeFileSync } from "node:fs";
-import { dirname, resolve } from "node:path";
+import { dirname, join, resolve } from "node:path";
 import { generateManifest } from "./generate";
-import { validateManifest } from "./validate";
+import { manifestSchema, validateManifest } from "./validate";
 
-const USAGE = "Usage: dbm-manifest --root <components package folder> --out <manifest.json> [--quiet]\n\nExits 1 when the manifest breaks its schema or anything is undocumented or unplaced, and 0 when there is nothing to report.";
+const USAGE = "Usage: dbm-manifest --root <components package folder> --out <manifest.json> [--with-schema] [--quiet]\n\n--with-schema also writes manifest.schema.json beside the manifest. Exits 1 when the manifest breaks its schema or anything is undocumented or unplaced, and 0 when there is nothing to report.";
 
 function read(flag: string): string | undefined {
   const index = process.argv.indexOf(flag);
@@ -21,6 +21,7 @@ if (!root || !out) {
 const { manifest, diagnostics } = generateManifest({ packageRoot: root });
 mkdirSync(dirname(resolve(out)), { recursive: true });
 writeFileSync(resolve(out), `${JSON.stringify(manifest, null, 2)}\n`);
+if (process.argv.includes("--with-schema")) writeFileSync(join(dirname(resolve(out)), "manifest.schema.json"), `${JSON.stringify(manifestSchema, null, 2)}\n`);
 
 const problems = validateManifest(manifest);
 const errors = diagnostics.filter((entry) => entry.level === "error");
