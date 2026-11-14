@@ -15,6 +15,7 @@
     "check-publish": "node scripts/check-publish.mjs",
     "check-radix-single-copy": "node scripts/check-radix-single-copy.mjs",
     "check-manifest": "node scripts/check-manifest.mjs",
+    "sync-agents": "node scripts/sync-agents.mjs",
     "check-fresh-app": "node scripts/check-fresh-app.mjs",
     "dev": "turbo run dev",
     "changeset": "changeset",

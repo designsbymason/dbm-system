@@ -1,12 +1,13 @@
 #!/usr/bin/env node
-import { mkdirSync, rmSync, writeFileSync } from "node:fs";
+import { mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
+import { renderAgentsList, updateAgentsBlock } from "./agents";
 import { generateManifest } from "./generate";
 import { splitManifest } from "./split";
 import { manifestSchema, validateManifest, validateManifestFile } from "./validate";
 import type { ManifestFileKind } from "./validate";
 
-const USAGE = "Usage: dbm-manifest --root <components package folder> --out <manifest.json> [--with-schema] [--split <folder>] [--quiet]\n\n--with-schema also writes manifest.schema.json beside the manifest; --split also writes the index, one file per component and utilities.json into the folder (ADR-0206). Exits 1 when the manifest breaks its schema or anything is undocumented or unplaced, and 0 when there is nothing to report.";
+const USAGE = "Usage: dbm-manifest --root <components package folder> --out <manifest.json> [--with-schema] [--split <folder>] [--agents <AGENTS.md>] [--quiet]\n\n--with-schema also writes manifest.schema.json beside the manifest; --split also writes the index, one file per component and utilities.json into the folder (ADR-0206); --agents rewrites the generated component list between the markers of an AGENTS.md (ADR-0208). Exits 1 when the manifest breaks its schema or anything is undocumented or unplaced, and 0 when there is nothing to report.";
 
 function read(flag: string): string | undefined {
   const index = process.argv.indexOf(flag);
@@ -26,6 +27,14 @@ writeFileSync(resolve(out), `${JSON.stringify(manifest, null, 2)}\n`);
 if (process.argv.includes("--with-schema")) writeFileSync(join(dirname(resolve(out)), "manifest.schema.json"), `${JSON.stringify(manifestSchema, null, 2)}\n`);
 
 const problems = validateManifest(manifest);
+
+const agentsFile = read("--agents");
+if (agentsFile) {
+  const path = resolve(agentsFile);
+  const before = readFileSync(path, "utf8");
+  const after = updateAgentsBlock(before, renderAgentsList(manifest));
+  if (after !== before) writeFileSync(path, after);
+}
 
 const splitFolder = read("--split");
 let splitCount = 0;

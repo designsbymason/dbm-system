@@ -4,6 +4,7 @@ import { fileURLToPath } from "node:url";
 import { beforeAll, describe, expect, it } from "vitest";
 import { generateManifest } from "./generate";
 import type { GenerateResult } from "./generate";
+import { renderAgentsList } from "./agents";
 import { splitManifest } from "./split";
 import { validateManifest, validateManifestFile } from "./validate";
 
@@ -121,6 +122,13 @@ describe("generateManifest on the components package", () => {
     const rows = (index as { components: { name: string; summary: string }[] }).components;
     expect(rows.map((row) => row.name)).toEqual(result.manifest.components.map((component) => component.name));
     expect(rows.every((row) => row.summary !== "")).toBe(true);
+  });
+
+  it("lists every component once and every function in the AGENTS.md list", () => {
+    const list = renderAgentsList(result.manifest);
+    for (const component of result.manifest.components) expect(list.match(new RegExp(`(?:^|[ ,])${component.name}(?=,|$)`, "gm"))).toHaveLength(1);
+    for (const utility of result.manifest.utilities) expect(list).toContain(utility.name);
+    expect(list.length).toBeLessThan(6_000);
   });
 
   it("is deterministic: a second run gives the same text", () => {

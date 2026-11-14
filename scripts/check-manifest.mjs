@@ -3,13 +3,14 @@
  * Checks the manifest the components package ships (ADR-0204, ADR-0205). It generates the manifest again from the source into a
  * temporary folder, which fails on a schema problem, anything undocumented or an export the manifest cannot place, and then compares
  * the result with every file the build shipped (`manifest.json`, its schema copy and the `manifest` folder of ADR-0206), so a shipped
- * file that is out of date, was edited by hand or has no source any more is caught. Nothing is written into the repository. Needs the packages built first (`@dbm-system/utils` is read from its
+ * file that is out of date, was edited by hand or has no source any more is caught; and the generated list in
+ * `packages/components/AGENTS.md` (ADR-0208) must be the one the manifest generates. Nothing is written into the repository. Needs the packages built first (`@dbm-system/utils` is read from its
  * `dist`, and the generator runs from its own).
  *
  * Run from the repository root: `pnpm check-manifest`.
  */
 import { spawnSync } from "node:child_process";
-import { existsSync, mkdtempSync, readFileSync, readdirSync, rmSync } from "node:fs";
+import { copyFileSync, existsSync, mkdtempSync, readFileSync, readdirSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -24,7 +25,11 @@ if (!existsSync(cli) || !existsSync(join(root, "packages", "utils", "dist", "ind
 
 const out = mkdtempSync(join(tmpdir(), "dbm-manifest-"));
 try {
-  const result = spawnSync("node", [cli, "--root", join(root, "packages", "components"), "--out", join(out, "manifest.json"), "--with-schema", "--split", join(out, "manifest")], { stdio: "inherit" });
+  // The committed AGENTS.md is copied, and the copy's generated list is rewritten from the fresh manifest, to compare the two below.
+  const agentsFile = join(root, "packages", "components", "AGENTS.md");
+  const agentsCopy = join(out, "AGENTS.md");
+  copyFileSync(agentsFile, agentsCopy);
+  const result = spawnSync("node", [cli, "--root", join(root, "packages", "components"), "--out", join(out, "manifest.json"), "--with-schema", "--split", join(out, "manifest"), "--agents", agentsCopy], { stdio: "inherit" });
   if (result.status !== 0) process.exit(result.status ?? 1);
   /** Every file under a folder, as paths relative to it. */
   const list = (folder, prefix = "") => readdirSync(join(folder, prefix), { withFileTypes: true }).flatMap((entry) => (entry.isDirectory() ? list(folder, join(prefix, entry.name)) : [join(prefix, entry.name)]));
@@ -44,6 +49,10 @@ try {
       console.error(`  FAIL  packages/components/dist/${file} is not what the source generates: run \`pnpm build\``);
       failed = true;
     }
+  }
+  if (readFileSync(agentsFile, "utf8") !== readFileSync(agentsCopy, "utf8")) {
+    console.error("  FAIL  packages/components/AGENTS.md: its generated list is not what the manifest generates: run `pnpm sync-agents` and commit the result");
+    failed = true;
   }
   if (failed) process.exit(1);
   console.log(`check-manifest: the ${expected.length} shipped manifest files match the source`);

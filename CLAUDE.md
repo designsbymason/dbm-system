@@ -43,7 +43,9 @@ apps/
 scripts/            Repo-level checks CI runs from the root: `check-publish` (publint and attw on each
                      packed public package, its packed package.json and the consumer guide's imports) `check-radix-single-copy` (one version of each shared
                      Radix package in the lockfile) `check-manifest` (the component manifest builds,
-                     nothing is undocumented, and what the build shipped matches the source) and
+                     nothing is undocumented, what the build shipped matches the source, and
+                     the generated list in packages/components/AGENTS.md is current; `sync-agents`
+                     rewrites that list) and
                      `check-fresh-app` (the packed packages install into an empty app and style a
                      component, bundled with esbuild and webpack; needs Chromium and the network)
 packages/
