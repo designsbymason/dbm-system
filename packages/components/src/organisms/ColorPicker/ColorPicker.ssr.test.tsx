@@ -69,13 +69,17 @@ describe("ColorPicker on the server and in hydration", () => {
     document.body.append(container);
     const recoverable: unknown[] = [];
     const errors = vi.spyOn(console, "error").mockImplementation(() => undefined);
+    let root: ReturnType<typeof hydrateRoot> | undefined;
     await act(async () => {
-      hydrateRoot(container, markup, { onRecoverableError: (error) => recoverable.push(error) });
+      root = hydrateRoot(container, markup, { onRecoverableError: (error) => recoverable.push(error) });
     });
     expect(recoverable).toEqual([]);
     expect(errors).not.toHaveBeenCalled();
     errors.mockRestore();
     expect(screen.getByRole("group", { name: "Brand" })).toBeInTheDocument();
+    // A root left mounted can still have React work scheduled when the test environment is torn down, which then reads a `window` that is gone
+    // (an unhandled error that failed a release run on a slow runner), so it is unmounted before the next test.
+    await act(async () => root?.unmount());
     container.remove();
   });
 });
