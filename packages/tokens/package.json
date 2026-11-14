@@ -42,7 +42,7 @@
   "devDependencies": {
     "@dbm-system/tsconfig": "workspace:*",
     "culori": "^4.0.2",
-    "style-dictionary": "^5.5.0",
+    "style-dictionary": "^5.8.0",
     "tsup": "^8.5.1",
     "typescript": "5.9.3"
   }
