@@ -135,7 +135,7 @@ function resolveExport(directory, exportsMap, subpath) {
     const star = key.indexOf("*");
     if (star === -1) continue;
     const [prefix, suffix] = [key.slice(0, star), key.slice(star + 1)];
-    if (subpath.startsWith(prefix) && subpath.endsWith(suffix) && subpath.length >= key.length - 1) return join(directory, target.replace("*", subpath.slice(prefix.length, subpath.length - suffix.length)));
+    if (subpath.startsWith(prefix) && subpath.endsWith(suffix) && subpath.length >= key.length - 1) return join(directory, target.split("*").join(subpath.slice(prefix.length, subpath.length - suffix.length)));
   }
   return undefined;
 }

@@ -75,6 +75,18 @@ const MANIFEST_FIELDS = new Set(["usedBy", "forwardsRef", "refElement", "importN
 /** Attributes in the text that belong to the page, not to a component: `data-theme` on the root element chooses a theme. */
 const NOT_PROPS = new Set(["data-theme"]);
 
+// Plain scans instead of regular expressions with two adjacent overlapping classes, which can take quadratic time on a long run of
+// one character (the text is a file an author wrote, but a check should not hang on it).
+const stripBackticks = (text: string): string => {
+  let start = 0;
+  let end = text.length;
+  while (start < end && text[start] === "`") start += 1;
+  while (end > start && text[end - 1] === "`") end -= 1;
+  return text.slice(start, end);
+};
+/** A lowerCamelCase name: a lowercase letter first, letters and digits only, and at least one capital after it. */
+const isCamelCase = (text: string): boolean => /^[a-z][A-Za-z0-9]*$/.test(text) && /[A-Z]/.test(text);
+
 /**
  * What is wrong with the hand-written text of `AGENTS.md` (ADR-0208): a name, prop, token or example the manifest and the token CSS do not
  * back. The generated block is left out. Checked, in inline code and in fenced code:
@@ -105,9 +117,9 @@ export function agentsProblems(text: string, manifest: Manifest, tokenNames: Rea
     if (!problems.includes(message)) problems.push(message);
   };
   for (const span of spans) {
-    const inner = span.replace(/^`+|`+$/g, "").trim();
+    const inner = stripBackticks(span).trim();
     if (/^[A-Z][A-Za-z0-9]*(\.[A-Z][A-Za-z0-9]*)?$/.test(inner) && !NOT_COMPONENTS.has(inner) && !parts.has(inner) && !otherNames.has(inner)) problem(`\`${inner}\` is not a component or part in the manifest, or a name another package exports`);
-    if (/^[a-z][A-Za-z0-9]*[A-Z][A-Za-z0-9]*$/.test(inner) && !everyProp.has(inner) && !utilities.has(inner) && !otherNames.has(inner) && !MANIFEST_FIELDS.has(inner)) problem(`\`${inner}\` is not a prop of any component or a hook or function in the manifest`);
+    if (isCamelCase(inner) && !everyProp.has(inner) && !utilities.has(inner) && !otherNames.has(inner) && !MANIFEST_FIELDS.has(inner)) problem(`\`${inner}\` is not a prop of any component or a hook or function in the manifest`);
     if (/^(aria|data)-[a-z-]+$/.test(inner) && !NOT_PROPS.has(inner) && !everyProp.has(inner)) problem(`\`${inner}\` is not a prop of any component in the manifest`);
     for (const [token] of span.matchAll(/--dbm-[a-z0-9-]+/g)) {
       // `--dbm-bg-*` names a family: some declared token must start with it.
@@ -124,8 +136,8 @@ export function agentsProblems(text: string, manifest: Manifest, tokenNames: Rea
       // What is inside braces is an expression, not an attribute name, so it is taken out first (a few levels deep).
       let bare = attributes;
       for (let level = 0; level < 4; level++) bare = bare.replace(/\{[^{}]*\}/g, "");
-      for (const [, attribute] of bare.matchAll(/(?:^|\s)([a-z][A-Za-z0-9]*[A-Z][A-Za-z0-9]*)(?=[=\s/]|$)/g)) {
-        if (attribute && !found.props.has(attribute)) problem(`<${tag} ${attribute}=…> in the examples: ${attribute} is not a prop of ${tag} in the manifest`);
+      for (const [, attribute] of bare.matchAll(/(?:^|\s)([a-z][A-Za-z0-9]*)(?=[=\s/]|$)/g)) {
+        if (attribute && isCamelCase(attribute) && !found.props.has(attribute)) problem(`<${tag} ${attribute}=…> in the examples: ${attribute} is not a prop of ${tag} in the manifest`);
       }
     }
   }
