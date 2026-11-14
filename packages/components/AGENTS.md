@@ -29,6 +29,15 @@ import "@dbm-system/tokens/css/purple-light.bundled.css";
 
 The themes are `purple-light`, `purple-dark`, `emerald-light` and `emerald-dark`. The package ships no fonts (`Nunito` and `Lora`); `README.md` in this package has the snippets to load them.
 
+## The packages
+
+- `@dbm-system/components`: the components, their stylesheet and the manifest. Install it.
+- `@dbm-system/tokens`: the design tokens, as the theme CSS and as typed constants. Install it: your app imports its theme CSS.
+- `@dbm-system/icons`: the Phosphor icon set, typed, with icons named like `PlusIcon`. Install it if you use icons.
+- `@dbm-system/utils`: helpers the components are built on. Do not install it. `formatRelativeTime`, `usePersistentDismiss`, `useRecentCommands` and the `Responsive`, `SpaceValue` and `Breakpoint` types come from `@dbm-system/components`; the rest of it is internal.
+
+The manifest files are inside `@dbm-system/components`; there is no separate package for them. The packages release together at one version, so install the same version of each.
+
 ## Use the components
 
 - Import by name: `import { Button } from "@dbm-system/components"`. The parts of a compound component hang off it: `Menu.Trigger`, `Menu.Content`, `Menu.Item`.
@@ -41,10 +50,17 @@ The themes are `purple-light`, `purple-dark`, `emerald-light` and `emerald-dark`
 - Text a component writes itself (labels, announcements) is replaceable through a partial `labels` object, and numbers it shows go through `formatNumber` (`Pagination`). English is the default. For right-to-left, pass `dir="rtl"` or wrap the app in `DirectionProvider`, and read it with `useDirection`.
 - Components are built to render on the server: they do not read `window` or `document` during the first render. Wrap your own browser-only code in `ClientOnly`.
 
-## Style and theme
+## Tokens, style and theme
 
-- Style with tokens, which are CSS custom properties: `var(--dbm-bg-surface)`, `var(--dbm-text-primary)`, `var(--dbm-border-default)`, `var(--dbm-space-4)`, `var(--dbm-radius-md)`. Use the semantic ones (the `bg`, `text`, `border` and `icon` groups), which change with the theme, and never write a colour, a spacing value or a duration as a literal.
-- To switch themes at runtime, set `data-theme` yourself, or wrap the app in `ThemeProvider` (`brand` is `purple` or `emerald`, `mode` is `light`, `dark` or `system`) and read it with `useTheme`.
+Tokens are CSS custom properties that all start with `--dbm-`, in three layers:
+
+- Semantic tokens change with the theme: `--dbm-bg-*` for backgrounds (`--dbm-bg-surface`, `--dbm-bg-brand`), `--dbm-text-*` (`--dbm-text-primary`), `--dbm-border-*` (`--dbm-border-default`) and `--dbm-icon-*` (`--dbm-icon-brand`). Use these for every colour.
+- Primitive tokens are the raw scales and are the same in every theme: `--dbm-space-4`, `--dbm-radius-md`, and the font, motion, shadow, z-index and breakpoint scales. Use them for every non-colour value. The colour scales (`--dbm-color-purple-600`) are what the semantic tokens are made from; do not use them, or they will not follow the theme.
+- Component tokens belong to one component (`--dbm-avatar-size-md`). Do not use them.
+
+Never write a colour, a spacing value or a duration as a literal. The same values are typed constants in `@dbm-system/tokens` for code that needs a number or a string instead of CSS (`primitives`, `componentTokens`, `purpleLight`, `purpleDark`, `emeraldLight`, `emeraldDark`, for example `purpleLight.bg.brand`).
+
+To switch themes at runtime, set `data-theme` yourself, or wrap the app in `ThemeProvider` (`brand` is `purple` or `emerald`, `mode` is `light`, `dark` or `system`) and read it with `useTheme`.
 
 ## Components, hooks and functions
 

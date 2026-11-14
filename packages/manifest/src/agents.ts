@@ -62,14 +62,15 @@ const NOT_PROPS = new Set(["data-theme"]);
 /**
  * What is wrong with the hand-written text of `AGENTS.md` (ADR-0208): a name, prop, token or example the manifest and the token CSS do not
  * back. The generated block is left out. Checked, in inline code and in fenced code:
- *   - a whole span that is a component or part name (`Menu.Item`) must be one in the manifest;
- *   - a whole span that is a camelCase name (`asChild`, `useTheme`) must be a prop of some component or a hook or function;
+ *   - a whole span that is a component or part name (`Menu.Item`) must be one in the manifest, or a name in `otherNames`;
+ *   - a whole span that is a camelCase name (`asChild`, `useTheme`) must be a prop of some component, a hook or function, or one of
+ *     `otherNames` (what other packages and the components package's types export: `purpleLight`, `PlusIcon`, `Responsive`);
  *   - a whole span that is `aria-…` or `data-…` must be a prop of some component;
- *   - every `--dbm-…` token must be declared in the token CSS;
+ *   - every `--dbm-…` token must be declared in the token CSS (`--dbm-bg-*` is a family: one declared token must start `--dbm-bg-`);
  *   - every JSX tag that names a component or part must exist, and a camelCase attribute on it must be one of its props.
  * Plain lower-case words (`size`, `light`) are not checked: they are words as often as props. `ref` and `children` are React's, not the manifest's.
  */
-export function agentsProblems(text: string, manifest: Manifest, tokenNames: ReadonlySet<string>): string[] {
+export function agentsProblems(text: string, manifest: Manifest, tokenNames: ReadonlySet<string>, otherNames: ReadonlySet<string> = new Set()): string[] {
   const start = text.indexOf(AGENTS_START);
   const end = text.indexOf(AGENTS_END);
   const handWritten = start !== -1 && end > start ? `${text.slice(0, start)}${text.slice(end + AGENTS_END.length)}` : text;
@@ -89,10 +90,14 @@ export function agentsProblems(text: string, manifest: Manifest, tokenNames: Rea
   };
   for (const span of spans) {
     const inner = span.replace(/^`+|`+$/g, "").trim();
-    if (/^[A-Z][A-Za-z0-9]*(\.[A-Z][A-Za-z0-9]*)?$/.test(inner) && !NOT_COMPONENTS.has(inner) && !parts.has(inner)) problem(`\`${inner}\` is not a component or part in the manifest`);
-    if (/^[a-z][A-Za-z0-9]*[A-Z][A-Za-z0-9]*$/.test(inner) && !everyProp.has(inner) && !utilities.has(inner)) problem(`\`${inner}\` is not a prop of any component or a hook or function in the manifest`);
+    if (/^[A-Z][A-Za-z0-9]*(\.[A-Z][A-Za-z0-9]*)?$/.test(inner) && !NOT_COMPONENTS.has(inner) && !parts.has(inner) && !otherNames.has(inner)) problem(`\`${inner}\` is not a component or part in the manifest, or a name another package exports`);
+    if (/^[a-z][A-Za-z0-9]*[A-Z][A-Za-z0-9]*$/.test(inner) && !everyProp.has(inner) && !utilities.has(inner) && !otherNames.has(inner)) problem(`\`${inner}\` is not a prop of any component or a hook or function in the manifest`);
     if (/^(aria|data)-[a-z-]+$/.test(inner) && !NOT_PROPS.has(inner) && !everyProp.has(inner)) problem(`\`${inner}\` is not a prop of any component in the manifest`);
-    for (const [token] of span.matchAll(/--dbm-[a-z0-9-]+/g)) if (!tokenNames.has(token)) problem(`\`${token}\` is not a token the token CSS declares`);
+    for (const [token] of span.matchAll(/--dbm-[a-z0-9-]+/g)) {
+      // `--dbm-bg-*` names a family: some declared token must start with it.
+      const known = token.endsWith("-") ? [...tokenNames].some((name) => name.startsWith(token)) : tokenNames.has(token);
+      if (!known) problem(`\`${token}\` is not a token the token CSS declares`);
+    }
     for (const [, tag, attributes = ""] of span.matchAll(/<([A-Z][A-Za-z0-9]*(?:\.[A-Z][A-Za-z0-9]*)?)\b([^>]*)>/g)) {
       if (PLACEHOLDERS.has(tag ?? "")) continue;
       const found = parts.get(tag ?? "");

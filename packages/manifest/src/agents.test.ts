@@ -83,7 +83,10 @@ describe("agentsProblems", () => {
     expect(check(`${AGENTS_START}\n\n\`Imaginary\`\n\n${AGENTS_END}`)).toEqual([]);
   });
   it("names a component or part that is not in the manifest", () => {
-    expect(check("`Imaginary` and `Menu.Nope`")).toEqual(["`Imaginary` is not a component or part in the manifest", "`Menu.Nope` is not a component or part in the manifest"]);
+    expect(check("`Imaginary` and `Menu.Nope`")).toEqual([
+      "`Imaginary` is not a component or part in the manifest, or a name another package exports",
+      "`Menu.Nope` is not a component or part in the manifest, or a name another package exports",
+    ]);
   });
   it("names a camelCase prop or hook that nothing has", () => {
     expect(check("`asChildd` and `useNope`")).toEqual(["`asChildd` is not a prop of any component or a hook or function in the manifest", "`useNope` is not a prop of any component or a hook or function in the manifest"]);
@@ -97,6 +100,14 @@ describe("agentsProblems", () => {
   });
   it("reads past expressions in braces and spread props", () => {
     expect(check("`<Button leadingIcon={{ isOpen }} {...rest}>x</Button>`")).toEqual([]);
+  });
+  it("accepts a camelCase name that another package exports, when it is given", () => {
+    expect(agentsProblems("`purpleLight`", known, tokens, new Set(["purpleLight"]))).toEqual([]);
+    expect(check("`purpleLight`")).toEqual(["`purpleLight` is not a prop of any component or a hook or function in the manifest"]);
+  });
+  it("accepts a PascalCase name another package or a type export gives, and a token family", () => {
+    expect(agentsProblems("`PlusIcon`, `Responsive` and `--dbm-bg-*`", known, tokens, new Set(["PlusIcon", "Responsive"]))).toEqual([]);
+    expect(check("`--dbm-nope-*`")).toEqual(["`--dbm-nope-` is not a token the token CSS declares"]);
   });
   it("lets the <Name> placeholder in a path through", () => {
     expect(check("`manifest/components/<Name>.json`")).toEqual([]);

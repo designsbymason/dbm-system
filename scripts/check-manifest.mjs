@@ -59,7 +59,20 @@ try {
   const tokenCss = readFileSync(join(root, "packages", "tokens", "build", "css", "purple-light.bundled.css"), "utf8");
   const tokenNames = new Set([...tokenCss.matchAll(/^\s*(--dbm-[a-z0-9-]+):/gm)].map((match) => match[1]));
   const freshManifest = JSON.parse(readFileSync(join(out, "manifest.json"), "utf8"));
-  for (const message of agentsProblems(readFileSync(agentsFile, "utf8"), freshManifest, tokenNames)) {
+  // Names the text may use that are not components: what the tokens and icons packages export, and everything the components package's
+  // declaration file exports (its own `export { … }` list and the `export type { … } from` lines that re-export types from other packages).
+  const exportsOf = async (name) => Object.keys(await import(pathToFileURL(join(root, "packages", name, "dist", "index.js")).href));
+  const declarations = readFileSync(join(root, "packages", "components", "dist", "index.d.ts"), "utf8");
+  const componentExports = [...declarations.matchAll(/^export (?:type )?\{([\s\S]*?)\}(?: from [^;]+)?;?$/gm)]
+    .flatMap((match) => (match[1] ?? "").split(","))
+    .map((entry) => entry.trim().replace(/^type\s+/, "").split(/\s+as\s+/).pop())
+    .filter(Boolean);
+  if (componentExports.length < 100) {
+    console.error("  FAIL  could not read the exports of packages/components/dist/index.d.ts");
+    failed = true;
+  }
+  const otherNames = new Set([...(await exportsOf("tokens")), ...(await exportsOf("icons")), ...componentExports]);
+  for (const message of agentsProblems(readFileSync(agentsFile, "utf8"), freshManifest, tokenNames, otherNames)) {
     console.error(`  FAIL  packages/components/AGENTS.md: ${message}`);
     failed = true;
   }
