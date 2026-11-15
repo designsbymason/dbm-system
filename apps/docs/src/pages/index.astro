@@ -1,0 +1,100 @@
+---
+// The home page (guidelines/docs-site/03-landing-page-brief.md). This is the M0 design-direction
+// sample: the hero, the specification and the theming section, in the agreed direction.
+import { SiteHeader } from "../components/header/SiteHeader";
+import { HeroActions } from "../components/home/HeroActions";
+import { HeroStack } from "../components/home/HeroStack";
+import { InstallLine } from "../components/home/InstallLine";
+import Specification from "../components/home/Specification.astro";
+import ThemeSection from "../components/home/ThemeSection.astro";
+import { facts } from "../components/home/facts";
+import SiteFooter from "../components/SiteFooter.astro";
+import Base from "../layouts/Base.astro";
+---
+
+<Base
+  title="DBM System: the agentic component library"
+  description="An accessible, token-driven React component library built for AI coding agents and developers alike."
+>
+  <SiteHeader client:load version={facts.version} />
+  <main id="main">
+    <section class="hero site-frame" aria-labelledby="hero-heading">
+      <div class="grid-12 hero__grid">
+        <div class="hero__text">
+          <h1 id="hero-heading" class="display hero__title">
+            The agentic component library for people and the AI agents that build with them.
+          </h1>
+          <p class="lede">
+            Accessible React components on one token system, with a typed manifest an agent reads before it writes a line.
+          </p>
+          <div class="hero__install">
+            <InstallLine client:visible />
+          </div>
+          <div class="hero__actions">
+            <HeroActions />
+          </div>
+        </div>
+        <div class="hero__visual">
+          <HeroStack />
+        </div>
+      </div>
+    </section>
+    <Specification />
+    <ThemeSection />
+  </main>
+  <SiteFooter />
+</Base>
+
+<style>
+  .hero {
+    padding-block: var(--dbm-space-12) var(--dbm-space-16);
+  }
+
+  .hero__grid {
+    row-gap: var(--dbm-space-8);
+    align-items: center;
+  }
+
+  .hero__text {
+    grid-column: 1 / -1;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--dbm-space-6);
+  }
+
+  .hero__title {
+    font-size: var(--dbm-font-size-4xl);
+    max-inline-size: 16em;
+  }
+
+  .hero__install {
+    max-inline-size: 36rem;
+  }
+
+  .hero__actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--dbm-space-3) var(--dbm-space-5);
+  }
+
+  .hero__visual {
+    grid-column: 1 / -1;
+  }
+
+  @media (min-width: 1024px) {
+    .hero {
+      padding-block: var(--dbm-space-16) var(--dbm-space-24);
+    }
+    .hero__text {
+      grid-column: 1 / span 6;
+    }
+    .hero__title {
+      font-size: var(--dbm-font-size-5xl);
+    }
+    .hero__visual {
+      grid-column: 7 / -1;
+      margin-inline-end: calc(-1 * var(--site-gutter));
+    }
+  }
+</style>

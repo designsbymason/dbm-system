@@ -1,0 +1,53 @@
+---
+// The site footer. The four-column version (02-structure.md §1) arrives with the docs pages in M1.
+---
+
+<footer class="footer">
+  <div class="site-frame footer__inner">
+    <p class="footer__line">DBM System is open source under the MIT licence. The fonts keep their own licence (SIL Open Font License).</p>
+    <nav aria-label="Project">
+      <ul class="footer__links">
+        <li><a href="https://github.com/designsbymason/dbm-system">GitHub</a></li>
+        <li><a href="https://www.npmjs.com/package/@dbm-system/components">npm</a></li>
+        <li><a href="https://github.com/designsbymason/dbm-system/issues">Issues</a></li>
+        <li><a href="/storybook/">Storybook</a></li>
+      </ul>
+    </nav>
+  </div>
+</footer>
+
+<style>
+  .footer {
+    border-block-start: 1px solid var(--site-rule);
+    padding-block: var(--dbm-space-10);
+    font-size: var(--dbm-font-size-sm);
+    color: var(--site-graphite);
+  }
+  .footer__inner {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: var(--dbm-space-4);
+  }
+  .footer__line {
+    margin: 0;
+    max-inline-size: 40em;
+  }
+  .footer__links {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--dbm-space-5);
+  }
+  .footer a {
+    color: var(--site-ink);
+    text-underline-offset: 0.2em;
+  }
+  .footer a:focus-visible {
+    outline: 2px solid var(--dbm-border-focus);
+    outline-offset: 2px;
+    border-radius: var(--dbm-radius-xs);
+  }
+</style>

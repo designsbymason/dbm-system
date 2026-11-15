@@ -1,0 +1,33 @@
+{
+  "name": "@dbm-system/docs",
+  "version": "0.0.0",
+  "private": true,
+  "description": "The DBM System documentation website (dbm-system.com).",
+  "license": "MIT",
+  "type": "module",
+  "scripts": {
+    "prepare-styles": "node scripts/scoped-themes.mjs",
+    "dev": "pnpm prepare-styles && ASTRO_TELEMETRY_DISABLED=1 astro dev --port 4321",
+    "build": "pnpm prepare-styles && ASTRO_TELEMETRY_DISABLED=1 astro build",
+    "preview": "ASTRO_TELEMETRY_DISABLED=1 astro preview --port 4321",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@astrojs/mdx": "^8.1.6",
+    "@astrojs/react": "^7.1.9",
+    "@dbm-system/components": "workspace:*",
+    "@dbm-system/icons": "workspace:*",
+    "@dbm-system/tokens": "workspace:*",
+    "@dbm-system/utils": "workspace:*",
+    "@fontsource/lora": "^5.3.0",
+    "@fontsource/nunito": "^5.3.0",
+    "astro": "^7.4.12",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1"
+  },
+  "devDependencies": {
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "typescript": "5.9.3"
+  }
+}

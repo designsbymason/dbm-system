@@ -1,0 +1,192 @@
+/*
+ * The site's own CSS (guidelines/docs-site/02-structure.md §3): semantic tokens only. Media queries
+ * use the breakpoint tokens' values (640, 768, 1024, 1280 px), as the components do, because a
+ * custom property cannot be read inside a media query.
+ */
+
+/* Site aliases: names for the roles the design direction gives the tokens. */
+:root {
+  --site-ink: var(--dbm-text-primary);
+  --site-graphite: var(--dbm-text-secondary);
+  --site-pencil: var(--dbm-text-tertiary);
+  --site-paper: var(--dbm-bg-canvas);
+  --site-sheet: var(--dbm-bg-surface);
+  --site-rule: var(--dbm-border-default);
+  --site-rule-strong: var(--dbm-border-strong);
+  --site-accent: var(--dbm-text-brand);
+  --site-shadow-plate: var(--dbm-shadow-light-lg);
+  --site-shadow-soft: var(--dbm-shadow-light-sm);
+  --site-gutter: var(--dbm-space-4);
+  --site-max: var(--dbm-breakpoint-xl);
+  --site-ease: var(--dbm-motion-easing-emphasized);
+}
+
+:root[data-theme$="-dark"] {
+  --site-shadow-plate: var(--dbm-shadow-dark-lg);
+  --site-shadow-soft: var(--dbm-shadow-dark-sm);
+}
+
+@media (min-width: 768px) {
+  :root {
+    --site-gutter: var(--dbm-space-8);
+  }
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  background: var(--site-paper);
+  color: var(--site-ink);
+  font-family: var(--dbm-font-family-primary);
+  font-size: 100%;
+  line-height: var(--dbm-line-height-normal);
+  -webkit-text-size-adjust: 100%;
+  text-rendering: optimizeLegibility;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+}
+
+::selection {
+  background: var(--dbm-bg-brand-subtle-hover);
+  color: var(--site-ink);
+}
+
+/* ---------- Layout: a 12-column grid with deliberate offsets ---------- */
+
+.site-frame {
+  width: 100%;
+  max-width: var(--site-max);
+  margin-inline: auto;
+  padding-inline: var(--site-gutter);
+}
+
+.grid-12 {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  column-gap: var(--dbm-space-4);
+}
+
+/* Grid items may shrink below their content (a long code line must not widen the page). */
+.grid-12 > * {
+  min-inline-size: 0;
+}
+
+@media (min-width: 1024px) {
+  .grid-12 {
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+    column-gap: var(--dbm-space-6);
+  }
+}
+
+/* ---------- Type roles ---------- */
+
+.display {
+  font-family: var(--dbm-font-family-secondary);
+  font-weight: var(--dbm-font-weight-regular);
+  letter-spacing: var(--dbm-letter-spacing-tight);
+  line-height: var(--dbm-line-height-tight);
+  text-wrap: balance;
+  margin: 0;
+}
+
+.lede {
+  font-size: var(--dbm-font-size-md);
+  line-height: var(--dbm-line-height-relaxed);
+  color: var(--site-graphite);
+  max-width: 34em;
+  text-wrap: pretty;
+  margin: 0;
+}
+
+.token-name {
+  font-family: var(--dbm-font-family-mono);
+  font-size: var(--dbm-font-size-xs);
+  color: var(--site-accent);
+  white-space: nowrap;
+}
+
+/* ---------- The annotation motif: a dimension line with end ticks and the token it measures ---------- */
+
+.dimension {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  gap: var(--dbm-space-1);
+  color: var(--site-accent);
+  pointer-events: none;
+}
+
+.dimension::before,
+.dimension::after {
+  content: "";
+  flex: 1 1 auto;
+  height: 1px;
+  background: currentColor;
+  opacity: 0.7;
+}
+
+.dimension > .token-name {
+  flex: none;
+  padding-inline: var(--dbm-space-1);
+}
+
+.dimension--ticks {
+  border-inline: 1px solid currentColor;
+  height: var(--dbm-space-3);
+}
+
+/* ---------- Mode change: a short reveal from the switch (ADR-0212) ---------- */
+
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation: none;
+  mix-blend-mode: normal;
+}
+
+html[data-mode-transition] ::view-transition-new(root) {
+  animation: site-reveal var(--dbm-motion-duration-slower) var(--site-ease);
+}
+
+@keyframes site-reveal {
+  from {
+    clip-path: circle(0 at var(--reveal-x, 100%) var(--reveal-y, 0));
+  }
+  to {
+    clip-path: circle(150vmax at var(--reveal-x, 100%) var(--reveal-y, 0));
+  }
+}
+
+/* Between pages: the content cross-fades; the header holds still. */
+@view-transition {
+  navigation: auto;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  @view-transition {
+    navigation: none;
+  }
+  html[data-mode-transition] ::view-transition-new(root) {
+    animation: none;
+  }
+}
+
+/* ---------- Utilities ---------- */
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}

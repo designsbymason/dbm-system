@@ -1,0 +1,448 @@
+---
+// The M0 design-direction page (guidelines/docs-site/01-plan.md, M0): the concept, how the tokens are
+// used, the motifs and the avoid list, for the maintainer to approve before any layout is built.
+// Internal: kept out of search results and not linked from the site.
+import { Button } from "@dbm-system/components";
+import { SiteHeader } from "../components/header/SiteHeader";
+import { facts } from "../components/home/facts";
+import SiteFooter from "../components/SiteFooter.astro";
+import Base from "../layouts/Base.astro";
+
+const palette = [
+  { role: "Paper", token: "bg.canvas", css: "--dbm-bg-canvas", use: "The page itself" },
+  { role: "Sheet", token: "bg.surface", css: "--dbm-bg-surface", use: "Raised surfaces: plates, cards, the alternate section" },
+  { role: "Ink", token: "text.primary", css: "--dbm-text-primary", use: "Headlines and body" },
+  { role: "Graphite", token: "text.secondary", css: "--dbm-text-secondary", use: "Ledes, terms, captions" },
+  { role: "Rule", token: "border.default", css: "--dbm-border-default", use: "Table rows and plate edges, never decoration" },
+  { role: "Brand ink", token: "text.brand", css: "--dbm-text-brand", use: "Annotations, the logo, emphasis" },
+  { role: "Brand fill", token: "bg.brand", css: "--dbm-bg-brand", use: "The one primary action per view" },
+  { role: "Brand wash", token: "bg.brand-subtle", css: "--dbm-bg-brand-subtle", use: "Selected and quiet brand states; tonal depth in illustrations" },
+];
+
+const avoid = [
+  "Gradient washes, glowing blobs and glassy blurred panels",
+  "A centred hero over a grid of identical icon cards",
+  "A row of big numbers with small labels, or facts joined with middle dots",
+  "Numbered eyebrow labels above headings when the content is not a sequence",
+  "All-caps labels, and one word picked out in a headline",
+  "Arrows appended to link and button text",
+  "Emoji, sparkle icons, stock imagery and abstract floating 3D shapes",
+  "Entrance animations on every section and hover lifts on every card",
+  "Invented metrics, logos or testimonials",
+];
+
+const revisions = [
+  {
+    brief: "Each section opens with a numbered label in mono (“01 — Tokens”)",
+    proposal: "Headings stand alone. The page is not a sequence, and a numbered mono eyebrow is one of the commonest marks of a generated page. Mono is kept for real code: token names, package names, commands.",
+  },
+  {
+    brief: "Once-only reveals as each section arrives",
+    proposal: "No generic section entrances. Motion is the hero's one orchestrated entrance, the three signature scroll moments, and motion that answers the reader (opening, copying, switching mode).",
+  },
+  {
+    brief: "A facts strip: one hairline row of figures",
+    proposal: "A specification sheet: terms and values in a table, every value read from the packages at build. It suits an instrument and avoids the big-number strip.",
+  },
+  {
+    brief: "Hairline rules and dimension lines as the annotation motif",
+    proposal: "Dimension lines only where they measure something real (the gap between two buttons is space.3; the plate's corner is radius.xl). Rules only separate rows of data. The components keep DBM's radii; nothing becomes a zero-radius broadsheet.",
+  },
+];
+---
+
+<Base title="Design direction: DBM System" description="The design direction for dbm-system.com, for review." noindex>
+  <SiteHeader client:load version={facts.version} />
+  <main id="main" class="direction site-frame">
+    <header class="intro grid-12">
+      <div class="intro__text">
+        <p class="kicker">Design direction for review (M0)</p>
+        <h1 class="display intro__title">An annotated instrument</h1>
+        <p class="lede">
+          DBM is a precise tool for building interfaces, documented the way a precise tool is: measured, labelled and
+          quietly exact. The site reads like a specimen book crossed with an engineering drawing. It is professional first;
+          its personality lives in three places only: the annotation motif, the editorial type, and the home page's
+          Human and Agent view.
+        </p>
+        <p class="lede">
+          See it applied on the <a href="/">sample home page</a>: the hero, the specification and the theming section.
+        </p>
+      </div>
+    </header>
+
+    <section class="block grid-12" aria-labelledby="colour">
+      <div class="block__head">
+        <h2 id="colour" class="display block__title">Colour: purple as ink</h2>
+        <p class="lede">Neutral paper and sheets; purple only where it means something. Switch the mode in the header to see both.</p>
+      </div>
+      <ul class="swatches">
+        {
+          palette.map((p) => (
+            <li class="swatch">
+              <span class="swatch__chip" style={`background: var(${p.css})`} />
+              <span class="swatch__role">{p.role}</span>
+              <span class="token-name">{p.token}</span>
+              <span class="swatch__use">{p.use}</span>
+            </li>
+          ))
+        }
+      </ul>
+    </section>
+
+    <section class="block grid-12" aria-labelledby="type">
+      <div class="block__head">
+        <h2 id="type" class="display block__title">Type: three voices</h2>
+        <p class="lede">Lora speaks for the system, Nunito does the work, and mono is reserved for code.</p>
+      </div>
+      <div class="specimens">
+        <div class="specimen">
+          <p class="specimen__label">Lora, display: font-family.secondary, 4xl to 6xl, regular, tight tracking</p>
+          <p class="display specimen__display">Change the theme, not the components</p>
+        </div>
+        <div class="specimen">
+          <p class="specimen__label">Nunito, interface and body: font-family.primary, base and md, relaxed leading</p>
+          <p class="specimen__body">
+            Every component reads the same semantic tokens. Load another theme file and the whole interface follows,
+            and not one component changes. Line length stays under about 75 characters.
+          </p>
+        </div>
+        <div class="specimen">
+          <p class="specimen__label">Mono: font-family.mono, only for what is literally code</p>
+          <p class="specimen__mono"><span class="token-name">bg.brand</span> <span class="token-name">space.3</span> <code>pnpm add @dbm-system/components</code></p>
+        </div>
+      </div>
+    </section>
+
+    <section class="block grid-12" aria-labelledby="layout">
+      <div class="block__head">
+        <h2 id="layout" class="display block__title">Layout: editorial asymmetry</h2>
+        <p class="lede">
+          Twelve columns with deliberate offsets on the home page and Docs home: headings in a narrow column, live
+          components wider and running into the margin. Docs pages keep a calm three-column reading layout. Everything is
+          left aligned.
+        </p>
+      </div>
+      <div class="columns" aria-hidden="true">
+        {Array.from({ length: 12 }, (_, i) => <span class="columns__col" style={`--n: ${i}`} />)}
+        <span class="columns__text">Headline and text: columns 1 to 6</span>
+        <span class="columns__visual">Live components: 7 to 12, into the margin</span>
+      </div>
+    </section>
+
+    <section class="block grid-12" aria-labelledby="annotation">
+      <div class="block__head">
+        <h2 id="annotation" class="display block__title">The annotation: measure, never decorate</h2>
+        <p class="lede">A dimension mark appears only where it measures a real token in a real component. Here, the gap between two buttons.</p>
+      </div>
+      <div class="measure">
+        <Button size="md">Save changes</Button>
+        <span class="measure__gap"><span class="token-name">space.3</span></span>
+        <Button size="md" variant="secondary">Cancel</Button>
+      </div>
+    </section>
+
+    <section class="block grid-12" aria-labelledby="motion">
+      <div class="block__head">
+        <h2 id="motion" class="display block__title">Motion: few moments, all earned</h2>
+        <p class="lede">CSS first, on the motion tokens; nothing moves while the reader reads.</p>
+      </div>
+      <ol class="moments">
+        <li><strong>On load:</strong> the hero's stack separates into its three layers, once.</li>
+        <li><strong>Scrolling past the hero:</strong> the stack settles flat.</li>
+        <li><strong>The theming section:</strong> one composition changes theme in turn as the reader scrolls.</li>
+        <li><strong>The accessibility section (later):</strong> a focus ring steps through the showcase in tab order.</li>
+        <li><strong>Answering the reader:</strong> menus opening, copying, the mode change revealed from its switch, page-to-page cross-fades.</li>
+      </ol>
+      <p class="note">With reduced motion, nothing animates and the stack lies flat. A browser without scroll timelines gets the same static page.</p>
+    </section>
+
+    <section class="block grid-12" aria-labelledby="avoid">
+      <div class="block__head">
+        <h2 id="avoid" class="display block__title">Avoid</h2>
+        <p class="lede">Checked in every review round.</p>
+      </div>
+      <ul class="avoid">
+        {avoid.map((item) => <li>{item}</li>)}
+      </ul>
+    </section>
+
+    <section class="block grid-12" aria-labelledby="revisions">
+      <div class="block__head">
+        <h2 id="revisions" class="display block__title">Proposed changes to the brief</h2>
+        <p class="lede">Found while setting the direction. Each needs your approval before the guidelines change.</p>
+      </div>
+      <table class="revisions">
+        <thead>
+          <tr>
+            <th scope="col">The brief says</th>
+            <th scope="col">Proposed instead</th>
+          </tr>
+        </thead>
+        <tbody>
+          {
+            revisions.map((r) => (
+              <tr>
+                <td>{r.brief}</td>
+                <td>{r.proposal}</td>
+              </tr>
+            ))
+          }
+        </tbody>
+      </table>
+    </section>
+  </main>
+  <SiteFooter />
+</Base>
+
+<style>
+  .direction {
+    padding-block: var(--dbm-space-12) var(--dbm-space-24);
+  }
+
+  .direction a {
+    color: var(--dbm-text-link);
+    text-underline-offset: 0.2em;
+  }
+
+  .intro__text {
+    grid-column: 1 / -1;
+    display: grid;
+    gap: var(--dbm-space-5);
+  }
+
+  .kicker {
+    margin: 0;
+    font-size: var(--dbm-font-size-sm);
+    font-weight: var(--dbm-font-weight-semibold);
+    color: var(--site-accent);
+  }
+
+  .intro__title {
+    font-size: var(--dbm-font-size-5xl);
+  }
+
+  .block {
+    padding-block: var(--dbm-space-16);
+    border-block-start: 1px solid var(--site-rule);
+    row-gap: var(--dbm-space-8);
+  }
+
+  .block:first-of-type {
+    margin-block-start: var(--dbm-space-16);
+  }
+
+  .block__head {
+    grid-column: 1 / -1;
+    display: grid;
+    gap: var(--dbm-space-3);
+    align-content: start;
+  }
+
+  .block__title {
+    font-size: var(--dbm-font-size-2xl);
+  }
+
+  .block > :not(.block__head) {
+    grid-column: 1 / -1;
+  }
+
+  @media (min-width: 1024px) {
+    .intro__text {
+      grid-column: 1 / span 8;
+    }
+    .block__head {
+      grid-column: 1 / span 4;
+    }
+    .block > :not(.block__head) {
+      grid-column: 6 / -1;
+    }
+  }
+
+  /* Colour */
+  .swatches {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(10rem, 1fr));
+    gap: var(--dbm-space-6) var(--dbm-space-4);
+  }
+
+  .swatch {
+    display: grid;
+    gap: var(--dbm-space-1);
+    font-size: var(--dbm-font-size-sm);
+  }
+
+  .swatch__chip {
+    display: block;
+    block-size: var(--dbm-space-16);
+    border-radius: var(--dbm-radius-lg);
+    border: 1px solid var(--site-rule);
+    margin-block-end: var(--dbm-space-2);
+  }
+
+  .swatch__role {
+    font-weight: var(--dbm-font-weight-semibold);
+  }
+
+  .swatch__use {
+    color: var(--site-graphite);
+  }
+
+  /* Type */
+  .specimens {
+    display: grid;
+    gap: var(--dbm-space-10);
+  }
+
+  .specimen {
+    display: grid;
+    gap: var(--dbm-space-3);
+  }
+
+  .specimen__label {
+    margin: 0;
+    font-size: var(--dbm-font-size-xs);
+    color: var(--site-graphite);
+  }
+
+  .specimen__display {
+    font-size: var(--dbm-font-size-5xl);
+  }
+
+  .specimen__body {
+    margin: 0;
+    font-size: var(--dbm-font-size-md);
+    line-height: var(--dbm-line-height-relaxed);
+    max-inline-size: 36em;
+  }
+
+  .specimen__mono {
+    margin: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--dbm-space-4);
+  }
+
+  .specimen__mono code {
+    font-family: var(--dbm-font-family-mono);
+    font-size: var(--dbm-font-size-sm);
+  }
+
+  /* Layout */
+  .columns {
+    position: relative;
+    display: grid;
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+    gap: var(--dbm-space-2);
+    block-size: var(--dbm-space-32);
+  }
+
+  .columns__col {
+    background: var(--dbm-bg-brand-subtle);
+    border-radius: var(--dbm-radius-xs);
+  }
+
+  .columns__text,
+  .columns__visual {
+    position: absolute;
+    inset-block-start: var(--dbm-space-6);
+    padding: var(--dbm-space-3);
+    font-size: var(--dbm-font-size-xs);
+    background: var(--site-sheet);
+    border: 1px solid var(--site-rule-strong);
+    border-radius: var(--dbm-radius-md);
+  }
+
+  .columns__text {
+    inset-inline-start: 0;
+    inline-size: calc(50% - var(--dbm-space-1));
+  }
+
+  .columns__visual {
+    inset-inline: calc(50% + var(--dbm-space-1)) calc(-1 * var(--dbm-space-4));
+    inset-block-start: var(--dbm-space-12);
+  }
+
+  /* Annotation */
+  .measure {
+    display: flex;
+    align-items: center;
+    padding-block-end: var(--dbm-space-8);
+  }
+
+  .measure__gap {
+    position: relative;
+    align-self: stretch;
+    inline-size: var(--dbm-space-3);
+    flex: none;
+  }
+
+  .measure__gap::after {
+    content: "";
+    position: absolute;
+    inset-inline: 0;
+    inset-block-end: calc(-1 * var(--dbm-space-2));
+    block-size: var(--dbm-space-2);
+    border: 1px solid var(--site-accent);
+    border-block-start: 0;
+  }
+
+  .measure__gap > .token-name {
+    position: absolute;
+    inset-block-start: calc(100% + var(--dbm-space-3));
+    inset-inline-start: 50%;
+    translate: -50% 0;
+  }
+
+  /* Motion */
+  .moments {
+    margin: 0;
+    padding-inline-start: var(--dbm-space-6);
+    display: grid;
+    gap: var(--dbm-space-3);
+    line-height: var(--dbm-line-height-relaxed);
+  }
+
+  .note {
+    margin: 0;
+    color: var(--site-graphite);
+    font-size: var(--dbm-font-size-sm);
+  }
+
+  /* Avoid */
+  .avoid {
+    margin: 0;
+    padding-inline-start: var(--dbm-space-6);
+    display: grid;
+    gap: var(--dbm-space-2);
+    line-height: var(--dbm-line-height-relaxed);
+  }
+
+  /* Revisions */
+  .revisions {
+    border-collapse: collapse;
+    inline-size: 100%;
+    font-size: var(--dbm-font-size-sm);
+    line-height: var(--dbm-line-height-relaxed);
+  }
+
+  .revisions th,
+  .revisions td {
+    text-align: start;
+    vertical-align: top;
+    padding: var(--dbm-space-3) var(--dbm-space-4) var(--dbm-space-3) 0;
+    border-block-end: 1px solid var(--site-rule);
+  }
+
+  .revisions th {
+    color: var(--site-graphite);
+    font-weight: var(--dbm-font-weight-semibold);
+  }
+
+  .revisions td:first-child {
+    inline-size: 35%;
+    color: var(--site-graphite);
+  }
+</style>

@@ -1,0 +1,26 @@
+.header {
+  view-transition-name: site-header;
+}
+
+.logo {
+  display: block;
+  height: var(--dbm-space-6);
+  width: auto;
+  color: var(--dbm-text-brand);
+}
+
+/* Storybook is a different tool: set slightly apart from the site's own sections. */
+.workshop {
+  margin-inline-start: var(--dbm-space-4);
+}
+
+.version {
+  display: inline-flex;
+  border-radius: var(--dbm-radius-full);
+  text-decoration: none;
+}
+
+.version:focus-visible {
+  outline: 2px solid var(--dbm-border-focus);
+  outline-offset: 2px;
+}

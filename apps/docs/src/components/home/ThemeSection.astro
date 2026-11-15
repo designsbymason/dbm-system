@@ -1,0 +1,231 @@
+---
+// "Change the theme, not the components": one composition in each of the four themes. With scroll
+// timelines and motion allowed, the section holds still while the themes change in turn as the reader
+// scrolls (the page's second scroll moment); otherwise the four sit side by side. The themes are the
+// token files themselves, re-scoped to a wrapper at build (scripts/scoped-themes.mjs).
+import "../../styles/generated/scoped-themes.css";
+import { facts, tokenValues } from "./facts";
+import { ThemeComposition } from "./ThemeComposition";
+
+const brand = tokenValues("--dbm-bg-brand");
+const surface = tokenValues("--dbm-bg-surface");
+const label = (theme: string) => {
+  const [b, m] = theme.split("-");
+  return `${b[0].toUpperCase()}${b.slice(1)}, ${m}`;
+};
+---
+
+<section class="themes" aria-labelledby="themes-heading">
+  <div class="themes__run">
+    <div class="themes__stage site-frame">
+      <div class="grid-12 themes__grid">
+        <div class="themes__text">
+          <h2 id="themes-heading" class="display themes__title">Change the theme, not the components</h2>
+          <p class="lede">
+            {`Every component reads the same semantic tokens. Load another theme file and the whole interface follows: ${facts.brands.length} brands, each in light and dark, and not one component changed.`}
+          </p>
+          <table class="themes__readout">
+            <caption class="visually-hidden">The value of two tokens in each theme</caption>
+            <thead>
+              <tr>
+                <th scope="col">Theme</th>
+                <th scope="col"><span class="token-name">bg.brand</span></th>
+                <th scope="col"><span class="token-name">bg.surface</span></th>
+              </tr>
+            </thead>
+            <tbody>
+              {
+                facts.themes.map((theme, index) => (
+                  <tr class="themes__row" style={`--i: ${index}`}>
+                    <th scope="row">{label(theme)}</th>
+                    <td>
+                      <span class="themes__swatch" style={`background: ${brand[theme]}`} />
+                      <code>{brand[theme]}</code>
+                    </td>
+                    <td>
+                      <span class="themes__swatch" style={`background: ${surface[theme]}`} />
+                      <code>{surface[theme]}</code>
+                    </td>
+                  </tr>
+                ))
+              }
+            </tbody>
+          </table>
+        </div>
+        <div class="themes__copies" aria-hidden="true" inert>
+          {
+            facts.themes.map((theme, index) => (
+              <figure class="themes__copy" data-theme-scope={theme} style={`--i: ${index}`}>
+                <ThemeComposition id={theme} />
+                <figcaption>{label(theme)}</figcaption>
+              </figure>
+            ))
+          }
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<style>
+  .themes {
+    border-block-start: 1px solid var(--site-rule);
+    background: var(--site-sheet);
+  }
+
+  .themes__stage {
+    padding-block: var(--dbm-space-20);
+  }
+
+  .themes__grid {
+    row-gap: var(--dbm-space-12);
+    align-items: start;
+  }
+
+  .themes__text {
+    grid-column: 1 / -1;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--dbm-space-6);
+    align-content: start;
+  }
+
+  .themes__title {
+    font-size: var(--dbm-font-size-3xl);
+  }
+
+  .themes__readout {
+    border-collapse: collapse;
+    font-size: var(--dbm-font-size-sm);
+    inline-size: 100%;
+  }
+
+  .themes__readout th,
+  .themes__readout td {
+    text-align: start;
+    padding-block: var(--dbm-space-2);
+    padding-inline-end: var(--dbm-space-4);
+    border-block-end: 1px solid var(--site-rule);
+    font-weight: var(--dbm-font-weight-regular);
+  }
+
+  .themes__readout thead th {
+    color: var(--site-graphite);
+    font-weight: var(--dbm-font-weight-semibold);
+  }
+
+  .themes__readout code {
+    font-family: var(--dbm-font-family-mono);
+    font-size: var(--dbm-font-size-xs);
+  }
+
+  .themes__swatch {
+    display: inline-block;
+    inline-size: var(--dbm-space-3);
+    block-size: var(--dbm-space-3);
+    border-radius: var(--dbm-radius-xs);
+    border: 1px solid var(--site-rule);
+    vertical-align: middle;
+    margin-inline-end: var(--dbm-space-2);
+  }
+
+  /* Static: the four copies side by side. */
+  .themes__copies {
+    grid-column: 1 / -1;
+    display: grid;
+    gap: var(--dbm-space-6);
+  }
+
+  .themes__copy {
+    margin: 0;
+    display: grid;
+    gap: var(--dbm-space-3);
+    padding: var(--dbm-space-4);
+    border-radius: var(--dbm-radius-xl);
+    background: var(--dbm-bg-canvas);
+    color: var(--dbm-text-primary);
+  }
+
+  .themes__copy figcaption {
+    font-size: var(--dbm-font-size-xs);
+    color: var(--dbm-text-secondary);
+  }
+
+  @media (min-width: 768px) {
+    .themes__copies {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+
+  @media (min-width: 1024px) {
+    .themes__text {
+      grid-column: 1 / span 5;
+    }
+    .themes__copies {
+      grid-column: 7 / -1;
+    }
+  }
+
+  /* Scrolled: the stage holds still and the themes change in turn. Wide screens only, where the stage fits the window. */
+  @supports (animation-timeline: view()) {
+    @media (prefers-reduced-motion: no-preference) and (min-width: 1024px) {
+      .themes__run {
+        block-size: 360vh;
+        view-timeline: --themes block;
+      }
+
+      .themes__stage {
+        position: sticky;
+        inset-block-start: var(--dbm-space-16);
+      }
+
+      .themes__copies {
+        grid-template-columns: 1fr;
+        display: grid;
+      }
+
+      .themes__copy {
+        grid-area: 1 / 1;
+        opacity: 0;
+        animation: theme-step linear both;
+        animation-timeline: --themes;
+        animation-range: contain calc(var(--i) * 25%) contain calc((var(--i) + 1) * 25%);
+      }
+
+      .themes__copy[style*="--i: 0"] {
+        animation-name: theme-first;
+      }
+
+      .themes__copy[style*="--i: 3"] {
+        animation-name: theme-last;
+      }
+
+      .themes__row {
+        animation: row-step linear both;
+        animation-timeline: --themes;
+        animation-range: contain calc(var(--i) * 25%) contain calc((var(--i) + 1) * 25%);
+      }
+
+      @keyframes theme-step {
+        0% { opacity: 0; }
+        12%, 88% { opacity: 1; }
+        100% { opacity: 0; }
+      }
+
+      @keyframes theme-first {
+        0%, 88% { opacity: 1; }
+        100% { opacity: 0; }
+      }
+
+      @keyframes theme-last {
+        0% { opacity: 0; }
+        12%, 100% { opacity: 1; }
+      }
+
+      @keyframes row-step {
+        0%, 100% { color: var(--site-pencil); }
+        12%, 88% { color: var(--site-ink); }
+      }
+    }
+  }
+</style>

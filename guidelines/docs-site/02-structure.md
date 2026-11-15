@@ -203,6 +203,7 @@ The docs app is not published, so the packages' runtime budget does not apply, b
 | `@fontsource/nunito`, `@fontsource/lora` | Self-hosted fonts for the site and Storybook ([ADR-0215](../adr/0215-the-docs-site-and-storybook-self-host-nunito-and-lora-over-loading-them-from-google-fonts.md)) | SIL Open Font License |
 | `pagefind` | Static search, no service | MIT |
 | A link checker and an accessibility scanner (CI only) | The quality gates; chosen in M0 | Open source |
+| `typescript`, `@types/react`, `@types/react-dom` (development only) | Type-checking the site's TypeScript, at the versions the components package uses | Apache-2.0, MIT |
 | `motion` | **Not added.** Only if a landing review round agrees an interaction needs it ([ADR-0212](../adr/0212-the-docs-site-animates-with-css-scroll-timelines-and-view-transitions-and-adds-motion-only-for-what-css-cannot-do-over-gsap-or-a-javascript-animation-library-by-default.md)) | MIT |
 
 No animation library is ever a dependency of `packages/*` ([ADR-0140](../adr/0140-the-design-system-takes-no-animation-library-and-animates-with-css-and-the-motion-tokens-over-keeping-motion-as-an-optional-peer-dependency.md)); a lint rule enforces it.

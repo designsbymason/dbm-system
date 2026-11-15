@@ -1,0 +1,59 @@
+---
+// The document every page shares: fonts (self-hosted, ADR-0215), the token themes and the
+// components' stylesheet, the mode chosen before the first paint, and cross-document view
+// transitions (ADR-0212).
+import "@fontsource/nunito/400.css";
+import "@fontsource/nunito/500.css";
+import "@fontsource/nunito/600.css";
+import "@fontsource/nunito/700.css";
+import "@fontsource/lora/400.css";
+import "@fontsource/lora/500.css";
+import "@fontsource/lora/600.css";
+import "@fontsource/lora/400-italic.css";
+import "@dbm-system/tokens/css/primitives.css";
+import "@dbm-system/tokens/css/component-tokens.css";
+import "@dbm-system/tokens/css/purple-light.css";
+import "@dbm-system/tokens/css/purple-dark.css";
+import "@dbm-system/components/styles.css";
+import "../styles/global.css";
+
+interface Props {
+  title: string;
+  description: string;
+  /** Keep the page out of search results (internal review pages). */
+  noindex?: boolean;
+}
+
+const { title, description, noindex = false } = Astro.props;
+const canonical = new URL(Astro.url.pathname, Astro.site);
+---
+
+<!doctype html>
+<html lang="en" data-theme="purple-light">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <link rel="canonical" href={canonical} />
+    {noindex && <meta name="robots" content="noindex" />}
+    <link rel="icon" href="/logo.svg" type="image/svg+xml" />
+    <meta name="color-scheme" content="light dark" />
+    <script is:inline>
+      // The reader's mode, applied before the first paint so there is no flash. One key on the
+      // origin, shared with Storybook at /storybook/ (ADR-0214): "light", "dark" or "system".
+      (function () {
+        var mode = "system";
+        try {
+          mode = localStorage.getItem("dbm-mode") || "system";
+        } catch (e) {}
+        var dark = mode === "dark" || (mode === "system" && matchMedia("(prefers-color-scheme: dark)").matches);
+        document.documentElement.dataset.theme = dark ? "purple-dark" : "purple-light";
+        document.documentElement.dataset.mode = mode;
+      })();
+    </script>
+  </head>
+  <body>
+    <slot />
+  </body>
+</html>

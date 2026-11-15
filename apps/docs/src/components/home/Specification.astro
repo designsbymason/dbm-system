@@ -1,0 +1,107 @@
+---
+// The facts, as a specification sheet rather than a strip of big numbers (an instrument has a
+// datasheet). Every value is read from the packages at build (facts.ts).
+import { facts } from "./facts";
+
+const list = (items: string[]) =>
+  items.length < 2 ? items.join("") : `${items.slice(0, -1).join(", ")} and ${items.at(-1)}`;
+
+const rows = [
+  { term: "Components", detail: `${facts.componentCount} components, and ${facts.utilityCount} hooks and functions` },
+  { term: "Themes", detail: `${list(facts.brands)}, each in ${list(facts.modes)}` },
+  { term: "Runtime dependencies", detail: list(facts.thirdParty) },
+  { term: "React", detail: `${facts.react.replace(">=", "")} and later, safe to render on the server` },
+  { term: "Accessibility", detail: "WCAG 2.2 AA is the target.", link: { href: "/accessibility-statement", text: "Read the known exceptions" } },
+  { term: "For agents", detail: "A typed component manifest, a token index and AGENTS.md ship in the package" },
+  { term: "Licence", detail: "MIT" },
+  { term: "Version", detail: `${facts.version}, before 1.0.`, link: { href: "/changelog", text: "Read the changelog" } },
+];
+---
+
+<section class="spec site-frame" aria-labelledby="spec-heading">
+  <div class="grid-12">
+    <h2 id="spec-heading" class="display spec__title">Specification</h2>
+    <dl class="spec__list">
+      {
+        rows.map((row) => (
+          <div class="spec__row">
+            <dt>{row.term}</dt>
+            <dd>
+              {row.detail}
+              {row.link && (
+                <>
+                  {" "}
+                  <a href={row.link.href}>{row.link.text}</a>
+                </>
+              )}
+            </dd>
+          </div>
+        ))
+      }
+    </dl>
+  </div>
+</section>
+
+<style>
+  .spec {
+    padding-block: var(--dbm-space-20);
+  }
+
+  .spec__title {
+    grid-column: 1 / -1;
+    font-size: var(--dbm-font-size-3xl);
+    margin-block-end: var(--dbm-space-8);
+  }
+
+  .spec__list {
+    grid-column: 1 / -1;
+    margin: 0;
+    border-block-start: 1px solid var(--site-rule-strong);
+  }
+
+  .spec__row {
+    display: grid;
+    gap: var(--dbm-space-1);
+    padding-block: var(--dbm-space-4);
+    border-block-end: 1px solid var(--site-rule);
+  }
+
+  dt {
+    font-size: var(--dbm-font-size-sm);
+    font-weight: var(--dbm-font-weight-semibold);
+    color: var(--site-graphite);
+  }
+
+  dd {
+    margin: 0;
+    font-size: var(--dbm-font-size-base);
+  }
+
+  dd a {
+    color: var(--dbm-text-link);
+    text-underline-offset: 0.2em;
+  }
+
+  dd a:focus-visible {
+    outline: 2px solid var(--dbm-border-focus);
+    outline-offset: 2px;
+    border-radius: var(--dbm-radius-xs);
+  }
+
+  @media (min-width: 768px) {
+    .spec__row {
+      grid-template-columns: minmax(0, 1fr) minmax(0, 2fr);
+      gap: var(--dbm-space-6);
+    }
+  }
+
+  @media (min-width: 1024px) {
+    .spec__title {
+      grid-column: 1 / span 4;
+      margin-block-end: 0;
+    }
+    .spec__list {
+      grid-column: 5 / -1;
+    }
+  }
+</style>
