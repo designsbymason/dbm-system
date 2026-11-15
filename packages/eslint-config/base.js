@@ -29,6 +29,23 @@ export const base = tseslint.config(
       ],
     },
   },
+  {
+    // The packages take no animation library: they animate with CSS and the motion tokens (ADR-0140). The docs site
+    // may add Motion for an interaction CSS can't do and never GSAP (ADR-0212); neither may reach a published package.
+    rules: {
+      "no-restricted-imports": [
+        "error",
+        {
+          patterns: [
+            {
+              group: ["gsap", "gsap/*", "motion", "motion/*", "framer-motion", "framer-motion/*", "popmotion", "animejs", "react-spring", "@react-spring/*", "lottie-web", "lottie-react"],
+              message: "The packages take no animation library: animate with CSS and the motion tokens (ADR-0140, ADR-0212).",
+            },
+          ],
+        },
+      ],
+    },
+  },
   eslintConfigPrettier,
 );
 

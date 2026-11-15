@@ -1,0 +1,26 @@
+---
+// The Article page type (02-structure.md §3, the Documentation Page recipe): the docs sidebar, breadcrumbs, the page
+// and an outline that follows the reader. Docs, guides, Resources, AI agents and Templates use it; a Reference page
+// (M2) adds a component header and example frames to it.
+import type { Crumb, OutlineItem } from "../components/shell/SiteShell";
+import { SiteShell } from "../components/shell/SiteShell";
+import { facts } from "../components/home/facts";
+import Base from "./Base.astro";
+
+interface Props {
+  title: string;
+  description: string;
+  section?: string;
+  outline?: OutlineItem[];
+  breadcrumbs?: Crumb[];
+  noindex?: boolean;
+}
+
+const { title, description, section, outline, breadcrumbs, noindex } = Astro.props;
+---
+
+<Base title={title} description={description} noindex={noindex}>
+  <SiteShell client:load kind="article" version={facts.version} section={section} path={Astro.url.pathname.replace(/\/$/, "") || "/"} outline={outline} breadcrumbs={breadcrumbs}>
+    <slot />
+  </SiteShell>
+</Base>

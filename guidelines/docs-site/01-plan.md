@@ -38,17 +38,17 @@ The milestones are the docs website's own, inside the roadmap's Phase 9 (`01-vis
 
 ### M0 — Foundation
 
-| Deliverable | Done when |
-|---|---|
-| Design direction | First, before any layout: a short direction page (concept, type roles, colour use, the annotation motif, motion, the avoid list; [02-structure.md](./02-structure.md) §3) and one sample page built in it, approved by the maintainer. Checked against the avoid list |
-| `apps/docs` | An Astro app with the React and MDX integrations builds, with a local dev entry in `.claude/launch.json` beside Storybook's |
-| Layouts | The three page types (Marketing, Article, Reference) on `PageShell` ([02-structure.md](./02-structure.md) §3), with the header, the large menus, the phone drawer, breadcrumbs and the footer |
-| Mode | Light, dark and system, chosen by the reader, remembered, with no flash on load |
-| Fonts | Self-hosted Nunito and Lora ([ADR-0215](../adr/0215-the-docs-site-and-storybook-self-host-nunito-and-lora-over-loading-them-from-google-fonts.md)) |
-| Motion layer | View transitions, the CSS scroll-reveal and reading-progress primitives, reduced motion ([02-structure.md](./02-structure.md) §5) |
-| Storybook bridge | The six items in [02-structure.md](./02-structure.md) §4, checked in both directions in the combined artifact |
-| Pipeline | The Pages workflow builds the site and Storybook into one artifact |
-| Gates | Link check and accessibility scan in CI; the lint rule keeping animation libraries out of `packages/*` |
+| Deliverable | Done when | Status |
+|---|---|---|
+| Design direction | First, before any layout: a short direction page (concept, type roles, colour use, the annotation motif, motion, the avoid list; [02-structure.md](./02-structure.md) §3) and one sample page built in it, approved by the maintainer. Checked against the avoid list | Done: approved, with its four changes to the brief and the paper, logo and icon-button tweaks; the direction page is `/direction` (not indexed) |
+| `apps/docs` | An Astro app with the React and MDX integrations builds, with a local dev entry in `.claude/launch.json` beside Storybook's | Done: Astro 7; `docs` and `site-artifact` entries in `.claude/launch.json` |
+| Layouts | The three page types (Marketing, Article, Reference) on `PageShell` ([02-structure.md](./02-structure.md) §3), with the header, the large menus, the phone drawer, breadcrumbs and the footer | Done for Marketing and Article (the shell in `apps/docs/src/components/shell/`, the map in `src/data/site.ts`); Reference is built on Article in M2 |
+| Mode | Light, dark and system, chosen by the reader, remembered, with no flash on load | Done; shared with Storybook |
+| Fonts | Self-hosted Nunito and Lora ([ADR-0215](../adr/0215-the-docs-site-and-storybook-self-host-nunito-and-lora-over-loading-them-from-google-fonts.md)) | Done, for the site and Storybook |
+| Motion layer | View transitions, the CSS scroll-reveal and reading-progress primitives, reduced motion ([02-structure.md](./02-structure.md) §5) | View transitions, reduced motion and the reading-progress line done; the illustration reveal comes with the first illustrations (M1) |
+| Storybook bridge | The six items in [02-structure.md](./02-structure.md) §4, checked in both directions in the combined artifact | Done and checked both ways in the combined artifact, except the two links between component pages, which come in M2 |
+| Pipeline | The Pages workflow builds the site and Storybook into one artifact | Done: every push builds and checks the site; it is published at `/` when `PUBLISH_DOCS_SITE` is switched on after M1 |
+| Gates | Link check and accessibility scan in CI; the lint rule keeping animation libraries out of `packages/*` | Done: link check and accessibility scan in the Pages workflow; the lint rule in `packages/eslint-config` |
 
 ### M1 — Docs core
 

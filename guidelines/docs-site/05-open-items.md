@@ -44,6 +44,11 @@ Recorded here so they are not re-asked; the detail is in the file named.
 | Site description (meta) | The one-sentence wording in [01-vision-and-goals.md](../01-vision-and-goals.md) §1, trimmed to about 155 characters at build | The first landing review |
 | First-release extras | Copy page and Markdown copies; Roadmap and FAQ; a release banner and an RSS feed | [01-plan.md](./01-plan.md) §2 |
 | Node and pnpm | The repository's: Node 24 from `.nvmrc` and the pinned pnpm | [02-structure.md](./02-structure.md) §9 |
+| Gates | The link check and the local server are scripts with no dependency; the accessibility scan is axe-core in Playwright's Chromium, the tools the components' checks already use | [02-structure.md](./02-structure.md) §11 |
+| Local development | `pnpm --filter @dbm-system/docs dev` (the `docs` entry in `.claude/launch.json`, port 4321) for the site; the `site-artifact` entry serves the assembled site with Storybook on one origin, to try the bridge | `apps/docs/README.md` |
+| Storybook's fonts | Bundled into Storybook itself, so it is self-hosted alone and deployed | [ADR-0215](../adr/0215-the-docs-site-and-storybook-self-host-nunito-and-lora-over-loading-them-from-google-fonts.md), amended |
+| Scroll timelines | Baseline "newly available" since October 2026, confirmed on MDN; a browser without them gets the static page | [ADR-0212](../adr/0212-the-docs-site-animates-with-css-scroll-timelines-and-view-transitions-and-adds-motion-only-for-what-css-cannot-do-over-gsap-or-a-javascript-animation-library-by-default.md) |
+| Going live | The site replaces the placeholder at `/` after M1, by the Pages workflow's `PUBLISH_DOCS_SITE` switch; until then it is built and checked on every push | [02-structure.md](./02-structure.md) §9 |
 
 ## 3. Questions not yet decided
 
@@ -51,9 +56,8 @@ Each of these is decided when the work it waits on starts.
 
 | Question | Waits on |
 |---|---|
-| The link checker and the accessibility scanner | M0 |
-| How a contributor runs the site and Storybook side by side (ports, a launch entry), and how Storybook run alone loads the self-hosted fonts | M0 |
-| Browser support for scroll timelines, confirmed against MDN's compatibility data | M0 |
+| How an illustration's reveal runs only once with CSS scroll timelines (which reverse when the reader scrolls back), or whether it may replay | The first illustrations (M1) |
+| `Sidebar` draws its section labels in capitals, which the design direction's avoid list names; changing it is a change to the design system | The maintainer's decision |
 | How a story that needs Storybook-only parts gets a site-safe form | M2 |
 | How the changelog page reads each package's `CHANGELOG.md` | M5 (the files exist) |
 | How social images are generated | M5 |

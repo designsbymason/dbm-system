@@ -1,6 +1,10 @@
 # Combined Pages deployment (ADR-0170): the site at / and Storybook at /storybook/.
-# Until apps/docs exists, / is the placeholder in .github/pages/. The custom domain
-# (dbm-system.com) is set in the repository's Pages settings, not by a CNAME file.
+# Every push builds the docs site (apps/docs) and runs its gates: the link check on the
+# site with Storybook beside it, and the accessibility scan (docs-site/02-structure.md §11).
+# What is published at / is the placeholder in .github/pages/ until PUBLISH_DOCS_SITE is
+# "true", which is switched on when the M1 docs core exists (docs-site/01-plan.md); Storybook
+# is published at /storybook/ either way. The custom domain (dbm-system.com) is set in the
+# repository's Pages settings, not by a CNAME file.
 name: Pages
 
 on:
@@ -10,6 +14,10 @@ on:
 
 permissions:
   contents: read
+
+env:
+  # The go-live switch for the docs site at the root. "false": the placeholder stays at /.
+  PUBLISH_DOCS_SITE: "false"
 
 # Only the newest deployment matters; never cancel one that is already publishing.
 concurrency:
@@ -35,17 +43,41 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      # Builds the packages and the docs site (apps/docs) through Turborepo.
       - name: Build workspace packages
         run: pnpm build
 
       - name: Build Storybook
         run: pnpm --filter @dbm-system/components build-storybook
 
+      # The docs site with Storybook beside it, as it will be published once it goes live: the gates run on this.
+      - name: Assemble the docs site with Storybook
+        run: |
+          mkdir -p apps/docs/_artifact
+          cp -R apps/docs/dist/. apps/docs/_artifact/
+          cp -R packages/components/storybook-static apps/docs/_artifact/storybook
+
+      - name: Check the links
+        working-directory: apps/docs
+        run: pnpm check-links _artifact
+
+      - name: Install Playwright browser
+        working-directory: apps/docs
+        run: pnpm exec playwright install --with-deps chromium
+
+      - name: Scan for accessibility
+        working-directory: apps/docs
+        run: pnpm check-accessibility
+
       - name: Assemble the site
         run: |
           mkdir -p _site
-          cp -R .github/pages/. _site/
-          cp -R packages/components/storybook-static _site/storybook
+          if [ "$PUBLISH_DOCS_SITE" = "true" ]; then
+            cp -R apps/docs/_artifact/. _site/
+          else
+            cp -R .github/pages/. _site/
+            cp -R packages/components/storybook-static _site/storybook
+          fi
 
       - name: Upload the site
         uses: actions/upload-pages-artifact@v5

@@ -1,23 +1,18 @@
 ---
 // The home page (guidelines/docs-site/03-landing-page-brief.md). This is the M0 design-direction
 // sample: the hero, the specification and the theming section, in the agreed direction.
-import { SiteHeader } from "../components/header/SiteHeader";
 import { HeroActions } from "../components/home/HeroActions";
 import { HeroStack } from "../components/home/HeroStack";
 import { InstallLine } from "../components/home/InstallLine";
 import Specification from "../components/home/Specification.astro";
 import ThemeSection from "../components/home/ThemeSection.astro";
-import { facts } from "../components/home/facts";
-import SiteFooter from "../components/SiteFooter.astro";
-import Base from "../layouts/Base.astro";
+import Marketing from "../layouts/Marketing.astro";
 ---
 
-<Base
+<Marketing
   title="DBM System: the agentic component library"
   description="An accessible, token-driven React component library built for AI coding agents and developers alike."
 >
-  <SiteHeader client:load version={facts.version} />
-  <main id="main">
     <section class="hero site-frame" aria-labelledby="hero-heading">
       <div class="grid-12 hero__grid">
         <div class="hero__text">
@@ -41,9 +36,7 @@ import Base from "../layouts/Base.astro";
     </section>
     <Specification />
     <ThemeSection />
-  </main>
-  <SiteFooter />
-</Base>
+</Marketing>
 
 <style>
   .hero {

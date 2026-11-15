@@ -1,5 +1,40 @@
+import { readFileSync } from "node:fs";
+import { createRequire } from "node:module";
 import remarkGfm from "remark-gfm";
 import type { StorybookConfig } from "@storybook/react-vite";
+
+// The manager's head, for the bridge to the docs website (ADR-0214). Built here, in Node, so the colours come from the
+// token index rather than being typed in.
+const tokenIndex = JSON.parse(readFileSync(createRequire(import.meta.url).resolve("@dbm-system/tokens/tokens.json"), "utf8")) as {
+  tokens: { name: string; values: Record<string, string> }[];
+};
+const tokenValue = (name: string, theme: string) => {
+  const value = tokenIndex.tokens.find((token) => token.name === name)?.values[theme];
+  if (!value) throw new Error(`.storybook/main.ts: no ${name} for ${theme} in tokens.json`);
+  return value;
+};
+// The manager's app background (`appBg` in theme.ts): bg.neutral-subtle in light, bg.brand-subtle in dark.
+const appBackground = { light: tokenValue("--dbm-bg-neutral-subtle", "purple-light"), dark: tokenValue("--dbm-bg-brand-subtle", "purple-dark") };
+const managerHead = `
+  <!-- Kept out of search results; the docs website's pages are the ones to find (ADR-0214). -->
+  <meta name="robots" content="noindex" />
+  <!-- Crossing to or from dbm-system.com cross-fades instead of flashing a blank page; both sides opt in. -->
+  <style>
+    @view-transition { navigation: auto; }
+    @media (prefers-reduced-motion: reduce) { @view-transition { navigation: none; } }
+    html { background: ${appBackground.light}; }
+    html[data-dbm-mode="dark"] { background: ${appBackground.dark}; color-scheme: dark; }
+  </style>
+  <!-- The reader's mode, shared with the site through one key on the origin, painted before the manager loads. -->
+  <script>
+    (function () {
+      try {
+        var mode = localStorage.getItem("dbm-mode");
+        var dark = mode === "dark" || (mode === "system" && matchMedia("(prefers-color-scheme: dark)").matches);
+        if (dark) document.documentElement.dataset.dbmMode = "dark";
+      } catch (e) {}
+    })();
+  </script>`;
 
 const config: StorybookConfig = {
   // `.mdx` docs pages live alongside their component's stories (see
@@ -39,9 +74,11 @@ const config: StorybookConfig = {
     },
     "@storybook/addon-vitest",
   ],
-  // Served at the root path, so `./public/logo.svg` becomes `/logo.svg` —
-  // referenced as `brandImage` in theme.ts for the sidebar logo.
+  // Served beside the manager, so `./public/logo.svg` becomes `logo.svg` next to
+  // `index.html` (at `/storybook/logo.svg` on dbm-system.com) — referenced as
+  // `brandImage` in theme.ts for the sidebar logo.
   staticDirs: ["./public"],
+  managerHead: (head) => `${head}${managerHead}`,
   framework: {
     name: "@storybook/react-vite",
     options: {},

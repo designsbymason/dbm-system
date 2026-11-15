@@ -69,9 +69,9 @@ Three page types, all on **`PageShell`**, the shipped shell for a site without a
 | Colour | **Purple as ink**: neutral surfaces throughout, the page itself on `bg.neutral-subtle` (every text token clears 4.5:1 on it in both modes) with rules in `border.neutral` (`border.default` matches it in dark mode); purple only for emphasis, links, focus, annotations, the brand-toned icon buttons and the primary action. No gradient washes. Illustrations use the brand's tonal range with the neutrals ([ADR-0217](../adr/0217-the-docs-sites-illustrations-are-geometric-svg-and-css-3d-compositions-drawn-in-code-from-the-tokens-over-commissioned-artwork-webgl-or-raster-images.md)) |
 | Type | **Lora** (secondary) for display headlines and editorial moments, in the `4xl` to `6xl` steps; **Nunito** (primary) for the interface and body; the **mono** family for annotations, token labels and code |
 | Layout | **Editorial asymmetry** on the home page and Docs home: a 12-column grid with deliberate offsets, headlines in a narrow column, content and live components spanning wider, generous margins for notes. Docs and reference pages keep a calm three-column reading layout |
-| Section openers | A numbered label in mono ("01 — Tokens"), a Lora headline and one sentence; one idea per section |
+| Section openers | A Lora headline and one sentence; one idea per section. No numbered or all-caps eyebrow above it: the page is not a sequence, and mono is kept for real code (token names, package names, commands) |
 | Annotation motif | **Sparing**: hairline rules, dimension lines and token labels measured onto real components, used only in the home page's hero and token section, on hover in the showcase, and in component anatomy diagrams. A signature, not wallpaper |
-| Motion | **Restrained** (§5): a few signature moments on the home page; quiet once-only reveals elsewhere; docs pages barely move |
+| Motion | **Restrained** (§5): one orchestrated entrance and three signature scroll moments on the home page; elsewhere only motion that answers the reader (menus, copying, the mode change, page cross-fades) and a once-only reveal for an illustration; no entrance on every section |
 | Surfaces | Space, alignment to the spacing scale, and the shadow and radius scales; light and dark designed together |
 | Voice | Plain, confident, specific; short sentences; no hype words |
 | Avoid | Gradient backgrounds, glassy blurred panels, glowing blobs, emoji, sparkle icons, abstract floating 3D shapes, a centred hero over a grid of identical icon cards, stock imagery, invented metrics or logos |
@@ -109,12 +109,12 @@ Storybook is the workshop: a Playground, controls and tests for every component,
 
 | Bridge item | What |
 |---|---|
-| Shared mode | One mode key in the origin's `localStorage`; the site writes it, Storybook's manager reads it at start-up and writes it back from its Mode toolbar |
-| Shared fonts | Both load the site's self-hosted font files ([ADR-0215](../adr/0215-the-docs-site-and-storybook-self-host-nunito-and-lora-over-loading-them-from-google-fonts.md)) |
-| Transitions | Both opt into cross-document View Transitions; the manager paints the mode's background before it loads |
-| Logo | Resolves under `/storybook/` (today it points at the root and fails there) and links to `https://dbm-system.com/` in the same tab |
-| Links both ways | "Open in Storybook" on each component page (to `/storybook/?path=/docs/<tier>-<category>-<name>--docs`); "View on dbm-system.com" in each Storybook component header |
-| Search engines | `noindex` in Storybook's head and `Disallow: /storybook/` in `robots.txt` |
+| Shared mode | One mode key, `dbm-mode`, in the origin's `localStorage`. The site writes it; Storybook's preview reads it into `initialGlobals` (a `mode` in the URL still wins), the manager starts in it, and a change from Storybook's Mode toolbar is written back, unless it only repeats what a stored "system" already resolves to |
+| Self-hosted fonts | Storybook bundles the same Fontsource files itself, the manager only the Latin subset, so it is self-hosted alone and deployed; no Google Fonts ([ADR-0215](../adr/0215-the-docs-site-and-storybook-self-host-nunito-and-lora-over-loading-them-from-google-fonts.md), amended) |
+| Transitions | Both opt into cross-document View Transitions (the manager's head is set in `.storybook/main.ts`); the manager paints the mode's background from the token index before it loads |
+| Logo | A relative `./logo.svg`, so it resolves under `/storybook/`, linking to `https://dbm-system.com/` in the same tab |
+| Links both ways | "Open in Storybook" on each component page (to `/storybook/?path=/docs/<tier>-<category>-<name>--docs`) and "View on dbm-system.com" in each Storybook component header, both in M2 with the component pages; until then the logo and the header's Storybook item are the way across |
+| Search engines | `noindex` in both of Storybook's heads and `Disallow: /storybook/` in `robots.txt` |
 
 Its sidebar keeps Foundations, the component pages (tier first) and Templates, plus a short Getting started page that points to the site and keeps the component index. The guides and the long Getting started content move to the site ([04-content-inventory.md](./04-content-inventory.md)); each old address keeps a "moved" page. The site never embeds Storybook; components render in the page.
 
@@ -126,7 +126,7 @@ CSS first; no GSAP; Motion only for an interaction CSS cannot express ([ADR-0212
 |---|---|---|
 | Micro-interactions | Hover, press, focus, copy feedback, menu and palette entrances | The DBM components' own transitions; site additions use the motion tokens (`duration.fast` to `slower`, `easing.standard` and `emphasized`, `scale.98` and `102`) |
 | Page transitions | Between pages, between the site and Storybook, and the mode change | Cross-document View Transitions (`@view-transition { navigation: auto }`): the header holds, the content cross-fades with a small slide; the mode change is a short reveal from the switch. No client router |
-| Scroll-driven | Docs pages: once-only reveals of illustrations and section openers, a reading-progress line in the header. Landing page: the choreography in the brief | CSS scroll timelines (`scroll()`, `view()`, named ranges), sticky sections, `@property` custom properties, SVG stroke drawing |
+| Scroll-driven | Docs pages: a reading-progress line under the header (built) and a once-only reveal for illustrations. Landing page: the choreography in the brief | CSS scroll timelines (`scroll()`, `view()`, named ranges), sticky sections, `@property` custom properties, SVG stroke drawing |
 
 **Rules:** reduced motion gives a static, complete page; content is in the HTML before any script; no scroll-jacking; time-based motion uses the motion tokens; on docs pages reveals run once and never loop; every scroll animation is inside `@supports (animation-timeline: view())`, and a browser without it gets the static page.
 
@@ -183,8 +183,8 @@ One GitHub Actions workflow, run on every push to `main` while the packages are 
 2. Build Storybook (`pnpm build-storybook`) to `storybook-static`.
 3. Build the site: copy the manifest and `AGENTS.md`, generate the pages and their Markdown copies, write the agent files, build the Pagefind index, generate the social images.
 4. Assemble one artifact: the site at the root and `storybook-static` in `storybook/`.
-5. Run the gates on that artifact (§11).
-6. Publish it with the Pages actions. The custom domain is set in the repository's Pages settings.
+5. Run the gates on that artifact (§11): the link check with Storybook beside the site, then the accessibility scan.
+6. Publish it with the Pages actions. Until the M1 docs core exists the workflow's `PUBLISH_DOCS_SITE` switch is `"false"`: the placeholder in `.github/pages/` stays at the root while the site is built and checked on every push, and Storybook is published at `/storybook/` either way. The custom domain is set in the repository's Pages settings.
 
 Pull requests get the build and the gates; only `main` deploys. From 1.0 the deploy moves to release tags. Development and previews import the workspace packages (which resolve to their built `dist`); a release build installs the published version from npm.
 
@@ -202,7 +202,7 @@ The docs app is not published, so the packages' runtime budget does not apply, b
 | `@storybook/react` | Portable stories for the live examples, at the version the components package's Storybook uses ([ADR-0216](../adr/0216-component-pages-render-the-storybook-stories-as-their-live-examples-through-portable-stories-over-hand-written-examples-or-story-iframes.md)) | MIT |
 | `@fontsource/nunito`, `@fontsource/lora` | Self-hosted fonts for the site and Storybook ([ADR-0215](../adr/0215-the-docs-site-and-storybook-self-host-nunito-and-lora-over-loading-them-from-google-fonts.md)) | SIL Open Font License |
 | `pagefind` | Static search, no service | MIT |
-| A link checker and an accessibility scanner (CI only) | The quality gates; chosen in M0 | Open source |
+| `playwright`, `axe-core` (development only) | The accessibility scan (Chromium and axe, the same tools the components' own checks use); the link check and the local server are scripts with no dependency | Apache-2.0, MPL-2.0 |
 | `typescript`, `@types/react`, `@types/react-dom` (development only) | Type-checking the site's TypeScript, at the versions the components package uses | Apache-2.0, MIT |
 | `motion` | **Not added.** Only if a landing review round agrees an interaction needs it ([ADR-0212](../adr/0212-the-docs-site-animates-with-css-scroll-timelines-and-view-transitions-and-adds-motion-only-for-what-css-cannot-do-over-gsap-or-a-javascript-animation-library-by-default.md)) | MIT |
 
@@ -210,11 +210,11 @@ No animation library is ever a dependency of `packages/*` ([ADR-0140](../adr/014
 
 ## 11. Quality gates
 
-| Gate | What it fails on | From |
+| Gate | What it fails on | Status |
 |---|---|---|
-| Link check | Any dead internal link, including links into `/storybook/` | M0 |
-| Accessibility scan | An axe violation on each page type, in light and dark, with reduced motion | M0 |
-| Animation libraries | `gsap`, `motion` or similar imported in `packages/*` | M0 |
+| Link check | Any internal link or asset that resolves to nothing in the build, including links into `/storybook/`, and any same-page `#fragment` with no id; a page not built yet may be linked only while `src/data/site.ts` lists it as planned (`apps/docs/scripts/check-links.mjs`) | Built |
+| Accessibility scan | An axe-core WCAG 2.2 A or AA violation on any built page, in light and dark, with and without reduced motion (`apps/docs/scripts/check-accessibility.mjs`) | Built |
+| Animation libraries | `gsap`, `motion` or a similar library imported in `packages/*` (`no-restricted-imports` in `packages/eslint-config/base.js`) | Built |
 | Component coverage | A component, hook or function in the manifest with no page | M2 |
 | Visual check | A changed snapshot of each page type, with the repository's Playwright setup | M2 |
 

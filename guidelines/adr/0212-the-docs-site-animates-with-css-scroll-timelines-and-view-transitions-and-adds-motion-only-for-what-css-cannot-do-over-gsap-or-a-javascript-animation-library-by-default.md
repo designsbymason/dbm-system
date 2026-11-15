@@ -1,6 +1,6 @@
 # 0212 — The docs site animates with CSS scroll timelines and View Transitions, and adds Motion only for what CSS cannot do, over GSAP or a JavaScript animation library by default
 
-**Status:** Accepted · **Date:** 2026-11-15 · Supersedes the GSAP part of [ADR-0173](./0173-the-docs-apps-dependencies-are-each-justified-in-a-list-and-the-landing-page-may-use-gsap-over-holding-it-to-the-packages-budget-or-leaving-it-unrestricted.md)
+**Status:** Accepted · **Date:** 2026-11-15 · Supersedes the GSAP part of [ADR-0173](./0173-the-docs-apps-dependencies-are-each-justified-in-a-list-and-the-landing-page-may-use-gsap-over-holding-it-to-the-packages-budget-or-leaving-it-unrestricted.md) · **Amended 2026-11-16** — reveals are for illustrations only, not for every section; the decision itself is unchanged
 
 ## Context
 The docs website must feel premium and alive: motion, micro-interactions and, above all, scroll-driven choreography on the landing page and quiet scroll reveals elsewhere. [ADR-0173](./0173-the-docs-apps-dependencies-are-each-justified-in-a-list-and-the-landing-page-may-use-gsap-over-holding-it-to-the-packages-budget-or-leaving-it-unrestricted.md) allowed GSAP with ScrollTrigger on the landing page as the project's one exception to free and open-source tooling, with Motion (MIT) and CSS as the fallback.
@@ -14,7 +14,7 @@ Meanwhile CSS scroll-driven animations (`animation-timeline: scroll()` and `view
 - **CSS is the default for every animation on the site**, in three layers:
   - **Micro-interactions** (hover, press, focus, copy feedback, entrances): CSS transitions on the motion tokens (`duration.*`, `easing.*`, `scale.*`), most already in the DBM components.
   - **Page transitions**: cross-document View Transitions (`@view-transition { navigation: auto }`) between site pages and between the site and Storybook, and a view transition for the light and dark change. No client router.
-  - **Scroll-driven**: CSS scroll timelines. Docs pages use quiet, once-only reveals and a reading-progress line; the landing page uses sticky sections with scrubbed timelines, named ranges, SVG stroke drawing, build-time split text, and custom properties registered with `@property` driving token values.
+  - **Scroll-driven**: CSS scroll timelines. Docs pages use a reading-progress line and, for illustrations only, a quiet once-only reveal *(Amended 2026-11-16: this originally said docs pages use quiet, once-only reveals, without limiting them to illustrations; an entrance on every section is one of the marks of a generated page, so the approved design direction dropped them)*; the landing page uses sticky sections with scrubbed timelines, named ranges, SVG stroke drawing, build-time split text, and custom properties registered with `@property` driving token values.
 - **Motion (MIT) is added only for a named interaction CSS cannot express** (pointer-following or spring-driven motion, a sequence tied to application state), agreed in a landing-page review round. It is then listed in `docs-site/02-structure.md` §10 and loads only on the page that needs it, as an island.
 - **Rules for all site motion:**
   1. With `prefers-reduced-motion: reduce` the page is static and complete.

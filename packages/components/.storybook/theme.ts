@@ -70,13 +70,16 @@ function buildStorybookTheme(brand: Brand, mode: Mode): ThemeVars {
     base: mode,
 
     brandTitle: "DBM System",
-    brandUrl: "https://github.com/designsbymason/dbm-system",
+    // The logo goes back to the docs website, in the same tab (ADR-0214).
+    brandUrl: "https://dbm-system.com/",
     brandTarget: "_self",
     // Served from `.storybook/public/logo.svg` via `staticDirs` in
     // main.ts. Fixed brand-purple circle mark (not theme-reactive) — it
     // carries its own background, so it reads fine on both light and dark
     // manager chrome without a mode-specific variant.
-    brandImage: "/logo.svg",
+    // Relative, so it resolves under `/storybook/` on dbm-system.com as well as at the root locally (an absolute
+    // `/logo.svg` pointed at the site's root there and failed).
+    brandImage: "./logo.svg",
 
     colorPrimary: t.bg.brand,
     // `text.brand`, not `bg.brand` (2026-08-09) — Storybook applies this as

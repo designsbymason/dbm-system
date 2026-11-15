@@ -3,10 +3,7 @@
 // used, the motifs and the avoid list, for the maintainer to approve before any layout is built.
 // Internal: kept out of search results and not linked from the site.
 import { Button } from "@dbm-system/components";
-import { SiteHeader } from "../components/header/SiteHeader";
-import { facts } from "../components/home/facts";
-import SiteFooter from "../components/SiteFooter.astro";
-import Base from "../layouts/Base.astro";
+import Article from "../layouts/Article.astro";
 
 const palette = [
   { role: "Paper", token: "bg.neutral-subtle", css: "--dbm-bg-neutral-subtle", use: "The page itself; every text token clears 4.5:1 on it in both modes" },
@@ -31,6 +28,16 @@ const avoid = [
   "Invented metrics, logos or testimonials",
 ];
 
+const outline = [
+  { id: "colour", label: "Colour", level: 1 as const },
+  { id: "type", label: "Type", level: 1 as const },
+  { id: "layout", label: "Layout", level: 1 as const },
+  { id: "annotation", label: "Annotation", level: 1 as const },
+  { id: "motion", label: "Motion", level: 1 as const },
+  { id: "avoid", label: "Avoid", level: 1 as const },
+  { id: "revisions", label: "Changes to the brief", level: 1 as const },
+];
+
 const revisions = [
   {
     brief: "Each section opens with a numbered label in mono (“01 — Tokens”)",
@@ -51,9 +58,14 @@ const revisions = [
 ];
 ---
 
-<Base title="Design direction: DBM System" description="The design direction for dbm-system.com, for review." noindex>
-  <SiteHeader client:load version={facts.version} />
-  <main id="main" class="direction site-frame">
+<Article
+  title="Design direction: DBM System"
+  description="The design direction for dbm-system.com, for review."
+  noindex
+  outline={outline}
+  breadcrumbs={[{ label: "Home", href: "/" }, { label: "Design direction" }]}
+>
+  <div class="direction">
     <header class="intro grid-12">
       <div class="intro__text">
         <p class="kicker">Design direction for review (M0)</p>
@@ -190,13 +202,12 @@ const revisions = [
         </tbody>
       </table>
     </section>
-  </main>
-  <SiteFooter />
-</Base>
+  </div>
+</Article>
 
 <style>
   .direction {
-    padding-block: var(--dbm-space-12) var(--dbm-space-24);
+    display: grid;
   }
 
   .direction a {
@@ -246,16 +257,9 @@ const revisions = [
     grid-column: 1 / -1;
   }
 
-  @media (min-width: 1024px) {
-    .intro__text {
-      grid-column: 1 / span 8;
-    }
-    .block__head {
-      grid-column: 1 / span 4;
-    }
-    .block > :not(.block__head) {
-      grid-column: 6 / -1;
-    }
+  /* In the Article layout's reading column the blocks stack: the 12-column split is for the wide home page. */
+  .direction :global(.grid-12) {
+    grid-template-columns: minmax(0, 1fr);
   }
 
   /* Colour */

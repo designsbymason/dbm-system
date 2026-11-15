@@ -34,8 +34,9 @@ An agentic, standalone React component library built for both AI coding agents a
 ## Repo structure
 ```
 apps/
-  docs/            Documentation website (Astro — built later; currently a stub, with a placeholder
-                     page served at dbm-system.com from .github/pages/)
+  docs/            Documentation website (Astro with React islands; its foundation, M0, is built and
+                     checked on every push, while dbm-system.com shows the placeholder from .github/pages/
+                     until M1)
   storybook/        Wrapper for the public Storybook build (currently a stub; the build is already
                      published at dbm-system.com/storybook/ by .github/workflows/pages.yml — the
                      Storybook actually used today lives in packages/components/.storybook/,

@@ -169,12 +169,29 @@ for (const guide of GUIDE_FILES) {
 }
 if (new Set(installLines.values()).size > 1) fail("the consumer guide", `the install line differs between files: ${[...installLines].map(([guide, line]) => `${guide}: ${line}`).join("; ")}`);
 
+// The consumer guide's font link must load the two families the tokens name, at every weight the tokens offer, and say
+// the same in every guide file. (It used to be compared with Storybook's own link; Storybook self-hosts its fonts now,
+// ADR-0215, while a consumer still chooses how to load them, ADR-0175.)
 const FONT_LINK = /https:\/\/fonts\.googleapis\.com\/css2\?[^"\s]+/;
-const guideFonts = readFileSync(join(root, "packages", "components", "README.md"), "utf8").match(FONT_LINK)?.[0];
-const previewFonts = readFileSync(join(root, "packages", "components", ".storybook", "preview-head.html"), "utf8").match(FONT_LINK)?.[0];
+const typography = JSON.parse(readFileSync(join(root, "packages", "tokens", "src", "primitive", "typography.json"), "utf8"));
+const families = ["primary", "secondary"].map((role) => typography["font-family"][role].$value[0]);
+const weights = Object.values(typography["font-weight"]).map((token) => String(token.$value)).sort();
+const fontLinks = new Map(GUIDE_FILES.map((guide) => [guide, readFileSync(join(root, guide), "utf8").match(FONT_LINK)?.[0]]).filter(([, link]) => link));
+const guideFonts = fontLinks.get("packages/components/README.md");
 if (!guideFonts) fail("packages/components/README.md", "has no Google Fonts link");
-else if (guideFonts !== previewFonts) fail("packages/components/README.md", `its Google Fonts link differs from the one Storybook loads (.storybook/preview-head.html): ${guideFonts} against ${previewFonts}`);
-if (!failed) console.log(`\nguide: ${GUIDE_FILES.length} files, every import and theme it shows resolves, and the font link is Storybook's`);
+else {
+  const asked = new Map([...new URL(guideFonts).searchParams.getAll("family")].map((spec) => {
+    const [name, axes = ""] = spec.split(":");
+    return [name.replaceAll("+", " "), (axes.split("@")[1] ?? "").split(";").filter(Boolean).sort()];
+  }));
+  for (const family of families) {
+    const got = asked.get(family);
+    if (!got) fail("packages/components/README.md", `its font link doesn't load ${family}, which the tokens name`);
+    else if (got.join(";") !== weights.join(";")) fail("packages/components/README.md", `its font link loads ${family} at ${got.join(", ")}, but the tokens offer ${weights.join(", ")}`);
+  }
+}
+if (new Set(fontLinks.values()).size > 1) fail("the consumer guide", `the font link differs between files: ${[...fontLinks].map(([guide, link]) => `${guide}: ${link}`).join("; ")}`);
+if (!failed) console.log(`\nguide: ${GUIDE_FILES.length} files, every import and theme it shows resolves, and the font link loads ${families.join(" and ")} at ${weights.join(", ")}`);
 
 if (failed) {
   console.error("\ncheck-publish: failed");

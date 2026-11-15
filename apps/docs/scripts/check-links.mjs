@@ -1,0 +1,83 @@
+#!/usr/bin/env node
+/**
+ * The link check (guidelines/docs-site/02-structure.md §11): every internal link and asset in the built site must
+ * resolve to a file in it, and every same-page `#fragment` to an id on the page. A link to a page that isn't built yet
+ * is allowed only while `src/data/site.ts` lists it as planned (`plannedPaths`), so the list shrinks as pages land and
+ * a typo is never excused. External links are not fetched: no network in the gate.
+ *
+ *   node scripts/check-links.mjs [root]
+ *
+ * `root` is the folder to check (default `dist`, the docs build). Pass the assembled Pages artifact (the site at the
+ * root, Storybook in `storybook/`) to check links into `/storybook/` too; with the docs build alone they are skipped.
+ */
+import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
+import { dirname, join, relative, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
+import { plannedPaths } from "../src/data/site.ts";
+
+/* eslint-disable no-console -- a CLI check's report */
+
+const here = dirname(fileURLToPath(import.meta.url));
+const root = resolve(here, "..", process.argv[2] ?? "dist");
+if (!existsSync(root)) {
+  console.error(`check-links: ${root} does not exist; build the site first`);
+  process.exit(1);
+}
+const hasStorybook = existsSync(join(root, "storybook", "index.html"));
+const planned = new Set(plannedPaths);
+
+/** The site's own pages: every .html file, except Storybook's (its links are its own). */
+const pages = [];
+const walk = (dir) => {
+  for (const name of readdirSync(dir)) {
+    const path = join(dir, name);
+    if (statSync(path).isDirectory()) {
+      if (relative(root, path) !== "storybook") walk(path);
+    } else if (name.endsWith(".html")) {
+      pages.push(path);
+    }
+  }
+};
+walk(root);
+
+/** The file a site path is served from, or `undefined`. */
+const fileFor = (pathname) => {
+  const clean = decodeURIComponent(pathname).replace(/\/$/, "");
+  return [join(root, clean), join(root, clean, "index.html"), join(root, `${clean}.html`)].find(
+    (candidate) => existsSync(candidate) && statSync(candidate).isFile(),
+  );
+};
+
+const failures = [];
+let checked = 0;
+const attribute = /\s(?:href|src)=("([^"]*)"|'([^']*)')/g;
+
+for (const page of pages) {
+  const html = readFileSync(page, "utf8");
+  const pagePath = `/${relative(root, page).replace(/index\.html$/, "").replace(/\.html$/, "")}`;
+  const ids = new Set([...html.matchAll(/\sid=("([^"]*)"|'([^']*)')/g)].map((match) => match[2] ?? match[3]));
+  for (const match of html.matchAll(attribute)) {
+    const value = (match[2] ?? match[3]).trim();
+    if (!value || /^(?:[a-z][a-z0-9+.-]*:|\/\/)/i.test(value)) continue; // external, mailto:, data:, javascript:
+    checked += 1;
+    if (value.startsWith("#")) {
+      const id = decodeURIComponent(value.slice(1));
+      if (id && !ids.has(id)) failures.push(`${pagePath}: "${value}" points at no id on the page`);
+      continue;
+    }
+    const url = new URL(value, `https://site.invalid${pagePath}`);
+    const pathname = url.pathname;
+    if (pathname.startsWith("/storybook/") && !hasStorybook) continue;
+    if (fileFor(pathname)) continue;
+    if (planned.has(pathname.replace(/\/$/, "") || "/")) continue;
+    failures.push(`${pagePath}: "${value}" resolves to nothing in the build, and src/data/site.ts doesn't list it as planned`);
+  }
+}
+
+console.log(`check-links: ${pages.length} pages, ${checked} internal links and assets${hasStorybook ? ", Storybook included" : ""}`);
+if (failures.length > 0) {
+  console.error(`\n${failures.length} broken:`);
+  for (const failure of [...new Set(failures)]) console.error(`  - ${failure}`);
+  process.exit(1);
+}
+console.log(`check-links: all resolve (${planned.size} planned pages allowed until they are built)`);

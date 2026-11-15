@@ -1,33 +1,16 @@
 <!--
-  Loads the two real web fonts the token system names (03-token-system-spec.md:
-  Nunito primary, Lora secondary) into the Storybook preview iframe.
+  The preview iframe's head.
 
-  Found missing 2026-09-06, via Heading's own review: neither font was ever
-  actually loaded anywhere in this project (no @font-face, no stylesheet
-  link, confirmed by grep) — every component using font-family.secondary
-  has been silently rendering its browser/OS fallback (`Georgia, serif`)
-  instead of Lora the whole time. This is why `weight` appeared to work for
-  `fontFamily="primary"` but not `"secondary"`: most fallback sans-serif
-  stacks carry real distinct weight faces, but Georgia (and many system
-  serif fallbacks) traditionally ship only regular/bold — no medium/
-  semibold face for the browser to render, so those two `weight` values
-  visually collapsed onto whichever of regular/bold they're nearest to.
+  Fonts: Nunito (primary) and Lora (secondary), the two families the token
+  system names, are self-hosted (ADR-0215): `preview.tsx` imports the
+  Fontsource files, all four weights the `weight` prop offers (400/500/600/
+  700) for both, so they are bundled into Storybook and no third party is
+  asked for them. They used to load from Google Fonts here. A consumer of
+  the published package still supplies its own fonts (ADR-0175).
 
-  Storybook-preview-only (this file is dev tooling under .storybook/, not
-  shipped in the published @dbm-system/components package — same
-  category as every other Storybook-only asset, per
-  07-storybook-and-documentation-standards.md §8) — a real published-package
-  consumer still needs to load these fonts themselves (or accept the
-  fallback stack); that's a separate, larger question this fix doesn't
-  answer, flagged rather than decided here.
-
-  All 4 weights the `weight` prop actually offers (regular/medium/semibold/
-  bold = 400/500/600/700) for both families, so every `weight` value renders
-  a real, distinct face for either `fontFamily`.
+  Search engines: the Storybook pages are kept out of results (ADR-0214,
+  docs-site/02-structure.md §4); the docs website's component pages are the
+  ones to find. `robots.txt` also disallows `/storybook/`, and this tag
+  covers a page reached by a link.
 -->
-<link rel="preconnect" href="https://fonts.googleapis.com" />
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link
-  href="https://fonts.googleapis.com/css2?family=Lora:wght@400;500;600;700&family=Nunito:wght@400;500;600;700&display=swap"
-  rel="stylesheet"
-/>
+<meta name="robots" content="noindex" />

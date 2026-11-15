@@ -1,6 +1,15 @@
 import type { Decorator, Preview } from "@storybook/react-vite";
 import { DbmDocsContainer } from "./DbmDocsContainer";
 
+// The two typefaces, self-hosted (ADR-0215): bundled into Storybook, no third-party request.
+import "@fontsource/nunito/400.css";
+import "@fontsource/nunito/500.css";
+import "@fontsource/nunito/600.css";
+import "@fontsource/nunito/700.css";
+import "@fontsource/lora/400.css";
+import "@fontsource/lora/500.css";
+import "@fontsource/lora/600.css";
+import "@fontsource/lora/700.css";
 import "@dbm-system/tokens/css/primitives.css";
 import "@dbm-system/tokens/css/component-tokens.css";
 import "@dbm-system/tokens/css/purple-light.css";
@@ -15,6 +24,18 @@ import "./docs.css";
 // so the theme attribute has to go on document.documentElement, the same place
 // ThemeProvider sets it in a real app. This also makes portaled content (which
 // mounts on document.body, outside any story wrapper) inherit the theme correctly.
+/** The site's mode key ("light", "dark" or "system"), resolved to light or dark; `undefined` when nothing is stored. */
+function storedMode(): "light" | "dark" | undefined {
+  try {
+    const value = window.localStorage.getItem("dbm-mode");
+    if (value === "light" || value === "dark") return value;
+    if (value === "system") return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+  } catch {
+    // Storage blocked: Storybook's own default applies.
+  }
+  return undefined;
+}
+
 const withTheme: Decorator = (Story, context) => {
   const { brand, mode } = context.globals;
   document.documentElement.dataset.theme = `${brand}-${mode}`;
@@ -169,6 +190,9 @@ const preview: Preview = {
       },
     },
   },
+  // The mode the reader chose on dbm-system.com, which shares this origin (ADR-0214), so crossing from the site keeps
+  // light or dark. A `mode` in the URL's `globals` still wins; with nothing stored it is light, as before.
+  initialGlobals: { mode: storedMode() ?? "light" },
   globalTypes: {
     brand: {
       description: "Brand theme",

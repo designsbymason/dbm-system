@@ -1,0 +1,21 @@
+---
+// The Marketing page type (02-structure.md §3): full-width sections in the site's shell. The landing page and Docs home.
+import { SiteShell } from "../components/shell/SiteShell";
+import { facts } from "../components/home/facts";
+import Base from "./Base.astro";
+
+interface Props {
+  title: string;
+  description: string;
+  section?: string;
+  noindex?: boolean;
+}
+
+const { title, description, section, noindex } = Astro.props;
+---
+
+<Base title={title} description={description} noindex={noindex}>
+  <SiteShell client:load kind="marketing" version={facts.version} section={section}>
+    <slot />
+  </SiteShell>
+</Base>

@@ -24,13 +24,13 @@ No testimonials, company logos, download counts, comparisons with other librarie
 
 ## 3. Sections, in order
 
-The page is one story told by scrolling. Every section opens the same way: a numbered label in mono ("01 — Tokens"), a Lora headline and one sentence, and makes one idea.
+The page is one story told by scrolling. Every section opens with a Lora headline and one sentence, with no numbered or all-caps label above it, and makes one idea.
 
 | # | Section | Content | Visual and motion |
 |---|---|---|---|
 | — | **Release banner** | One line: the current version is on npm, with a link to the Changelog. Dismissible | `PageShell.Banner` |
 | 1 | **Hero** | The tagline, "The agentic component library for people and the AI agents that build with them.", one supporting sentence, the install line with package-manager tabs and a copy button; the primary action Get started, the secondary Browse components, a text link to Storybook | A **CSS 3D stack of live components**: tokens, then components, then an application screen, slightly separated, with two or three dimension annotations (`space.6`, `radius.md`). It flattens as the reader scrolls into section 3 |
-| 2 | **Facts** | True figures generated at build: the number of components and hooks, two brands in two modes, two runtime dependencies, the WCAG 2.2 AA target, MIT, the current version | Static: one hairline row. It does the work logos and testimonials usually do, without inventing anything |
+| 2 | **Specification** | True figures generated at build, as a specification sheet: the number of components and hooks, two brands in two modes, the runtime dependencies, React, the WCAG 2.2 AA target, what ships for agents, MIT, the current version | Static: terms and values in rows, not a strip of big numbers or facts joined with dots. It does the work logos and testimonials usually do, without inventing anything |
 | 3 | **From token to interface** | One semantic layer, four themes, no component changes: the system's core idea, shown rather than told | A short pinned section: as the reader scrolls, one token changes and a live form, table and toast re-theme across Purple and Emerald, light and dark (the token theme files re-scoped to a wrapper at build, since `ThemeProvider` themes the whole document), with the token's name and value annotated as they change |
 | 4 | **Live showcase** | A realistic slice of an application: a data table with filters, a command palette, a form in a drawer, a toast. Fully usable | The pieces settle into place, then hold still; hovering a component shows its name and tokens, with a link to its page |
 | 5 | **Accessible by default** | Keyboard, focus, contrast, names for assistive technology; the claim with its known exceptions, linked to the accessibility statement | As the reader scrolls, a focus ring steps through the showcase in tab order and contrast pairs appear with their real ratios |
@@ -42,7 +42,7 @@ The page is one story told by scrolling. Every section opens the same way: a num
 
 **On a phone** the 3D stack is shallower and turns less, the pinned section becomes a short scroll-through, and the showcase shows one composition at a time: designed for the phone, not shrunk.
 
-**Length:** nine sections is the starting point. If the first review round finds the page long, sections 7 and 8 fold in first (7 into the facts, 8 into the hero's install line).
+**Length:** nine sections is the starting point. If the first review round finds the page long, sections 7 and 8 fold in first (7 into the specification, 8 into the hero's install line).
 
 ## 4. Look and feel
 
@@ -63,7 +63,7 @@ The page follows the site's design direction, "an annotated instrument" ([02-str
 2. The token re-theme in section 3.
 3. The focus ring stepping through the showcase in section 5.
 
-Elsewhere: once-only reveals as sections arrive, the agent section's JSON writing out, crisp hover, focus and press states, and the mode change's view transition. The techniques: sticky sections with scrubbed scroll timelines, named view-timeline ranges, SVG stroke drawing, words split at build time, and registered custom properties driving the token values in section 3. Motion (MIT) is added only for an interaction a review round agrees CSS cannot do, and loads only on this page. The motion tokens set every duration and easing.
+Elsewhere, no entrance on every section: the agent section's JSON writing out, crisp hover, focus and press states, and the mode change's view transition. The techniques: sticky sections with scrubbed scroll timelines, named view-timeline ranges, SVG stroke drawing, words split at build time, and registered custom properties driving the token values in section 3. Motion (MIT) is added only for an interaction a review round agrees CSS cannot do, and loads only on this page. The motion tokens set every duration and easing.
 
 **Rules:**
 

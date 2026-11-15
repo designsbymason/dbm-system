@@ -1,3 +1,8 @@
+// The manager's own text is Latin, and its bundler inlines each font file into its CSS, so only the Latin subset is
+// imported here (the full files would add about half a megabyte); the preview loads every subset by `unicode-range`.
+import "@fontsource/nunito/latin-400.css";
+import "@fontsource/nunito/latin-600.css";
+import "@fontsource/nunito/latin-700.css";
 import { addons } from "storybook/manager-api";
 import { DOCS_RENDERED, SET_GLOBALS, UPDATE_GLOBALS } from "storybook/internal/core-events";
 import { primitives } from "@dbm-system/tokens";
@@ -46,8 +51,32 @@ import { getSemanticTokens, getStorybookTheme } from "./theme";
 // below) — after that, only `UPDATE_GLOBALS` (confirmed live and timely in
 // every capture) is allowed to change `lastBrand`/`lastMode`. Applies to
 // both Brand and Mode — same channel, same events.
+// The reader's mode on dbm-system.com, which shares this origin (ADR-0214): "light", "dark" or "system" under one key.
+// The manager starts in it (the preview's `initialGlobals` reads the same key), and a change made in the Mode toolbar
+// is written back, so the site follows on the way back.
+const MODE_KEY = "dbm-mode";
+function storedMode(): "light" | "dark" | undefined {
+  try {
+    const value = window.localStorage.getItem(MODE_KEY);
+    if (value === "light" || value === "dark") return value;
+    if (value === "system") return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+  } catch {
+    // Storage blocked: Storybook's own default applies.
+  }
+  return undefined;
+}
+function rememberMode(mode: string): void {
+  // Only a real change is written, so a stored "system" survives Storybook echoing the mode it already resolved to.
+  if ((mode !== "light" && mode !== "dark") || storedMode() === mode) return;
+  try {
+    window.localStorage.setItem(MODE_KEY, mode);
+  } catch {
+    // Not remembered; Storybook still changes mode.
+  }
+}
+
 let lastBrand: string | undefined;
-let lastMode: string | undefined;
+let lastMode: string | undefined = storedMode();
 let hasReceivedInitialSync = false;
 
 // The addon panel (Controls/Actions/Interactions/..., `#storybook-panel-root`
@@ -418,6 +447,7 @@ addons.ready().then((channel) => {
   channel.on(UPDATE_GLOBALS, (payload) => {
     hasReceivedInitialSync = true;
     applyTheme(payload?.globals);
+    if (typeof payload?.globals?.mode === "string") rememberMode(payload.globals.mode);
   });
 });
 

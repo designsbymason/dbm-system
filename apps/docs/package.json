@@ -10,7 +10,9 @@
     "dev": "pnpm prepare-styles && ASTRO_TELEMETRY_DISABLED=1 astro dev --port 4321",
     "build": "pnpm prepare-styles && ASTRO_TELEMETRY_DISABLED=1 astro build",
     "preview": "ASTRO_TELEMETRY_DISABLED=1 astro preview --port 4321",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "check-links": "node scripts/check-links.mjs",
+    "check-accessibility": "node scripts/check-accessibility.mjs"
   },
   "dependencies": {
     "@astrojs/mdx": "^8.1.6",
@@ -28,6 +30,8 @@
   "devDependencies": {
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",
+    "axe-core": "^4.14.0",
+    "playwright": "^1.65.0",
     "typescript": "5.9.3"
   }
 }

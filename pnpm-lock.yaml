@@ -87,6 +87,12 @@ importers:
       '@types/react-dom':
         specifier: ^19.3.0
         version: 19.3.0(@types/react@19.3.0)
+      axe-core:
+        specifier: ^4.14.0
+        version: 4.14.0
+      playwright:
+        specifier: ^1.65.0
+        version: 1.65.0
       typescript:
         specifier: 5.9.3
         version: 5.9.3
@@ -193,6 +199,12 @@ importers:
       '@dbm-system/tsconfig':
         specifier: workspace:*
         version: link:../tsconfig
+      '@fontsource/lora':
+        specifier: ^5.3.0
+        version: 5.3.0
+      '@fontsource/nunito':
+        specifier: ^5.3.0
+        version: 5.3.0
       '@playwright/test':
         specifier: ^1.65.0
         version: 1.65.0
@@ -3171,10 +3183,6 @@ packages:
 
   axe-core@4.10.2:
     resolution: {integrity: sha512-RE3mdQ7P3FRSe7eqCWoeQ/Z9QXrtniSjp1wUjt5nRC3WIpz5rSCve6o3fsZ2aCpJtrZjSZgjwXAoTO5k4tEI0w==}
-    engines: {node: '>=4'}
-
-  axe-core@4.12.1:
-    resolution: {integrity: sha512-s7iGf5GaVMxEG0ENN9x+xTr7GFZCb1ZP/1uATUpCEK2X78nDB3RwbtFCo9pGAf9ru+VwoQ464DkaLEeRM08wJA==}
     engines: {node: '>=4'}
 
   axe-core@4.14.0:
@@ -8564,8 +8572,6 @@ snapshots:
 
   axe-core@4.10.2: {}
 
-  axe-core@4.12.1: {}
-
   axe-core@4.14.0: {}
 
   axobject-query@4.1.0: {}
@@ -9079,7 +9085,7 @@ snapshots:
       array-includes: 3.1.9
       array.prototype.flatmap: 1.3.3
       ast-types-flow: 0.0.8
-      axe-core: 4.12.1
+      axe-core: 4.14.0
       axobject-query: 4.1.0
       damerau-levenshtein: 1.0.8
       emoji-regex: 9.2.2

@@ -3,3 +3,4 @@ src/styles/generated/
 # Astro
 .astro/
 dist/
+_artifact/

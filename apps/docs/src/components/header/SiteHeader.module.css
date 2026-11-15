@@ -9,9 +9,19 @@
   color: var(--dbm-text-brand);
 }
 
-/* Storybook is a different tool: set slightly apart from the site's own sections. */
-.workshop {
-  margin-inline-start: var(--dbm-space-4);
+/* Storybook is a different tool: set slightly apart from the site's own sections in the bar (not in the phone menu's
+   stacked list, where the indent would read as nesting). */
+@media (min-width: 1024px) {
+  .workshop {
+    margin-inline-start: var(--dbm-space-4);
+  }
+}
+
+/* The sidebar's menu button is for a phone and a tablet; from `lg` the sidebar is a column. */
+@media (min-width: 1024px) {
+  .menuButton {
+    display: none;
+  }
 }
 
 .version {
