@@ -1,6 +1,6 @@
 # 0173 — The docs app's dependencies are each justified in a list, and the landing page may use GSAP, over holding it to the packages' budget or leaving it unrestricted
 
-**Status:** Accepted · **Date:** 2026-11-03
+**Status:** Accepted, the GSAP part superseded by [0212](./0212-the-docs-site-animates-with-css-scroll-timelines-and-view-transitions-and-adds-motion-only-for-what-css-cannot-do-over-gsap-or-a-javascript-animation-library-by-default.md) · **Date:** 2026-11-03
 
 ## Context
 The published packages carry a runtime-dependency budget (Radix UI Primitives and Phosphor Icons) and no animation library ([ADR-0140](./0140-the-design-system-takes-no-animation-library-and-animates-with-css-and-the-motion-tokens-over-keeping-motion-as-an-optional-peer-dependency.md)), and the project uses free and open-source tooling only. The docs website is an app, not a package, and it needs a framework, MDX, search and, for a premium landing page with scroll-driven choreography, a motion library. ADR-0140 already lets the docs site choose its own.

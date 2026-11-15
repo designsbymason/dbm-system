@@ -24,17 +24,23 @@ Recorded here so they are not re-asked; the detail is in the file named.
 
 | Item | Decision | Where |
 |---|---|---|
-| The site's brand | Purple, in light, dark and system mode; only mode is a reader control | [02-structure.md](./02-structure.md) §5 |
-| Landing-page guardrails | Reduced motion (a static, complete page) and content before script are required; nothing else is. Weight and motion are judged in review | [03-landing-page-brief.md](./03-landing-page-brief.md) §5 |
-| Showing two brands | Side by side, with live Storybook stories, one frame per brand (Storybook takes the brand in its URL) | [03-landing-page-brief.md](./03-landing-page-brief.md) §3 |
-| Old Storybook guide links | A short "this page has moved" page at each old address, linking to the new one | [04-content-inventory.md](./04-content-inventory.md) §4 |
-| Search engines and `/storybook/` | Not indexed | [02-structure.md](./02-structure.md) §10 |
+| The site's brand | Purple, in light, dark and system mode; only mode is a reader control | [02-structure.md](./02-structure.md) §3 |
+| Navigation and URLs | Docs, Components, Templates, AI agents, Storybook; Resources at root URLs; hooks and functions get pages; components by category | [ADR-0213](../adr/0213-the-docs-site-is-navigated-by-docs-components-templates-ai-agents-and-storybook-with-project-pages-and-agent-files-at-short-root-urls-over-one-docs-section-holding-everything.md) |
+| Milestone order | Foundation, docs core, components, then the landing page, then guides and templates, then agents and polish | [01-plan.md](./01-plan.md) §3 |
+| Animation | CSS first; no GSAP; Motion only for an interaction CSS cannot do, agreed in a review round | [ADR-0212](../adr/0212-the-docs-site-animates-with-css-scroll-timelines-and-view-transitions-and-adds-motion-only-for-what-css-cannot-do-over-gsap-or-a-javascript-animation-library-by-default.md) |
+| Motion guardrails | Reduced motion gives a static, complete page; content before script; no scroll-jacking; motion tokens; reveals once on docs pages; `@supports` around scroll animation | [02-structure.md](./02-structure.md) §5 |
+| Illustrations | Geometric SVG drawn in code from the tokens | [ADR-0217](../adr/0217-the-docs-sites-illustrations-are-geometric-svg-drawn-in-code-from-the-tokens-over-commissioned-artwork-or-raster-images.md) |
+| Storybook and the site | Storybook keeps its interface; shared mode, fonts, transitions, logo and links both ways; the bridge's Storybook changes are part of M0 | [ADR-0214](../adr/0214-storybook-keeps-its-own-interface-and-is-bridged-to-the-docs-site-by-a-shared-mode-shared-fonts-view-transitions-and-links-both-ways-over-an-iframe-workshop-page-or-an-injected-header.md) |
+| Fonts | Self-hosted Nunito and Lora for the site and Storybook | [ADR-0215](../adr/0215-the-docs-site-and-storybook-self-host-nunito-and-lora-over-loading-them-from-google-fonts.md) |
+| Live examples | The Storybook stories, rendered with portable stories | [ADR-0216](../adr/0216-component-pages-render-the-storybook-stories-as-their-live-examples-through-portable-stories-over-hand-written-examples-or-story-iframes.md) |
+| Showing two brands | On the landing page, in the page itself: `ThemeProvider` scopes a brand around a live composition (replaces the earlier one-Storybook-frame-per-brand idea, which the in-page version makes unnecessary) | [03-landing-page-brief.md](./03-landing-page-brief.md) §3 |
+| DBM changes found while building | A new or changed component or token is raised with the maintainer first; the site never hardcodes a value instead | [01-plan.md](./01-plan.md) §6 |
+| Old Storybook guide links | A short "this page has moved" page at each old address | [04-content-inventory.md](./04-content-inventory.md) §4 |
+| Search engines and `/storybook/` | Not indexed | [02-structure.md](./02-structure.md) §4 |
 | Tagline | "The agentic component library for people and the AI agents that build with them." | [03-landing-page-brief.md](./03-landing-page-brief.md) §3 |
 | Site description (meta) | The one-sentence wording in [01-vision-and-goals.md](../01-vision-and-goals.md) §1, trimmed to about 155 characters at build | The first landing review |
-| Phase A before Phase 8 | Yes, with the sections not built yet labelled "in active development" (Phase 8 has since shipped) | [01-plan.md](./01-plan.md) |
-| GSAP's licence | Read at adoption: free including commercial use, ScrollTrigger included, not described as open source (the recorded exception); pin the version, because terms can change for newer versions | [02-structure.md](./02-structure.md) §8 |
-| Node and pnpm | The repository's: Node 24 from `.nvmrc` and the pinned pnpm, which CI already reads | [02-structure.md](./02-structure.md) §3 |
-| `/templates` before a template exists | Moot: Phase 7 builds the first templates before the docs site | [01-plan.md](./01-plan.md) |
+| First-release extras | Copy page and Markdown copies; Roadmap and FAQ; a release banner and an RSS feed | [01-plan.md](./01-plan.md) §2 |
+| Node and pnpm | The repository's: Node 24 from `.nvmrc` and the pinned pnpm | [02-structure.md](./02-structure.md) §9 |
 
 ## 3. Questions not yet decided
 
@@ -42,15 +48,20 @@ Each of these is decided when the work it waits on starts.
 
 | Question | Waits on |
 |---|---|
-| How social images are generated | The social-image build step; the tool is chosen when it is built |
-| Component page layout | The docs site skeleton (Phase 9); the manifest, its schema and its per-component files exist ([ADR-0206](../adr/0206-the-manifest-is-also-shipped-as-an-index-and-one-file-per-component-beside-the-whole-file-over-the-single-file-alone-or-waiting-for-an-mcp-server.md)) |
-| How the changelog page reads Changesets | Open: the release workflow now writes each package's `CHANGELOG.md`, so the page can read those |
-| The hero's visual concept and the page's length | The first landing review |
+| The link checker and the accessibility scanner | M0 |
+| How a contributor runs the site and Storybook side by side (ports, a launch entry), and how Storybook run alone loads the self-hosted fonts | M0 |
+| Browser support for scroll timelines, confirmed against MDN's compatibility data | M0 |
+| How a story that needs Storybook-only parts gets a site-safe form | M2 |
+| How the changelog page reads each package's `CHANGELOG.md` | M5 (the files exist) |
+| How social images are generated | M5 |
+| Whether the illustrations need decorative tokens beyond the semantic ones | The first illustrations (M1); raised with the maintainer if so |
+| The hero's visual concept and the page's length | The first landing review (M3) |
+| A brand switch on component examples | After M2 |
 
 ## 4. Gaps this plan depends on
 
-- **Phase 8 outputs:** all built and shipped: the manifest and its schema, the publish pipeline and Changesets wiring (`0.1.1` is on npm with provenance) and the consumer stylesheet and token loading ([ADR-0175](../adr/0175-a-consumer-imports-an-explicit-stylesheet-and-one-bundled-theme-file-and-supplies-the-fonts-over-implicit-css-or-shipped-fonts.md)) (`01-vision-and-goals.md` §12 and §13).
-- **Templates:** two shells ship and three story-only pages are built (`04-component-inventory.md`); the rest of the Templates pages wait on the templates still to build.
+- **Phase 8 outputs:** all built and shipped: the manifest and its split files, the publish pipeline (`0.1.x` is on npm with provenance) and the consumer stylesheet and token loading ([ADR-0175](../adr/0175-a-consumer-imports-an-explicit-stylesheet-and-one-bundled-theme-file-and-supplies-the-fonts-over-implicit-css-or-shipped-fonts.md)).
+- **Templates:** two shells ship and the first example pages are built (`04-component-inventory.md`); the rest of the Templates pages follow the templates still to build.
 - **Ports:** every guide uses Storybook-only blocks ([04-content-inventory.md](./04-content-inventory.md)); the port is real work.
-- **Local development:** how a contributor runs the docs app and Storybook side by side (ports, a launch entry) is decided with the skeleton.
+- **Stories as examples:** some stories may rely on Storybook-only parts; each needs a site-safe form before its page shows it.
 - **No analytics** means no reader numbers. A later change needs a new ADR.

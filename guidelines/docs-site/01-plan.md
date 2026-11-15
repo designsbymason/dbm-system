@@ -1,79 +1,98 @@
 # Docs website — plan
 
-**Decided in:** [ADR-0170](../adr/0170-the-docs-website-is-an-astro-app-with-react-islands-deployed-with-storybook-as-one-github-pages-site-on-the-apex-of-dbm-system-com.md), [ADR-0171](../adr/0171-docs-website-content-comes-from-the-manifest-for-facts-and-mdx-for-prose-and-the-guides-move-out-of-storybook-which-keeps-the-component-pages.md), [ADR-0172](../adr/0172-pull-requests-are-enabled-for-collaborators-only-and-issues-are-on-over-keeping-both-off-or-opening-contributions-to-everyone.md), [ADR-0173](../adr/0173-the-docs-apps-dependencies-are-each-justified-in-a-list-and-the-landing-page-may-use-gsap-over-holding-it-to-the-packages-budget-or-leaving-it-unrestricted.md). Structure is in [02-structure.md](./02-structure.md).
+**Decided in:** [ADR-0170](../adr/0170-the-docs-website-is-an-astro-app-with-react-islands-deployed-with-storybook-as-one-github-pages-site-on-the-apex-of-dbm-system-com.md), [ADR-0171](../adr/0171-docs-website-content-comes-from-the-manifest-for-facts-and-mdx-for-prose-and-the-guides-move-out-of-storybook-which-keeps-the-component-pages.md), [ADR-0172](../adr/0172-pull-requests-are-enabled-for-collaborators-only-and-issues-are-on-over-keeping-both-off-or-opening-contributions-to-everyone.md), [ADR-0173](../adr/0173-the-docs-apps-dependencies-are-each-justified-in-a-list-and-the-landing-page-may-use-gsap-over-holding-it-to-the-packages-budget-or-leaving-it-unrestricted.md) (its dependency rule; its GSAP part is superseded), [ADR-0212](../adr/0212-the-docs-site-animates-with-css-scroll-timelines-and-view-transitions-and-adds-motion-only-for-what-css-cannot-do-over-gsap-or-a-javascript-animation-library-by-default.md) to [ADR-0217](../adr/0217-the-docs-sites-illustrations-are-geometric-svg-drawn-in-code-from-the-tokens-over-commissioned-artwork-or-raster-images.md). Structure is in [02-structure.md](./02-structure.md).
 
 ## 1. Goals
 
-1. A **front door** for DBM System at `dbm-system.com` that makes a first impression worthy of the system, and says plainly what it is (an agentic component library for people and AI agents): premium, fast, accessible, and honest about what is and is not built yet.
-2. A **complete reference** for a person or an agent who wants to adopt it: install, theme, guides, every component and template, the changelog.
-3. **Agent legibility**: the manifest, `llms.txt`, `llms-full.txt` and a consumer `AGENTS.md` at stable URLs (`01-vision-and-goals.md` §13.1).
-4. A site that **uses DBM itself**: its chrome is DBM components and tokens, so the docs site is the system's largest real test.
-5. **Storybook stays the workshop**: Playground, controls and tests for every component, at `/storybook/`, linked from every component page.
+1. A **front door** for DBM System at `dbm-system.com` that says plainly what it is (an agentic component library for people and AI agents) and makes a first impression worthy of the system: premium, professional, calm and precise.
+2. **One quality bar for every page.** The docs pages, the component pages and Storybook get the same care as the landing page: one design language, one type hierarchy, one motion system.
+3. **Alive, not busy.** Motion, micro-interactions and scroll-driven choreography explain structure and never delay reading ([ADR-0212](../adr/0212-the-docs-site-animates-with-css-scroll-timelines-and-view-transitions-and-adds-motion-only-for-what-css-cannot-do-over-gsap-or-a-javascript-animation-library-by-default.md)). SVG illustrations, drawn from the tokens, carry the ideas ([ADR-0217](../adr/0217-the-docs-sites-illustrations-are-geometric-svg-drawn-in-code-from-the-tokens-over-commissioned-artwork-or-raster-images.md)).
+4. **One site with Storybook.** Moving between the docs and Storybook keeps the mode, the type and the colours, without a flash ([ADR-0214](../adr/0214-storybook-keeps-its-own-interface-and-is-bridged-to-the-docs-site-by-a-shared-mode-shared-fonts-view-transitions-and-links-both-ways-over-an-iframe-workshop-page-or-an-injected-header.md)).
+5. A **complete reference** for a person or an agent adopting DBM: install, frameworks, theme, guides, every component, hook, function and template, the changelog.
+6. **Agent legibility**: the manifest, per-component JSON, `AGENTS.md`, a Markdown copy of every page, `llms.txt` and `llms-full.txt` at stable URLs (`01-vision-and-goals.md` §13.1).
+7. **Dogfooded**: the site's chrome is DBM components and tokens, so the site is the system's largest real test. A gap found in DBM is raised with the maintainer before anything in the system changes.
+8. **Honest and fast**: nothing promised that is not built; static HTML with islands only where something is interactive; WCAG 2.2 AA; reduced motion gives a complete static page.
 
 ## 2. Scope of the first release
 
-In: the landing page, the Docs section (Getting started and Installation, Guides, a Foundations overview that links into Storybook, For AI agents, Changelog, Accessibility statement and browser support), the Components index and pages, the Templates index, a 404, search, light and dark and system mode, the community files, the quality gates.
+In: the landing page; Docs (home, Introduction, Installation, Quick start, Frameworks, the six guides, Foundations overview); Resources (Changelog with an RSS feed, Roadmap, FAQ, Accessibility statement); the Components index and a page per component, hook and function; the Templates index and pages; AI agents and the agent files; the 404; search; light, dark and system mode; a release banner; the Storybook bridge; the quality gates.
 
-Out for now: a blog, analytics, a brand switcher or a text-direction switch on the site, versioned docs (from 1.0), a Figma library, an MCP server.
+Later: "Edit this page" and "Last updated" on docs pages; a brand switch on component examples (revisited after M2); a grid view of the component index with a glyph per component; a tokens page; recipes built from the template pages; versioned docs (from 1.0).
 
-## 3. Phases
+Out: a blog, analytics, a brand switcher or a text-direction switch for the site itself, a Figma library, an MCP server.
 
-The phases here are the docs website's own. They sit inside the roadmap's Phase 9 (surface expansion, `01-vision-and-goals.md` §13); Phase 8 (manifest and publish) is done, so nothing here waits on it.
+## 3. Milestones
 
-### Phase A — skeleton, landing page and pipeline (the next work; needs nothing unbuilt)
+The milestones are the docs website's own, inside the roadmap's Phase 9 (`01-vision-and-goals.md` §13). Phase 8 is done, so nothing here waits on it. Each milestone ends with a review in the running site (desktop, tablet and phone; light and dark; reduced motion; keyboard only) and is deployed before the next starts. The order puts the design language on many real pages before the landing page, so the landing page can link to real component pages.
 
-**Order within it:** the repository settings, the community files and a minimal Pages deployment come first (they prove the pipeline and settle the subpath and redirect checks). **Roadmap Phase 7, the first templates, then runs before the landing page**, because the live showcase should be built from real compositions such as a dashboard shell (`01-vision-and-goals.md` §13). The `apps/docs` skeleton and the landing page follow it.
+### Done before the milestones
 
-| Deliverable | Done when | Status |
-|---|---|---|
-| Repository settings | Pull requests limited to collaborators, Issues on, private vulnerability reporting on (`05-open-items.md`) | Done |
-| Community files | Issue templates, `SECURITY.md`, `CONTRIBUTING.md`, `CODE_OF_CONDUCT.md` exist | Done |
-| Domain on GitHub Pages | `https://dbm-system.com` serves a Pages site over HTTPS, `www` redirects to the apex, the domain is verified | Done (placeholder page live) |
-| `apps/docs` skeleton | An Astro app with the React and MDX integrations builds, with the layout, the navigation and light, dark and system mode, using DBM components and tokens | Not started |
-| Combined Pages workflow | One workflow builds the docs site and `storybook-static` and publishes docs at `/` and Storybook at `/storybook/` on every push to `main` | Partly: Storybook and a placeholder are published; the docs build joins when the skeleton exists |
-| Storybook subpath check | Storybook works under `/storybook/`: assets, the iframe, the Getting started page's index fetch, deep links | Done for assets, the index fetch and the HTTP to HTTPS redirect; deep links to check once the docs site links in |
-| Landing page | Built from the brief in [03-landing-page-brief.md](./03-landing-page-brief.md) over several review rounds, with what is not built (`llms.txt`, an MCP server) labelled, and the real install line (the packages are on npm at `0.1.x`) | Not started |
-| Docs shell pages | Getting started with the real Installation, and For AI agents describing the manifest, `tokens.json` and `AGENTS.md`; `llms.txt` and an MCP server labelled "in active development" | Not started |
-| Search | Pagefind index built and wired into the layout | Not started |
-| Quality gates | Link check and an accessibility scan of the key pages run in CI | Not started |
-| Storybook trimmed | Getting started becomes a pointer to the docs website; the guides move (the move waits until their pages exist on the site), each leaving a "moved" page; `/storybook/` is marked not to be indexed | Not started |
+| Deliverable | Status |
+|---|---|
+| Repository settings: pull requests for collaborators, Issues, private vulnerability reporting ([05-open-items.md](./05-open-items.md)) | Done |
+| Community files: issue templates, `SECURITY.md`, `CONTRIBUTING.md`, `CODE_OF_CONDUCT.md` | Done |
+| Domain on GitHub Pages over HTTPS, `www` redirecting to the apex | Done |
+| Pages workflow publishing a placeholder at `/` and Storybook at `/storybook/` | Done |
+| Storybook under the subpath: assets, the index fetch, the HTTP to HTTPS redirect | Done; deep links and the logo are fixed in M0 |
+| The first templates the site's layouts and showcase use (`AppShell`, `PageShell`, the Documentation Page and Marketing Page recipes) | Done |
 
-### Phase B — content from the published packages (follows the Phase A skeleton; Phase 8 is done)
+### M0 — Foundation
 
 | Deliverable | Done when |
 |---|---|
-| Manifest at a stable URL | `/manifest.json` is copied from the built components package (`@dbm-system/components/manifest.json`) |
-| Component pages | `/components/<name>` for every component, props and variants from the manifest, prose from MDX, a link to its Storybook page |
-| Component coverage check | CI fails when a component in the manifest has no docs page |
-| Installation | The Installation page is real: the install line, the stylesheet and a theme, the fonts ([ADR-0175](../adr/0175-a-consumer-imports-an-explicit-stylesheet-and-one-bundled-theme-file-and-supplies-the-fonts-over-implicit-css-or-shipped-fonts.md)); the content already exists in Storybook's Getting started page and the package README |
-| Agent files | `llms.txt` and `llms-full.txt` are generated from the docs, and the consumer `AGENTS.md` (already shipped in the components package) is linked or copied |
-| Changelog | Reads each package's `CHANGELOG.md`, which the release workflow writes, under Docs |
-| Release-version builds | `check-fresh-app` already tests the packed packages in a fresh app on every change; a build against the published versions after each release is the addition |
+| `apps/docs` | An Astro app with the React and MDX integrations builds, with a local dev entry in `.claude/launch.json` beside Storybook's |
+| Layouts | The three page types (Marketing, Article, Reference) on `PageShell` ([02-structure.md](./02-structure.md) §3), with the header, the large menus, the phone drawer, breadcrumbs and the footer |
+| Mode | Light, dark and system, chosen by the reader, remembered, with no flash on load |
+| Fonts | Self-hosted Nunito and Lora ([ADR-0215](../adr/0215-the-docs-site-and-storybook-self-host-nunito-and-lora-over-loading-them-from-google-fonts.md)) |
+| Motion layer | View transitions, the CSS scroll-reveal and reading-progress primitives, reduced motion ([02-structure.md](./02-structure.md) §5) |
+| Storybook bridge | The six items in [02-structure.md](./02-structure.md) §4, checked in both directions in the combined artifact |
+| Pipeline | The Pages workflow builds the site and Storybook into one artifact |
+| Gates | Link check and accessibility scan in CI; the lint rule keeping animation libraries out of `packages/*` |
 
-### Phase C — 1.0
+### M1 — Docs core
 
-Versioned docs under `/v1/`, `/v2/` and so on; a build that deploys from release tags; Templates pages as templates are built (`04-component-inventory.md`, Templates).
+Docs home, Introduction, Installation, Quick start, Frameworks, the Foundations overview, AI agents, the Accessibility statement, FAQ, Roadmap and the 404; search (Pagefind behind `CommandPalette`); previous and next links; the first illustrations. Done when each page is live and reviewed.
+
+### M2 — Components
+
+The `/components` index; a page for every component, hook and function from the manifest, with live examples from the stories ([ADR-0216](../adr/0216-component-pages-render-the-storybook-stories-as-their-live-examples-through-portable-stories-over-hand-written-examples-or-story-iframes.md)); the coverage gate; per-component JSON and the Markdown copies. Done when the coverage gate passes.
+
+### M3 — Landing page
+
+Built from [03-landing-page-brief.md](./03-landing-page-brief.md) section by section over review rounds, CSS first, with Motion only for an interaction a round agrees CSS cannot do; the hero and section illustrations. Done when the maintainer calls it done.
+
+### M4 — Guides and templates
+
+The six guides ported from Storybook (their demos as islands); the Templates index and pages; Storybook trimmed: its Getting started becomes a pointer, and each moved guide leaves a "moved" page.
+
+### M5 — Agents and polish
+
+`llms.txt` and `llms-full.txt`; the Changelog and its RSS feed; social images; the release banner; print styles; a full accessibility and performance pass.
 
 ## 4. What blocks what
 
-- Component pages, Installation, the agent files and the changelog need the Phase A skeleton, not Phase 8: the manifest, the publish pipeline and the consumer CSS are built and the packages are published at `0.1.x`. `llms.txt` and the docs pages themselves are not built.
-- The skeleton, the landing page, the pipeline, the community files and the domain **wait on nothing** and can start at once.
-- Moving the guides off Storybook waits on their pages existing on the site; until then Storybook's pages stay, so nothing disappears.
+- M0 waits on nothing. Every later milestone needs M0's layouts and pipeline.
+- M2 needs the manifest (built and shipped) and the stories; a story that depends on Storybook-only parts needs a site-safe form first ([ADR-0216](../adr/0216-component-pages-render-the-storybook-stories-as-their-live-examples-through-portable-stories-over-hand-written-examples-or-story-iframes.md)).
+- M3 links to the component pages, so it follows M2.
+- Moving the guides off Storybook waits on their pages existing on the site; until then Storybook keeps them, so nothing disappears.
+- A change to a DBM component or token found while building waits on the maintainer's confirmation.
 
 ## 5. Risks
 
 | Risk | What reduces it |
 |---|---|
-| The landing page becomes heavy or slow with motion | The brief asks for a hand review of weight and script size; no CI budget was adopted ([ADR-0173](../adr/0173-the-docs-apps-dependencies-are-each-justified-in-a-list-and-the-landing-page-may-use-gsap-over-holding-it-to-the-packages-budget-or-leaving-it-unrestricted.md)), so it needs checking by hand each round |
-| Storybook does not work under `/storybook/` | A subpath check in Phase A, before anything depends on it |
+| The landing page becomes heavy or slow with motion | CSS first; Motion only by agreement; its weight is reported in the build log each round and reviewed by hand |
+| Scroll timelines unsupported in a reader's browser | Every scroll animation is inside `@supports`; such a browser gets the complete static page |
+| Storybook does not work under `/storybook/`, or the bridge breaks on a Storybook upgrade | The bridge uses configuration and head files, not Storybook internals, and is rechecked in the upgrade checklist |
+| A story cannot render outside Storybook | The page shows a different story or a site-safe form is added ([ADR-0216](../adr/0216-component-pages-render-the-storybook-stories-as-their-live-examples-through-portable-stories-over-hand-written-examples-or-story-iframes.md)) |
 | The guides are ported badly (Storybook-only blocks) | The port list in [04-content-inventory.md](./04-content-inventory.md) and a visual check of each page |
-| The docs promise things that are not built | Every item that is not built (`llms.txt`, an MCP server) is labelled in the page itself; the accessibility page states the known exceptions |
-| GSAP's licence terms change | Re-read before the first release; the fallback is Motion with CSS ([ADR-0173](../adr/0173-the-docs-apps-dependencies-are-each-justified-in-a-list-and-the-landing-page-may-use-gsap-over-holding-it-to-the-packages-budget-or-leaving-it-unrestricted.md)) |
-| One maintainer | Keep the pipeline small and the content mostly generated; every gate is automated |
+| The docs promise things that are not built | Each such item is labelled in the page itself; the accessibility statement lists the known exceptions |
+| One maintainer | A small pipeline, generated content where possible, every gate automated |
 
 ## 6. How the work is run
 
-- One phase deliverable at a time, each verified in a browser (and the pipeline in a real run) before it is called done.
+- One milestone at a time, each verified in a browser (and the pipeline in a real run) before it is called done.
+- The site uses DBM components and tokens. A new component, a change to one, or a new token is raised with the maintainer before it is made; the site never hardcodes a value instead.
 - The landing page is built from the brief and tightened in review rounds against the running page.
 - A decision that is a real fork in the road gets an ADR; routine choices are recorded in the commit message.
 - The maintainer commits and pushes; nothing is pushed without an explicit go-ahead (`CLAUDE.md`).
