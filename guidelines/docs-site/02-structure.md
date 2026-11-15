@@ -9,11 +9,11 @@ The site is `https://dbm-system.com` (the apex is canonical; `www` redirects). T
 | URL | Page | Source |
 |---|---|---|
 | `/` | The landing page | MDX and Astro, from [03-landing-page-brief.md](./03-landing-page-brief.md) |
-| `/docs/getting-started` | Getting started, with Installation | MDX; Installation can be written now, the packages are published |
+| `/docs/getting-started` | Getting started, with Installation | MDX; Installation is real, the packages are published and the content exists in Storybook and the package README |
 | `/docs/guides/theming`, `accessibility`, `responsive-and-rtl`, `hooks-and-utilities`, `composition-patterns`, `icons` | The guides | MDX, ported from Storybook |
 | `/docs/foundations` | One overview page: what tokens are, the three layers, naming, and a card for each of the ten token pages, each linking to its Storybook page (`/storybook/?path=/docs/foundations-<name>--docs`) | MDX; the token pages themselves stay in Storybook |
 | `/docs/for-ai-agents` | The manifest, `llms.txt`, `AGENTS.md` explained | MDX; the manifest and `AGENTS.md` ship in the package, `llms.txt` is not built |
-| `/docs/changelog` | The release history | Generated from Changesets |
+| `/docs/changelog` | The release history | Each package's `CHANGELOG.md`, written by the release workflow |
 | `/docs/accessibility-statement` | The WCAG target, the known exceptions, supported browsers | MDX |
 | `/components` | The component index: a table with search, Tier and Category filters and sortable columns | Generated from the manifest |
 | `/components/<name>` | One component (flat, for example `/components/button`) | Manifest for facts, MDX for prose |

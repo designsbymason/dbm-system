@@ -4,7 +4,7 @@
 
 ## 1. Goals
 
-1. A **front door** for DBM System at `dbm-system.com` that makes a first impression worthy of the system, and says plainly what it is (an agentic component library for people and AI agents): premium, fast, accessible, and honest about what is and is not published yet.
+1. A **front door** for DBM System at `dbm-system.com` that makes a first impression worthy of the system, and says plainly what it is (an agentic component library for people and AI agents): premium, fast, accessible, and honest about what is and is not built yet.
 2. A **complete reference** for a person or an agent who wants to adopt it: install, theme, guides, every component and template, the changelog.
 3. **Agent legibility**: the manifest, `llms.txt`, `llms-full.txt` and a consumer `AGENTS.md` at stable URLs (`01-vision-and-goals.md` §13.1).
 4. A site that **uses DBM itself**: its chrome is DBM components and tokens, so the docs site is the system's largest real test.
@@ -18,9 +18,9 @@ Out for now: a blog, analytics, a brand switcher or a text-direction switch on t
 
 ## 3. Phases
 
-The phases here are the docs website's own. They sit inside the roadmap's Phase 8 (manifest and publish) and Phase 9 (surface expansion), in `01-vision-and-goals.md` §13.
+The phases here are the docs website's own. They sit inside the roadmap's Phase 9 (surface expansion, `01-vision-and-goals.md` §13); Phase 8 (manifest and publish) is done, so nothing here waits on it.
 
-### Phase A — skeleton, landing page and pipeline (starts now; needs nothing unbuilt)
+### Phase A — skeleton, landing page and pipeline (the next work; needs nothing unbuilt)
 
 **Order within it:** the repository settings, the community files and a minimal Pages deployment come first (they prove the pipeline and settle the subpath and redirect checks). **Roadmap Phase 7, the first templates, then runs before the landing page**, because the live showcase should be built from real compositions such as a dashboard shell (`01-vision-and-goals.md` §13). The `apps/docs` skeleton and the landing page follow it.
 
@@ -32,23 +32,23 @@ The phases here are the docs website's own. They sit inside the roadmap's Phase 
 | `apps/docs` skeleton | An Astro app with the React and MDX integrations builds, with the layout, the navigation and light, dark and system mode, using DBM components and tokens | Not started |
 | Combined Pages workflow | One workflow builds the docs site and `storybook-static` and publishes docs at `/` and Storybook at `/storybook/` on every push to `main` | Partly: Storybook and a placeholder are published; the docs build joins when the skeleton exists |
 | Storybook subpath check | Storybook works under `/storybook/`: assets, the iframe, the Getting started page's index fetch, deep links | Done for assets, the index fetch and the HTTP to HTTPS redirect; deep links to check once the docs site links in |
-| Landing page | Built from the brief in [03-landing-page-brief.md](./03-landing-page-brief.md) over several review rounds, with the not-yet-published states labelled | Not started |
-| Docs shell pages | Placeholders with honest "in active development, not yet published" states for Installation and For AI agents | Not started |
+| Landing page | Built from the brief in [03-landing-page-brief.md](./03-landing-page-brief.md) over several review rounds, with what is not built (`llms.txt`, an MCP server) labelled, and the real install line (the packages are on npm at `0.1.x`) | Not started |
+| Docs shell pages | Getting started with the real Installation, and For AI agents describing the manifest, `tokens.json` and `AGENTS.md`; `llms.txt` and an MCP server labelled "in active development" | Not started |
 | Search | Pagefind index built and wired into the layout | Not started |
 | Quality gates | Link check and an accessibility scan of the key pages run in CI | Not started |
 | Storybook trimmed | Getting started becomes a pointer to the docs website; the guides move (the move waits until their pages exist on the site), each leaving a "moved" page; `/storybook/` is marked not to be indexed | Not started |
 
-### Phase B — after Phase 8 (manifest and first publish; Phase 8 is done)
+### Phase B — content from the published packages (follows the Phase A skeleton; Phase 8 is done)
 
 | Deliverable | Done when |
 |---|---|
-| Manifest at a stable URL | `/manifest.json` is built or copied from `packages/manifest` |
+| Manifest at a stable URL | `/manifest.json` is copied from the built components package (`@dbm-system/components/manifest.json`) |
 | Component pages | `/components/<name>` for every component, props and variants from the manifest, prose from MDX, a link to its Storybook page |
 | Component coverage check | CI fails when a component in the manifest has no docs page |
-| Installation | The Installation page is real, once the consumer stylesheet and token loading decision is made (`01` §12) |
-| Agent files | `llms.txt`, `llms-full.txt` and the consumer `AGENTS.md` are published |
-| Changelog | Generated from Changesets, under Docs |
-| Release-version builds | A release build installs the published packages and tests them in a fresh app |
+| Installation | The Installation page is real: the install line, the stylesheet and a theme, the fonts ([ADR-0175](../adr/0175-a-consumer-imports-an-explicit-stylesheet-and-one-bundled-theme-file-and-supplies-the-fonts-over-implicit-css-or-shipped-fonts.md)); the content already exists in Storybook's Getting started page and the package README |
+| Agent files | `llms.txt` and `llms-full.txt` are generated from the docs, and the consumer `AGENTS.md` (already shipped in the components package) is linked or copied |
+| Changelog | Reads each package's `CHANGELOG.md`, which the release workflow writes, under Docs |
+| Release-version builds | `check-fresh-app` already tests the packed packages in a fresh app on every change; a build against the published versions after each release is the addition |
 
 ### Phase C — 1.0
 
@@ -56,7 +56,7 @@ Versioned docs under `/v1/`, `/v2/` and so on; a build that deploys from release
 
 ## 4. What blocks what
 
-- Component pages, Installation, the agent files and the changelog **no longer wait on Phase 8**: the manifest, the publish pipeline and the consumer CSS are built, so the packages are published at `0.1.x`; `llms.txt` and the docs pages themselves are not.
+- Component pages, Installation, the agent files and the changelog need the Phase A skeleton, not Phase 8: the manifest, the publish pipeline and the consumer CSS are built and the packages are published at `0.1.x`. `llms.txt` and the docs pages themselves are not built.
 - The skeleton, the landing page, the pipeline, the community files and the domain **wait on nothing** and can start at once.
 - Moving the guides off Storybook waits on their pages existing on the site; until then Storybook's pages stay, so nothing disappears.
 

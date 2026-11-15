@@ -28,7 +28,7 @@ No invented metrics, testimonials, logos, download counts or comparisons. No oth
 | 1 | **Hero** | The tagline, "The agentic component library for people and the AI agents that build with them.", and a sentence of support; an install snippet with the real `pnpm add` line; calls to action to Get started, Components and Storybook. A quiet, high-quality visual built from real DBM components and tokens. |
 | 2 | **Live component showcase** | Real components on the page, in a composed, designed arrangement (a form, a data table, a toast, a command palette), themed by the reader's mode. Interactive, not screenshots. |
 | 3 | **Theming and accessibility** | The token story: one semantic layer, four themes, no component changes. The accessibility claim with the known exceptions, linked. **The two brands are shown side by side with live Storybook stories, one frame per brand** (Storybook takes the brand in its URL, for example `/storybook/iframe.html?id=<story>&globals=brand:emerald`), loaded lazily so they cost nothing until scrolled to. |
-| 4 | **Built for agents** | The manifest, `llms.txt` and `AGENTS.md`, each labelled in development. Why an agent-legible system matters. |
+| 4 | **Built for agents** | The manifest, `tokens.json` and `AGENTS.md`, shown as available, and `llms.txt` labelled in development. Why an agent-legible system matters. |
 | 5 | **Where to next** | Docs, Components, Templates, Storybook, GitHub. A calm closing call to action. |
 | 6 | **Footer** | Navigation, the licence (MIT), the repository, Issues, the accessibility statement. |
 
