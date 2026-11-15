@@ -19,7 +19,7 @@ export interface IconButtonProps extends Omit<
   // silently erased by) this component's own computed value.
   "aria-label" | "aria-pressed"
 > {
-  /** The icon to render — a component reference, not a string name. */
+  /** The icon to render — a component reference, not a string name. Drawn inside the slotted element with `asChild`. */
   icon: PhosphorIcon;
   /**
    * Visual style, signaling emphasis/hierarchy: `primary` for the one main action, down to `ghost` for the quietest, and
@@ -45,8 +45,8 @@ export interface IconButtonProps extends Omit<
    * both. The box is taller and as wide as the caption needs, never narrower than the plain square of its `size`; a pressed
    * toggle draws the caption bold without changing the box's width. Keep it to a word or two (one line, never wrapped).
    * `aria-label` stays required, since without the caption (below `hideLabelBelow`) the button is icon-only, and in
-   * development a warning fires if the caption isn't part of it (WCAG 2.5.3). Not drawn with `asChild` (Radix `Slot` takes
-   * one child), and `rounded` is ignored while it shows; both warn in development. The caption is a `text.*` colour,
+   * development a warning fires if the caption isn't part of it (WCAG 2.5.3). With `asChild` it is drawn inside the slotted
+   * element, unless that element has content of its own; `rounded` is ignored while it shows; both warn in development. The caption is a `text.*` colour,
    * following the variant and `tone` as `Button`'s label does.
    */
   label?: string;
@@ -58,9 +58,10 @@ export interface IconButtonProps extends Omit<
   hideLabelBelow?: Exclude<Breakpoint, "base">;
   /**
    * Shows a spinner in place of the icon and disables interaction while
-   * `true`. When `asChild` is also set, the slotted element can't take a
-   * native `disabled` attribute, so this instead applies `aria-disabled`
-   * plus matching dimmed styling and blocks its click handler.
+   * `true`. When `asChild` is also set, the spinner is drawn inside the
+   * slotted element (unless it has content of its own), and since that
+   * element can't take a native `disabled` attribute, this applies
+   * `aria-disabled` plus matching dimmed styling and blocks its click handler.
    * @default false
    */
   isLoading?: boolean;
@@ -107,7 +108,12 @@ export interface IconButtonProps extends Omit<
   onPressedChange?: (pressed: boolean) => void;
   /**
    * Merge props onto the single child element instead of rendering a
-   * `<button>` (via Radix `Slot`).
+   * `<button>` (via Radix `Slot`), for a link that looks like an icon button:
+   * `<IconButton asChild icon={…} aria-label="Name"><a href="…" aria-label="Name" /></IconButton>`
+   * (the same name on the link satisfies lint rules that check a link for content).
+   * The icon (and the spinner and caption) are drawn inside that element. If
+   * the element has content of its own, that content is used as it is and
+   * `icon` and `label` are not drawn.
    * @default false
    */
   asChild?: boolean;

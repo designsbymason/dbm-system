@@ -96,7 +96,8 @@ control and the icon decorates it.
   (a speech-control user says what they see). A development warning says when it doesn't.
 - The caption is text, so it takes a `text.*` colour that follows the variant, the tone and the pressed state (contrast checked in all
   four themes); a pressed toggle draws it bold without changing the box's width.
-- Not drawn with `asChild` (the slotted child is yours), and `rounded` has no effect while it shows; both warn in development. A `tooltip`
+- With `asChild` it is drawn inside the slotted element (unless that element has content of its own), and `rounded` has no effect
+  while it shows; both cases warn in development. A `tooltip`
   would repeat an always-visible caption, so it warns too.
 
 <Canvas of={IconButtonStories.WithCaption} />
@@ -177,10 +178,10 @@ convenience for sighted users, never the only name — and nothing opens on a di
 </Callout>
 <Callout tone="danger" title="Don't">
 
-- Don't pass `icon` expecting it to render in `asChild` mode — Radix `Slot` always renders
-  `children` directly, and `icon` has no fallback role there (it's still required by the type,
-  since it's the only accessible-icon path outside `asChild`). `IconButton` warns once in
-  development when this happens.
+- Don't put content inside an `asChild` element and expect `icon` (or `label`, or the spinner) to
+  be drawn as well: an element with content of its own is used as it is. Leave it empty
+  (`<a href="…" aria-label="…" />`, with the same name, which lint rules that check a link for
+  content read) and `IconButton` draws the icon inside it.
 - Don't set `defaultPressed` without pairing it with a real `onPressedChange` if you also intend to
   read the pressed state elsewhere — an uncontrolled toggle manages its own internal state, so a
   parent that needs to know the current value should switch to the controlled `pressed` +
@@ -265,7 +266,7 @@ convenience for sighted users, never the only name — and nothing opens on a di
   onPressedChange={setIsFavorited}
 />
 <IconButton asChild icon={PlusIcon} aria-label="Add item">
-  <a href="/add"><PlusIcon /></a>
+  <a href="/add" aria-label="Add item" />
 </IconButton>
 <IconButton icon={TrashIcon} aria-label="Delete" form="item-form" name="delete-action" onFocus={trackDeleteFocus} />
 ```

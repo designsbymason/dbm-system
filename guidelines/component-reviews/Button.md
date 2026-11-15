@@ -47,3 +47,7 @@ At explicit direction ([ADR-0097](../adr/0097-button-and-iconbutton-take-a-tone-
 ## Hover fill of `secondary` and `tertiary`, 2026-10-19 (visual change; stays Finalized)
 
 At explicit direction: the hover fill of the `secondary` and `tertiary` variants is the plain tint, `bg.brand-subtle` (`bg.neutral-subtle` in the neutral tone), not the `-hover` step of it, so a hovered button reads as the same tint a hovered `Navbar` link or menu item takes. `ghost` keeps `bg.brand-subtle-hover` (`bg.neutral-subtle-hover`) since it already rests on the plain tint. Pairings are unchanged from the rest-state ones in `03-token-system-spec.md` (`text.brand` and `text.secondary` on the tint). A real-pointer check (`HoverFills`) reads the hover fill of every tone and variant. Same change in [IconButton](IconButton.md).
+
+## Icons and the spinner drawn inside an `asChild` element, 2026-11-15 (additive; stays Finalized)
+
+At explicit direction ([ADR-0218](../adr/0218-an-aschild-component-draws-its-own-icons-spinner-and-caption-inside-the-slotted-element-with-radix-slottable-over-dropping-them-or-asking-the-consumer-to-put-them-in-the-child.md)): with `asChild`, `leadingIcon`, `trailingIcon` and the loading spinner are drawn inside the slotted element, around its own content, with Radix `Slottable`. They were dropped before, with a development warning, which is removed. A new story, "asChild with icons", shows a link with an icon and checks both icons are inside it. Found while building the docs website, whose header and hero need links that look like buttons with icons.

@@ -1,7 +1,7 @@
 import { cx } from "@dbm-system/utils";
-import { Slot } from "@radix-ui/react-slot";
+import { Slot, Slottable } from "@radix-ui/react-slot";
 import { forwardRef, useRef } from "react";
-import type { MouseEvent } from "react";
+import type { MouseEvent, ReactNode } from "react";
 import { Icon } from "../Icon";
 import type { IconTone } from "../Icon";
 import styles from "./Button.module.css";
@@ -117,13 +117,11 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
     // an <a> or any other element) — `aria-disabled` plus this handler
     // conveys and enforces the same state instead.
     const slottedDisabled = asChild && isDisabled;
-    // In `asChild` mode the rendered label always comes from `children`
-    // (the slotted element) regardless of `isLoading`/`loadingText` — the
-    // spinner/label-swap branch below is skipped entirely in that mode.
+    // In `asChild` mode the label is the slotted element's own content, regardless of `loadingText`; the icons and the
+    // spinner are still drawn, inside that element (see the render below).
     const effectiveLabel = !asChild && isLoading ? loadingText || children : children;
 
     const hasWarnedNoAccessibleNameRef = useRef(false);
-    const hasWarnedAsChildIgnoredPropsRef = useRef(false);
     if (process.env.NODE_ENV !== "production") {
       if (
         !effectiveLabel &&
@@ -134,16 +132,6 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
         hasWarnedNoAccessibleNameRef.current = true;
         console.warn(
           "Button: no accessible name — pass visible text as `children`, or `aria-label`/`aria-labelledby`, so assistive tech has something to announce. An icon-only button with no label is invisible to screen reader users.",
-        );
-      }
-      if (
-        asChild &&
-        (leadingIcon || trailingIcon || isLoading) &&
-        !hasWarnedAsChildIgnoredPropsRef.current
-      ) {
-        hasWarnedAsChildIgnoredPropsRef.current = true;
-        console.warn(
-          "Button: `leadingIcon`/`trailingIcon`/`isLoading` have no effect when `asChild` is set — icons and the loading spinner aren't rendered in that mode, since Radix `Slot` requires exactly one child. Remove `asChild`, or remove these props.",
         );
       }
     }
@@ -161,6 +149,18 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
       }
       onClickCapture?.(event);
     };
+
+    const decorate = (label: ReactNode) => (
+      <>
+        {isLoading ? (
+          <span className={styles.spinner} aria-hidden="true" />
+        ) : (
+          leadingIcon && <Icon icon={leadingIcon} size={iconSize} tone={iconTone} />
+        )}
+        {label}
+        {!isLoading && trailingIcon && <Icon icon={trailingIcon} size={iconSize} tone={iconTone} />}
+      </>
+    );
 
     return (
       <Component
@@ -196,21 +196,11 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
         )}
       >
         {asChild ? (
-          children
+          // `Slottable`'s render form clones the slotted element with what it returns as its content: the icons (or the
+          // spinner) are drawn around the element's own content, inside it, and the element is still the one rendered.
+          <Slottable child={children}>{decorate}</Slottable>
         ) : (
-          <>
-            {isLoading ? (
-              <span className={styles.spinner} aria-hidden="true" />
-            ) : (
-              leadingIcon && (
-                <Icon icon={leadingIcon} size={iconSize} tone={iconTone} />
-              )
-            )}
-            {effectiveLabel}
-            {!isLoading && trailingIcon && (
-              <Icon icon={trailingIcon} size={iconSize} tone={iconTone} />
-            )}
-          </>
+          decorate(effectiveLabel)
         )}
       </Component>
     );

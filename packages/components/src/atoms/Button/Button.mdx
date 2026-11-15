@@ -120,6 +120,10 @@ in a toolbar, a cancel beside a primary. Every variant but `destructive` follows
 
 <Canvas of={ButtonStories.AsChildDisabled} />
 
+### asChild with icons (a link with an icon)
+
+<Canvas of={ButtonStories.AsChildWithIcons} />
+
 ## Usage guidelines
 
 <div className="dbm-do-dont-grid">
@@ -141,8 +145,9 @@ in a toolbar, a cancel beside a primary. Every variant but `destructive` follows
   the point, and using them for the main CTA undermines the hierarchy `variant` is meant to convey.
 - Don't disable a button without also explaining why nearby (a validation message, a helper
   text) — a disabled control with no visible reason reads as broken, not intentional.
-- Don't pass both `leadingIcon`/`trailingIcon` and `asChild` expecting the icon to render — icons
-  and the loading spinner are skipped in `asChild` mode since `Slot` requires exactly one child.
+- Don't put an icon inside an `asChild` element by hand — pass `leadingIcon`/`trailingIcon` and
+  `Button` draws it inside the element, around the element's own content, sized and coloured like
+  any button's icon.
 
 </Callout>
 </div>
@@ -193,6 +198,7 @@ in a toolbar, a cancel beside a primary. Every variant but `destructive` follows
 <Button fullWidth>Continue</Button>
 <Button rounded>Get started</Button>
 <Button asChild><a href="/next">Continue</a></Button>
+<Button asChild trailingIcon={ArrowRightIcon}><a href="/docs">Read the docs</a></Button>
 <Button type="submit" data-testid="checkout-submit">Place order</Button>
 <Button form="checkout-form" name="action" onFocus={trackButtonFocus}>Continue</Button>
 ```

@@ -1,5 +1,6 @@
 import {
   ArrowRightIcon,
+  BookOpenIcon,
   CheckIcon,
   DownloadIcon,
   HeartIcon,
@@ -440,6 +441,23 @@ export const AsChildDisabled: Story = {
       <a href="/next">Continue as a link</a>
     </Button>
   ),
+};
+
+export const AsChildWithIcons: Story = {
+  name: "asChild with icons (a link with an icon)",
+  parameters: { docs: { source: { code: buttonSnippets.asChildWithIcons } } },
+  // The icons are drawn inside the link, around its own text, sized and coloured like any button's icons.
+  args: { leadingIcon: BookOpenIcon, trailingIcon: ArrowRightIcon },
+  render: (args) => (
+    <Button {...args} asChild>
+      <a href="/docs">Read the docs</a>
+    </Button>
+  ),
+  play: async ({ canvasElement }) => {
+    const link = within(canvasElement).getByRole("link", { name: "Read the docs" });
+    await expect(link).toHaveAttribute("href", "/docs");
+    await expect(link.querySelectorAll("svg")).toHaveLength(2);
+  },
 };
 
 export const ClickInteraction: Story = {

@@ -151,6 +151,41 @@ describe("IconButton", () => {
     expect(link.tagName).toBe("A");
   });
 
+  it("draws the icon inside an empty slotted element", () => {
+    render(
+      <IconButton asChild icon={TrashIcon} aria-label="Delete">
+        <a href="/delete" aria-label="Delete" />
+      </IconButton>,
+    );
+    const link = screen.getByRole("link", { name: "Delete" });
+    expect(link).toHaveAttribute("href", "/delete");
+    expect(link.querySelectorAll("svg")).toHaveLength(1);
+  });
+
+  it("uses the slotted element's own content as it is, so an icon put in the link is not drawn twice", () => {
+    render(
+      <IconButton asChild icon={TrashIcon} aria-label="Delete">
+        <a href="/delete">
+          <svg data-testid="own-icon" />
+        </a>
+      </IconButton>,
+    );
+    const link = screen.getByRole("link", { name: "Delete" });
+    expect(link.querySelectorAll("svg")).toHaveLength(1);
+    expect(screen.getByTestId("own-icon")).toBeInTheDocument();
+  });
+
+  it("draws the spinner inside an empty slotted element while loading", () => {
+    render(
+      <IconButton asChild icon={TrashIcon} aria-label="Delete" isLoading>
+        <a href="/delete" aria-label="Delete" />
+      </IconButton>,
+    );
+    const link = screen.getByRole("link", { name: "Delete" });
+    expect(link.querySelector("svg")).not.toBeInTheDocument();
+    expect(link.querySelector('span[aria-hidden="true"]')).toBeInTheDocument();
+  });
+
   it("calls onClick when clicked", () => {
     const onClick = vi.fn();
     render(
@@ -296,7 +331,19 @@ describe("IconButton", () => {
     });
 
     describe("what it warns about, in development", () => {
-      it("does not draw a caption with asChild, and warns", () => {
+      it("draws the caption inside an empty asChild element, without warning", () => {
+        const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+        render(
+          <IconButton asChild icon={HeartIcon} aria-label="Favorite" label="Favorite">
+            <a href="/favorites" aria-label="Favorite" />
+          </IconButton>,
+        );
+        expect(screen.getByRole("link").querySelector("[data-label]")).toHaveTextContent("Favorite");
+        expect(warn.mock.calls.some(([message]) => String(message).includes("`label` has no effect"))).toBe(false);
+        warn.mockRestore();
+      });
+
+      it("does not draw a caption when the asChild element has content of its own, and warns", () => {
         const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
         render(
           <IconButton asChild icon={HeartIcon} aria-label="Favorite" label="Favorite">
@@ -304,7 +351,7 @@ describe("IconButton", () => {
           </IconButton>,
         );
         expect(screen.getByRole("link").querySelector("[data-label]")).toBeNull();
-        expect(warn.mock.calls.some(([message]) => String(message).includes("`label` has no effect when `asChild`"))).toBe(true);
+        expect(warn.mock.calls.some(([message]) => String(message).includes("`label` has no effect when the `asChild` element has content"))).toBe(true);
         warn.mockRestore();
       });
 
@@ -749,11 +796,11 @@ describe("IconButton", () => {
       consoleWarnSpy.mockRestore();
     });
 
-    it("warns once in development when asChild is set (icon/isLoading's spinner have no effect there)", () => {
+    it("does not warn when asChild is set: the icon is drawn inside the element, or the element's own content is used", () => {
       const consoleWarnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
       const { rerender } = render(
         <IconButton asChild icon={TrashIcon} aria-label="Delete">
-          <a href="/delete">Delete</a>
+          <a href="/delete" aria-label="Delete" />
         </IconButton>,
       );
       rerender(
@@ -762,10 +809,7 @@ describe("IconButton", () => {
         </IconButton>,
       );
 
-      expect(consoleWarnSpy).toHaveBeenCalledTimes(1);
-      expect(consoleWarnSpy).toHaveBeenCalledWith(
-        expect.stringContaining("has no effect when `asChild` is set"),
-      );
+      expect(consoleWarnSpy).not.toHaveBeenCalled();
       consoleWarnSpy.mockRestore();
     });
 

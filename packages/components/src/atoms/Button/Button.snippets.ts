@@ -59,6 +59,12 @@ export const buttonSnippets = {
 <Button asChild disabled>
   <a href="/next">Continue as a link</a>
 </Button>`,
+
+  asChildWithIcons: `{/* With asChild, the icons are drawn inside your element, around its own content.
+    BookOpenIcon and ArrowRightIcon come from @dbm-system/icons. */}
+<Button asChild leadingIcon={BookOpenIcon} trailingIcon={ArrowRightIcon}>
+  <a href="/docs">Read the docs</a>
+</Button>`,
 } as const;
 
 // The Playground's icon controls hand the builder an icon — the component itself, or the

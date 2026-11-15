@@ -73,21 +73,17 @@ export const iconButtonSnippets = {
   onPressedChange={handlePressedChange}
 />`,
 
-  asChild: `{/* asChild renders the icon button's styling onto your own element — here a link — which holds the icon.
-    icon is a required prop but has no effect under asChild: put the icon in the child.
-    HeartIcon comes from @dbm-system/icons. */}
+  asChild: `{/* asChild renders the icon button onto your own element — here a link — and draws the icon inside it.
+    Leave the link empty (if it has content of its own, that content is used instead), and give it the same
+    aria-label, which lint rules that check a link for content read. HeartIcon comes from @dbm-system/icons. */}
 <IconButton asChild icon={HeartIcon} aria-label="Favorite">
-  <a href="/favorite">
-    <HeartIcon />
-  </a>
+  <a href="/favorite" aria-label="Favorite" />
 </IconButton>`,
 
   asChildDisabled: `{/* On an asChild icon button, disabled sets aria-disabled and blocks the click — an <a> has no native
     disabled attribute. HeartIcon comes from @dbm-system/icons. */}
 <IconButton asChild disabled icon={HeartIcon} aria-label="Favorite">
-  <a href="/favorite">
-    <HeartIcon />
-  </a>
+  <a href="/favorite" aria-label="Favorite" />
 </IconButton>`,
 } as const;
 

@@ -446,15 +446,32 @@ describe("Button", () => {
     });
   });
 
-  it("renders the single child via Slot when asChild is set, without icons", () => {
+  it("renders the single child via Slot when asChild is set, with its icons drawn inside it", () => {
     render(
-      <Button asChild leadingIcon={WalletIcon}>
+      <Button asChild leadingIcon={WalletIcon} trailingIcon={WalletIcon}>
         <a href="/next">Continue</a>
       </Button>,
     );
     const link = screen.getByRole("link", { name: "Continue" });
     expect(link.tagName).toBe("A");
+    expect(link).toHaveAttribute("href", "/next");
+    // Leading icon, the link's own text, trailing icon: all inside the one link.
+    expect(link.querySelectorAll("svg")).toHaveLength(2);
+    expect(link.firstElementChild?.tagName.toLowerCase()).toBe("svg");
+    expect(link.lastElementChild?.tagName.toLowerCase()).toBe("svg");
+    expect(link).toHaveTextContent("Continue");
+  });
+
+  it("draws the spinner inside the slotted element while loading, and keeps its own label", () => {
+    render(
+      <Button asChild isLoading leadingIcon={WalletIcon} loadingText="Saving…">
+        <a href="/next">Continue</a>
+      </Button>,
+    );
+    const link = screen.getByRole("link", { name: "Continue" });
+    expect(link.querySelector('span[aria-hidden="true"]')).toBeInTheDocument();
     expect(link.querySelector("svg")).not.toBeInTheDocument();
+    expect(link).toHaveTextContent("Continue");
   });
 
   it("removes the default anchor underline in asChild mode", () => {
@@ -529,23 +546,20 @@ describe("Button", () => {
       consoleWarnSpy.mockRestore();
     });
 
-    it("warns once in development when asChild is combined with leadingIcon/trailingIcon/isLoading", () => {
+    it("does not warn when asChild is combined with leadingIcon/trailingIcon/isLoading, which it now draws", () => {
       const consoleWarnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
       const { rerender } = render(
-        <Button asChild leadingIcon={WalletIcon}>
+        <Button asChild leadingIcon={WalletIcon} trailingIcon={WalletIcon}>
           <a href="/next">Continue</a>
         </Button>,
       );
       rerender(
-        <Button asChild leadingIcon={WalletIcon}>
-          <a href="/next">Continue, still</a>
+        <Button asChild isLoading>
+          <a href="/next">Continue</a>
         </Button>,
       );
 
-      expect(consoleWarnSpy).toHaveBeenCalledTimes(1);
-      expect(consoleWarnSpy).toHaveBeenCalledWith(
-        expect.stringContaining("have no effect when `asChild` is set"),
-      );
+      expect(consoleWarnSpy).not.toHaveBeenCalled();
       consoleWarnSpy.mockRestore();
     });
 

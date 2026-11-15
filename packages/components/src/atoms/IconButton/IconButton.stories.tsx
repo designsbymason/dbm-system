@@ -491,9 +491,8 @@ export const AsChild: Story = {
   // class, and same fix, as Button's own `AsChild` story.
   render: (args) => (
     <IconButton {...args} asChild>
-      <a href="/favorite">
-        <HeartIcon />
-      </a>
+      {/* The same name on the link itself: lint rules that check a link for content (jsx-a11y) read the element as written. */}
+      <a href="/favorite" aria-label={args["aria-label"]} />
     </IconButton>
   ),
 };
@@ -507,9 +506,8 @@ export const AsChildDisabled: Story = {
   args: { disabled: true },
   render: (args) => (
     <IconButton {...args} asChild>
-      <a href="/favorite">
-        <HeartIcon />
-      </a>
+      {/* The same name on the link itself: lint rules that check a link for content (jsx-a11y) read the element as written. */}
+      <a href="/favorite" aria-label={args["aria-label"]} />
     </IconButton>
   ),
 };

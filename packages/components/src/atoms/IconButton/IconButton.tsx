@@ -1,7 +1,7 @@
 import { cx } from "@dbm-system/utils";
-import { Slot } from "@radix-ui/react-slot";
-import { forwardRef, useRef, useState } from "react";
-import type { MouseEvent } from "react";
+import { Slot, Slottable } from "@radix-ui/react-slot";
+import { forwardRef, isValidElement, useRef, useState } from "react";
+import type { MouseEvent, ReactNode } from "react";
 import type { ButtonSize, ButtonVariant } from "../Button/Button.types";
 import { useButtonGroup } from "../Button/buttonGroupContext";
 import { Icon } from "../Icon";
@@ -102,10 +102,14 @@ export const IconButton = forwardRef<HTMLButtonElement, IconButtonProps>(
     // `destructive` is always danger-coloured, so the tone (its own or the group's) has no effect on it.
     const neutral = (toneProp ?? group?.tone ?? "brand") === "neutral" && variant !== "destructive";
     const size = sizeProp ?? group?.size ?? "md";
-    // A caption is drawn only on a real `<button>` (Radix `Slot` takes one child), and a pill or circle has no shape for it,
-    // so with one `rounded` has no effect.
+    // With `asChild` the icon, the spinner and the caption are drawn inside the slotted element (Radix `Slottable`), unless
+    // that element brings content of its own: then its content is used as it is, so code that put the icon in the link
+    // itself (the only way before) still draws one icon, not two.
+    const slottedHasContent = asChild && isValidElement<{ children?: ReactNode }>(children) && hasContent(children.props.children);
+    const drawsContent = !slottedHasContent;
+    // A pill or circle has no shape for a caption, so with one `rounded` has no effect.
     const hasLabel = label !== undefined && label !== "";
-    const labelled = hasLabel && !asChild;
+    const labelled = hasLabel && drawsContent;
     const rounded = (roundedProp ?? group?.rounded ?? false) && !labelled;
     // Naming/shape mirrors Radix `Toggle`'s own `pressed`/`defaultPressed`/
     // `onPressedChange` (this system's established convention for
@@ -138,7 +142,6 @@ export const IconButton = forwardRef<HTMLButtonElement, IconButtonProps>(
     const effectiveAriaLabel = isLoading ? loadingLabel || ariaLabel : ariaLabel;
 
     const hasWarnedNoAccessibleNameRef = useRef(false);
-    const hasWarnedAsChildIgnoredPropsRef = useRef(false);
     const hasWarnedAsChildPressedRef = useRef(false);
     const hasWarnedLabelIgnoredRef = useRef(false);
     const hasWarnedLabelNameRef = useRef(false);
@@ -153,16 +156,10 @@ export const IconButton = forwardRef<HTMLButtonElement, IconButtonProps>(
           "IconButton: no accessible name — pass `aria-label` or `aria-labelledby` so assistive tech has something to announce. An icon-only button with no label is invisible to screen reader users.",
         );
       }
-      if (asChild && !hasWarnedAsChildIgnoredPropsRef.current) {
-        hasWarnedAsChildIgnoredPropsRef.current = true;
-        console.warn(
-          "IconButton: `icon` has no effect when `asChild` is set — Radix `Slot` always renders `children` directly, and `icon` has no fallback role in that mode (though it's still a required prop, since it's the only accessible-icon path outside `asChild`). `isLoading`'s spinner is skipped the same way, though its dimming/`aria-disabled` state still applies. Render the icon as part of the slotted child instead.",
-        );
-      }
       if (hasLabel && !hasWarnedLabelIgnoredRef.current) {
         const ignored =
-          asChild
-            ? "`label` has no effect when `asChild` is set — Radix `Slot` renders the one child you give it, so there is nowhere to draw a caption. Put the caption in the slotted child, or remove `asChild`."
+          slottedHasContent
+            ? "`label` has no effect when the `asChild` element has content of its own — that content is used as it is. Leave the element empty to have the icon and the caption drawn inside it, or remove `label`."
             : roundedProp ?? group?.rounded
               ? "`rounded` has no effect while a `label` is shown — a pill or circle has no shape for an icon over a caption. Remove `rounded`, or `label`."
               : tooltip !== undefined && tooltip !== false && hideLabelBelow === undefined
@@ -220,6 +217,24 @@ export const IconButton = forwardRef<HTMLButtonElement, IconButtonProps>(
     const tooltipContent = tooltip === true ? effectiveAriaLabel : tooltip;
     const hasTooltip = tooltipContent !== undefined && tooltipContent !== null && tooltipContent !== false && tooltipContent !== "";
 
+    const content = (
+      <>
+        {isLoading ? (
+          <span className={styles.spinner} aria-hidden="true" />
+        ) : (
+          <Icon icon={icon} size={size} weight={isToggle && isPressed ? "fill" : "bold"} />
+        )}
+        {labelled && (
+          // For the eye only: the button's own name says it. `data-label` is read by the stylesheet to reserve the
+          // width of the bold form a pressed toggle draws, so the box doesn't change size when it is pressed. It stays
+          // while loading, so the box doesn't shrink to the square.
+          <span className={styles.label} data-label={label} aria-hidden="true">
+            {label}
+          </span>
+        )}
+      </>
+    );
+
     const button = (
       <Component
         ref={ref}
@@ -263,27 +278,11 @@ export const IconButton = forwardRef<HTMLButtonElement, IconButtonProps>(
         )}
       >
         {asChild ? (
-          children
+          // `Slottable`'s render form clones the slotted element with what it returns as its content, so the icon and the
+          // caption land inside the link (or whatever element was given), and that element is still the one rendered.
+          <Slottable child={children}>{(own: ReactNode) => (drawsContent ? content : own)}</Slottable>
         ) : (
-          <>
-            {isLoading ? (
-              <span className={styles.spinner} aria-hidden="true" />
-            ) : (
-              <Icon
-                icon={icon}
-                size={size}
-                weight={isToggle && isPressed ? "fill" : "bold"}
-              />
-            )}
-            {labelled && (
-              // For the eye only: the button's own name says it. `data-label` is read by the stylesheet to reserve the
-              // width of the bold form a pressed toggle draws, so the box doesn't change size when it is pressed. It stays
-              // while loading, so the box doesn't shrink to the square.
-              <span className={styles.label} data-label={label} aria-hidden="true">
-                {label}
-              </span>
-            )}
-          </>
+          content
         )}
       </Component>
     );
@@ -299,3 +298,9 @@ export const IconButton = forwardRef<HTMLButtonElement, IconButtonProps>(
 );
 
 IconButton.displayName = "IconButton";
+
+/** Whether a slotted element's own children draw anything (an empty string, `false` and `null` do not). */
+function hasContent(node: ReactNode): boolean {
+  if (Array.isArray(node)) return node.some(hasContent);
+  return node !== undefined && node !== null && node !== false && node !== true && node !== "";
+}

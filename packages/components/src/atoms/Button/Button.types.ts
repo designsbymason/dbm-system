@@ -44,12 +44,11 @@ export interface ButtonProps extends ComponentPropsWithoutRef<"button"> {
   /**
    * Shows a spinner in place of the leading icon (or before the label if
    * there is none), swaps in `loadingText`, and disables interaction while
-   * `true`. When `asChild` is also set, the spinner and label swap don't
-   * render at all — `Slot` always renders `children` directly, since it
-   * requires exactly one child — so only dimmed styling and
-   * `aria-disabled` (plus a blocked click handler, since the slotted
-   * element can't take a native `disabled` attribute) signal the loading
-   * state there.
+   * `true`. When `asChild` is also set, the spinner is drawn inside the
+   * slotted element but the label stays that element's own content (no
+   * `loadingText` swap), and since the element can't take a native
+   * `disabled` attribute, `aria-disabled`, dimmed styling and a blocked
+   * click handler signal the loading state.
    * @default false
    */
   isLoading?: boolean;
@@ -67,8 +66,10 @@ export interface ButtonProps extends ComponentPropsWithoutRef<"button"> {
   fullWidth?: boolean;
   /**
    * Merge props onto the single child element instead of rendering a
-   * `<button>` (via Radix `Slot`). Icons and the loading spinner are not
-   * rendered in this mode, since `Slot` requires exactly one child.
+   * `<button>` (via Radix `Slot`), for a link that looks like a button:
+   * `<Button asChild leadingIcon={…}><a href="/next">Continue</a></Button>`.
+   * The icons and the loading spinner are drawn inside that element, around
+   * its own content, which is the label.
    * @default false
    */
   asChild?: boolean;
