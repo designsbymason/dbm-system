@@ -28,7 +28,7 @@ The plan, structure and supporting references for the DBM System documentation w
 | [0214](../adr/0214-storybook-keeps-its-own-interface-and-is-bridged-to-the-docs-site-by-a-shared-mode-shared-fonts-view-transitions-and-links-both-ways-over-an-iframe-workshop-page-or-an-injected-header.md) | The Storybook bridge |
 | [0215](../adr/0215-the-docs-site-and-storybook-self-host-nunito-and-lora-over-loading-them-from-google-fonts.md) | Self-hosted fonts for the site and Storybook |
 | [0216](../adr/0216-component-pages-render-the-storybook-stories-as-their-live-examples-through-portable-stories-over-hand-written-examples-or-story-iframes.md) | Live examples from the Storybook stories |
-| [0217](../adr/0217-the-docs-sites-illustrations-are-geometric-svg-drawn-in-code-from-the-tokens-over-commissioned-artwork-or-raster-images.md) | Illustrations drawn in code from the tokens |
+| [0217](../adr/0217-the-docs-sites-illustrations-are-geometric-svg-and-css-3d-compositions-drawn-in-code-from-the-tokens-over-commissioned-artwork-webgl-or-raster-images.md) | Illustrations: geometric SVG and CSS 3D compositions of live components, drawn from the tokens; no WebGL |
 
 ## Rules for this folder
 

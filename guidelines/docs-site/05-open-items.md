@@ -29,7 +29,10 @@ Recorded here so they are not re-asked; the detail is in the file named.
 | Milestone order | Foundation, docs core, components, then the landing page, then guides and templates, then agents and polish | [01-plan.md](./01-plan.md) §3 |
 | Animation | CSS first; no GSAP; Motion only for an interaction CSS cannot do, agreed in a review round | [ADR-0212](../adr/0212-the-docs-site-animates-with-css-scroll-timelines-and-view-transitions-and-adds-motion-only-for-what-css-cannot-do-over-gsap-or-a-javascript-animation-library-by-default.md) |
 | Motion guardrails | Reduced motion gives a static, complete page; content before script; no scroll-jacking; motion tokens; reveals once on docs pages; `@supports` around scroll animation | [02-structure.md](./02-structure.md) §5 |
-| Illustrations | Geometric SVG drawn in code from the tokens | [ADR-0217](../adr/0217-the-docs-sites-illustrations-are-geometric-svg-drawn-in-code-from-the-tokens-over-commissioned-artwork-or-raster-images.md) |
+| Design direction | "An annotated instrument": purple as ink, Lora headlines with Nunito and mono notes, editorial asymmetry, sparing annotation, restrained motion, an avoid list; professional first, personality in three places | [02-structure.md](./02-structure.md) §3 |
+| Home page | Nine sections from the hero's CSS 3D stack to Where next, numbers generated at build, three signature scroll moments | [03-landing-page-brief.md](./03-landing-page-brief.md) §3 and §5 |
+| Human / Agent view | On the home page only, in the Built for agents section; elsewhere Copy page and the Markdown copies do that job | [03-landing-page-brief.md](./03-landing-page-brief.md) §3 |
+| Illustrations and 3D | Geometric SVG and CSS 3D compositions of live components, in the brand's tonal range with the neutrals; no WebGL | [ADR-0217](../adr/0217-the-docs-sites-illustrations-are-geometric-svg-and-css-3d-compositions-drawn-in-code-from-the-tokens-over-commissioned-artwork-webgl-or-raster-images.md) |
 | Storybook and the site | Storybook keeps its interface; shared mode, fonts, transitions, logo and links both ways; the bridge's Storybook changes are part of M0 | [ADR-0214](../adr/0214-storybook-keeps-its-own-interface-and-is-bridged-to-the-docs-site-by-a-shared-mode-shared-fonts-view-transitions-and-links-both-ways-over-an-iframe-workshop-page-or-an-injected-header.md) |
 | Fonts | Self-hosted Nunito and Lora for the site and Storybook | [ADR-0215](../adr/0215-the-docs-site-and-storybook-self-host-nunito-and-lora-over-loading-them-from-google-fonts.md) |
 | Live examples | The Storybook stories, rendered with portable stories | [ADR-0216](../adr/0216-component-pages-render-the-storybook-stories-as-their-live-examples-through-portable-stories-over-hand-written-examples-or-story-iframes.md) |
@@ -54,8 +57,8 @@ Each of these is decided when the work it waits on starts.
 | How a story that needs Storybook-only parts gets a site-safe form | M2 |
 | How the changelog page reads each package's `CHANGELOG.md` | M5 (the files exist) |
 | How social images are generated | M5 |
-| Whether the illustrations need decorative tokens beyond the semantic ones | The first illustrations (M1); raised with the maintainer if so |
-| The hero's visual concept and the page's length | The first landing review (M3) |
+| Whether the brand tonal range needs decorative tokens beyond the semantic ones for the 3D stack and illustrations | The design-direction sample (M0); raised with the maintainer if so |
+| The page's length (nine sections, or seven with 7 and 8 folded in) | The first landing review (M3) |
 | A brand switch on component examples | After M2 |
 
 ## 4. Gaps this plan depends on

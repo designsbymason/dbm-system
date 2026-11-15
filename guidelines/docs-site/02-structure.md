@@ -1,6 +1,6 @@
 # Docs website — structure
 
-**Decided in:** [ADR-0170](../adr/0170-the-docs-website-is-an-astro-app-with-react-islands-deployed-with-storybook-as-one-github-pages-site-on-the-apex-of-dbm-system-com.md), [ADR-0171](../adr/0171-docs-website-content-comes-from-the-manifest-for-facts-and-mdx-for-prose-and-the-guides-move-out-of-storybook-which-keeps-the-component-pages.md) and [ADR-0212](../adr/0212-the-docs-site-animates-with-css-scroll-timelines-and-view-transitions-and-adds-motion-only-for-what-css-cannot-do-over-gsap-or-a-javascript-animation-library-by-default.md) to [ADR-0217](../adr/0217-the-docs-sites-illustrations-are-geometric-svg-drawn-in-code-from-the-tokens-over-commissioned-artwork-or-raster-images.md). The plan is [01-plan.md](./01-plan.md).
+**Decided in:** [ADR-0170](../adr/0170-the-docs-website-is-an-astro-app-with-react-islands-deployed-with-storybook-as-one-github-pages-site-on-the-apex-of-dbm-system-com.md), [ADR-0171](../adr/0171-docs-website-content-comes-from-the-manifest-for-facts-and-mdx-for-prose-and-the-guides-move-out-of-storybook-which-keeps-the-component-pages.md) and [ADR-0212](../adr/0212-the-docs-site-animates-with-css-scroll-timelines-and-view-transitions-and-adds-motion-only-for-what-css-cannot-do-over-gsap-or-a-javascript-animation-library-by-default.md) to [ADR-0217](../adr/0217-the-docs-sites-illustrations-are-geometric-svg-and-css-3d-compositions-drawn-in-code-from-the-tokens-over-commissioned-artwork-webgl-or-raster-images.md). The plan is [01-plan.md](./01-plan.md).
 
 ## 1. Navigation
 
@@ -62,7 +62,21 @@ Three page types, all on **`PageShell`**, the shipped shell for a site without a
 | **Article** | Docs, guides, Resources, AI agents, Templates | The Documentation Page recipe: a sidebar column (`Sidebar`), the article, an outline (`TableOfContents`) that becomes a sticky row of pills below `lg`, one menu drawer on a phone |
 | **Reference** | Component, hook and function pages | The Article layout with a component header and example frames |
 
-**Design language.** Generous space; a strong type hierarchy (Nunito for the interface, Lora for editorial moments, the `4xl` to `6xl` steps for display); alignment to the spacing scale; surfaces from the shadow and radius scales; light and dark designed together. Site-only CSS uses semantic tokens only.
+**Design direction: "an annotated instrument".** The site reads as a precise instrument, documented: editorial and technical, like a type specimen book crossed with an engineering drawing. Professional and highly finished first; the personality lives in three controlled places, the annotation motif, the editorial type and the home page's Human / Agent split ([03-landing-page-brief.md](./03-landing-page-brief.md) §4).
+
+| Element | Rule |
+|---|---|
+| Colour | **Purple as ink**: neutral surfaces throughout; purple only for emphasis, links, focus, annotations and the primary action. No gradient washes. Illustrations use the brand's tonal range with the neutrals ([ADR-0217](../adr/0217-the-docs-sites-illustrations-are-geometric-svg-and-css-3d-compositions-drawn-in-code-from-the-tokens-over-commissioned-artwork-webgl-or-raster-images.md)) |
+| Type | **Lora** (secondary) for display headlines and editorial moments, in the `4xl` to `6xl` steps; **Nunito** (primary) for the interface and body; the **mono** family for annotations, token labels and code |
+| Layout | **Editorial asymmetry** on the home page and Docs home: a 12-column grid with deliberate offsets, headlines in a narrow column, content and live components spanning wider, generous margins for notes. Docs and reference pages keep a calm three-column reading layout |
+| Section openers | A numbered label in mono ("01 — Tokens"), a Lora headline and one sentence; one idea per section |
+| Annotation motif | **Sparing**: hairline rules, dimension lines and token labels measured onto real components, used only in the home page's hero and token section, on hover in the showcase, and in component anatomy diagrams. A signature, not wallpaper |
+| Motion | **Restrained** (§5): a few signature moments on the home page; quiet once-only reveals elsewhere; docs pages barely move |
+| Surfaces | Space, alignment to the spacing scale, and the shadow and radius scales; light and dark designed together |
+| Voice | Plain, confident, specific; short sentences; no hype words |
+| Avoid | Gradient backgrounds, glassy blurred panels, glowing blobs, emoji, sparkle icons, abstract floating 3D shapes, a centred hero over a grid of identical icon cards, stock imagery, invented metrics or logos |
+
+Site-only CSS uses semantic tokens only; a missing token or component is proposed to the maintainer, never replaced by a one-off value.
 
 **Component page anatomy:**
 
@@ -118,11 +132,11 @@ CSS first; no GSAP; Motion only for an interaction CSS cannot express ([ADR-0212
 
 ## 6. Illustrations
 
-Geometric, diagram-style inline SVG drawn in code from the tokens ([ADR-0217](../adr/0217-the-docs-sites-illustrations-are-geometric-svg-drawn-in-code-from-the-tokens-over-commissioned-artwork-or-raster-images.md)): built from the radius scale, the spacing grid and real component silhouettes; every colour a semantic token, so one asset serves both modes; drawn, assembled and moved on scroll, never morphed; the final frame under reduced motion; decorative ones `aria-hidden`, informative ones with a `<title>` and `<desc>`.
+Geometric, diagram-style illustrations drawn in code from the tokens ([ADR-0217](../adr/0217-the-docs-sites-illustrations-are-geometric-svg-and-css-3d-compositions-drawn-in-code-from-the-tokens-over-commissioned-artwork-webgl-or-raster-images.md)), in two techniques: inline SVG (including isometric views) and CSS 3D compositions of live DBM components. Built from the radius scale, the spacing grid and real component silhouettes; coloured from the brand's tonal range and the neutrals, every colour a semantic token, so one asset serves both modes; drawn, assembled, separated and flattened on scroll, never morphed; the final, flat frame under reduced motion; decorative ones `aria-hidden`, informative ones with a `<title>` and `<desc>`. No WebGL.
 
 | Set | Pieces |
 |---|---|
-| Launch | The landing hero and its section pieces; a spot illustration per guide; the Docs home cards; the AI agents diagram; the 404; the social-image template |
+| Launch | The home page's CSS 3D stack (tokens, components, an application) and its section pieces; a spot illustration per guide; the Docs home cards; the AI agents diagram; the 404; the social-image template |
 | Later | A small glyph per component for a grid view of the index |
 
 ## 7. Agent files

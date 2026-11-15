@@ -33,7 +33,7 @@ Meanwhile CSS scroll-driven animations (`animation-timeline: scroll()` and `view
 
 ## Consequences
 - The site has no non-open-source dependency; ADR-0173's exception is gone, and its rule that every docs dependency is listed and justified still stands.
-- Scroll choreography is written by hand in CSS, and shape morphing is avoided by design (illustrations assemble and draw instead, [ADR-0217](./0217-the-docs-sites-illustrations-are-geometric-svg-drawn-in-code-from-the-tokens-over-commissioned-artwork-or-raster-images.md)).
+- Scroll choreography is written by hand in CSS, and shape morphing is avoided by design (illustrations assemble and draw instead, [ADR-0217](./0217-the-docs-sites-illustrations-are-geometric-svg-and-css-3d-compositions-drawn-in-code-from-the-tokens-over-commissioned-artwork-webgl-or-raster-images.md)).
 - Older browsers see the static page; the reduced-motion review covers what they see.
 - Browser support for scroll timelines is confirmed against MDN's compatibility data when the site's foundation is built.
 
