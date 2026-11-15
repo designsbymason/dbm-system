@@ -9,11 +9,11 @@ import SiteFooter from "../components/SiteFooter.astro";
 import Base from "../layouts/Base.astro";
 
 const palette = [
-  { role: "Paper", token: "bg.canvas", css: "--dbm-bg-canvas", use: "The page itself" },
+  { role: "Paper", token: "bg.neutral-subtle", css: "--dbm-bg-neutral-subtle", use: "The page itself; every text token clears 4.5:1 on it in both modes" },
   { role: "Sheet", token: "bg.surface", css: "--dbm-bg-surface", use: "Raised surfaces: plates, cards, the alternate section" },
   { role: "Ink", token: "text.primary", css: "--dbm-text-primary", use: "Headlines and body" },
   { role: "Graphite", token: "text.secondary", css: "--dbm-text-secondary", use: "Ledes, terms, captions" },
-  { role: "Rule", token: "border.default", css: "--dbm-border-default", use: "Table rows and plate edges, never decoration" },
+  { role: "Rule", token: "border.neutral", css: "--dbm-border-neutral", use: "Table rows and section edges, never decoration (border.default matches the paper in dark mode)" },
   { role: "Brand ink", token: "text.brand", css: "--dbm-text-brand", use: "Annotations, the logo, emphasis" },
   { role: "Brand fill", token: "bg.brand", css: "--dbm-bg-brand", use: "The one primary action per view" },
   { role: "Brand wash", token: "bg.brand-subtle", css: "--dbm-bg-brand-subtle", use: "Selected and quiet brand states; tonal depth in illustrations" },

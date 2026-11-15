@@ -66,7 +66,7 @@ Three page types, all on **`PageShell`**, the shipped shell for a site without a
 
 | Element | Rule |
 |---|---|
-| Colour | **Purple as ink**: neutral surfaces throughout; purple only for emphasis, links, focus, annotations and the primary action. No gradient washes. Illustrations use the brand's tonal range with the neutrals ([ADR-0217](../adr/0217-the-docs-sites-illustrations-are-geometric-svg-and-css-3d-compositions-drawn-in-code-from-the-tokens-over-commissioned-artwork-webgl-or-raster-images.md)) |
+| Colour | **Purple as ink**: neutral surfaces throughout, the page itself on `bg.neutral-subtle` (every text token clears 4.5:1 on it in both modes) with rules in `border.neutral` (`border.default` matches it in dark mode); purple only for emphasis, links, focus, annotations, the brand-toned icon buttons and the primary action. No gradient washes. Illustrations use the brand's tonal range with the neutrals ([ADR-0217](../adr/0217-the-docs-sites-illustrations-are-geometric-svg-and-css-3d-compositions-drawn-in-code-from-the-tokens-over-commissioned-artwork-webgl-or-raster-images.md)) |
 | Type | **Lora** (secondary) for display headlines and editorial moments, in the `4xl` to `6xl` steps; **Nunito** (primary) for the interface and body; the **mono** family for annotations, token labels and code |
 | Layout | **Editorial asymmetry** on the home page and Docs home: a 12-column grid with deliberate offsets, headlines in a narrow column, content and live components spanning wider, generous margins for notes. Docs and reference pages keep a calm three-column reading layout |
 | Section openers | A numbered label in mono ("01 — Tokens"), a Lora headline and one sentence; one idea per section |

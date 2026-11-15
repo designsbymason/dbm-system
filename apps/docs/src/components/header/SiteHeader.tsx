@@ -48,7 +48,7 @@ export function SiteHeader({ current, version }: SiteHeaderProps) {
         </Navbar.Action>
         <Navbar.Action>
           {/* IconButton draws the icon inside the empty link (ADR-0218); the link carries the same name for lint. */}
-          <IconButton asChild icon={GithubLogoIcon} aria-label="DBM System on GitHub" tooltip="GitHub" variant="ghost" tone="neutral" size="sm">
+          <IconButton asChild icon={GithubLogoIcon} aria-label="DBM System on GitHub" tooltip="GitHub" variant="ghost" size="sm">
             <a href="https://github.com/designsbymason/dbm-system" aria-label="DBM System on GitHub" />
           </IconButton>
         </Navbar.Action>

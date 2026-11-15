@@ -9,9 +9,11 @@
   --site-ink: var(--dbm-text-primary);
   --site-graphite: var(--dbm-text-secondary);
   --site-pencil: var(--dbm-text-tertiary);
-  --site-paper: var(--dbm-bg-canvas);
+  /* Paper is bg.neutral-subtle: every text token clears 4.5:1 on it in both modes (on bg.canvas, text.tertiary and
+     text.link fall below). border.default is the same colour as it in dark mode, so rules use border.neutral. */
+  --site-paper: var(--dbm-bg-neutral-subtle);
   --site-sheet: var(--dbm-bg-surface);
-  --site-rule: var(--dbm-border-default);
+  --site-rule: var(--dbm-border-neutral);
   --site-rule-strong: var(--dbm-border-strong);
   --site-accent: var(--dbm-text-brand);
   --site-shadow-plate: var(--dbm-shadow-light-lg);

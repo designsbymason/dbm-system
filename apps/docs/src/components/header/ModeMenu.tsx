@@ -30,7 +30,7 @@ export function ModeMenu() {
   return (
     <Menu>
       <Menu.Trigger asChild>
-        <IconButton ref={trigger} icon={icons[mode]} aria-label={`Colour mode: ${names[mode]}`} tooltip="Colour mode" variant="ghost" tone="neutral" size="sm" />
+        <IconButton ref={trigger} icon={icons[mode]} aria-label={`Colour mode: ${names[mode]}`} tooltip="Colour mode" variant="ghost" size="sm" />
       </Menu.Trigger>
       <Menu.Content align="end" aria-label="Colour mode">
         <Menu.RadioGroup value={mode} onValueChange={choose} aria-label="Colour mode">

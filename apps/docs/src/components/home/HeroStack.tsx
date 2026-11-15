@@ -2,7 +2,7 @@ import { Avatar, Badge, Button, Checkbox, Input, ProgressBar, Switch, Tag } from
 import type { CSSProperties } from "react";
 import styles from "./HeroStack.module.css";
 
-const swatches = ["bg-brand", "bg-brand-hover", "bg-brand-subtle", "border-brand", "text-primary", "bg-canvas"];
+const swatches = ["bg-brand", "bg-brand-hover", "bg-brand-subtle", "border-brand", "text-primary", "bg-neutral-subtle"];
 const spaces = [1, 2, 3, 4, 6, 8];
 const radii = ["sm", "md", "lg", "xl"];
 const invoices = [
