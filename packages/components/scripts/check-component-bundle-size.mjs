@@ -25,7 +25,7 @@
  * reason `check-foundations-token-coverage` sits there.
  */
 
-import { existsSync, readFileSync, rmSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { gzipSync } from "node:zlib";
@@ -38,6 +38,14 @@ import { build } from "tsup";
 const PACKAGE_ROOT = fileURLToPath(new URL("..", import.meta.url));
 const SRC_INDEX = join(PACKAGE_ROOT, "src/index.ts");
 const OUT_DIR = join(PACKAGE_ROOT, "dist/.bundle-size-check");
+const DIST_INDEX = join(PACKAGE_ROOT, "dist/index.js");
+
+// What a consumer actually imports is the package entry, `dist/index.js`, not a component's own source. A component
+// imported through it must cost about what it costs alone: if it costs much more, the build stopped letting a bundler
+// leave out the components an app doesn't use (until 0.1.2 every import carried the whole library, ADR-0219). A few
+// small and large components are enough to see that; the allowance covers the entry's own few bytes.
+const THROUGH_ENTRY_COMPONENTS = ["Button", "Badge", "Navbar", "DataTable"];
+const THROUGH_ENTRY_ALLOWANCE = { factor: 1.25, extraKb: 1 };
 
 // (Sizes are for a production build: see `define` below, and 06-engineering-standards.md.)
 // Deliberately generous headroom over the real baseline measured
@@ -184,6 +192,52 @@ function listComponentEntries() {
   }));
 }
 
+/**
+ * Bundles `export { Name } from "<dist/index.js>"` for each of `THROUGH_ENTRY_COMPONENTS`, as an app's bundler would,
+ * and fails a component whose size through the entry is well over its size alone. Needs the real build first.
+ */
+async function checkThroughPackageEntry(results, failures) {
+  if (!existsSync(DIST_INDEX)) {
+    failures.push(`dist/index.js is missing: run the package build before this check, which measures the shipped entry.`);
+    return;
+  }
+  const sourceDir = join(OUT_DIR, "through-entry-src");
+  const outDir = join(OUT_DIR, "through-entry");
+  mkdirSync(sourceDir, { recursive: true });
+  const entry = {};
+  for (const name of THROUGH_ENTRY_COMPONENTS) {
+    const file = join(sourceDir, `${name}.js`);
+    writeFileSync(file, `export { ${name} } from ${JSON.stringify(DIST_INDEX)};\n`);
+    entry[name] = file;
+  }
+  await build({
+    entry,
+    format: ["esm"],
+    outDir,
+    dts: false,
+    sourcemap: false,
+    minify: true,
+    treeshake: true,
+    splitting: false,
+    external: ["react", "react-dom"],
+    loader: { ".css": "empty" },
+    define: { "process.env.NODE_ENV": '"production"' },
+    silent: true,
+  });
+  console.log("\nThrough the package entry (dist/index.js), against the component alone:");
+  for (const name of THROUGH_ENTRY_COMPONENTS) {
+    const throughKb = toKb(gzipSync(readFileSync(join(outDir, `${name}.js`))).byteLength);
+    const alone = results.find((result) => result.name === name);
+    const limitKb = alone.jsGzipKb * THROUGH_ENTRY_ALLOWANCE.factor + THROUGH_ENTRY_ALLOWANCE.extraKb;
+    console.log(`  ${name.padEnd(20)} JS ${formatKb(throughKb).padStart(9)}   alone ${formatKb(alone.jsGzipKb).padStart(9)}`);
+    if (throughKb > limitKb) {
+      failures.push(
+        `${name}: ${formatKb(throughKb)} imported through dist/index.js against ${formatKb(alone.jsGzipKb)} alone; the package entry is carrying components an app didn't import.`,
+      );
+    }
+  }
+}
+
 function toKb(bytes) {
   return bytes / 1024;
 }
@@ -268,6 +322,8 @@ async function main() {
       if (js.includes(marker)) failures.push(`${name}: its bundle contains ${what}, which should not be in it.`);
     }
   }
+
+  await checkThroughPackageEntry(results, failures);
 
   rmSync(OUT_DIR, { recursive: true, force: true });
 
