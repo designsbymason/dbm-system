@@ -13,6 +13,8 @@ export { IconGallery } from "./IconGallery";
 export { ComponentHeader, toneForTier } from "./ComponentHeader";
 export type { ComponentTier } from "./ComponentHeader";
 export { FieldsTable } from "./FieldsTable";
+export { FileTable } from "./FileTable";
+export type { FileRow } from "./FileTable";
 export { FoundationsCards } from "./FoundationsCards";
 export type { FieldRow } from "./FieldsTable";
 export { PlaygroundCanvas } from "./PlaygroundCanvas";

@@ -1,5 +1,5 @@
 import { Meta } from "@storybook/addon-docs/blocks";
-import { ComponentIndex, FoundationsCards, RelatedLinks } from "../../.storybook/blocks";
+import { ComponentIndex, FileTable, FoundationsCards, RelatedLinks } from "../../.storybook/blocks";
 import { ThemeSync } from "../../.storybook/blocks/foundations";
 import { VisuallyHidden } from "../atoms/VisuallyHidden";
 
@@ -136,10 +136,22 @@ The design tokens behind every component: each is a named value, read live from 
 
 Everything an agent needs ships inside the packages, so it can work from structured facts instead of guessing:
 
-| File | What it is |
-|---|---|
-| `AGENTS.md` at the root of `@dbm-system/components` | The rules for using the library, with a list of every component. Start here. |
-| `@dbm-system/components/manifest/index.json` | Every component in one small file, with the path of its full description (props, parts and examples) |
-| `@dbm-system/tokens/tokens.json` | Every design token, its value in each theme, and which components use it |
+<FileTable
+  label="Files for AI agents"
+  rows={[
+    {
+      name: "AGENTS.md",
+      description: "At the root of @dbm-system/components: the rules for using the library, with a list of every component. Start here.",
+    },
+    {
+      name: "@dbm-system/components/manifest/index.json",
+      description: "Every component in one small file, with the path of its full description (props, parts and examples).",
+    },
+    {
+      name: "@dbm-system/tokens/tokens.json",
+      description: "Every design token, its value in each theme, and which components use it.",
+    },
+  ]}
+/>
 
 Every component page here has full types and a snippet for each example. An MCP server is planned.

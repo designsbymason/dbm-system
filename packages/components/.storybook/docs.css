@@ -1294,3 +1294,13 @@
     transition: none;
   }
 }
+
+/* The files table on the Getting started page: the first column holds paths, so it never breaks inside one, and the table keeps the
+   same space above and below as the other tables on the page. */
+.dbm-getting-started__filetable {
+  margin-block: var(--dbm-space-4);
+}
+
+.dbm-getting-started__filetable th[scope="row"] code {
+  overflow-wrap: anywhere;
+}
