@@ -40,8 +40,8 @@ These are in `packages/components/.storybook/blocks/` and depend on Storybook's 
 | Page | Needs |
 |---|---|
 | The landing page | [03-landing-page-brief.md](./03-landing-page-brief.md) |
-| Getting started and Installation | Phase 8: the publish decision and the consumer stylesheet and token loading |
-| For AI agents | Phase 8: the manifest, `llms.txt`, `llms-full.txt`, `AGENTS.md` |
+| Getting started and Installation | Unblocked: the packages are published and the consumer stylesheet and token loading are built |
+| For AI agents | The manifest and `AGENTS.md` are built; `llms.txt` and `llms-full.txt` are not |
 | Changelog | The publish pipeline (Changesets) |
 | Accessibility statement and browser support | The WCAG target and known exceptions (from the token spec) and the supported browsers (`06-engineering-standards.md` §6) |
 | Component pages | The manifest |

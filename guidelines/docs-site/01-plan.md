@@ -38,7 +38,7 @@ The phases here are the docs website's own. They sit inside the roadmap's Phase 
 | Quality gates | Link check and an accessibility scan of the key pages run in CI | Not started |
 | Storybook trimmed | Getting started becomes a pointer to the docs website; the guides move (the move waits until their pages exist on the site), each leaving a "moved" page; `/storybook/` is marked not to be indexed | Not started |
 
-### Phase B — after Phase 8 (manifest and first publish)
+### Phase B — after Phase 8 (manifest and first publish; Phase 8 is done)
 
 | Deliverable | Done when |
 |---|---|
@@ -56,7 +56,7 @@ Versioned docs under `/v1/`, `/v2/` and so on; a build that deploys from release
 
 ## 4. What blocks what
 
-- Component pages, Installation, the agent files and the changelog **wait on Phase 8**: the manifest, the publish pipeline and the consumer CSS decision.
+- Component pages, Installation, the agent files and the changelog **no longer wait on Phase 8**: the manifest, the publish pipeline and the consumer CSS are built, so the packages are published at `0.1.x`; `llms.txt` and the docs pages themselves are not.
 - The skeleton, the landing page, the pipeline, the community files and the domain **wait on nothing** and can start at once.
 - Moving the guides off Storybook waits on their pages existing on the site; until then Storybook's pages stay, so nothing disappears.
 
@@ -67,7 +67,7 @@ Versioned docs under `/v1/`, `/v2/` and so on; a build that deploys from release
 | The landing page becomes heavy or slow with motion | The brief asks for a hand review of weight and script size; no CI budget was adopted ([ADR-0173](../adr/0173-the-docs-apps-dependencies-are-each-justified-in-a-list-and-the-landing-page-may-use-gsap-over-holding-it-to-the-packages-budget-or-leaving-it-unrestricted.md)), so it needs checking by hand each round |
 | Storybook does not work under `/storybook/` | A subpath check in Phase A, before anything depends on it |
 | The guides are ported badly (Storybook-only blocks) | The port list in [04-content-inventory.md](./04-content-inventory.md) and a visual check of each page |
-| The docs promise things that are not published | Every unpublished item is labelled in the page itself; the accessibility page states the known exceptions |
+| The docs promise things that are not built | Every item that is not built (`llms.txt`, an MCP server) is labelled in the page itself; the accessibility page states the known exceptions |
 | GSAP's licence terms change | Re-read before the first release; the fallback is Motion with CSS ([ADR-0173](../adr/0173-the-docs-apps-dependencies-are-each-justified-in-a-list-and-the-landing-page-may-use-gsap-over-holding-it-to-the-packages-budget-or-leaving-it-unrestricted.md)) |
 | One maintainer | Keep the pipeline small and the content mostly generated; every gate is automated |
 

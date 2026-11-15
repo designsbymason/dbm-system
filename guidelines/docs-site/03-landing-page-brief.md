@@ -17,7 +17,7 @@ The page says only what the repository supports (`01-vision-and-goals.md`):
 - Very few dependencies: Radix UI primitives for interaction and Phosphor for icons.
 - Built to be read by people and agents: full types, a snippet for each example, a planned manifest.
 - WCAG 2.2 AA is the **target**; the known exceptions are on the accessibility statement and the page links to it.
-- **Not yet published to npm.** Install steps, the manifest, `llms.txt` and `AGENTS.md` are shown as "in active development, not yet published", never as available.
+- **Published to npm at `0.1.x`, pre-1.0.** Install steps, the manifest and `AGENTS.md` are available and shown as such; `llms.txt` and an MCP server are not built and are labelled "in active development", never as available.
 
 No invented metrics, testimonials, logos, download counts or comparisons. No other design system is named anywhere in the repository or its output.
 
@@ -25,7 +25,7 @@ No invented metrics, testimonials, logos, download counts or comparisons. No oth
 
 | # | Section | What it does |
 |---|---|---|
-| 1 | **Hero** | The tagline, "The agentic component library for people and the AI agents that build with them.", and a sentence of support; an install snippet that says it is not published yet; calls to action to Get started, Components and Storybook. A quiet, high-quality visual built from real DBM components and tokens. |
+| 1 | **Hero** | The tagline, "The agentic component library for people and the AI agents that build with them.", and a sentence of support; an install snippet with the real `pnpm add` line; calls to action to Get started, Components and Storybook. A quiet, high-quality visual built from real DBM components and tokens. |
 | 2 | **Live component showcase** | Real components on the page, in a composed, designed arrangement (a form, a data table, a toast, a command palette), themed by the reader's mode. Interactive, not screenshots. |
 | 3 | **Theming and accessibility** | The token story: one semantic layer, four themes, no component changes. The accessibility claim with the known exceptions, linked. **The two brands are shown side by side with live Storybook stories, one frame per brand** (Storybook takes the brand in its URL, for example `/storybook/iframe.html?id=<story>&globals=brand:emerald`), loaded lazily so they cost nothing until scrolled to. |
 | 4 | **Built for agents** | The manifest, `llms.txt` and `AGENTS.md`, each labelled in development. Why an agent-legible system matters. |

@@ -12,7 +12,7 @@ This is a solo-maintained project, so there is no response-time guarantee. A rep
 
 ## Supported versions
 
-Nothing is published to npm yet. Once it is, only the latest release receives fixes until 1.0.
+The `@dbm-system/*` packages are published to npm (the four public packages share one version, currently `0.1.x`). Only the latest release receives fixes until 1.0.
 
 ## Scope
 

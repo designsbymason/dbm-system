@@ -9,10 +9,10 @@ The site is `https://dbm-system.com` (the apex is canonical; `www` redirects). T
 | URL | Page | Source |
 |---|---|---|
 | `/` | The landing page | MDX and Astro, from [03-landing-page-brief.md](./03-landing-page-brief.md) |
-| `/docs/getting-started` | Getting started, with Installation | MDX; Installation waits on Phase 8 |
+| `/docs/getting-started` | Getting started, with Installation | MDX; Installation can be written now, the packages are published |
 | `/docs/guides/theming`, `accessibility`, `responsive-and-rtl`, `hooks-and-utilities`, `composition-patterns`, `icons` | The guides | MDX, ported from Storybook |
 | `/docs/foundations` | One overview page: what tokens are, the three layers, naming, and a card for each of the ten token pages, each linking to its Storybook page (`/storybook/?path=/docs/foundations-<name>--docs`) | MDX; the token pages themselves stay in Storybook |
-| `/docs/for-ai-agents` | The manifest, `llms.txt`, `AGENTS.md` explained | MDX; waits on Phase 8 |
+| `/docs/for-ai-agents` | The manifest, `llms.txt`, `AGENTS.md` explained | MDX; the manifest and `AGENTS.md` ship in the package, `llms.txt` is not built |
 | `/docs/changelog` | The release history | Generated from Changesets |
 | `/docs/accessibility-statement` | The WCAG target, the known exceptions, supported browsers | MDX |
 | `/components` | The component index: a table with search, Tier and Category filters and sortable columns | Generated from the manifest |
@@ -89,12 +89,12 @@ Pagefind: an open-source index built from the generated HTML at deploy time, sea
 
 | File | What | When |
 |---|---|---|
-| `/manifest.json` | The full component manifest | After Phase 8 |
-| `/llms.txt` | A short curated index of the docs (the llmstxt.org convention) | After Phase 8 |
-| `/llms-full.txt` | The documentation as one text file, generated from the same content | After Phase 8 |
-| A consumer `AGENTS.md` | A usage guide for an agent building with the library, also shipped in the npm package | After Phase 8 |
+| `/manifest.json` | The full component manifest | Can be built now: the manifest ships in the package |
+| `/llms.txt` | A short curated index of the docs (the llmstxt.org convention) | Not built |
+| `/llms-full.txt` | The documentation as one text file, generated from the same content | Not built |
+| A consumer `AGENTS.md` | A usage guide for an agent building with the library, also shipped in the npm package | Built: `AGENTS.md` ships in the components package, and the page can link to it |
 
-Until Phase 8, the For AI agents page says plainly that they are in development.
+Until a file here is built, the For AI agents page says plainly that it is in development.
 
 ## 8. Dependencies of `apps/docs`
 

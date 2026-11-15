@@ -402,8 +402,8 @@ A guide's code samples are fenced code in the MDX, so nothing compiles them: **c
 
 | Page | Covers | Waits on |
 |---|---|---|
-| Guides: Agent usage and contributing | The consumer-facing usage guide from `01-vision-and-goals.md` §13.1, shown where a person looks for it | The manifest and the published package (Phase 8) |
-| Guides: Changelog and migration | Generated from Changesets | The release pipeline (Phase 8) |
+| Guides: Agent usage and contributing | The consumer-facing usage guide from `01-vision-and-goals.md` §13.1, shown where a person looks for it | Available: the manifest and `AGENTS.md` ship in the published package (Phase 8) |
+| Guides: Changelog and migration | Generated from Changesets | Available: the release workflow writes each package's `CHANGELOG.md` (Phase 8) |
 
 **Standing checks for these pages:** keyboard operation, a real-browser check at phone width, dark mode (a block that sets no colour of its own inherits Storybook's near-black text, found on the overview's legend, so give a block an explicit `text.primary`), right-to-left and forced colours, and the four-theme contrast check for any colour a page introduces. Confirm that `check-guidelines` and the token-coverage check still agree when a new group is added.
 

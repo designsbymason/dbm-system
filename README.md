@@ -1,12 +1,12 @@
 # DBM System
 
-> **Status: in active development, not yet published.** The component library is substantial — 118 of a planned 118 components are built, and five page-level templates (two shells that ship, `AppShell` and `PageShell`, and three story-only example pages: a data table list page, a documentation page and a marketing page) — but nothing has shipped to npm yet; the API can still change before the first publish.
+> **Status: published on npm at `0.1.x`, the API is still pre-1.0.** The component library is substantial — 118 of a planned 118 components are built, and five page-level templates (two shells that ship, `AppShell` and `PageShell`, and three story-only example pages: a data table list page, a documentation page and a marketing page). A breaking change before `1.0.0` bumps the minor version and says how to migrate in its changelog.
 
 An agentic, standalone React component library built for both AI coding agents and human developers to compose web and enterprise applications quickly, consistently, and accessibly. Token-driven, multi-brand, multi-theme (light/dark), and built with a strong TypeScript + JSDoc contract so AI agents can work against a structured, predictable API.
 
 ## Packages
 
-This is a monorepo. Once published, the packages live under the `@dbm-system` npm scope. An app installs three of them:
+This is a monorepo. The packages are published under the `@dbm-system` npm scope, at one version together. An app installs three of them:
 
 - `@dbm-system/components` — the component library, its stylesheet and the machine-readable manifest of every component
 - `@dbm-system/tokens` — the design tokens: the theme CSS and typed constants
@@ -14,7 +14,7 @@ This is a monorepo. Once published, the packages live under the `@dbm-system` np
 
 `@dbm-system/utils` is published because the components depend on it; an app does not install it. `@dbm-system/manifest` (the manifest generator), `@dbm-system/eslint-config` and `@dbm-system/tsconfig` are private tools of this repository and are not published.
 
-None of these are published yet. The install steps are in the components package's README.
+The install steps are in the components package's README, and `RELEASING.md` describes how a release is made.
 
 ## Documentation
 

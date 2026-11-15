@@ -16,4 +16,4 @@ Everyone taking part follows the [code of conduct](./CODE_OF_CONDUCT.md).
 
 ## Working on the code
 
-Start with `CLAUDE.md` and the numbered documents in `guidelines/`. Turn on the pre-commit guard once per clone with `git config core.hooksPath .githooks`.
+Start with `CLAUDE.md` and the numbered documents in `guidelines/`. Turn on the pre-commit guard once per clone with `git config core.hooksPath .githooks`. A change that affects what a consumer of a published package sees includes a changeset (`pnpm changeset`); how a release is made is in [`RELEASING.md`](./RELEASING.md).
