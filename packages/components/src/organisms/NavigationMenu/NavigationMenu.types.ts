@@ -321,7 +321,7 @@ export interface NavigationMenuContentProps extends Omit<ComponentPropsWithoutRe
 export interface NavigationMenuLinkProps extends Omit<ComponentPropsWithoutRef<"a">, "children" | "onSelect"> {
   /** The link's text, or (with `asChild`) the element that is the link. */
   children?: ReactNode;
-  /** Where the link goes. Not used with `asChild`, where the child element has its own. */
+  /** Where the link goes. Not used with `asChild`, where the child element has its own (and an external one is worked out from that). */
   href?: string;
   /**
    * Marks the page the reader is on (`aria-current`: `"page"`, or the menu's `currentType`), drawn in the menu's `currentVariant` when the link is a top-level item.
@@ -334,7 +334,8 @@ export interface NavigationMenuLinkProps extends Omit<ComponentPropsWithoutRef<"
    */
   disabled?: boolean;
   /**
-   * Draws the look on the child element (a router's link) instead of an `<a>`.
+   * Draws the look on the child element (a router's link) instead of an `<a>`. The `icon`, `description`, `badge` and an external link's icon
+   * and cue (worked out from the child's own `href`) are drawn inside that element, around its own content.
    * @default false
    */
   asChild?: boolean;

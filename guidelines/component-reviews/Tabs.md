@@ -633,3 +633,7 @@ Two changes to existing output, both asked for by the maintainer after looking a
 
 ## Reads the nearest DirectionProvider (2026-11-06)
 Additive, at explicit direction ([ADR-0177](../adr/0177-an-optional-direction-provider-sets-the-text-direction-for-a-subtree-over-reading-the-page-direction-automatically.md), [ADR-0182](../adr/0182-appshell-grows-a-busy-main-a-whole-page-state-and-a-layer-ladder-and-direction-reaches-the-shell-sidebar-and-navbar-through-a-provider.md)): `dir` left out now follows the nearest `DirectionProvider`; with none, nothing changes (the page's direction, or a Radix `DirectionProvider`, still applies as before). The `dir` JSDoc, the Controls description and the Docs text say so; a test covers it. Finalized status is unchanged.
+
+## `icon` drawn inside an `asChild` tab, 2026-11-15 (additive; stays Finalized)
+
+At explicit direction ([ADR-0218](../adr/0218-an-aschild-component-draws-its-own-icons-spinner-and-caption-inside-the-slotted-element-with-radix-slottable-over-dropping-them-or-asking-the-consumer-to-put-them-in-the-child.md), adopted here): with `asChild`, `Tabs.Trigger`'s `icon` and its label wrapper are drawn inside the slotted element, around its own content, with Radix `Slottable`, which the primitive's own slot finds as its direct child; the development warning that `icon` has no effect is removed. The tabs-as-links story now passes an icon to each tab, with a play check; the warning test is replaced by one that finds the icon inside the link, and the asChild test now finds the label wrapper there too.

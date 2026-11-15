@@ -14,7 +14,7 @@ const meta: Meta<typeof Breadcrumb.Link> = {
     icon: {
       control: false,
       description:
-        "An icon shown before the text — a component reference from @dbm-system/icons, not a string name. Decorative. Not drawn with asChild.",
+        "An icon shown before the text — a component reference from @dbm-system/icons, not a string name. Decorative. With asChild it is drawn inside your element, before its own text.",
     },
     external: {
       control: "boolean",
@@ -25,7 +25,7 @@ const meta: Meta<typeof Breadcrumb.Link> = {
     asChild: {
       control: "boolean",
       description:
-        "Renders the link's look onto your own single child element (a router's link) instead of an anchor. The icon and the external cue are not drawn in this mode.",
+        "Renders the link's look onto your own single child element (a router's link) instead of an anchor. The icon, and an external link's icon and cue, are drawn inside that element.",
       table: { defaultValue: { summary: "false" } },
     },
     disabled: {

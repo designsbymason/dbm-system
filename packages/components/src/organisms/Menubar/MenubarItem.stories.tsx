@@ -28,7 +28,7 @@ const meta: Meta<typeof Menubar.Item> = {
       // A single element child is what asChild needs; the story's text label can't stand in for one.
       control: false,
       description:
-        "Renders as the single child element (Radix Slot), which receives the item's role, keyboard handling and styles — how a link or a router Link becomes a menu item. In this mode the item draws none of its own content, so icon and shortcut are not rendered; put them inside the child.",
+        "Renders as the single child element (Radix Slot), which receives the item's role, keyboard handling and styles — how a link or a router Link becomes a menu item. The child's own content is the label, and the item's icon, shortcut, description and trailing content are drawn inside it, around that content.",
       table: { defaultValue: { summary: "false" } },
     },
     tone: {

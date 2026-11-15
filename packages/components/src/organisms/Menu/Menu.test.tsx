@@ -327,17 +327,57 @@ describe("Menu", () => {
       await waitFor(() => expect(screen.queryByRole("menu")).not.toBeInTheDocument());
     });
 
-    it("warns that icon and shortcut are not drawn in asChild mode", () => {
+    it("draws the icon, the shortcut and the description inside an asChild link, around its own text, without a warning", () => {
       const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
       render(
         <Basic root={{ defaultOpen: true }}>
-          <Menu.Item asChild icon={CopyIcon}>
+          <Menu.Item asChild icon={CopyIcon} shortcut="Ctrl+C" description="To the clipboard">
             <a href="#docs">Docs</a>
           </Menu.Item>
         </Basic>,
       );
-      expect(warn).toHaveBeenCalledWith(expect.stringContaining("have no effect when `asChild` is set"));
-      expect(screen.getByRole("menuitem").querySelector("svg")).not.toBeInTheDocument();
+      // The shortcut hint is part of the name, as for any item.
+      const link = screen.getByRole("menuitem", { name: "Docs Ctrl+C" });
+      expect(link.tagName).toBe("A");
+      expect(link).toHaveAttribute("href", "#docs");
+      expect(link.querySelector(`.${styles.iconSlot as string} svg`)).toBeInTheDocument();
+      expect(link.querySelector(`.${styles.label as string}`)).toHaveTextContent("Docs");
+      expect(link.querySelector("kbd")).toHaveTextContent("Ctrl+C");
+      expect(link).toHaveAccessibleDescription("To the clipboard");
+      expect(link.querySelectorAll("a")).toHaveLength(0);
+      expect(warn).not.toHaveBeenCalled();
+      warn.mockRestore();
+    });
+
+    it("uses an asChild element's content as it is when the item has none of its own pieces", () => {
+      render(
+        <Basic root={{ defaultOpen: true }}>
+          <Menu.Item asChild>
+            <a href="#docs">
+              <span data-testid="own">Docs</span>
+            </a>
+          </Menu.Item>
+        </Basic>,
+      );
+      const link = screen.getByRole("menuitem", { name: "Docs" });
+      expect(link.firstElementChild).toBe(screen.getByTestId("own"));
+      expect(link.querySelector(`.${styles.label as string}`)).toBeNull();
+    });
+
+    it("announces a disabled asChild item's reason from inside it", () => {
+      const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
+      render(
+        <Basic root={{ defaultOpen: true }}>
+          <Menu.Item asChild disabled disabledReason="Sign in first">
+            <a href="#docs">Docs</a>
+          </Menu.Item>
+        </Basic>,
+      );
+      const link = screen.getByRole("menuitem", { name: "Docs" });
+      expect(link).toHaveAccessibleDescription("Sign in first");
+      expect(link).toHaveAttribute("aria-disabled", "true");
+      expect(warn).not.toHaveBeenCalled();
+      warn.mockRestore();
     });
   });
 
@@ -598,20 +638,6 @@ describe("Menu", () => {
   });
 
   describe("a reason in the wrong place", () => {
-    it("does not point aria-describedby at a hidden reason an asChild item never draws", () => {
-      const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
-      render(
-        <Basic root={{ defaultOpen: true }}>
-          <Menu.Item asChild disabled disabledReason="Admins only">
-            <a href="#delete">Delete</a>
-          </Menu.Item>
-        </Basic>,
-      );
-      const link = screen.getByRole("menuitem", { name: "Delete" });
-      expect(link).not.toHaveAttribute("aria-describedby");
-      expect(warn).toHaveBeenCalledWith(expect.stringContaining("not announced as the item's description"));
-    });
-
     it("warns, once per item, that a reason without disabled does nothing", () => {
       const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
       render(

@@ -2,6 +2,7 @@ import { CaretLeftIcon, CaretRightIcon, DotsThreeIcon } from "@dbm-system/icons"
 import { cx, mergeDefined, mergeRefs } from "@dbm-system/utils";
 import {
   Children,
+  cloneElement,
   createContext,
   forwardRef,
   isValidElement,
@@ -137,31 +138,32 @@ function Separator({ separator, size }: { separator: BreadcrumbSeparator; size: 
 const BreadcrumbLink = forwardRef<HTMLAnchorElement, BreadcrumbLinkProps>(
   ({ icon, className, children, asChild = false, ...props }, ref) => {
     const { size, tone, underline, truncate } = useContext(BreadcrumbContext);
-    useEffect(() => {
-      if (process.env.NODE_ENV !== "production" && asChild && icon) {
-        console.warn(
-          "Breadcrumb.Link: `icon` is not drawn together with `asChild`, since the slotted element owns its own content. Put the icon inside that element instead.",
-        );
-      }
-    }, [asChild, icon]);
+    const decorate = (label: ReactNode) => (
+      <>
+        {icon && <Icon icon={icon} size={iconSizeForSize[size]} />}
+        <span className={styles.label}>{label}</span>
+      </>
+    );
+    // With `asChild` the icon and the label wrapper are drawn inside the slotted element, around its own content
+    // (ADR-0218). The element is handed on to `Link`, which slots it in turn and draws an external link's icon and cue
+    // after this content, so this clones it here, as Radix `Slottable`'s render form does, rather than nesting a
+    // `Slottable` inside `Link`'s own.
+    const slotted =
+      asChild && isValidElement<{ children?: ReactNode }>(children)
+        ? cloneElement(children, undefined, decorate(children.props.children))
+        : children;
+    const labelText = asChild && isValidElement<{ children?: ReactNode }>(children) ? children.props.children : children;
     return (
       <Link
         {...props}
         ref={ref}
         asChild={asChild}
         underline={underline ? "always" : "hover"}
-        className={cx(styles.link, toneClass[tone], asChild && styles.slotted, className)}
+        className={cx(styles.link, toneClass[tone], className)}
         // The whole label as a tooltip when it can be cut short — only for plain text, which is all a title holds.
-        title={props.title ?? (truncate && typeof children === "string" ? children : undefined)}
+        title={props.title ?? (truncate && typeof labelText === "string" ? labelText : undefined)}
       >
-        {asChild ? (
-          children
-        ) : (
-          <>
-            {icon && <Icon icon={icon} size={iconSizeForSize[size]} />}
-            <span className={styles.label}>{children}</span>
-          </>
-        )}
+        {asChild ? slotted : decorate(children)}
       </Link>
     );
   },

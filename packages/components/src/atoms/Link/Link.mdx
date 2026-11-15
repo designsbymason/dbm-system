@@ -83,6 +83,10 @@ Drive every prop live.
 
 <Canvas of={LinkStories.AsChild} />
 
+### asChild, external (icon and cue inside your element)
+
+<Canvas of={LinkStories.AsChildExternal} />
+
 ### Disabled (aria-disabled, click blocked)
 
 <Canvas of={LinkStories.Disabled} />
@@ -116,7 +120,8 @@ whether the size is inherited or set.
   auto-detection would get it wrong (e.g. a relative path that still needs new-tab behavior, or an
   absolute URL that should deliberately stay same-tab).
 - Use `asChild` to compose with a router's own Link component so client-side navigation and this
-  system's styling/external-link logic both apply to the same element.
+  system's styling/external-link logic both apply to the same element. An external link keeps its
+  icon and its "(opens in a new tab)" cue: both are drawn inside your element, after its own text.
 
 </Callout>
 <Callout tone="danger" title="Don't">
@@ -160,7 +165,7 @@ whether the size is inherited or set.
   the default rather than `"hover"`.
 - External links get a visually-hidden "(opens in a new tab)" cue (via `VisuallyHidden`) in addition
   to the visible icon, so screen reader users get the same warning sighted users get from the icon
-  alone.
+  alone. With `asChild` both are drawn inside your element, so a router's link keeps the warning too.
 - `disabled` uses `aria-disabled` plus a click-handler guard, not a native `disabled` attribute —
   `<a>` has no such attribute. The link stays in the tab order and keeps its `href`, matching
   WAI-ARIA APG guidance (unlike native `disabled`, which removes focusability entirely).

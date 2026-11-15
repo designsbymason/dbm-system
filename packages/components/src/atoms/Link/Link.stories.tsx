@@ -212,6 +212,34 @@ export const AsChild: Story = {
   ),
 };
 
+export const AsChildExternal: Story = {
+  name: "asChild, external (icon and cue inside your element)",
+  parameters: { docs: { source: { code: linkSnippets.asChildExternal } } },
+  argTypes: {
+    href: { control: false },
+    children: { control: false },
+    external: { control: false },
+    underline: { control: false },
+    size: { control: false },
+    disabled: { control: false },
+    "aria-label": { control: false },
+  },
+  // The external-link icon and the visually hidden "(opens in a new tab)" cue are drawn inside the slotted anchor,
+  // after its own text, so a router's link that leaves the site keeps both.
+  render: () => (
+    <Link asChild href="https://example.com/changelog">
+      {/* eslint-disable-next-line jsx-a11y/anchor-is-valid -- Radix Slot merges the outer Link's own href onto this anchor at render time (see the AsChild story). */}
+      <a>Read the changelog</a>
+    </Link>
+  ),
+  play: async ({ canvasElement }) => {
+    const link = within(canvasElement).getByRole("link", { name: /^Read the changelog ?\(opens in a new tab\)$/ });
+    await expect(link).toHaveAttribute("href", "https://example.com/changelog");
+    await expect(link).toHaveAttribute("target", "_blank");
+    await expect(link.querySelectorAll("svg")).toHaveLength(1);
+  },
+};
+
 export const Disabled: Story = {
   name: "Disabled (aria-disabled, click blocked)",
   parameters: { docs: { source: { code: linkSnippets.disabled } } },

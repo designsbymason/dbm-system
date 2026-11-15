@@ -6,7 +6,6 @@ import { BellIcon, BookOpenIcon, ChartBarIcon, DotsThreeIcon, FolderSimpleIcon, 
 import type { SpaceValue } from "@dbm-system/utils";
 import { Avatar } from "../../atoms/Avatar";
 import { Badge } from "../../atoms/Badge";
-import { Icon } from "../../atoms/Icon";
 import { IconButton } from "../../atoms/IconButton";
 import { Menu } from "../Menu";
 import { Sidebar } from "./Sidebar";
@@ -507,9 +506,9 @@ export const Items: Story = {
                 <Sidebar.Item href="#billing" icon={ReceiptIcon} disabled>
                   A disabled link
                 </Sidebar.Item>
-                <Sidebar.Item asChild>
+                {/* The icon is drawn inside the router's link, before its own text. */}
+                <Sidebar.Item asChild icon={UsersIcon}>
                   <a href="#routed" onClick={(event) => event.preventDefault()}>
-                    <Icon icon={UsersIcon} size="md" />
                     A router&apos;s link (asChild)
                   </a>
                 </Sidebar.Item>

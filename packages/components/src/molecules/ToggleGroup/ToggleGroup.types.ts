@@ -159,7 +159,10 @@ export interface ToggleGroupItemProps
    * The label. Leave it out for an icon-only item, and name it with `aria-label`.
    */
   children?: ReactNode;
-  /** An icon before the label — a component reference, not a string name. */
+  /**
+   * An icon before the label — a component reference, not a string name. With `asChild` it is drawn inside the slotted element, before
+   * that element's own content; an element that brings its own icon (as was the only way before) leaves this out, so one icon shows.
+   */
   icon?: PhosphorIcon;
   /**
    * Disables this item, taking it out of the arrow-key order. Left out, it follows the group.
@@ -168,7 +171,8 @@ export interface ToggleGroupItemProps
   disabled?: boolean;
   /**
    * Merge props onto the single child element instead of rendering a `<button>` (via Radix `Slot`) — for a tooltip
-   * wrapper, say. `icon` has no effect in this mode.
+   * wrapper, or a link, say. The element's own content is the label, and `icon` is drawn inside it, before that content; an
+   * empty element with an `icon` is icon-only, and carries the item's `aria-label`.
    * @default false
    */
   asChild?: boolean;

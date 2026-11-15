@@ -96,14 +96,15 @@ ${menu(
 )}`,
 
   linkItems: `{/* asChild makes the anchor the menu item: it gets the role, the keyboard handling and the styles.
-    The item draws none of its own content in this mode, so an icon goes inside the link. */}
+    The icon, shortcut, description and trailing content are drawn inside the link, around its own text.
+    BookOpenIcon and ClockCounterClockwiseIcon come from @dbm-system/icons. */}
 ${menu(
   "",
   "",
-  `    <Menu.Item asChild>
+  `    <Menu.Item asChild icon={BookOpenIcon} shortcut="?">
       <a href="/docs">Documentation</a>
     </Menu.Item>
-    <Menu.Item asChild>
+    <Menu.Item asChild icon={ClockCounterClockwiseIcon}>
       <a href="/changelog">Changelog</a>
     </Menu.Item>`,
 )}`,

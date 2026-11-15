@@ -812,6 +812,15 @@ export const RouterLinks: Story = {
       )}
     </NavbarStage>
   ),
+  // The icon and the external icon and cue are drawn inside the router's links (one element each), around their own text.
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const products = canvas.getAllByRole("link", { name: "Products" })[0]!;
+    await expect(products.firstElementChild?.tagName.toLowerCase()).toBe("svg");
+    const docs = canvas.getAllByRole("link", { name: /^Docs\s*\(opens in a new tab\)$/ })[0]!;
+    await expect(docs).toHaveAttribute("target", "_blank");
+    await expect(docs.querySelectorAll("svg")).toHaveLength(1);
+  },
 };
 
 export const ControlledMenu: Story = {

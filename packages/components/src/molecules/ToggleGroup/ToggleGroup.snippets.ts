@@ -120,6 +120,18 @@ export const toggleGroupSnippets = {
   </Tooltip>
 </ToggleGroup>`,
 
+  asChild: `{/* asChild puts the item on your own element; the icon is drawn inside it, before its own text.
+    An empty element with an icon is icon-only, and carries the item's name.
+    TextBIcon and TextItalicIcon come from @dbm-system/icons. */}
+<ToggleGroup aria-label="Text style" type="multiple" size="sm">
+  <ToggleGroup.Item value="bold" icon={TextBIcon} asChild>
+    <button type="button" data-shortcut="Mod+B">Bold</button>
+  </ToggleGroup.Item>
+  <ToggleGroup.Item value="italic" icon={TextItalicIcon} aria-label="Italic" asChild>
+    <button type="button" data-shortcut="Mod+I" aria-label="Italic" />
+  </ToggleGroup.Item>
+</ToggleGroup>`,
+
   rtl: `{/* dir="rtl" mirrors the group: the first item at the right, and the arrow keys the other way round.
     Left out, it follows the nearest DirectionProvider, else left-to-right; it is not read from the page. */}
 <ToggleGroup aria-label="Text alignment" dir="rtl" defaultValue="left">

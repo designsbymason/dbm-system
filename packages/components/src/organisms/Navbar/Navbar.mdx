@@ -458,7 +458,8 @@ link it is, from your router. A `disabled` link blocks its click and stays in th
 
 ### With a router's links
 
-`asChild` puts the look on your router's own link component.
+`asChild` puts the look on your router's own link component. The `icon`, the `badge` and an
+external link's icon and "(opens in a new tab)" cue are drawn inside it, around its own text.
 
 <Canvas of={NavbarStories.RouterLinks} />
 
@@ -598,7 +599,7 @@ This story is shown at a phone's width when opened on its own; on this page, nar
 </Navbar>
 
 {/* A router's links */}
-<Navbar.Link asChild current>
+<Navbar.Link asChild icon={ShoppingCartIcon} current>
   <RouterLink to="/products">Products</RouterLink>
 </Navbar.Link>
 

@@ -487,17 +487,21 @@ ${navbar("sticky variant=\"frosted\" scrollContainerRef={boxRef}")}`,
   </Navbar.Links>
 </Navbar>`,
 
-  routerLinks: `{/* asChild puts the look on your router's link: put its component where the <a> is (here a plain anchor). */}
+  routerLinks: `{/* asChild puts the look on your router's link: put its component where the <a> is (here a plain anchor).
+    The icon, a badge and an external link's icon and cue are drawn inside it. ShoppingCartIcon comes from @dbm-system/icons. */}
 <Navbar>
   <Navbar.Brand asChild>
     <a href="/">dbM</a>
   </Navbar.Brand>
   <Navbar.Links>
-    <Navbar.Link asChild current>
+    <Navbar.Link asChild icon={ShoppingCartIcon} current>
       <a href="/products">Products</a>
     </Navbar.Link>
     <Navbar.Link asChild>
       <a href="/pricing">Pricing</a>
+    </Navbar.Link>
+    <Navbar.Link asChild>
+      <a href="https://example.com/docs">Docs</a>
     </Navbar.Link>
   </Navbar.Links>
 </Navbar>`,

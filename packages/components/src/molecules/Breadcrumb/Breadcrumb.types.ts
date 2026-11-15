@@ -174,8 +174,8 @@ export interface BreadcrumbLinkProps extends Omit<LinkProps, "underline"> {
   /**
    * An icon shown before the text — a component reference from
    * `@dbm-system/icons`, not a string name. Decorative, so the link
-   * still needs text (or an `aria-label`). Not drawn with `asChild`, since the
-   * slotted element owns its own content; put the icon inside it instead.
+   * still needs text (or an `aria-label`). With `asChild` it is drawn inside
+   * the slotted element, before that element's own content.
    */
   icon?: PhosphorIcon;
 }

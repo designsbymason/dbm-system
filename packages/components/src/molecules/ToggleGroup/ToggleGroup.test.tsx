@@ -80,7 +80,7 @@ describe("ToggleGroup", () => {
       warnSpy.mockRestore();
     });
 
-    it("warns once per icon-only item with no name, and once for an icon on an asChild item", () => {
+    it("warns once per icon-only item with no name, and not for an icon on an asChild item, which it draws", () => {
       const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
       render(
         <ToggleGroup aria-label="Style">
@@ -93,7 +93,7 @@ describe("ToggleGroup", () => {
       );
       // Items "a" and "b" have no name; the asChild one supplies its own content.
       expect(warnSpy.mock.calls.filter(([message]) => String(message).includes("no accessible name"))).toHaveLength(2);
-      expect(warnSpy.mock.calls.filter(([message]) => String(message).includes("`icon` has no effect"))).toHaveLength(1);
+      expect(warnSpy).toHaveBeenCalledTimes(2);
       warnSpy.mockRestore();
     });
 
@@ -576,6 +576,27 @@ describe("ToggleGroup", () => {
       await user.click(screen.getByRole("button", { name: "Bold" }));
       expect(screen.getByRole("button", { name: "Bold" })).toHaveAttribute("aria-pressed", "true");
       expect(screen.getByRole("link", { name: "Link" })).toHaveAttribute("data-state", "off");
+    });
+
+    it("draws the icon inside an asChild item, before its own label, and an empty one icon-only", () => {
+      render(
+        <ToggleGroup aria-label="Style" type="multiple">
+          <ToggleGroup.Item value="bold" icon={TextBIcon} asChild>
+            <a href="#bold">Bold</a>
+          </ToggleGroup.Item>
+          <ToggleGroup.Item value="italic" icon={TextItalicIcon} aria-label="Italic" asChild>
+            <a href="#italic" aria-label="Italic" />
+          </ToggleGroup.Item>
+        </ToggleGroup>,
+      );
+      const bold = screen.getByRole("link", { name: "Bold" });
+      expect(bold.firstElementChild?.tagName.toLowerCase()).toBe("svg");
+      expect(bold.querySelector(`.${styles.itemLabel}`)).toHaveTextContent("Bold");
+      expect(bold).not.toHaveClass(styles.iconOnly!);
+      const italic = screen.getByRole("link", { name: "Italic" });
+      expect(italic.querySelectorAll("svg")).toHaveLength(1);
+      expect(italic.querySelector(`.${styles.itemLabel}`)).toBeNull();
+      expect(italic).toHaveClass(styles.iconOnly!);
     });
   });
 

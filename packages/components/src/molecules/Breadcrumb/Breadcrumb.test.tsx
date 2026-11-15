@@ -218,7 +218,7 @@ describe("Breadcrumb.Link", () => {
     expect(screen.getByRole("link", { name: "Off" })).toHaveAttribute("aria-disabled", "true");
   });
 
-  it("renders a slotted element with asChild, and warns that icon is not drawn with it", () => {
+  it("renders a slotted element with asChild, with the icon and the label drawn inside it", () => {
     const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
     render(
       <Breadcrumb>
@@ -233,8 +233,46 @@ describe("Breadcrumb.Link", () => {
     );
     const routed = screen.getByTestId("routed");
     expect(routed.className).toMatch(/link/);
-    expect(routed.querySelector("svg")).toBeNull();
-    expect(warn).toHaveBeenCalledWith(expect.stringContaining("`icon` is not drawn together with `asChild`"));
+    expect(routed).toHaveAccessibleName("Routed");
+    // The icon first, then the element's own text in the label wrapper, all inside the one element.
+    expect(routed.firstElementChild?.tagName.toLowerCase()).toBe("svg");
+    expect(routed.querySelector("span")).toHaveTextContent("Routed");
+    expect(routed.querySelectorAll("a")).toHaveLength(0);
+    expect(warn).not.toHaveBeenCalled();
+    warn.mockRestore();
+  });
+
+  it("draws an external link's icon and cue inside the slotted element, after the label", () => {
+    render(
+      <Breadcrumb>
+        <Breadcrumb.Item>
+          <Breadcrumb.Link asChild href="https://example.com" icon={HouseIcon}>
+            <a data-testid="routed" href="https://example.com">
+              Elsewhere
+            </a>
+          </Breadcrumb.Link>
+        </Breadcrumb.Item>
+      </Breadcrumb>,
+    );
+    const routed = screen.getByTestId("routed");
+    expect(routed).toHaveAttribute("target", "_blank");
+    expect(routed.querySelectorAll("svg")).toHaveLength(2);
+    expect(routed).toHaveTextContent(/Elsewhere\s*\(opens in a new tab\)$/);
+  });
+
+  it("gives a truncating trail's slotted link its text as a title", () => {
+    render(
+      <Breadcrumb truncate>
+        <Breadcrumb.Item>
+          <Breadcrumb.Link asChild href="/x">
+            <a data-testid="routed" href="/x">
+              A long label
+            </a>
+          </Breadcrumb.Link>
+        </Breadcrumb.Item>
+      </Breadcrumb>,
+    );
+    expect(screen.getByTestId("routed")).toHaveAttribute("title", "A long label");
   });
 
   it("forwards a ref to the anchor", () => {

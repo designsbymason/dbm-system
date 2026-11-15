@@ -1,7 +1,9 @@
 import { cx, mergeRefs, useResolvedResponsiveValue, useScrollEdges } from "@dbm-system/utils";
 import { CaretDownIcon, CaretLeftIcon, CaretRightIcon, CaretUpIcon } from "@dbm-system/icons";
+import { Slottable } from "@radix-ui/react-slot";
 import * as TabsPrimitive from "@radix-ui/react-tabs";
 import { createContext, forwardRef, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
+import type { ReactNode } from "react";
 import { Icon } from "../../atoms/Icon";
 import type { IconSize } from "../../atoms/Icon";
 import styles from "./Tabs.module.css";
@@ -375,15 +377,8 @@ const TabsTrigger = forwardRef<HTMLButtonElement, TabsTriggerProps>((triggerProp
   const { variant, size, fullWidth, rounded, orientation } = useContext(TabsContext);
   const hasAction = useContext(TabsItemContext);
 
-  const hasWarnedIconRef = useRef(false);
   const hasWarnedNameRef = useRef(false);
   if (process.env.NODE_ENV !== "production") {
-    if (asChild && icon !== undefined && !hasWarnedIconRef.current) {
-      hasWarnedIconRef.current = true;
-      console.warn(
-        "Tabs.Trigger: `icon` has no effect when `asChild` is set — the slotted child supplies its own content. Render the icon inside the child instead.",
-      );
-    }
     if (
       !asChild &&
       !children &&
@@ -397,6 +392,13 @@ const TabsTrigger = forwardRef<HTMLButtonElement, TabsTriggerProps>((triggerProp
       );
     }
   }
+
+  const decorate = (label: ReactNode) => (
+    <>
+      {icon && <Icon icon={icon} size={tabIconSize[size]} className={styles.triggerIcon} />}
+      {label !== undefined && label !== null && label !== false && label !== "" && <span className={styles.triggerLabel}>{label}</span>}
+    </>
+  );
 
   return (
     <TabsPrimitive.Trigger
@@ -417,14 +419,12 @@ const TabsTrigger = forwardRef<HTMLButtonElement, TabsTriggerProps>((triggerProp
       )}
     >
       {asChild ? (
-        children
+        // `Slottable`'s render form clones the slotted element with what it returns as its content: the icon and the label wrapper are
+        // drawn around the element's own content, inside it, and the element is still the one rendered (ADR-0218). The primitive's own
+        // slot finds it as its direct child.
+        <Slottable child={children}>{decorate}</Slottable>
       ) : (
-        <>
-          {icon && <Icon icon={icon} size={tabIconSize[size]} className={styles.triggerIcon} />}
-          {children !== undefined && children !== null && children !== false && (
-            <span className={styles.triggerLabel}>{children}</span>
-          )}
-        </>
+        decorate(children)
       )}
     </TabsPrimitive.Trigger>
   );

@@ -287,7 +287,8 @@ Drag the bottom-right corner of the box to change how much room the trail has.
 - The first item is usually the home page. An icon alone is enough for it when the link has an
   `aria-label` — `<Breadcrumb.Link href="/" icon={HouseIcon} aria-label="Home" />`.
 - With a client-side router, use `asChild` on `Breadcrumb.Link` to render the router's own link, so
-  navigation doesn't reload the page.
+  navigation doesn't reload the page. Its `icon`, and an external link's icon and cue, are drawn
+  inside the router's link, around its own text.
 - Keep labels short. A label that is much longer than its neighbours wraps onto a second line inside
   its own item, which is fine, but a trail of long labels reads better collapsed.
 - A numeric `maxItems` counts every item, including the first and the current page. Neither form
@@ -399,7 +400,7 @@ the current page's heavier weight; `underline` adds a cue that doesn't depend on
 </Breadcrumb>
 
 {/* With a router: the router's own link carries the navigation */}
-<Breadcrumb.Link asChild href="/products">
+<Breadcrumb.Link asChild href="/products" icon={PackageIcon}>
   <RouterLink to="/products">Products</RouterLink>
 </Breadcrumb.Link>
 

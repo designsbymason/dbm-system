@@ -106,6 +106,47 @@ describe("NavigationMenu", () => {
     expect(link.querySelector("svg")).toHaveAttribute("aria-hidden", "true");
   });
 
+  it("draws an asChild link's icon, description, badge and external cue inside the router's link, around its own text", async () => {
+    const user = userEvent.setup();
+    const onSelect = vi.fn((event: Event) => event.preventDefault());
+    render(
+      <NavigationMenu aria-label="Primary">
+        <NavigationMenu.List>
+          <NavigationMenu.Item value="products">
+            <NavigationMenu.Trigger>Products</NavigationMenu.Trigger>
+            <NavigationMenu.Content>
+              <NavigationMenu.Link asChild icon={ChartBarIcon} description="Dashboards for every team" badge="New" onSelect={onSelect}>
+                <a href="/analytics" data-testid="routed">
+                  Analytics
+                </a>
+              </NavigationMenu.Link>
+            </NavigationMenu.Content>
+          </NavigationMenu.Item>
+          <NavigationMenu.Item>
+            <NavigationMenu.Link asChild>
+              <a href="https://example.com/docs">Docs</a>
+            </NavigationMenu.Link>
+          </NavigationMenu.Item>
+        </NavigationMenu.List>
+      </NavigationMenu>,
+    );
+    const docs = screen.getByRole("link", { name: /^Docs\s*\(opens in a new tab\)$/ });
+    expect(docs).toHaveAttribute("href", "https://example.com/docs");
+    expect(docs).toHaveAttribute("target", "_blank");
+    expect(docs).toHaveAttribute("rel", "noopener noreferrer");
+    expect(docs.querySelectorAll("svg")).toHaveLength(1);
+    await user.click(screen.getByRole("button", { name: "Products" }));
+    const routed = await screen.findByTestId("routed");
+    expect(routed).toHaveAttribute("href", "/analytics");
+    expect(routed).not.toHaveAttribute("target");
+    // The icon first, then the text, the description and the badge: all inside the one anchor, which is the one rendered.
+    expect(routed.firstElementChild?.tagName.toLowerCase()).toBe("svg");
+    expect(routed).toHaveTextContent("AnalyticsDashboards for every teamNew");
+    expect(routed.querySelectorAll("a")).toHaveLength(0);
+    await user.click(routed);
+    expect(onSelect).toHaveBeenCalledTimes(1);
+  });
+
   it("holds the open item in a controlled value and reports changes without changing it itself", async () => {
     const user = userEvent.setup();
     const onValueChange = vi.fn();

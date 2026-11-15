@@ -1,8 +1,8 @@
 import { ArrowSquareOutIcon, CaretDownIcon, ListIcon } from "@dbm-system/icons";
 import { cx, mergeDefined, mergeRefs, useScrollEdges } from "@dbm-system/utils";
-import { Slot } from "@radix-ui/react-slot";
+import { Slot, Slottable } from "@radix-ui/react-slot";
 import { cloneElement, forwardRef, isValidElement, useCallback, useContext, useEffect, useId, useMemo, useRef, useState } from "react";
-import type { CSSProperties, MouseEvent, ReactElement } from "react";
+import type { CSSProperties, MouseEvent, ReactElement, ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { Affix } from "../../atoms/Affix";
 import { useDirection } from "../../atoms/DirectionProvider";
@@ -577,7 +577,8 @@ NavbarLinks.displayName = "Navbar.Links";
  * One link of the navigation. `current` marks the page the reader is on (`aria-current="page"`); `disabled` blocks the click
  * and keeps the link in the tab order, as `Link` does; `asChild` puts the look on a router's link. It takes an `icon` before its
  * text, a `badge` (a count or dot, part of the link's name) after it, and an `external` mark (worked out from `href`: a new tab, a
- * trailing icon and a hidden cue). Inside a `Navbar.Group` it is an item of that group's floating menu.
+ * trailing icon and a hidden cue). With `asChild` all of these are drawn inside the router's link, around its own content. Inside a
+ * `Navbar.Group` it is an item of that group's floating menu.
  */
 const NavbarLink = forwardRef<HTMLAnchorElement, NavbarLinkProps>(
   (
@@ -604,7 +605,9 @@ const NavbarLink = forwardRef<HTMLAnchorElement, NavbarLinkProps>(
     const setLook = useContext(NavbarLinksLookContext);
     const currentVariant = setLook?.currentVariant ?? barCurrentVariant;
     const rounded = setLook?.rounded ?? barRounded;
-    const isExternal = !asChild && (external ?? EXTERNAL_HREF_PATTERN.test(href ?? ""));
+    // With `asChild` the address is the slotted element's own, so an external one is worked out from that.
+    const slottedHref = asChild && isValidElement<{ href?: unknown }>(children) && typeof children.props.href === "string" ? children.props.href : undefined;
+    const isExternal = external ?? EXTERNAL_HREF_PATTERN.test((asChild ? slottedHref : href) ?? "");
     const inPanel = useContext(NavbarPanelContext);
     const closeGroupMenu = useContext(NavbarMenuContext);
     const inMenu = closeGroupMenu !== null;
@@ -630,10 +633,41 @@ const NavbarLink = forwardRef<HTMLAnchorElement, NavbarLinkProps>(
       if (closeGroupMenu && event.defaultPrevented) closeGroupMenu();
     };
 
+    const decorate = (label: ReactNode) => (
+      <>
+        {icon && <Icon icon={icon} size={iconSize} />}
+        {label}
+        {badge !== undefined &&
+          badge !== null &&
+          // A `Badge` passed as the badge is drawn as written (its tone, variant, `max`…), with the link's size and height rule filled in
+          // where it didn't say; anything else is the content of the link's own badge (solid, brand; subtle on a current link drawn as a brand fill, where a solid
+          // brand pill would vanish), so a pill is never inside a pill.
+          (isValidElement(badge) && badge.type === Badge ? (
+            cloneElement(badge as ReactElement<BadgeProps>, {
+              size: (badge as ReactElement<BadgeProps>).props.size ?? "xs",
+              className: cx(styles.linkBadge, (badge as ReactElement<BadgeProps>).props.className),
+            })
+          ) : (
+            <Badge tone="brand" variant={current && currentVariant === "solid" ? "subtle" : "solid"} size="xs" className={cx(styles.linkBadge, styles.linkBadgeOwn)}>
+              {badge}
+            </Badge>
+          ))}
+        {isExternal && (
+          <>
+            <Icon icon={ArrowSquareOutIcon} size={trailingIconSize} />
+            <VisuallyHidden> {labels.externalLink}</VisuallyHidden>
+          </>
+        )}
+      </>
+    );
+
     const link = (
       <Component
         {...props}
-        {...(asChild ? {} : { href, target: target ?? (isExternal ? "_blank" : undefined), rel: rel ?? (isExternal ? "noopener noreferrer" : undefined) })}
+        // With `asChild` the slotted element keeps its own `href`, and its own `target` and `rel` win over these (Radix `Slot`).
+        {...(asChild ? {} : { href })}
+        target={target ?? (isExternal ? "_blank" : undefined)}
+        rel={rel ?? (isExternal ? "noopener noreferrer" : undefined)}
         ref={ref}
         aria-current={current ? "page" : undefined}
         aria-disabled={disabled || undefined}
@@ -651,33 +685,12 @@ const NavbarLink = forwardRef<HTMLAnchorElement, NavbarLinkProps>(
         )}
       >
         {asChild ? (
-          children
+          // `Slottable`'s render form clones the slotted element (a router's link) with what it returns as its content: the
+          // icon, the badge and an external link's icon and cue are drawn around the element's own content, inside it, and
+          // the element is still the one rendered (ADR-0218).
+          <Slottable child={children}>{decorate}</Slottable>
         ) : (
-          <>
-            {icon && <Icon icon={icon} size={iconSize} />}
-            {children}
-            {badge !== undefined &&
-              badge !== null &&
-              // A `Badge` passed as the badge is drawn as written (its tone, variant, `max`…), with the link's size and height rule filled in
-              // where it didn't say; anything else is the content of the link's own badge (solid, brand; subtle on a current link drawn as a brand fill, where a solid
-              // brand pill would vanish), so a pill is never inside a pill.
-              (isValidElement(badge) && badge.type === Badge ? (
-                cloneElement(badge as ReactElement<BadgeProps>, {
-                  size: (badge as ReactElement<BadgeProps>).props.size ?? "xs",
-                  className: cx(styles.linkBadge, (badge as ReactElement<BadgeProps>).props.className),
-                })
-              ) : (
-                <Badge tone="brand" variant={current && currentVariant === "solid" ? "subtle" : "solid"} size="xs" className={cx(styles.linkBadge, styles.linkBadgeOwn)}>
-                  {badge}
-                </Badge>
-              ))}
-            {isExternal && (
-              <>
-                <Icon icon={ArrowSquareOutIcon} size={trailingIconSize} />
-                <VisuallyHidden> {labels.externalLink}</VisuallyHidden>
-              </>
-            )}
-          </>
+          decorate(children)
         )}
       </Component>
     );

@@ -11,7 +11,7 @@ const meta: Meta<typeof Navbar.Link> = {
     children: {
       control: "text",
       description:
-        "The link's text. With asChild, the child's own content instead (and then icon, badge and external are not drawn).",
+        "The link's text. With asChild, the child's own content instead, and icon, badge and the external mark are drawn inside the child, around it.",
     },
     href: { control: "text", description: "Where the link goes. With asChild, put it on the child instead." },
     icon: {
@@ -41,7 +41,8 @@ const meta: Meta<typeof Navbar.Link> = {
     },
     asChild: {
       control: "boolean",
-      description: "Renders as a single provided child element (Radix Slot) instead of the built-in <a>, to use a router's link.",
+      description:
+        "Renders as a single provided child element (Radix Slot) instead of the built-in <a>, to use a router's link. The icon, the badge and an external link's icon and cue are drawn inside that element.",
       table: { defaultValue: { summary: "false" } },
     },
     "aria-label": { control: "text", description: "Names the link when its content is only an icon." },

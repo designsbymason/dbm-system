@@ -30,7 +30,8 @@ const meta: Meta<typeof NavigationMenu.Link> = {
     },
     asChild: {
       control: false,
-      description: "Draws the look on the child element (a router's link) instead of an <a>.",
+      description:
+        "Draws the look on the child element (a router's link) instead of an <a>. The icon, description, badge and an external link's icon and cue are drawn inside that element, around its own content.",
       table: { defaultValue: { summary: "false" } },
     },
     onSelect: { control: false, description: "Called when the link is chosen (a click, or Enter). Call event.preventDefault() to keep the panel open." },

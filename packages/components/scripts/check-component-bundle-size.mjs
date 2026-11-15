@@ -90,6 +90,8 @@ const PER_COMPONENT_CSS_BUDGET_KB = 5;
 //   `IconButton` it draws with, 16.80KB measured (the same parts as `Navbar`'s 19.50KB, less its search sheet and rows).
 //   Sidebar (2026-10-21): shared group and section state, `peek`, the account part, group counts, the skeleton (the `Skeleton` atom) and the
 //   rail flyout's measured offset, 20.70KB measured; the budget is 22KB, the same as `Navbar`'s.
+//   Sidebar (2026-11-15): an `asChild` item draws its icon, label, description, badge and external cue inside a router's link (Radix
+//   `Slottable`, ADR-0218), worked out from the link's own text and `href`: 21.87KB to 22.11KB. The budget is 23KB.
 //   FileUpload (2026-10-24): draws with `Button`, `IconButton`, `FieldError`, `ProgressBar`, `Icon`, `Image` and `Text`, and holds the
 //   drop, paste, folder-reading, duplicate, cancel and preview code of its own, 10.24KB measured against the default 10KB. The budget is 14KB.
 //   DataTable (2026-10-24): a row's context menu (`rowContextMenu`) brings `ContextMenu` with it, which draws `Menu`'s item parts that the column
@@ -123,7 +125,7 @@ const PER_COMPONENT_CSS_BUDGET_KB = 5;
 // whether or not it uses the part, as `Toolbar`'s overflow menu and `TableOfContents`' row are: 23.95KB of JS and 10.81KB of CSS measured against the
 // defaults of 10KB and 5KB, budgeted at 25KB and 11.5KB. `DataTable` draws the bar, so it holds it too: 38.31KB and 14.16KB against 32KB and 10KB, budgeted
 // at 40KB and 15KB.
-const JS_BUDGET_OVERRIDES_KB = { TableToolbar: 25, AppShell: 29, Calendar: 12, Carousel: 11, ConfirmDialog: 11, ColorPicker: 15, CommandPalette: 18, DataTable: 40, DatePicker: 18, DateRangePicker: 22, PageShell: 12, EditorTabs: 16, FileUpload: 14, ImageViewer: 13, Menubar: 12, MultiSelect: 18, Navbar: 22, Sidebar: 22, TimeRangePicker: 12, Toolbar: 13, TableOfContents: 17, Tour: 16 };
+const JS_BUDGET_OVERRIDES_KB = { TableToolbar: 25, AppShell: 29, Calendar: 12, Carousel: 11, ConfirmDialog: 11, ColorPicker: 15, CommandPalette: 18, DataTable: 40, DatePicker: 18, DateRangePicker: 22, PageShell: 12, EditorTabs: 16, FileUpload: 14, ImageViewer: 13, Menubar: 12, MultiSelect: 18, Navbar: 22, Sidebar: 23, TimeRangePicker: 12, Toolbar: 13, TableOfContents: 17, Tour: 16 };
 
 // `EditorTabs`'s bundle holds `Tabs`, the `Menu` and `ContextMenu` its tab list and per-tab menus open, the `IconButton` and `Tooltip` of its
 // add button and tabs, the `Spinner`, and `useSortable`: 12.21KB measured first, 14.49KB with the tab menu, status, tooltips, shortcuts and the vertical strip,

@@ -11,7 +11,7 @@ const meta: Meta<typeof Sidebar.Item> = {
     children: {
       control: "text",
       description:
-        "The item's text. In the rail it is hidden and shown in a tooltip, and it stays the item's accessible name. With asChild, the child's own content instead (and then icon, badge and external are not drawn).",
+        "The item's text. In the rail it is hidden and shown in a tooltip, and it stays the item's accessible name. With asChild, the child's own content instead, and the icon, description, badge and external cue are drawn inside the child, around it.",
     },
     href: { control: "text", description: "Where the item goes. Without one, the item is a button (an action). With asChild, put it on the child instead." },
     icon: {
@@ -59,7 +59,8 @@ const meta: Meta<typeof Sidebar.Item> = {
     },
     asChild: {
       control: "boolean",
-      description: "Renders as a single provided child element (Radix Slot) instead of the built-in <a> or <button>, to use a router's link.",
+      description:
+        "Renders as a single provided child element (Radix Slot) instead of the built-in <a> or <button>, to use a router's link. The icon, description, badge and an external link's icon and cue are drawn inside that element, around its own content; in the rail its own text is the tooltip.",
       table: { defaultValue: { summary: "false" } },
     },
     "aria-label": { control: "text", description: "Names the item when its content is only an icon." },

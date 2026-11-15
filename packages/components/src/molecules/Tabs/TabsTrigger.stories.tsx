@@ -34,7 +34,7 @@ const meta: Meta<typeof Tabs.Trigger> = {
     asChild: {
       control: false,
       description:
-        "Renders the trigger's behaviour and styling onto a single provided child element instead of its own button — for a tab that must be another element, such as a link. The child supplies its own label, so icon has no effect in this mode.",
+        "Renders the trigger's behaviour and styling onto a single provided child element instead of its own button — for a tab that must be another element, such as a link. The child's own content is the label, and icon is drawn inside the child, before it.",
       table: { defaultValue: { summary: "false" } },
     },
     "aria-label": {

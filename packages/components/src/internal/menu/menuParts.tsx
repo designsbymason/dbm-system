@@ -11,6 +11,7 @@ import {
   type ReactElement,
   type ReactNode,
 } from "react";
+import { Slottable } from "@radix-ui/react-slot";
 import { Icon } from "../../atoms/Icon";
 import { Spinner } from "../../atoms/Spinner";
 import { Tooltip } from "../../atoms/Tooltip";
@@ -216,7 +217,6 @@ function useItemChrome({
   disabledReason,
   description,
   ariaDescribedBy,
-  describesInside,
   onSelect,
   closeOnSelect,
   onSelectError,
@@ -225,8 +225,6 @@ function useItemChrome({
   disabledReason: ReactNode;
   description: ReactNode;
   ariaDescribedBy: string | undefined;
-  /** False for an `asChild` item, which draws none of its own content, so there is no description to point at. */
-  describesInside: boolean;
   onSelect: ((event: Event) => void | Promise<unknown>) | undefined;
   closeOnSelect: boolean;
   onSelectError: ((error: unknown) => void) | undefined;
@@ -237,10 +235,7 @@ function useItemChrome({
   // A disabled item with a reason stays reachable (focusable, `aria-disabled`) so the reason can be heard and seen;
   // with no reason it is Radix's own skipped-and-dimmed.
   const hasReason = disabled && disabledReason !== undefined && disabledReason !== null;
-  // The reason is announced through a hidden element the item draws itself, which an `asChild` item doesn't.
-  const announcesReason = hasReason && describesInside;
   const reasonWithoutDisabled = !disabled && disabledReason !== undefined && disabledReason !== null;
-  const reasonNotAnnounced = hasReason && !describesInside;
   useEffect(() => {
     if (process.env.NODE_ENV === "production") return;
     if (reasonWithoutDisabled) {
@@ -248,19 +243,15 @@ function useItemChrome({
         "Menu: `disabledReason` has no effect on an item that is not `disabled` — it explains why an item can't be chosen. Add `disabled`, or remove `disabledReason`.",
       );
     }
-    if (reasonNotAnnounced) {
-      console.warn(
-        "Menu.Item: with `asChild`, `disabledReason` is shown in a tooltip but not announced as the item's description, since the item draws none of its own content. Put the reason in the child (and `aria-describedby`), or remove `asChild`.",
-      );
-    }
-  }, [reasonWithoutDisabled, reasonNotAnnounced]);
+  }, [reasonWithoutDisabled]);
   const { busy, handleSelect } = useItemSelect({ onSelect, closeOnSelect, onSelectError, inert: disabled });
   const hasDescription = description !== undefined && description !== null;
   const describedBy =
-    [ariaDescribedBy, hasDescription && describesInside ? descriptionId : undefined, announcesReason ? reasonId : undefined]
+    [ariaDescribedBy, hasDescription ? descriptionId : undefined, hasReason ? reasonId : undefined]
       .filter(Boolean)
       .join(" ") || undefined;
-  const reason = announcesReason ? (
+  // The reason is announced through a hidden element the item draws itself (inside the slotted element, for an `asChild` item).
+  const reason = hasReason ? (
     <VisuallyHidden id={reasonId} aria-hidden="true">
       {disabledReason}
     </VisuallyHidden>
@@ -279,7 +270,8 @@ function useItemChrome({
 /**
  * An action. `onSelect` runs when it is chosen, by a click, Enter or Space, and the menu closes afterwards unless
  * the handler calls `event.preventDefault()` or `closeOnSelect` is `false`. Return a promise from `onSelect` for an
- * action that takes time. Pass `asChild` with a link to make a navigation item.
+ * action that takes time. Pass `asChild` with a link to make a navigation item: its `icon`, `shortcut`, `description` and `trailing`
+ * content are drawn inside the link, around its own text.
  */
 export const MenuItem = forwardRef<HTMLDivElement, MenuItemProps>(
   (
@@ -305,24 +297,37 @@ export const MenuItem = forwardRef<HTMLDivElement, MenuItemProps>(
   ) => {
     const Primitive = useContext(MenuPrimitiveContext);
     const size = useContext(MenuSizeContext);
-    const ignoresContent = asChild && Boolean(icon || shortcut || description || trailing);
-    useEffect(() => {
-      if (process.env.NODE_ENV === "production" || !ignoresContent) return;
-      console.warn(
-        "Menu.Item: `icon`, `shortcut`, `description` and `trailing` have no effect when `asChild` is set — the item draws none of its own content in that mode, since Radix `Slot` requires exactly one child. Put them inside the child, or remove `asChild`.",
-      );
-    }, [ignoresContent]);
+    // With `asChild` the item's own pieces are drawn inside the slotted element, around its own content, which stays the label
+    // (ADR-0218). An item with none of them uses the element's content as it is, so an element drawn in full (a `Navbar.Link` in a
+    // group's menu, a router link of your own) keeps its own layout.
+    const hasPieces = Boolean(icon || shortcut || description || trailing);
     const chrome = useItemChrome({
       disabled,
       disabledReason,
       description,
       ariaDescribedBy,
-      describesInside: !asChild,
       onSelect,
       closeOnSelect,
       onSelectError,
     });
     const iconTone: IconTone = disabled ? "disabled" : tone === "danger" ? "danger" : "default";
+    const body = (label: ReactNode) => (
+      <>
+        <ItemBody
+          icon={icon}
+          shortcut={shortcut}
+          description={description}
+          descriptionId={chrome.descriptionId}
+          trailing={trailing}
+          busy={chrome.busy}
+          size={size}
+          iconTone={iconTone}
+        >
+          {label}
+        </ItemBody>
+        {chrome.reason}
+      </>
+    );
     return chrome.withReason(
       <Primitive.Item
         ref={ref}
@@ -339,23 +344,15 @@ export const MenuItem = forwardRef<HTMLDivElement, MenuItemProps>(
         aria-describedby={chrome.describedBy}
       >
         {asChild ? (
-          children
+          hasPieces || chrome.reason ? (
+            // `Slottable`'s render form clones the slotted element with what it returns as its content, so the pieces land inside
+            // it and it is still the one rendered. The primitive's own slot finds it as its direct child.
+            <Slottable child={children}>{(own: ReactNode) => (hasPieces ? body(own) : <>{own}{chrome.reason}</>)}</Slottable>
+          ) : (
+            children
+          )
         ) : (
-          <>
-            <ItemBody
-              icon={icon}
-              shortcut={shortcut}
-              description={description}
-              descriptionId={chrome.descriptionId}
-              trailing={trailing}
-              busy={chrome.busy}
-              size={size}
-              iconTone={iconTone}
-            >
-              {children}
-            </ItemBody>
-            {chrome.reason}
-          </>
+          body(children)
         )}
       </Primitive.Item>,
     );
@@ -400,7 +397,6 @@ export const MenuCheckboxItem = forwardRef<HTMLDivElement, MenuCheckboxItemProps
       disabledReason,
       description,
       ariaDescribedBy,
-      describesInside: true,
       onSelect,
       closeOnSelect,
       onSelectError,
@@ -535,7 +531,6 @@ export const MenuRadioItem = forwardRef<HTMLDivElement, MenuRadioItemProps>(
       disabledReason,
       description,
       ariaDescribedBy,
-      describesInside: true,
       onSelect,
       closeOnSelect,
       onSelectError,

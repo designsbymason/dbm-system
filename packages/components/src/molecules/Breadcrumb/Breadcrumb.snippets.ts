@@ -90,10 +90,11 @@ ${trail(
 ${trail("maxItems={4} itemsBeforeCollapse={2} itemsAfterCollapse={1}", longItems)}`,
 
   router: `{/* asChild renders your own single child element with Breadcrumb's look — here a plain
-    <a>, standing in for your router's link component (which goes in its place). */}
+    <a>, standing in for your router's link component (which goes in its place). The icon is
+    drawn inside that element, before its own text. HouseIcon comes from @dbm-system/icons. */}
 <Breadcrumb>
   <Breadcrumb.Item>
-    <Breadcrumb.Link asChild href="/">
+    <Breadcrumb.Link asChild href="/" icon={HouseIcon}>
       <a href="/">Home</a>
     </Breadcrumb.Link>
   </Breadcrumb.Item>

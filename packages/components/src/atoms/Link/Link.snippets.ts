@@ -31,6 +31,12 @@ export const linkSnippets = {
   <a>Rendered as a real Link, styling merged onto this anchor</a>
 </Link>`,
 
+  asChildExternal: `{/* With asChild, an external link's icon and its "(opens in a new tab)" cue are drawn inside your
+    element, after its own text. */}
+<Link asChild href="https://example.com/changelog">
+  <a>Read the changelog</a>
+</Link>`,
+
   disabled: `{/* disabled sets aria-disabled, blocks clicks and keyboard activation, and dims the link */}
 <Link href="/unavailable" disabled>
   Unavailable right now

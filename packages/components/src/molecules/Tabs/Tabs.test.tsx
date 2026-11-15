@@ -501,8 +501,9 @@ describe("Tabs — triggers", () => {
     expect(alpha).toHaveAttribute("href", "#a");
     expect(alpha).toHaveAttribute("aria-selected", "true");
     expect(alpha).toHaveClass(styles.trigger!, styles.underline!);
-    // The child supplies its own content: no wrapper span added around it.
-    expect(alpha.querySelector(`.${styles.triggerLabel}`)).toBeNull();
+    // The child's own content is the label, in the same wrapper a plain tab draws, inside the child.
+    expect(alpha.querySelector(`.${styles.triggerLabel}`)).toHaveTextContent("Alpha");
+    expect(alpha.querySelector("svg")).toBeNull();
   });
 
   it("selects an asChild tab on click", async () => {
@@ -725,20 +726,25 @@ describe("Tabs — dev-mode warnings", () => {
     expect(warn).not.toHaveBeenCalled();
   });
 
-  it("warns that icon has no effect with asChild", () => {
+  it("draws the icon inside an asChild tab, before its own label, without a warning", () => {
     const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
     render(
       <Tabs defaultValue="a">
         <Tabs.List aria-label="Project">
           <Tabs.Trigger value="a" asChild icon={HouseIcon}>
-            <a href="#a">A</a>
+            <a href="#a">Alpha</a>
           </Tabs.Trigger>
         </Tabs.List>
         <Tabs.Content value="a">A</Tabs.Content>
       </Tabs>,
     );
-    expect(warn).toHaveBeenCalledTimes(1);
-    expect(warn.mock.calls[0]?.[0]).toMatch(/`icon` has no effect when `asChild`/);
+    const tab = screen.getByRole("tab", { name: "Alpha" });
+    expect(tab.tagName).toBe("A");
+    expect(tab.firstElementChild?.tagName.toLowerCase()).toBe("svg");
+    expect(tab.firstElementChild).toHaveClass(styles.triggerIcon!);
+    expect(tab.querySelectorAll("a")).toHaveLength(0);
+    expect(warn).not.toHaveBeenCalled();
+    warn.mockRestore();
   });
 });
 

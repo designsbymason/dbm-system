@@ -285,7 +285,7 @@ deep; the group that holds the current page starts open, and marks its own butto
 
 An item with an `href` is a link, one without is a button (an action), an `http(s)://` address is marked external
 (a new tab, a trailing icon and a hidden cue), `disabled` keeps the item focusable, and `asChild` puts the look on your
-router's link (its text and any icon are then the child's own). A `badge` is a count or text in the built-in solid brand badge (its subtle look on a current item drawn as a brand fill, where a solid pill would vanish), or a
+router's link (its text is the child's own; the `icon`, `description`, `badge` and an external link's icon and cue are drawn inside it, and in the rail its text is the tooltip). A `badge` is a count or text in the built-in solid brand badge (its subtle look on a current item drawn as a brand fill, where a solid pill would vanish), or a
 `Badge` you pass, which is drawn as written: its own `tone`, `variant`, `size`, `className` and `style` win over the built-in look, the item
 fills in only its `size` and height where it sets none, and in the rail it becomes the mark on the icon.
 

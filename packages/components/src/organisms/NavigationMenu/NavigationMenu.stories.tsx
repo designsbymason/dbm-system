@@ -2,7 +2,9 @@ import type { Meta, StoryContext, StoryObj } from "@storybook/react-vite";
 import type { Responsive } from "@dbm-system/utils";
 import { expect, userEvent, waitFor, within } from "storybook/test";
 import { Fragment, useRef, useState } from "react";
+import { BookOpenIcon, ChartBarIcon } from "@dbm-system/icons";
 import { Button } from "../../atoms/Button";
+import { NavigationMenu } from "./NavigationMenu";
 import { navigationMenuPlaygroundSnippet, navigationMenuSnippets } from "./NavigationMenu.snippets";
 import type {
   NavigationMenuController,
@@ -321,6 +323,52 @@ export const RichPanels: Story = {
     </MenuStage>
   ),
   parameters: { docs: { source: { code: navigationMenuSnippets.richPanel } } },
+};
+
+export const RouterLinks: Story = {
+  name: "With a router's links (asChild)",
+  argTypes: pinned("presentation", "orientation", "indicator"),
+  // A plain anchor stands in for a router's link. With `asChild` the icon, the description and an external link's icon and cue are drawn
+  // inside it, around its own text, and the anchor is still the one rendered.
+  render: (args) => (
+    <MenuStage>
+      <DemoNavigation {...menuArgs(args)}>
+        <NavigationMenu.List>
+          <NavigationMenu.Item value="products">
+            <NavigationMenu.Trigger>Products</NavigationMenu.Trigger>
+            <NavigationMenu.Content>
+              <NavigationMenu.Link asChild icon={ChartBarIcon} description="Dashboards and reports for every team">
+                <a href="/analytics">Analytics</a>
+              </NavigationMenu.Link>
+              <NavigationMenu.Link asChild icon={BookOpenIcon} description="Guides and the API reference">
+                <a href="https://example.com/docs">Docs</a>
+              </NavigationMenu.Link>
+            </NavigationMenu.Content>
+          </NavigationMenu.Item>
+          <NavigationMenu.Item>
+            <NavigationMenu.Link asChild>
+              <a href="/pricing">Pricing</a>
+            </NavigationMenu.Link>
+          </NavigationMenu.Item>
+        </NavigationMenu.List>
+      </DemoNavigation>
+    </MenuStage>
+  ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await userEvent.click(canvas.getByRole("button", { name: "Products" }));
+    const analytics = await canvas.findByRole("link", { name: /^Analytics/ });
+    await expect(analytics.firstElementChild?.tagName.toLowerCase()).toBe("svg");
+    await expect(analytics).toHaveTextContent("Dashboards and reports for every team");
+    const docs = canvas.getByRole("link", { name: /^Docs\s*\(opens in a new tab\)/ });
+    await expect(docs).toHaveAttribute("target", "_blank");
+    await expect(docs.querySelectorAll("svg")).toHaveLength(2);
+    // Closed again before the accessibility run that follows, which would otherwise meet the primitive's hidden focus proxy.
+    await userEvent.keyboard("{Escape}");
+    await waitFor(() => expect(canvasElement.querySelector('button[aria-expanded="true"]')).toBeNull(), { timeout: 4000 });
+    await waitFor(() => expect(canvasElement.querySelector('span[aria-hidden="true"][tabindex="0"]')).toBeNull(), { timeout: 4000 });
+  },
+  parameters: { docs: { source: { code: navigationMenuSnippets.routerLinks } } },
 };
 
 export const PanelAlignment: Story = {

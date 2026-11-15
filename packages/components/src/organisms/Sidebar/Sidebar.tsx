@@ -7,7 +7,7 @@ import {
   ListIcon,
 } from "@dbm-system/icons";
 import { cx, mergeDefined, mergeRefs } from "@dbm-system/utils";
-import { Slot } from "@radix-ui/react-slot";
+import { Slot, Slottable } from "@radix-ui/react-slot";
 import { cloneElement, forwardRef, isValidElement, useCallback, useContext, useEffect, useId, useMemo, useRef, useState } from "react";
 import type { CSSProperties, ElementType, MouseEvent, ReactElement, ReactNode } from "react";
 import { Avatar } from "../../atoms/Avatar";
@@ -762,8 +762,8 @@ SidebarSkeleton.displayName = "Sidebar.Skeleton";
  * One item of the navigation: a link (`href`), or a button when it has none. `current` marks the page the reader is on
  * (`aria-current="page"`); `disabled` blocks the click and keeps the item in the tab order, as `Link` does; `asChild` puts the look on a
  * router's link. It takes an `icon` before its text (all the rail shows), a `badge` after it and an `external` mark (worked out from
- * `href`). In the rail its text moves to a tooltip and stays its accessible name. Inside a rail group's floating menu it is an item of
- * that menu.
+ * `href`). With `asChild` all of these are drawn inside the router's link, around its own content. In the rail its text moves to a
+ * tooltip and stays its accessible name. Inside a rail group's floating menu it is an item of that menu.
  */
 const SidebarItem = forwardRef<HTMLElement, SidebarItemProps>(
   (
@@ -798,20 +798,25 @@ const SidebarItem = forwardRef<HTMLElement, SidebarItemProps>(
     const tooltipSide = useOutwardSide();
     const grows = useBecameCurrent(current);
     const isLink = href !== undefined;
-    const isExternal = !asChild && isLink && (external ?? EXTERNAL_HREF_PATTERN.test(href));
+    // With `asChild` the item's text and address are the slotted element's own (ADR-0218: its pieces are drawn inside that element,
+    // around its own content), so the label, the rail's tooltip and an external address are worked out from them.
+    const slotted = asChild && isValidElement<{ children?: ReactNode; href?: unknown }>(children) ? children : null;
+    const ownContent = asChild ? slotted?.props.children : children;
+    const ownHref = asChild ? (typeof slotted?.props.href === "string" ? slotted.props.href : undefined) : href;
+    const isExternal = ownHref !== undefined && (external ?? EXTERNAL_HREF_PATTERN.test(ownHref));
     // One of three elements chosen at run time; `ElementType` keeps the anchor and button attribute sets from fighting over `type`.
     const Component: ElementType = asChild ? Slot : isLink ? "a" : "button";
     const rail = railed && !inMenu;
-    const label = typeof children === "string" || typeof children === "number" ? String(children) : null;
-    const { setLabel, open: tipOpen, onOpenChange: onTipOpenChange } = useTruncationTooltip(!rail && !inMenu && !asChild && label !== null);
+    const label = typeof ownContent === "string" || typeof ownContent === "number" ? String(ownContent) : null;
+    const { setLabel, open: tipOpen, onOpenChange: onTipOpenChange } = useTruncationTooltip(!rail && !inMenu && label !== null);
     const hasAction = action !== undefined && action !== null && !rail && !inMenu;
     const descriptionId = useId();
-    const hasDescription = description !== undefined && description !== null && !asChild && !inMenu;
+    const hasDescription = description !== undefined && description !== null && !inMenu;
     const describedBy = [props["aria-describedby"], hasDescription ? descriptionId : undefined].filter(Boolean).join(" ") || undefined;
 
     useEffect(() => {
       if (process.env.NODE_ENV === "production") return;
-      if (rail && !icon && !asChild && label === null) {
+      if (rail && !icon && label === null) {
         console.warn("Sidebar.Item: in the rail an item with no `icon` and no plain-text label has nothing to show. Give every item an `icon`.");
       }
     });
@@ -852,11 +857,35 @@ const SidebarItem = forwardRef<HTMLElement, SidebarItemProps>(
       className,
     );
 
+    const decorate = (content: ReactNode) => (
+      <>
+        {iconNode}
+        <span className={cx(styles.itemText, hasDescription && styles.hasDescription)}>
+          <span ref={setLabel} className={cx(styles.label, rail && styles.hiddenText)}>
+            {content}
+          </span>
+          {hasDescription && (
+            <span id={descriptionId} aria-hidden="true" className={cx(styles.description, rail && styles.hiddenText)}>
+              {description}
+            </span>
+          )}
+        </span>
+        {badgeNode}
+        {isExternal && (
+          <>
+            {!rail && <Icon icon={ArrowSquareOutIcon} size={externalIconSizeFor[size]} className={styles.trailingIcon} />}
+            <VisuallyHidden> {labels.externalLink}</VisuallyHidden>
+          </>
+        )}
+      </>
+    );
+
     const element = (
       <Component
         {...props}
         {...(asChild
-          ? {}
+          ? // The slotted element keeps its own `href`, and its own `target` and `rel` win over these (Radix `Slot`).
+            { target: target ?? (isExternal ? "_blank" : undefined), rel: rel ?? (isExternal ? "noopener noreferrer" : undefined) }
           : isLink
             ? { href, target: target ?? (isExternal ? "_blank" : undefined), rel: rel ?? (isExternal ? "noopener noreferrer" : undefined) }
             : { type: "button" })}
@@ -869,28 +898,12 @@ const SidebarItem = forwardRef<HTMLElement, SidebarItemProps>(
         className={itemClass}
       >
         {asChild ? (
-          children
+          // `Slottable`'s render form clones the slotted element (a router's link) with what it returns as its content: the icon, the label
+          // and description wrappers, the badge and an external link's icon and cue are drawn around the element's own content, inside it,
+          // and the element is still the one rendered (ADR-0218).
+          <Slottable child={children}>{decorate}</Slottable>
         ) : (
-          <>
-            {iconNode}
-            <span className={cx(styles.itemText, hasDescription && styles.hasDescription)}>
-              <span ref={setLabel} className={cx(styles.label, rail && styles.hiddenText)}>
-                {children}
-              </span>
-              {hasDescription && (
-                <span id={descriptionId} aria-hidden="true" className={cx(styles.description, rail && styles.hiddenText)}>
-                  {description}
-                </span>
-              )}
-            </span>
-            {badgeNode}
-            {isExternal && (
-              <>
-                {!rail && <Icon icon={ArrowSquareOutIcon} size={externalIconSizeFor[size]} className={styles.trailingIcon} />}
-                <VisuallyHidden> {labels.externalLink}</VisuallyHidden>
-              </>
-            )}
-          </>
+          decorate(children)
         )}
       </Component>
     );
@@ -904,14 +917,15 @@ const SidebarItem = forwardRef<HTMLElement, SidebarItemProps>(
       );
     }
 
-    const tooltipContent = asChild ? props["aria-label"] : children;
+    // With `asChild` the slotted element's own text, as for any item; an element with none (an icon-only router link) falls back to its name.
+    const tooltipContent = asChild ? (hasNodeContent(ownContent) ? ownContent : props["aria-label"]) : children;
     // In the rail the text is the tooltip. Expanded, it is one only when the label is cut with an ellipsis, so the full text can still be read.
     const withTooltip =
       rail && tooltipContent !== undefined && tooltipContent !== null ? (
         <Tooltip content={tooltipContent} side={tooltipSide}>
           {element}
         </Tooltip>
-      ) : label !== null && !rail && !asChild ? (
+      ) : label !== null && !rail ? (
         <Tooltip content={label} side={tooltipSide} open={tipOpen} onOpenChange={onTipOpenChange}>
           {element}
         </Tooltip>
@@ -930,6 +944,12 @@ const SidebarItem = forwardRef<HTMLElement, SidebarItemProps>(
   },
 );
 SidebarItem.displayName = "Sidebar.Item";
+
+/** Whether a slotted element's own children draw anything (an empty string, `false` and `null` do not). */
+function hasNodeContent(node: ReactNode): boolean {
+  if (Array.isArray(node)) return node.some(hasNodeContent);
+  return node !== undefined && node !== null && node !== false && node !== true && node !== "";
+}
 
 /**
  * An item that opens more items: a button with `aria-expanded` that shows its items indented beneath it, animated. Groups nest, up to

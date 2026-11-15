@@ -132,6 +132,29 @@ ${pricing(" current").replace(/^/gm, "    ")}
   </NavigationMenu.List>
 </NavigationMenu>`,
 
+  routerLinks: `{/* asChild draws the look on your router's link: put its component where the <a> is (here a plain anchor).
+    The icon, the description and an external link's icon and cue are drawn inside it. ChartBarIcon and BookOpenIcon come from @dbm-system/icons. */}
+<NavigationMenu aria-label="Primary">
+  <NavigationMenu.List>
+    <NavigationMenu.Item value="products">
+      <NavigationMenu.Trigger>Products</NavigationMenu.Trigger>
+      <NavigationMenu.Content>
+        <NavigationMenu.Link asChild icon={ChartBarIcon} description="Dashboards and reports for every team">
+          <a href="/analytics">Analytics</a>
+        </NavigationMenu.Link>
+        <NavigationMenu.Link asChild icon={BookOpenIcon} description="Guides and the API reference">
+          <a href="https://example.com/docs">Docs</a>
+        </NavigationMenu.Link>
+      </NavigationMenu.Content>
+    </NavigationMenu.Item>
+    <NavigationMenu.Item>
+      <NavigationMenu.Link asChild>
+        <a href="/pricing">Pricing</a>
+      </NavigationMenu.Link>
+    </NavigationMenu.Item>
+  </NavigationMenu.List>
+</NavigationMenu>`,
+
   panelAlign: `{/* panelAlign: "start" (default) | "center" | "end" | "auto" — auto is end when there is more room toward the start side.
     Panels are kept on the screen either way, their links wrapping to the room there is. */}
 ${menu('panelAlign="auto"')}`,

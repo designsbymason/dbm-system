@@ -183,6 +183,13 @@ A single group keeps one item chosen once it has one: clicking the chosen item d
 
 <Canvas of={ToggleGroupStories.Wrapped} />
 
+### Your own element (asChild)
+
+With `asChild` the item's look and state go on your own element, and its `icon` is drawn inside that element, before its
+own text. An empty element with an `icon` is icon-only, and carries the item's `aria-label`.
+
+<Canvas of={ToggleGroupStories.AsChild} />
+
 ### Named by a visible label
 
 <Canvas of={ToggleGroupStories.LabelledBy} />

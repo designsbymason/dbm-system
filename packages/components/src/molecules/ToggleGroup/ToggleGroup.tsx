@@ -1,7 +1,8 @@
 import { cx, useResolvedResponsiveValue } from "@dbm-system/utils";
+import { Slottable } from "@radix-ui/react-slot";
 import * as ToggleGroupPrimitive from "@radix-ui/react-toggle-group";
-import { createContext, forwardRef, useContext, useRef, useState } from "react";
-import type { FocusEvent, KeyboardEvent } from "react";
+import { createContext, forwardRef, isValidElement, useContext, useRef, useState } from "react";
+import type { FocusEvent, KeyboardEvent, ReactNode } from "react";
 import { Icon } from "../../atoms/Icon";
 import type { IconSize } from "../../atoms/Icon";
 import styles from "./ToggleGroup.module.css";
@@ -203,16 +204,11 @@ const ToggleGroupItem = forwardRef<HTMLButtonElement, ToggleGroupItemProps>((ite
     itemProps as ToggleGroupItemProps & { role?: string; "aria-checked"?: unknown; "aria-pressed"?: unknown };
   const { variant, size, onItemFocus } = useContext(ToggleGroupContext);
 
-  const hasWarnedIconRef = useRef(false);
   const hasWarnedNameRef = useRef(false);
-  const hasLabel = children !== undefined && children !== null && children !== false;
+  // With `asChild` the label is the slotted element's own content, and the icon is drawn inside that element, before it (ADR-0218).
+  const ownContent = asChild ? (isValidElement<{ children?: ReactNode }>(children) ? children.props.children : undefined) : children;
+  const hasLabel = isLabel(ownContent);
   if (process.env.NODE_ENV !== "production") {
-    if (asChild && icon !== undefined && !hasWarnedIconRef.current) {
-      hasWarnedIconRef.current = true;
-      console.warn(
-        "ToggleGroup.Item: `icon` has no effect when `asChild` is set — the slotted child supplies its own content. Render the icon inside the child instead.",
-      );
-    }
     if (!asChild && !hasLabel && !props["aria-label"] && !props["aria-labelledby"] && !hasWarnedNameRef.current) {
       hasWarnedNameRef.current = true;
       console.warn(
@@ -220,6 +216,13 @@ const ToggleGroupItem = forwardRef<HTMLButtonElement, ToggleGroupItemProps>((ite
       );
     }
   }
+
+  const decorate = (label: ReactNode) => (
+    <>
+      {icon && <Icon icon={icon} size={iconSizeForSize[size]} className={styles.itemIcon} />}
+      {isLabel(label) && <span className={styles.itemLabel}>{label}</span>}
+    </>
+  );
 
   return (
     <ToggleGroupPrimitive.Item
@@ -235,22 +238,27 @@ const ToggleGroupItem = forwardRef<HTMLButtonElement, ToggleGroupItemProps>((ite
         styles.item,
         sizeClass[size],
         variantClass[variant],
-        !asChild && !hasLabel && styles.iconOnly,
+        !hasLabel && styles.iconOnly,
         className,
       )}
     >
       {asChild ? (
-        children
+        // `Slottable`'s render form clones the slotted element with what it returns as its content: the icon and the label wrapper are
+        // drawn around the element's own content, inside it, and the element is still the one rendered. The primitive's own slot finds
+        // it as its direct child.
+        <Slottable child={children}>{decorate}</Slottable>
       ) : (
-        <>
-          {icon && <Icon icon={icon} size={iconSizeForSize[size]} className={styles.itemIcon} />}
-          {hasLabel && <span className={styles.itemLabel}>{children}</span>}
-        </>
+        decorate(children)
       )}
     </ToggleGroupPrimitive.Item>
   );
 });
 ToggleGroupItem.displayName = "ToggleGroup.Item";
+
+/** Whether an item's content is a label to draw (an empty string, `false` and `null` are not). */
+function isLabel(node: ReactNode): boolean {
+  return node !== undefined && node !== null && node !== false && node !== "";
+}
 
 type ToggleGroupComponent = typeof ToggleGroupRoot & {
   Item: typeof ToggleGroupItem;

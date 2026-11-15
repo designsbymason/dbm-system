@@ -339,6 +339,47 @@ describe("Sidebar", () => {
       await user.click(link);
       expect(navigate).toHaveBeenCalledTimes(1);
     });
+
+    it("draws the icon, the label, the description, the badge and the external cue inside an asChild link", () => {
+      render(
+        <Sidebar collapseBelow="never">
+          <Sidebar.Nav>
+            <Sidebar.Item asChild icon={HouseIcon} description="Off the site" badge="4">
+              <a href="https://example.com/routed">Routed</a>
+            </Sidebar.Item>
+          </Sidebar.Nav>
+        </Sidebar>,
+      );
+      const link = screen.getByRole("link", { name: /^Routed 4\s*\(opens in a new tab\)$/ });
+      expect(link).toHaveAttribute("href", "https://example.com/routed");
+      expect(link).toHaveAttribute("target", "_blank");
+      expect(link).toHaveAccessibleDescription("Off the site");
+      // The icon first, then the label, all inside the one link: the slotted element is the one rendered.
+      expect(link.firstElementChild?.tagName.toLowerCase()).toBe("svg");
+      expect(link.querySelectorAll("svg")).toHaveLength(2);
+      expect(link.querySelectorAll("a")).toHaveLength(0);
+    });
+
+    it("gives an asChild item in the rail its own text as the tooltip, and its aria-label when it has none", async () => {
+      const user = userEvent.setup();
+      render(
+        <Sidebar collapseBelow="never" defaultCollapsed>
+          <Sidebar.Nav>
+            <Sidebar.Item asChild icon={HouseIcon}>
+              <a href="/routed">Routed</a>
+            </Sidebar.Item>
+            <Sidebar.Item asChild icon={HouseIcon} aria-label="Named">
+              <a href="/named" aria-label="Named" />
+            </Sidebar.Item>
+          </Sidebar.Nav>
+        </Sidebar>,
+      );
+      await user.hover(screen.getByRole("link", { name: "Routed" }));
+      expect(await screen.findByRole("tooltip")).toHaveTextContent("Routed");
+      await user.unhover(screen.getByRole("link", { name: "Routed" }));
+      await user.hover(screen.getByRole("link", { name: "Named" }));
+      await waitFor(() => expect(screen.getByRole("tooltip")).toHaveTextContent("Named"));
+    });
   });
 
   describe("groups", () => {
@@ -1355,21 +1396,21 @@ describe("Sidebar item descriptions", () => {
     expect(link.getAttribute("aria-describedby")).toMatch(/extra/);
   });
 
-  it("keeps it in the DOM, hidden, in the rail, and not for an asChild item", () => {
+  it("keeps it in the DOM, hidden, in the rail, also for an asChild item", () => {
     render(
       <Sidebar collapseBelow="never" defaultCollapsed>
         <Sidebar.Nav>
           <Sidebar.Item href="/a" icon={HouseIcon} description="Everything at a glance">
             Overview
           </Sidebar.Item>
-          <Sidebar.Item asChild description="Ignored">
+          <Sidebar.Item asChild icon={HouseIcon} description="Drawn inside">
             <a href="/b">Plain</a>
           </Sidebar.Item>
         </Sidebar.Nav>
       </Sidebar>,
     );
     expect(screen.getByRole("link", { name: "Overview" })).toHaveAccessibleDescription(/Everything at a glance/);
-    expect(screen.queryByText("Ignored")).not.toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Plain" })).toHaveAccessibleDescription(/Drawn inside/);
   });
 });
 

@@ -626,10 +626,11 @@ export const AsLink: Story = {
     <div style={demoContainerStyle}>
       <Tabs defaultValue="overview">
         <Tabs.List aria-label="Project">
-          <Tabs.Trigger value="overview" asChild>
+          {/* The icon is drawn inside the link, before its own text. */}
+          <Tabs.Trigger value="overview" asChild icon={HouseIcon}>
             <a href="#overview">Overview</a>
           </Tabs.Trigger>
-          <Tabs.Trigger value="activity" asChild>
+          <Tabs.Trigger value="activity" asChild icon={ChartBarIcon}>
             <a href="#activity">Activity</a>
           </Tabs.Trigger>
         </Tabs.List>
@@ -642,6 +643,12 @@ export const AsLink: Story = {
       </Tabs>
     </div>
   ),
+  play: async ({ canvasElement }) => {
+    const tab = within(canvasElement).getByRole("tab", { name: "Overview" });
+    await expect(tab.tagName).toBe("A");
+    await expect(tab.firstElementChild?.tagName.toLowerCase()).toBe("svg");
+    await expect(tab).toHaveTextContent("Overview");
+  },
 };
 
 export const RightToLeft: Story = {

@@ -19,7 +19,7 @@ const meta: Meta<typeof ToggleGroup.Item> = {
     },
     icon: {
       control: false,
-      description: "An icon before the label, sized to the group's size. Not for asChild.",
+      description: "An icon before the label, sized to the group's size. With asChild it is drawn inside your element, before its own content.",
     },
     disabled: {
       control: "boolean",
@@ -29,7 +29,7 @@ const meta: Meta<typeof ToggleGroup.Item> = {
     asChild: {
       control: "boolean",
       description:
-        "Renders the item as its only child, for a wrapper such as a Tooltip trigger. The child must be a single element that takes the item's props.",
+        "Renders the item as its only child, for a wrapper such as a Tooltip trigger. The child must be a single element that takes the item's props; the icon is drawn inside it, before its own content.",
       table: { defaultValue: { summary: "false" } },
     },
     "aria-label": {

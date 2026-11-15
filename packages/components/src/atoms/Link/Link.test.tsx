@@ -115,7 +115,7 @@ describe("Link", () => {
     expect(screen.getByTestId("link").className).toMatch(/underlineNone/);
   });
 
-  it("renders the single child via Slot when asChild is set, merging href onto a real anchor, without the icon", () => {
+  it("renders the single child via Slot when asChild is set, merging href onto a real anchor, with the external icon and cue inside it", () => {
     render(
       <Link asChild href="https://example.com" external>
         {/* eslint-disable-next-line jsx-a11y/anchor-is-valid -- intentionally
@@ -124,10 +124,27 @@ describe("Link", () => {
         <a>Custom element</a>
       </Link>,
     );
-    const el = screen.getByRole("link", { name: "Custom element" });
+    const el = screen.getByRole("link", { name: /^Custom element ?\(opens in a new tab\)$/ });
     expect(el.tagName).toBe("A");
     expect(el).toHaveAttribute("href", "https://example.com");
-    expect(document.querySelector("svg")).not.toBeInTheDocument();
+    expect(el).toHaveAttribute("target", "_blank");
+    // The element's own text first, then the icon and the cue, all inside the one anchor.
+    expect(el.firstChild?.textContent).toBe("Custom element");
+    expect(el.querySelectorAll("svg")).toHaveLength(1);
+    expect(el).toHaveTextContent("Custom element (opens in a new tab)");
+    expect(document.querySelectorAll("a")).toHaveLength(1);
+  });
+
+  it("draws neither the icon nor the cue inside an asChild element whose link is not external", () => {
+    render(
+      <Link asChild href="/docs">
+        {/* eslint-disable-next-line jsx-a11y/anchor-is-valid -- Slot merges Link's own href onto the child at render time. */}
+        <a>Docs</a>
+      </Link>,
+    );
+    const el = screen.getByRole("link", { name: "Docs" });
+    expect(el.querySelector("svg")).not.toBeInTheDocument();
+    expect(el).toHaveTextContent(/^Docs$/);
   });
 
   it("forwards ref to the underlying anchor", () => {

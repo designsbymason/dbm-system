@@ -1,5 +1,7 @@
 import type { Meta, StoryContext, StoryObj } from "@storybook/react-vite";
 import {
+  BookOpenIcon,
+  ClockCounterClockwiseIcon,
   CopyIcon,
   DotsThreeIcon,
   DownloadSimpleIcon,
@@ -264,10 +266,11 @@ export const LinkItems: Story = {
   parameters: { docs: { source: { code: menuSnippets.linkItems } } },
   render: (args) => (
     <MenuStage args={args} label="Help">
-      <Menu.Item asChild>
+      {/* The icon and the shortcut are drawn inside the link, around its own text. */}
+      <Menu.Item asChild icon={BookOpenIcon} shortcut="?">
         <a href="#documentation">Documentation</a>
       </Menu.Item>
-      <Menu.Item asChild>
+      <Menu.Item asChild icon={ClockCounterClockwiseIcon}>
         <a href="#changelog">Changelog</a>
       </Menu.Item>
     </MenuStage>

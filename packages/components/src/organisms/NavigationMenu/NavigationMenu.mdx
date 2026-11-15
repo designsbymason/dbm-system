@@ -276,6 +276,13 @@ or a trigger, and a description cut after a number of lines (`descriptionLines`)
 
 <Canvas of={NavigationMenuStories.RichPanels} />
 
+### With a router's links (asChild)
+
+`asChild` draws a link's look on your router's own link component. Its `icon`, `description`, `badge` and an external link's
+icon and "(opens in a new tab)" cue are drawn inside that element, around its own text.
+
+<Canvas of={NavigationMenuStories.RouterLinks} />
+
 ### A trigger that is also a link
 
 Give a trigger an `href` and it is a link to the section's own page beside a caret button that opens the panel. The link opens the panel
@@ -443,7 +450,7 @@ it is the stacked list, and choosing a link closes the menu.
       </NavigationMenu.Link>
     </NavigationMenu.Item>
     <NavigationMenu.Item>
-      <NavigationMenu.Link asChild>
+      <NavigationMenu.Link asChild icon={NewspaperIcon}>
         <RouterLink to="/blog">Blog</RouterLink>
       </NavigationMenu.Link>
     </NavigationMenu.Item>

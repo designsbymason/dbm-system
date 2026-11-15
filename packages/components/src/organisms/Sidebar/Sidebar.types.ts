@@ -341,7 +341,7 @@ export interface SidebarSectionProps extends Omit<HTMLAttributes<HTMLLIElement>,
 }
 
 export interface SidebarItemProps extends Omit<AnchorHTMLAttributes<HTMLAnchorElement>, "children"> {
-  /** The item's text. In the rail it is hidden and shown in a tooltip, and it stays the item's accessible name. With `asChild`, the child's own content instead. */
+  /** The item's text. In the rail it is hidden and shown in a tooltip, and it stays the item's accessible name. With `asChild`, the child's own content instead, drawn inside the same label wrapper. */
   children?: ReactNode;
   /** Where the item goes. Without one, the item is a `<button>` (an action, such as "New project"). With `asChild`, put it on the child instead. */
   href?: string;
@@ -390,6 +390,8 @@ export interface SidebarItemProps extends Omit<AnchorHTMLAttributes<HTMLAnchorEl
   disabled?: boolean;
   /**
    * Renders as a single provided child element (via Radix `Slot`) instead of the built-in `<a>` or `<button>`, to use a router's link.
+   * The `icon`, `description`, `badge` and an external link's icon and cue (worked out from the child's own `href`) are drawn inside that
+   * element, around its own content, and in the rail its own text is the tooltip (its `aria-label` when it has none).
    * @default false
    */
   asChild?: boolean;

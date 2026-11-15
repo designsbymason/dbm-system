@@ -49,10 +49,10 @@ export interface LinkProps extends ComponentPropsWithoutRef<"a"> {
   size?: LinkSize;
   /**
    * Merge props onto the single child element instead of rendering an
-   * `<a>` (via Radix `Slot`). The external-link icon and the visually-hidden
-   * "(opens in a new tab)" cue are not rendered in this mode, since `Slot`
-   * requires exactly one child — the consumer's own child element is
-   * responsible for its own accessible content in that case.
+   * `<a>` (via Radix `Slot`), for a router's link component. The external-link
+   * icon and the visually-hidden "(opens in a new tab)" cue are drawn inside
+   * that element, after its own content (Radix `Slottable`), so an external
+   * link keeps both.
    * @default false
    */
   asChild?: boolean;

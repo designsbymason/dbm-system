@@ -55,3 +55,7 @@ A hint written with `mod` (`shortcut="mod+s"`, `"mod+shift+z"`) is drawn for the
 
 ## Reads the nearest DirectionProvider (2026-11-06)
 Additive, at explicit direction ([ADR-0177](../adr/0177-an-optional-direction-provider-sets-the-text-direction-for-a-subtree-over-reading-the-page-direction-automatically.md), [ADR-0182](../adr/0182-appshell-grows-a-busy-main-a-whole-page-state-and-a-layer-ladder-and-direction-reaches-the-shell-sidebar-and-navbar-through-a-provider.md)): `dir` left out now follows the nearest `DirectionProvider`; with none, nothing changes. The `dir` JSDoc, the Controls description and the Docs text say so; a unit test and a real-browser check (`DirectionProvider.checks.stories.tsx`) set the direction only with a provider. Finalized status is unchanged.
+
+## Item pieces drawn inside an `asChild` item, 2026-11-15 (additive; stays Finalized)
+
+At explicit direction ([ADR-0218](../adr/0218-an-aschild-component-draws-its-own-icons-spinner-and-caption-inside-the-slotted-element-with-radix-slottable-over-dropping-them-or-asking-the-consumer-to-put-them-in-the-child.md), adopted here): `ContextMenu.Item` shares `Menu.Item`'s part, so with `asChild` its `icon`, `shortcut`, `description` and `trailing` content are drawn inside the slotted element, around its own content, and a `disabledReason` is announced from inside it; an item with none of them uses the element as it is. See [Menu](Menu.md) for the change and its tests. Only the `asChild` Controls description changed here.

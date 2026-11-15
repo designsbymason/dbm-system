@@ -163,11 +163,12 @@ ${tabs('value={value} onValueChange={setValue}')}`,
 
   asChildLink: `{/* asChild renders the tab onto your own element, keeping its look and its role="tab".
     Here each tab is a real link; the panels stay in the page, so use this only when the
-    tabs switch panels rather than navigate. */}
+    tabs switch panels rather than navigate. The icon is drawn inside your element, before its
+    own text. HouseIcon and ChartBarIcon come from @dbm-system/icons. */}
 <Tabs defaultValue="overview">
   <Tabs.List aria-label="Project">
-    <Tabs.Trigger value="overview" asChild><a href="#overview">Overview</a></Tabs.Trigger>
-    <Tabs.Trigger value="activity" asChild><a href="#activity">Activity</a></Tabs.Trigger>
+    <Tabs.Trigger value="overview" asChild icon={HouseIcon}><a href="#overview">Overview</a></Tabs.Trigger>
+    <Tabs.Trigger value="activity" asChild icon={ChartBarIcon}><a href="#activity">Activity</a></Tabs.Trigger>
   </Tabs.List>
   <Tabs.Content value="overview">A summary of the project.</Tabs.Content>
   <Tabs.Content value="activity">Recent changes to the project.</Tabs.Content>

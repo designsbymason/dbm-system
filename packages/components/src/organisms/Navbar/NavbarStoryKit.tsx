@@ -363,11 +363,17 @@ export function RouterDemoNavbar({ menuContainer }: { menuContainer?: HTMLElemen
         </a>
       </Navbar.Brand>
       <Navbar.Links>
-        <Navbar.Link asChild current={demo.isCurrent("products")}>
+        {/* The icon is drawn inside the router's link, before its own text; an external one gets its icon and cue there too. */}
+        <Navbar.Link asChild icon={ShoppingCartIcon} current={demo.isCurrent("products")}>
           <a {...demo.anchor("products")}>Products</a>
         </Navbar.Link>
         <Navbar.Link asChild current={demo.isCurrent("pricing")}>
           <a {...demo.anchor("pricing")}>Pricing</a>
+        </Navbar.Link>
+        <Navbar.Link asChild>
+          <a href="https://example.com/docs" onClick={preventNavigation}>
+            Docs
+          </a>
         </Navbar.Link>
       </Navbar.Links>
     </Navbar>

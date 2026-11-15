@@ -141,7 +141,7 @@ ${sidebar("", { current: "emea", footer: "none" })}`,
 
   items: `{/* An item with an href is a link; without one it is a button (an action). badge is a count, or a Badge you pass, drawn as written (its tone, variant,
     size, className and style win over the built-in badge). An http(s) address is external (a new tab, a trailing icon, a hidden cue). disabled keeps it
-    focusable, as Link does. asChild puts the look on your router's link: put its component where the <a> is (here a plain anchor); the item's icon and text are then the child's own. */}
+    focusable, as Link does. asChild puts the look on your router's link: put its component where the <a> is (here a plain anchor); the icon, badge and external cue are drawn inside it. */}
 <Sidebar.Nav>
   <Sidebar.Item href="/" icon={HouseIcon} current>
     A link, the current page
@@ -159,11 +159,8 @@ ${sidebar("", { current: "emea", footer: "none" })}`,
   <Sidebar.Item href="/billing" icon={ReceiptIcon} disabled>
     A disabled link
   </Sidebar.Item>
-  <Sidebar.Item asChild>
-    <a href="/team">
-      <Icon icon={UsersIcon} size="md" />
-      A router's link (asChild)
-    </a>
+  <Sidebar.Item asChild icon={UsersIcon}>
+    <a href="/team">A router's link (asChild)</a>
   </Sidebar.Item>
 </Sidebar.Nav>`,
 

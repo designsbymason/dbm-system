@@ -546,7 +546,7 @@ export const AsRouterLink: Story = {
     <div style={demoContainerStyle}>
       <Breadcrumb>
         <Breadcrumb.Item>
-          <Breadcrumb.Link asChild href="/">
+          <Breadcrumb.Link asChild href="/" icon={HouseIcon}>
             {/* Stands in for a router's own link component. */}
             <a href="/" onClick={(event) => event.preventDefault()}>
               Home
@@ -559,6 +559,12 @@ export const AsRouterLink: Story = {
       </Breadcrumb>
     </div>
   ),
+  // The icon is drawn inside the router's link, before its own text: one link, holding both.
+  play: async ({ canvasElement }) => {
+    const link = within(canvasElement).getByRole("link", { name: "Home" });
+    await expect(link.querySelectorAll("svg")).toHaveLength(1);
+    await expect(link.firstElementChild?.tagName.toLowerCase()).toBe("svg");
+  },
 };
 
 export const DisabledLink: Story = {

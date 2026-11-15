@@ -417,7 +417,7 @@ export interface NavbarLinksProps extends Omit<ComponentPropsWithoutRef<"nav">, 
 }
 
 export interface NavbarLinkProps extends Omit<AnchorHTMLAttributes<HTMLAnchorElement>, "children"> {
-  /** The link's text. With `asChild`, the child's own content instead (and then `icon`, `badge` and `external` are not drawn). */
+  /** The link's text. With `asChild`, the child's own content instead, and `icon`, `badge` and the external mark are drawn inside the child, around it. */
   children?: ReactNode;
   /** Where the link goes. With `asChild`, put it on the child instead. */
   href?: string;
@@ -432,7 +432,8 @@ export interface NavbarLinkProps extends Omit<AnchorHTMLAttributes<HTMLAnchorEle
   badge?: ReactNode;
   /**
    * Marks the link as leading off the site: it opens in a new tab with `rel="noopener noreferrer"`, and gets a trailing
-   * icon and a visually hidden "(opens in a new tab)". Worked out from `href` when left out (a link starting `http(s)://` or `//`).
+   * icon and a visually hidden "(opens in a new tab)". Worked out from `href` when left out (a link starting `http(s)://` or `//`);
+   * with `asChild`, from the child's own `href`, and the icon and cue are drawn inside the child.
    */
   external?: boolean;
   /**
@@ -448,6 +449,7 @@ export interface NavbarLinkProps extends Omit<AnchorHTMLAttributes<HTMLAnchorEle
   disabled?: boolean;
   /**
    * Renders as a single provided child element (via Radix `Slot`) instead of the built-in `<a>`, to use a router's link.
+   * The `icon`, the `badge` and an external link's icon and cue are drawn inside that element, around its own content.
    * @default false
    */
   asChild?: boolean;

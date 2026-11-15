@@ -1,8 +1,8 @@
 import { ArrowSquareOutIcon } from "@dbm-system/icons";
 import { cx } from "@dbm-system/utils";
-import { Slot } from "@radix-ui/react-slot";
+import { Slot, Slottable } from "@radix-ui/react-slot";
 import { forwardRef } from "react";
-import type { MouseEvent } from "react";
+import type { MouseEvent, ReactNode } from "react";
 import { Icon } from "../Icon";
 import { VisuallyHidden } from "../VisuallyHidden";
 import styles from "./Link.module.css";
@@ -34,7 +34,9 @@ const sizeClass: Record<LinkSize, string | undefined> = {
  * A styled anchor with automatic external-link affordances (new tab,
  * `rel="noopener noreferrer"`, a trailing icon, and a visually-hidden
  * "(opens in a new tab)" cue for screen reader users) and `asChild` support
- * for composing with routers (e.g. `<Link asChild><RouterLink to="/x" /></Link>`).
+ * for composing with routers (e.g. `<Link asChild href="/x"><RouterLink to="/x">X</RouterLink></Link>`).
+ * With `asChild` the external-link icon and cue are drawn inside the slotted
+ * element, after its own content.
  *
  * `size` is left out by default: a link takes the font size of the text around it, or, with none around it, of its nearest ancestor that
  * sets one. Pass `size` (the font-size scale `Text` and `Heading` use) to set it. The external-link icon is the size of
@@ -103,6 +105,18 @@ export const Link = forwardRef<HTMLAnchorElement, LinkProps>(
       }
     };
 
+    const decorate = (content: ReactNode) => (
+      <>
+        {content}
+        {isExternal && (
+          <>
+            <Icon icon={ArrowSquareOutIcon} className={styles.icon} />
+            <VisuallyHidden> (opens in a new tab)</VisuallyHidden>
+          </>
+        )}
+      </>
+    );
+
     return (
       <Component
         {...props}
@@ -121,17 +135,12 @@ export const Link = forwardRef<HTMLAnchorElement, LinkProps>(
         className={cx(styles.root, size && sizeClass[size], underlineClass[underline], disabled && styles.disabled, className)}
       >
         {asChild ? (
-          children
+          // `Slottable`'s render form clones the slotted element with what it returns as its content: the external-link
+          // icon and the "(opens in a new tab)" cue are drawn after the element's own content, inside it, and the element
+          // (a router's link, say) is still the one rendered.
+          <Slottable child={children}>{decorate}</Slottable>
         ) : (
-          <>
-            {children}
-            {isExternal && (
-              <>
-                <Icon icon={ArrowSquareOutIcon} className={styles.icon} />
-                <VisuallyHidden> (opens in a new tab)</VisuallyHidden>
-              </>
-            )}
-          </>
+          decorate(children)
         )}
       </Component>
     );

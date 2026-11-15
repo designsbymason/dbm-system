@@ -428,6 +428,36 @@ export const Wrapped: Story = {
   ),
 };
 
+export const AsChild: Story = {
+  name: "Your own element (asChild)",
+  parameters: { docs: { source: { code: toggleGroupSnippets.asChild } } },
+  args: { size: "sm" },
+  argTypes: { size: noControls, type: noControls, count: noControls, chosen: noControls, deselectable: noControls, "aria-label": noControls },
+  // With asChild the item's look and state go on your own element, and the icon is drawn inside it, before its own text; an empty
+  // element with an icon is icon-only, and carries the item's name.
+  render: ({ count: _count, chosen: _chosen, type: _type, deselectable: _deselectable, "aria-label": _label, ...args }) => (
+    <ToggleGroup {...args} type="multiple" aria-label="Text style">
+      <ToggleGroup.Item value="bold" icon={TextBIcon} asChild>
+        <button type="button" data-shortcut="Mod+B">
+          Bold
+        </button>
+      </ToggleGroup.Item>
+      <ToggleGroup.Item value="italic" icon={TextItalicIcon} aria-label="Italic" asChild>
+        <button type="button" data-shortcut="Mod+I" aria-label="Italic" />
+      </ToggleGroup.Item>
+    </ToggleGroup>
+  ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const bold = canvas.getByRole("button", { name: "Bold" });
+    await expect(bold).toHaveAttribute("data-shortcut", "Mod+B");
+    await expect(bold.firstElementChild?.tagName.toLowerCase()).toBe("svg");
+    await expect(canvas.getByRole("button", { name: "Italic" }).querySelectorAll("svg")).toHaveLength(1);
+    await userEvent.click(bold);
+    await expect(bold).toHaveAttribute("aria-pressed", "true");
+  },
+};
+
 export const RightToLeft: Story = {
   name: "Right to left",
   parameters: { docs: { source: { code: toggleGroupSnippets.rtl } } },

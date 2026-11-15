@@ -1,7 +1,7 @@
 import { ArrowRightIcon, ArrowSquareOutIcon, CaretDownIcon } from "@dbm-system/icons";
 import { cx, mergeDefined, mergeRefs, useResolvedResponsiveValue } from "@dbm-system/utils";
 import * as Primitive from "@radix-ui/react-navigation-menu";
-import { Slot } from "@radix-ui/react-slot";
+import { Slot, Slottable } from "@radix-ui/react-slot";
 import {
   Children,
   cloneElement,
@@ -977,7 +977,8 @@ const NavigationMenuContent = forwardRef<HTMLDivElement, NavigationMenuContentPr
 NavigationMenuContent.displayName = "NavigationMenu.Content";
 
 /**
- * A link. As a top-level item it is drawn like a trigger; in a panel it is a row with an icon, a description and a badge. Choosing
+ * A link. As a top-level item it is drawn like a trigger; in a panel it is a row with an icon, a description and a badge (with
+ * `asChild`, all drawn inside the router's link, around its own content). Choosing
  * it closes the panel (and, in a `Navbar`'s phone menu, the menu), unless `onSelect` calls `event.preventDefault()`. With
  * `currentPath` on the menu it is the current page when its `href` is that path.
  */
@@ -988,7 +989,9 @@ const NavigationMenuLink = forwardRef<HTMLAnchorElement, NavigationMenuLinkProps
   ) => {
     const { currentVariant, rounded, labels, currentPath, currentMatch } = useNavigationMenuContext("NavigationMenu.Link");
     const inPanel = useContext(NavigationMenuContentContext);
-    const isExternal = !asChild && (external ?? EXTERNAL_HREF_PATTERN.test(href ?? ""));
+    // With `asChild` the address is the slotted element's own, so an external one is worked out from that.
+    const slottedHref = asChild && isValidElement<{ href?: unknown }>(children) && typeof children.props.href === "string" ? children.props.href : undefined;
+    const isExternal = external ?? EXTERNAL_HREF_PATTERN.test((asChild ? slottedHref : href) ?? "");
     const current = ownCurrent ?? matchesCurrent(currentPath, href, currentMatch);
     const onBrandFill = !inPanel && current && currentVariant === "solid";
 
@@ -1002,14 +1005,12 @@ const NavigationMenuLink = forwardRef<HTMLAnchorElement, NavigationMenuLinkProps
       className,
     );
 
-    const content = asChild ? (
-      children
-    ) : (
+    const decorate = (text: ReactNode) => (
       <>
         {icon && <Icon icon={icon} size={inPanel ? "md" : "sm"} className={styles.linkIcon} />}
         <span className={styles.linkBody}>
           <span className={styles.linkText}>
-            {children}
+            {text}
             {isExternal && (
               <>
                 <Icon icon={ArrowSquareOutIcon} size="xs" className={styles.external} />
@@ -1035,7 +1036,10 @@ const NavigationMenuLink = forwardRef<HTMLAnchorElement, NavigationMenuLinkProps
       <SelectableAnchor
         {...props}
         {...(inPanel ? {} : { "data-nm-stop": "" })}
-        {...(asChild ? {} : { href, target: target ?? (isExternal ? "_blank" : undefined), rel: rel ?? (isExternal ? "noopener noreferrer" : undefined) })}
+        // With `asChild` the slotted element keeps its own `href`, and its own `target` and `rel` win over these (Radix `Slot`).
+        {...(asChild ? {} : { href })}
+        target={target ?? (isExternal ? "_blank" : undefined)}
+        rel={rel ?? (isExternal ? "noopener noreferrer" : undefined)}
         ref={ref}
         asChild={asChild}
         current={current}
@@ -1043,7 +1047,14 @@ const NavigationMenuLink = forwardRef<HTMLAnchorElement, NavigationMenuLinkProps
         onIntent={onIntent}
         className={classes}
       >
-        {content}
+        {asChild ? (
+          // `Slottable`'s render form clones the slotted element (a router's link) with what it returns as its content: the icon, the
+          // text and description wrappers, the badge and an external link's icon and cue are drawn around the element's own content,
+          // inside it, and the element is still the one rendered (ADR-0218). `SelectableAnchor`'s own slot finds it as its direct child.
+          <Slottable child={children}>{decorate}</Slottable>
+        ) : (
+          decorate(children)
+        )}
       </SelectableAnchor>
     );
   },

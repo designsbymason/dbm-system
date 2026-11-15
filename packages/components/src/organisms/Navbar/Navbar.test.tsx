@@ -1101,21 +1101,62 @@ describe("Navbar.Link icon, badge and external", () => {
     expect(screen.getByRole("link", { name: "Forced" })).not.toHaveAttribute("target");
   });
 
-  it("takes the cue's wording from labels, and draws none of it for asChild", () => {
+  it("takes the cue's wording from labels, also for asChild", () => {
     render(
       <Navbar collapseBelow="never" labels={{ externalLink: "(nouvel onglet)" }}>
         <Navbar.Links>
           <Navbar.Link href="https://example.com">Docs</Navbar.Link>
-          <Navbar.Link asChild icon={HouseIcon} badge="9">
+          <Navbar.Link asChild>
             <a href="https://example.com/x">Child</a>
           </Navbar.Link>
         </Navbar.Links>
       </Navbar>,
     );
     expect(screen.getByRole("link", { name: /^Docs\s*\(nouvel onglet\)$/ })).toBeInTheDocument();
-    const child = screen.getByRole("link", { name: "Child" });
-    expect(child.querySelector("svg")).toBeNull();
-    expect(child).not.toHaveAttribute("target");
+    expect(screen.getByRole("link", { name: /^Child\s*\(nouvel onglet\)$/ })).toBeInTheDocument();
+  });
+
+  it("draws the icon, the badge and the external icon and cue inside an asChild link, around its own content", () => {
+    render(
+      <Navbar collapseBelow="never">
+        <Navbar.Links>
+          <Navbar.Link asChild icon={HouseIcon} badge="9">
+            <a href="https://example.com/x">Child</a>
+          </Navbar.Link>
+          <Navbar.Link asChild icon={HouseIcon}>
+            <a href="/local">Local</a>
+          </Navbar.Link>
+        </Navbar.Links>
+      </Navbar>,
+    );
+    const child = screen.getByRole("link", { name: /^Child 9\s*\(opens in a new tab\)$/ });
+    expect(child).toHaveAttribute("href", "https://example.com/x");
+    expect(child).toHaveAttribute("target", "_blank");
+    expect(child).toHaveAttribute("rel", "noopener noreferrer");
+    // The icon first, then the child's own text, the badge, and the external icon: all inside the one link.
+    expect(child.firstElementChild?.tagName.toLowerCase()).toBe("svg");
+    expect(child.querySelectorAll("svg")).toHaveLength(2);
+    expect(child.querySelectorAll("a")).toHaveLength(0);
+    const local = screen.getByRole("link", { name: "Local" });
+    expect(local.querySelectorAll("svg")).toHaveLength(1);
+    expect(local).not.toHaveAttribute("target");
+  });
+
+  it("keeps an asChild link's own target and rel over the external ones", () => {
+    render(
+      <Navbar collapseBelow="never">
+        <Navbar.Links>
+          <Navbar.Link asChild>
+            <a href="https://example.com/x" target="_self" rel="external">
+              Child
+            </a>
+          </Navbar.Link>
+        </Navbar.Links>
+      </Navbar>,
+    );
+    const child = screen.getByRole("link", { name: /^Child/ });
+    expect(child).toHaveAttribute("target", "_self");
+    expect(child).toHaveAttribute("rel", "external");
   });
 
   it("draws the same content for a link in a group's menu", async () => {

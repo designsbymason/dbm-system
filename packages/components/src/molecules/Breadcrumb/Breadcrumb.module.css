@@ -205,11 +205,3 @@ a.toneNeutral:hover {
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-
-/* A slotted link (`asChild`) has no label element of ours to cut short, so the element itself does. */
-.truncating .slotted {
-  display: block;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}

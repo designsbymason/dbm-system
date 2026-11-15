@@ -294,8 +294,9 @@ interface MenuItemBaseProps
 export interface MenuItemProps extends MenuItemBaseProps {
   /**
    * Renders as the single child element (through Radix `Slot`), which receives the item's role, keyboard handling
-   * and styles: how a link or a router `Link` becomes a menu item. In this mode the item draws none of its own
-   * content, so `icon` and `shortcut` are not rendered (a development warning says so); put them inside the child.
+   * and styles: how a link or a router `Link` becomes a menu item. The child's own content is the label, and the
+   * item's `icon`, `shortcut`, `description`, `trailing` content and `disabledReason` are drawn inside the child,
+   * around it. An item with none of them uses the child's content as it is.
    * @default false
    */
   asChild?: boolean;

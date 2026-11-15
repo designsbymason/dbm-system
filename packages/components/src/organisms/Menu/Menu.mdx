@@ -391,7 +391,8 @@ The submenu's panel. Also accepts any other native `<div>` attribute beyond what
   with `Menu.Label` and `Menu.Separator`.
 - A leading `icon` helps recognition when most items have one; give every item in a set one, or none.
 - For a link, pass `asChild` and put the anchor (or your router's `Link`) inside, so it navigates as a
-  real link and is announced as one in the menu.
+  real link and is announced as one in the menu. Its `icon`, `shortcut`, `description` and `trailing`
+  content are drawn inside the link, around its own text.
 - Open a menu from `Menu.Trigger asChild` over a `Button` or an `IconButton`: the built-in fallback has
   no chrome of its own.
 - `align="end"` suits a trigger at the end of a row or a toolbar, so the panel doesn't run off the page.
@@ -471,8 +472,8 @@ function Example() {
   <Menu.RadioItem value="date">Date</Menu.RadioItem>
 </Menu.RadioGroup>
 
-{/* A link, with a router's Link */}
-<Menu.Item asChild>
+{/* A link, with a router's Link: the icon is drawn inside it */}
+<Menu.Item asChild icon={BookOpenIcon}>
   <RouterLink to="/docs">Documentation</RouterLink>
 </Menu.Item>
 
