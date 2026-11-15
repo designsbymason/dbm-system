@@ -1,6 +1,6 @@
 {
   "name": "@dbm-system/utils",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Framework-agnostic utilities and shared hooks for the DBM System (classname/ref merging, responsive-value helpers, overflow/dismissal/announcement hooks).",
   "license": "MIT",
   "repository": {
