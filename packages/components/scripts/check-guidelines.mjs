@@ -147,8 +147,17 @@ check("counts are stated once, in the inventory", () => {
 
 check("the README's headline matches the inventory and the code", () => {
   const file = join(REPO, "README.md");
-  const match = /(\d+) of a planned (\d+) components/.exec(read(file));
-  if (!match) return warn(file, 0, "the status sentence no longer has the form 'N of a planned M components'");
+  const text = read(file);
+  // A lower bound ("More than 100 components") stays true as components are added; it only
+  // needs checking against what is built.
+  const floor = /More than (\d+) components/.exec(text);
+  if (floor) {
+    const built = builtComponents().size;
+    if (built <= Number(floor[1])) warn(file, 0, `the headline says more than ${floor[1]} components but ${built} are built`);
+    return;
+  }
+  const match = /(\d+) of a planned (\d+) components/.exec(text);
+  if (!match) return warn(file, 0, "the headline no longer has the form 'More than N components' or 'N of a planned M components'");
   const actual = [builtComponents().size, inventoryRows().size];
   const stated = match.slice(1, 3).map(Number);
   if (actual.some((value, index) => value !== stated[index])) {

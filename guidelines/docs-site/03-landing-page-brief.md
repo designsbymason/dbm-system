@@ -15,7 +15,7 @@ The page says only what the repository supports (`01-vision-and-goals.md`):
 - **Agentic**: a React component library built for AI coding agents and developers alike, to build web and enterprise applications quickly, consistently and accessibly. The canonical tagline and one-sentence wording are in `01-vision-and-goals.md` §1.
 - Built on design tokens: two brands (Purple and Emerald), each in light and dark.
 - Very few dependencies: Radix UI primitives for interaction and Phosphor for icons.
-- Built to be read by people and agents: full types, a snippet for each example, a planned manifest.
+- Built to be read by people and agents: full types, a snippet for each example, and a component manifest shipped in the package.
 - WCAG 2.2 AA is the **target**; the known exceptions are on the accessibility statement and the page links to it.
 - **Published to npm at `0.1.x`, pre-1.0.** Install steps, the manifest and `AGENTS.md` are available and shown as such; `llms.txt` and an MCP server are not built and are labelled "in active development", never as available.
 
