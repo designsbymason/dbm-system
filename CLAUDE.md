@@ -91,7 +91,7 @@ Full rationale for each choice: `guidelines/02-tech-stack-and-structure.md`.
 | Task | Check first |
 |---|---|
 | Adding/changing a design token | `guidelines/03-token-system-spec.md` |
-| Building a new component | `guidelines/04-component-inventory.md` (tier + scope) |
+| Building a new component | `guidelines/04-component-inventory.md` (tier + scope); then its entry in `packages/components/src/componentCatalog.json` and a `Components/{Name}` story title (`guidelines/07-storybook-and-documentation-standards.md` §3, ADR-0225) |
 | Building a template (a shell that ships, or a story-only page) and in what order | `guidelines/04-component-inventory.md` (Templates, with its build order) and ADR-0179 |
 | Unsure about a dependency or tool choice | `guidelines/02-tech-stack-and-structure.md` |
 | Overall project goals/scope | `guidelines/01-vision-and-goals.md` |

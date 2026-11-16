@@ -25,7 +25,7 @@ Recorded here so they are not re-asked; the detail is in the file named.
 | Item | Decision | Where |
 |---|---|---|
 | Where the docs live | Storybook; the website is the home page, the 404 and the agent files | [ADR-0220](../adr/0220-the-docs-website-is-the-home-page-only-and-storybook-is-the-documentation-with-a-header-that-links-into-it-and-search-over-its-index-over-docs-pages-on-the-website.md) |
-| Storybook's sidebar | Getting started, Guides, Resources, Foundations, then Atoms, Molecules, Organisms and Templates; no component address changes | [02-structure.md](./02-structure.md) §2 |
+| Storybook's sidebar | Getting started, Guides, Resources, Foundations, Components (the Index first, then every component alphabetically, no tier or category groups) and Templates; no component address changes | [02-structure.md](./02-structure.md) §2 |
 | The header | Logo and version; Docs and Foundations menus and a Components link into Storybook; search, mode, Storybook, GitHub. On the home page only | [02-structure.md](./02-structure.md) §1 |
 | Search | `CommandPalette` over Storybook's `index.json`; Pagefind goes | [ADR-0220](../adr/0220-the-docs-website-is-the-home-page-only-and-storybook-is-the-documentation-with-a-header-that-links-into-it-and-search-over-its-index-over-docs-pages-on-the-website.md) |
 | Search engines | Storybook's Docs pages indexed, its canvases not; a sitemap; plain-text copies for agents | [ADR-0221](../adr/0221-storybooks-docs-pages-are-indexed-by-search-engines-with-plain-text-copies-for-agents-over-keeping-storybook-out-of-results.md) |
@@ -36,7 +36,7 @@ Recorded here so they are not re-asked; the detail is in the file named.
 | Motion | Expressive on the home page with Motion allowed for pointer and spring interaction; calm in Storybook; reduced motion static, content before script, no scroll-jacking, `@supports` around scroll animation | [ADR-0222](../adr/0222-the-home-pages-motion-is-expressive-with-motion-allowed-for-pointer-and-spring-interaction-over-the-restrained-motion-of-the-first-direction.md), [02-structure.md](./02-structure.md) §5 |
 | Design direction | "An annotated instrument": purple as ink, Lora headlines with Nunito and mono notes, editorial asymmetry, the annotation motif, an avoid list | [02-structure.md](./02-structure.md) §3 |
 | Home page | Seven sections: Hero, Built for agents, Specification, All components, the theme card, Accessible and responsive, Start in three steps; numbers and lists generated at build | [03-landing-page-brief.md](./03-landing-page-brief.md) §3 |
-| All components | A Storybook page under Getting started, and a filterable section on the home page, both from the same data | [02-structure.md](./02-structure.md) §2 |
+| All components | The Index page, first in Storybook's Components group, and a filterable section on the home page, both from the same data | [02-structure.md](./02-structure.md) §2 |
 | Accessibility guide and statement | One page under Guides | [04-content-inventory.md](./04-content-inventory.md) §1 |
 | Illustrations and 3D | Geometric SVG and CSS 3D compositions of live components, in the brand's tonal range with the neutrals; no WebGL | [ADR-0217](../adr/0217-the-docs-sites-illustrations-are-geometric-svg-and-css-3d-compositions-drawn-in-code-from-the-tokens-over-commissioned-artwork-webgl-or-raster-images.md) |
 | Showing two brands | The token theme files re-scoped to a wrapper element at build, so the theme card can wear each theme | [03-landing-page-brief.md](./03-landing-page-brief.md) §3 |

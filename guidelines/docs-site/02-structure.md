@@ -24,7 +24,7 @@ A ghost bar that sticks (transparent until it is stuck). **From `lg` (1024 px) i
 | Version | The current version as a subtle brand-toned `Badge` inside the home link, read from the packages at build; shown from `lg` only, so the wordmark is alone and centred below it |
 | **Docs** | A simple dropdown list of Storybook pages, no descriptions, in three groups side by side, each with its label in capitals: Getting started (with AI agents), Guides, Resources |
 | **Foundations** | A simple dropdown list, one link per Storybook Foundations page, in one labelled group |
-| **Components** | A direct link (no menu) to Storybook's All components page |
+| **Components** | A direct link (no menu) to Storybook's Index page (the Components table) |
 | Icon buttons | Search, the mode toggle and GitHub: tertiary `IconButton`s at the bar's medium size, with accessible names and tooltips (the name alone, no shortcut), one group with one small equal space between each, no divider. Search and the mode toggle stay in the bar at every width; GitHub is in the bar from `lg`, and below it in the menu panel's foot. Storybook is not in the bar (the Docs menu and Components link lead into it); it is a button in the menu panel's foot |
 | Search | A `CommandPalette` over Storybook's `index.json`: every Docs page, component and story by title; a result opens in Storybook. Opened by its icon button or with ⌘K or Ctrl K. From `lg` it is the palette's usual panel; **below `lg` it opens as a bottom sheet, 85% of the screen tall** (the palette's panel restyled in `SiteSearch.module.css`, since the component has no sheet presentation) |
 | Mode | An icon button that toggles light and dark; a first visit is light; remembered and shared with Storybook ([ADR-0223](../adr/0223-the-sites-mode-is-a-light-and-dark-toggle-that-starts-light-over-light-dark-and-system.md)) |
@@ -54,14 +54,14 @@ A version path (`/v1/…`) is added from 1.0; until then the site is the latest 
 
 | Group | Pages |
 |---|---|
-| **Getting started** | Introduction · Installation · Quick start · Frameworks · AI agents · All components |
+| **Getting started** | Introduction · Installation · Quick start · Frameworks · AI agents |
 | **Guides** | Theming · Accessibility (with the statement: guarantees, how it is checked, the known exceptions, browsers, how to report) · Responsive and right-to-left · Composition patterns · Hooks and utilities · Icons |
 | **Resources** | Changelog (generated from the packages' `CHANGELOG.md` at build) · Roadmap · FAQ |
 | **Foundations** | Overview · Color · Typography · Spacing · Radius · Shadows · Motion · Icon sizes · Miscellaneous · Breakpoints |
-| **Atoms**, **Molecules**, **Organisms** | Tier, then category, then component: unchanged, so no component address changes |
+| **Components** | **Index** (the Components and Templates tables) first, then every atom, molecule and organism alphabetically by name, a part under its component; tier and category are in `componentCatalog.json` and the Index table, not in the sidebar ([ADR-0225](../adr/0225-storybooks-sidebar-lists-every-component-alphabetically-in-one-group-and-a-catalog-holds-tier-and-category-over-tier-and-category-groups-in-the-story-title.md)); no component address changes |
 | **Templates** | Unchanged |
 
-The order is set in `preview.tsx`'s `storySort` (`07-storybook-and-documentation-standards.md` §11). **All components** holds the Components and Templates tables (the `ComponentIndex` block over `index.json`); the home page's All components section shows the same data from the manifest. A page whose address changes keeps a short "moved" page at the old one, since static Pages cannot redirect.
+The order is set in `preview.tsx`'s `storySort` (`07-storybook-and-documentation-standards.md` §11). The **Index** holds the Components and Templates tables (the `ComponentIndex` block over `index.json`); the home page's All components section shows the same data from the manifest. A page whose address changes keeps a short "moved" page at the old one, since static Pages cannot redirect.
 
 ## 3. Design direction: "an annotated instrument"
 
@@ -134,7 +134,7 @@ Expressive on the home page, calm in Storybook ([ADR-0222](../adr/0222-the-home-
 |---|---|
 | `Callout` | A blockquote beginning "Note:", "Do:" or "Don't:" |
 | `ReferenceTable`, `FieldsTable` | A table from the same props or imported data |
-| `ComponentIndex` | The All components table, from the manifest |
+| `ComponentIndex` | The Index table, from Storybook's index and the catalog |
 | `RelatedLinks`, `FoundationsCards` | A list of links |
 | The Foundations token blocks | Token tables from `tokens.json` |
 | Live demos and `Canvas` | The story's snippet where it has one, and a "Live example:" link to Storybook |

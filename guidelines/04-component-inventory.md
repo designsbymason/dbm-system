@@ -1,6 +1,6 @@
 # DBM System — Component Inventory
 
-Organizing principle: **9 functional categories** for documentation/discoverability (docs site, Storybook sidebar, manifest grouping), with **atomic-design tier** tracked as metadata per component (internal composition concern, not a navigation axis). See `guidelines/adr/0006` for why this hybrid approach.
+Organizing principle: **9 functional categories** for documentation/discoverability (the Index table, the manifest and the docs site; Storybook's sidebar lists components alphabetically, [ADR-0225](adr/0225-storybooks-sidebar-lists-every-component-alphabetically-in-one-group-and-a-catalog-holds-tier-and-category-over-tier-and-category-groups-in-the-story-title.md)), with **atomic-design tier** tracked as metadata per component, both in `packages/components/src/componentCatalog.json` (internal composition concern, not a navigation axis). See `guidelines/adr/0006` for why this hybrid approach.
 
 **Priority key:** 🟢 v1 (core, build first) · 🟡 v1.5 (comprehensive pass, right after v1 ships) · ⚪ v2/deferred (real, but not blocking launch)
 

@@ -1,6 +1,6 @@
 # 0006 — Organize the component inventory (docs site, Storybook sidebar, manifest grouping) by functional category, not atomic-design tier
 
-**Status:** Accepted · **Date:** 2026-07-18
+**Status:** Accepted, partly superseded by [0225](./0225-storybooks-sidebar-lists-every-component-alphabetically-in-one-group-and-a-catalog-holds-tier-and-category-over-tier-and-category-groups-in-the-story-title.md) (Storybook's sidebar is one alphabetical group; the categories stand as metadata, in the manifest and the Index table) · **Date:** 2026-07-18
 
 ## Context
 This system uses atomic design (atoms → molecules → organisms → templates) as its internal composition hierarchy — how components are built from each other (`CLAUDE.md`'s own core principle). That's a separate question from how ~104 planned components should be *navigated* by a consumer — a human developer or, per this project's own "agent-legible is a design constraint, not a feature flag" principle (`01-vision-and-goals.md` §8), an AI coding agent — browsing the docs site, the Storybook sidebar, or the future JSON component manifest.
