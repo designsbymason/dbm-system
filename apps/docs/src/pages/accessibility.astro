@@ -61,10 +61,36 @@ import { accessibility } from "../data/site";
   <p>
     Automated tools find only part of what can go wrong. We have not yet tested with a range of screen readers, on every
     browser and real device, or in Windows high-contrast mode on a real machine (we emulate forced-colours mode in a
-    browser). Some of the components in the documentation also have measured contrast values below the target, for
-    example the faint track of a slider. Where that is so, it is listed, with the reason, in the
-    <a href={accessibility.href}>Accessibility guide</a>, which also covers what every component guarantees and what stays
-    your job when you build with them.
+    browser).
+  </p>
+
+  <h2>Known exceptions</h2>
+  <p>
+    Some components in the documentation have measured colour contrast below the target. In short:
+  </p>
+  <ul>
+    <li>
+      <strong>Borders, tracks and placeholders.</strong> The resting borders of form controls such as inputs and checkboxes
+      are lighter than the 3:1 that WCAG 1.4.11 asks for in light mode, and the tracks of sliders, switches and progress bars
+      are lighter in both modes. We treat them as decoration, because the thumb, the fill or the label carries the meaning,
+      but a strict reading of the guideline may disagree. Loading placeholders are lighter still, and are hidden from
+      assistive technology.
+    </li>
+    <li>
+      <strong>A few text pairings.</strong> Some colour pairings, such as tertiary text on the page background, fall below the
+      level for text. The components never use them, but your own markup could.
+    </li>
+    <li>
+      <strong>Optional effects.</strong> The optional fade effects of the Carousel dim the text on a slide below the level
+      for text while it is dimmed. They are off unless you turn them on.
+    </li>
+    <li>
+      <strong>Error text.</strong> Error text aims for the higher AAA level. It meets AA in light mode and AAA in dark mode.
+    </li>
+  </ul>
+  <p>
+    The <a href={accessibility.href}>Accessibility guide</a> in Storybook is the full list, with the measured values and the
+    reason for each. It also covers what every component guarantees and what stays your job when you build with them.
   </p>
 
   <h2>Supported browsers</h2>
