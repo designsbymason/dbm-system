@@ -47,6 +47,8 @@ Recorded here so they are not re-asked; the detail is in the file named.
 | Tagline | "The agentic component library for people and the AI agents that build with them." | `01-vision-and-goals.md` §1 |
 | Node and pnpm | The repository's: Node 24 from `.nvmrc` and the pinned pnpm | [02-structure.md](./02-structure.md) §9 |
 | Local development | `pnpm --filter @dbm-system/docs dev` (the `docs` entry in `.claude/launch.json`, port 4321); the `site-artifact` entry serves the assembled site with Storybook on one origin | `apps/docs/README.md` |
+| Story canvases and search engines | `robots.txt` blocks `?path=/story/` addresses but never `iframe.html`; the frame carries `noindex, indexifembedded`; the manager adds `noindex` on story paths and a canonical on Docs paths; the sitemap lists only Docs entries | [02-structure.md](./02-structure.md) §12 |
+| Storybook blocks in the Markdown copies | Converted at build, one text form per block; an unknown block fails the build | [02-structure.md](./02-structure.md) §6 |
 | Going live | The site replaces the placeholder at `/` at the end of S3, by the Pages workflow's `PUBLISH_DOCS_SITE` switch | [02-structure.md](./02-structure.md) §9 |
 
 ## 3. Questions not yet decided
@@ -55,8 +57,6 @@ Recorded here so they are not re-asked; the detail is in the file named.
 |---|---|
 | `Sidebar` draws its section labels in capitals, which the design direction's avoid list names; changing it is a change to the design system | The maintainer's decision |
 | The components package doesn't mark its modules `"use client"`, so in the Next.js App Router they must be imported from a file that does (the Frameworks page says so); marking them would be a change to the design system | The maintainer's decision |
-| How the Markdown copies render Storybook blocks (tables, callouts, the component index) as text | S4 |
-| How Storybook's story canvases are kept out of results (a `noindex` in the iframe page, `robots.txt` rules on `iframe.html`, or both) | S1 |
 | Whether the brand tonal range needs decorative tokens beyond the semantic ones for the 3D stack and illustrations | S3; raised with the maintainer if so |
 
 ## 4. Gaps this plan depends on

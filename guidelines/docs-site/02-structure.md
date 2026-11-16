@@ -119,6 +119,19 @@ Expressive on the home page, calm in Storybook ([ADR-0222](../adr/0222-the-home-
 | `/llms.txt` | A short curated index of the docs (the llmstxt.org convention) | S4 |
 | `/llms-full.txt` | The documentation as one text file | S4 |
 
+**How the copies are made:** each Storybook Docs page's MDX is parsed with the unified tools at build. Headings, prose, lists, tables and code pass through; imports, `<Meta>` and `<ThemeSync />` are dropped; every block has its own text form, and a block with none fails the build, so nothing disappears silently:
+
+| Block | Text form |
+|---|---|
+| `Callout` | A blockquote beginning "Note:", "Do:" or "Don't:" |
+| `ReferenceTable`, `FieldsTable` | A table from the same props or imported data |
+| `ComponentIndex` | The All components table, from the manifest |
+| `RelatedLinks`, `FoundationsCards` | A list of links |
+| The Foundations token blocks | Token tables from `tokens.json` |
+| Live demos and `Canvas` | The story's snippet where it has one, and a "Live example:" link to Storybook |
+
+Links become absolute, pointing at the `.md` copy where one exists. A check fails if a Docs page in `index.json` has no copy; `llms-full.txt` is built from the same output.
+
 Until a file is built, the AI agents page says plainly that it is in development.
 
 ## 7. Illustrations
@@ -194,7 +207,18 @@ Not adopted: a Lighthouse or page-weight budget. The home page's weight is repor
 
 ## 12. SEO and sharing
 
-`sitemap.xml` (the home page and Storybook's Docs pages), `robots.txt` (Storybook allowed, its story canvases kept out), a canonical URL and page metadata on the home page; Storybook's Docs pages indexed ([ADR-0221](../adr/0221-storybooks-docs-pages-are-indexed-by-search-engines-with-plain-text-copies-for-agents-over-keeping-storybook-out-of-results.md)); a web app manifest and favicons from the logo. No structured data at launch.
+`sitemap.xml` (the home page and Storybook's Docs pages, the `docs` entries of `index.json`), `robots.txt` (Storybook allowed, its story canvases kept out), a canonical URL and page metadata on the home page; Storybook's Docs pages indexed ([ADR-0221](../adr/0221-storybooks-docs-pages-are-indexed-by-search-engines-with-plain-text-copies-for-agents-over-keeping-storybook-out-of-results.md)); a web app manifest and favicons from the logo. No structured data at launch.
+
+**Keeping the story canvases out** (S1): Storybook serves each page at the manager address (`/storybook/?path=/docs/…` or `?path=/story/…`) and renders it in `iframe.html`, which must stay crawlable or the Docs pages index empty.
+
+| Where | What |
+|---|---|
+| `robots.txt` | `Disallow: /storybook/*?path=/story/`; `iframe.html` is never disallowed |
+| The preview's head (`iframe.html`) | `<meta name="robots" content="noindex, indexifembedded">`: the frame is never a result itself, but its content counts for the page that embeds it |
+| The manager's head (`managerHead`) | A short script: `noindex` on a story path, a canonical URL on a Docs path (the static head is the same for every path, so only a script can tell them apart) |
+| `sitemap.xml` | Only the Docs entries; a check confirms each one exists in `index.json` |
+
+How well a search engine renders the manager and its frame is checked in Search Console after launch; the plain-text copies (§6) make the docs readable either way.
 
 ## 13. Community and licence
 
