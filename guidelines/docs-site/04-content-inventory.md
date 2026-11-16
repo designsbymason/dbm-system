@@ -1,8 +1,8 @@
 # Docs website — content inventory
 
-Where each piece of documentation lives under the current plan: once, in Storybook ([ADR-0220](../adr/0220-the-docs-website-is-the-home-page-only-and-storybook-is-the-documentation-with-a-header-that-links-into-it-and-search-over-its-index-over-docs-pages-on-the-website.md)). The sidebar is in [02-structure.md](./02-structure.md) §2. Storybook's sources are in `packages/components/src/guides/` and `packages/components/src/foundations/`; the site's M1 pages are in `apps/docs/src/content/` until S1 moves them.
+Where each piece of documentation lives under the current plan: once, in Storybook ([ADR-0220](../adr/0220-the-docs-website-is-the-home-page-only-and-storybook-is-the-documentation-with-a-header-that-links-into-it-and-search-over-its-index-over-docs-pages-on-the-website.md)). The sidebar is in [02-structure.md](./02-structure.md) §2. Storybook's sources are in `packages/components/src/guides/` and `packages/components/src/foundations/`; the site's M1 pages in `apps/docs/src/content/` have been ported to them (S1) and leave the site in S2.
 
-## 1. Content moves and merges (S1)
+## 1. Content moves and merges (S1, built)
 
 No page exists twice. Where the site and Storybook both cover something, the two merge into one Storybook page.
 

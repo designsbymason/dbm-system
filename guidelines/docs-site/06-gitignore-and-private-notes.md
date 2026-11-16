@@ -24,6 +24,7 @@ Added for the docs website:
 | `apps/docs/.astro/` | Astro's generated types and cache |
 | `apps/docs/public/pagefind/` | The search index, rebuilt on every deploy |
 | `apps/docs/public/manifest.json`, `apps/docs/public/llms.txt`, `apps/docs/public/llms-full.txt` | Generated at build from the manifest and the content, so a committed copy would go stale |
+| `packages/components/src/guides/Changelog.generated.mdx` | Storybook's Changelog page, generated from the packages' `CHANGELOG.md` files on every `storybook` and `build-storybook` run |
 | `.local/` | The private notes folder (below) |
 | `.claude/settings.local.json` | One person's Claude Code permission settings. The shared `.claude/commands/` and `launch.json` stay tracked. It was ignored only by a personal global gitignore, so it is listed here for every clone |
 

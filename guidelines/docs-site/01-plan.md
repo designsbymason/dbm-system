@@ -33,13 +33,14 @@ The milestones are inside the roadmap's Phase 9 (`01-vision-and-goals.md` §13).
 |---|---|
 | Repository settings, community files, the domain on GitHub Pages over HTTPS, the Pages workflow with Storybook at `/storybook/` ([05-open-items.md](./05-open-items.md)) | Done |
 | **M0, the foundation**: the design direction ([02-structure.md](./02-structure.md) §3), `apps/docs` (Astro 7 with React and MDX), the page shell, the shared mode and fonts, view transitions, the Storybook bridge, the pipeline, the link check and accessibility scan, the lint rule keeping animation libraries out of `packages/*` | Built |
-| **M1, the docs core** under the first plan: docs pages on the site, Pagefind search, Markdown copies, the first illustrations, the 404 | Built; under the current plan its pages move into Storybook (S1) and the site is trimmed (S2) |
+| **M1, the docs core** under the first plan: docs pages on the site, Pagefind search, Markdown copies, the first illustrations, the 404 | Built; its pages are ported to Storybook (S1) and the site is trimmed (S2) |
+| **S1, Storybook docs**: the sidebar groups, the ported and merged pages, Getting started split with a "moved" page, the Accessibility guide and statement merged, the generated Changelog, indexing with a sitemap and `robots.txt`, the "dbM system" logo in a light and a dark file | Built (`07-storybook-and-documentation-standards.md` §11) |
 
 The site is built and checked on every push and is not yet published at the root: the workflow's `PUBLISH_DOCS_SITE` switch stays off until S3.
 
 ### S1 — Storybook docs
 
-The sidebar groups (Getting started, Guides, Resources, Foundations, then the tiers and Templates); the site's M1 pages ported to Storybook MDX and merged with what is there ([04-content-inventory.md](./04-content-inventory.md)); Getting started split into Introduction, Installation and All components; the Accessibility guide and statement merged; the Changelog generated from the packages' `CHANGELOG.md`; Storybook indexed with a sitemap ([ADR-0221](../adr/0221-storybooks-docs-pages-are-indexed-by-search-engines-with-plain-text-copies-for-agents-over-keeping-storybook-out-of-results.md)); a "moved" page at each changed address; the new logo in a light and a dark file generated from the tokens.
+Built; see the table above and `07-storybook-and-documentation-standards.md` §11. What remains for the search-engine setup is on the site's side: its build takes Storybook's `robots.txt` and merges the sitemap (S2), and the Markdown copies and `llms.txt` are S4.
 
 ### S2 — Site trim and header
 
@@ -55,10 +56,10 @@ Built from [03-landing-page-brief.md](./03-landing-page-brief.md) section by sec
 
 ## 4. What blocks what
 
-- S1 waits on nothing. S2's menus and search point at S1's pages, so S1 comes first.
+- S1 (built) waited on nothing. S2's menus and search point at S1's pages.
 - S3 needs S2's header and the All components data; its sections link into S1's pages.
 - S4 reads S1's MDX, so it follows S1; it may run beside S3.
-- The site's M1 pages stay until S1 has their content in Storybook, so nothing disappears in between.
+- The site's M1 pages stay until S2 removes them; their content is already in Storybook (S1), so nothing disappears in between.
 - A change to a DBM component or token found while building waits on the maintainer's confirmation.
 
 ## 5. Risks

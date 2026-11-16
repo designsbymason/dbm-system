@@ -201,7 +201,7 @@ No animation library is ever a dependency of `packages/*` ([ADR-0140](../adr/014
 | Link check | Any internal link or asset that resolves to nothing in the build, including links into `/storybook/` (checked against Storybook's `index.json`), and any same-page `#fragment` with no id (`apps/docs/scripts/check-links.mjs`) | Built |
 | Accessibility scan | An axe-core WCAG 2.2 A or AA violation on any built page, in light and dark, with and without reduced motion (`apps/docs/scripts/check-accessibility.mjs`) | Built |
 | Animation libraries | `gsap`, `motion` or a similar library imported in `packages/*` (`no-restricted-imports` in `packages/eslint-config/base.js`) | Built |
-| Storybook docs | Storybook's own checks and the guide-file consistency in `check-publish`, which the new Getting started pages join | S1 |
+| Storybook docs | Storybook's own checks and the guide-file consistency in `check-publish`, which the new Getting started pages join (and `check-logo` for the logo files) | Built |
 
 Not adopted: a Lighthouse or page-weight budget. The home page's weight is reported in the build log and reviewed by hand each round.
 
@@ -209,7 +209,7 @@ Not adopted: a Lighthouse or page-weight budget. The home page's weight is repor
 
 `sitemap.xml` (the home page and Storybook's Docs pages, the `docs` entries of `index.json`), `robots.txt` (Storybook allowed, its story canvases kept out), a canonical URL and page metadata on the home page; Storybook's Docs pages indexed ([ADR-0221](../adr/0221-storybooks-docs-pages-are-indexed-by-search-engines-with-plain-text-copies-for-agents-over-keeping-storybook-out-of-results.md)); a web app manifest and favicons from the logo. No structured data at launch.
 
-**Keeping the story canvases out** (S1): Storybook serves each page at the manager address (`/storybook/?path=/docs/…` or `?path=/story/…`) and renders it in `iframe.html`, which must stay crawlable or the Docs pages index empty.
+**Keeping the story canvases out:** Storybook serves each page at the manager address (`/storybook/?path=/docs/…` or `?path=/story/…`) and renders it in `iframe.html`, which must stay crawlable or the Docs pages index empty.
 
 | Where | What |
 |---|---|
