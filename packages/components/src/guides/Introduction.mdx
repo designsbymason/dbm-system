@@ -1,5 +1,5 @@
 import { Meta } from "@storybook/addon-docs/blocks";
-import { RelatedLinks } from "../../.storybook/blocks";
+import { ReferenceTable, RelatedLinks } from "../../.storybook/blocks";
 import { ThemeSync } from "../../.storybook/blocks/foundations";
 import { VisuallyHidden } from "../atoms/VisuallyHidden";
 
@@ -36,12 +36,16 @@ for interaction and Phosphor for icons.
 
 ## The packages
 
-| Package | What it holds | Install it? |
-|---|---|---|
-| `@dbm-system/components` | The components, their stylesheet, the manifest and `AGENTS.md` | Yes |
-| `@dbm-system/tokens` | The design tokens, as theme CSS and as typed constants | Yes: your app imports a theme from it |
-| `@dbm-system/icons` | The Phosphor icon set, typed | Yes, if you use icons |
-| `@dbm-system/utils` | Helpers the components are built on | No: what an app needs from it is re-exported by the components |
+<ReferenceTable
+  plainFirstColumn
+  columns={["Package", "What it holds", "Install it?"]}
+  rows={[
+    ["`@dbm-system/components`", "The components, their stylesheet, the manifest and `AGENTS.md`", "Yes"],
+    ["`@dbm-system/tokens`", "The design tokens, as theme CSS and as typed constants", "Yes: your app imports a theme from it"],
+    ["`@dbm-system/icons`", "The Phosphor icon set, typed", "Yes, if you use icons"],
+    ["`@dbm-system/utils`", "Helpers the components are built on", "No: what an app needs from it is re-exported by the components"],
+  ]}
+/>
 
 The four packages are released together at one version. Install the same version of each.
 
