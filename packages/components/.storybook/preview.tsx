@@ -88,14 +88,16 @@ const preview: Preview = {
       // reference to a function defined elsewhere in this module fails
       // with "Unexpected 'storySort'" at startup.
       //
-      // Top-level group order: Getting started, Guides, Resources and
-      // Foundations (token reference) before Components, then Templates —
+      // Top-level group order: Getting started, Guides and Foundations
+      // (token reference), then Components, Templates and Resources —
       // an explicit order, since alphabetical would scatter them. Within
       // Foundations, an explicit reading order (Overview first, then
       // roughly increasing specialization) — alphabetical would scatter
       // Overview into the middle of the list. Within Components, the Index
       // first, then every component alphabetically by name (no tier or
-      // category groups; they are in src/componentCatalog.json); within a
+      // category groups; they are in src/componentCatalog.json); within
+      // Templates, the Index first, then the template groups in the
+      // inventory's order; within a
       // component, the hand-authored Docs page (see
       // guidelines/07-storybook-and-documentation-standards.md §4) always
       // sorts first, then the Playground story, then everything else in
@@ -126,10 +128,10 @@ const preview: Preview = {
         // @ts-expect-error — `title` can't be typed; see comment above
         const topLevelGroup = (title) => title.split("/")[0] ?? title;
         // Getting started (the introduction, installation, quick start, frameworks and AI agents) first, then the written guides, the
-        // resources (changelog, roadmap, FAQ), then the token reference, then Components (the Index first, then every component
-        // alphabetically by name, a component's parts under it), then Templates (the template groups come out in the inventory's own
-        // order, Shells first).
-        const groupPriority = ["Getting started", "Guides", "Resources", "Foundations", "Components"];
+        // token reference, then Components (the Index first, then every component alphabetically by name, a component's parts under
+        // it), then Templates (the Index first, then the template groups in the inventory's own order, Shells first), then the
+        // resources (changelog, roadmap, FAQ).
+        const groupPriority = ["Getting started", "Guides", "Foundations", "Components", "Templates", "Resources"];
         const templateGroups = ["Shells", "Authentication", "Data pages", "Settings and account", "System and utility pages"];
         const gettingStartedOrder = [
           "Getting started/Introduction",
@@ -185,10 +187,11 @@ const preview: Preview = {
         if (aGroup === "Foundations") {
           return foundationsOrder.indexOf(a.title) - foundationsOrder.indexOf(b.title);
         }
-        if (aGroup === "Components") {
-          // The Index page (and its hidden checks) leads the group; every component after it falls to the alphabetical order below.
+        if (aGroup === "Components" || aGroup === "Templates") {
+          // The Index page (and its hidden checks) leads the group; every component after it falls to the alphabetical order below,
+          // and the template groups to their own order.
           // @ts-expect-error — `title` can't be typed; see comment above
-          const inIndex = (title) => title === "Components/Index" || title.startsWith("Components/Index/");
+          const inIndex = (title) => title === `${aGroup}/Index` || title.startsWith(`${aGroup}/Index/`);
           const aIndex = inIndex(a.title);
           const bIndex = inIndex(b.title);
           if (aIndex !== bIndex) return aIndex ? -1 : 1;

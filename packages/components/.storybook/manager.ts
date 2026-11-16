@@ -412,6 +412,10 @@ document.head.appendChild(brandChromeStyleEl);
 
 addons.setConfig({
   theme: getStorybookTheme(lastBrand, lastMode),
+  // Every top-level group but Getting started starts collapsed, so the sidebar opens short. A page in a collapsed group (a link
+  // from the site, a bookmark) still opens its own group, which Storybook does for the selected page. The ids are the group names
+  // as Storybook writes them (lower case, hyphens).
+  sidebar: { collapsedRoots: ["guides", "foundations", "components", "templates", "resources"] },
 });
 applyPanelBg(lastBrand, lastMode);
 applyGearButtonStyle(lastBrand, lastMode);

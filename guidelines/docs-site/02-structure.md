@@ -56,12 +56,12 @@ A version path (`/v1/…`) is added from 1.0; until then the site is the latest 
 |---|---|
 | **Getting started** | Introduction · Installation · Quick start · Frameworks · AI agents |
 | **Guides** | Theming · Accessibility (with the statement: guarantees, how it is checked, the known exceptions, browsers, how to report) · Responsive and right-to-left · Composition patterns · Hooks and utilities · Icons |
-| **Resources** | Changelog (generated from the packages' `CHANGELOG.md` at build) · Roadmap · FAQ |
 | **Foundations** | Overview · Color · Typography · Spacing · Radius · Shadows · Motion · Icon sizes · Miscellaneous · Breakpoints |
-| **Components** | **Index** (the Components and Templates tables) first, then every atom, molecule and organism alphabetically by name, a part under its component; tier and category are in `componentCatalog.json` and the Index table, not in the sidebar ([ADR-0225](../adr/0225-storybooks-sidebar-lists-every-component-alphabetically-in-one-group-and-a-catalog-holds-tier-and-category-over-tier-and-category-groups-in-the-story-title.md)); no component address changes |
-| **Templates** | Unchanged |
+| **Components** | **Index** (the Components table) first, then every atom, molecule and organism alphabetically by name, a part under its component; tier and category are in `componentCatalog.json` and the Index table, not in the sidebar ([ADR-0225](../adr/0225-storybooks-sidebar-lists-every-component-alphabetically-in-one-group-and-a-catalog-holds-tier-and-category-over-tier-and-category-groups-in-the-story-title.md)); no component address changes |
+| **Templates** | **Index** (the Templates table) first, then the template groups, unchanged |
+| **Resources** | Changelog (generated from the packages' `CHANGELOG.md` at build) · Roadmap · FAQ |
 
-The order is set in `preview.tsx`'s `storySort` (`07-storybook-and-documentation-standards.md` §11). The **Index** holds the Components and Templates tables (the `ComponentIndex` block over `index.json`); the home page's All components section shows the same data from the manifest. A page whose address changes keeps a short "moved" page at the old one, since static Pages cannot redirect.
+The order is set in `preview.tsx`'s `storySort` (`07-storybook-and-documentation-standards.md` §11). Each group's **Index** holds its table, the Components one the components and the Templates one the templates (the `ComponentIndex` block over `index.json`, with a `section`); every group but Getting started starts collapsed in the sidebar; the home page's All components section shows the same data from the manifest. A page whose address changes keeps a short "moved" page at the old one, since static Pages cannot redirect.
 
 ## 3. Design direction: "an annotated instrument"
 

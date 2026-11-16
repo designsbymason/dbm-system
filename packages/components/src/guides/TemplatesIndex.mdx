@@ -1,0 +1,18 @@
+import { Meta } from "@storybook/addon-docs/blocks";
+import { ComponentIndex } from "../../.storybook/blocks";
+import { ThemeSync } from "../../.storybook/blocks/foundations";
+import { VisuallyHidden } from "../atoms/VisuallyHidden";
+
+<Meta title="Templates/Index" />
+
+<ThemeSync />
+
+<VisuallyHidden asChild><h2>Intro</h2></VisuallyHidden>
+
+# Index
+
+Every template, with a line on each, grouped in the sidebar as the shells an app is built in and the example pages it copies.
+A name opens its Docs page. The list is built from this Storybook's own index, so a new template appears here without an edit
+to the page. The components have an Index of their own, first in Components.
+
+<ComponentIndex section="templates" />

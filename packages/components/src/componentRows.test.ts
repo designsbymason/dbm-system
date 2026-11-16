@@ -62,6 +62,11 @@ describe("toRows", () => {
     ]);
   });
 
+  it("does not list the Templates Index page, which is the page of the table, as a template", () => {
+    const rows = toRows(index(docs("Templates/Index"), docs("Templates/Shells/AppShell"), docs("Components/Index")), catalog);
+    expect(rows.map((row) => row.name)).toEqual(["AppShell"]);
+  });
+
   it("sorts by name, whatever the case", () => {
     const rows = toRows(index(docs("Components/Sidebar"), docs("Templates/Shells/AppShell"), docs("Components/Button")), catalog);
     expect(rows.map((row) => row.name)).toEqual(["AppShell", "Button", "Sidebar"]);

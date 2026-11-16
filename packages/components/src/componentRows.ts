@@ -58,7 +58,8 @@ export function toRows(entries: Record<string, RawEntry>, catalog: Catalog = com
     const name = parts[parts.length - 1];
     if (!name) continue;
     if (parts[0] === "Templates") {
-      if (parts.length < 2 || parts.length > 3) continue;
+      // The Templates Index page (`Templates/Index`) is the page of the table, not a template.
+      if (parts.length < 2 || parts.length > 3 || entry.title === "Templates/Index") continue;
       rows.push({ id: entry.id, name, tier: "Templates", category: parts[1] ?? "", examplePage: entry.tags?.includes(EXAMPLE_PAGE_TAG) === true });
       continue;
     }

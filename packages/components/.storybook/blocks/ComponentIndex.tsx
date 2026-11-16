@@ -268,15 +268,19 @@ function IndexTable({
   );
 }
 
+/** Which section of the index a page draws: the Components page the components, the Templates page the templates; both when it is left out (the checks draw both). */
+export type IndexSection = "components" | "templates";
+
 /**
- * Docs-page-only Components and Templates sections for the Index page, built live from Storybook's own
+ * Docs-page-only Components and Templates sections for the Components and Templates Index pages, built live from Storybook's own
  * `index.json` (which pages exist) and the component catalog (each component's tier and category), so they can never drift
  * from the sidebar. The Components section has a count badge, and a toolbar of a
  * search box and a Tier and a Category filter (each a panel of checkboxes, "All" until one is chosen) over a table of
  * every component; its tier badges are the ones the component pages draw. Templates are listed in a section of their
- * own, empty until the first one exists. Not part of the published package.
+ * own, empty until the first one exists. `section` draws one of the two (each has its own Index page); left out, both.
+ * Not part of the published package.
  */
-export function ComponentIndex({ index }: { index?: Record<string, RawEntry> } = {}) {
+export function ComponentIndex({ index, section }: { index?: Record<string, RawEntry>; section?: IndexSection } = {}) {
   const [entries, setEntries] = useState<IndexRow[] | null>(index ? toRows(index) : null);
   const [failed, setFailed] = useState(false);
   const [query, setQuery] = useState("");
@@ -326,91 +330,99 @@ export function ComponentIndex({ index }: { index?: Record<string, RawEntry> } =
 
   return (
     <div className="dbm-getting-started sb-unstyled">
-      <h2 id="components">Components</h2>
-      <p className="dbm-getting-started__lede">
-        Every component opens its own page with a live Playground, props, usage guidance, accessibility notes and a
-        copyable snippet for each example. They come in three tiers: an{" "}
-        <Badge tone={toneForTier.Atom} size="sm" variant="subtle">
-          Atom
-        </Badge>{" "}
-        is a single building block, a{" "}
-        <Badge tone={toneForTier.Molecule} size="sm" variant="subtle">
-          Molecule
-        </Badge>{" "}
-        combines a few atoms into one working unit, and an{" "}
-        <Badge tone={toneForTier.Organism} size="sm" variant="subtle">
-          Organism
-        </Badge>{" "}
-        is a complete pattern. The list is read from Storybook itself, so it always matches the sidebar.
-      </p>
-
-      {failed ? (
-        <p className="dbm-getting-started__note">
-          The component list could not be loaded from Storybook&apos;s index. Use the sidebar to browse the components.
-        </p>
-      ) : entries === null ? (
-        <p className="dbm-getting-started__note" role="status">
-          Loading the component list…
-        </p>
-      ) : (
-        <IndexTable tall columns={COMPONENT_COLUMNS} rows={shown} label="Components" emptyState="No component matches. Try a shorter search or clear a filter.">
-          <DataTable.Toolbar aria-label="Component list tools">
-            <TableToolbar.Row>
-              <TableToolbar.Summary
-                className="dbm-getting-started__summary"
-                count={shown.length}
-                total={filtering ? components.length : undefined}
-                labels={summaryLabels}
-              />
-              <TableToolbar.Search>
-                <SearchInput
-                  aria-label="Search components"
-                  placeholder="Search"
-                  value={query}
-                  onChange={(event) => setQuery(event.target.value)}
-                  onClear={() => setQuery("")}
-                />
-              </TableToolbar.Search>
-              <div className="dbm-getting-started__mobiletools">
-                <FilterIconButton name="Tier" icon={StackIcon} options={COMPONENT_TIERS} chosen={tiers} onChange={setTiers} />
-                <FilterIconButton name="Category" icon={SquaresFourIcon} options={categoryOptions} chosen={categories} onChange={setCategories} />
-                <SearchIconButton query={query} onChange={setQuery} />
-              </div>
-              <Toolbar aria-label="Filters" variant="secondary" className="dbm-getting-started__filters">
-                <Toolbar.Item>
-                  <ChoiceFilter name="Tier" options={COMPONENT_TIERS} chosen={tiers} onChange={setTiers} width="8.25rem" />
-                </Toolbar.Item>
-                <Toolbar.Item>
-                  <ChoiceFilter
-                    name="Category"
-                    options={categoryOptions}
-                    chosen={categories}
-                    onChange={setCategories}
-                    width="9.25rem"
-                  />
-                </Toolbar.Item>
-              </Toolbar>
-            </TableToolbar.Row>
-          </DataTable.Toolbar>
-        </IndexTable>
-      )}
-
-      <h2 id="templates">Templates</h2>
-      <p className="dbm-getting-started__lede">
-        Templates are page-level compositions of the components above: a dashboard shell, an auth flow and so on.
-      </p>
-      {templates.length > 0 ? (
+      {section !== "templates" && (
         <>
-          <IndexTable wrapNames columns={TEMPLATE_COLUMNS} rows={templates} label="Templates" emptyState="No templates yet." />
-          {templates.some((row) => row.examplePage) && (
-            <p className="dbm-getting-started__note dbm-getting-started__footnote">
-              * An example page template, not a component. Nothing is imported from the package: copy the page into your app
-              and replace its data and words.
+          <h2 id="components">Components</h2>
+          <p className="dbm-getting-started__lede">
+            Every component opens its own page with a live Playground, props, usage guidance, accessibility notes and a
+            copyable snippet for each example. They come in three tiers: an{" "}
+            <Badge tone={toneForTier.Atom} size="sm" variant="subtle">
+              Atom
+            </Badge>{" "}
+            is a single building block, a{" "}
+            <Badge tone={toneForTier.Molecule} size="sm" variant="subtle">
+              Molecule
+            </Badge>{" "}
+            combines a few atoms into one working unit, and an{" "}
+            <Badge tone={toneForTier.Organism} size="sm" variant="subtle">
+              Organism
+            </Badge>{" "}
+            is a complete pattern. The list is read from Storybook itself, so it always matches the sidebar.
+          </p>
+
+          {failed ? (
+            <p className="dbm-getting-started__note">
+              The component list could not be loaded from Storybook&apos;s index. Use the sidebar to browse the components.
             </p>
+          ) : entries === null ? (
+            <p className="dbm-getting-started__note" role="status">
+              Loading the component list…
+            </p>
+          ) : (
+            <IndexTable tall columns={COMPONENT_COLUMNS} rows={shown} label="Components" emptyState="No component matches. Try a shorter search or clear a filter.">
+              <DataTable.Toolbar aria-label="Component list tools">
+                <TableToolbar.Row>
+                  <TableToolbar.Summary
+                    className="dbm-getting-started__summary"
+                    count={shown.length}
+                    total={filtering ? components.length : undefined}
+                    labels={summaryLabels}
+                  />
+                  <TableToolbar.Search>
+                    <SearchInput
+                      aria-label="Search components"
+                      placeholder="Search"
+                      value={query}
+                      onChange={(event) => setQuery(event.target.value)}
+                      onClear={() => setQuery("")}
+                    />
+                  </TableToolbar.Search>
+                  <div className="dbm-getting-started__mobiletools">
+                    <FilterIconButton name="Tier" icon={StackIcon} options={COMPONENT_TIERS} chosen={tiers} onChange={setTiers} />
+                    <FilterIconButton name="Category" icon={SquaresFourIcon} options={categoryOptions} chosen={categories} onChange={setCategories} />
+                    <SearchIconButton query={query} onChange={setQuery} />
+                  </div>
+                  <Toolbar aria-label="Filters" variant="secondary" className="dbm-getting-started__filters">
+                    <Toolbar.Item>
+                      <ChoiceFilter name="Tier" options={COMPONENT_TIERS} chosen={tiers} onChange={setTiers} width="8.25rem" />
+                    </Toolbar.Item>
+                    <Toolbar.Item>
+                      <ChoiceFilter
+                        name="Category"
+                        options={categoryOptions}
+                        chosen={categories}
+                        onChange={setCategories}
+                        width="9.25rem"
+                      />
+                    </Toolbar.Item>
+                  </Toolbar>
+                </TableToolbar.Row>
+              </DataTable.Toolbar>
+            </IndexTable>
           )}
         </>
-      ) : (
-        <p className="dbm-getting-started__note">No templates yet.</p>
+      )}
+
+      {section !== "components" && (
+        <>
+          <h2 id="templates">Templates</h2>
+          <p className="dbm-getting-started__lede">
+            Templates are page-level compositions of the components above: a dashboard shell, an auth flow and so on.
+          </p>
+          {templates.length > 0 ? (
+            <>
+              <IndexTable wrapNames columns={TEMPLATE_COLUMNS} rows={templates} label="Templates" emptyState="No templates yet." />
+              {templates.some((row) => row.examplePage) && (
+                <p className="dbm-getting-started__note dbm-getting-started__footnote">
+                  * An example page template, not a component. Nothing is imported from the package: copy the page into your app
+                  and replace its data and words.
+                </p>
+              )}
+            </>
+          ) : (
+            <p className="dbm-getting-started__note">No templates yet.</p>
+          )}
+        </>
       )}
     </div>
   );
