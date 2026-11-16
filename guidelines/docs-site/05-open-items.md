@@ -31,7 +31,7 @@ Recorded here so they are not re-asked; the detail is in the file named.
 | Motion guardrails | Reduced motion gives a static, complete page; content before script; no scroll-jacking; motion tokens; reveals once on docs pages; `@supports` around scroll animation | [02-structure.md](./02-structure.md) §5 |
 | Design direction | "An annotated instrument": purple as ink, Lora headlines with Nunito and mono notes, editorial asymmetry, sparing annotation, restrained motion, an avoid list; professional first, personality in three places | [02-structure.md](./02-structure.md) §3 |
 | Home page | Nine sections from the hero's CSS 3D stack to Where next, numbers generated at build, three signature scroll moments | [03-landing-page-brief.md](./03-landing-page-brief.md) §3 and §5 |
-| Human / Agent view | On the home page only, in the Built for agents section; elsewhere Copy page and the Markdown copies do that job | [03-landing-page-brief.md](./03-landing-page-brief.md) §3 |
+| Human / Agent view | On the home page only, in the Built for agents section; elsewhere the Markdown copies do that job | [03-landing-page-brief.md](./03-landing-page-brief.md) §3 |
 | Illustrations and 3D | Geometric SVG and CSS 3D compositions of live components, in the brand's tonal range with the neutrals; no WebGL | [ADR-0217](../adr/0217-the-docs-sites-illustrations-are-geometric-svg-and-css-3d-compositions-drawn-in-code-from-the-tokens-over-commissioned-artwork-webgl-or-raster-images.md) |
 | Storybook and the site | Storybook keeps its interface; shared mode, fonts, transitions, logo and links both ways; the bridge's Storybook changes are part of M0 | [ADR-0214](../adr/0214-storybook-keeps-its-own-interface-and-is-bridged-to-the-docs-site-by-a-shared-mode-shared-fonts-view-transitions-and-links-both-ways-over-an-iframe-workshop-page-or-an-injected-header.md) |
 | Fonts | Self-hosted Nunito and Lora for the site and Storybook | [ADR-0215](../adr/0215-the-docs-site-and-storybook-self-host-nunito-and-lora-over-loading-them-from-google-fonts.md) |
@@ -42,7 +42,7 @@ Recorded here so they are not re-asked; the detail is in the file named.
 | Search engines and `/storybook/` | Not indexed | [02-structure.md](./02-structure.md) §4 |
 | Tagline | "The agentic component library for people and the AI agents that build with them." | [03-landing-page-brief.md](./03-landing-page-brief.md) §3 |
 | Site description (meta) | The one-sentence wording in [01-vision-and-goals.md](../01-vision-and-goals.md) §1, trimmed to about 155 characters at build | The first landing review |
-| First-release extras | Copy page and Markdown copies; Roadmap and FAQ; a release banner and an RSS feed | [01-plan.md](./01-plan.md) §2 |
+| First-release extras | Markdown copies of the pages (no "Copy page" button or "View as Markdown" link, at the maintainer's decision); Roadmap and FAQ; a release banner and an RSS feed | [01-plan.md](./01-plan.md) §2 |
 | Node and pnpm | The repository's: Node 24 from `.nvmrc` and the pinned pnpm | [02-structure.md](./02-structure.md) §9 |
 | Gates | The link check and the local server are scripts with no dependency; the accessibility scan is axe-core in Playwright's Chromium, the tools the components' checks already use | [02-structure.md](./02-structure.md) §11 |
 | Local development | `pnpm --filter @dbm-system/docs dev` (the `docs` entry in `.claude/launch.json`, port 4321) for the site; the `site-artifact` entry serves the assembled site with Storybook on one origin, to try the bridge | `apps/docs/README.md` |
@@ -60,7 +60,6 @@ Each of these is decided when the work it waits on starts.
 | How an illustration's reveal runs only once with CSS scroll timelines (which reverse when the reader scrolls back), or whether it may replay | The first illustrations (M1) |
 | `Sidebar` draws its section labels in capitals, which the design direction's avoid list names; changing it is a change to the design system | The maintainer's decision |
 | The components package doesn't mark its modules `"use client"`, so in the Next.js App Router they must be imported from a file that does (the Frameworks page says so); marking them would be a change to the design system | The maintainer's decision |
-| "Copy page" writes to the clipboard through a `ClipboardItem` started in the click; the browser pane used to build the site blocks the clipboard, so it is still to be checked in Chrome, Safari and Firefox | Before going live |
 | How a story that needs Storybook-only parts gets a site-safe form | M2 |
 | How the changelog page reads each package's `CHANGELOG.md` | M5 (the files exist) |
 | How social images are generated | M5 |

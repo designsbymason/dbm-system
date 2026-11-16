@@ -82,7 +82,7 @@ Site-only CSS uses semantic tokens only; a missing token or component is propose
 
 **Component page anatomy:**
 
-1. Header: name, the manifest's one-sentence description, tier and category badges, the import line with a copy button, and links to Storybook, the source, the component's JSON and "Copy page".
+1. Header: name, the manifest's one-sentence description, tier and category badges, the import line with a copy button, and links to Storybook, the source, and the component's JSON.
 2. Hero example: the default story, live, in a frame with Preview and Code tabs.
 3. Examples: each with a heading, a sentence, the live story and its snippet, and mode and direction toggles on the frame.
 4. Anatomy (compound components): the parts and how they nest, as a diagram.
@@ -148,7 +148,7 @@ Geometric, diagram-style illustrations drawn in code from the tokens ([ADR-0217]
 | `/manifest.json` | The full component manifest, copied from the built components package | M2 |
 | `/components/<name>.json` | One component's entry, from the manifest's split files ([ADR-0206](../adr/0206-the-manifest-is-also-shipped-as-an-index-and-one-file-per-component-beside-the-whole-file-over-the-single-file-alone-or-waiting-for-an-mcp-server.md)) | M2 |
 | `/AGENTS.md` | The consumer usage guide, copied from the components package at build | Built |
-| `<page>.md` | A Markdown copy of every docs, component, hook and function page; each page has a "Copy page" button and a "View as Markdown" link | Built for the docs and root pages (their source is plain Markdown, so the copy is the source); the reference pages in M2 |
+| `<page>.md` | A Markdown copy of every docs, component, hook and function page, at the page's path with `.md` (not linked from the page itself) | Built for the docs and root pages (their source is plain Markdown, so the copy is the source); the reference pages in M2 |
 | `/llms.txt` | A short curated index of the docs (the llmstxt.org convention) | M5 |
 | `/llms-full.txt` | The documentation as one text file | M5 |
 

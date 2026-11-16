@@ -1,25 +1,16 @@
 ---
-// The head of a content page: its title, one sentence, and the page as Markdown (copy it, or open it).
-import { CopyPage } from "./CopyPage";
-
+// The head of a content page: its title and one sentence.
 interface Props {
   title: string;
   description: string;
-  /** The page's path; its Markdown copy is the path with `.md`. */
-  path: string;
 }
 
-const { title, description, path } = Astro.props;
-const markdownHref = `${path}.md`;
+const { title, description } = Astro.props;
 ---
 
 <header class="page-head">
   <h1 class="display page-head__title">{title}</h1>
   <p class="lede">{description}</p>
-  <div class="page-head__actions">
-    <CopyPage client:idle markdownHref={markdownHref} />
-    <a class="page-head__md" href={markdownHref}>View as Markdown</a>
-  </div>
 </header>
 
 <style>
@@ -31,21 +22,5 @@ const markdownHref = `${path}.md`;
   }
   .page-head__title {
     font-size: var(--dbm-font-size-4xl);
-  }
-  .page-head__actions {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: var(--dbm-space-4);
-  }
-  .page-head__md {
-    font-size: var(--dbm-font-size-sm);
-    color: var(--dbm-text-link);
-    text-underline-offset: 0.2em;
-  }
-  .page-head__md:focus-visible {
-    outline: 2px solid var(--dbm-border-focus);
-    outline-offset: 2px;
-    border-radius: var(--dbm-radius-xs);
   }
 </style>

@@ -1,5 +1,5 @@
 // Every docs page as Markdown, at its own address with `.md` (ADR-0213): its source, which is plain Markdown, under
-// its title and description. For an agent, or to paste into a chat ("Copy page").
+// its title and description, for an agent to read.
 import type { APIRoute, GetStaticPaths } from "astro";
 import { getCollection } from "astro:content";
 

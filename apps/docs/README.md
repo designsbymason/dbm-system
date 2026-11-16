@@ -21,7 +21,7 @@ Telemetry and the dev toolbar are off.
 - `src/layouts/`: `Base` (fonts, tokens, the mode before first paint), `Marketing` and `Article`.
 - `src/content/`: the pages' prose, plain Markdown in MDX (`docs/` under /docs, `pages/` at the root), with `src/content.config.ts`.
 - `src/pages/`: the routes, including the `.md` copies and `/AGENTS.md`.
-- `src/components/content/`: the page head with "Copy page", previous and next, and the code fences (`src/plugins/remark-code-fence.mjs` turns each fence into a DBM `CodeBlock`).
+- `src/components/content/`: the page head, previous and next, and the code fences (`src/plugins/remark-code-fence.mjs` turns each fence into a DBM `CodeBlock`).
 - `src/illustrations/`: the SVG illustrations, coloured from the tokens.
 - `src/components/home/`: the home page sample's sections.
 - `scripts/`: the scoped token themes, the link check, the accessibility scan and the local server.

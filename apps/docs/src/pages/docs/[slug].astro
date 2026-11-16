@@ -23,7 +23,7 @@ const breadcrumbs = [{ label: "Docs", href: "/docs" }, ...(group && group.links.
 ---
 
 <Article title={`${entry.data.title}: DBM System`} description={entry.data.description} section="/docs" outline={outline} breadcrumbs={breadcrumbs}>
-  <PageHead title={entry.data.title} description={entry.data.description} path={path} />
+  <PageHead title={entry.data.title} description={entry.data.description} />
   <div class="prose" data-pagefind-body>
     <Content components={{ CodeFence }} />
   </div>
