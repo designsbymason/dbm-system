@@ -21,6 +21,9 @@ export const storybookHref = "/storybook/";
 /** The Storybook address of a Docs page, from its id (`guides-theming` for `guides-theming--docs`). */
 const page = (id: string) => `${storybookHref}?path=/docs/${id}--docs`;
 
+/** The same, for a page outside this file (the home page's component table links each name to its Docs page). */
+export const docsPage = page;
+
 export const docsGroups: SiteGroup[] = [
   {
     label: "Getting started",
@@ -77,6 +80,10 @@ const [gettingStarted, guides, resources] = docsGroups as [SiteGroup, SiteGroup,
 export const changelog: SiteLink = link(resources, "Changelog");
 export const accessibility: SiteLink = link(guides, "Accessibility");
 export const quickStart: SiteLink = link(gettingStarted, "Quick start");
+export const installation: SiteLink = link(gettingStarted, "Installation");
+
+/** Storybook's Index page of the templates: the example pages and the shells that ship. */
+export const templatesIndex: SiteLink = { label: "Templates", href: page("templates-index") };
 
 /** This website's own accessibility statement; the components' guarantees and known exceptions are in the Accessibility guide (`accessibility`). */
 export const accessibilityStatement: SiteLink = { label: "Accessibility", href: "/accessibility" };

@@ -3,8 +3,10 @@
 // sample: the hero, the specification and the theming section, in the agreed direction.
 import { HeroActions } from "../components/home/HeroActions";
 import { HeroStack } from "../components/home/HeroStack";
+import ComponentsSection from "../components/home/ComponentsSection.astro";
 import { InstallLine } from "../components/home/InstallLine";
 import Specification from "../components/home/Specification.astro";
+import StartSection from "../components/home/StartSection.astro";
 import ThemeSection from "../components/home/ThemeSection.astro";
 import Marketing from "../layouts/Marketing.astro";
 ---
@@ -35,7 +37,9 @@ import Marketing from "../layouts/Marketing.astro";
       </div>
     </section>
     <Specification />
+    <ComponentsSection />
     <ThemeSection />
+    <StartSection />
 </Marketing>
 
 <style>

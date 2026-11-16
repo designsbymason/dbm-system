@@ -9,6 +9,7 @@ const managers = [
   { id: "bun", command: `bun add ${packages}` },
 ];
 const KEY = "dbm-package-manager";
+const CHANGED = "dbm-package-manager-change";
 
 /** The install line, in the reader's package manager (remembered), with a copy button. */
 export function InstallLine() {
@@ -21,10 +22,18 @@ export function InstallLine() {
     } catch {
       // Not remembered; pnpm stays the default.
     }
+    // Another install line on the page (the hero's and the steps') follows a choice made in this one.
+    const follow = (event: Event) => {
+      const value = (event as CustomEvent<string>).detail;
+      if (managers.some((m) => m.id === value)) setManager(value);
+    };
+    window.addEventListener(CHANGED, follow);
+    return () => window.removeEventListener(CHANGED, follow);
   }, []);
 
   const choose = (value: string) => {
     setManager(value);
+    window.dispatchEvent(new CustomEvent(CHANGED, { detail: value }));
     try {
       localStorage.setItem(KEY, value);
     } catch {

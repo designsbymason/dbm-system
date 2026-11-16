@@ -1,0 +1,147 @@
+---
+// Section 7 (03-landing-page-brief.md §3): install, import the stylesheet and a theme, render a component. Real code, each with a copy
+// button. The package-manager tabs are the hero's, so a choice made there is the choice here.
+import { installation } from "../../data/site";
+import { CodeStep } from "./CodeStep";
+import { InstallLine } from "./InstallLine";
+import { StartActions } from "./StartActions";
+
+const imports = `import "@dbm-system/components/styles.css";
+import "@dbm-system/tokens/css/purple-light.bundled.css";`;
+const html = `<html data-theme="purple-light">`;
+const render = `import { Button } from "@dbm-system/components";
+
+export function Example() {
+  return <Button>Save</Button>;
+}`;
+---
+
+<section id="start" class="start site-frame" aria-labelledby="start-heading">
+  <div class="grid-12">
+    <div class="start__text">
+      <h2 id="start-heading" class="display start__title">Start in three steps</h2>
+      <p class="lede">Install the packages, import the stylesheet and one theme, then render a component.</p>
+      <div class="start__actions">
+        <StartActions />
+      </div>
+    </div>
+    <ol class="start__steps">
+      <li class="start__step">
+        <h3>Install</h3>
+        <InstallLine client:visible />
+      </li>
+      <li class="start__step">
+        <h3>Import the stylesheet and a theme</h3>
+        <CodeStep client:visible code={imports} language="ts" label="Import the stylesheet and a theme" />
+        <p>Then choose the theme on the root element:</p>
+        <CodeStep client:visible code={html} language="html" label="Choose the theme" />
+      </li>
+      <li class="start__step">
+        <h3>Render a component</h3>
+        <CodeStep client:visible code={render} language="tsx" label="Render a component" />
+      </li>
+    </ol>
+    <p class="start__note">
+      The packages ship no fonts. <a href={installation.href}>Installation</a> shows how to load Nunito and Lora.
+    </p>
+  </div>
+</section>
+
+<style>
+  .start {
+    padding-block: var(--dbm-space-20);
+  }
+
+  .start__text,
+  .start__steps,
+  .start__note {
+    grid-column: 1 / -1;
+  }
+
+  .start__text {
+    display: grid;
+    gap: var(--dbm-space-4);
+    align-content: start;
+    margin-block-end: var(--dbm-space-8);
+  }
+
+  .start__title {
+    font-size: var(--dbm-font-size-3xl);
+  }
+
+  .start__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--dbm-space-3);
+    margin-block-start: var(--dbm-space-2);
+  }
+
+  .start__steps {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: var(--dbm-space-8);
+    counter-reset: step;
+  }
+
+  .start__step {
+    display: grid;
+    gap: var(--dbm-space-3);
+    counter-increment: step;
+    padding-block-start: var(--dbm-space-4);
+    border-block-start: 1px solid var(--site-rule-strong);
+  }
+
+  .start__step h3 {
+    margin: 0;
+    font-size: var(--dbm-font-size-md);
+    font-weight: var(--dbm-font-weight-semibold);
+  }
+
+  /* The step's number, drawn before its name; the list's own numbering is not shown (the list is `list-style: none`). */
+  .start__step h3::before {
+    content: counter(step) ". ";
+    color: var(--site-accent);
+    font-family: var(--dbm-font-family-mono);
+    font-size: var(--dbm-font-size-sm);
+  }
+
+  .start__step p {
+    margin: 0;
+    color: var(--site-graphite);
+    font-size: var(--dbm-font-size-sm);
+  }
+
+  .start__note {
+    margin: var(--dbm-space-6) 0 0;
+    color: var(--site-graphite);
+    font-size: var(--dbm-font-size-sm);
+  }
+
+  .start__note a {
+    color: var(--dbm-text-link);
+    text-underline-offset: 0.2em;
+  }
+
+  .start__note a:focus-visible {
+    outline: 2px solid var(--dbm-border-focus);
+    outline-offset: 2px;
+    border-radius: var(--dbm-radius-xs);
+  }
+
+  @media (min-width: 1024px) {
+    .start__text {
+      grid-column: 1 / span 4;
+      margin-block-end: 0;
+    }
+
+    .start__steps {
+      grid-column: 5 / -1;
+    }
+
+    .start__note {
+      grid-column: 5 / -1;
+    }
+  }
+</style>

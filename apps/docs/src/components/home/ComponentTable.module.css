@@ -1,0 +1,105 @@
+/* The home page's component table. Semantic tokens only; the toolbar rules follow the ones Storybook's Index page uses. */
+.table {
+  container-type: inline-size;
+}
+
+/* A fixed layout takes each column's width from its header, so an empty-state row cannot nudge a column. The table is never narrower
+   than 40rem: on a phone it scrolls sideways inside its box instead of squeezing four columns into the screen. */
+.table table {
+  min-inline-size: 40rem;
+  table-layout: fixed;
+}
+
+.table :global([class*="_row_"]) {
+  align-items: center;
+  column-gap: var(--dbm-space-6);
+  display: flex;
+  flex-wrap: wrap;
+  row-gap: var(--dbm-space-3);
+}
+
+.summary {
+  flex: none;
+  min-inline-size: 9.5rem;
+  text-align: start;
+  white-space: nowrap;
+}
+
+.table :global([class*="_search_"]) {
+  flex: 1 1 6rem;
+  min-inline-size: 0;
+}
+
+.filtergroup {
+  align-items: center;
+  display: flex;
+  flex: none;
+  gap: var(--dbm-space-2);
+}
+
+.filterlabel {
+  color: var(--dbm-text-secondary);
+  white-space: nowrap;
+}
+
+.filter {
+  gap: var(--dbm-space-2);
+  justify-content: space-between;
+  min-inline-size: 8.5rem;
+  padding-inline: var(--dbm-space-3);
+  text-align: start;
+}
+
+.panel {
+  display: grid;
+  gap: var(--dbm-space-2);
+  min-inline-size: 11rem;
+}
+
+/* The brand text colour, not the link blue: the blue measures 4.49:1 on the striped rows in the light themes. */
+.link {
+  color: var(--dbm-text-brand);
+  font-weight: var(--dbm-font-weight-semibold);
+  text-decoration: none;
+}
+
+.link:hover {
+  text-decoration: underline;
+}
+
+.link:focus-visible {
+  outline: 2px solid var(--dbm-border-focus);
+  outline-offset: 2px;
+  border-radius: var(--dbm-radius-xs);
+}
+
+.more {
+  display: flex;
+  justify-content: center;
+  margin-block-start: var(--dbm-space-4);
+}
+
+/* Narrow: the count on its own line, the search across the width, then the two filters sharing the next line. */
+@container (max-width: 45rem) {
+  .summary {
+    flex: 1 0 100%;
+  }
+
+  .table :global([class*="_search_"]) {
+    flex: 1 0 100%;
+  }
+
+  /* Each filter takes a row of its own, its label a fixed width so the two buttons line up. */
+  .filtergroup {
+    flex: 1 0 100%;
+  }
+
+  .filterlabel {
+    flex: none;
+    min-inline-size: 5rem;
+  }
+
+  .filtergroup .filter {
+    flex: 1 1 auto;
+  }
+}
