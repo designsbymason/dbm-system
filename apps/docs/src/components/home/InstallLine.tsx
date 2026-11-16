@@ -6,7 +6,6 @@ const managers = [
   { id: "pnpm", command: `pnpm add ${packages}` },
   { id: "npm", command: `npm install ${packages}` },
   { id: "yarn", command: `yarn add ${packages}` },
-  { id: "bun", command: `bun add ${packages}` },
 ];
 const KEY = "dbm-package-manager";
 const CHANGED = "dbm-package-manager-change";

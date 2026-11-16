@@ -89,7 +89,7 @@ Site-only CSS uses semantic tokens only; a missing token or component is propose
 | Header and phone menu panel | `Navbar` (a ghost, sticky bar with a `Navbar.Row` in columns), `NavigationMenu`, `Badge`, `IconButton`, `Button` |
 | Search | `CommandPalette` (`filter={false}`), Storybook's `index.json` |
 | Mode toggle | `IconButton`, `ThemeProvider`, the shared storage key |
-| Install line with package-manager tabs (pnpm, npm, yarn, bun), remembered | `Tabs`, `CodeBlock` |
+| Install line with package-manager tabs (pnpm, npm, yarn), remembered | `Tabs`, `CodeBlock` |
 | All components table | `DataTable`, `SearchInput`, `Select` or `ToggleGroup`, `Badge` |
 
 ## 4. How Storybook fits
