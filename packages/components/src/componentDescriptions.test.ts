@@ -3,9 +3,9 @@ import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { componentDescriptions } from "./componentDescriptions";
 
-// The Getting started page's component table has a Description column read from `src/componentDescriptions.ts`.
-// A component is whatever has a main story titled `{Atoms|Molecules|Organisms|Templates}/{Category}/{Name}`; each needs a
-// line there, and a line for a component that no longer exists is removed. (The tests run from the package's own folder.)
+// The All components page's component table has a Description column read from `src/componentDescriptions.ts`. A component is
+// whatever is in `src/componentCatalog.json`, and a template is a main story titled `Templates/{Category}/{Name}`; each needs a line
+// there, and a line for a component that no longer exists is removed. (The tests run from the package's own folder.)
 const root = join(process.cwd(), "src");
 
 function storiesFiles(dir: string): string[] {
@@ -16,9 +16,9 @@ function storiesFiles(dir: string): string[] {
   });
 }
 
-const components = new Set<string>();
-for (const file of storiesFiles(root)) {
-  const match = /^\s*title:\s*"(?:Atoms|Molecules|Organisms|Templates)\/[^/"]+\/([^/"]+)"/m.exec(readFileSync(file, "utf8"));
+const components = new Set<string>(Object.keys(JSON.parse(readFileSync(join(root, "componentCatalog.json"), "utf8")) as Record<string, unknown>));
+for (const file of storiesFiles(join(root, "templates"))) {
+  const match = /^\s*title:\s*"Templates\/[^/"]+\/([^/"]+)"/m.exec(readFileSync(file, "utf8"));
   if (match?.[1]) components.add(match[1]);
 }
 

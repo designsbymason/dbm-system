@@ -2,6 +2,7 @@
 // The page type the site has (02-structure.md §3): full-width sections in the site's shell. The home page and the 404.
 import { SiteShell } from "../components/shell/SiteShell";
 import { facts } from "../components/home/facts";
+import { componentPlacements } from "../data/placements";
 import Base from "./Base.astro";
 
 interface Props {
@@ -14,7 +15,7 @@ const { title, description, noindex } = Astro.props;
 ---
 
 <Base title={title} description={description} noindex={noindex}>
-  <SiteShell client:load version={facts.version}>
+  <SiteShell client:load version={facts.version} placements={componentPlacements}>
     <slot />
   </SiteShell>
 </Base>

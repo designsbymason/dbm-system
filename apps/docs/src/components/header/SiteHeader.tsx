@@ -3,6 +3,7 @@ import { FlaskIcon, GithubLogoIcon } from "@dbm-system/icons";
 import { allComponents, docsGroups, foundationsLinks, storybookHref } from "../../data/site";
 import { Wordmark } from "../Wordmark";
 import { ModeToggle } from "./ModeToggle";
+import type { Placements } from "./searchIndex";
 import { SiteSearch } from "./SiteSearch";
 import styles from "./SiteHeader.module.css";
 
@@ -11,6 +12,8 @@ const githubHref = "https://github.com/designsbymason/dbm-system";
 export interface SiteHeaderProps {
   /** The published version, read from the components package at build. */
   version: string;
+  /** Each component's tier and category, for search. */
+  placements: Placements;
 }
 
 const githubLabel = "DBM System on GitHub";
@@ -46,7 +49,7 @@ function PanelToolLinks() {
  * move to its foot as labelled buttons. The columns below `lg` are `Navbar.Row`'s own, so the wordmark is centred however
  * wide the two sides are.
  */
-export function SiteHeader({ version }: SiteHeaderProps) {
+export function SiteHeader({ version, placements }: SiteHeaderProps) {
   return (
     <Navbar sticky variant="ghost" collapseBelow="lg" className={styles.header}>
       <Navbar.Row columns="balanced" columnsBelow="lg" className={styles.row}>
@@ -92,7 +95,7 @@ export function SiteHeader({ version }: SiteHeaderProps) {
         </Navbar.Links>
         <Navbar.Actions column="end" className={styles.actions}>
           <Navbar.Action>
-            <SiteSearch />
+            <SiteSearch placements={placements} />
           </Navbar.Action>
           <Navbar.Action>
             <ModeToggle />

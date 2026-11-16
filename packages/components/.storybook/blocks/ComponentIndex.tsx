@@ -16,24 +16,10 @@ import type { DataTableColumn } from "../../src/organisms/DataTable";
 import { componentDescriptions } from "../../src/componentDescriptions";
 import { toneForTier } from "./ComponentHeader";
 import type { ComponentTier } from "./ComponentHeader";
+import { toRows } from "../../src/componentRows";
+import type { IndexRow, RawEntry, Tier } from "../../src/componentRows";
 
-type Tier = "Atoms" | "Molecules" | "Organisms" | "Templates";
-
-interface IndexRow {
-  id: string;
-  name: string;
-  tier: Tier;
-  category: string;
-  /** A template that is a story-only example page an app copies, not a component it imports (only the application shells ship). */
-  examplePage: boolean;
-}
-
-export interface RawEntry {
-  id: string;
-  title: string;
-  type: string;
-  tags?: string[];
-}
+export type { RawEntry } from "../../src/componentRows";
 
 /** The singular label of each tier, which is also the key of the badge tone `ComponentHeader` draws it with. */
 const TIER_LABEL: Record<Tier, ComponentTier> = {
@@ -42,13 +28,6 @@ const TIER_LABEL: Record<Tier, ComponentTier> = {
   Organisms: "Organism",
   Templates: "Template",
 };
-
-/**
- * The tag a story-only example page puts on its stories (`tags: ["example-page"]`), which Storybook copies onto the page's Docs entry.
- * It is the template's own statement, so it holds wherever the template is grouped; `src/templates/examplePageTags.test.ts` fails a
- * template that is not exported from the package and lacks it.
- */
-const EXAMPLE_PAGE_TAG = "example-page";
 
 const COMPONENT_TIERS: Exclude<Tier, "Templates">[] = ["Atoms", "Molecules", "Organisms"];
 
@@ -64,34 +43,6 @@ const CATEGORY_ORDER = [
   "Media",
   "Utility",
 ];
-
-const isTier = (value: string | undefined): value is Tier =>
-  value === "Atoms" || value === "Molecules" || value === "Organisms" || value === "Templates";
-
-/**
- * Turns Storybook's own index into rows. A component's Docs page is the entry whose type is `docs` and whose title is
- * `{Tier}/{Category}/{Component}` (§3), so a new component appears here with no edit to this page. A template is a
- * `Templates/{Template}` or `Templates/{Category}/{Template}` Docs page. Everything else (the Foundations pages, the
- * guides, a component's own checks) has a different top-level group or no Docs entry and is left out.
- */
-function toRows(entries: Record<string, RawEntry>): IndexRow[] {
-  const rows: IndexRow[] = [];
-  for (const entry of Object.values(entries)) {
-    if (entry.type !== "docs") continue;
-    const parts = entry.title.split("/");
-    const tier = parts[0];
-    if (!isTier(tier)) continue;
-    const name = parts[parts.length - 1];
-    if (!name) continue;
-    if (tier === "Templates") {
-      if (parts.length < 2 || parts.length > 3) continue;
-      rows.push({ id: entry.id, name, tier, category: parts[1] ?? "", examplePage: entry.tags?.includes(EXAMPLE_PAGE_TAG) === true });
-    } else if (parts.length === 3 && parts[1]) {
-      rows.push({ id: entry.id, name, tier, category: parts[1], examplePage: false });
-    }
-  }
-  return rows.sort((a, b) => a.name.localeCompare(b.name, undefined, { sensitivity: "base" }));
-}
 
 /** `./` from the preview iframe is Storybook's root, so `?path=` there opens a page in the full shell. */
 function docsHref(id: string): string {
@@ -318,8 +269,9 @@ function IndexTable({
 }
 
 /**
- * Docs-page-only Components and Templates sections for the Getting started page, built live from Storybook's own
- * `index.json` so they can never drift from the sidebar. The Components section has a count badge, and a toolbar of a
+ * Docs-page-only Components and Templates sections for the All components page, built live from Storybook's own
+ * `index.json` (which pages exist) and the component catalog (each component's tier and category), so they can never drift
+ * from the sidebar. The Components section has a count badge, and a toolbar of a
  * search box and a Tier and a Category filter (each a panel of checkboxes, "All" until one is chosen) over a table of
  * every component; its tier badges are the ones the component pages draw. Templates are listed in a section of their
  * own, empty until the first one exists. Not part of the published package.

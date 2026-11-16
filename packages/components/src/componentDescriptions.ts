@@ -1,6 +1,6 @@
 /**
- * One short line for every component, shown in the Description column of the Getting started page's component table.
- * Keyed by the component's name as it appears in its story title (`Atoms/Layout/Box` is `Box`). Hand-written, so a
+ * One short line for every component, shown in the Description column of the All components page's component table.
+ * Keyed by the component's name (the name in `src/componentCatalog.json`, or a template's name). Hand-written, so a
  * new component needs a line here: `src/componentDescriptions.test.ts` fails when one is missing or one is left over.
  * Docs-only, like `snippetHelpers.ts`: not exported, so not shipped.
  */

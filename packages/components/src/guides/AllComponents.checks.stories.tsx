@@ -22,12 +22,12 @@ const docs = (title: string, tags: string[] = []): [string, RawEntry] => {
   return [id, { id, title, type: "docs", tags }];
 };
 const index: Record<string, RawEntry> = Object.fromEntries([
-  docs("Atoms/Layout/Box"),
-  docs("Atoms/Inputs/Button"),
-  docs("Molecules/Data Display/Card"),
-  docs("Molecules/Navigation/Tabs"),
-  docs("Organisms/Data Display/DataTable"),
-  docs("Organisms/Navigation/Sidebar"),
+  docs("Components/Box"),
+  docs("Components/Button"),
+  docs("Components/Card"),
+  docs("Components/Tabs"),
+  docs("Components/DataTable"),
+  docs("Components/Sidebar"),
   docs("Templates/Shells/AppShell"),
   // Grouped under a shell group on purpose: the asterisk follows the tag, not the group.
   docs("Templates/Shells/Landing page", ["example-page"]),

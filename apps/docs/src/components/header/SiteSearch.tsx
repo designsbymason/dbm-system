@@ -3,31 +3,9 @@ import type { CommandItem } from "@dbm-system/components";
 import { MagnifyingGlassIcon } from "@dbm-system/icons";
 import { useRef, useState } from "react";
 import { storybookHref } from "../../data/site";
+import { find, prepare } from "./searchIndex";
+import type { IndexEntry, Placements, Searchable } from "./searchIndex";
 import styles from "./SiteSearch.module.css";
-
-/** One entry of Storybook's `index.json`: a Docs page, or a story. */
-interface IndexEntry {
-  id: string;
-  title: string;
-  name: string;
-  type: "docs" | "story";
-  tags?: string[];
-}
-
-/** A searchable page or story, prepared once from the index. */
-interface Searchable {
-  item: CommandItem;
-  /** Lower-case words the query is matched against. */
-  text: string;
-  /** The Docs pages come before the stories, and the shorter title before the longer. */
-  rank: number;
-}
-
-/** How many results the palette lists. */
-const LIMIT = 12;
-
-/** The top-level Storybook groups that are documentation; the rest (Atoms, Molecules, Organisms, Templates) are components. */
-const DOCS_GROUPS = new Set(["Getting started", "Guides", "Resources", "Foundations"]);
 
 /**
  * Where Storybook is. On the published site it is beside the site, at `/storybook/`. The development server has no Storybook beside it,
@@ -37,50 +15,15 @@ const storybookBase = import.meta.env.DEV ? "http://localhost:6006/" : storybook
 
 const unavailable = import.meta.env.DEV ? "Start Storybook (pnpm storybook) to search." : "Search is not available right now.";
 
-/** The entries a reader sees in Storybook's sidebar (the `dev` tag): not the hidden check stories or the moved page. */
-function prepare(entries: IndexEntry[]): Searchable[] {
-  return entries
-    .filter((entry) => entry.tags?.includes("dev"))
-    .map((entry) => {
-      const parts = entry.title.split("/");
-      const last = parts.at(-1) ?? entry.title;
-      const where = parts.slice(0, -1).join(" › ");
-      const isDocs = entry.type === "docs";
-      const group = DOCS_GROUPS.has(parts[0] ?? "") ? "Docs" : isDocs ? "Components" : "Examples";
-      const label = isDocs ? last : `${last}: ${entry.name}`;
-      const href = `${storybookBase}?path=/${isDocs ? "docs" : "story"}/${entry.id}`;
-      return {
-        item: { value: href, label, description: where || undefined, group },
-        text: `${entry.title} ${isDocs ? "" : entry.name}`.toLowerCase(),
-        rank: (isDocs ? 0 : 100) + entry.title.length,
-      };
-    });
-}
-
-/** The best matches for a query: every word must appear, a title that starts with the query comes first, then Docs pages. */
-function find(searchables: Searchable[], query: string): CommandItem[] {
-  const words = query.toLowerCase().split(/\s+/).filter(Boolean);
-  if (words.length === 0) return [];
-  return searchables
-    .filter(({ text }) => words.every((word) => text.includes(word)))
-    .map((searchable) => {
-      const label = searchable.item.label.toLowerCase();
-      const starts = words.every((word) => label.startsWith(word)) ? 0 : label.includes(words[0] ?? "") ? 50 : 200;
-      return { searchable, score: searchable.rank + starts };
-    })
-    .sort((a, b) => a.score - b.score)
-    .slice(0, LIMIT)
-    .map(({ searchable }) => searchable.item);
-}
-
 /**
  * Search (02-structure.md §1, ADR-0220): DBM's CommandPalette over Storybook's own `index.json` on this origin, so every Docs
  * page, component and story is found by title and opens in Storybook. No search service and no site index. The index is
  * fetched once, when the palette first opens. ⌘K or Ctrl K opens it from anywhere. On the development server it reads the Storybook
- * development server instead (see `storybookBase`), and says so when that is not running. Its trigger is an icon button, and below `lg` the palette
+ * development server instead (see `storybookBase`), and says so when that is not running. `placements` gives each component's tier and
+ * category (from the manifest), so a result reads "Atoms › Inputs" however Storybook groups the component. Its trigger is an icon button, and below `lg` the palette
  * opens as a bottom sheet.
  */
-export function SiteSearch() {
+export function SiteSearch({ placements }: { placements: Placements }) {
   const [results, setResults] = useState<CommandItem[]>([]);
   const [failed, setFailed] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -93,7 +36,7 @@ export function SiteSearch() {
         if (!response.ok) throw new Error(String(response.status));
         return response.json() as Promise<{ entries: Record<string, IndexEntry> }>;
       })
-      .then(({ entries }) => prepare(Object.values(entries)))
+      .then(({ entries }) => prepare(Object.values(entries), placements, storybookBase))
       .catch(() => {
         setFailed(true);
         return null;
