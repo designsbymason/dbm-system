@@ -8,9 +8,10 @@
   asked for them. They used to load from Google Fonts here. A consumer of
   the published package still supplies its own fonts (ADR-0175).
 
-  Search engines: the Storybook pages are kept out of results (ADR-0214,
-  docs-site/02-structure.md §4); the docs website's component pages are the
-  ones to find. `robots.txt` also disallows `/storybook/`, and this tag
-  covers a page reached by a link.
+  Search engines (ADR-0221, docs-site/02-structure.md §12): the Docs pages are
+  indexed and are drawn inside this frame, so the frame must stay crawlable
+  and is never disallowed in robots.txt. The tag below keeps the frame from
+  being a result by itself, while its content still counts for the page that
+  embeds it. The manager's head (main.ts) marks story paths noindex.
 -->
-<meta name="robots" content="noindex" />
+<meta name="robots" content="noindex, indexifembedded" />

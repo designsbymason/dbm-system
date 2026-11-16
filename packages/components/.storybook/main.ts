@@ -16,8 +16,39 @@ const tokenValue = (name: string, theme: string) => {
 // The manager's app background (`appBg` in theme.ts): bg.neutral-subtle in light, bg.brand-subtle in dark.
 const appBackground = { light: tokenValue("--dbm-bg-neutral-subtle", "purple-light"), dark: tokenValue("--dbm-bg-brand-subtle", "purple-dark") };
 const managerHead = `
-  <!-- Kept out of search results; the docs website's pages are the ones to find (ADR-0214). -->
-  <meta name="robots" content="noindex" />
+  <!-- Search engines (ADR-0221, docs-site/02-structure.md §12): the Docs pages are indexed and the story canvases are not.
+       The head is the same for every path, so a script decides from the address: a story path gets noindex, a Docs path a
+       canonical URL. It follows Storybook's own navigation, which changes the address without loading the page again. -->
+  <script>
+    (function () {
+      var base = "https://dbm-system.com/storybook/";
+      function head(tag, attrs) {
+        var el = document.head.querySelector(tag + "[data-dbm-seo]");
+        if (!el) { el = document.createElement(tag); el.setAttribute("data-dbm-seo", ""); document.head.appendChild(el); }
+        for (var name in attrs) el.setAttribute(name, attrs[name]);
+        return el;
+      }
+      function sync() {
+        var path = new URLSearchParams(location.search).get("path") || "";
+        var robots = document.head.querySelector('meta[name="robots"][data-dbm-seo]');
+        var canonical = document.head.querySelector('link[rel="canonical"][data-dbm-seo]');
+        if (path.indexOf("/story/") === 0) {
+          head("meta", { name: "robots", content: "noindex" });
+          if (canonical) canonical.remove();
+        } else {
+          if (robots) robots.remove();
+          if (path.indexOf("/docs/") === 0) head("link", { rel: "canonical", href: base + "?path=" + path });
+          else if (canonical) canonical.remove();
+        }
+      }
+      ["pushState", "replaceState"].forEach(function (method) {
+        var original = history[method];
+        history[method] = function () { var result = original.apply(this, arguments); sync(); return result; };
+      });
+      addEventListener("popstate", sync);
+      sync();
+    })();
+  </script>
   <!-- Crossing to or from dbm-system.com cross-fades instead of flashing a blank page; both sides opt in. -->
   <style>
     @view-transition { navigation: auto; }
