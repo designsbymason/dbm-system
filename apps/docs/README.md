@@ -6,7 +6,7 @@ The website for `https://dbm-system.com`: an Astro app with React islands, deplo
 
 Build the workspace packages first (`pnpm build` at the root), then:
 
-- `pnpm --filter @dbm-system/docs dev`: the site at `http://localhost:4321` (the `docs` entry in `.claude/launch.json`).
+- `pnpm --filter @dbm-system/docs dev`: the site at `http://localhost:4321` (the `docs` entry in `.claude/launch.json`). A change to a CSS module can show a page load late in the development server; reload twice, or restart it, before judging a style.
 - `pnpm --filter @dbm-system/docs build`: the static site in `dist/`.
 - `pnpm --filter @dbm-system/docs typecheck`: the TypeScript files.
 - `pnpm --filter @dbm-system/docs check-links [folder]` and `check-accessibility [folder]`: the two gates, on `dist/` by default.
@@ -21,7 +21,7 @@ Telemetry and the dev toolbar are off.
 - `src/layouts/`: `Base` (fonts, tokens, the mode before first paint) and `Marketing` (the page type the site has).
 - `src/pages/`: the routes: `/`, the 404 and `/AGENTS.md`.
 - `src/illustrations/`: the SVG illustrations, coloured from the tokens.
-- `src/components/header/SiteSearch.tsx`: search, a `CommandPalette` over Storybook's `index.json` on the same origin (fetched when it first opens). It finds nothing on the development server, which has no Storybook beside it; try it in the assembled site (`serve.mjs`).
+- `src/components/header/SiteSearch.tsx`: search, a `CommandPalette` over Storybook's `index.json` (fetched when it first opens). On the published site that is Storybook beside the site; on the development server it is Storybook's own development server (`pnpm storybook`, port 6006), which has to be running, or search says so.
 - `src/components/home/`: the home page's sections.
 - `scripts/`: the scoped token themes, `assemble-seo.mjs` (writes the root `robots.txt` and `sitemap.xml` from Storybook's own, in the Pages workflow), the link check (which also checks each link into Storybook against its `index.json`), the accessibility scan and the local server.
 

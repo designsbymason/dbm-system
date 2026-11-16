@@ -34,14 +34,14 @@ function GithubLink() {
   );
 }
 
-/** The same two links in the menu panel, with their names showing: a touch screen has no tooltip to read an icon from. */
+/** The same two links in the menu panel, ghost buttons that share the width, with their names showing: a touch screen has no tooltip to read an icon from. */
 function PanelToolLinks() {
   return (
     <>
-      <Button asChild variant="tertiary" size="sm" leadingIcon={FlaskIcon}>
+      <Button asChild variant="ghost" size="sm" leadingIcon={FlaskIcon} className={styles.panelButton}>
         <a href={storybookHref}>Storybook</a>
       </Button>
-      <Button asChild variant="tertiary" size="sm" leadingIcon={GithubLogoIcon}>
+      <Button asChild variant="ghost" size="sm" leadingIcon={GithubLogoIcon} className={styles.panelButton}>
         <a href={githubHref}>GitHub</a>
       </Button>
     </>
@@ -70,9 +70,9 @@ export function SiteHeader({ version }: SiteHeaderProps) {
             <NavigationMenu.List>
               <NavigationMenu.Item value="docs">
                 <NavigationMenu.Trigger>Docs</NavigationMenu.Trigger>
-                <NavigationMenu.Content layout="columns" className={styles.docsPanel}>
+                <NavigationMenu.Content layout="columns" className={`${styles.menuPanel} ${styles.docsPanel}`}>
                   {docsGroups.map((group) => (
-                    <NavigationMenu.Group key={group.label} label={group.label}>
+                    <NavigationMenu.Group key={group.label} label={group.label} className={styles.group}>
                       {group.links.map((link) => (
                         <NavigationMenu.Link key={link.href} href={link.href}>
                           {link.label}
@@ -84,8 +84,8 @@ export function SiteHeader({ version }: SiteHeaderProps) {
               </NavigationMenu.Item>
               <NavigationMenu.Item value="foundations">
                 <NavigationMenu.Trigger>Foundations</NavigationMenu.Trigger>
-                <NavigationMenu.Content>
-                  <NavigationMenu.Group label="Design tokens">
+                <NavigationMenu.Content className={styles.menuPanel}>
+                  <NavigationMenu.Group label="Design tokens" className={styles.group}>
                     {foundationsLinks.map((link) => (
                       <NavigationMenu.Link key={link.href} href={link.href}>
                         {link.label}

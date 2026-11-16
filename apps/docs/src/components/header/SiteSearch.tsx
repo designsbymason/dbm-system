@@ -1,4 +1,4 @@
-import { CommandPalette, IconButton, Kbd } from "@dbm-system/components";
+import { CommandPalette, IconButton } from "@dbm-system/components";
 import type { CommandItem } from "@dbm-system/components";
 import { MagnifyingGlassIcon } from "@dbm-system/icons";
 import { useRef, useState } from "react";
@@ -29,7 +29,13 @@ const LIMIT = 12;
 /** The top-level Storybook groups that are documentation; the rest (Atoms, Molecules, Organisms, Templates) are components. */
 const DOCS_GROUPS = new Set(["Getting started", "Guides", "Resources", "Foundations"]);
 
-const unavailable = "Search needs Storybook beside the site.";
+/**
+ * Where Storybook is. On the published site it is beside the site, at `/storybook/`. The development server has no Storybook beside it,
+ * so there search reads the Storybook development server (`pnpm storybook`, port 6006) when one is running.
+ */
+const storybookBase = import.meta.env.DEV ? "http://localhost:6006/" : storybookHref;
+
+const unavailable = import.meta.env.DEV ? "Start Storybook (pnpm storybook) to search." : "Search is not available right now.";
 
 /** The entries a reader sees in Storybook's sidebar (the `dev` tag): not the hidden check stories or the moved page. */
 function prepare(entries: IndexEntry[]): Searchable[] {
@@ -42,7 +48,7 @@ function prepare(entries: IndexEntry[]): Searchable[] {
       const isDocs = entry.type === "docs";
       const group = DOCS_GROUPS.has(parts[0] ?? "") ? "Docs" : isDocs ? "Components" : "Examples";
       const label = isDocs ? last : `${last}: ${entry.name}`;
-      const href = `${storybookHref}?path=/${isDocs ? "docs" : "story"}/${entry.id}`;
+      const href = `${storybookBase}?path=/${isDocs ? "docs" : "story"}/${entry.id}`;
       return {
         item: { value: href, label, description: where || undefined, group },
         text: `${entry.title} ${isDocs ? "" : entry.name}`.toLowerCase(),
@@ -70,8 +76,8 @@ function find(searchables: Searchable[], query: string): CommandItem[] {
 /**
  * Search (02-structure.md §1, ADR-0220): DBM's CommandPalette over Storybook's own `index.json` on this origin, so every Docs
  * page, component and story is found by title and opens in Storybook. No search service and no site index. The index is
- * fetched once, when the palette first opens. ⌘K or Ctrl K opens it from anywhere. Where there is no Storybook beside the site
- * (the development server), the palette says so instead of searching. Its trigger is an icon button, and below `lg` the palette
+ * fetched once, when the palette first opens. ⌘K or Ctrl K opens it from anywhere. On the development server it reads the Storybook
+ * development server instead (see `storybookBase`), and says so when that is not running. Its trigger is an icon button, and below `lg` the palette
  * opens as a bottom sheet.
  */
 export function SiteSearch() {
@@ -82,7 +88,7 @@ export function SiteSearch() {
   const latest = useRef("");
 
   const load = () => {
-    index.current ??= fetch(`${storybookHref}index.json`)
+    index.current ??= fetch(`${storybookBase}index.json`)
       .then((response) => {
         if (!response.ok) throw new Error(String(response.status));
         return response.json() as Promise<{ entries: Record<string, IndexEntry> }>;
@@ -123,15 +129,11 @@ export function SiteSearch() {
       // Below `lg` the panel is a sheet from the bottom edge, 85% of the screen tall (SiteSearch.module.css).
       className={styles.sheet}
       trigger={
-        // An icon button like the others in the bar. Its name is "Search"; the tooltip adds the shortcut, shown for a sighted keyboard user.
+        // An icon button like the others in the bar; its name and tooltip are "Search".
         <IconButton
           icon={MagnifyingGlassIcon}
           aria-label="Search"
-          tooltip={
-            <>
-              Search <Kbd keys={["mod", "K"]} />
-            </>
-          }
+          tooltip="Search"
           variant="tertiary"
           size="sm"
           data-site-search

@@ -31,7 +31,7 @@ A ghost bar that sticks (transparent until it is stuck). **From `lg` (1024 px) i
 
 Every menu link goes into Storybook in the same tab. The menus are on the home page only; inside Storybook its sidebar navigates and the logo links home.
 
-**Below `lg`** the menu button opens a panel from the start edge: Docs and Foundations as expandable groups (the same labelled simple lists), Components as a link, and Storybook and GitHub at the foot.
+**Below `lg`** the menu button opens a panel from the start edge: Docs and Foundations as expandable groups (the same labelled simple lists, their links lined up with the top-level labels and a subtle line between groups), Components as a link, and Storybook and GitHub at the foot as ghost buttons that share the width.
 
 **Footer:** columns for Docs (into Storybook), Resources (Changelog, Roadmap, FAQ in Storybook), AI agents and the agent files, and Project (GitHub, npm, Issues, Security, Licence). The 404 offers search and the way into the docs.
 
