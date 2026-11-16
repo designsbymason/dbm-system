@@ -46,7 +46,8 @@ function useSyncSizeToLevel(level: HeadingLevel) {
 }
 
 const meta: Meta<typeof Heading> = {
-  title: "Atoms/Typography/Heading",
+  title: "Components/Heading",
+  id: "atoms-typography-heading",
   component: Heading,
   parameters: { layout: "padded" },
   // Ordered to match HeadingProps' own declaration order (children, level,

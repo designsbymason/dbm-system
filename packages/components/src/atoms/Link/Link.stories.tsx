@@ -4,7 +4,8 @@ import { Link } from "./Link";
 import { linkPlaygroundSnippet, linkSnippets } from "./Link.snippets";
 
 const meta: Meta<typeof Link> = {
-  title: "Atoms/Typography/Link",
+  title: "Components/Link",
+  id: "atoms-typography-link",
   component: Link,
   parameters: { layout: "padded" },
   // Ordered to match LinkProps' own declaration order, content/destination

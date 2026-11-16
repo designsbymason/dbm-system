@@ -4,7 +4,8 @@ import { Kbd } from "./Kbd";
 import { kbdPlaygroundSnippet, kbdSnippets } from "./Kbd.snippets";
 
 const meta: Meta<typeof Kbd> = {
-  title: "Atoms/Typography/Kbd",
+  title: "Components/Kbd",
+  id: "atoms-typography-kbd",
   component: Kbd,
   parameters: { layout: "padded" },
   // Ordered to match KbdProps' own declaration order (children, aria-label),

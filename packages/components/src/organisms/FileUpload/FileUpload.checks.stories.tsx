@@ -9,7 +9,8 @@ import { demoEntries, demoFile, demoImage } from "./FileUploadStoryKit";
 // enforces, the computed look of the drop area while dragging and in forced colours, target sizes, a phone's width and
 // right-to-left. Hidden from the sidebar and the Docs page, and still run as tests (07 §4.2, guidelines/adr/0013).
 const meta: Meta = {
-  title: "Organisms/Inputs/FileUpload/Checks",
+  title: "Components/FileUpload/Checks",
+  id: "organisms-inputs-fileupload-checks",
   tags: ["!dev"],
   parameters: { layout: "padded" },
 };

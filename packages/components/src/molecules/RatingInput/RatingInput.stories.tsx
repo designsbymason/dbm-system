@@ -14,7 +14,8 @@ const valueNames = ["Poor", "Fair", "Good", "Great", "Excellent"];
 const iconChoices = { Heart: HeartIcon, Thumb: ThumbsUpIcon, Smiley: SmileyIcon, Circle: CircleIcon };
 
 const meta: Meta<typeof RatingInput> = {
-  title: "Molecules/Inputs/RatingInput",
+  title: "Components/RatingInput",
+  id: "molecules-inputs-ratinginput",
   component: RatingInput,
   parameters: { layout: "padded" },
   // `defaultValue` only sets where an uncontrolled rating starts, so changing its control would do nothing to a rating

@@ -6,7 +6,8 @@ import { SkipLink } from "./SkipLink";
 import { skipLinkPlaygroundSnippet, skipLinkSnippets } from "./SkipLink.snippets";
 
 const meta: Meta<typeof SkipLink> = {
-  title: "Atoms/Utility/SkipLink",
+  title: "Components/SkipLink",
+  id: "atoms-utility-skiplink",
   component: SkipLink,
   parameters: { layout: "padded" },
   // Ordered to match SkipLinkProps' own declaration order (children, href, labels), then the standard props last — the sequencing principle the

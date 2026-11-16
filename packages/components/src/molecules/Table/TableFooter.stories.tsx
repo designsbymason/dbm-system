@@ -6,7 +6,8 @@ import { Table } from "./Table";
 // inside a real `Table` (the sub-part's own styling reads the parent's
 // context) with a minimal, valid table structure around it.
 const meta: Meta<typeof Table.Footer> = {
-  title: "Molecules/Data Display/Table/Footer",
+  title: "Components/Table/Footer",
+  id: "molecules-data-display-table-footer",
   component: Table.Footer,
   tags: ["!dev"],
   argTypes: {

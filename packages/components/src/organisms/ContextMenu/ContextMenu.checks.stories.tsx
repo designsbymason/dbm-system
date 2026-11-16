@@ -15,7 +15,8 @@ import type { ContextMenuSize } from "./ContextMenu.types";
 // right-click and a real touch, layout, computed style from the cascade and forced colours. Hidden from the sidebar
 // and the Docs page, and still run as tests (07 §4.2, guidelines/adr/0013).
 const meta: Meta = {
-  title: "Organisms/Overlay/ContextMenu/Checks",
+  title: "Components/ContextMenu/Checks",
+  id: "organisms-overlay-contextmenu-checks",
   tags: ["!dev"],
   // A modal menu hides the page behind it from assistive technology while the area stays focusable but unreachable
   // (focus is trapped in the panel and Tab does nothing), which axe's `aria-hidden-focus` reports for every story that

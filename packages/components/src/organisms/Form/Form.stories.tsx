@@ -14,7 +14,8 @@ import { EmailAndUsername, Stage, Submitted, useSubmitted } from "./FormStoryKit
 import type { FormController, FormErrors, FormProps, FormValues } from "./Form.types";
 
 const meta: Meta<typeof Form> = {
-  title: "Organisms/Inputs/Form",
+  title: "Components/Form",
+  id: "organisms-inputs-form",
   component: Form,
   parameters: { layout: "padded" },
   // Keys follow the component's own `FormProps` declaration order (07 §4 item 3).

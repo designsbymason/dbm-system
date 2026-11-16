@@ -14,7 +14,8 @@ const iconControl = {
 };
 
 const meta: Meta<typeof ContextMenu.RadioItem> = {
-  title: "Organisms/Overlay/ContextMenu/RadioItem",
+  title: "Components/ContextMenu/RadioItem",
+  id: "organisms-overlay-contextmenu-radioitem",
   component: ContextMenu.RadioItem,
   tags: ["!dev"],
   argTypes: {

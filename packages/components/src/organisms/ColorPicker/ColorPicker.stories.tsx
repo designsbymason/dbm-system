@@ -12,7 +12,8 @@ import { colorPickerPlaygroundSnippet, colorPickerSnippets } from "./ColorPicker
 const swatchList = ["#5548a4", "#2e8a7d", { value: "oklch(0.7 0.15 60)", label: "Amber" }, "#d92d20", "#1f2937"];
 
 const meta: Meta<typeof ColorPicker> = {
-  title: "Organisms/Inputs/ColorPicker",
+  title: "Components/ColorPicker",
+  id: "organisms-inputs-colorpicker",
   component: ColorPicker,
   parameters: { layout: "padded" },
   // Core value props first, then the format and content props, then visual and state props, then the panel and form wiring,

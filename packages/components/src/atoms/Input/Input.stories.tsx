@@ -7,7 +7,8 @@ import { Input } from "./Input";
 import { inputPlaygroundSnippet, inputSnippets } from "./Input.snippets";
 
 const meta: Meta<typeof Input> = {
-  title: "Atoms/Inputs/Input",
+  title: "Components/Input",
+  id: "atoms-inputs-input",
   component: Input,
   parameters: { layout: "padded" },
   // Ordered content-ish prop first (placeholder, the closest thing this

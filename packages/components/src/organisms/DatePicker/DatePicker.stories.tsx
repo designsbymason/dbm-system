@@ -8,7 +8,8 @@ import { DatePicker } from "./DatePicker";
 import { datePickerPlaygroundSnippet, datePickerSnippets } from "./DatePicker.snippets";
 
 const meta: Meta<typeof DatePicker> = {
-  title: "Organisms/Inputs/DatePicker",
+  title: "Components/DatePicker",
+  id: "organisms-inputs-datepicker",
   component: DatePicker,
   parameters: { layout: "padded" },
   // Core value props first, then the format and constraint props, then visual and state props, then the calendar and

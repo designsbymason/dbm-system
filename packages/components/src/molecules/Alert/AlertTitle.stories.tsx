@@ -3,7 +3,8 @@ import { Alert } from "./Alert";
 
 // Docs-only (guidelines/adr/0013) — `Alert.Title`'s own props get their own Properties table on Alert.mdx.
 const meta: Meta<typeof Alert.Title> = {
-  title: "Molecules/Feedback/Alert/Title",
+  title: "Components/Alert/Title",
+  id: "molecules-feedback-alert-title",
   component: Alert.Title,
   tags: ["!dev"],
   argTypes: {

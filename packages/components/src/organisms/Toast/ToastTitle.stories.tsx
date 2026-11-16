@@ -3,7 +3,8 @@ import { Toast } from "./Toast";
 
 // Docs-only (guidelines/adr/0013): resolves `Toast.Title`'s own argTypes for its sub-part Properties table.
 const meta: Meta<typeof Toast.Title> = {
-  title: "Organisms/Feedback/Toast/Title",
+  title: "Components/Toast/Title",
+  id: "organisms-feedback-toast-title",
   component: Toast.Title,
   tags: ["!dev"],
   argTypes: {

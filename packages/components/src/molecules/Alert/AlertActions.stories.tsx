@@ -4,7 +4,8 @@ import { Alert } from "./Alert";
 
 // Docs-only (guidelines/adr/0013) — `Alert.Actions`' own props get their own Properties table on Alert.mdx.
 const meta: Meta<typeof Alert.Actions> = {
-  title: "Molecules/Feedback/Alert/Actions",
+  title: "Components/Alert/Actions",
+  id: "molecules-feedback-alert-actions",
   component: Alert.Actions,
   tags: ["!dev"],
   argTypes: {

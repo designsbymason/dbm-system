@@ -8,7 +8,8 @@ import { ListItem } from "./ListItem";
 import { listItemPlaygroundSnippet, listItemSnippets } from "./ListItem.snippets";
 
 const meta: Meta<typeof ListItem> = {
-  title: "Atoms/Typography/ListItem",
+  title: "Components/ListItem",
+  id: "atoms-typography-listitem",
   component: ListItem,
   parameters: { layout: "padded" },
   // Ordered to match ListItemProps' own declaration order, content prop

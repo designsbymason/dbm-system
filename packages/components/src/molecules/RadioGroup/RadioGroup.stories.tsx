@@ -7,7 +7,8 @@ import { RadioGroup } from "./RadioGroup";
 import { radioGroupPlaygroundSnippet, radioGroupSnippets } from "./RadioGroup.snippets";
 
 const meta: Meta<typeof RadioGroup> = {
-  title: "Molecules/Inputs/RadioGroup",
+  title: "Components/RadioGroup",
+  id: "molecules-inputs-radiogroup",
   component: RadioGroup,
   parameters: { layout: "padded" },
   // Keys below are ordered to match the component's own `RadioGroupProps`

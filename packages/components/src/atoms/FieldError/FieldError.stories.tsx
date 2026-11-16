@@ -22,7 +22,8 @@ const iconControl = {
 };
 
 const meta: Meta<typeof FieldError> = {
-  title: "Atoms/Inputs/FieldError",
+  title: "Components/FieldError",
+  id: "atoms-inputs-fielderror",
   component: FieldError,
   parameters: { layout: "padded" },
   // Ordered content prop first, then core visual/behavioral props, then

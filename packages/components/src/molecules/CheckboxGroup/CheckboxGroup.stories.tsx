@@ -7,7 +7,8 @@ import { CheckboxGroup } from "./CheckboxGroup";
 import { checkboxGroupPlaygroundSnippet, checkboxGroupSnippets } from "./CheckboxGroup.snippets";
 
 const meta: Meta<typeof CheckboxGroup> = {
-  title: "Molecules/Inputs/CheckboxGroup",
+  title: "Components/CheckboxGroup",
+  id: "molecules-inputs-checkboxgroup",
   component: CheckboxGroup,
   parameters: { layout: "padded" },
   // Keys below are ordered to match the component's own `CheckboxGroupProps`

@@ -9,7 +9,8 @@ import type { ConfirmDialogProps } from "./ConfirmDialog.types";
 // Real-browser checks for what jsdom can't evaluate: a real mouse and key, focus after a button turns busy, layout,
 // the breakpoint. Hidden from the sidebar and the Docs page, and still run as tests (07 §4.2, guidelines/adr/0013).
 const meta: Meta = {
-  title: "Organisms/Overlay/ConfirmDialog/Checks",
+  title: "Components/ConfirmDialog/Checks",
+  id: "organisms-overlay-confirmdialog-checks",
   tags: ["!dev"],
   parameters: { layout: "fullscreen" },
 };

@@ -3,7 +3,8 @@ import { Menubar } from "./Menubar";
 
 // Docs-only — see MenubarRoot.stories.tsx's own comment for the full rationale (guidelines/adr/0013).
 const meta: Meta<typeof Menubar.RadioGroup> = {
-  title: "Organisms/Navigation/Menubar/RadioGroup",
+  title: "Components/Menubar/RadioGroup",
+  id: "organisms-navigation-menubar-radiogroup",
   component: Menubar.RadioGroup,
   tags: ["!dev"],
   argTypes: {

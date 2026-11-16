@@ -135,7 +135,8 @@ const noControls: Record<keyof PlaygroundArgs, { control: false }> = {
 };
 
 const meta: Meta<PlaygroundArgs> = {
-  title: "Molecules/Data Display/Card",
+  title: "Components/Card",
+  id: "molecules-data-display-card",
   parameters: { layout: "padded" },
   argTypes: {
     variant: {

@@ -9,7 +9,8 @@ import { AlertDialog } from "./AlertDialog";
 // Real-browser checks for what jsdom can't evaluate: layout, a real mouse, the breakpoint, computed colour from the
 // cascade. Hidden from the sidebar and the Docs page, and still run as tests (07 §4.2, guidelines/adr/0013).
 const meta: Meta = {
-  title: "Organisms/Overlay/AlertDialog/Checks",
+  title: "Components/AlertDialog/Checks",
+  id: "organisms-overlay-alertdialog-checks",
   tags: ["!dev"],
   parameters: { layout: "fullscreen" },
 };

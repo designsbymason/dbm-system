@@ -5,7 +5,8 @@ import { Dialog } from "./Dialog";
 // table: the Playground's meta also carries `Dialog.Content`'s props (one render drives both), so a table built
 // from it would list `size`, `divided`… as root props and omit `open`.
 const meta: Meta<typeof Dialog> = {
-  title: "Organisms/Overlay/Dialog/Root",
+  title: "Components/Dialog/Root",
+  id: "organisms-overlay-dialog-root",
   component: Dialog,
   tags: ["!dev"],
   argTypes: {

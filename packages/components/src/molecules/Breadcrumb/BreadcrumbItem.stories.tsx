@@ -5,7 +5,8 @@ import { Breadcrumb } from "./Breadcrumb";
 // Properties table on Breadcrumb.mdx. Rendered inside a real `Breadcrumb`, whose
 // context the item reads.
 const meta: Meta<typeof Breadcrumb.Item> = {
-  title: "Molecules/Navigation/Breadcrumb/Item",
+  title: "Components/Breadcrumb/Item",
+  id: "molecules-navigation-breadcrumb-item",
   component: Breadcrumb.Item,
   tags: ["!dev"],
   argTypes: {

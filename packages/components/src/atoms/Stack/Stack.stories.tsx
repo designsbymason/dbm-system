@@ -4,7 +4,8 @@ import { Stack } from "./Stack";
 import { stackPlaygroundSnippet, stackSnippets } from "./Stack.snippets";
 
 const meta: Meta<typeof Stack> = {
-  title: "Atoms/Layout/Stack",
+  title: "Components/Stack",
+  id: "atoms-layout-stack",
   component: Stack,
   parameters: { layout: "padded" },
   // Ordered to match StackProps' own declaration order (as, direction, gap,

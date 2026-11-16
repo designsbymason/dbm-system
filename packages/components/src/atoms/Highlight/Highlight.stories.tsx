@@ -4,7 +4,8 @@ import { Highlight } from "./Highlight";
 import { highlightPlaygroundSnippet, highlightSnippets } from "./Highlight.snippets";
 
 const meta: Meta<typeof Highlight> = {
-  title: "Atoms/Typography/Highlight",
+  title: "Components/Highlight",
+  id: "atoms-typography-highlight",
   component: Highlight,
   parameters: { layout: "padded" },
   // Ordered to match HighlightProps' own declaration order (children, tone,

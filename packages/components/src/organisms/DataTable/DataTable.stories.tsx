@@ -15,7 +15,8 @@ const noControls = { control: false } as const;
 const column = { display: "flex", flexDirection: "column", gap: "var(--dbm-space-6)", alignItems: "stretch" } as const;
 
 const meta: Meta<Args> = {
-  title: "Organisms/Data Display/DataTable",
+  title: "Components/DataTable",
+  id: "organisms-data-display-datatable",
   component: DataTable as unknown as ComponentType<Args>,
   parameters: { layout: "padded" },
   // Data and columns first, then the behaviour (sort, selection, pages, windowing), then the look, then the text and the

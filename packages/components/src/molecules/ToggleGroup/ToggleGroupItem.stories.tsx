@@ -4,7 +4,8 @@ import { ToggleGroup } from "./ToggleGroup";
 // Docs-only (guidelines/adr/0013) — `ToggleGroup.Item`'s own props get their own Properties table on
 // ToggleGroup.mdx. Rendered inside a real `ToggleGroup` (Radix's own context-scoped Item throws outside one).
 const meta: Meta<typeof ToggleGroup.Item> = {
-  title: "Molecules/Inputs/ToggleGroup/Item",
+  title: "Components/ToggleGroup/Item",
+  id: "molecules-inputs-togglegroup-item",
   component: ToggleGroup.Item,
   tags: ["!dev"],
   argTypes: {

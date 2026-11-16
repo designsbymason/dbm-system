@@ -3,7 +3,8 @@ import { Form } from "./Form";
 
 // Docs-only: resolves `Form.Error`'s own argTypes for the Properties table on `Form.mdx` (ADR-0013).
 const meta: Meta<typeof Form.Error> = {
-  title: "Organisms/Inputs/Form/Error",
+  title: "Components/Form/Error",
+  id: "organisms-inputs-form-error",
   component: Form.Error,
   tags: ["!dev"],
   argTypes: {

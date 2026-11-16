@@ -3,7 +3,8 @@ import { NavigationMenu } from "./NavigationMenu";
 
 // Docs-only: this file exists so the Docs page can show this part's own Properties table (guidelines/adr/0013).
 const meta: Meta<typeof NavigationMenu.List> = {
-  title: "Organisms/Navigation/NavigationMenu/List",
+  title: "Components/NavigationMenu/List",
+  id: "organisms-navigation-navigationmenu-list",
   component: NavigationMenu.List,
   tags: ["!dev"],
   argTypes: {

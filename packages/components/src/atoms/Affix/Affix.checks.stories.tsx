@@ -5,7 +5,8 @@ import { Affix } from "./Affix";
 // Hidden real-browser checks (guidelines/adr/0013): what jsdom can't do — an `IntersectionObserver` over a real scroll, to a rest position where the
 // one-pixel sentinel is partly or only just in view.
 const meta: Meta = {
-  title: "Atoms/Layout/Affix/Checks",
+  title: "Components/Affix/Checks",
+  id: "atoms-layout-affix-checks",
   tags: ["!dev"],
   parameters: { layout: "fullscreen" },
 };

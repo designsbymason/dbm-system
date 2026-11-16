@@ -28,7 +28,8 @@ const Demo = ({ label, tint = false }: { label: ReactNode; tint?: boolean }) => 
 );
 
 const meta: Meta<typeof Splitter> = {
-  title: "Molecules/Layout/Splitter",
+  title: "Components/Splitter",
+  id: "molecules-layout-splitter",
   component: Splitter,
   parameters: { layout: "padded" },
   // Keys follow the component's own `SplitterProps` declaration order (07 §4 item 3).

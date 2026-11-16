@@ -6,7 +6,8 @@ import { Accordion } from "./Accordion";
 // their own Properties table on Accordion.mdx. Rendered inside a real
 // `Accordion.Item` (Radix's own context-scoped Trigger throws outside one).
 const meta: Meta<typeof Accordion.Trigger> = {
-  title: "Molecules/Overlay/Accordion/Trigger",
+  title: "Components/Accordion/Trigger",
+  id: "molecules-overlay-accordion-trigger",
   component: Accordion.Trigger,
   tags: ["!dev"],
   argTypes: {

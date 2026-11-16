@@ -7,7 +7,8 @@ import { portalPlaygroundSnippet, portalSnippets } from "./Portal.snippets";
 // its own, so the story demonstrates *where in the DOM* content ends up
 // rather than viewport-width coverage.
 const meta: Meta<typeof Portal> = {
-  title: "Atoms/Utility/Portal",
+  title: "Components/Portal",
+  id: "atoms-utility-portal",
   component: Portal,
   parameters: { layout: "padded" },
   argTypes: {

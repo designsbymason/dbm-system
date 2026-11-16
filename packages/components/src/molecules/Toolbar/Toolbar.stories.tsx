@@ -43,7 +43,8 @@ const DemoItems = () => (
 );
 
 const meta: Meta<ToolbarProps> = {
-  title: "Molecules/Inputs/Toolbar",
+  title: "Components/Toolbar",
+  id: "molecules-inputs-toolbar",
   component: Toolbar,
   parameters: { layout: "padded" },
   // Core visual props first, then behavioral/state props, then advanced/escape-hatch props last — the same

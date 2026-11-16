@@ -5,7 +5,8 @@ import { PasswordInput } from "./PasswordInput";
 import { passwordInputPlaygroundSnippet, passwordInputSnippets } from "./PasswordInput.snippets";
 
 const meta: Meta<typeof PasswordInput> = {
-  title: "Molecules/Inputs/PasswordInput",
+  title: "Components/PasswordInput",
+  id: "molecules-inputs-passwordinput",
   component: PasswordInput,
   parameters: { layout: "padded" },
   // Ordered content-ish prop first (placeholder), then the slot prop, then

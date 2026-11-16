@@ -5,7 +5,8 @@ import type { StatSize } from "./Stat.types";
 
 // Hidden real-browser checks (guidelines/adr/0013): what jsdom can't do — real text widths. They run in the `storybook` (Chromium) project.
 const meta: Meta = {
-  title: "Molecules/Data Display/Stat/Checks",
+  title: "Components/Stat/Checks",
+  id: "molecules-data-display-stat-checks",
   tags: ["!dev"],
 };
 

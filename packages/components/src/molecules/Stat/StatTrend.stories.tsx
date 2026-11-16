@@ -6,7 +6,8 @@ import { Stat } from "./Stat";
 // inside a real `Stat`, beside a real `Stat.Value`, so the sub-part is shown
 // in its real context.
 const meta: Meta<typeof Stat.Trend> = {
-  title: "Molecules/Data Display/Stat/Trend",
+  title: "Components/Stat/Trend",
+  id: "molecules-data-display-stat-trend",
   component: Stat.Trend,
   tags: ["!dev"],
   argTypes: {

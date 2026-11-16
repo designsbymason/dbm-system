@@ -7,7 +7,8 @@ import { Popover } from "./Popover";
 // carries `Popover.Content`'s props (one render drives both), so a table
 // built from it listed `side`, `align`… as root props and omitted `open`.
 const meta: Meta<typeof Popover> = {
-  title: "Molecules/Overlay/Popover/Root",
+  title: "Components/Popover/Root",
+  id: "molecules-overlay-popover-root",
   component: Popover,
   tags: ["!dev"],
   argTypes: {

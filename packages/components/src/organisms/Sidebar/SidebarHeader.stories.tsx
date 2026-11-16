@@ -3,7 +3,8 @@ import { Sidebar } from "./Sidebar";
 
 // Docs-only (guidelines/adr/0013). This resolves Header's own argTypes for its Properties table on the main Docs page.
 const meta: Meta<typeof Sidebar.Header> = {
-  title: "Organisms/Navigation/Sidebar/Header",
+  title: "Components/Sidebar/Header",
+  id: "organisms-navigation-sidebar-header",
   component: Sidebar.Header,
   tags: ["!dev"],
   argTypes: {

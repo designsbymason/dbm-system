@@ -3,7 +3,8 @@ import { Dialog } from "./Dialog";
 
 // Docs-only — see DialogRoot.stories.tsx's own comment for the full rationale (guidelines/adr/0013).
 const meta: Meta<typeof Dialog.Close> = {
-  title: "Organisms/Overlay/Dialog/Close",
+  title: "Components/Dialog/Close",
+  id: "organisms-overlay-dialog-close",
   component: Dialog.Close,
   tags: ["!dev"],
   argTypes: {

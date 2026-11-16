@@ -69,7 +69,8 @@ const noControls: Record<keyof PlaygroundArgs, { control: false }> = {
 };
 
 const meta: Meta<PlaygroundArgs> = {
-  title: "Molecules/Data Display/Stat",
+  title: "Components/Stat",
+  id: "molecules-data-display-stat",
   parameters: { layout: "padded" },
   argTypes: {
     variant: {

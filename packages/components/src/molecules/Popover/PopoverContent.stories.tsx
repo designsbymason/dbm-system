@@ -9,7 +9,8 @@ import { Popover } from "./Popover";
 // mounts for this story's own screenshot/reference purposes, even though
 // this table's own argTypes come from static docgen, not the live render.
 const meta: Meta<typeof Popover.Content> = {
-  title: "Molecules/Overlay/Popover/Content",
+  title: "Components/Popover/Content",
+  id: "molecules-overlay-popover-content",
   component: Popover.Content,
   tags: ["!dev"],
   argTypes: {

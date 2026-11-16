@@ -3,7 +3,8 @@ import { Sidebar } from "./Sidebar";
 
 // Docs-only (guidelines/adr/0013). This resolves Skeleton's own argTypes for its Properties table on the main Docs page.
 const meta: Meta<typeof Sidebar.Skeleton> = {
-  title: "Organisms/Navigation/Sidebar/Skeleton",
+  title: "Components/Sidebar/Skeleton",
+  id: "organisms-navigation-sidebar-skeleton",
   component: Sidebar.Skeleton,
   tags: ["!dev"],
   argTypes: {

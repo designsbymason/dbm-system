@@ -3,7 +3,8 @@ import { Menu } from "./Menu";
 
 // Docs-only — see MenuRoot.stories.tsx's own comment for the full rationale (guidelines/adr/0013).
 const meta: Meta<typeof Menu.Trigger> = {
-  title: "Organisms/Navigation/Menu/Trigger",
+  title: "Components/Menu/Trigger",
+  id: "organisms-navigation-menu-trigger",
   component: Menu.Trigger,
   tags: ["!dev"],
   argTypes: {

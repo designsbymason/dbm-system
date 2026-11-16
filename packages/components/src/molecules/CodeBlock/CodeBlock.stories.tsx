@@ -14,7 +14,8 @@ const logHighlighter: Highlighter = (code, language) =>
     : undefined;
 
 const meta: Meta<PlaygroundArgs> = {
-  title: "Molecules/Typography/CodeBlock",
+  title: "Components/CodeBlock",
+  id: "molecules-typography-codeblock",
   component: CodeBlock,
   parameters: { layout: "padded" },
   // Content first, then core visual props, then behavioral/state props, then advanced/escape-hatch props last —

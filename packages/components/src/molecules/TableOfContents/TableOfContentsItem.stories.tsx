@@ -5,7 +5,8 @@ import type { TableOfContentsItem } from "./TableOfContents.types";
 // Docs-only (guidelines/adr/0013) — the fields of one entry of `items` get their own Properties table on
 // TableOfContents.mdx, drawn like the main one.
 const meta: Meta<TableOfContentsItem> = {
-  title: "Molecules/Navigation/TableOfContents/Item",
+  title: "Components/TableOfContents/Item",
+  id: "molecules-navigation-tableofcontents-item",
   tags: ["!dev"],
   argTypes: {
     id: {

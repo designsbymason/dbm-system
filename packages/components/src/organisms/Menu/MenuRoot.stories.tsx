@@ -5,7 +5,8 @@ import { Menu } from "./Menu";
 // the Playground's meta also carries `Menu.Content`'s props (one render drives both), so a table built from it would
 // list `size`, `side`… as root props and omit `open`.
 const meta: Meta<typeof Menu> = {
-  title: "Organisms/Navigation/Menu/Root",
+  title: "Components/Menu/Root",
+  id: "organisms-navigation-menu-root",
   component: Menu,
   tags: ["!dev"],
   argTypes: {

@@ -47,7 +47,8 @@ function DemoBackground() {
 }
 
 const meta: Meta<typeof Backdrop> = {
-  title: "Atoms/Overlay/Backdrop",
+  title: "Components/Backdrop",
+  id: "atoms-overlay-backdrop",
   component: Backdrop,
   parameters: { layout: "padded" },
   // Content prop first, then core visual props, then the behavioral prop,

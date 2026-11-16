@@ -5,7 +5,8 @@ import { DemoSlide } from "./CarouselStoryKit";
 // Docs-only (guidelines/adr/0013) — `Carousel.Indicators`'s own props get their own Properties table on Carousel.mdx.
 // Rendered inside a real `Carousel`, whose context it reads.
 const meta: Meta<typeof Carousel.Indicators> = {
-  title: "Organisms/Media/Carousel/Indicators",
+  title: "Components/Carousel/Indicators",
+  id: "organisms-media-carousel-indicators",
   component: Carousel.Indicators,
   tags: ["!dev"],
   argTypes: {

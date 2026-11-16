@@ -3,7 +3,8 @@ import { Menu } from "./Menu";
 
 // Docs-only — see MenuRoot.stories.tsx's own comment for the full rationale (guidelines/adr/0013).
 const meta: Meta<typeof Menu.Separator> = {
-  title: "Organisms/Navigation/Menu/Separator",
+  title: "Components/Menu/Separator",
+  id: "organisms-navigation-menu-separator",
   component: Menu.Separator,
   tags: ["!dev"],
   argTypes: {

@@ -125,7 +125,8 @@ const noControls = {
 } as const;
 
 const meta: Meta<PlaygroundArgs> = {
-  title: "Molecules/Feedback/Alert",
+  title: "Components/Alert",
+  id: "molecules-feedback-alert",
   parameters: { layout: "padded" },
   argTypes: {
     children: {

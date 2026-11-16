@@ -5,7 +5,8 @@ import { ClientOnly } from "./ClientOnly";
 import { clientOnlyPlaygroundSnippet, clientOnlySnippets } from "./ClientOnly.snippets";
 
 const meta: Meta<typeof ClientOnly> = {
-  title: "Atoms/Utility/ClientOnly",
+  title: "Components/ClientOnly",
+  id: "atoms-utility-clientonly",
   component: ClientOnly,
   parameters: { layout: "padded" },
   argTypes: {

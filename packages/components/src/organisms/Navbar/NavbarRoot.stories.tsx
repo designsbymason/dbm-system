@@ -4,7 +4,8 @@ import { preventNavigation } from "./NavbarStoryKit";
 
 // Docs-only (guidelines/adr/0013). This resolves the root component's own argTypes for the main Properties table.
 const meta: Meta<typeof Navbar> = {
-  title: "Organisms/Navigation/Navbar/Root",
+  title: "Components/Navbar/Root",
+  id: "organisms-navigation-navbar-root",
   component: Navbar,
   tags: ["!dev"],
   argTypes: {

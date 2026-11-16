@@ -11,7 +11,8 @@ import type { ToastOptions, ToastProviderProps } from "./Toast.types";
 // modal dialog under a real mouse, focus coming back, forced colours and the sizes of targets. Hidden from the sidebar
 // and the Docs page, and still run as tests (07 §4.2, guidelines/adr/0013).
 const meta: Meta = {
-  title: "Organisms/Feedback/Toast/Checks",
+  title: "Components/Toast/Checks",
+  id: "organisms-feedback-toast-checks",
   tags: ["!dev"],
   parameters: { layout: "fullscreen" },
 };

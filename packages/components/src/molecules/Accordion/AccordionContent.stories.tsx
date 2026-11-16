@@ -8,7 +8,8 @@ import { Accordion } from "./Accordion";
 // outside one, and stays unmounted when its own item is closed) so this
 // story's own screenshot/reference purposes actually show something.
 const meta: Meta<typeof Accordion.Content> = {
-  title: "Molecules/Overlay/Accordion/Content",
+  title: "Components/Accordion/Content",
+  id: "molecules-overlay-accordion-content",
   component: Accordion.Content,
   tags: ["!dev"],
   argTypes: {

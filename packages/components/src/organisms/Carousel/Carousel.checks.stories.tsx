@@ -10,7 +10,8 @@ import { Demo, DemoSlide, allSizes } from "./CarouselStoryKit";
 // the sidebar and the Docs page): what jsdom can't evaluate — real scroll-snap layout, text direction, focus rings,
 // emulated media — measured in Chromium.
 const meta: Meta = {
-  title: "Organisms/Media/Carousel/Checks",
+  title: "Components/Carousel/Checks",
+  id: "organisms-media-carousel-checks",
   tags: ["!dev"],
   parameters: { layout: "padded" },
 };

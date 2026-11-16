@@ -5,7 +5,8 @@ import { Toolbar } from "./Toolbar";
 // Docs-only (guidelines/adr/0013) — `Toolbar.Item`'s own props get their own Properties table on Toolbar.mdx.
 // Rendered inside a real `Toolbar` (Radix's own context-scoped Button throws outside one).
 const meta: Meta<typeof Toolbar.Item> = {
-  title: "Molecules/Inputs/Toolbar/Item",
+  title: "Components/Toolbar/Item",
+  id: "molecules-inputs-toolbar-item",
   component: Toolbar.Item,
   tags: ["!dev"],
   argTypes: {

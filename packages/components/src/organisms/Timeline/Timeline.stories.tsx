@@ -79,7 +79,8 @@ const except = (...keys: Array<keyof typeof noControls>) =>
   Object.fromEntries(Object.entries(noControls).filter(([key]) => !keys.includes(key as keyof typeof noControls)));
 
 const meta: Meta<PlaygroundArgs> = {
-  title: "Organisms/Data Display/Timeline",
+  title: "Components/Timeline",
+  id: "organisms-data-display-timeline",
   parameters: { layout: "padded" },
   argTypes: {
     children: { control: false, description: "The events, in the order to read them: one Timeline.Item each." },

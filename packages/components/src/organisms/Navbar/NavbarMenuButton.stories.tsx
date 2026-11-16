@@ -4,7 +4,8 @@ import { preventNavigation } from "./NavbarStoryKit";
 
 // Docs-only — see NavbarRoot.stories.tsx's own comment for the full rationale (guidelines/adr/0013).
 const meta: Meta<typeof Navbar.MenuButton> = {
-  title: "Organisms/Navigation/Navbar/MenuButton",
+  title: "Components/Navbar/MenuButton",
+  id: "organisms-navigation-navbar-menubutton",
   component: Navbar.MenuButton,
   tags: ["!dev"],
   argTypes: {

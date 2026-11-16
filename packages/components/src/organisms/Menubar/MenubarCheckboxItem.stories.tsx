@@ -20,7 +20,8 @@ const iconControl = {
 };
 
 const meta: Meta<typeof Menubar.CheckboxItem> = {
-  title: "Organisms/Navigation/Menubar/CheckboxItem",
+  title: "Components/Menubar/CheckboxItem",
+  id: "organisms-navigation-menubar-checkboxitem",
   component: Menubar.CheckboxItem,
   tags: ["!dev"],
   argTypes: {

@@ -6,7 +6,8 @@ import { Slider } from "./Slider";
 import { sliderPlaygroundSnippet, sliderSnippets } from "./Slider.snippets";
 
 const meta: Meta<typeof Slider> = {
-  title: "Molecules/Inputs/Slider",
+  title: "Components/Slider",
+  id: "molecules-inputs-slider",
   component: Slider,
   parameters: { layout: "padded" },
   // Ordered core visual props first, then behavioral/state props, then

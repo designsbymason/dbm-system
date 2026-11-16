@@ -4,7 +4,8 @@ import { preventNavigation } from "./SidebarStoryKit";
 
 // Docs-only (guidelines/adr/0013). This resolves Separator's own argTypes for its Properties table on the main Docs page.
 const meta: Meta<typeof Sidebar.Separator> = {
-  title: "Organisms/Navigation/Sidebar/Separator",
+  title: "Components/Sidebar/Separator",
+  id: "organisms-navigation-sidebar-separator",
   component: Sidebar.Separator,
   tags: ["!dev"],
   argTypes: {

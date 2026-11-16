@@ -3,7 +3,8 @@ import { FieldLabel } from "./FieldLabel";
 import { fieldLabelPlaygroundSnippet, fieldLabelSnippets } from "./FieldLabel.snippets";
 
 const meta: Meta<typeof FieldLabel> = {
-  title: "Atoms/Inputs/FieldLabel",
+  title: "Components/FieldLabel",
+  id: "atoms-inputs-fieldlabel",
   component: FieldLabel,
   parameters: { layout: "padded" },
   // Ordered content prop first, then the field-association prop, then

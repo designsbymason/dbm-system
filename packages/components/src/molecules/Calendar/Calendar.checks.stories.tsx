@@ -9,7 +9,8 @@ import { Calendar } from "./Calendar";
 // the sidebar and the Docs page): what jsdom can't evaluate — real layout, text direction, forced colours, focus
 // rings, the Docs page's own stylesheet — measured in Chromium.
 const meta: Meta = {
-  title: "Molecules/Inputs/Calendar/Checks",
+  title: "Components/Calendar/Checks",
+  id: "molecules-inputs-calendar-checks",
   tags: ["!dev"],
   parameters: { layout: "padded" },
 };

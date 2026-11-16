@@ -3,7 +3,8 @@ import { ContextMenu } from "./ContextMenu";
 
 // Docs-only — see ContextMenuRoot.stories.tsx's own comment for the full rationale (guidelines/adr/0013).
 const meta: Meta<typeof ContextMenu.RadioGroup> = {
-  title: "Organisms/Overlay/ContextMenu/RadioGroup",
+  title: "Components/ContextMenu/RadioGroup",
+  id: "organisms-overlay-contextmenu-radiogroup",
   component: ContextMenu.RadioGroup,
   tags: ["!dev"],
   argTypes: {

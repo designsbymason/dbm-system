@@ -4,7 +4,8 @@ import { MenuStage } from "./NavigationMenuStoryKit";
 
 // Docs-only: this file exists so the Docs page can show this part's own Properties table (guidelines/adr/0013).
 const meta: Meta<typeof NavigationMenu.Group> = {
-  title: "Organisms/Navigation/NavigationMenu/Group",
+  title: "Components/NavigationMenu/Group",
+  id: "organisms-navigation-navigationmenu-group",
   component: NavigationMenu.Group,
   tags: ["!dev"],
   argTypes: {

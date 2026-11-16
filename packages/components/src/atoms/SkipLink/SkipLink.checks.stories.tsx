@@ -6,7 +6,8 @@ import { SkipLink } from "./SkipLink";
 // Hidden real-browser checks (guidelines/adr/0013): what jsdom can't do — the link's hiding, its place in the corner, its ring, forced colours,
 // right to left and print. A real key press is needed for `:focus-visible`: a synthetic one, or `focus()` from a script, does not set it.
 const meta: Meta = {
-  title: "Atoms/Utility/SkipLink/Checks",
+  title: "Components/SkipLink/Checks",
+  id: "atoms-utility-skiplink-checks",
   tags: ["!dev"],
   parameters: { layout: "fullscreen" },
 };

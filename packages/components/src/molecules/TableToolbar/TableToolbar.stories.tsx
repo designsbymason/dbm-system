@@ -20,7 +20,8 @@ const noControls = { control: false } as const;
 const column = { display: "flex", flexDirection: "column", gap: "var(--dbm-space-6)", alignItems: "stretch" } as const;
 
 const meta: Meta<TableToolbarProps> = {
-  title: "Molecules/Data Display/TableToolbar",
+  title: "Components/TableToolbar",
+  id: "molecules-data-display-tabletoolbar",
   component: TableToolbar,
   parameters: { layout: "padded" },
   // Core visual props first, then the name, then advanced/escape-hatch props last — the same sequencing as every other

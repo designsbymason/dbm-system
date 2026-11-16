@@ -3,7 +3,8 @@ import { Menu } from "./Menu";
 
 // Docs-only — see MenuRoot.stories.tsx's own comment for the full rationale (guidelines/adr/0013).
 const meta: Meta<typeof Menu.Sub> = {
-  title: "Organisms/Navigation/Menu/Sub",
+  title: "Components/Menu/Sub",
+  id: "organisms-navigation-menu-sub",
   component: Menu.Sub,
   tags: ["!dev"],
   argTypes: {

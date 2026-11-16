@@ -3,7 +3,8 @@ import { PageHeader } from "./PageHeader";
 
 // Docs-only (guidelines/adr/0013) — `PageHeader.Title`'s own props get their own Properties table on PageHeader.mdx.
 const meta: Meta<typeof PageHeader.Title> = {
-  title: "Molecules/Layout/PageHeader/Title",
+  title: "Components/PageHeader/Title",
+  id: "molecules-layout-pageheader-title",
   component: PageHeader.Title,
   tags: ["!dev"],
   argTypes: {

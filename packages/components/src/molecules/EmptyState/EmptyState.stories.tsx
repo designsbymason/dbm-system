@@ -94,7 +94,8 @@ const noControls: Record<keyof PlaygroundArgs, { control: false }> = {
 };
 
 const meta: Meta<PlaygroundArgs> = {
-  title: "Molecules/Data Display/EmptyState",
+  title: "Components/EmptyState",
+  id: "molecules-data-display-emptystate",
   parameters: { layout: "padded" },
   argTypes: {
     variant: {

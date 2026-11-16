@@ -4,7 +4,8 @@ import { Toast } from "./Toast";
 // Docs-only (guidelines/adr/0013). This resolves a single `Toast`'s own argTypes for the main Properties table: the
 // Playground's meta carries the provider's props and the options of `toast()` in one render.
 const meta: Meta<typeof Toast> = {
-  title: "Organisms/Feedback/Toast/Root",
+  title: "Components/Toast/Root",
+  id: "organisms-feedback-toast-root",
   component: Toast,
   tags: ["!dev"],
   argTypes: {

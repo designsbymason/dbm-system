@@ -87,7 +87,8 @@ const maxHeightProp = (value: PlaygroundArgs["maxHeight"]): TreeProps["maxHeight
 const windowedProp = (value: PlaygroundArgs["windowed"]): TreeProps["windowed"] => (value === "on" ? true : value === "off" ? false : "auto");
 
 const meta: Meta<PlaygroundArgs> = {
-  title: "Organisms/Data Display/Tree",
+  title: "Components/Tree",
+  id: "organisms-data-display-tree",
   parameters: { layout: "padded" },
   argTypes: {
     nodes: {

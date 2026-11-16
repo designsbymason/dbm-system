@@ -5,7 +5,8 @@ import { Card } from "./Card";
 // Properties table on Card.mdx, separate from the umbrella table. Rendered
 // inside a real `Card` so the sub-part is shown in its real context.
 const meta: Meta<typeof Card.Header> = {
-  title: "Molecules/Data Display/Card/Header",
+  title: "Components/Card/Header",
+  id: "molecules-data-display-card-header",
   component: Card.Header,
   tags: ["!dev"],
   argTypes: {

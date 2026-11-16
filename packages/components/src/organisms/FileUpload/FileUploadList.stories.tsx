@@ -5,7 +5,8 @@ import { demoEntries } from "./FileUploadStoryKit";
 // Docs-only (guidelines/adr/0013): `FileUpload.List`'s own props get their own Properties table on FileUpload.mdx,
 // separate from the umbrella table. Rendered inside a real `FileUpload`, since the part reads its settings from it.
 const meta: Meta<typeof FileUpload.List> = {
-  title: "Organisms/Inputs/FileUpload/List",
+  title: "Components/FileUpload/List",
+  id: "organisms-inputs-fileupload-list",
   component: FileUpload.List,
   tags: ["!dev"],
   argTypes: {

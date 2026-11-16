@@ -44,7 +44,8 @@ const positionOptions = [
 ] as const;
 
 const meta: Meta<typeof Image> = {
-  title: "Atoms/Media/Image",
+  title: "Components/Image",
+  id: "atoms-media-image",
   component: Image,
   parameters: { layout: "padded" },
   // Ordered to match ImageProps' own declaration order (src, alt, fallback,

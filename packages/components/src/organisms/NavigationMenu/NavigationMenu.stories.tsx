@@ -76,7 +76,8 @@ function menuArgs(args: PlaygroundArgs) {
 const readOnly = (description: string) => ({ control: false as const, description });
 
 const meta: Meta<PlaygroundArgs> = {
-  title: "Organisms/Navigation/NavigationMenu",
+  title: "Components/NavigationMenu",
+  id: "organisms-navigation-navigationmenu",
   parameters: { layout: "padded" },
   decorators: [
     // `defaultValue` is only read when the menu mounts, so changing its control remounts it.

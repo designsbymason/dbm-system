@@ -22,7 +22,8 @@ import stories, { Languages } from "./DirectionProvider.stories";
 // it through the component, not the cascade. Every story here sets the direction ONLY with a DirectionProvider (never a `dir` on a component or
 // on the page) and measures the computed `direction` of what opened.
 const meta: Meta = {
-  title: "Atoms/Utility/DirectionProvider/Checks",
+  title: "Components/DirectionProvider/Checks",
+  id: "atoms-utility-directionprovider-checks",
   tags: ["!dev"],
   // Modal overlays held open hide the page behind them, which axe's `aria-hidden-focus` reports; the same markup is axe-checked in each component's own tests.
   parameters: { layout: "fullscreen", a11y: { test: "todo" } },

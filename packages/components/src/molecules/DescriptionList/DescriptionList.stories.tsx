@@ -57,7 +57,8 @@ const demoContainerStyle = {
 } as const;
 
 const meta: Meta<typeof DescriptionList> = {
-  title: "Molecules/Data Display/DescriptionList",
+  title: "Components/DescriptionList",
+  id: "molecules-data-display-descriptionlist",
   component: DescriptionList,
   parameters: { layout: "padded" },
   // Ordered to match DescriptionListProps' own declaration order (children,

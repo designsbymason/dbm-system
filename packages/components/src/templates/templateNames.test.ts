@@ -3,8 +3,8 @@ import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 
 // A template is named in Title Case, a page ends with "Page", and its name is never a component's (`04-component-inventory.md`, Templates).
-// A story's `title` is `{Tier}/{Group}/{Name}`; the names are read from the main story of each component and each template. (The tests
-// run from the package's own folder.)
+// A template's story `title` is `Templates/{Group}/{Name}`, read from the main story of each template; the components are the names in
+// `src/componentCatalog.json`. (The tests run from the package's own folder.)
 const root = join(process.cwd(), "src");
 
 function storiesFiles(dir: string): string[] {
@@ -17,15 +17,14 @@ function storiesFiles(dir: string): string[] {
 
 const normalised = (name: string) => name.toLowerCase().replace(/\s+/g, "");
 
-const components = new Set<string>();
+const components = new Set<string>(
+  Object.keys(JSON.parse(readFileSync(join(root, "componentCatalog.json"), "utf8")) as Record<string, unknown>).map(normalised),
+);
 const templates: { name: string; page: boolean; file: string }[] = [];
-for (const file of storiesFiles(root)) {
+for (const file of storiesFiles(join(root, "templates"))) {
   const source = readFileSync(file, "utf8");
-  const match = /^\s*title:\s*"(Atoms|Molecules|Organisms|Templates)\/[^/"]+\/([^/"]+)"/m.exec(source);
-  if (!match) continue;
-  const [, tier, name] = match;
-  if (tier === "Templates") templates.push({ name: name as string, page: /tags:\s*\[[^\]]*"example-page"/.test(source), file });
-  else components.add(normalised(name as string));
+  const match = /^\s*title:\s*"Templates\/[^/"]+\/([^/"]+)"/m.exec(source);
+  if (match?.[1]) templates.push({ name: match[1], page: /tags:\s*\[[^\]]*"example-page"/.test(source), file });
 }
 
 describe("template names", () => {

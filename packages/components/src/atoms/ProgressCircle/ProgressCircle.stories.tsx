@@ -4,7 +4,8 @@ import { progressCirclePlaygroundSnippet, progressCircleSnippets } from "./Progr
 import type { ProgressCircleProps } from "./ProgressCircle.types";
 
 const meta: Meta<typeof ProgressCircle> = {
-  title: "Atoms/Feedback/ProgressCircle",
+  title: "Components/ProgressCircle",
+  id: "atoms-feedback-progresscircle",
   component: ProgressCircle,
   parameters: { layout: "padded" },
   // Ordered to match ProgressCircleProps' own declaration order (value,

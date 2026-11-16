@@ -9,7 +9,8 @@ import { dateRangePickerPlaygroundSnippet, dateRangePickerSnippets } from "./Dat
 import type { DateRangeValue } from "./DateRangePicker.types";
 
 const meta: Meta<typeof DateRangePicker> = {
-  title: "Organisms/Inputs/DateRangePicker",
+  title: "Components/DateRangePicker",
+  id: "organisms-inputs-daterangepicker",
   component: DateRangePicker,
   parameters: { layout: "padded" },
   // Core value props first, then the format and constraint props, then visual and state props, then the calendar and

@@ -8,7 +8,8 @@ import { PageHeader } from "./PageHeader";
 // Hidden real-browser checks (guidelines/adr/0013): what jsdom can't do — where the text and the actions sit, when they wrap, a long title, right to left
 // and forced colours.
 const meta: Meta = {
-  title: "Molecules/Layout/PageHeader/Checks",
+  title: "Components/PageHeader/Checks",
+  id: "molecules-layout-pageheader-checks",
   tags: ["!dev"],
   parameters: { layout: "padded" },
 };

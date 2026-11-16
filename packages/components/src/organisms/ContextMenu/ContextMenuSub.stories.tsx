@@ -3,7 +3,8 @@ import { ContextMenu } from "./ContextMenu";
 
 // Docs-only — see ContextMenuRoot.stories.tsx's own comment for the full rationale (guidelines/adr/0013).
 const meta: Meta<typeof ContextMenu.Sub> = {
-  title: "Organisms/Overlay/ContextMenu/Sub",
+  title: "Components/ContextMenu/Sub",
+  id: "organisms-overlay-contextmenu-sub",
   component: ContextMenu.Sub,
   tags: ["!dev"],
   argTypes: {

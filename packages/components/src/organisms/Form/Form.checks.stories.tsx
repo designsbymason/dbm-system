@@ -16,7 +16,8 @@ import type { FormController } from "./Form.types";
 // the buttons' width on a phone and right-to-left. Hidden from the sidebar and the Docs page, and still run as
 // tests (07 §4.2, guidelines/adr/0013).
 const meta: Meta = {
-  title: "Organisms/Inputs/Form/Checks",
+  title: "Components/Form/Checks",
+  id: "organisms-inputs-form-checks",
   tags: ["!dev"],
   parameters: { layout: "padded" },
 };

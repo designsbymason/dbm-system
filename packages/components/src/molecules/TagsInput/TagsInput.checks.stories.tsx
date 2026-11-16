@@ -9,7 +9,8 @@ import { TagsInput } from "./TagsInput";
 // the sidebar and the Docs page): what jsdom can't evaluate — real layout and measurement, focus, text
 // direction, forms and the accessibility tree — measured in Chromium.
 const meta: Meta = {
-  title: "Molecules/Inputs/TagsInput/Checks",
+  title: "Components/TagsInput/Checks",
+  id: "molecules-inputs-tagsinput-checks",
   tags: ["!dev"],
   parameters: { layout: "padded" },
 };

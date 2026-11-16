@@ -5,7 +5,8 @@ import { demoEntries } from "./FileUploadStoryKit";
 // Docs-only (guidelines/adr/0013): `FileUpload.Summary`'s own props get their own Properties table on FileUpload.mdx,
 // separate from the umbrella table. Rendered inside a real `FileUpload`, since the part reads the list from it.
 const meta: Meta<typeof FileUpload.Summary> = {
-  title: "Organisms/Inputs/FileUpload/Summary",
+  title: "Components/FileUpload/Summary",
+  id: "organisms-inputs-fileupload-summary",
   component: FileUpload.Summary,
   tags: ["!dev"],
   argTypes: {

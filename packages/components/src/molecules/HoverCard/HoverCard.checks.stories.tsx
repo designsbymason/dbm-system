@@ -11,7 +11,8 @@ import { HoverCard } from "./HoverCard";
 // `07-storybook-and-documentation-standards.md` §4.2 for why these live apart from the
 // visible stories.
 const meta: Meta = {
-  title: "Molecules/Overlay/HoverCard/Checks",
+  title: "Components/HoverCard/Checks",
+  id: "molecules-overlay-hovercard-checks",
   tags: ["!dev"],
   parameters: { layout: "padded" },
 };

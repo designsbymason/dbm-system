@@ -11,7 +11,8 @@ import { registerCodeLanguage } from "./registry";
 // emulation, the accessibility tree. They live in their own file, in their own group, the way ADR-0013 keeps a
 // sub-part's documentation out of the sidebar, so the file that documents the component stays about the component.
 const meta: Meta<PlaygroundArgs> = {
-  title: "Molecules/Typography/CodeBlock/Checks",
+  title: "Components/CodeBlock/Checks",
+  id: "molecules-typography-codeblock-checks",
   component: CodeBlock,
   tags: ["!dev"],
   parameters: { layout: "padded" },

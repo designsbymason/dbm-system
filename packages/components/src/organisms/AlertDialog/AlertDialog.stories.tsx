@@ -51,7 +51,8 @@ const allControlsOff = {
 } as const;
 
 const meta: Meta<PlaygroundArgs> = {
-  title: "Organisms/Overlay/AlertDialog",
+  title: "Components/AlertDialog",
+  id: "organisms-overlay-alertdialog",
   parameters: { layout: "padded" },
   argTypes: {
     onOpenChange: {

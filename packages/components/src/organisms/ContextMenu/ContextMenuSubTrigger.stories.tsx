@@ -14,7 +14,8 @@ const iconControl = {
 };
 
 const meta: Meta<typeof ContextMenu.SubTrigger> = {
-  title: "Organisms/Overlay/ContextMenu/SubTrigger",
+  title: "Components/ContextMenu/SubTrigger",
+  id: "organisms-overlay-contextmenu-subtrigger",
   component: ContextMenu.SubTrigger,
   tags: ["!dev"],
   argTypes: {

@@ -17,7 +17,8 @@ import { countries } from "./MenuStoryKit";
 // breakpoint, computed style from the cascade and forced colours. Hidden from the sidebar and the Docs page, and
 // still run as tests (07 §4.2, guidelines/adr/0013).
 const meta: Meta = {
-  title: "Organisms/Navigation/Menu/Checks",
+  title: "Components/Menu/Checks",
+  id: "organisms-navigation-menu-checks",
   tags: ["!dev"],
   // A modal menu hides the page behind it from assistive technology while its trigger stays focusable but unreachable
   // (focus is trapped in the panel and Tab does nothing), which axe's `aria-hidden-focus` reports for every story that

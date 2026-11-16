@@ -4,7 +4,8 @@ import { Form } from "./Form";
 
 // Docs-only: resolves `Form.Actions`' argTypes for the Properties table on `Form.mdx` (ADR-0013).
 const meta: Meta<typeof Form.Actions> = {
-  title: "Organisms/Inputs/Form/Actions",
+  title: "Components/Form/Actions",
+  id: "organisms-inputs-form-actions",
   component: Form.Actions,
   tags: ["!dev"],
   argTypes: {

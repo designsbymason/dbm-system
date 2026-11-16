@@ -4,7 +4,8 @@ import { HoverCard } from "./HoverCard";
 // Docs-only — see HoverCardTrigger.stories.tsx's own comment for the full
 // rationale (guidelines/adr/0013). Rendered open so `HoverCard.Media` mounts.
 const meta: Meta<typeof HoverCard.Media> = {
-  title: "Molecules/Overlay/HoverCard/Media",
+  title: "Components/HoverCard/Media",
+  id: "molecules-overlay-hovercard-media",
   component: HoverCard.Media,
   tags: ["!dev"],
   argTypes: {

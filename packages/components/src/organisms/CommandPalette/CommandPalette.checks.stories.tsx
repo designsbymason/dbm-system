@@ -14,7 +14,8 @@ import { askingCommands, groupedCommands, manyCommands, sampleCommands, sampleMo
 // colours, the window of a long list, and the hand-off of focus to another overlay. Hidden from the sidebar and the
 // Docs page, and still run as tests (07 §4.2, guidelines/adr/0013).
 const meta: Meta = {
-  title: "Organisms/Navigation/CommandPalette/Checks",
+  title: "Components/CommandPalette/Checks",
+  id: "organisms-navigation-commandpalette-checks",
   tags: ["!dev"],
   parameters: { layout: "fullscreen" },
 };

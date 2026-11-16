@@ -7,11 +7,11 @@ describe("CodeBlock's stories module", () => {
   // opening the Docs page. Loading the module here, outside a browser test, is the same failure.
   it("loads without evaluating the test runner's browser module", async () => {
     const stories = await import("./CodeBlock.stories");
-    expect(stories.default.title).toBe("Molecules/Typography/CodeBlock");
+    expect(stories.default.title).toBe("Components/CodeBlock");
     expect(stories.Playground).toBeDefined();
     // The checks are the file that uses the protocol, so it is the one that must not evaluate it at load.
     const checks = await import("./CodeBlock.checks.stories");
-    expect(checks.default.title).toBe("Molecules/Typography/CodeBlock/Checks");
+    expect(checks.default.title).toBe("Components/CodeBlock/Checks");
     expect(checks.default.tags).toContain("!dev");
     expect(checks.PrintInteraction).toBeDefined();
   });

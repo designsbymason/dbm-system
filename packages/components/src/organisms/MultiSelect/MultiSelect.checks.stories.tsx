@@ -15,7 +15,8 @@ import { countries, manyOptions, people } from "./MultiSelectStoryKit";
 // Popover, windowing, the cascade, forced colours and the layout of the field. Hidden from the sidebar and the Docs
 // page, and still run as tests (07 §4.2, guidelines/adr/0013).
 const meta: Meta = {
-  title: "Organisms/Inputs/MultiSelect/Checks",
+  title: "Components/MultiSelect/Checks",
+  id: "organisms-inputs-multiselect-checks",
   tags: ["!dev"],
   parameters: { layout: "fullscreen" },
 };

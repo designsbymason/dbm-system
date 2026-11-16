@@ -6,7 +6,8 @@ import { HoverCardProvider } from "./HoverCardProvider";
 // rationale (guidelines/adr/0013). Resolves `HoverCardProvider`'s argTypes for
 // the "HoverCardProvider properties" table on `HoverCard.mdx`.
 const meta: Meta<typeof HoverCardProvider> = {
-  title: "Molecules/Overlay/HoverCard/Provider",
+  title: "Components/HoverCard/Provider",
+  id: "molecules-overlay-hovercard-provider",
   component: HoverCardProvider,
   tags: ["!dev"],
   argTypes: {

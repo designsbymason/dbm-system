@@ -217,7 +217,8 @@ const ColumnTrackOverlay = ({
 );
 
 const meta: Meta<typeof Grid> = {
-  title: "Molecules/Layout/Grid",
+  title: "Components/Grid",
+  id: "molecules-layout-grid",
   component: Grid,
   parameters: { layout: "padded" },
   // Ordered to match GridProps' own declaration order (as, columns,

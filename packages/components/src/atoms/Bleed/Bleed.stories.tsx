@@ -5,7 +5,8 @@ import { Bleed } from "./Bleed";
 import { bleedPlaygroundSnippet, bleedSnippets } from "./Bleed.snippets";
 
 const meta: Meta<typeof Bleed> = {
-  title: "Atoms/Layout/Bleed",
+  title: "Components/Bleed",
+  id: "atoms-layout-bleed",
   component: Bleed,
   parameters: { layout: "padded" },
   // Ordered to match BleedProps' own declaration order (inset, side,

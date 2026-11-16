@@ -4,7 +4,8 @@ import { Timeline } from "./Timeline";
 // Docs-only (guidelines/adr/0013) — `Timeline.End`'s own props get their own
 // Properties table on Timeline.mdx. Rendered inside a real `Timeline`.
 const meta: Meta<typeof Timeline.End> = {
-  title: "Organisms/Data Display/Timeline/End",
+  title: "Components/Timeline/End",
+  id: "organisms-data-display-timeline-end",
   component: Timeline.End,
   tags: ["!dev"],
   argTypes: {

@@ -4,7 +4,8 @@ import { preventNavigation } from "./SidebarStoryKit";
 
 // Docs-only (guidelines/adr/0013). This resolves Section's own argTypes for its Properties table on the main Docs page.
 const meta: Meta<typeof Sidebar.Section> = {
-  title: "Organisms/Navigation/Sidebar/Section",
+  title: "Components/Sidebar/Section",
+  id: "organisms-navigation-sidebar-section",
   component: Sidebar.Section,
   tags: ["!dev"],
   argTypes: {

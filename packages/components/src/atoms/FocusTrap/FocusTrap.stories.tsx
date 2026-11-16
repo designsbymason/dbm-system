@@ -4,7 +4,8 @@ import { FocusTrap } from "./FocusTrap";
 import { focusTrapPlaygroundSnippet } from "./FocusTrap.snippets";
 
 const meta: Meta<typeof FocusTrap> = {
-  title: "Atoms/Utility/FocusTrap",
+  title: "Components/FocusTrap",
+  id: "atoms-utility-focustrap",
   component: FocusTrap,
   parameters: { layout: "padded" },
   argTypes: {

@@ -5,7 +5,8 @@ import { employeeColumns, employees } from "./DataTableStoryKit";
 // Docs-only (guidelines/adr/0013) — `DataTable.ColumnMenu`'s own props get their own Properties table on DataTable.mdx. It is a
 // `Button` that opens a `Menu`; rendered inside a real DataTable, since it reads the table's columns.
 const meta: Meta<typeof DataTable.ColumnMenu> = {
-  title: "Organisms/Data Display/DataTable/ColumnMenu",
+  title: "Components/DataTable/ColumnMenu",
+  id: "organisms-data-display-datatable-columnmenu",
   component: DataTable.ColumnMenu,
   tags: ["!dev"],
   argTypes: {

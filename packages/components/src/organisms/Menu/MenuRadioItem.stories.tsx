@@ -14,7 +14,8 @@ const iconControl = {
 };
 
 const meta: Meta<typeof Menu.RadioItem> = {
-  title: "Organisms/Navigation/Menu/RadioItem",
+  title: "Components/Menu/RadioItem",
+  id: "organisms-navigation-menu-radioitem",
   component: Menu.RadioItem,
   tags: ["!dev"],
   argTypes: {

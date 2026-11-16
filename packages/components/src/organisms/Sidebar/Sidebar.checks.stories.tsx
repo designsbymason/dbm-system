@@ -11,7 +11,8 @@ import { DemoSidebar, FilterableSidebar, SidebarFrame, SidebarStage, SidebarView
 // Hidden real-browser checks (guidelines/adr/0013): what jsdom can't do (layout, the cascade, a breakpoint, stacking, forced
 // colours). They run in the `storybook` (Chromium) project; the test window is 1200px wide unless a story pins another.
 const meta: Meta = {
-  title: "Organisms/Navigation/Sidebar/Checks",
+  title: "Components/Sidebar/Checks",
+  id: "organisms-navigation-sidebar-checks",
   tags: ["!dev"],
   parameters: { layout: "padded" },
   decorators: [

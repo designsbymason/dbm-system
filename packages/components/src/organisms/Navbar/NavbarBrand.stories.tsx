@@ -4,7 +4,8 @@ import { preventNavigation } from "./NavbarStoryKit";
 
 // Docs-only — see NavbarRoot.stories.tsx's own comment for the full rationale (guidelines/adr/0013).
 const meta: Meta<typeof Navbar.Brand> = {
-  title: "Organisms/Navigation/Navbar/Brand",
+  title: "Components/Navbar/Brand",
+  id: "organisms-navigation-navbar-brand",
   component: Navbar.Brand,
   tags: ["!dev"],
   argTypes: {

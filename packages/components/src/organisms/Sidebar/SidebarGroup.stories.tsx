@@ -4,7 +4,8 @@ import { preventNavigation } from "./SidebarStoryKit";
 
 // Docs-only (guidelines/adr/0013). This resolves Group's own argTypes for its Properties table on the main Docs page.
 const meta: Meta<typeof Sidebar.Group> = {
-  title: "Organisms/Navigation/Sidebar/Group",
+  title: "Components/Sidebar/Group",
+  id: "organisms-navigation-sidebar-group",
   component: Sidebar.Group,
   tags: ["!dev"],
   argTypes: {

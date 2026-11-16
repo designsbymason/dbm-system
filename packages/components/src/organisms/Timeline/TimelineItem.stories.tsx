@@ -5,7 +5,8 @@ import { Timeline } from "./Timeline";
 // Properties table on Timeline.mdx. Rendered inside a real `Timeline`, whose
 // context the item reads.
 const meta: Meta<typeof Timeline.Item> = {
-  title: "Organisms/Data Display/Timeline/Item",
+  title: "Components/Timeline/Item",
+  id: "organisms-data-display-timeline-item",
   component: Timeline.Item,
   tags: ["!dev"],
   argTypes: {

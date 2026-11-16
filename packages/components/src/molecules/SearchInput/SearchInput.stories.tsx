@@ -6,7 +6,8 @@ import { SearchInput } from "./SearchInput";
 import { searchInputPlaygroundSnippet, searchInputSnippets } from "./SearchInput.snippets";
 
 const meta: Meta<typeof SearchInput> = {
-  title: "Molecules/Inputs/SearchInput",
+  title: "Components/SearchInput",
+  id: "molecules-inputs-searchinput",
   component: SearchInput,
   parameters: { layout: "padded" },
   // Ordered content-ish prop first (placeholder), then the slot prop, then

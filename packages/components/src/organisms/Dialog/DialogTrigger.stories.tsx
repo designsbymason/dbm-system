@@ -3,7 +3,8 @@ import { Dialog } from "./Dialog";
 
 // Docs-only — see DialogRoot.stories.tsx's own comment for the full rationale (guidelines/adr/0013).
 const meta: Meta<typeof Dialog.Trigger> = {
-  title: "Organisms/Overlay/Dialog/Trigger",
+  title: "Components/Dialog/Trigger",
+  id: "organisms-overlay-dialog-trigger",
   component: Dialog.Trigger,
   tags: ["!dev"],
   argTypes: {

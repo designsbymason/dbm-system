@@ -5,7 +5,8 @@ import { employeeColumns, employees } from "./DataTableStoryKit";
 // Docs-only (guidelines/adr/0013) — `DataTable.Selection`'s own props get their own Properties table on DataTable.mdx. It is a
 // TableToolbar.Selection read from the table's own selection, so `count`, `totalCount` and `onClear` are not props.
 const meta: Meta<typeof DataTable.Selection> = {
-  title: "Organisms/Data Display/DataTable/Selection",
+  title: "Components/DataTable/Selection",
+  id: "organisms-data-display-datatable-selection",
   component: DataTable.Selection,
   tags: ["!dev"],
   argTypes: {

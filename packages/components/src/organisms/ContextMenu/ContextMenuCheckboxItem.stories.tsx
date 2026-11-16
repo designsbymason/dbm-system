@@ -14,7 +14,8 @@ const iconControl = {
 };
 
 const meta: Meta<typeof ContextMenu.CheckboxItem> = {
-  title: "Organisms/Overlay/ContextMenu/CheckboxItem",
+  title: "Components/ContextMenu/CheckboxItem",
+  id: "organisms-overlay-contextmenu-checkboxitem",
   component: ContextMenu.CheckboxItem,
   tags: ["!dev"],
   argTypes: {

@@ -12,7 +12,8 @@ import { allSizes, Demo } from "./TimelineStoryKit";
 // the sidebar and the Docs page): what jsdom can't evaluate — real layout, text direction, forced colours, focus
 // rings, a media query — measured in Chromium.
 const meta: Meta = {
-  title: "Organisms/Data Display/Timeline/Checks",
+  title: "Components/Timeline/Checks",
+  id: "organisms-data-display-timeline-checks",
   tags: ["!dev"],
   parameters: { layout: "padded" },
 };

@@ -59,7 +59,8 @@ const playgroundSource = {
 };
 
 const meta: Meta<PlaygroundArgs> = {
-  title: "Organisms/Overlay/Dialog",
+  title: "Components/Dialog",
+  id: "organisms-overlay-dialog",
   parameters: { layout: "padded" },
   argTypes: {
     modal: {

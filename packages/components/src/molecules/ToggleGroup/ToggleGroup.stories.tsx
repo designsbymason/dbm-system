@@ -83,7 +83,8 @@ function Demo({ count, chosen, type, deselectable, ...rest }: Omit<PlaygroundArg
 }
 
 const meta: Meta<PlaygroundArgs> = {
-  title: "Molecules/Inputs/ToggleGroup",
+  title: "Components/ToggleGroup",
+  id: "molecules-inputs-togglegroup",
   // The props are a single/multiple union, which the Playground's flat args can't satisfy directly.
   component: ToggleGroup as unknown as ComponentType<PlaygroundArgs>,
   parameters: { layout: "padded" },

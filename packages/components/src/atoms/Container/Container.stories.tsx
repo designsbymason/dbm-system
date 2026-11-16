@@ -3,7 +3,8 @@ import { Container } from "./Container";
 import { containerPlaygroundSnippet, containerSnippets } from "./Container.snippets";
 
 const meta: Meta<typeof Container> = {
-  title: "Atoms/Layout/Container",
+  title: "Components/Container",
+  id: "atoms-layout-container",
   component: Container,
   parameters: { layout: "fullscreen" },
   // Ordered to match ContainerProps' own declaration order (as, size,

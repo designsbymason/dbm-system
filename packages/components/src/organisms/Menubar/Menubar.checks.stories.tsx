@@ -16,7 +16,8 @@ import { DemoMenus, ViewMenu } from "./MenubarStoryKit";
 // style from the cascade, scrolling and forced colours. Hidden from the sidebar and the Docs page, and still run as
 // tests (07 §4.2, guidelines/adr/0013).
 const meta: Meta = {
-  title: "Organisms/Navigation/Menubar/Checks",
+  title: "Components/Menubar/Checks",
+  id: "organisms-navigation-menubar-checks",
   tags: ["!dev"],
   parameters: { layout: "fullscreen" },
 };

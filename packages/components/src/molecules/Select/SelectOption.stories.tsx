@@ -17,7 +17,8 @@ import { Select } from "./Select";
 // Option, simply isn't mounted while closed, same as any other closed
 // Select in this package's own test suite).
 const meta: Meta<typeof Select.Option> = {
-  title: "Molecules/Inputs/Select/Option",
+  title: "Components/Select/Option",
+  id: "molecules-inputs-select-option",
   component: Select.Option,
   tags: ["!dev"],
   argTypes: {

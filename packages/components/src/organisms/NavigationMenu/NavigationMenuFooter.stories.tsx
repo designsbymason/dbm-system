@@ -4,7 +4,8 @@ import { MenuStage } from "./NavigationMenuStoryKit";
 
 // Docs-only: this file exists so the Docs page can show this part's own Properties table (guidelines/adr/0013).
 const meta: Meta<typeof NavigationMenu.Footer> = {
-  title: "Organisms/Navigation/NavigationMenu/Footer",
+  title: "Components/NavigationMenu/Footer",
+  id: "organisms-navigation-navigationmenu-footer",
   component: NavigationMenu.Footer,
   tags: ["!dev"],
   argTypes: {

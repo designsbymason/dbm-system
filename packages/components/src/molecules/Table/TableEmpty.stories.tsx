@@ -6,7 +6,8 @@ import { Table } from "./Table";
 // inside a real `Table` (the sub-part reads the parent's column count and size)
 // with a header row so its column-spanning behaviour is visible.
 const meta: Meta<typeof Table.Empty> = {
-  title: "Molecules/Data Display/Table/Empty",
+  title: "Components/Table/Empty",
+  id: "molecules-data-display-table-empty",
   component: Table.Empty,
   tags: ["!dev"],
   argTypes: {

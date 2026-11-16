@@ -5,7 +5,8 @@ import { Tabs } from "./Tabs";
 // Docs-only (guidelines/adr/0013) — `Tabs.Item`'s own props get their own Properties table on Tabs.mdx.
 // Rendered inside a real `Tabs.List`, whose settings its trigger reads.
 const meta: Meta<typeof Tabs.Item> = {
-  title: "Molecules/Navigation/Tabs/Item",
+  title: "Components/Tabs/Item",
+  id: "molecules-navigation-tabs-item",
   component: Tabs.Item,
   tags: ["!dev"],
   argTypes: {

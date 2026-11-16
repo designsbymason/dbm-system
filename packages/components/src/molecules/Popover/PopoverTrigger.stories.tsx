@@ -11,7 +11,8 @@ import { Popover } from "./Popover";
 // required provider, and `@storybook/addon-vitest`'s full-sweep render
 // exercises every story, `!dev`-tagged ones included.
 const meta: Meta<typeof Popover.Trigger> = {
-  title: "Molecules/Overlay/Popover/Trigger",
+  title: "Components/Popover/Trigger",
+  id: "molecules-overlay-popover-trigger",
   component: Popover.Trigger,
   tags: ["!dev"],
   argTypes: {

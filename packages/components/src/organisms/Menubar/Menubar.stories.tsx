@@ -106,7 +106,8 @@ function PlaygroundStage(args: MenubarStageArgs) {
 }
 
 const meta: Meta<MenubarStageArgs> = {
-  title: "Organisms/Navigation/Menubar",
+  title: "Components/Menubar",
+  id: "organisms-navigation-menubar",
   parameters: { layout: "padded" },
   argTypes: {
     size: {

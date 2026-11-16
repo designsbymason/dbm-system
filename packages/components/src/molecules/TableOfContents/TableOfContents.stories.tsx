@@ -180,7 +180,8 @@ const noControls = {
 } as const;
 
 const meta: Meta<PlaygroundArgs> = {
-  title: "Molecules/Navigation/TableOfContents",
+  title: "Components/TableOfContents",
+  id: "molecules-navigation-tableofcontents",
   parameters: { layout: "padded" },
   argTypes: {
     items: {

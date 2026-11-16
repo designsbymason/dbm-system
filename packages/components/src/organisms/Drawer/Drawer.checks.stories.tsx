@@ -12,7 +12,8 @@ import type { DrawerContentProps, DrawerProps } from "./Drawer.types";
 // the direction it enters from, the breakpoint, a real mouse and the stylesheet's own rules. Hidden from the
 // sidebar and the Docs page, and still run as tests (07 §4.2, guidelines/adr/0013).
 const meta: Meta = {
-  title: "Organisms/Overlay/Drawer/Checks",
+  title: "Components/Drawer/Checks",
+  id: "organisms-overlay-drawer-checks",
   tags: ["!dev"],
   parameters: { layout: "fullscreen" },
 };

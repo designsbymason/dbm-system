@@ -8,7 +8,8 @@ import { HoverCard } from "./HoverCard";
 // so a table built from it would list content props as if they were the
 // root's own.
 const meta: Meta<typeof HoverCard> = {
-  title: "Molecules/Overlay/HoverCard/Root",
+  title: "Components/HoverCard/Root",
+  id: "molecules-overlay-hovercard-root",
   component: HoverCard,
   tags: ["!dev"],
   argTypes: {

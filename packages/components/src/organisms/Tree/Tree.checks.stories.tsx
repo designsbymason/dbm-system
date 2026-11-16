@@ -9,7 +9,8 @@ import { allSizes, Demo, manyNodes, RenameDemo, RowMenuDemo } from "./TreeStoryK
 // sidebar and the Docs page): what jsdom can't evaluate — real layout, text direction, forced colours, focus rings,
 // target sizes and a window of rows over a long tree — measured in Chromium.
 const meta: Meta = {
-  title: "Organisms/Data Display/Tree/Checks",
+  title: "Components/Tree/Checks",
+  id: "organisms-data-display-tree-checks",
   tags: ["!dev"],
   parameters: { layout: "padded" },
 };

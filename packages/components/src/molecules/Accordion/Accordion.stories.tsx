@@ -73,7 +73,8 @@ const DemoItems = () => (
 );
 
 const meta: Meta<PlaygroundArgs> = {
-  title: "Molecules/Overlay/Accordion",
+  title: "Components/Accordion",
+  id: "molecules-overlay-accordion",
   parameters: { layout: "padded" },
   argTypes: {
     type: {

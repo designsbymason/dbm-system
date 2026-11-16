@@ -5,7 +5,8 @@ import { employeeColumns, employees } from "./DataTableStoryKit";
 // Docs-only (guidelines/adr/0013) — `DataTable.Pagination`'s own props get their own Properties table on DataTable.mdx. It takes
 // `Pagination`'s presentation props; the page, page count and change handler come from the table.
 const meta: Meta<typeof DataTable.Pagination> = {
-  title: "Organisms/Data Display/DataTable/Pagination",
+  title: "Components/DataTable/Pagination",
+  id: "organisms-data-display-datatable-pagination",
   component: DataTable.Pagination,
   tags: ["!dev"],
   argTypes: {

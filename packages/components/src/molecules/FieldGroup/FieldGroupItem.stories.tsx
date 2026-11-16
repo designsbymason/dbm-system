@@ -5,7 +5,8 @@ import { FieldGroup } from "./FieldGroup";
 // on `FieldGroup.mdx` — it is a compound sub-part, not an independently browsable component (see ADR-0013), so
 // `tags: ["!dev"]` keeps every story here out of the sidebar while leaving it indexed for the Docs page.
 const meta: Meta<typeof FieldGroup.Item> = {
-  title: "Molecules/Inputs/FieldGroup/Item",
+  title: "Components/FieldGroup/Item",
+  id: "molecules-inputs-fieldgroup-item",
   component: FieldGroup.Item,
   tags: ["!dev"],
   argTypes: {

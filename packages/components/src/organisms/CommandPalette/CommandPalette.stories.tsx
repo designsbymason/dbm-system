@@ -45,7 +45,8 @@ const noControls = {
 } as const;
 
 const meta: Meta<PlaygroundArgs> = {
-  title: "Organisms/Navigation/CommandPalette",
+  title: "Components/CommandPalette",
+  id: "organisms-navigation-commandpalette",
   component: CommandPalette,
   parameters: { layout: "padded" },
   argTypes: {

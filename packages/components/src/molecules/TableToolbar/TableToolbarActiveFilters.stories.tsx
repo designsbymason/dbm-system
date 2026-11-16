@@ -3,7 +3,8 @@ import { TableToolbar } from "./TableToolbar";
 
 // Docs-only (guidelines/adr/0013) — `TableToolbar.ActiveFilters`' own props get their own Properties table on TableToolbar.mdx.
 const meta: Meta<typeof TableToolbar.ActiveFilters> = {
-  title: "Molecules/Data Display/TableToolbar/ActiveFilters",
+  title: "Components/TableToolbar/ActiveFilters",
+  id: "molecules-data-display-tabletoolbar-activefilters",
   component: TableToolbar.ActiveFilters,
   tags: ["!dev"],
   argTypes: {

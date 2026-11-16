@@ -4,7 +4,8 @@ import { FileUpload } from "./FileUpload";
 // Docs-only (guidelines/adr/0013): `FileUpload.Dropzone`'s own props get their own Properties table on FileUpload.mdx,
 // separate from the umbrella table. Rendered inside a real `FileUpload`, since the part reads its settings from it.
 const meta: Meta<typeof FileUpload.Dropzone> = {
-  title: "Organisms/Inputs/FileUpload/Dropzone",
+  title: "Components/FileUpload/Dropzone",
+  id: "organisms-inputs-fileupload-dropzone",
   component: FileUpload.Dropzone,
   tags: ["!dev"],
   argTypes: {

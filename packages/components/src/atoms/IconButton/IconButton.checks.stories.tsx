@@ -7,7 +7,8 @@ import { IconButton } from "./IconButton";
 // The checks only a real browser can make, run as stories but hidden from the sidebar and the Docs page (`!dev`, as ADR-0013
 // keeps a sub-part's documentation out of the sidebar): the caption's real contrast, the box it makes, and a real pointer over it.
 const meta: Meta = {
-  title: "Atoms/Inputs/IconButton/Checks",
+  title: "Components/IconButton/Checks",
+  id: "atoms-inputs-iconbutton-checks",
   tags: ["!dev"],
   parameters: { layout: "padded" },
 };

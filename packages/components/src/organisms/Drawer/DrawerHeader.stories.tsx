@@ -3,7 +3,8 @@ import { Drawer } from "./Drawer";
 
 // Docs-only — see DrawerRoot.stories.tsx's own comment for the full rationale (guidelines/adr/0013).
 const meta: Meta<typeof Drawer.Header> = {
-  title: "Organisms/Overlay/Drawer/Header",
+  title: "Components/Drawer/Header",
+  id: "organisms-overlay-drawer-header",
   component: Drawer.Header,
   tags: ["!dev"],
   argTypes: {

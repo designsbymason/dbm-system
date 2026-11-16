@@ -3,7 +3,8 @@ import { Spinner } from "./Spinner";
 import { spinnerPlaygroundSnippet, spinnerSnippets } from "./Spinner.snippets";
 
 const meta: Meta<typeof Spinner> = {
-  title: "Atoms/Feedback/Spinner",
+  title: "Components/Spinner",
+  id: "atoms-feedback-spinner",
   component: Spinner,
   parameters: { layout: "padded" },
   // Ordered to match SpinnerProps' own declaration order (size, tone,

@@ -133,7 +133,8 @@ const noControls: Record<keyof PlaygroundArgs, { control: false }> = {
 };
 
 const meta: Meta<PlaygroundArgs> = {
-  title: "Molecules/Inputs/Calendar",
+  title: "Components/Calendar",
+  id: "molecules-inputs-calendar",
   parameters: { layout: "padded" },
   argTypes: {
     mode: {

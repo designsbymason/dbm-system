@@ -60,23 +60,18 @@ describe("component catalog", () => {
     expect(names).toEqual([...names].sort((a, b) => a.localeCompare(b, "en", { sensitivity: "base" })));
   });
 
-  // Until a component's story title stops carrying its tier and category, the catalog must agree with the title, so the two
-  // cannot drift while both exist. This check goes when the titles become `Components/{Name}`.
-  it("agrees with the tier and category in each component's story title", () => {
-    const TITLE_TIERS: Record<string, Tier> = { Atoms: "atom", Molecules: "molecule", Organisms: "organism" };
-    const disagree: string[] = [];
+  // The sidebar lists every component in one group by its name alone, so a component's main stories are titled `Components/{Name}`;
+  // its tier and category are the catalog's, never the title's. (A component's parts and checks are `Components/{Name}/{Part}`.)
+  it("titles each component's main stories Components/{Name}", () => {
+    const wrong: string[] = [];
     for (const name of Object.keys(catalog)) {
       const folder = Object.entries(TIER_FOLDERS).find(([, tier]) => tier === folders.get(name))?.[0];
       if (!folder) continue;
       const stories = readFileSync(join(root, folder, name, `${name}.stories.tsx`), "utf8");
-      const match = /^\s*title:\s*"(Atoms|Molecules|Organisms)\/([^/"]+)\/([^/"]+)"/m.exec(stories);
-      const entry = catalog[name];
-      if (!match || !entry) {
-        disagree.push(`${name}: no Tier/Category/Name title in its stories`);
-      } else if (match[3] !== name || TITLE_TIERS[match[1] ?? ""] !== entry.tier || match[2] !== entry.category) {
-        disagree.push(`${name}: the title says ${match[1]}/${match[2]}, the catalog says ${entry.tier}/${entry.category}`);
-      }
+      // The meta's title is the one under `Components/`; a story's own `title` arg (a dialog's heading, say) is not.
+      const title = /^\s*title:\s*"(Components\/[^"]+)"/m.exec(stories)?.[1];
+      if (title !== `Components/${name}`) wrong.push(`${name}: titled "${title}", not "Components/${name}"`);
     }
-    expect(disagree).toEqual([]);
+    expect(wrong).toEqual([]);
   });
 });

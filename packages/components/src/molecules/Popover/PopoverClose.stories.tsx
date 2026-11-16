@@ -4,7 +4,8 @@ import { Popover } from "./Popover";
 // Docs-only — see PopoverTrigger.stories.tsx's own comment for the full
 // rationale (guidelines/adr/0013).
 const meta: Meta<typeof Popover.Close> = {
-  title: "Molecules/Overlay/Popover/Close",
+  title: "Components/Popover/Close",
+  id: "molecules-overlay-popover-close",
   component: Popover.Close,
   tags: ["!dev"],
   argTypes: {

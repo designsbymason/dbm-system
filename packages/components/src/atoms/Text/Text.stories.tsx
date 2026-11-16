@@ -22,7 +22,8 @@ function parseTruncateArg(value: unknown): number | undefined {
 }
 
 const meta: Meta<typeof Text> = {
-  title: "Atoms/Typography/Text",
+  title: "Components/Text",
+  id: "atoms-typography-text",
   component: Text,
   parameters: { layout: "padded" },
   // Ordered to match TextProps' own declaration order (children, size,

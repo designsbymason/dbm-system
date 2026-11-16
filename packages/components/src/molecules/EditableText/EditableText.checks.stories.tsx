@@ -12,7 +12,8 @@ import { EditableText } from "./EditableText";
 // the sidebar and the Docs page): what jsdom can't evaluate — real layout and measurement, focus, text
 // direction and forced colours — measured in Chromium.
 const meta: Meta = {
-  title: "Molecules/Inputs/EditableText/Checks",
+  title: "Components/EditableText/Checks",
+  id: "molecules-inputs-editabletext-checks",
   tags: ["!dev"],
   parameters: { layout: "padded" },
 };

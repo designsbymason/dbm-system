@@ -4,7 +4,8 @@ import { preventNavigation } from "./NavbarStoryKit";
 
 // Docs-only — see NavbarRoot.stories.tsx's own comment for the full rationale (guidelines/adr/0013).
 const meta: Meta<typeof Navbar.SkipLink> = {
-  title: "Organisms/Navigation/Navbar/SkipLink",
+  title: "Components/Navbar/SkipLink",
+  id: "organisms-navigation-navbar-skiplink",
   component: Navbar.SkipLink,
   tags: ["!dev"],
   argTypes: {

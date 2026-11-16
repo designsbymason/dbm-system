@@ -4,7 +4,8 @@ import { Dialog } from "./Dialog";
 
 // Docs-only — see DialogRoot.stories.tsx's own comment for the full rationale (guidelines/adr/0013).
 const meta: Meta<typeof Dialog.Footer> = {
-  title: "Organisms/Overlay/Dialog/Footer",
+  title: "Components/Dialog/Footer",
+  id: "organisms-overlay-dialog-footer",
   component: Dialog.Footer,
   tags: ["!dev"],
   argTypes: {

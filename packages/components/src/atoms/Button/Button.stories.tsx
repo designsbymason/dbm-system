@@ -39,7 +39,8 @@ const iconControl = {
 };
 
 const meta: Meta<typeof Button> = {
-  title: "Atoms/Inputs/Button",
+  title: "Components/Button",
+  id: "atoms-inputs-button",
   component: Button,
   // No `tags: ["autodocs"]` — Button.mdx is a hand-authored Docs page (see
   // guidelines/07-storybook-and-documentation-standards.md §4) that embeds

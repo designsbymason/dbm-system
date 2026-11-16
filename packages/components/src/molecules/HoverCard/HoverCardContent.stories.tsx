@@ -5,7 +5,8 @@ import { HoverCard } from "./HoverCard";
 // rationale (guidelines/adr/0013). Rendered open (`defaultOpen`) so
 // `HoverCard.Content` actually mounts.
 const meta: Meta<typeof HoverCard.Content> = {
-  title: "Molecules/Overlay/HoverCard/Content",
+  title: "Components/HoverCard/Content",
+  id: "molecules-overlay-hovercard-content",
   component: HoverCard.Content,
   tags: ["!dev"],
   argTypes: {

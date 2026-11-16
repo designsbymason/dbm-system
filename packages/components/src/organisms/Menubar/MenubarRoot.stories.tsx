@@ -5,7 +5,8 @@ import { Menubar } from "./Menubar";
 // the Playground's meta carries only the bar's own props, but the root, `Menubar.Menu` and `Menubar.Content` are
 // separate components that each get their own table from their own hidden stories file.
 const meta: Meta<typeof Menubar> = {
-  title: "Organisms/Navigation/Menubar/Root",
+  title: "Components/Menubar/Root",
+  id: "organisms-navigation-menubar-root",
   component: Menubar,
   tags: ["!dev"],
   argTypes: {

@@ -55,7 +55,8 @@ const triggerControl = {
 };
 
 const meta: Meta<typeof Collapse> = {
-  title: "Atoms/Overlay/Collapse",
+  title: "Components/Collapse",
+  id: "atoms-overlay-collapse",
   component: Collapse,
   parameters: { layout: "padded" },
   // Ordered content prop first, then core behavioral props, then

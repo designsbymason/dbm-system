@@ -3,7 +3,8 @@ import { TableToolbar } from "./TableToolbar";
 
 // Docs-only (guidelines/adr/0013) — `TableToolbar.Summary`'s own props get their own Properties table on TableToolbar.mdx.
 const meta: Meta<typeof TableToolbar.Summary> = {
-  title: "Molecules/Data Display/TableToolbar/Summary",
+  title: "Components/TableToolbar/Summary",
+  id: "molecules-data-display-tabletoolbar-summary",
   component: TableToolbar.Summary,
   tags: ["!dev"],
   argTypes: {

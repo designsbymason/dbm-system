@@ -6,7 +6,8 @@ import { EmptyState } from "./EmptyState";
 // Properties table on EmptyState.mdx, separate from the umbrella table. Rendered
 // inside a real `EmptyState` so the sub-part is shown in its real context.
 const meta: Meta<typeof EmptyState.Icon> = {
-  title: "Molecules/Data Display/EmptyState/Icon",
+  title: "Components/EmptyState/Icon",
+  id: "molecules-data-display-emptystate-icon",
   component: EmptyState.Icon,
   tags: ["!dev"],
   argTypes: {

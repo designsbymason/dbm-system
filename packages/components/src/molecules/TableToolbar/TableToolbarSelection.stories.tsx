@@ -5,7 +5,8 @@ import { TableToolbar } from "./TableToolbar";
 
 // Docs-only (guidelines/adr/0013) — `TableToolbar.Selection`'s own props get their own Properties table on TableToolbar.mdx.
 const meta: Meta<typeof TableToolbar.Selection> = {
-  title: "Molecules/Data Display/TableToolbar/Selection",
+  title: "Components/TableToolbar/Selection",
+  id: "molecules-data-display-tabletoolbar-selection",
   component: TableToolbar.Selection,
   tags: ["!dev"],
   argTypes: {

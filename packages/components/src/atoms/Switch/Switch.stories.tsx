@@ -31,7 +31,8 @@ const uncheckedIconControl = {
 };
 
 const meta: Meta<typeof Switch> = {
-  title: "Atoms/Inputs/Switch",
+  title: "Components/Switch",
+  id: "atoms-inputs-switch",
   component: Switch,
   parameters: { layout: "padded" },
   // Keys below are ordered to match `SwitchProps`' own declaration order

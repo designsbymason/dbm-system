@@ -4,7 +4,8 @@ import { preventNavigation } from "./NavbarStoryKit";
 
 // Docs-only — see NavbarRoot.stories.tsx's own comment for the full rationale (guidelines/adr/0013).
 const meta: Meta<typeof Navbar.Row> = {
-  title: "Organisms/Navigation/Navbar/Row",
+  title: "Components/Navbar/Row",
+  id: "organisms-navigation-navbar-row",
   component: Navbar.Row,
   tags: ["!dev"],
   argTypes: {

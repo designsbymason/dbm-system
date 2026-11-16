@@ -9,7 +9,8 @@ import { Aligned, DemoItems, DemoMenu, DemoNavigation, MenuStage, RichItems, Tal
 // Hidden real-browser checks (guidelines/adr/0013): what jsdom can't do (layout, the cascade, a real pointer, forced colours,
 // direction). They run in the `storybook` (Chromium) project; the test window is 1200px wide unless a story pins another.
 const meta: Meta = {
-  title: "Organisms/Navigation/NavigationMenu/Checks",
+  title: "Components/NavigationMenu/Checks",
+  id: "organisms-navigation-navigationmenu-checks",
   tags: ["!dev"],
   parameters: { layout: "padded" },
 };

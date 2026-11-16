@@ -9,7 +9,8 @@ import { DensityDemo, EmployeeDetail, SavedViewsDemo, employeeColumns, employees
 // table, the ellipsis, the size of a target, the real Tab order and a pointer on a menu inside the scrolling frame. Hidden
 // from the sidebar and the Docs page, and still run as tests (07 §4.2, guidelines/adr/0013).
 const meta: Meta = {
-  title: "Organisms/Data Display/DataTable/Checks",
+  title: "Components/DataTable/Checks",
+  id: "organisms-data-display-datatable-checks",
   tags: ["!dev"],
   parameters: { layout: "padded" },
 };

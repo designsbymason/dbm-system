@@ -20,7 +20,8 @@ const iconControl = {
 };
 
 const meta: Meta<typeof Menubar.Item> = {
-  title: "Organisms/Navigation/Menubar/Item",
+  title: "Components/Menubar/Item",
+  id: "organisms-navigation-menubar-item",
   component: Menubar.Item,
   tags: ["!dev"],
   argTypes: {

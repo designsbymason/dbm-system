@@ -5,7 +5,8 @@ import { NumberInput } from "./NumberInput";
 import { numberInputPlaygroundSnippet, numberInputSnippets } from "./NumberInput.snippets";
 
 const meta: Meta<typeof NumberInput> = {
-  title: "Molecules/Inputs/NumberInput",
+  title: "Components/NumberInput",
+  id: "molecules-inputs-numberinput",
   component: NumberInput,
   parameters: { layout: "padded" },
   // Ordered content-ish prop first (placeholder), then the slot prop, then

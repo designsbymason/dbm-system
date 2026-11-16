@@ -3,7 +3,8 @@ import { Toast } from "./Toast";
 
 // Docs-only (guidelines/adr/0013): resolves `Toast.Action`'s own argTypes for its sub-part Properties table.
 const meta: Meta<typeof Toast.Action> = {
-  title: "Organisms/Feedback/Toast/Action",
+  title: "Components/Toast/Action",
+  id: "organisms-feedback-toast-action",
   component: Toast.Action,
   tags: ["!dev"],
   argTypes: {

@@ -3,7 +3,8 @@ import { ContextMenu } from "./ContextMenu";
 
 // Docs-only — see ContextMenuRoot.stories.tsx's own comment for the full rationale (guidelines/adr/0013).
 const meta: Meta<typeof ContextMenu.Separator> = {
-  title: "Organisms/Overlay/ContextMenu/Separator",
+  title: "Components/ContextMenu/Separator",
+  id: "organisms-overlay-contextmenu-separator",
   component: ContextMenu.Separator,
   tags: ["!dev"],
   argTypes: {

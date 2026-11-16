@@ -3,7 +3,8 @@ import { NavigationMenu } from "./NavigationMenu";
 
 // Docs-only: this file exists so the Docs page can show this part's own Properties table (guidelines/adr/0013).
 const meta: Meta<typeof NavigationMenu.Trigger> = {
-  title: "Organisms/Navigation/NavigationMenu/Trigger",
+  title: "Components/NavigationMenu/Trigger",
+  id: "organisms-navigation-navigationmenu-trigger",
   component: NavigationMenu.Trigger,
   tags: ["!dev"],
   argTypes: {

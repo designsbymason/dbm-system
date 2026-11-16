@@ -5,7 +5,8 @@ import { Drawer } from "./Drawer";
 // table: the Playground's meta also carries `Drawer.Content`'s props (one render drives both), so a table built
 // from it would list `size`, `divided`… as root props and omit `open`.
 const meta: Meta<typeof Drawer> = {
-  title: "Organisms/Overlay/Drawer/Root",
+  title: "Components/Drawer/Root",
+  id: "organisms-overlay-drawer-root",
   component: Drawer,
   tags: ["!dev"],
   argTypes: {

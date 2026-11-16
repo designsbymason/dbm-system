@@ -43,7 +43,8 @@ interface PlaygroundArgs {
 }
 
 const meta: Meta<PlaygroundArgs> = {
-  title: "Molecules/Overlay/Popover",
+  title: "Components/Popover",
+  id: "molecules-overlay-popover",
   parameters: { layout: "padded" },
   argTypes: {
     defaultOpen: {

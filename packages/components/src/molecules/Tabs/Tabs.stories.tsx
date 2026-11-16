@@ -81,7 +81,8 @@ const noControls = {
 } as const;
 
 const meta: Meta<PlaygroundArgs> = {
-  title: "Molecules/Navigation/Tabs",
+  title: "Components/Tabs",
+  id: "molecules-navigation-tabs",
   parameters: { layout: "padded" },
   argTypes: {
     defaultValue: {

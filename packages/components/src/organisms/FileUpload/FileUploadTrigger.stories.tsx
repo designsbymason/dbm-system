@@ -4,7 +4,8 @@ import { FileUpload } from "./FileUpload";
 // Docs-only (guidelines/adr/0013): `FileUpload.Trigger`'s own props get their own Properties table on FileUpload.mdx,
 // separate from the umbrella table. Rendered inside a real `FileUpload`, since the part reads its settings from it.
 const meta: Meta<typeof FileUpload.Trigger> = {
-  title: "Organisms/Inputs/FileUpload/Trigger",
+  title: "Components/FileUpload/Trigger",
+  id: "organisms-inputs-fileupload-trigger",
   component: FileUpload.Trigger,
   tags: ["!dev"],
   argTypes: {

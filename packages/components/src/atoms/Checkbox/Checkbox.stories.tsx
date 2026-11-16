@@ -32,7 +32,8 @@ const indeterminateIconControl = {
 };
 
 const meta: Meta<typeof Checkbox> = {
-  title: "Atoms/Inputs/Checkbox",
+  title: "Components/Checkbox",
+  id: "atoms-inputs-checkbox",
   component: Checkbox,
   parameters: { layout: "padded" },
   // Keys below are ordered to match the component's own `CheckboxProps`

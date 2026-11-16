@@ -4,7 +4,8 @@ import { TimeRangePicker } from "./TimeRangePicker";
 
 // Hidden, real-browser checks (`!dev`, ADR-0013): what jsdom can't measure — the shared popover's layout.
 const meta: Meta = {
-  title: "Molecules/Inputs/TimeRangePicker/Checks",
+  title: "Components/TimeRangePicker/Checks",
+  id: "molecules-inputs-timerangepicker-checks",
   tags: ["!dev"],
   parameters: { layout: "padded" },
 };

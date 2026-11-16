@@ -3,7 +3,8 @@ import { Blockquote } from "./Blockquote";
 import { blockquotePlaygroundSnippet } from "./Blockquote.snippets";
 
 const meta: Meta<typeof Blockquote> = {
-  title: "Atoms/Typography/Blockquote",
+  title: "Components/Blockquote",
+  id: "atoms-typography-blockquote",
   component: Blockquote,
   parameters: { layout: "padded" },
   // Ordered to match BlockquoteProps' own declaration order (children,

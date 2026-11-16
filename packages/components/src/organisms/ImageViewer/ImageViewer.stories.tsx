@@ -45,7 +45,8 @@ const noControls = {
 const openButton = <Button>View photos</Button>;
 
 const meta: Meta<PlaygroundArgs> = {
-  title: "Organisms/Media/ImageViewer",
+  title: "Components/ImageViewer",
+  id: "organisms-media-imageviewer",
   component: ImageViewer,
   parameters: { layout: "padded" },
   argTypes: {

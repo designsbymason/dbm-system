@@ -5,7 +5,8 @@ import { VisuallyHidden } from "./VisuallyHidden";
 import { visuallyHiddenPlaygroundSnippet, visuallyHiddenSnippets } from "./VisuallyHidden.snippets";
 
 const meta: Meta<typeof VisuallyHidden> = {
-  title: "Atoms/Utility/VisuallyHidden",
+  title: "Components/VisuallyHidden",
+  id: "atoms-utility-visuallyhidden",
   component: VisuallyHidden,
   parameters: { layout: "padded" },
   // Ordered to match VisuallyHiddenProps' own declaration order (children,

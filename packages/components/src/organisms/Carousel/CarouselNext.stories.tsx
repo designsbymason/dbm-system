@@ -5,7 +5,8 @@ import { DemoSlide } from "./CarouselStoryKit";
 // Docs-only (guidelines/adr/0013) — `Carousel.Next`'s own props get their own Properties table on Carousel.mdx.
 // Rendered inside a real `Carousel`, whose context it reads.
 const meta: Meta<typeof Carousel.Next> = {
-  title: "Organisms/Media/Carousel/Next",
+  title: "Components/Carousel/Next",
+  id: "organisms-media-carousel-next",
   component: Carousel.Next,
   tags: ["!dev"],
   argTypes: {

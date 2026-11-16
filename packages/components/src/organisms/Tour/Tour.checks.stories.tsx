@@ -13,7 +13,8 @@ import { Demo, interactiveSteps } from "./TourStoryKit";
 // scrolling, the keyboard loop, forced colours and reduced motion. Hidden from the sidebar and the Docs page, and still run as
 // tests (07 §4.2, guidelines/adr/0013).
 const meta: Meta = {
-  title: "Organisms/Overlay/Tour/Checks",
+  title: "Components/Tour/Checks",
+  id: "organisms-overlay-tour-checks",
   tags: ["!dev"],
   parameters: { layout: "padded" },
 };

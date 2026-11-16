@@ -84,7 +84,8 @@ function Top({ children }: { children: ReactNode }) {
 const readOnly = (description: string) => ({ control: false as const, description });
 
 const meta: Meta<PlaygroundArgs> = {
-  title: "Organisms/Navigation/Navbar",
+  title: "Components/Navbar",
+  id: "organisms-navigation-navbar",
   parameters: { layout: "padded" },
   decorators: [
     // `defaultMenuOpen` is only read when the bar mounts, so changing its control remounts the bar.

@@ -5,7 +5,8 @@ import { Alert } from "./Alert";
 // real `Alert`, whose tone, variant and size the action reads. Its Default column is set by hand: docgen can't trace a default
 // through a compound sub-part's property-access `component`.
 const meta: Meta<typeof Alert.Action> = {
-  title: "Molecules/Feedback/Alert/Action",
+  title: "Components/Alert/Action",
+  id: "molecules-feedback-alert-action",
   component: Alert.Action,
   tags: ["!dev"],
   argTypes: {

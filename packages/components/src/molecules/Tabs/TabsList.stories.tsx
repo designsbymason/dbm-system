@@ -6,7 +6,8 @@ import { Tabs } from "./Tabs";
 // Properties table on Tabs.mdx. Rendered inside a real `Tabs` (Radix's own
 // context-scoped List throws outside one).
 const meta: Meta<typeof Tabs.List> = {
-  title: "Molecules/Navigation/Tabs/List",
+  title: "Components/Tabs/List",
+  id: "molecules-navigation-tabs-list",
   component: Tabs.List,
   tags: ["!dev"],
   argTypes: {

@@ -4,7 +4,8 @@ import { AlertDialog } from "./AlertDialog";
 // Docs-only (guidelines/adr/0013): the root component's own argTypes for the main Properties table, since the
 // Playground's meta also carries `AlertDialog.Content`'s props.
 const meta: Meta<typeof AlertDialog> = {
-  title: "Organisms/Overlay/AlertDialog/Root",
+  title: "Components/AlertDialog/Root",
+  id: "organisms-overlay-alertdialog-root",
   component: AlertDialog,
   tags: ["!dev"],
   argTypes: {

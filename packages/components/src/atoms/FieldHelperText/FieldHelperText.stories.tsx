@@ -3,7 +3,8 @@ import { FieldHelperText } from "./FieldHelperText";
 import { fieldHelperTextPlaygroundSnippet } from "./FieldHelperText.snippets";
 
 const meta: Meta<typeof FieldHelperText> = {
-  title: "Atoms/Inputs/FieldHelperText",
+  title: "Components/FieldHelperText",
+  id: "atoms-inputs-fieldhelpertext",
   component: FieldHelperText,
   parameters: { layout: "padded" },
   // Ordered content prop first, then behavioral/state props, then

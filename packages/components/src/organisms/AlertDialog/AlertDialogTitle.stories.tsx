@@ -4,7 +4,8 @@ import { AlertDialog } from "./AlertDialog";
 // Docs-only (guidelines/adr/0013): resolves the sub-part's own argTypes for its Properties table on the
 // AlertDialog Docs page.
 const meta: Meta<typeof AlertDialog.Title> = {
-  title: "Organisms/Overlay/AlertDialog/Title",
+  title: "Components/AlertDialog/Title",
+  id: "organisms-overlay-alertdialog-title",
   component: AlertDialog.Title,
   tags: ["!dev"],
   argTypes: {

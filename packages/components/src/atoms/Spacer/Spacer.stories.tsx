@@ -3,7 +3,8 @@ import { Spacer } from "./Spacer";
 import { spacerSnippets } from "./Spacer.snippets";
 
 const meta: Meta<typeof Spacer> = {
-  title: "Atoms/Layout/Spacer",
+  title: "Components/Spacer",
+  id: "atoms-layout-spacer",
   component: Spacer,
   parameters: { layout: "padded" },
   // Spacer takes no props of its own — only the inherited native escape

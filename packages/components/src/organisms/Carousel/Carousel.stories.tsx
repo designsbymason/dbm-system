@@ -87,7 +87,8 @@ const except = (...keys: Array<keyof typeof noControls>) =>
   Object.fromEntries(Object.entries(noControls).filter(([key]) => !keys.includes(key as keyof typeof noControls)));
 
 const meta: Meta<PlaygroundArgs> = {
-  title: "Organisms/Media/Carousel",
+  title: "Components/Carousel",
+  id: "organisms-media-carousel",
   parameters: { layout: "padded" },
   // The uncontrolled starting position is only read on mount, so its control remounts the carousel.
   decorators: [(Story, context) => <div key={String(context.args.defaultValue)}><Story /></div>],

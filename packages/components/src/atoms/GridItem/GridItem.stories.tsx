@@ -38,7 +38,8 @@ function parseNumberArg(value: unknown): number | undefined {
 }
 
 const meta: Meta<typeof GridItem> = {
-  title: "Atoms/Layout/GridItem",
+  title: "Components/GridItem",
+  id: "atoms-layout-griditem",
   component: GridItem,
   parameters: { layout: "padded" },
   // Ordered to match GridItemProps' own declaration order (children,

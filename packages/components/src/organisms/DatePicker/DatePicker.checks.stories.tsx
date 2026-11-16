@@ -13,7 +13,8 @@ import { DatePicker } from "./DatePicker";
 // layout and forced colours. Hidden from the sidebar and the Docs page, and still run as tests (07 §4.2,
 // guidelines/adr/0013).
 const meta: Meta = {
-  title: "Organisms/Inputs/DatePicker/Checks",
+  title: "Components/DatePicker/Checks",
+  id: "organisms-inputs-datepicker-checks",
   tags: ["!dev"],
   parameters: { layout: "fullscreen" },
 };

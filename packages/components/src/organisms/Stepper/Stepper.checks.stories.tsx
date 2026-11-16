@@ -10,7 +10,8 @@ import type { StepperProps } from "./Stepper.types";
 // the sidebar and the Docs page): what jsdom can't evaluate — real layout, text direction, forced colours, focus
 // rings, a media query — measured in Chromium.
 const meta: Meta = {
-  title: "Organisms/Navigation/Stepper/Checks",
+  title: "Components/Stepper/Checks",
+  id: "organisms-navigation-stepper-checks",
   tags: ["!dev"],
   parameters: { layout: "padded" },
 };

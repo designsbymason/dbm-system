@@ -14,7 +14,8 @@ const iconControl = {
 };
 
 const meta: Meta<typeof ContextMenu.Item> = {
-  title: "Organisms/Overlay/ContextMenu/Item",
+  title: "Components/ContextMenu/Item",
+  id: "organisms-overlay-contextmenu-item",
   component: ContextMenu.Item,
   tags: ["!dev"],
   argTypes: {

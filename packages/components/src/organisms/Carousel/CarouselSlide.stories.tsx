@@ -4,7 +4,8 @@ import { Carousel } from "./Carousel";
 // Docs-only (guidelines/adr/0013) — the parts' own props get their own Properties tables on Carousel.mdx.
 // Each is rendered inside a real `Carousel`, whose context it reads.
 const meta: Meta<typeof Carousel.Slide> = {
-  title: "Organisms/Media/Carousel/Slide",
+  title: "Components/Carousel/Slide",
+  id: "organisms-media-carousel-slide",
   component: Carousel.Slide,
   tags: ["!dev"],
   argTypes: {

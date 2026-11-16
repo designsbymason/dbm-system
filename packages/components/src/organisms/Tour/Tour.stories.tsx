@@ -39,7 +39,8 @@ const noControls = {
 } as const;
 
 const meta: Meta<PlaygroundArgs> = {
-  title: "Organisms/Overlay/Tour",
+  title: "Components/Tour",
+  id: "organisms-overlay-tour",
   parameters: { layout: "padded" },
   argTypes: {
     steps: {

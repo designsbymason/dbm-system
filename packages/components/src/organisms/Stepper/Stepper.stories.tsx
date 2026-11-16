@@ -90,7 +90,8 @@ const playgroundBoxHeight = (args: Pick<PlaygroundArgs, "orientation" | "compact
 };
 
 const meta: Meta<PlaygroundArgs> = {
-  title: "Organisms/Navigation/Stepper",
+  title: "Components/Stepper",
+  id: "organisms-navigation-stepper",
   parameters: { layout: "padded" },
   argTypes: {
     children: {

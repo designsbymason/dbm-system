@@ -9,7 +9,8 @@ import { HoverCard } from "./HoverCard";
 // Docs page (guidelines/adr/0013). Rendered inside a real `<HoverCard>`,
 // since Radix's context-scoped primitives throw outside their provider.
 const meta: Meta<typeof HoverCard.Trigger> = {
-  title: "Molecules/Overlay/HoverCard/Trigger",
+  title: "Components/HoverCard/Trigger",
+  id: "molecules-overlay-hovercard-trigger",
   component: HoverCard.Trigger,
   tags: ["!dev"],
   argTypes: {

@@ -3,7 +3,8 @@ import { Sidebar } from "./Sidebar";
 
 // Docs-only (guidelines/adr/0013). This resolves Toggle's own argTypes for its Properties table on the main Docs page.
 const meta: Meta<typeof Sidebar.Toggle> = {
-  title: "Organisms/Navigation/Sidebar/Toggle",
+  title: "Components/Sidebar/Toggle",
+  id: "organisms-navigation-sidebar-toggle",
   component: Sidebar.Toggle,
   tags: ["!dev"],
   argTypes: {

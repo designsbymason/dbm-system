@@ -8,7 +8,8 @@ import { Accordion } from "./Accordion";
 // outside one) with the item pre-opened so its own Trigger/Content are both
 // visible for this story's own screenshot/reference purposes.
 const meta: Meta<typeof Accordion.Item> = {
-  title: "Molecules/Overlay/Accordion/Item",
+  title: "Components/Accordion/Item",
+  id: "molecules-overlay-accordion-item",
   component: Accordion.Item,
   tags: ["!dev"],
   argTypes: {

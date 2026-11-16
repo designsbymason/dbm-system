@@ -7,7 +7,8 @@ import { TableToolbar } from "./TableToolbar";
 
 // Docs-only (guidelines/adr/0013) — `TableToolbar.Filter`'s own props get their own Properties table on TableToolbar.mdx.
 const meta: Meta<typeof TableToolbar.Filter> = {
-  title: "Molecules/Data Display/TableToolbar/Filter",
+  title: "Components/TableToolbar/Filter",
+  id: "molecules-data-display-tabletoolbar-filter",
   component: TableToolbar.Filter,
   tags: ["!dev"],
   argTypes: {

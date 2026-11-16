@@ -7,7 +7,8 @@ import { FieldGroup } from "./FieldGroup";
 import { fieldGroupPlaygroundSnippet, fieldGroupSnippets } from "./FieldGroup.snippets";
 
 const meta: Meta<typeof FieldGroup> = {
-  title: "Molecules/Inputs/FieldGroup",
+  title: "Components/FieldGroup",
+  id: "molecules-inputs-fieldgroup",
   component: FieldGroup,
   parameters: { layout: "padded" },
   // Keys follow the component's own `FieldGroupProps` declaration order (07 §4 item 3).

@@ -5,7 +5,8 @@ import { Indicators } from "./Indicators";
 import { indicatorsPlaygroundSnippet, indicatorsSnippets } from "./Indicators.snippets";
 
 const meta: Meta<typeof Indicators> = {
-  title: "Atoms/Media/Indicators",
+  title: "Components/Indicators",
+  id: "atoms-media-indicators",
   component: Indicators,
   parameters: { layout: "padded" },
   // Ordered to match IndicatorsProps' own declaration order (count, size,

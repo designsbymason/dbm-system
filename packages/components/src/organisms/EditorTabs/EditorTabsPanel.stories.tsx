@@ -4,7 +4,8 @@ import { EditorTabs } from "./EditorTabs";
 // Docs-only (guidelines/adr/0013) — `EditorTabs.Panel`'s own props get their own Properties table on EditorTabs.mdx.
 // Rendered inside a real `EditorTabs`, whose tabs it belongs to.
 const meta: Meta<typeof EditorTabs.Panel> = {
-  title: "Organisms/Navigation/EditorTabs/Panel",
+  title: "Components/EditorTabs/Panel",
+  id: "organisms-navigation-editortabs-panel",
   component: EditorTabs.Panel,
   tags: ["!dev"],
   argTypes: {

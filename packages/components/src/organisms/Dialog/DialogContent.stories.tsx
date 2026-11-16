@@ -3,7 +3,8 @@ import { Dialog } from "./Dialog";
 
 // Docs-only — see DialogRoot.stories.tsx's own comment for the full rationale (guidelines/adr/0013).
 const meta: Meta<typeof Dialog.Content> = {
-  title: "Organisms/Overlay/Dialog/Content",
+  title: "Components/Dialog/Content",
+  id: "organisms-overlay-dialog-content",
   component: Dialog.Content,
   tags: ["!dev"],
   argTypes: {

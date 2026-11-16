@@ -5,7 +5,8 @@ import { EmptyState } from "./EmptyState";
 // own Properties table on EmptyState.mdx, separate from the umbrella table.
 // Rendered inside a real `EmptyState` so the sub-part is shown in its real context.
 const meta: Meta<typeof EmptyState.Description> = {
-  title: "Molecules/Data Display/EmptyState/Description",
+  title: "Components/EmptyState/Description",
+  id: "molecules-data-display-emptystate-description",
   component: EmptyState.Description,
   tags: ["!dev"],
   argTypes: {

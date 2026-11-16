@@ -6,7 +6,8 @@ import { Divider } from "./Divider";
 import { dividerPlaygroundSnippet, dividerSnippets } from "./Divider.snippets";
 
 const meta: Meta<typeof Divider> = {
-  title: "Atoms/Layout/Divider",
+  title: "Components/Divider",
+  id: "atoms-layout-divider",
   component: Divider,
   parameters: { layout: "padded" },
   // Ordered to match DividerProps' own declaration order (orientation,

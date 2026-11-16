@@ -5,7 +5,8 @@ import { Textarea } from "./Textarea";
 import { textareaPlaygroundSnippet, textareaSnippets } from "./Textarea.snippets";
 
 const meta: Meta<typeof Textarea> = {
-  title: "Atoms/Inputs/Textarea",
+  title: "Components/Textarea",
+  id: "atoms-inputs-textarea",
   component: Textarea,
   parameters: { layout: "padded" },
   // Ordered content-ish prop first (placeholder), then core visual props,

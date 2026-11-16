@@ -4,7 +4,8 @@ import { Center } from "./Center";
 import { centerPlaygroundSnippet, centerSnippets } from "./Center.snippets";
 
 const meta: Meta<typeof Center> = {
-  title: "Atoms/Layout/Center",
+  title: "Components/Center",
+  id: "atoms-layout-center",
   component: Center,
   parameters: { layout: "padded" },
   // Ordered to match CenterProps' own declaration order (as, inline,

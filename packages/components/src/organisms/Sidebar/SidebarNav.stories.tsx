@@ -4,7 +4,8 @@ import { preventNavigation } from "./SidebarStoryKit";
 
 // Docs-only (guidelines/adr/0013). This resolves Nav's own argTypes for its Properties table on the main Docs page.
 const meta: Meta<typeof Sidebar.Nav> = {
-  title: "Organisms/Navigation/Sidebar/Nav",
+  title: "Components/Sidebar/Nav",
+  id: "organisms-navigation-sidebar-nav",
   component: Sidebar.Nav,
   tags: ["!dev"],
   argTypes: {

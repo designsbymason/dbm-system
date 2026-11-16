@@ -3,7 +3,8 @@ import { Menubar } from "./Menubar";
 
 // Docs-only — see MenubarRoot.stories.tsx's own comment for the full rationale (guidelines/adr/0013).
 const meta: Meta<typeof Menubar.Label> = {
-  title: "Organisms/Navigation/Menubar/Label",
+  title: "Components/Menubar/Label",
+  id: "organisms-navigation-menubar-label",
   component: Menubar.Label,
   tags: ["!dev"],
   argTypes: {

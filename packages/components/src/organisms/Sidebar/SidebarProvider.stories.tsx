@@ -3,7 +3,8 @@ import { Sidebar } from "./Sidebar";
 
 // Docs-only (guidelines/adr/0013). This resolves Provider's own argTypes for its Properties table on the main Docs page.
 const meta: Meta<typeof Sidebar.Provider> = {
-  title: "Organisms/Navigation/Sidebar/Provider",
+  title: "Components/Sidebar/Provider",
+  id: "organisms-navigation-sidebar-provider",
   component: Sidebar.Provider,
   tags: ["!dev"],
   argTypes: {

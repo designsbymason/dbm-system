@@ -7,7 +7,8 @@ import { Tabs } from "./Tabs";
 // selected (Radix's own context-scoped Content throws outside one, and stays
 // unmounted unless its tab is selected).
 const meta: Meta<typeof Tabs.Content> = {
-  title: "Molecules/Navigation/Tabs/Content",
+  title: "Components/Tabs/Content",
+  id: "molecules-navigation-tabs-content",
   component: Tabs.Content,
   tags: ["!dev"],
   argTypes: {

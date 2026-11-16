@@ -11,7 +11,8 @@ import { DateRangePicker } from "./DateRangePicker";
 // each size against an Input, the months shown on a phone and beyond, the right-to-left layout and focus coming back. Hidden
 // from the sidebar and the Docs page, and still run as tests (07 §4.2, guidelines/adr/0013).
 const meta: Meta = {
-  title: "Organisms/Inputs/DateRangePicker/Checks",
+  title: "Components/DateRangePicker/Checks",
+  id: "organisms-inputs-daterangepicker-checks",
   tags: ["!dev"],
   parameters: { layout: "fullscreen" },
 };

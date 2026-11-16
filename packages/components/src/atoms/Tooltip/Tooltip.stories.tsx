@@ -28,7 +28,8 @@ const triggerControl = {
 };
 
 const meta: Meta<typeof Tooltip> = {
-  title: "Atoms/Overlay/Tooltip",
+  title: "Components/Tooltip",
+  id: "atoms-overlay-tooltip",
   component: Tooltip,
   parameters: { layout: "padded" },
   // Content prop first, then the trigger, then core visual/behavioral

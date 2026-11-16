@@ -62,7 +62,8 @@ function ProfilePreview() {
 }
 
 const meta: Meta<PlaygroundArgs> = {
-  title: "Molecules/Overlay/HoverCard",
+  title: "Components/HoverCard",
+  id: "molecules-overlay-hovercard",
   parameters: { layout: "padded" },
   argTypes: {
     defaultOpen: {

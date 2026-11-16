@@ -30,7 +30,8 @@ const iconControl = {
 };
 
 const meta: Meta<typeof Tag> = {
-  title: "Atoms/Data Display/Tag",
+  title: "Components/Tag",
+  id: "atoms-data-display-tag",
   component: Tag,
   parameters: { layout: "padded" },
   // Ordered content prop first, then core visual props, then

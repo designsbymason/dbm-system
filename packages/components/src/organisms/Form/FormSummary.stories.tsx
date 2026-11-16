@@ -7,7 +7,8 @@ import { Form } from "./Form";
 // compound sub-part, not an independently browsable component (ADR-0013), so `tags: ["!dev"]` keeps it out of the
 // sidebar while leaving it indexed for the Docs page.
 const meta: Meta<typeof Form.Summary> = {
-  title: "Organisms/Inputs/Form/Summary",
+  title: "Components/Form/Summary",
+  id: "organisms-inputs-form-summary",
   component: Form.Summary,
   tags: ["!dev"],
   argTypes: {

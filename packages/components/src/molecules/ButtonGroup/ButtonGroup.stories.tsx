@@ -33,7 +33,8 @@ const DemoButtons = ({ count }: { count: number }) => (
 );
 
 const meta: Meta<PlaygroundArgs> = {
-  title: "Molecules/Inputs/ButtonGroup",
+  title: "Components/ButtonGroup",
+  id: "molecules-inputs-buttongroup",
   component: ButtonGroup,
   parameters: { layout: "padded" },
   // Core visual props first, then behavioral/state props, then advanced/escape-hatch props last — the same

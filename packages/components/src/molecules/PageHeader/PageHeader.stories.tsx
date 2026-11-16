@@ -24,7 +24,8 @@ const trail = (
 );
 
 const meta: Meta<PlaygroundArgs> = {
-  title: "Molecules/Layout/PageHeader",
+  title: "Components/PageHeader",
+  id: "molecules-layout-pageheader",
   component: PageHeader,
   subcomponents: {},
   parameters: { layout: "padded" },

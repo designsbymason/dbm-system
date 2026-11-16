@@ -6,7 +6,8 @@ import { Splitter } from "./Splitter";
 // `tags: ["!dev"]` keeps every story here out of the sidebar while leaving it indexed for the Docs page. The render
 // wraps the pane in a real `Splitter`, which is where it gets its size.
 const meta: Meta<typeof Splitter.Pane> = {
-  title: "Molecules/Layout/Splitter/Pane",
+  title: "Components/Splitter/Pane",
+  id: "molecules-layout-splitter-pane",
   component: Splitter.Pane,
   tags: ["!dev"],
   argTypes: {

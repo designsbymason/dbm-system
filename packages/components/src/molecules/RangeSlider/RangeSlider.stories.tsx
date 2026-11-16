@@ -20,7 +20,8 @@ interface PlaygroundArgs extends RangeSliderProps {
 const noControls = { control: false } as const;
 
 const meta: Meta<PlaygroundArgs> = {
-  title: "Molecules/Inputs/RangeSlider",
+  title: "Components/RangeSlider",
+  id: "molecules-inputs-rangeslider",
   component: RangeSlider,
   parameters: { layout: "padded" },
   // Core visual props first, then behavioral/state props, then advanced/escape-hatch props last — the same

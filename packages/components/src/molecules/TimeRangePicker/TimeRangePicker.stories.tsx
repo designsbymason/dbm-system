@@ -8,7 +8,8 @@ import { timeRangePickerPlaygroundSnippet, timeRangePickerSnippets } from "./Tim
 import type { TimeRangeValue } from "./TimeRangePicker.types";
 
 const meta: Meta<typeof TimeRangePicker> = {
-  title: "Molecules/Inputs/TimeRangePicker",
+  title: "Components/TimeRangePicker",
+  id: "molecules-inputs-timerangepicker",
   component: TimeRangePicker,
   parameters: { layout: "padded" },
   argTypes: {

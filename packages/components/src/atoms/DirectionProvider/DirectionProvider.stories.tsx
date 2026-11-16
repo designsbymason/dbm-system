@@ -8,7 +8,8 @@ import { DirectionProvider } from "./DirectionProvider";
 import { directionProviderPlaygroundSnippet, directionProviderSnippets } from "./DirectionProvider.snippets";
 
 const meta: Meta<typeof DirectionProvider> = {
-  title: "Atoms/Utility/DirectionProvider",
+  title: "Components/DirectionProvider",
+  id: "atoms-utility-directionprovider",
   component: DirectionProvider,
   parameters: { layout: "padded" },
   argTypes: {

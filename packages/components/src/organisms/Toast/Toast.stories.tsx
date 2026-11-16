@@ -111,7 +111,8 @@ const noControls = {
 } as const;
 
 const meta: Meta<PlaygroundArgs> = {
-  title: "Organisms/Feedback/Toast",
+  title: "Components/Toast",
+  id: "organisms-feedback-toast",
   parameters: { layout: "padded" },
   argTypes: {
     title: {

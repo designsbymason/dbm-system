@@ -8,7 +8,8 @@ import { TimePicker } from "./TimePicker";
 import { timePickerPlaygroundSnippet, timePickerSnippets } from "./TimePicker.snippets";
 
 const meta: Meta<typeof TimePicker> = {
-  title: "Molecules/Inputs/TimePicker",
+  title: "Components/TimePicker",
+  id: "molecules-inputs-timepicker",
   component: TimePicker,
   parameters: { layout: "padded" },
   // Core value props first, then the format and constraint props, then visual and state props, then the picker and

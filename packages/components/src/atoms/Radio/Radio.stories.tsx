@@ -6,7 +6,8 @@ import { Radio } from "./Radio";
 import { radioPlaygroundSnippet, radioSnippets } from "./Radio.snippets";
 
 const meta: Meta<typeof Radio> = {
-  title: "Atoms/Inputs/Radio",
+  title: "Components/Radio",
+  id: "atoms-inputs-radio",
   component: Radio,
   parameters: { layout: "padded" },
   // Keys below are ordered to match the component's own `RadioProps`

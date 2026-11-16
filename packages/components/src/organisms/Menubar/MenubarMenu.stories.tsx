@@ -3,7 +3,8 @@ import { Menubar } from "./Menubar";
 
 // Docs-only — see MenubarRoot.stories.tsx's own comment for the full rationale (guidelines/adr/0013).
 const meta: Meta<typeof Menubar.Menu> = {
-  title: "Organisms/Navigation/Menubar/Menu",
+  title: "Components/Menubar/Menu",
+  id: "organisms-navigation-menubar-menu",
   component: Menubar.Menu,
   tags: ["!dev"],
   argTypes: {

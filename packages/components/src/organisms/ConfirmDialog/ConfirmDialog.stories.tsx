@@ -47,7 +47,8 @@ const noControls = {
 } as const;
 
 const meta: Meta<PlaygroundArgs> = {
-  title: "Organisms/Overlay/ConfirmDialog",
+  title: "Components/ConfirmDialog",
+  id: "organisms-overlay-confirmdialog",
   component: ConfirmDialog,
   parameters: { layout: "padded" },
   argTypes: {

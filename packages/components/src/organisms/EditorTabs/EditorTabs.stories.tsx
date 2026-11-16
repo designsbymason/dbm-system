@@ -59,7 +59,8 @@ const except = (...keys: Array<keyof typeof noControls>) =>
   Object.fromEntries(Object.entries(noControls).filter(([key]) => !keys.includes(key as keyof typeof noControls)));
 
 const meta: Meta<PlaygroundArgs> = {
-  title: "Organisms/Navigation/EditorTabs",
+  title: "Components/EditorTabs",
+  id: "organisms-navigation-editortabs",
   parameters: { layout: "padded" },
   argTypes: {
     tabs: {

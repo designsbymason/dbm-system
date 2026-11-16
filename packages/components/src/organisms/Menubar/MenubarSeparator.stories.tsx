@@ -3,7 +3,8 @@ import { Menubar } from "./Menubar";
 
 // Docs-only — see MenubarRoot.stories.tsx's own comment for the full rationale (guidelines/adr/0013).
 const meta: Meta<typeof Menubar.Separator> = {
-  title: "Organisms/Navigation/Menubar/Separator",
+  title: "Components/Menubar/Separator",
+  id: "organisms-navigation-menubar-separator",
   component: Menubar.Separator,
   tags: ["!dev"],
   argTypes: {

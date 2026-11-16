@@ -11,7 +11,8 @@ import { brokenImages, getManyImages, sampleImages } from "./ImageViewerStoryKit
 // touch gestures, the scroll lock, contrast from the computed styles, forced colours and reduced motion. Hidden from the
 // sidebar and the Docs page, and still run as tests (07 §4.2, guidelines/adr/0013).
 const meta: Meta = {
-  title: "Organisms/Media/ImageViewer/Checks",
+  title: "Components/ImageViewer/Checks",
+  id: "organisms-media-imageviewer-checks",
   tags: ["!dev"],
   parameters: { layout: "fullscreen" },
 };

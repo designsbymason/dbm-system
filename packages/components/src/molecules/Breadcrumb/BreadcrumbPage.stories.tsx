@@ -4,7 +4,8 @@ import { Breadcrumb } from "./Breadcrumb";
 // Docs-only (guidelines/adr/0013) — `Breadcrumb.Page`'s own props get their own
 // Properties table on Breadcrumb.mdx.
 const meta: Meta<typeof Breadcrumb.Page> = {
-  title: "Molecules/Navigation/Breadcrumb/Page",
+  title: "Components/Breadcrumb/Page",
+  id: "molecules-navigation-breadcrumb-page",
   component: Breadcrumb.Page,
   tags: ["!dev"],
   argTypes: {

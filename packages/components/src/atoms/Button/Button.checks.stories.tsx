@@ -10,7 +10,8 @@ import { Button } from "./Button";
 // pairings in the theme the story runs in. `guidelines/03-token-system-spec.md` has the method; the pairings were also
 // computed from the tokens for all four themes (Purple and Emerald, light and dark) when the tone was added.
 const meta: Meta = {
-  title: "Atoms/Inputs/Button/Checks",
+  title: "Components/Button/Checks",
+  id: "atoms-inputs-button-checks",
   tags: ["!dev"],
   parameters: { layout: "padded" },
 };

@@ -6,7 +6,8 @@ import { TagsInput } from "./TagsInput";
 import { tagsInputPlaygroundSnippet, tagsInputSnippets } from "./TagsInput.snippets";
 
 const meta: Meta<typeof TagsInput> = {
-  title: "Molecules/Inputs/TagsInput",
+  title: "Components/TagsInput",
+  id: "molecules-inputs-tagsinput",
   component: TagsInput,
   parameters: { layout: "padded" },
   // Content props first, then core visual props, then behavioural and state props, then the advanced and

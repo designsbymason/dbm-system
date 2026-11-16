@@ -5,7 +5,8 @@ import { ContextMenu } from "./ContextMenu";
 // the Playground's meta also carries `ContextMenu.Content`'s props (one render drives both), so a table built from it would
 // list `size`, `alignOffset`… as root props and omit `open`.
 const meta: Meta<typeof ContextMenu> = {
-  title: "Organisms/Overlay/ContextMenu/Root",
+  title: "Components/ContextMenu/Root",
+  id: "organisms-overlay-contextmenu-root",
   component: ContextMenu,
   tags: ["!dev"],
   argTypes: {

@@ -27,7 +27,8 @@ const DemoOptions = () => (
 );
 
 const meta: Meta<typeof Select> = {
-  title: "Molecules/Inputs/Select",
+  title: "Components/Select",
+  id: "molecules-inputs-select",
   component: Select,
   parameters: { layout: "padded" },
   // Ordered to match SelectProps' own declaration order (value,

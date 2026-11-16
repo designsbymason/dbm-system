@@ -90,7 +90,8 @@ const noControls: Record<keyof PlaygroundArgs, { control: false }> = {
 };
 
 const meta: Meta<PlaygroundArgs & DocumentedProps> = {
-  title: "Organisms/Inputs/FileUpload",
+  title: "Components/FileUpload",
+  id: "organisms-inputs-fileupload",
   parameters: { layout: "padded" },
   argTypes: {
     children: {

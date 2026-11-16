@@ -3,7 +3,8 @@ import { Sidebar } from "./Sidebar";
 
 // Docs-only (guidelines/adr/0013). This resolves Footer's own argTypes for its Properties table on the main Docs page.
 const meta: Meta<typeof Sidebar.Footer> = {
-  title: "Organisms/Navigation/Sidebar/Footer",
+  title: "Components/Sidebar/Footer",
+  id: "organisms-navigation-sidebar-footer",
   component: Sidebar.Footer,
   tags: ["!dev"],
   argTypes: {

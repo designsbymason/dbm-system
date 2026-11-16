@@ -5,7 +5,8 @@ import { preventNavigation } from "./NavbarStoryKit";
 
 // Docs-only — see NavbarRoot.stories.tsx's own comment for the full rationale (guidelines/adr/0013).
 const meta: Meta<typeof Navbar.PanelActions> = {
-  title: "Organisms/Navigation/Navbar/PanelActions",
+  title: "Components/Navbar/PanelActions",
+  id: "organisms-navigation-navbar-panelactions",
   component: Navbar.PanelActions,
   tags: ["!dev"],
   argTypes: {

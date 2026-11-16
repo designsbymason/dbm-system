@@ -20,7 +20,8 @@ const demoContainerStyle = {
 } as const;
 
 const meta: Meta<typeof FormField> = {
-  title: "Molecules/Inputs/FormField",
+  title: "Components/FormField",
+  id: "molecules-inputs-formfield",
   component: FormField,
   parameters: { layout: "padded" },
   // Ordered to match FormFieldProps' own declaration order (label,

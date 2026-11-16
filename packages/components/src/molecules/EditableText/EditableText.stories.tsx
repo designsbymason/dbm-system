@@ -8,7 +8,8 @@ import type { EditableTextActions } from "./EditableText.types";
 import { editableTextPlaygroundSnippet, editableTextSnippets } from "./EditableText.snippets";
 
 const meta: Meta<typeof EditableText> = {
-  title: "Molecules/Inputs/EditableText",
+  title: "Components/EditableText",
+  id: "molecules-inputs-editabletext",
   component: EditableText,
   parameters: { layout: "padded" },
   // The field and the committed value are kept by the component itself, so a changed `defaultValue`

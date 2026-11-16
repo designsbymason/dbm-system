@@ -6,7 +6,8 @@ import { Tabs } from "./Tabs";
 // Properties table on Tabs.mdx. Rendered inside a real `Tabs.List` (Radix's own
 // context-scoped Trigger throws outside one).
 const meta: Meta<typeof Tabs.Trigger> = {
-  title: "Molecules/Navigation/Tabs/Trigger",
+  title: "Components/Tabs/Trigger",
+  id: "molecules-navigation-tabs-trigger",
   component: Tabs.Trigger,
   tags: ["!dev"],
   argTypes: {

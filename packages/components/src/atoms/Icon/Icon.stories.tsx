@@ -56,7 +56,8 @@ const onColorTones: { tone: IconTone; bg: string }[] = [
 ];
 
 const meta: Meta<typeof Icon> = {
-  title: "Atoms/Media/Icon",
+  title: "Components/Icon",
+  id: "atoms-media-icon",
   component: Icon,
   parameters: { layout: "padded" },
   // Ordered to match IconProps' own declaration order (icon, size, weight,

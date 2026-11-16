@@ -5,7 +5,8 @@ import { ImageViewerButton } from "./ImageViewer";
 // Docs-only: its props are shown in a Properties table on ImageViewer's Docs page, with no sidebar entry of its own
 // (guidelines/adr/0013). The button is drawn for the viewer's dark stage, so it is shown on one.
 const meta: Meta<typeof ImageViewerButton> = {
-  title: "Organisms/Media/ImageViewer/Button",
+  title: "Components/ImageViewer/Button",
+  id: "organisms-media-imageviewer-button",
   component: ImageViewerButton,
   tags: ["!dev"],
   argTypes: {

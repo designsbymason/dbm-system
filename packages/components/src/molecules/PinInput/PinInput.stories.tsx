@@ -8,7 +8,8 @@ import { PinInput } from "./PinInput";
 import { pinInputPlaygroundSnippet, pinInputSnippets } from "./PinInput.snippets";
 
 const meta: Meta<typeof PinInput> = {
-  title: "Molecules/Inputs/PinInput",
+  title: "Components/PinInput",
+  id: "molecules-inputs-pininput",
   component: PinInput,
   parameters: { layout: "padded" },
   // Content-ish props first (length, type), then the look, then behaviour and state, then the escape hatches last

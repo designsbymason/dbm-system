@@ -5,7 +5,8 @@ import { DemoSlide } from "./CarouselStoryKit";
 // Docs-only (guidelines/adr/0013) — `Carousel.AutoPlayToggle`'s own props get their own Properties table on Carousel.mdx.
 // Rendered inside a real `Carousel`, whose context it reads.
 const meta: Meta<typeof Carousel.AutoPlayToggle> = {
-  title: "Organisms/Media/Carousel/AutoPlayToggle",
+  title: "Components/Carousel/AutoPlayToggle",
+  id: "organisms-media-carousel-autoplaytoggle",
   component: Carousel.AutoPlayToggle,
   tags: ["!dev"],
   argTypes: {

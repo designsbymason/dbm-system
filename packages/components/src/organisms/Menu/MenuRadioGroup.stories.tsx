@@ -3,7 +3,8 @@ import { Menu } from "./Menu";
 
 // Docs-only — see MenuRoot.stories.tsx's own comment for the full rationale (guidelines/adr/0013).
 const meta: Meta<typeof Menu.RadioGroup> = {
-  title: "Organisms/Navigation/Menu/RadioGroup",
+  title: "Components/Menu/RadioGroup",
+  id: "organisms-navigation-menu-radiogroup",
   component: Menu.RadioGroup,
   tags: ["!dev"],
   argTypes: {

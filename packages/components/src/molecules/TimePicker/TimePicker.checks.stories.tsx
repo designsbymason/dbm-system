@@ -10,7 +10,8 @@ import { TimePicker } from "./TimePicker";
 // the sidebar and the Docs page): what jsdom can't evaluate — real layout, text direction, forced colours, focus
 // order — measured in Chromium.
 const meta: Meta = {
-  title: "Molecules/Inputs/TimePicker/Checks",
+  title: "Components/TimePicker/Checks",
+  id: "molecules-inputs-timepicker-checks",
   tags: ["!dev"],
   parameters: { layout: "padded" },
 };

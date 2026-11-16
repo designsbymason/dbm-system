@@ -3,7 +3,8 @@ import { Sidebar } from "./Sidebar";
 
 // Docs-only (guidelines/adr/0013). This resolves MenuButton's own argTypes for its Properties table on the main Docs page.
 const meta: Meta<typeof Sidebar.MenuButton> = {
-  title: "Organisms/Navigation/Sidebar/MenuButton",
+  title: "Components/Sidebar/MenuButton",
+  id: "organisms-navigation-sidebar-menubutton",
   component: Sidebar.MenuButton,
   tags: ["!dev"],
   argTypes: {

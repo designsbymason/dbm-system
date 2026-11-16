@@ -4,7 +4,8 @@ import { Skeleton } from "./Skeleton";
 import { skeletonPlaygroundSnippet, skeletonSnippets } from "./Skeleton.snippets";
 
 const meta: Meta<typeof Skeleton> = {
-  title: "Atoms/Data Display/Skeleton",
+  title: "Components/Skeleton",
+  id: "atoms-data-display-skeleton",
   component: Skeleton,
   parameters: { layout: "padded" },
   // Ordered to match SkeletonProps' own declaration order (variant, width,

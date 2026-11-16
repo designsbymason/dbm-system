@@ -13,7 +13,8 @@ import { LongText } from "./DialogStoryKit";
 // breakpoint, computed style from the cascade and the stylesheet's own rules. Hidden from the sidebar and the
 // Docs page, and still run as tests (07 §4.2, guidelines/adr/0013).
 const meta: Meta = {
-  title: "Organisms/Overlay/Dialog/Checks",
+  title: "Components/Dialog/Checks",
+  id: "organisms-overlay-dialog-checks",
   tags: ["!dev"],
   parameters: { layout: "fullscreen" },
 };

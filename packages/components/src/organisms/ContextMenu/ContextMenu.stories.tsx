@@ -37,7 +37,8 @@ const playgroundSource = {
 };
 
 const meta: Meta<PlaygroundArgs> = {
-  title: "Organisms/Overlay/ContextMenu",
+  title: "Components/ContextMenu",
+  id: "organisms-overlay-contextmenu",
   parameters: { layout: "padded" },
   argTypes: {
     size: {

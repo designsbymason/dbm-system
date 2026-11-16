@@ -58,7 +58,8 @@ function parseNumberArg(value: unknown): number | undefined {
 }
 
 const meta: Meta<typeof List> = {
-  title: "Molecules/Typography/List",
+  title: "Components/List",
+  id: "molecules-typography-list",
   component: List,
   parameters: { layout: "padded" },
   // Ordered to match ListProps' own declaration order (as, marker, spacing,

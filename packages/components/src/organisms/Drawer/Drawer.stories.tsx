@@ -77,7 +77,8 @@ const noControls = {
 } as const;
 
 const meta: Meta<PlaygroundArgs> = {
-  title: "Organisms/Overlay/Drawer",
+  title: "Components/Drawer",
+  id: "organisms-overlay-drawer",
   parameters: { layout: "padded" },
   // Tells the demo box whether it is on a Docs page (a compact frame) or a story of its own (the whole canvas).
   decorators: [

@@ -4,7 +4,8 @@ import { Drawer } from "./Drawer";
 
 // Docs-only — see DrawerRoot.stories.tsx's own comment for the full rationale (guidelines/adr/0013).
 const meta: Meta<typeof Drawer.Footer> = {
-  title: "Organisms/Overlay/Drawer/Footer",
+  title: "Components/Drawer/Footer",
+  id: "organisms-overlay-drawer-footer",
   component: Drawer.Footer,
   tags: ["!dev"],
   argTypes: {

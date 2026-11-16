@@ -14,7 +14,8 @@ const iconControl = {
 };
 
 const meta: Meta<typeof Menu.SubTrigger> = {
-  title: "Organisms/Navigation/Menu/SubTrigger",
+  title: "Components/Menu/SubTrigger",
+  id: "organisms-navigation-menu-subtrigger",
   component: Menu.SubTrigger,
   tags: ["!dev"],
   argTypes: {

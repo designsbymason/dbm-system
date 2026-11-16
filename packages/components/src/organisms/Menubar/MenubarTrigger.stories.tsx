@@ -3,7 +3,8 @@ import { Menubar } from "../Menubar";
 
 // Docs-only — see MenubarRoot.stories.tsx's own comment for the full rationale (guidelines/adr/0013).
 const meta: Meta<typeof Menubar.Trigger> = {
-  title: "Organisms/Navigation/Menubar/Trigger",
+  title: "Components/Menubar/Trigger",
+  id: "organisms-navigation-menubar-trigger",
   component: Menubar.Trigger,
   tags: ["!dev"],
   argTypes: {

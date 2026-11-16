@@ -6,7 +6,8 @@ import { Box } from "./Box";
 import { boxPlaygroundSnippet, boxSnippets } from "./Box.snippets";
 
 const meta: Meta<typeof Box> = {
-  title: "Atoms/Layout/Box",
+  title: "Components/Box",
+  id: "atoms-layout-box",
   component: Box,
   // No `tags: ["autodocs"]` — Box.mdx is a hand-authored Docs page (see
   // guidelines/07-storybook-and-documentation-standards.md §4) that embeds

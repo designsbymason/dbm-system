@@ -4,7 +4,8 @@ import { Avatar } from "./Avatar";
 import { avatarPlaygroundSnippet, avatarSnippets } from "./Avatar.snippets";
 
 const meta: Meta<typeof Avatar> = {
-  title: "Atoms/Data Display/Avatar",
+  title: "Components/Avatar",
+  id: "atoms-data-display-avatar",
   component: Avatar,
   parameters: { layout: "padded" },
   // Every key below is listed explicitly, in the order it should appear in

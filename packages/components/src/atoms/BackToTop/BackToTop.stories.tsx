@@ -7,7 +7,8 @@ import { backToTopPlaygroundSnippet, backToTopSnippets } from "./BackToTop.snipp
 import type { BackToTopProps } from "./BackToTop.types";
 
 const meta: Meta<typeof BackToTop> = {
-  title: "Atoms/Navigation/BackToTop",
+  title: "Components/BackToTop",
+  id: "atoms-navigation-backtotop",
   component: BackToTop,
   // BackToTop only makes sense against real scroll space — every story
   // here needs its own tall/scrollable canvas, so fullscreen (rather than

@@ -77,7 +77,8 @@ const noControls: Record<keyof PlaygroundArgs, { control: false }> = {
 };
 
 const meta: Meta<PlaygroundArgs> = {
-  title: "Molecules/Data Display/Pagination",
+  title: "Components/Pagination",
+  id: "molecules-data-display-pagination",
   parameters: { layout: "padded" },
   argTypes: {
     pageCount: {

@@ -3,7 +3,8 @@ import { AspectRatio } from "./AspectRatio";
 import { aspectRatioPlaygroundSnippet, aspectRatioSnippets } from "./AspectRatio.snippets";
 
 const meta: Meta<typeof AspectRatio> = {
-  title: "Atoms/Layout/AspectRatio",
+  title: "Components/AspectRatio",
+  id: "atoms-layout-aspectratio",
   component: AspectRatio,
   parameters: { layout: "padded" },
   // Ordered to match AspectRatioProps' own declaration order (ratio,

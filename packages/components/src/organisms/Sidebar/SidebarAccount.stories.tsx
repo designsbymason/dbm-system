@@ -4,7 +4,8 @@ import { Sidebar } from "./Sidebar";
 
 // Docs-only (guidelines/adr/0013). This resolves Sidebar.Account's own argTypes for its Properties table on the main Docs page.
 const meta: Meta<typeof Sidebar.Account> = {
-  title: "Organisms/Navigation/Sidebar/Account",
+  title: "Components/Sidebar/Account",
+  id: "organisms-navigation-sidebar-account",
   component: Sidebar.Account,
   tags: ["!dev"],
   argTypes: {

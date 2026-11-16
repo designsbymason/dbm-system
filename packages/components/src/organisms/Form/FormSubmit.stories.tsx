@@ -4,7 +4,8 @@ import { Form } from "./Form";
 // Docs-only: resolves `Form.Submit`'s argTypes for the Properties table on `Form.mdx` (ADR-0013). It is a `Button`
 // with `type="submit"`, so only what it changes is listed; every other `Button` prop passes through.
 const meta: Meta<typeof Form.Submit> = {
-  title: "Organisms/Inputs/Form/Submit",
+  title: "Components/Form/Submit",
+  id: "organisms-inputs-form-submit",
   component: Form.Submit,
   tags: ["!dev"],
   argTypes: {

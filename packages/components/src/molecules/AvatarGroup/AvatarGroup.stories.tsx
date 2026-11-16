@@ -36,7 +36,8 @@ const DemoGroup = ({ count, overflowButton, total, onOverflowClick, ...args }: P
 const stack = { display: "flex", flexDirection: "column", gap: "var(--dbm-space-5)", alignItems: "flex-start" } as const;
 
 const meta: Meta<PlaygroundArgs> = {
-  title: "Molecules/Data Display/AvatarGroup",
+  title: "Components/AvatarGroup",
+  id: "molecules-data-display-avatargroup",
   component: AvatarGroup,
   parameters: { layout: "padded" },
   // Core visual props first, then behavioral/state props, then advanced/escape-hatch props last — the same

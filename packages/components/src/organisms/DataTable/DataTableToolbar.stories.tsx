@@ -5,7 +5,8 @@ import { employeeColumns, employees } from "./DataTableStoryKit";
 // Docs-only (guidelines/adr/0013) — `DataTable.Toolbar`'s own props get their own Properties table on DataTable.mdx. It is a
 // TableToolbar, drawn above the table; the props are TableToolbar's. Rendered inside a real DataTable.
 const meta: Meta<typeof DataTable.Toolbar> = {
-  title: "Organisms/Data Display/DataTable/Toolbar",
+  title: "Components/DataTable/Toolbar",
+  id: "organisms-data-display-datatable-toolbar",
   component: DataTable.Toolbar,
   tags: ["!dev"],
   argTypes: {

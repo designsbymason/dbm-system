@@ -25,7 +25,8 @@ const iconControl = {
 };
 
 const meta: Meta<typeof IconButton> = {
-  title: "Atoms/Inputs/IconButton",
+  title: "Components/IconButton",
+  id: "atoms-inputs-iconbutton",
   component: IconButton,
   parameters: { layout: "padded" },
   // Ordered to match IconButtonProps' own declaration order (content prop

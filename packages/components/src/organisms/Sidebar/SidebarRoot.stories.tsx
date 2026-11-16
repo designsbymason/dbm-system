@@ -6,7 +6,8 @@ import { Sidebar } from "./Sidebar";
 const readOnly = (description: string) => ({ control: false as const, description });
 
 const meta: Meta<typeof Sidebar> = {
-  title: "Organisms/Navigation/Sidebar/Root",
+  title: "Components/Sidebar/Root",
+  id: "organisms-navigation-sidebar-root",
   component: Sidebar,
   tags: ["!dev"],
   argTypes: {

@@ -4,7 +4,8 @@ import { CloseButton } from "./CloseButton";
 import { closeButtonPlaygroundSnippet, closeButtonSnippets } from "./CloseButton.snippets";
 
 const meta: Meta<typeof CloseButton> = {
-  title: "Atoms/Inputs/CloseButton",
+  title: "Components/CloseButton",
+  id: "atoms-inputs-closebutton",
   component: CloseButton,
   parameters: { layout: "padded" },
   // Ordered core visual props → behavioral/state props → advanced/

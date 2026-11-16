@@ -6,7 +6,8 @@ import { Badge } from "./Badge";
 import { badgePlaygroundSnippet, badgeSnippets } from "./Badge.snippets";
 
 const meta: Meta<typeof Badge> = {
-  title: "Atoms/Data Display/Badge",
+  title: "Components/Badge",
+  id: "atoms-data-display-badge",
   component: Badge,
   parameters: { layout: "padded" },
   // Ordered content prop first, then core visual props, then behavioral

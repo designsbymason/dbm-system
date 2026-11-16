@@ -5,7 +5,8 @@ import { Stepper } from "./Stepper";
 // Properties table on Stepper.mdx. Rendered inside a real `Stepper`, whose
 // context the step reads.
 const meta: Meta<typeof Stepper.Step> = {
-  title: "Organisms/Navigation/Stepper/Step",
+  title: "Components/Stepper/Step",
+  id: "organisms-navigation-stepper-step",
   component: Stepper.Step,
   tags: ["!dev"],
   argTypes: {

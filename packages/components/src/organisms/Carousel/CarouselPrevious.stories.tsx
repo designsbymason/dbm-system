@@ -5,7 +5,8 @@ import { DemoSlide } from "./CarouselStoryKit";
 // Docs-only (guidelines/adr/0013) — `Carousel.Previous`'s own props get their own Properties table on Carousel.mdx.
 // Rendered inside a real `Carousel`, whose context it reads.
 const meta: Meta<typeof Carousel.Previous> = {
-  title: "Organisms/Media/Carousel/Previous",
+  title: "Components/Carousel/Previous",
+  id: "organisms-media-carousel-previous",
   component: Carousel.Previous,
   tags: ["!dev"],
   argTypes: {

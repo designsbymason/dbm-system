@@ -7,7 +7,8 @@ import { affixSnippets } from "./Affix.snippets";
 import type { AffixProps } from "./Affix.types";
 
 const meta: Meta<typeof Affix> = {
-  title: "Atoms/Layout/Affix",
+  title: "Components/Affix",
+  id: "atoms-layout-affix",
   component: Affix,
   // Affix only makes sense against real scroll space — every story here
   // needs its own tall/scrollable canvas, so fullscreen (rather than the

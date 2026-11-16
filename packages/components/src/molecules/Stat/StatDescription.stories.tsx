@@ -5,7 +5,8 @@ import { Stat } from "./Stat";
 // Properties table on Stat.mdx, separate from the umbrella table. Rendered
 // inside a real `Stat` so the sub-part is shown in its real context.
 const meta: Meta<typeof Stat.Description> = {
-  title: "Molecules/Data Display/Stat/Description",
+  title: "Components/Stat/Description",
+  id: "molecules-data-display-stat-description",
   component: Stat.Description,
   tags: ["!dev"],
   argTypes: {

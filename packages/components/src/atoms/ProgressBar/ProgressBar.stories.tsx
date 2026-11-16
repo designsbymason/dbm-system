@@ -4,7 +4,8 @@ import { progressBarPlaygroundSnippet, progressBarSnippets } from "./ProgressBar
 import type { ProgressBarProps } from "./ProgressBar.types";
 
 const meta: Meta<typeof ProgressBar> = {
-  title: "Atoms/Feedback/ProgressBar",
+  title: "Components/ProgressBar",
+  id: "atoms-feedback-progressbar",
   component: ProgressBar,
   parameters: { layout: "padded" },
   // Ordered to match ProgressBarProps' own declaration order (value, max,

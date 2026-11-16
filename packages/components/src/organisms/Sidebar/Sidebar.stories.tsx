@@ -98,7 +98,8 @@ const noControls = Object.fromEntries(editableArgs.map((name) => [name, { contro
 const readOnly = (description: string) => ({ control: false as const, description });
 
 const meta: Meta<PlaygroundArgs> = {
-  title: "Organisms/Navigation/Sidebar",
+  title: "Components/Sidebar",
+  id: "organisms-navigation-sidebar",
   parameters: { layout: "padded" },
   decorators: [
     // `defaultCollapsed` and `defaultMenuOpen` are only read when the sidebar mounts, so changing a control remounts it.

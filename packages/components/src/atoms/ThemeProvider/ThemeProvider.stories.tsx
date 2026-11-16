@@ -27,7 +27,8 @@ const Demo = () => (
 );
 
 const meta: Meta<typeof ThemeProvider> = {
-  title: "Atoms/Utility/ThemeProvider",
+  title: "Components/ThemeProvider",
+  id: "atoms-utility-themeprovider",
   component: ThemeProvider,
   parameters: { layout: "padded" },
   // Ordered to match ThemeProviderProps' own declaration order (brand, mode,

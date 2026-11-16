@@ -3,7 +3,8 @@ import { Dialog } from "./Dialog";
 
 // Docs-only — see DialogRoot.stories.tsx's own comment for the full rationale (guidelines/adr/0013).
 const meta: Meta<typeof Dialog.Header> = {
-  title: "Organisms/Overlay/Dialog/Header",
+  title: "Components/Dialog/Header",
+  id: "organisms-overlay-dialog-header",
   component: Dialog.Header,
   tags: ["!dev"],
   argTypes: {

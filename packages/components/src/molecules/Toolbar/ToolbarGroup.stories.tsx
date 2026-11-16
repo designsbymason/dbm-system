@@ -3,7 +3,8 @@ import { Toolbar } from "./Toolbar";
 
 // Docs-only (guidelines/adr/0013) — `Toolbar.Group`'s own props get their own Properties table on Toolbar.mdx.
 const meta: Meta<typeof Toolbar.Group> = {
-  title: "Molecules/Inputs/Toolbar/Group",
+  title: "Components/Toolbar/Group",
+  id: "molecules-inputs-toolbar-group",
   component: Toolbar.Group,
   tags: ["!dev"],
   argTypes: {

@@ -3,7 +3,8 @@ import { PageHeader } from "./PageHeader";
 
 // Docs-only (guidelines/adr/0013) — `PageHeader.Breadcrumbs`'s own props get their own Properties table on PageHeader.mdx.
 const meta: Meta<typeof PageHeader.Breadcrumbs> = {
-  title: "Molecules/Layout/PageHeader/Breadcrumbs",
+  title: "Components/PageHeader/Breadcrumbs",
+  id: "molecules-layout-pageheader-breadcrumbs",
   component: PageHeader.Breadcrumbs,
   tags: ["!dev"],
   argTypes: {

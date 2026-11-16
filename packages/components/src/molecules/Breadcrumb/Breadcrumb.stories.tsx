@@ -117,7 +117,8 @@ const noControls = {
 } as const;
 
 const meta: Meta<PlaygroundArgs> = {
-  title: "Molecules/Navigation/Breadcrumb",
+  title: "Components/Breadcrumb",
+  id: "molecules-navigation-breadcrumb",
   parameters: { layout: "padded" },
   argTypes: {
     children: {

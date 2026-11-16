@@ -11,7 +11,8 @@ import { SearchingCombobox, countries, manyOptions, plans } from "./ComboboxStor
 const NONE = "none" as unknown as ComboboxProps["highlightTone"];
 
 const meta: Meta<typeof Combobox> = {
-  title: "Organisms/Inputs/Combobox",
+  title: "Components/Combobox",
+  id: "organisms-inputs-combobox",
   component: Combobox,
   parameters: { layout: "padded" },
   // Content props first, then core visual props, then behavioural and state props, then the advanced and

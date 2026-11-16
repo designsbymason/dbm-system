@@ -17,7 +17,8 @@ import type { InputSize } from "./Input.types";
 // The checks only a real browser can make, run as stories but hidden from the sidebar and the Docs page (`!dev`): the icons in an input
 // are the input's own step, and a larger icon (and the clear button's hit area round it) never makes the field taller.
 const meta: Meta = {
-  title: "Atoms/Inputs/Input/Checks",
+  title: "Components/Input/Checks",
+  id: "atoms-inputs-input-checks",
   tags: ["!dev"],
   parameters: { layout: "padded" },
 };

@@ -13,7 +13,8 @@ import { SearchingMultiSelect, countries, manyOptions, people, plans } from "./M
 const NONE = "none" as unknown as MultiSelectProps["highlightTone"];
 
 const meta: Meta<typeof MultiSelect> = {
-  title: "Organisms/Inputs/MultiSelect",
+  title: "Components/MultiSelect",
+  id: "organisms-inputs-multiselect",
   component: MultiSelect,
   parameters: { layout: "padded" },
   // Content props first, then core visual props, then behavioural and state props, then the advanced and

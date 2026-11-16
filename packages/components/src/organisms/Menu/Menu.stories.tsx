@@ -46,7 +46,8 @@ const playgroundSource = {
 };
 
 const meta: Meta<PlaygroundArgs> = {
-  title: "Organisms/Navigation/Menu",
+  title: "Components/Menu",
+  id: "organisms-navigation-menu",
   parameters: { layout: "padded" },
   argTypes: {
     size: {

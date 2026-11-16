@@ -4,7 +4,8 @@ import { preventNavigation } from "./SidebarStoryKit";
 
 // Docs-only (guidelines/adr/0013). This resolves Content's own argTypes for its Properties table on the main Docs page.
 const meta: Meta<typeof Sidebar.Content> = {
-  title: "Organisms/Navigation/Sidebar/Content",
+  title: "Components/Sidebar/Content",
+  id: "organisms-navigation-sidebar-content",
   component: Sidebar.Content,
   tags: ["!dev"],
   argTypes: {

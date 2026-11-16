@@ -6,7 +6,8 @@ import { Toast } from "./Toast";
 // the two. A compound sub-part's `component: Parent.Sub` is a property access docgen can't trace, so every row
 // is declared here with its own description and default.
 const meta: Meta<typeof Toast.Provider> = {
-  title: "Organisms/Feedback/Toast/Provider",
+  title: "Components/Toast/Provider",
+  id: "organisms-feedback-toast-provider",
   component: Toast.Provider,
   tags: ["!dev"],
   argTypes: {

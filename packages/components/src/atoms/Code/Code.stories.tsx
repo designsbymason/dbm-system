@@ -4,7 +4,8 @@ import { Code } from "./Code";
 import { codePlaygroundSnippet, codeSnippets } from "./Code.snippets";
 
 const meta: Meta<typeof Code> = {
-  title: "Atoms/Typography/Code",
+  title: "Components/Code",
+  id: "atoms-typography-code",
   component: Code,
   parameters: { layout: "padded" },
   // Ordered to match CodeProps' own declaration order (children), then the

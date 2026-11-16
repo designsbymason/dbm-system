@@ -58,7 +58,8 @@ function DemoLongLines() {
 }
 
 const meta: Meta<typeof ScrollArea> = {
-  title: "Molecules/Layout/ScrollArea",
+  title: "Components/ScrollArea",
+  id: "molecules-layout-scrollarea",
   component: ScrollArea,
   parameters: { layout: "padded" },
   // Content prop first, then core visual props, then behavioral/state props, then

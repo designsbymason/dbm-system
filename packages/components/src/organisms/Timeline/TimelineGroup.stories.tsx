@@ -4,7 +4,8 @@ import { Timeline } from "./Timeline";
 // Docs-only (guidelines/adr/0013) — `Timeline.Group`'s own props get their own
 // Properties table on Timeline.mdx. Rendered inside a real `Timeline`.
 const meta: Meta<typeof Timeline.Group> = {
-  title: "Organisms/Data Display/Timeline/Group",
+  title: "Components/Timeline/Group",
+  id: "organisms-data-display-timeline-group",
   component: Timeline.Group,
   tags: ["!dev"],
   argTypes: {
