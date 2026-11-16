@@ -35,8 +35,9 @@ The milestones are inside the roadmap's Phase 9 (`01-vision-and-goals.md` §13).
 | **M0, the foundation**: the design direction ([02-structure.md](./02-structure.md) §3), `apps/docs` (Astro 7 with React and MDX), the page shell, the shared mode and fonts, view transitions, the Storybook bridge, the pipeline, the link check and accessibility scan, the lint rule keeping animation libraries out of `packages/*` | Built |
 | **M1, the docs core** under the first plan: docs pages on the site, Pagefind search, Markdown copies, the first illustrations, the 404 | Built; its pages are ported to Storybook (S1) and the site is trimmed (S2) |
 | **S1, Storybook docs**: the sidebar groups, the ported and merged pages, Getting started split with a "moved" page, the Accessibility guide and statement merged, the generated Changelog, indexing with a sitemap and `robots.txt`, the "dbM system" logo in a light and a dark file | Built (`07-storybook-and-documentation-standards.md` §11) |
+| **S2, site trim and header**: the site is the home page, the 404 and the agent files; the new header (wordmark, version, Docs and Foundations menus, Components, search, the light and dark toggle, Storybook and GitHub, the phone menu panel); search over Storybook's index; the footer; the root `robots.txt` and `sitemap.xml` from Storybook's own | Built |
 
-The site is built and checked on every push and is not yet published at the root: the workflow's `PUBLISH_DOCS_SITE` switch stays off until S3.
+The site is built and checked on every push and is not yet published at the root: the workflow's `PUBLISH_DOCS_SITE` switch stays off until S3. Meanwhile the root is the placeholder, and the workflow still writes its `robots.txt` and `sitemap.xml` so Storybook's pages are indexed.
 
 ### S1 — Storybook docs
 
@@ -44,7 +45,7 @@ Built; see the table above and `07-storybook-and-documentation-standards.md` §1
 
 ### S2 — Site trim and header
 
-The site becomes the home page, the 404 and the agent files ([02-structure.md](./02-structure.md) §1); the new header (logo, version, Docs and Foundations menus, the Components link, search, mode, Storybook, GitHub, the phone drawer); search over Storybook's index; the light and dark toggle that starts light ([ADR-0223](../adr/0223-the-sites-mode-is-a-light-and-dark-toggle-that-starts-light-over-light-dark-and-system.md)).
+Built; see the table above and [02-structure.md](./02-structure.md) §1. Known and left for S3: at exactly 1024 px the home page sample's hero scene is a few pixels wider than the window (`HeroStack`).
 
 ### S3 — Home page
 
