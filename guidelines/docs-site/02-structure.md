@@ -6,24 +6,32 @@
 
 The site is `https://dbm-system.com` (the apex is canonical; `www` redirects). It is the home page; the documentation is Storybook at `/storybook/` ([ADR-0220](../adr/0220-the-docs-website-is-the-home-page-only-and-storybook-is-the-documentation-with-a-header-that-links-into-it-and-search-over-its-index-over-docs-pages-on-the-website.md)).
 
+A ghost bar that sticks (transparent until it is stuck). **From `lg` (1024 px) it is three columns**, the two sides sharing the room equally so the middle is truly centred:
+
 ```
-[dbM system] [v0.1.x]        Docs ▾   Foundations ▾   Components        [Search] [Mode] | [Storybook] [GitHub]
+[dbM system] [v0.1.x]        Docs ▾   Foundations ▾   Components                [Search] [Mode] [Storybook] [GitHub]
+```
+
+**Below `lg` it is three columns too** (`Navbar.Row`'s `columns`), with the wordmark centred however wide the sides are:
+
+```
+[Menu]                        [dbM system]                        [Search] [Mode]
 ```
 
 | Item | What |
 |---|---|
 | Logo | The "dbM system" wordmark, inline SVG coloured with `text.brand`, about 24 px tall; links to `/` |
-| Version | The current version as a subtle brand-toned `Badge`, read from the packages at build |
-| **Docs** | A large menu, one link per Storybook page, grouped: Getting started, Guides, Resources, and AI agents |
-| **Foundations** | A menu, one link per Storybook Foundations page |
+| Version | The current version as a subtle brand-toned `Badge` inside the home link, read from the packages at build; shown from `lg` only, so the wordmark is alone and centred below it |
+| **Docs** | A simple dropdown list of Storybook pages, no descriptions, in three labelled groups side by side: Getting started (with AI agents), Guides, Resources |
+| **Foundations** | A simple dropdown list, one link per Storybook Foundations page, in one labelled group |
 | **Components** | A direct link (no menu) to Storybook's All components page |
-| Search | `CommandPalette` over Storybook's `index.json`: every Docs page, component and story by title; a result opens in Storybook. Opened from the header or with ⌘K or Ctrl K |
+| Icon buttons | Search, the mode toggle, Storybook and GitHub: tertiary `IconButton`s with accessible names and tooltips, one group with one equal space between each, no divider. Search and the mode toggle stay in the bar at every width; Storybook and GitHub are in the bar from `lg` and in the menu panel's foot (as labelled buttons) below it |
+| Search | A `CommandPalette` over Storybook's `index.json`: every Docs page, component and story by title; a result opens in Storybook. Opened by its icon button or with ⌘K or Ctrl K. From `lg` it is the palette's usual panel; **below `lg` it opens as a bottom sheet, 85% of the screen tall** (the palette's panel restyled in `SiteSearch.module.css`, since the component has no sheet presentation) |
 | Mode | An icon button that toggles light and dark; a first visit is light; remembered and shared with Storybook ([ADR-0223](../adr/0223-the-sites-mode-is-a-light-and-dark-toggle-that-starts-light-over-light-dark-and-system.md)) |
-| Storybook, GitHub | Brand-toned icon buttons with accessible names, after a vertical divider |
 
 Every menu link goes into Storybook in the same tab. The menus are on the home page only; inside Storybook its sidebar navigates and the logo links home.
 
-**On a phone** the bar keeps the logo, the version, search and a menu button; the drawer holds the menus as expandable groups and the actions.
+**Below `lg`** the menu button opens a panel from the start edge: Docs and Foundations as expandable groups (the same labelled simple lists), Components as a link, and Storybook and GitHub at the foot.
 
 **Footer:** columns for Docs (into Storybook), Resources (Changelog, Roadmap, FAQ in Storybook), AI agents and the agent files, and Project (GitHub, npm, Issues, Security, Licence). The 404 offers search and the way into the docs.
 
@@ -76,7 +84,7 @@ Site-only CSS uses semantic tokens only; a missing token or component is propose
 
 | Piece | Composed from |
 |---|---|
-| Header and phone drawer | `PageShell`, `NavigationMenu`, `Badge`, `IconButton`, `Divider`, `Drawer` |
+| Header and phone menu panel | `Navbar` (a ghost, sticky bar with a `Navbar.Row` in columns), `NavigationMenu`, `Badge`, `IconButton`, `Button` |
 | Search | `CommandPalette` (`filter={false}`), Storybook's `index.json` |
 | Mode toggle | `IconButton`, `ThemeProvider`, the shared storage key |
 | Install line with package-manager tabs (pnpm, npm, yarn, bun), remembered | `Tabs`, `CodeBlock` |

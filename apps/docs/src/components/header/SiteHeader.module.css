@@ -10,20 +10,51 @@
   color: var(--dbm-text-brand);
 }
 
-.version {
+/* The wordmark and the version are one link home. */
+.brand {
   display: inline-flex;
-  border-radius: var(--dbm-radius-full);
-  text-decoration: none;
+  align-items: center;
+  gap: var(--dbm-space-3);
 }
 
-.version:focus-visible {
-  outline: 2px solid var(--dbm-border-focus);
-  outline-offset: 2px;
+/* Below `lg` the wordmark is alone and centred, so the version waits for the wide bar. */
+@media not all and (min-width: 1024px) {
+  .version.version {
+    display: none;
+  }
 }
 
-.divider.divider {
-  /* A short rule between the mode control and the tool links, not the bar's full height. */
-  block-size: var(--dbm-space-6);
+/* From `lg` the row is three columns, the two sides sharing the room equally so the links are centred in the bar, whatever
+   the wordmark and the icon buttons take. The row's inner box holds the parts (Navbar.Row wraps them in column boxes that are
+   transparent to layout from `lg`), so the grid is on it. Below `lg` the row's own `columns` do the same job. */
+@media (min-width: 1024px) {
+  .row.row > div {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+    align-items: center;
+  }
+
+  .row.row .brand {
+    grid-column: 1;
+    grid-row: 1;
+    justify-self: start;
+  }
+
+  .row.row .links {
+    grid-column: 2;
+    grid-row: 1;
+  }
+
+  .row.row .actions {
+    grid-column: 3;
+    grid-row: 1;
+    justify-self: end;
+  }
+}
+
+/* The icon buttons are one group with one space between each. */
+.actions.actions {
+  gap: var(--dbm-space-2);
 }
 
 .panelActions {
@@ -31,4 +62,16 @@
   flex-wrap: wrap;
   align-items: center;
   gap: var(--dbm-space-2);
+}
+
+/* The Docs panel holds three groups side by side (Getting started, Guides, Resources). Each group's width is the panel's least
+   width, so that is narrowed here, and the greatest width is raised to fit three of them. Only this panel (Foundations is a
+   single list and keeps the usual widths), and only in the bar: in the phone menu the groups stack inside the panel. */
+@media (min-width: 1024px) {
+  .docsPanel.docsPanel {
+    --dbm-navigation-menu-panel-min-width: 13rem;
+    --dbm-navigation-menu-panel-max-width: 46rem;
+    /* Three groups of 13rem, their gaps and the panel's padding; a narrower window gets what it has. */
+    inline-size: min(44rem, calc(100vw - 2rem));
+  }
 }

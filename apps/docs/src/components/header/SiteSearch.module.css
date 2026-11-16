@@ -1,16 +1,51 @@
-/* On a phone the search button is the icon alone, so the bar keeps room for the wordmark, the version and the menu button.
-   The word stays in the page for its name (WCAG 2.5.3); the shortcut is for a keyboard and is not shown. */
-@media not all and (min-width: 768px) {
-  .label.label {
-    position: absolute;
-    inline-size: 1px;
-    block-size: 1px;
-    overflow: hidden;
-    clip-path: inset(50%);
-    white-space: nowrap;
+/* Search as a bottom sheet below `lg` (1024px, where the header's menu button appears): the palette's panel is pinned to the
+   bottom edge, full width, 85% of the screen tall, with rounded top corners, and slides up. The panel is a flex child of the
+   dialog's scrim, so its own custom properties (the width, the height, the offsets) are set rather than overridden. From `lg`
+   it is the palette's usual panel, centred near the top. */
+@media not all and (min-width: 1024px) {
+  .sheet.sheet {
+    --dialog-inline-size: 100%;
+    --dialog-block-size-base: 85%;
+    --dialog-top-offset: 0px;
+    --dialog-gutter: 0px;
+    align-self: flex-end;
+    margin-block: 0;
+    max-block-size: 85%;
+    max-inline-size: none;
+    border-end-start-radius: 0;
+    border-end-end-radius: 0;
+    border-block-end-width: 0;
   }
 
-  .shortcut.shortcut {
-    display: none;
+  .sheet.sheet[data-state="open"] {
+    animation-name: sheet-in;
+  }
+
+  .sheet.sheet[data-state="closed"] {
+    animation-name: sheet-out;
+  }
+}
+
+@keyframes sheet-in {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
+@keyframes sheet-out {
+  from {
+    transform: translateY(0);
+  }
+  to {
+    transform: translateY(100%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sheet.sheet[data-state] {
+    animation-name: none;
   }
 }

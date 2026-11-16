@@ -29,6 +29,7 @@ export const docsGroups: SiteGroup[] = [
       { label: "Installation", href: page("getting-started-installation"), description: "Packages, stylesheet, theme and fonts" },
       { label: "Quick start", href: page("getting-started-quick-start"), description: "An empty app to a themed page" },
       { label: "Frameworks", href: page("getting-started-frameworks"), description: "Next.js, Vite, Astro and server rendering" },
+      { label: "AI agents", href: page("getting-started-ai-agents"), description: "The files an agent reads" },
     ],
   },
   {
@@ -48,7 +49,6 @@ export const docsGroups: SiteGroup[] = [
       { label: "Changelog", href: page("resources-changelog"), description: "Every release" },
       { label: "Roadmap", href: page("resources-roadmap"), description: "Built, next and not planned" },
       { label: "FAQ", href: page("resources-faq"), description: "Short answers" },
-      { label: "AI agents", href: page("getting-started-ai-agents"), description: "The files an agent reads" },
     ],
   },
 ];
@@ -68,17 +68,27 @@ export const foundationsLinks: SiteLink[] = [
 
 /** The header's Components link and the home page's way in: Storybook's All components page. */
 export const allComponents: SiteLink = { label: "All components", href: page("getting-started-all-components") };
-export const changelog: SiteLink = docsGroups[2].links[0];
-export const accessibility: SiteLink = docsGroups[1].links[1];
-export const quickStart: SiteLink = docsGroups[0].links[2];
+const link = (group: SiteGroup, label: string): SiteLink => {
+  const found = group.links.find((candidate) => candidate.label === label);
+  if (!found) throw new Error(`site.ts: no "${label}" link in ${group.label}`);
+  return found;
+};
+const [gettingStarted, guides, resources] = docsGroups as [SiteGroup, SiteGroup, SiteGroup];
+export const changelog: SiteLink = link(resources, "Changelog");
+export const accessibility: SiteLink = link(guides, "Accessibility");
+export const quickStart: SiteLink = link(gettingStarted, "Quick start");
+export const aiAgents: SiteLink = link(gettingStarted, "AI agents");
 
 /** The agent files the site serves at its root. Only `AGENTS.md` is built; the rest are listed on Storybook's AI agents page as in development. */
 export const agentsMd: SiteLink = { label: "AGENTS.md", href: "/AGENTS.md", description: "The guide an agent reads first" };
 
 export const footerColumns: SiteGroup[] = [
-  { label: "Docs", links: [...docsGroups[0].links, docsGroups[1].links[0], docsGroups[1].links[1], allComponents] },
-  { label: "Resources", links: docsGroups[2].links.slice(0, 3) },
-  { label: "AI agents", links: [docsGroups[2].links[3], agentsMd] },
+  {
+    label: "Docs",
+    links: [...gettingStarted.links.filter((candidate) => candidate !== aiAgents), link(guides, "Theming"), accessibility, allComponents],
+  },
+  { label: "Resources", links: resources.links },
+  { label: "AI agents", links: [aiAgents, agentsMd] },
   {
     label: "Project",
     links: [

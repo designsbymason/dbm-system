@@ -1,4 +1,4 @@
-import { Button, CommandPalette, Kbd } from "@dbm-system/components";
+import { CommandPalette, IconButton, Kbd } from "@dbm-system/components";
 import type { CommandItem } from "@dbm-system/components";
 import { MagnifyingGlassIcon } from "@dbm-system/icons";
 import { useRef, useState } from "react";
@@ -29,7 +29,7 @@ const LIMIT = 12;
 /** The top-level Storybook groups that are documentation; the rest (Atoms, Molecules, Organisms, Templates) are components. */
 const DOCS_GROUPS = new Set(["Getting started", "Guides", "Resources", "Foundations"]);
 
-const unavailable = "Search reads Storybook's index, which is not beside the site here. Build the site with Storybook to try it.";
+const unavailable = "Search needs Storybook beside the site.";
 
 /** The entries a reader sees in Storybook's sidebar (the `dev` tag): not the hidden check stories or the moved page. */
 function prepare(entries: IndexEntry[]): Searchable[] {
@@ -71,7 +71,8 @@ function find(searchables: Searchable[], query: string): CommandItem[] {
  * Search (02-structure.md §1, ADR-0220): DBM's CommandPalette over Storybook's own `index.json` on this origin, so every Docs
  * page, component and story is found by title and opens in Storybook. No search service and no site index. The index is
  * fetched once, when the palette first opens. ⌘K or Ctrl K opens it from anywhere. Where there is no Storybook beside the site
- * (the development server), the palette says so instead of searching.
+ * (the development server), the palette says so instead of searching. Its trigger is an icon button, and below `lg` the palette
+ * opens as a bottom sheet.
  */
 export function SiteSearch() {
   const [results, setResults] = useState<CommandItem[]>([]);
@@ -119,12 +120,22 @@ export function SiteSearch() {
       onSelect={(item) => window.location.assign(item.value)}
       emptyContent={failed ? unavailable : undefined}
       labels={{ placeholder: "Search the docs and components…" }}
+      // Below `lg` the panel is a sheet from the bottom edge, 85% of the screen tall (SiteSearch.module.css).
+      className={styles.sheet}
       trigger={
-        // The visible word is the name (WCAG 2.5.3); the shortcut is shown but kept from assistive technology.
-        <Button variant="secondary" tone="neutral" size="sm" leadingIcon={MagnifyingGlassIcon} data-site-search>
-          <span className={styles.label}>Search</span>
-          <Kbd keys={["mod", "K"]} aria-hidden="true" className={styles.shortcut} />
-        </Button>
+        // An icon button like the others in the bar. Its name is "Search"; the tooltip adds the shortcut, shown for a sighted keyboard user.
+        <IconButton
+          icon={MagnifyingGlassIcon}
+          aria-label="Search"
+          tooltip={
+            <>
+              Search <Kbd keys={["mod", "K"]} />
+            </>
+          }
+          variant="tertiary"
+          size="sm"
+          data-site-search
+        />
       }
     />
   );
