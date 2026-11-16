@@ -269,7 +269,7 @@ function IndexTable({
 }
 
 /**
- * Docs-page-only Components and Templates sections for the All components page, built live from Storybook's own
+ * Docs-page-only Components and Templates sections for the Index page, built live from Storybook's own
  * `index.json` (which pages exist) and the component catalog (each component's tier and category), so they can never drift
  * from the sidebar. The Components section has a count badge, and a toolbar of a
  * search box and a Tier and a Category filter (each a panel of checkboxes, "All" until one is chosen) over a table of

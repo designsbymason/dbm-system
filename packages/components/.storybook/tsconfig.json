@@ -4,5 +4,5 @@
   "compilerOptions": {
     "noEmit": true
   },
-  "include": ["**/*.ts", "**/*.tsx", "../src/types/**/*.d.ts", "../src/guides/AllComponents.checks.stories.tsx"]
+  "include": ["**/*.ts", "**/*.tsx", "../src/types/**/*.d.ts", "../src/guides/ComponentsIndex.checks.stories.tsx"]
 }

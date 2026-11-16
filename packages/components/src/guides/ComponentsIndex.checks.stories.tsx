@@ -3,11 +3,11 @@ import { expect, userEvent, waitFor, within } from "storybook/test";
 import { ComponentIndex } from "../../.storybook/blocks/ComponentIndex";
 import type { RawEntry } from "../../.storybook/blocks/ComponentIndex";
 
-// Hidden real-browser checks for the All components page's component and template tables (guidelines/adr/0013): what jsdom can't do
+// Hidden real-browser checks for the Index page's component and template tables (guidelines/adr/0013): what jsdom can't do
 // (layout at a width). They draw the page's own block, which reads Storybook's index. Docs styles are scoped to `.sbdocs-content`,
 // which a story is not inside, so the block is wrapped in one, as the Docs page does.
 const meta: Meta = {
-  title: "Getting started/Checks",
+  title: "Components/Index/Checks",
   tags: ["!dev"],
   parameters: { layout: "padded" },
 };

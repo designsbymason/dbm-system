@@ -4,7 +4,7 @@ import { describe, expect, it } from "vitest";
 import { toRows } from "./componentRows";
 import type { Catalog, RawEntry } from "./componentRows";
 
-// `toRows` turns Storybook's index into the rows of the All components table. A component's tier and category are the
+// `toRows` turns Storybook's index into the rows of the Index page's table. A component's tier and category are the
 // catalog's, whatever the title says, so the sidebar can group components however it likes.
 const catalog: Catalog = {
   Button: { tier: "atom", category: "Inputs" },

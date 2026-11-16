@@ -88,16 +88,18 @@ const preview: Preview = {
       // reference to a function defined elsewhere in this module fails
       // with "Unexpected 'storySort'" at startup.
       //
-      // Top-level group order: Foundations (token reference — read this
-      // first) before Atoms before anything else, since alphabetical would
-      // otherwise put Atoms first. Within Foundations, an explicit reading
-      // order (Overview first, then roughly increasing specialization) —
-      // alphabetical would scatter Overview into the middle of the list.
-      // Within Atoms (and any future tier), the hand-authored Docs page
-      // (see guidelines/07-storybook-and-documentation-standards.md §4)
-      // always sorts first within its component group, then the Playground
-      // story, then everything else in file order — across different
-      // components, alphabetical by title.
+      // Top-level group order: Getting started, Guides, Resources and
+      // Foundations (token reference) before Components, then Templates —
+      // an explicit order, since alphabetical would scatter them. Within
+      // Foundations, an explicit reading order (Overview first, then
+      // roughly increasing specialization) — alphabetical would scatter
+      // Overview into the middle of the list. Within Components, the Index
+      // first, then every component alphabetically by name (no tier or
+      // category groups; they are in src/componentCatalog.json); within a
+      // component, the hand-authored Docs page (see
+      // guidelines/07-storybook-and-documentation-standards.md §4) always
+      // sorts first, then the Playground story, then everything else in
+      // file order.
       // Un-annotatable, not just unannotated — this function's own *source
       // text* is statically extracted and `eval`'d server-side (see the
       // comment above) as plain JS, before any TypeScript transpilation.
@@ -123,11 +125,11 @@ const preview: Preview = {
         // annotated for the same reason `a`/`b` above can't be.
         // @ts-expect-error — `title` can't be typed; see comment above
         const topLevelGroup = (title) => title.split("/")[0] ?? title;
-        // Getting started (the introduction, installation and the component index) first,
-        // then the written guides, the resources (changelog, roadmap, FAQ), then the token reference, then the tiers
-        // (Atoms, then Molecules, Organisms and Templates alphabetically; the template groups come out in the
-        // inventory's own order, Shells first).
-        const groupPriority = ["Getting started", "Guides", "Resources", "Foundations", "Atoms"];
+        // Getting started (the introduction, installation, quick start, frameworks and AI agents) first, then the written guides, the
+        // resources (changelog, roadmap, FAQ), then the token reference, then Components (the Index first, then every component
+        // alphabetically by name, a component's parts under it), then Templates (the template groups come out in the inventory's own
+        // order, Shells first).
+        const groupPriority = ["Getting started", "Guides", "Resources", "Foundations", "Components"];
         const templateGroups = ["Shells", "Authentication", "Data pages", "Settings and account", "System and utility pages"];
         const gettingStartedOrder = [
           "Getting started/Introduction",
@@ -135,7 +137,6 @@ const preview: Preview = {
           "Getting started/Quick start",
           "Getting started/Frameworks",
           "Getting started/AI agents",
-          "Getting started/All components",
         ];
         const resourcesOrder = ["Resources/Changelog", "Resources/Roadmap", "Resources/FAQ"];
         const guidesOrder = [
@@ -183,6 +184,14 @@ const preview: Preview = {
         }
         if (aGroup === "Foundations") {
           return foundationsOrder.indexOf(a.title) - foundationsOrder.indexOf(b.title);
+        }
+        if (aGroup === "Components") {
+          // The Index page (and its hidden checks) leads the group; every component after it falls to the alphabetical order below.
+          // @ts-expect-error — `title` can't be typed; see comment above
+          const inIndex = (title) => title === "Components/Index" || title.startsWith("Components/Index/");
+          const aIndex = inIndex(a.title);
+          const bIndex = inIndex(b.title);
+          if (aIndex !== bIndex) return aIndex ? -1 : 1;
         }
         if (aGroup === "Templates") {
           // The template groups in the inventory's own order, not alphabetical (Shells would come out after Data pages).

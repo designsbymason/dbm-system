@@ -1,14 +1,14 @@
 import componentCatalog from "./componentCatalog.json";
 
 /**
- * The rows of the All components table, from Storybook's index and the component catalog. Docs-only, like `componentDescriptions.ts`: not
+ * The rows of the Index page's table, from Storybook's index and the component catalog. Docs-only, like `componentDescriptions.ts`: not
  * exported from the package, so not shipped.
  */
 
-/** A tier as the All components table names it. */
+/** A tier as the Index page's table names it. */
 export type Tier = "Atoms" | "Molecules" | "Organisms" | "Templates";
 
-/** One row of the All components table. */
+/** One row of the Index page's table. */
 export interface IndexRow {
   id: string;
   name: string;

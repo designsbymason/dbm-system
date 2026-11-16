@@ -3,7 +3,7 @@ import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 
 // `src/componentCatalog.json` is where each component's tier and category are written down: one entry per component, keyed by
-// the component's name, which is also the name of its folder (`src/atoms/Button`). The manifest, the All components table and
+// the component's name, which is also the name of its folder (`src/atoms/Button`). The manifest, the Index page's table and
 // the site's search read it, so a component belongs to one tier and one category in one place. These tests keep it complete
 // and honest. (They run from the package's own folder.)
 const root = join(process.cwd(), "src");

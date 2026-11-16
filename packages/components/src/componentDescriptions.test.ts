@@ -3,7 +3,7 @@ import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { componentDescriptions } from "./componentDescriptions";
 
-// The All components page's component table has a Description column read from `src/componentDescriptions.ts`. A component is
+// The Index page's component table has a Description column read from `src/componentDescriptions.ts`. A component is
 // whatever is in `src/componentCatalog.json`, and a template is a main story titled `Templates/{Category}/{Name}`; each needs a line
 // there, and a line for a component that no longer exists is removed. (The tests run from the package's own folder.)
 const root = join(process.cwd(), "src");

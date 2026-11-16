@@ -66,8 +66,8 @@ export const foundationsLinks: SiteLink[] = [
   { label: "Breakpoints", href: page("foundations-breakpoints"), description: "From sm to 3xl" },
 ];
 
-/** The header's Components link and the home page's way in: Storybook's All components page. */
-export const allComponents: SiteLink = { label: "All components", href: page("getting-started-all-components") };
+/** The header's Components link and the home page's way in: Storybook's Index page, at the top of Components. */
+export const allComponents: SiteLink = { label: "Components", href: page("components-index") };
 const link = (group: SiteGroup, label: string): SiteLink => {
   const found = group.links.find((candidate) => candidate.label === label);
   if (!found) throw new Error(`site.ts: no "${label}" link in ${group.label}`);
