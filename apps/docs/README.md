@@ -21,6 +21,7 @@ Telemetry and the dev toolbar are off.
 - `src/layouts/`: `Base` (fonts, tokens, the mode before first paint) and `Marketing` (the page type the site has).
 - `src/pages/`: the routes: `/`, the 404 and `/AGENTS.md`.
 - `src/illustrations/`: the SVG illustrations, coloured from the tokens.
+- `src/components/header/SiteSearch.tsx`: search, a `CommandPalette` over Storybook's `index.json` on the same origin (fetched when it first opens). It finds nothing on the development server, which has no Storybook beside it; try it in the assembled site (`serve.mjs`).
 - `src/components/home/`: the home page's sections.
 - `scripts/`: the scoped token themes, the link check (which also checks each link into Storybook against its `index.json`), the accessibility scan and the local server.
 

@@ -77,7 +77,7 @@ Site-only CSS uses semantic tokens only; a missing token or component is propose
 | Piece | Composed from |
 |---|---|
 | Header and phone drawer | `PageShell`, `NavigationMenu`, `Badge`, `IconButton`, `Divider`, `Drawer` |
-| Search | `CommandPalette` (`filter={false}`), `useRecentCommands`, Storybook's `index.json` |
+| Search | `CommandPalette` (`filter={false}`), Storybook's `index.json` |
 | Mode toggle | `IconButton`, `ThemeProvider`, the shared storage key |
 | Install line with package-manager tabs (pnpm, npm, yarn, bun), remembered | `Tabs`, `CodeBlock` |
 | All components table | `DataTable`, `SearchInput`, `Select` or `ToggleGroup`, `Badge` |
