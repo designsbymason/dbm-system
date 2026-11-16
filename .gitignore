@@ -54,3 +54,6 @@ apps/docs/public/llms-full.txt
 
 # Assembled Pages site (built by .github/workflows/pages.yml)
 _site/
+
+# Storybook's Changelog page, generated from the packages' CHANGELOG.md files (packages/components/scripts/generate-changelog.mjs)
+packages/components/src/guides/Changelog.generated.mdx
