@@ -1,6 +1,7 @@
 ---
 // The 404: a short way back, in the site's shell.
 import { allComponents, docsGroups, storybookHref } from "../data/site";
+import { OpenSearchButton } from "../components/header/OpenSearchButton";
 import Lost from "../illustrations/Lost.astro";
 import Marketing from "../layouts/Marketing.astro";
 ---
@@ -9,7 +10,8 @@ import Marketing from "../layouts/Marketing.astro";
   <section class="site-frame lost" aria-labelledby="lost-heading">
     <div class="lost__art"><Lost /></div>
     <h1 id="lost-heading" class="display lost__title">Nothing measured here</h1>
-    <p class="lede">This page doesn't exist, or it moved. These are the ways in:</p>
+    <p class="lede">This page doesn't exist, or it moved. Search the docs, or take one of these ways in:</p>
+    <OpenSearchButton client:load>Search the docs</OpenSearchButton>
     <ul class="lost__links">
       <li><a href="/">Home</a></li>
       <li><a href={docsGroups[0].links[0].href}>Introduction</a></li>

@@ -72,10 +72,13 @@ export const changelog: SiteLink = docsGroups[2].links[0];
 export const accessibility: SiteLink = docsGroups[1].links[1];
 export const quickStart: SiteLink = docsGroups[0].links[2];
 
+/** The agent files the site serves at its root. Only `AGENTS.md` is built; the rest are listed on Storybook's AI agents page as in development. */
+export const agentsMd: SiteLink = { label: "AGENTS.md", href: "/AGENTS.md", description: "The guide an agent reads first" };
+
 export const footerColumns: SiteGroup[] = [
-  { label: "Docs", links: [...docsGroups[0].links, docsGroups[1].links[0], docsGroups[1].links[1]] },
-  { label: "Components", links: [allComponents, { label: "Foundations", href: foundationsLinks[0].href }, { label: "Hooks and utilities", href: docsGroups[1].links[4].href }] },
-  { label: "Resources", links: docsGroups[2].links },
+  { label: "Docs", links: [...docsGroups[0].links, docsGroups[1].links[0], docsGroups[1].links[1], allComponents] },
+  { label: "Resources", links: docsGroups[2].links.slice(0, 3) },
+  { label: "AI agents", links: [docsGroups[2].links[3], agentsMd] },
   {
     label: "Project",
     links: [

@@ -28,7 +28,7 @@ const walk = (dir) => {
     const path = join(dir, name);
     if (statSync(path).isDirectory()) {
       if (relative(root, path) !== "storybook") walk(path);
-    } else if (name.endsWith(".html") && name !== "404.html") {
+    } else if (name.endsWith(".html")) {
       pages.push(`/${relative(root, path).replace(/index\.html$/, "").replace(/\.html$/, "")}`);
     }
   }

@@ -121,7 +121,7 @@ export function SiteSearch() {
       labels={{ placeholder: "Search the docs and components…" }}
       trigger={
         // The visible word is the name (WCAG 2.5.3); the shortcut is shown but kept from assistive technology.
-        <Button variant="secondary" tone="neutral" size="sm" leadingIcon={MagnifyingGlassIcon}>
+        <Button variant="secondary" tone="neutral" size="sm" leadingIcon={MagnifyingGlassIcon} data-site-search>
           <span className={styles.label}>Search</span>
           <Kbd keys={["mod", "K"]} aria-hidden="true" className={styles.shortcut} />
         </Button>
