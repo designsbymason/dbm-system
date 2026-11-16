@@ -1,0 +1,142 @@
+---
+// Section 2 (03-landing-page-brief.md §3): why an agent works from facts. The demo shows a real manifest entry beside the component it
+// describes; the rows under it are the files an agent reads, with sizes read at build. `llms.txt` is labelled "in active development"
+// until it exists (S4), never as available.
+import { Badge } from "@dbm-system/components";
+import indexJson from "@dbm-system/components/manifest/index.json" with { type: "json" };
+import { aiAgents } from "../../data/site";
+import { AgentDemo } from "./AgentDemo";
+import { agentExcerpts } from "./agentExcerpts";
+
+const indexKb = Math.round(JSON.stringify(indexJson).length / 1024);
+
+const files = [
+  { name: "manifest/index.json", detail: `Every component with its tier, category and a sentence. Read this first; it is about ${indexKb} KB.` },
+  { name: "manifest/components/<Name>.json", detail: "One component in full: its props, parts, the native props it takes and its examples." },
+  { name: "AGENTS.md", detail: "The rules that hold across components, and every public name." },
+  { name: "tokens.json", detail: "Every design token, its value in each theme, and which components use it." },
+  { name: "llms.txt", detail: "A short index of the documentation for tools that read that convention.", inDevelopment: true },
+];
+---
+
+<section id="agents" class="agents site-frame" aria-labelledby="agents-heading">
+  <div class="grid-12">
+    <h2 id="agents-heading" class="display agents__title">What your agent reads</h2>
+    <p class="lede agents__lede">
+      Before it writes a line, an agent can read the same typed manifest this page does: every prop, its type, its allowed values and its default.
+      Pick a component to see it.
+    </p>
+    <div class="agents__demo">
+      <AgentDemo client:visible excerpts={agentExcerpts} />
+    </div>
+    <dl class="agents__files">
+      {
+        files.map((file) => (
+          <div class="agents__file">
+            <dt>
+              <code>{file.name}</code>
+              {file.inDevelopment && (
+                <Badge tone="warning" size="sm" variant="subtle">
+                  In active development
+                </Badge>
+              )}
+            </dt>
+            <dd>{file.detail}</dd>
+          </div>
+        ))
+      }
+    </dl>
+    <p class="agents__more">
+      <a href={aiAgents.href}>How an agent uses them</a>
+    </p>
+  </div>
+</section>
+
+<style>
+  .agents {
+    padding-block: var(--dbm-space-20);
+  }
+
+  .agents__title,
+  .agents__lede,
+  .agents__demo,
+  .agents__files,
+  .agents__more {
+    grid-column: 1 / -1;
+  }
+
+  .agents__title {
+    font-size: var(--dbm-font-size-3xl);
+    margin-block-end: var(--dbm-space-4);
+  }
+
+  .agents__lede {
+    margin-block-end: var(--dbm-space-8);
+  }
+
+  .agents__files {
+    margin: var(--dbm-space-10) 0 0;
+    border-block-start: 1px solid var(--site-rule-strong);
+  }
+
+  .agents__file {
+    display: grid;
+    gap: var(--dbm-space-1);
+    padding-block: var(--dbm-space-4);
+    border-block-end: 1px solid var(--site-rule);
+  }
+
+  dt {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--dbm-space-2);
+    font-weight: var(--dbm-font-weight-semibold);
+  }
+
+  dt code {
+    font-family: var(--dbm-font-family-mono);
+    font-size: var(--dbm-font-size-sm);
+    color: var(--site-accent);
+    overflow-wrap: anywhere;
+  }
+
+  dd {
+    margin: 0;
+    color: var(--site-graphite);
+  }
+
+  .agents__more {
+    margin: var(--dbm-space-6) 0 0;
+  }
+
+  .agents__more a {
+    color: var(--dbm-text-link);
+    text-underline-offset: 0.2em;
+  }
+
+  .agents__more a:focus-visible {
+    outline: 2px solid var(--dbm-border-focus);
+    outline-offset: 2px;
+    border-radius: var(--dbm-radius-xs);
+  }
+
+  @media (min-width: 768px) {
+    .agents__file {
+      grid-template-columns: minmax(0, 1fr) minmax(0, 2fr);
+      gap: var(--dbm-space-6);
+    }
+  }
+
+  @media (min-width: 1024px) {
+    .agents__title {
+      grid-column: 1 / span 4;
+      margin-block-end: 0;
+    }
+
+    .agents__lede {
+      grid-column: 5 / -1;
+      margin-block-end: var(--dbm-space-10);
+    }
+  }
+</style>

@@ -1,0 +1,129 @@
+/* Section 2's demo: the live component beside the manifest entry an agent reads. Semantic tokens only. */
+.demo {
+  min-inline-size: 0;
+}
+
+/* Below the medium step one pane shows at a time, chosen by the switch; from it both show. */
+.switch {
+  display: flex;
+  justify-content: flex-end;
+  margin-block: var(--dbm-space-4);
+}
+
+.panes {
+  display: grid;
+  gap: var(--dbm-space-4);
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.demo[data-view="draws"] .reads,
+.demo[data-view="reads"] .draws {
+  display: none;
+}
+
+.draws,
+.reads {
+  display: grid;
+  gap: var(--dbm-space-3);
+  align-content: start;
+  min-inline-size: 0;
+}
+
+.caption {
+  margin: 0;
+  font-size: var(--dbm-font-size-sm);
+  font-weight: var(--dbm-font-weight-semibold);
+  color: var(--dbm-text-secondary);
+}
+
+/* The live component, on a sheet of its own surface so it reads as the real thing. */
+.stage {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-block-size: 9rem;
+  padding: var(--dbm-space-6);
+  background: var(--dbm-bg-surface);
+  border: 1px solid var(--site-rule);
+  border-radius: var(--dbm-radius-md);
+}
+
+.code,
+.json {
+  margin: 0;
+  padding: var(--dbm-space-4);
+  background: var(--dbm-bg-surface);
+  border: 1px solid var(--site-rule);
+  border-radius: var(--dbm-radius-md);
+  font-family: var(--dbm-font-family-mono);
+  font-size: var(--dbm-font-size-xs);
+  line-height: var(--dbm-line-height-relaxed);
+  color: var(--dbm-text-primary);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.mark,
+.entry {
+  background: var(--dbm-bg-brand-subtle);
+  color: inherit;
+  transition: background-color var(--dbm-motion-duration-fast) var(--dbm-motion-easing-standard);
+}
+
+/* A name in the code is underlined as well as tinted, since the tint alone is faint on the surface in the light themes. */
+.mark {
+  border-radius: var(--dbm-radius-xs);
+  text-decoration: underline;
+  text-decoration-color: var(--dbm-border-brand);
+  text-decoration-thickness: 2px;
+  text-underline-offset: 3px;
+}
+
+/* An entry is a whole object in the JSON: its left edge is drawn in the brand colour so the eye finds where it begins. */
+.entry {
+  display: block;
+  box-shadow: inset 2px 0 0 var(--dbm-border-brand);
+  padding-inline-start: var(--dbm-space-2);
+  margin-inline-start: calc(var(--dbm-space-2) * -1);
+}
+
+.active {
+  background: var(--dbm-bg-brand-subtle-hover);
+}
+
+.note {
+  margin: 0;
+  color: var(--site-graphite);
+  font-size: var(--dbm-font-size-sm);
+}
+
+.note code {
+  font-family: var(--dbm-font-family-mono);
+  font-size: var(--dbm-font-size-xs);
+  color: var(--site-accent);
+  overflow-wrap: anywhere;
+}
+
+@media (min-width: 768px) {
+  .switch {
+    display: none;
+  }
+
+  .panes {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--dbm-space-6);
+  }
+
+  /* From the medium step both panes show whatever the switch says. */
+  .demo[data-view="draws"] .reads,
+  .demo[data-view="reads"] .draws {
+    display: grid;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mark,
+  .entry {
+    transition: none;
+  }
+}
