@@ -1,0 +1,11 @@
+---
+// The composition the home page's "Accessible and responsive" section shows in an iframe, so that it has a viewport of its own: DBM's
+// components respond to the viewport, so only a frame of the width shown can make them take that width's layout. It is for that frame,
+// not for readers, so it is kept out of search results (and out of the sitemap, which skips a noindex page).
+import Base from "../layouts/Base.astro";
+import { TeamSettings } from "../components/home/TeamSettings";
+---
+
+<Base title="Team settings composition" description="A team settings screen built from DBM System components, shown on the home page." noindex>
+  <TeamSettings client:load />
+</Base>

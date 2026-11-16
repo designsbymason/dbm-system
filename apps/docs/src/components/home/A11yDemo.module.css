@@ -1,0 +1,113 @@
+/* The "Accessible and responsive" demo: a frame the width of a phone, tablet or desktop, and a panel on the focused control. */
+.demo {
+  min-inline-size: 0;
+}
+
+.controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--dbm-space-3) var(--dbm-space-6);
+  margin-block-end: var(--dbm-space-4);
+}
+
+.layout {
+  display: grid;
+  gap: var(--dbm-space-6);
+  grid-template-columns: minmax(0, 1fr);
+  align-items: start;
+}
+
+.stage {
+  min-inline-size: 0;
+  display: grid;
+  justify-items: center;
+}
+
+/* The frame's own pixels are scaled into this box, which takes the scaled size so the page lays out around what is seen. */
+.scaled {
+  overflow: hidden;
+  border: 1px solid var(--site-rule-strong);
+  border-radius: var(--dbm-radius-md);
+  background: var(--dbm-bg-surface);
+  box-shadow: var(--site-shadow-soft);
+  max-inline-size: 100%;
+}
+
+.frame {
+  display: block;
+  border: 0;
+  transform-origin: top left;
+}
+
+.caption {
+  margin: var(--dbm-space-2) 0 0;
+  text-align: center;
+  font-family: var(--dbm-font-family-mono);
+  font-size: var(--dbm-font-size-xs);
+  color: var(--site-graphite);
+}
+
+.panel {
+  display: grid;
+  gap: var(--dbm-space-3);
+  padding: var(--dbm-space-4);
+  background: var(--dbm-bg-surface);
+  border: 1px solid var(--site-rule);
+  border-radius: var(--dbm-radius-md);
+  min-inline-size: 0;
+}
+
+.heading {
+  margin: 0;
+  font-size: var(--dbm-font-size-sm);
+  font-weight: var(--dbm-font-weight-semibold);
+  color: var(--dbm-text-secondary);
+}
+
+.facts {
+  display: grid;
+  gap: var(--dbm-space-2);
+  margin: 0;
+}
+
+.facts > div {
+  display: grid;
+  grid-template-columns: 8rem minmax(0, 1fr);
+  gap: var(--dbm-space-3);
+  padding-block-end: var(--dbm-space-2);
+  border-block-end: 1px solid var(--site-rule);
+}
+
+.facts dt {
+  font-size: var(--dbm-font-size-sm);
+  color: var(--site-graphite);
+}
+
+.facts dd {
+  margin: 0;
+  font-family: var(--dbm-font-family-mono);
+  font-size: var(--dbm-font-size-sm);
+  overflow-wrap: anywhere;
+}
+
+.hint,
+.note {
+  margin: 0;
+  font-size: var(--dbm-font-size-sm);
+  color: var(--site-graphite);
+}
+
+.note {
+  font-size: var(--dbm-font-size-xs);
+}
+
+@media (min-width: 1024px) {
+  .layout {
+    grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
+  }
+
+  .panel {
+    position: sticky;
+    inset-block-start: var(--dbm-space-20);
+  }
+}

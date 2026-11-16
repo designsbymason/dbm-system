@@ -44,8 +44,9 @@ Every menu link goes into Storybook in the same tab. The menus are on the home p
 | `/` | The home page | Astro, from [03-landing-page-brief.md](./03-landing-page-brief.md) |
 | `/404` | Not found, with search | Astro |
 | `/accessibility`, `/privacy`, `/terms` | The accessibility statement for the site, the Privacy Policy and the Terms of Use ([ADR-0224](../adr/0224-the-website-carries-a-privacy-policy-and-terms-of-use-as-two-pages-of-its-own-over-putting-them-in-storybook-or-leaving-them-out.md)) | Astro, plain prose in `src/pages/` |
+| `/composition/` | The team settings screen the home page's "Accessible and responsive" section shows in an iframe, so that it has a viewport of its own (the components follow the viewport, not their box). For that frame only: `noindex`, and left out of the sitemap | Astro, `src/pages/composition.astro` |
 | `/AGENTS.md`; later `/manifest.json`, `/llms.txt`, `/llms-full.txt` and the Markdown copies (S4) | The agent files (§6) | `/AGENTS.md` is served today; the rest are generated at build, not committed, and not built yet |
-| `/sitemap.xml`, `/robots.txt` | §12 | Generated at assembly by `apps/docs/scripts/assemble-seo.mjs` from Storybook's own; not committed |
+| `/sitemap.xml`, `/robots.txt` | §12 | Generated at assembly by `apps/docs/scripts/assemble-seo.mjs` from Storybook's own (it leaves out a root page marked `noindex`); not committed |
 | `/storybook/` | The documentation | The `storybook-static` build |
 
 A version path (`/v1/…`) is added from 1.0; until then the site is the latest release only.
