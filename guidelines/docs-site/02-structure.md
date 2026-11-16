@@ -36,7 +36,7 @@ Every menu link goes into Storybook in the same tab. The menus are on the home p
 | `/` | The home page | Astro, from [03-landing-page-brief.md](./03-landing-page-brief.md) |
 | `/404` | Not found, with search | Astro |
 | `/AGENTS.md`, `/manifest.json`, `/llms.txt`, `/llms-full.txt`, the Markdown copies | The agent files (§6) | Generated at build; not committed |
-| `/sitemap.xml`, `/robots.txt` | §12 | Generated |
+| `/sitemap.xml`, `/robots.txt` | §12 | Generated at assembly by `apps/docs/scripts/assemble-seo.mjs` from Storybook's own; not committed |
 | `/storybook/` | The documentation | The `storybook-static` build |
 
 A version path (`/v1/…`) is added from 1.0; until then the site is the latest release only.
@@ -168,8 +168,8 @@ One GitHub Actions workflow, run on every push to `main` while the packages are 
 
 1. Install with pnpm on the Node version in `.nvmrc`, and build the packages through Turborepo.
 2. Build Storybook (`pnpm build-storybook`) to `storybook-static`, with the generated Changelog and logo files.
-3. Build the site, and write the agent files and the sitemap from the manifest and Storybook's index and MDX.
-4. Assemble one artifact: the site at the root and `storybook-static` in `storybook/`.
+3. Build the site, and write the agent files from the manifest and Storybook's MDX.
+4. Assemble one artifact: the site at the root and `storybook-static` in `storybook/`. Then `assemble-seo.mjs` writes the root `robots.txt` and `sitemap.xml` from what Storybook's build left (§12).
 5. Run the gates on that artifact (§11).
 6. Publish it with the Pages actions. Until S3 the workflow's `PUBLISH_DOCS_SITE` switch is `"false"`: the placeholder in `.github/pages/` stays at the root while the site is built and checked, and Storybook is published at `/storybook/` either way.
 
@@ -214,7 +214,7 @@ Not adopted: a Lighthouse or page-weight budget. The home page's weight is repor
 | `robots.txt` | `Disallow: /storybook/*?path=/story/`; `iframe.html` is never disallowed |
 | The preview's head (`iframe.html`) | `<meta name="robots" content="noindex, indexifembedded">`: the frame is never a result itself, but its content counts for the page that embeds it |
 | The manager's head (`managerHead`) | A short script: `noindex` on a story path, a canonical URL on a Docs path (the static head is the same for every path, so only a script can tell them apart) |
-| `sitemap.xml` | Only the Docs entries; a check confirms each one exists in `index.json` |
+| `sitemap.xml` | The home page (once the site is live) and the Docs entries; `assemble-seo.mjs` fails when an entry is not in `index.json` |
 
 How well a search engine renders the manager and its frame is checked in Search Console after launch; the plain-text copies (§6) make the docs readable either way.
 

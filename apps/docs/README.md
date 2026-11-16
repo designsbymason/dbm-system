@@ -23,6 +23,6 @@ Telemetry and the dev toolbar are off.
 - `src/illustrations/`: the SVG illustrations, coloured from the tokens.
 - `src/components/header/SiteSearch.tsx`: search, a `CommandPalette` over Storybook's `index.json` on the same origin (fetched when it first opens). It finds nothing on the development server, which has no Storybook beside it; try it in the assembled site (`serve.mjs`).
 - `src/components/home/`: the home page's sections.
-- `scripts/`: the scoped token themes, the link check (which also checks each link into Storybook against its `index.json`), the accessibility scan and the local server.
+- `scripts/`: the scoped token themes, `assemble-seo.mjs` (writes the root `robots.txt` and `sitemap.xml` from Storybook's own, in the Pages workflow), the link check (which also checks each link into Storybook against its `index.json`), the accessibility scan and the local server.
 
 The plan, structure, landing page brief and open items are in `guidelines/docs-site/`; the decisions are ADRs 0170, 0172, 0173, 0212, 0214, 0215, 0217 and 0220 to 0223 in `guidelines/adr/`.

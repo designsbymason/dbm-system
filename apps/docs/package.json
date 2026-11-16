@@ -12,7 +12,8 @@
     "preview": "ASTRO_TELEMETRY_DISABLED=1 astro preview --port 4321",
     "typecheck": "pnpm prepare-styles && ASTRO_TELEMETRY_DISABLED=1 astro sync && tsc --noEmit",
     "check-links": "node scripts/check-links.mjs",
-    "check-accessibility": "node scripts/check-accessibility.mjs"
+    "check-accessibility": "node scripts/check-accessibility.mjs",
+    "assemble-seo": "node scripts/assemble-seo.mjs"
   },
   "dependencies": {
     "@astrojs/react": "^7.1.9",

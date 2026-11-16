@@ -56,6 +56,8 @@ jobs:
           mkdir -p apps/docs/_artifact
           cp -R apps/docs/dist/. apps/docs/_artifact/
           cp -R packages/components/storybook-static apps/docs/_artifact/storybook
+          # The root robots.txt and sitemap.xml, from Storybook's own (the site's home page included).
+          node apps/docs/scripts/assemble-seo.mjs apps/docs/_artifact --home
 
       - name: Check the links
         working-directory: apps/docs
@@ -77,6 +79,8 @@ jobs:
           else
             cp -R .github/pages/. _site/
             cp -R packages/components/storybook-static _site/storybook
+            # The placeholder root has no home page to list, but Storybook's pages are indexed (ADR-0221).
+            node apps/docs/scripts/assemble-seo.mjs _site
           fi
 
       - name: Upload the site

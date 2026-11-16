@@ -40,7 +40,7 @@ The site is built and checked on every push and is not yet published at the root
 
 ### S1 — Storybook docs
 
-Built; see the table above and `07-storybook-and-documentation-standards.md` §11. What remains for the search-engine setup is on the site's side: its build takes Storybook's `robots.txt` and merges the sitemap (S2), and the Markdown copies and `llms.txt` are S4.
+Built; see the table above and `07-storybook-and-documentation-standards.md` §11. The Markdown copies and `llms.txt` are S4.
 
 ### S2 — Site trim and header
 
