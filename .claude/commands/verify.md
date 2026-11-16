@@ -17,14 +17,15 @@ From the repo root, in this order (each stops the run on a failure you can't exp
 6. `pnpm check-manifest` (generates the component manifest and fails on a schema problem or anything undocumented, on a stale generated list in `AGENTS.md` or `CLAUDE.md` (`pnpm sync-agents` rewrites them), or on a name `AGENTS.md` uses that does not exist; needs the build)
 7. `pnpm --filter @dbm-system/components check-component-bundle-size`
 8. `pnpm --filter @dbm-system/components check-foundations-token-coverage`
-9. `pnpm --filter @dbm-system/components check-guidelines` (report the warning count)
-10. `pnpm --filter @dbm-system/components build-storybook`, then `pnpm --filter @dbm-system/components check-storybook-bundle-size` (report the size against its budget)
-11. `pnpm test` (unit)
-12. `pnpm --filter @dbm-system/components test:storybook` (real browser: stories, `play` functions, axe)
-13. `pnpm --filter @dbm-system/components test:visual` (run it from `packages/components`, as CI does; the root has no such script; the Playwright visual-regression suite; it needs the Storybook dev server, so start it with `preview_start` if it is not running, and report a snapshot difference with the story it is on, never update snapshots)
-14. `pnpm check-fresh-app` (packs the four public packages, installs them into an empty app with npm, bundles a `Button` with the stylesheet and a bundled theme with esbuild and with webpack, and checks the page in Chromium; needs the network and Playwright's Chromium, as `browser-tests` has)
+9. `pnpm --filter @dbm-system/components check-logo` (the Storybook logo files match the tokens)
+10. `pnpm --filter @dbm-system/components check-guidelines` (report the warning count)
+11. `pnpm --filter @dbm-system/components build-storybook`, then `pnpm --filter @dbm-system/components check-storybook-bundle-size` (report the size against its budget)
+12. `pnpm test` (unit)
+13. `pnpm --filter @dbm-system/components test:storybook` (real browser: stories, `play` functions, axe)
+14. `pnpm --filter @dbm-system/components test:visual` (run it from `packages/components`, as CI does; the root has no such script; the Playwright visual-regression suite; it needs the Storybook dev server, so start it with `preview_start` if it is not running, and report a snapshot difference with the story it is on, never update snapshots)
+15. `pnpm check-fresh-app` (packs the four public packages, installs them into an empty app with npm, bundles a `Button` with the stylesheet and a bundled theme with esbuild and with webpack, and checks the page in Chromium; needs the network and Playwright's Chromium, as `browser-tests` has)
 
-With `quick`, run only 3, 9 and 11. With a step name, run just that step.
+With `quick`, run only 3, 10 and 12. With a step name, run just that step.
 
 For a failure: say whether it is a known flake (my memory notes and the "Post-Finalization" entries in `guidelines/component-reviews/`) and rerun that one test or folder alone to see; a failure on code the working tree changed, or one that repeats alone, is not a flake until shown. Reproduce before proposing a fix, and propose it without applying it.
 

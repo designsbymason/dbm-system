@@ -30,6 +30,8 @@ The plan, structure and supporting references for `https://dbm-system.com`: the 
 | [0221](../adr/0221-storybooks-docs-pages-are-indexed-by-search-engines-with-plain-text-copies-for-agents-over-keeping-storybook-out-of-results.md) | Storybook's Docs pages indexed, plain-text copies for agents, the token-coloured logo |
 | [0222](../adr/0222-the-home-pages-motion-is-expressive-with-motion-allowed-for-pointer-and-spring-interaction-over-the-restrained-motion-of-the-first-direction.md) | Expressive motion on the home page, Motion allowed for pointer and spring interaction |
 | [0223](../adr/0223-the-sites-mode-is-a-light-and-dark-toggle-that-starts-light-over-light-dark-and-system.md) | A light and dark toggle that starts light |
+| [0224](../adr/0224-the-website-carries-a-privacy-policy-and-terms-of-use-as-two-pages-of-its-own-over-putting-them-in-storybook-or-leaving-them-out.md) | A Privacy Policy and Terms of Use as two pages of the site |
+| [0225](../adr/0225-storybooks-sidebar-lists-every-component-alphabetically-in-one-group-and-a-catalog-holds-tier-and-category-over-tier-and-category-groups-in-the-story-title.md) | Storybook's sidebar lists every component alphabetically in one group, with the Index pages first |
 
 ## Rules for this folder
 

@@ -63,7 +63,7 @@ packages/
                      `SpaceValue`/`Breakpoint` types) is re-exported from the
                      components package, so one install covers it
   icons/             Phosphor Icons wrapper
-  components/        The actual DBM component library (published npm package) — atoms,
+  components/        The actual DBM component library (published npm package; each component's tier and category are in src/componentCatalog.json) — atoms,
                      molecules and organisms, plus src/templates/ (shells that ship,
                      AppShell and PageShell; page-level templates are story-only
                      examples, ADR-0179). Shared internals live in src/internal/. Also holds its own .storybook/ config, src/foundations/

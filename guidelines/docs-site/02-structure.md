@@ -44,7 +44,7 @@ Every menu link goes into Storybook in the same tab. The menus are on the home p
 | `/` | The home page | Astro, from [03-landing-page-brief.md](./03-landing-page-brief.md) |
 | `/404` | Not found, with search | Astro |
 | `/accessibility`, `/privacy`, `/terms` | The accessibility statement for the site, the Privacy Policy and the Terms of Use ([ADR-0224](../adr/0224-the-website-carries-a-privacy-policy-and-terms-of-use-as-two-pages-of-its-own-over-putting-them-in-storybook-or-leaving-them-out.md)) | Astro, plain prose in `src/pages/` |
-| `/AGENTS.md`, `/manifest.json`, `/llms.txt`, `/llms-full.txt`, the Markdown copies | The agent files (§6) | Generated at build; not committed |
+| `/AGENTS.md`; later `/manifest.json`, `/llms.txt`, `/llms-full.txt` and the Markdown copies (S4) | The agent files (§6) | `/AGENTS.md` is served today; the rest are generated at build, not committed, and not built yet |
 | `/sitemap.xml`, `/robots.txt` | §12 | Generated at assembly by `apps/docs/scripts/assemble-seo.mjs` from Storybook's own; not committed |
 | `/storybook/` | The documentation | The `storybook-static` build |
 
