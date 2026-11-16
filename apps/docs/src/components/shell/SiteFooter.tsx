@@ -1,35 +1,30 @@
 import { Link } from "@dbm-system/components";
-import { footerColumns } from "../../data/site";
+import { footerLinks } from "../../data/site";
 import { Wordmark } from "../Wordmark";
 import styles from "./SiteFooter.module.css";
 
-/** The site footer: Docs, Components, Resources and Project, then the licence line (02-structure.md §1). */
+/**
+ * The site footer (guidelines/docs-site/02-structure.md §1): one compact row on `bg.brand-subtle`, in three columns. The
+ * wordmark is at the start, the Accessibility, Privacy Policy and Terms of Use links are centred, and the copyright line is at
+ * the end. Below `md` the three stack.
+ */
 export function SiteFooter() {
   return (
-    <div className={`site-frame ${styles.footer}`}>
-      <div className={styles.columns}>
-        {footerColumns.map((column) => (
-          <nav key={column.label} aria-labelledby={`footer-${column.label}`} className={styles.column}>
-            <h2 id={`footer-${column.label}`} className={styles.heading}>
-              {column.label}
-            </h2>
-            <ul className={styles.links}>
-              {column.links.map((link) => (
-                <li key={link.href}>
-                  <Link href={link.href} size="sm" underline="hover">
-                    {link.label}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </nav>
-        ))}
-      </div>
-      <div className={styles.base}>
+    <div className={styles.root}>
+      <div className={`site-frame ${styles.row}`}>
         <Wordmark className={styles.logo} />
-        <p className={styles.line}>
-          DBM System is open source under the MIT licence. The fonts keep their own licence (SIL Open Font License).
-        </p>
+        <nav aria-label="About this site" className={styles.nav}>
+          <ul className={styles.links}>
+            {footerLinks.map((link) => (
+              <li key={link.href}>
+                <Link href={link.href} size="sm" underline="hover" className={styles.link}>
+                  {link.label}
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </nav>
+        <p className={styles.copyright}>DBM System © 2026 Designs By Mason</p>
       </div>
     </div>
   );

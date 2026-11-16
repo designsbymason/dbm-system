@@ -1,0 +1,80 @@
+---
+// A page of plain prose in the site's shell: the Privacy Policy and the Terms of Use (ADR-0224). One column at a reading
+// width, headings in the display face, links in the link colour. The page's text is its slot.
+import Marketing from "./Marketing.astro";
+
+interface Props {
+  title: string;
+  description: string;
+  /** When the text last changed, as written for a reader: "16 November 2026". */
+  updated: string;
+}
+
+const { title, description, updated } = Astro.props;
+---
+
+<Marketing title={`${title}: DBM System`} description={description}>
+  <article class="site-frame legal" aria-labelledby="legal-heading">
+    <h1 id="legal-heading" class="display legal__title">{title}</h1>
+    <p class="legal__updated">Last updated {updated}</p>
+    <div class="legal__body">
+      <slot />
+    </div>
+  </article>
+</Marketing>
+
+<style>
+  .legal {
+    display: grid;
+    gap: var(--dbm-space-4);
+    padding-block: var(--dbm-space-12) var(--dbm-space-24);
+  }
+
+  .legal__title {
+    font-size: var(--dbm-font-size-3xl);
+  }
+
+  .legal__updated {
+    margin: 0;
+    font-size: var(--dbm-font-size-sm);
+    color: var(--site-graphite);
+  }
+
+  .legal__body {
+    display: grid;
+    gap: var(--dbm-space-4);
+    max-inline-size: 42rem;
+    font-size: var(--dbm-font-size-base);
+    line-height: var(--dbm-line-height-relaxed);
+  }
+
+  .legal__body :global(h2) {
+    margin: var(--dbm-space-6) 0 0;
+    font-family: var(--dbm-font-family-secondary);
+    font-size: var(--dbm-font-size-xl);
+    font-weight: var(--dbm-font-weight-regular);
+    line-height: var(--dbm-line-height-tight);
+  }
+
+  .legal__body :global(p),
+  .legal__body :global(ul) {
+    margin: 0;
+  }
+
+  .legal__body :global(ul) {
+    padding-inline-start: var(--dbm-space-6);
+    display: grid;
+    gap: var(--dbm-space-2);
+  }
+
+  .legal__body :global(a) {
+    color: var(--dbm-text-link);
+    text-underline-offset: 0.2em;
+  }
+
+  .legal__body :global(a:focus-visible) {
+    outline: 2px solid var(--dbm-border-focus);
+    outline-offset: 2px;
+    border-radius: var(--dbm-radius-xs);
+  }
+</style>

@@ -1,0 +1,73 @@
+---
+// The Privacy Policy (ADR-0224). It says only what is true of the site as built: no accounts, cookies, analytics or
+// third-party scripts. A change to that (an analytics tool, say) changes this page in the same commit.
+import Legal from "../layouts/Legal.astro";
+---
+
+<Legal
+  title="Privacy Policy"
+  description="What DBM System's website and documentation do and do not collect: no accounts, no cookies, no analytics."
+  updated="16 November 2026"
+>
+  <p>
+    DBM System is a React component library made by Designs By Mason ("we", "us"). This policy covers this website,
+    including the documentation in Storybook at dbm-system.com/storybook. It is short because there is little to say.
+  </p>
+
+  <h2>The short version</h2>
+  <ul>
+    <li>We do not ask you to create an account or give us any personal information.</li>
+    <li>We do not use cookies.</li>
+    <li>We do not use analytics, advertising or tracking of any kind, and we run no scripts from other companies.</li>
+    <li>We do not sell, share or collect your personal data.</li>
+  </ul>
+
+  <h2>What stays in your browser</h2>
+  <p>
+    The site remembers whether you chose light or dark mode, so the choice is still there on your next visit and is shared
+    between the home page and the documentation. It is stored in your browser's local storage under the name
+    <code>dbm-mode</code>, holds only the word "light" or "dark", and never leaves your device. Storybook may also keep its own
+    interface settings, such as the layout of its panels and the pages you last viewed, in local storage, and some interactive examples may keep their own
+    state there. You can remove all of it at any time by clearing this site's data in your browser's settings.
+  </p>
+
+  <h2>Fonts and other resources</h2>
+  <p>
+    The fonts, scripts, styles and images on this site are served from the site itself. Your browser does not contact any font
+    provider or other third party to display it.
+  </p>
+
+  <h2>Hosting</h2>
+  <p>
+    The site is hosted on GitHub Pages. Like any web host, GitHub may handle technical information about a visit, such as your
+    IP address, to deliver the pages and keep the service secure, under
+    {" "}<a href="https://docs.github.com/en/site-policy/privacy-policies/github-general-privacy-statement">GitHub's privacy statement</a>.
+    We do not run our own logging and keep no record of who visits.
+  </p>
+
+  <h2>The packages</h2>
+  <p>
+    The DBM System packages on npm do not collect data and send nothing anywhere. Installing or using them does not tell us
+    anything about you or your product.
+  </p>
+
+  <h2>Links to other sites</h2>
+  <p>
+    This site links to other services such as GitHub and npm. Their own privacy policies apply to what you do there. If you
+    open an issue on GitHub, what you write is public, so please do not post personal information in it.
+  </p>
+
+  <h2>Questions</h2>
+  <p>
+    Because we hold no personal information about visitors, there is nothing to access, correct or delete. If you have a
+    question about this policy,
+    {" "}<a href="https://github.com/designsbymason/dbm-system/issues">open an issue on GitHub</a>. For a security problem, use
+    the <a href="https://github.com/designsbymason/dbm-system/security/policy">security policy</a> instead of a public issue.
+  </p>
+
+  <h2>Changes</h2>
+  <p>
+    If what the site does with information changes, we will change this page and its date. The date at the top says when it
+    last changed.
+  </p>
+</Legal>

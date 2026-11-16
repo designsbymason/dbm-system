@@ -1,6 +1,6 @@
 # docs
 
-The website for `https://dbm-system.com`: an Astro app with React islands, deployed with Storybook as one GitHub Pages site. The site is the home page, the 404 and the agent files; Storybook, at `/storybook/`, is the documentation (`guidelines/docs-site/01-plan.md`, ADR-0220). The docs pages that were once here (M1) now live in Storybook (S1), and the site was trimmed to match (S2). It is built and checked on every push and replaces the placeholder at the root when the Pages workflow's `PUBLISH_DOCS_SITE` switch is turned on (after S3).
+The website for `https://dbm-system.com`: an Astro app with React islands, deployed with Storybook as one GitHub Pages site. The site is the home page, the 404, the two legal pages and the agent files; Storybook, at `/storybook/`, is the documentation (`guidelines/docs-site/01-plan.md`, ADR-0220). The docs pages that were once here (M1) now live in Storybook (S1), and the site was trimmed to match (S2). It is built and checked on every push and replaces the placeholder at the root when the Pages workflow's `PUBLISH_DOCS_SITE` switch is turned on (after S3).
 
 ## Run it
 
@@ -19,7 +19,7 @@ Telemetry and the dev toolbar are off.
 - `src/data/site.ts`: the site map: every docs link, which goes into Storybook (the header menus and the footer read it).
 - `src/components/shell/`: the page shell (`PageShell`, the header, the footer).
 - `src/layouts/`: `Base` (fonts, tokens, the mode before first paint) and `Marketing` (the page type the site has).
-- `src/pages/`: the routes: `/`, the 404 and `/AGENTS.md`.
+- `src/pages/`: the routes: `/`, the 404, `/AGENTS.md`, and the Privacy Policy and Terms of Use (`privacy.astro` and `terms.astro`, on the `Legal` layout; ADR-0224). Their text says what the site does with information, so a change to that changes them.
 - `src/illustrations/`: the SVG illustrations, coloured from the tokens.
 - `src/components/header/SiteSearch.tsx`: search, a `CommandPalette` over Storybook's `index.json` (fetched when it first opens). On the published site that is Storybook beside the site; on the development server it is Storybook's own development server (`pnpm storybook`, port 6006), which has to be running, or search says so.
 - `src/components/home/`: the home page's sections.

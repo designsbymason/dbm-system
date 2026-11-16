@@ -77,26 +77,10 @@ const [gettingStarted, guides, resources] = docsGroups as [SiteGroup, SiteGroup,
 export const changelog: SiteLink = link(resources, "Changelog");
 export const accessibility: SiteLink = link(guides, "Accessibility");
 export const quickStart: SiteLink = link(gettingStarted, "Quick start");
-export const aiAgents: SiteLink = link(gettingStarted, "AI agents");
 
-/** The agent files the site serves at its root. Only `AGENTS.md` is built; the rest are listed on Storybook's AI agents page as in development. */
-export const agentsMd: SiteLink = { label: "AGENTS.md", href: "/AGENTS.md", description: "The guide an agent reads first" };
-
-export const footerColumns: SiteGroup[] = [
-  {
-    label: "Docs",
-    links: [...gettingStarted.links.filter((candidate) => candidate !== aiAgents), link(guides, "Theming"), accessibility, allComponents],
-  },
-  { label: "Resources", links: resources.links },
-  { label: "AI agents", links: [aiAgents, agentsMd] },
-  {
-    label: "Project",
-    links: [
-      { label: "GitHub", href: "https://github.com/designsbymason/dbm-system" },
-      { label: "npm", href: "https://www.npmjs.com/package/@dbm-system/components" },
-      { label: "Issues", href: "https://github.com/designsbymason/dbm-system/issues" },
-      { label: "Security", href: "https://github.com/designsbymason/dbm-system/security/policy" },
-      { label: "Licence (MIT)", href: "https://github.com/designsbymason/dbm-system/blob/main/LICENSE" },
-    ],
-  },
+/** The footer's links: the Accessibility guide in Storybook, and the site's two legal pages. */
+export const footerLinks: SiteLink[] = [
+  accessibility,
+  { label: "Privacy Policy", href: "/privacy" },
+  { label: "Terms of Use", href: "/terms" },
 ];

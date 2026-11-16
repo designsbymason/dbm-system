@@ -1,50 +1,34 @@
-.footer {
+/* A full-width band on bg.brand-subtle; the row inside it is held to the site's width like the page. */
+.root {
+  background-color: var(--dbm-bg-brand-subtle);
+}
+
+.row {
   display: grid;
-  gap: var(--dbm-space-10);
-  padding-block: var(--dbm-space-12) var(--dbm-space-10);
-  border-block-start: 1px solid var(--site-rule);
-}
-
-.columns {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: var(--dbm-space-8) var(--dbm-space-6);
-}
-
-@media (min-width: 1024px) {
-  .columns {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-  }
-}
-
-.column {
-  display: grid;
-  gap: var(--dbm-space-3);
-  align-content: start;
-}
-
-.heading {
-  margin: 0;
-  font-size: var(--dbm-font-size-sm);
-  font-weight: var(--dbm-font-weight-semibold);
-  color: var(--site-ink);
-}
-
-.links {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: grid;
-  gap: var(--dbm-space-2);
-}
-
-.base {
-  display: flex;
-  flex-wrap: wrap;
+  grid-template-columns: minmax(0, 1fr);
+  justify-items: start;
   align-items: center;
   gap: var(--dbm-space-4);
-  padding-block-start: var(--dbm-space-6);
-  border-block-start: 1px solid var(--site-rule);
+  padding-block: var(--dbm-space-6);
+}
+
+/* From `md` the row is three columns, the two sides sharing the room equally so the links are centred in the page. */
+@media (min-width: 768px) {
+  .row {
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+    gap: var(--dbm-space-6);
+  }
+
+  /* text.link is 4.5:1 on bg.brand-subtle in light, too close to the floor; text.brand is 7:1 there and in dark, and suits the band. */
+.link.link,
+.link.link:hover {
+  color: var(--dbm-text-brand);
+}
+
+.copyright {
+    justify-self: end;
+    text-align: end;
+  }
 }
 
 .logo {
@@ -53,8 +37,23 @@
   color: var(--dbm-text-brand);
 }
 
-.line {
+.links {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--dbm-space-2) var(--dbm-space-6);
+}
+
+/* text.link is 4.5:1 on bg.brand-subtle in light, too close to the floor; text.brand is 7:1 there and in dark, and suits the band. */
+.link.link,
+.link.link:hover {
+  color: var(--dbm-text-brand);
+}
+
+.copyright {
   margin: 0;
   font-size: var(--dbm-font-size-sm);
-  color: var(--site-graphite);
+  color: var(--dbm-text-secondary);
 }
