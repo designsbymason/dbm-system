@@ -53,5 +53,5 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
   }
   writeFileSync(join(out, "sitemap.xml"), sitemap);
   writeFileSync(join(out, "robots.txt"), buildRobots());
-  console.log(`generate-seo: sitemap.xml with ${docsLocations(index).length} Docs pages, and robots.txt`);
+  process.stdout.write(`generate-seo: sitemap.xml with ${docsLocations(index).length} Docs pages, and robots.txt\n`);
 }

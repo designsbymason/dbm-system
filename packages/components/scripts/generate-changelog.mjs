@@ -94,5 +94,5 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
     if (!existsSync(join(packagesDir, dir, "CHANGELOG.md"))) throw new Error(`generate-changelog: packages/${dir}/CHANGELOG.md is missing`);
   }
   writeFileSync(outputPath, buildPage());
-  console.log(`generate-changelog: wrote ${outputPath.slice(packagesDir.length - "packages".length)}`);
+  process.stdout.write(`generate-changelog: wrote ${outputPath.slice(packagesDir.length - "packages".length)}\n`);
 }

@@ -47,11 +47,11 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
       }
     } else {
       writeFileSync(file, expected);
-      console.log(`generate-logo: wrote ${name} (${tokenValue(theme)})`);
+      process.stdout.write(`generate-logo: wrote ${name} (${tokenValue(theme)})\n`);
     }
   }
   if (check) {
     if (stale) process.exit(1);
-    console.log("check-logo: both logo files match the tokens");
+    process.stdout.write("check-logo: both logo files match the tokens\n");
   }
 }
