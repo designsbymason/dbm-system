@@ -1,14 +1,15 @@
 ---
-// The hero's illustration (03-landing-page-brief.md §3, ADR-0217, ADR-0222): a page of the manual. It falls into place like a feather on load,
-// shows the JSON an agent reads (a real token entry from the token index, read at build), breaks up into static, and resolves into a
-// specimen of the primitive tokens drawn with the tokens themselves. As the page scrolls it tilts, skews and lifts, and returns when the page
-// scrolls back. Everything is CSS: the final state is the base style, so reduced motion, a browser without scroll timelines, or no script at
-// all gets the finished specimen, still and complete. It is a picture, so it is hidden from assistive technology and inert.
+// The hero's illustration (03-landing-page-brief.md §3, ADR-0217, ADR-0222): a page of the manual, on bg.brand-subtle. On desktop it glides down
+// like a feather, in wide swings and slightly bent, showing a specimen of the primitive tokens while it falls; once it is in position the
+// specimen breaks into static and resolves into the JSON an agent reads (a real token entry, `bg.brand-subtle`, read from the token index at
+// build). It tilts, skews and lifts as the page scrolls and returns when it scrolls back, and on desktop it leans toward the pointer.
+// Everything that moves is added on top of a finished state, which is the base style: the JSON page, still. Reduced motion, a browser without
+// scroll timelines, or no script all get that complete page. It is a picture, so it is hidden from assistive technology and inert.
 import tokens from "@dbm-system/tokens/tokens.json" with { type: "json" };
 
 type Token = { name: string; layer: string; group: string; type: string; values: Record<string, string>; aliases: Record<string, string>; usedBy: string[] };
-const token = (tokens.tokens as unknown as Token[]).find((candidate) => candidate.name === "--dbm-bg-brand");
-if (!token) throw new Error("HeroPaper: no --dbm-bg-brand in the token index");
+const token = (tokens.tokens as unknown as Token[]).find((candidate) => candidate.name === "--dbm-bg-brand-subtle");
+if (!token) throw new Error("HeroPaper: no --dbm-bg-brand-subtle in the token index");
 
 /** The JSON of one real entry, line by line, as an agent reads it; the long `usedBy` list is cut after three names, as a trimmed excerpt. */
 const used = token.usedBy.slice(0, 3);
@@ -36,7 +37,7 @@ const lines = [
 /** A line cut into runs the stylesheet can colour: the key, the string after it, and the punctuation. */
 const runs = (line: string) => {
   const match = /^(\s*)("[^"]+")(: )?(.*)$/.exec(line);
-  if (!match) return [{ text: line, kind: line.trim().startsWith("…") ? "punct" : "punct" }];
+  if (!match) return [{ text: line, kind: "punct" }];
   const [, indent = "", key = "", colon = "", rest = ""] = match;
   const out = [{ text: indent, kind: "punct" }, { text: key, kind: colon ? "key" : "string" }];
   if (colon) out.push({ text: colon, kind: "punct" });
@@ -52,70 +53,165 @@ const sizes = ["xs", "sm", "base", "md", "lg", "xl"];
 
 <div class="paper" aria-hidden="true" inert>
   <div class="paper__stage">
-    <div class="paper__scroll">
-      <div class="paper__fall">
-        <div class="paper__sheet">
-          <div class="paper__head">
-            <span class="paper__file">tokens.json</span>
-            <span class="paper__page">manual</span>
-          </div>
-          <pre class="paper__json"><code>{
-            lines.map((line, index) => (
-              <span class="paper__line" style={`--i: ${index}`}>{runs(line).map((run) => <span class={`paper__${run.kind}`}>{run.text}</span>)}</span>
-            ))
-          }</code></pre>
-          <div class="paper__ui">
-            <div class="paper__block" style="--k: 0">
-              <p class="paper__label"><span class="token-name">color.purple.50 to 950</span></p>
-              <div class="paper__ramp">
-                {ramp.map((step) => <span style={`background: var(--dbm-color-purple-${step})`}></span>)}
-              </div>
+    <div class="paper__hover">
+      <div class="paper__scroll">
+        <div class="paper__shadow"></div>
+        <div class="paper__fall">
+          <div class="paper__sheet">
+            <div class="paper__head">
+              <span class="paper__file">tokens.json</span>
+              <span class="paper__page">manual</span>
             </div>
-            <div class="paper__block" style="--k: 1">
-              <p class="paper__label"><span class="token-name">space.1 to 12</span></p>
-              <div class="paper__spaces">
-                {spaces.map((step) => <span style={`inline-size: var(--dbm-space-${step})`}></span>)}
-              </div>
-            </div>
-            <div class="paper__row">
-              <div class="paper__block" style="--k: 2">
-                <p class="paper__label"><span class="token-name">radius.xs to xl</span></p>
-                <div class="paper__radii">
-                  {radii.map((step) => <span style={`border-radius: var(--dbm-radius-${step})`}></span>)}
+            <pre class="paper__json"><code>{
+              lines.map((line, index) => (
+                <span class="paper__line" style={`--i: ${index}`}>{runs(line).map((run) => <span class={`paper__${run.kind}`}>{run.text}</span>)}</span>
+              ))
+            }</code></pre>
+            <div class="paper__ui">
+              <div class="paper__block" style="--k: 0">
+                <p class="paper__label"><span class="token-name">color.purple.50 to 950</span></p>
+                <div class="paper__ramp">
+                  {ramp.map((step) => <span style={`background: var(--dbm-color-purple-${step})`}></span>)}
                 </div>
               </div>
-              <div class="paper__block" style="--k: 3">
-                <p class="paper__label"><span class="token-name">shadow.xs to md</span></p>
-                <div class="paper__shadows">
-                  <span class="paper__shadow paper__shadow--xs"></span>
-                  <span class="paper__shadow paper__shadow--sm"></span>
-                  <span class="paper__shadow paper__shadow--md"></span>
+              <div class="paper__block" style="--k: 1">
+                <p class="paper__label"><span class="token-name">space.1 to 12</span></p>
+                <div class="paper__spaces">
+                  {spaces.map((step) => <span style={`inline-size: var(--dbm-space-${step})`}></span>)}
+                </div>
+              </div>
+              <div class="paper__row">
+                <div class="paper__block" style="--k: 2">
+                  <p class="paper__label"><span class="token-name">radius.xs to xl</span></p>
+                  <div class="paper__radii">
+                    {radii.map((step) => <span style={`border-radius: var(--dbm-radius-${step})`}></span>)}
+                  </div>
+                </div>
+                <div class="paper__block" style="--k: 3">
+                  <p class="paper__label"><span class="token-name">shadow.xs to md</span></p>
+                  <div class="paper__shadows">
+                    <span class="paper__tile paper__tile--xs"></span>
+                    <span class="paper__tile paper__tile--sm"></span>
+                    <span class="paper__tile paper__tile--md"></span>
+                  </div>
+                </div>
+              </div>
+              <div class="paper__block" style="--k: 4">
+                <p class="paper__label"><span class="token-name">font.size.xs to xl</span></p>
+                <div class="paper__type">
+                  {sizes.map((step) => <span style={`font-size: var(--dbm-font-size-${step})`}>Aa</span>)}
                 </div>
               </div>
             </div>
-            <div class="paper__block" style="--k: 4">
-              <p class="paper__label"><span class="token-name">font.size.xs to xl</span></p>
-              <div class="paper__type">
-                {sizes.map((step) => <span style={`font-size: var(--dbm-font-size-${step})`}>Aa</span>)}
-              </div>
-            </div>
+            <div class="paper__noise"></div>
           </div>
-          <div class="paper__noise"></div>
         </div>
       </div>
     </div>
   </div>
 </div>
 
+<script is:inline>
+  // Runs as the markup is parsed, before the first paint, so there is no flash. Two enhancements, both for a desktop reader who has not asked
+  // for reduced motion; without them the page is one flat sheet and still complete.
+  (function () {
+    var root = document.currentScript && document.currentScript.previousElementSibling;
+    if (!root || !root.classList.contains("paper")) return;
+    if (!window.matchMedia("(min-width: 768px) and (prefers-reduced-motion: no-preference)").matches) return;
+
+    // 1. The bend: the sheet is cut into hinged strips, each turned a little more than the last, so it curves as it falls. Each strip holds a
+    //    copy of the sheet, shifted to show its own slice. The strips straighten to nothing as the page lands.
+    var fall = root.querySelector(".paper__fall");
+    var sheet = fall && fall.querySelector(".paper__sheet");
+    var count = 5;
+    if (fall && sheet) {
+      root.style.setProperty("--n", String(count));
+      // The stylesheet is scoped by an attribute the page's own elements carry; the new ones need it too.
+      var scope = "";
+      for (var a = 0; a < root.attributes.length; a += 1) if (root.attributes[a].name.indexOf("data-astro-cid-") === 0) scope = root.attributes[a].name;
+      var previous = null;
+      for (var index = 0; index < count; index += 1) {
+        var strip = document.createElement("div");
+        strip.className = "paper__strip";
+        var win = document.createElement("div");
+        win.className = "paper__win";
+        if (scope) {
+          strip.setAttribute(scope, "");
+          win.setAttribute(scope, "");
+        }
+        var part = index === 0 ? sheet : sheet.cloneNode(true);
+        part.style.setProperty("--part", String(index));
+        win.appendChild(part);
+        strip.appendChild(win);
+        (previous || fall).appendChild(strip);
+        previous = strip;
+      }
+    }
+
+    // 2. The parallax: once the page has landed it leans toward the pointer and its layers shift a little against each other.
+    var hero = root.closest(".hero") || root;
+    var stage = root.querySelector(".paper__stage");
+    var target = { x: 0, y: 0, near: 0 };
+    var current = { x: 0, y: 0, near: 0 };
+    var frame = 0;
+    var live = false;
+    function draw() {
+      current.x += (target.x - current.x) * 0.1;
+      current.y += (target.y - current.y) * 0.1;
+      current.near += (target.near - current.near) * 0.1;
+      root.style.setProperty("--mx", current.x.toFixed(3));
+      root.style.setProperty("--my", current.y.toFixed(3));
+      root.style.setProperty("--near", current.near.toFixed(3));
+      var settled = Math.abs(target.x - current.x) + Math.abs(target.y - current.y) + Math.abs(target.near - current.near) < 0.002;
+      frame = settled ? 0 : window.requestAnimationFrame(draw);
+    }
+    function ask() {
+      if (!frame) frame = window.requestAnimationFrame(draw);
+    }
+    function clamp(value) {
+      return Math.max(-1, Math.min(1, value));
+    }
+    hero.addEventListener("pointermove", function (event) {
+      if (!live || event.pointerType !== "mouse" || !stage) return;
+      var box = stage.getBoundingClientRect();
+      target.x = clamp(((event.clientX - (box.left + box.width / 2)) / box.width) * 1.6);
+      target.y = clamp(((event.clientY - (box.top + box.height / 2)) / box.height) * 1.6);
+      target.near = event.clientX > box.left && event.clientX < box.right && event.clientY > box.top && event.clientY < box.bottom ? 1 : 0;
+      ask();
+    });
+    hero.addEventListener("pointerleave", function () {
+      target.x = 0;
+      target.y = 0;
+      target.near = 0;
+      ask();
+    });
+    root.addEventListener("animationend", function (event) {
+      if (event.animationName === "paper-fall") live = true;
+    });
+  })();
+</script>
+
 <style>
   /*
-   * The finished state is the base style: the specimen showing, the JSON and the static not drawn. Everything that moves is added below, inside
-   * `prefers-reduced-motion: no-preference`, so a reader who asked for no motion (or a browser that cannot animate) gets the complete page.
+   * The finished state is the base style: the JSON page, drawn still. Everything that moves is added below, inside `prefers-reduced-motion:
+   * no-preference`, so a reader who asked for no motion (or a browser that cannot animate) gets the complete page.
    */
+  @property --bend {
+    syntax: "<angle>";
+    inherits: true;
+    initial-value: 0deg;
+  }
+
+  /* The page glides in wide swings, so it passes beyond the hero's own column for a moment; the viewport's edge, not a scrollbar, is where it stops. */
+  :global(body) {
+    overflow-x: clip;
+  }
+
   .paper {
-    /* When each part of the sequence begins. The fall takes --fall; the JSON breaks up as it lands; the specimen resolves out of the static. */
-    --fall: 4.2s;
+    /* When each part of the sequence begins. The fall takes --fall; the specimen breaks up as the page lands; the JSON resolves out of the static. */
+    --fall: 4.6s;
     --t0: calc(var(--fall) + 0.4s);
+    --n: 1;
     --paper-w: min(100%, 23rem);
     display: grid;
     place-items: center;
@@ -132,12 +228,62 @@ const sizes = ["xs", "sm", "base", "md", "lg", "xl"];
 
   .paper__stage {
     inline-size: var(--paper-w);
-    perspective: 1500px;
+    container-type: inline-size;
+    perspective: 1100px;
   }
 
+  .paper__hover,
   .paper__scroll,
-  .paper__fall {
+  .paper__fall,
+  .paper__strip {
     transform-style: preserve-3d;
+  }
+
+  /* Leaning toward the pointer: a turn, a small shift and, over the page itself, a slight lift. All zero at rest. */
+  .paper__hover {
+    transform: translate3d(calc(var(--mx, 0) * var(--dbm-space-3)), calc(var(--my, 0) * var(--dbm-space-3)), 0)
+      scale(calc(1 + var(--near, 0) * 0.02)) rotateY(calc(var(--mx, 0) * 9deg)) rotateX(calc(var(--my, 0) * -7deg));
+  }
+
+  .paper__scroll {
+    position: relative;
+  }
+
+  /* The depth cast on the page behind: it sits under the sheet and takes the sheet's own shadow, so it follows light and dark. */
+  .paper__shadow {
+    position: absolute;
+    inset: 0;
+    border-radius: var(--dbm-radius-md);
+    box-shadow: var(--site-shadow-plate);
+  }
+
+  /* The bend. The strips turn a little each, hinged on their near edge; --bend is the sum, and it is nothing when the page is flat. */
+  .paper__strip {
+    position: relative;
+    inline-size: 100%;
+    transform-origin: left center;
+    transform: rotateY(calc(var(--bend) / var(--n)));
+  }
+
+  .paper__fall > .paper__strip {
+    inline-size: calc(100% / var(--n));
+  }
+
+  .paper__strip > .paper__strip {
+    position: absolute;
+    inset-block: 0;
+    inset-inline-start: 100%;
+  }
+
+  .paper__win {
+    inline-size: calc(100% + 1px);
+    block-size: 100%;
+    overflow: hidden;
+  }
+
+  .paper__win > .paper__sheet {
+    inline-size: 100cqw;
+    transform: translateX(calc(var(--part, 0) * -100cqw / var(--n)));
   }
 
   .paper__sheet {
@@ -147,31 +293,30 @@ const sizes = ["xs", "sm", "base", "md", "lg", "xl"];
     display: grid;
     grid-template-columns: minmax(0, 1fr);
     grid-template-rows: auto 1fr;
-    background: var(--dbm-bg-surface);
-    border: 1px solid var(--site-rule-strong);
+    background: var(--dbm-bg-brand-subtle);
+    border: 1px solid var(--dbm-border-brand);
     border-radius: var(--dbm-radius-md);
-    box-shadow: var(--site-shadow-plate);
   }
 
   .paper__head {
     display: flex;
     justify-content: space-between;
     padding: var(--dbm-space-3) var(--dbm-space-5);
-    border-block-end: 1px solid var(--site-rule);
+    border-block-end: 1px solid var(--dbm-border-brand-subtle);
     font-family: var(--dbm-font-family-mono);
     font-size: var(--dbm-font-size-xs);
-    color: var(--site-pencil);
+    color: var(--site-graphite);
+    translate: calc(var(--mx, 0) * var(--dbm-space-1)) calc(var(--my, 0) * var(--dbm-space-1));
   }
 
   .paper__file {
     color: var(--site-accent);
   }
 
-  /* The JSON an agent reads. Not drawn in the finished state. */
+  /* The JSON an agent reads: the finished state. */
   .paper__json {
-    display: none;
     grid-area: 2 / 1;
-    align-self: start;
+    align-self: center;
     margin: 0;
     padding: var(--dbm-space-4) var(--dbm-space-3);
     font-family: var(--dbm-font-family-mono);
@@ -179,6 +324,7 @@ const sizes = ["xs", "sm", "base", "md", "lg", "xl"];
     line-height: var(--dbm-line-height-snug);
     white-space: normal;
     color: var(--site-graphite);
+    translate: calc(var(--mx, 0) * var(--dbm-space-2)) calc(var(--my, 0) * var(--dbm-space-2));
   }
 
   /* Each line keeps its own spaces; the newlines between the generated elements are not part of the JSON. */
@@ -196,16 +342,17 @@ const sizes = ["xs", "sm", "base", "md", "lg", "xl"];
   }
 
   .paper__punct {
-    color: var(--site-pencil);
+    color: var(--site-graphite);
   }
 
-  /* The specimen: the primitive tokens, drawn with the tokens. */
+  /* The specimen of the primitive tokens, drawn with the tokens. Shown while the page falls, not in the finished state. */
   .paper__ui {
+    display: none;
     grid-area: 2 / 1;
-    display: grid;
     align-content: space-evenly;
     gap: var(--dbm-space-4);
     padding: var(--dbm-space-5);
+    translate: calc(var(--mx, 0) * var(--dbm-space-3)) calc(var(--my, 0) * var(--dbm-space-3));
   }
 
   .paper__row {
@@ -229,7 +376,7 @@ const sizes = ["xs", "sm", "base", "md", "lg", "xl"];
     grid-template-columns: repeat(11, minmax(0, 1fr));
     border-radius: var(--dbm-radius-sm);
     overflow: hidden;
-    border: 1px solid var(--site-rule);
+    border: 1px solid var(--dbm-border-brand-subtle);
   }
 
   .paper__ramp span {
@@ -259,7 +406,7 @@ const sizes = ["xs", "sm", "base", "md", "lg", "xl"];
     inline-size: var(--dbm-space-6);
     block-size: var(--dbm-space-6);
     border: 2px solid var(--dbm-border-brand);
-    background: var(--dbm-bg-brand-subtle);
+    background: var(--dbm-bg-surface);
   }
 
   .paper__shadows {
@@ -268,7 +415,7 @@ const sizes = ["xs", "sm", "base", "md", "lg", "xl"];
     padding-block: var(--dbm-space-1);
   }
 
-  .paper__shadow {
+  .paper__tile {
     display: block;
     inline-size: var(--dbm-space-6);
     block-size: var(--dbm-space-6);
@@ -276,15 +423,15 @@ const sizes = ["xs", "sm", "base", "md", "lg", "xl"];
     border-radius: var(--dbm-radius-sm);
   }
 
-  .paper__shadow--xs {
+  .paper__tile--xs {
     box-shadow: var(--paper-sh-xs);
   }
 
-  .paper__shadow--sm {
+  .paper__tile--sm {
     box-shadow: var(--paper-sh-sm);
   }
 
-  .paper__shadow--md {
+  .paper__tile--md {
     box-shadow: var(--paper-sh-md);
   }
 
@@ -311,12 +458,16 @@ const sizes = ["xs", "sm", "base", "md", "lg", "xl"];
   }
 
   @media (prefers-reduced-motion: no-preference) {
-    .paper__json,
+    .paper__ui,
     .paper__noise {
       display: block;
     }
 
-    /* On a phone the page does not fall: it is already in place, and the JSON breaks up soon after load. */
+    .paper__ui {
+      display: grid;
+    }
+
+    /* On a phone the page does not fall: it is already in place, and the specimen breaks up into the JSON soon after load. */
     @media (max-width: 767px) {
       .paper {
         --fall: 0s;
@@ -328,12 +479,16 @@ const sizes = ["xs", "sm", "base", "md", "lg", "xl"];
       .paper__fall {
         animation: paper-fall var(--fall) cubic-bezier(0.37, 0, 0.3, 1) both;
       }
+
+      .paper__shadow {
+        animation: paper-shadow var(--fall) cubic-bezier(0.37, 0, 0.3, 1) both;
+      }
     }
 
-    /* Each line of JSON breaks up in turn, top to bottom, in coarse steps, like a signal losing its lock. */
-    .paper__line {
-      animation: paper-break 0.9s steps(7, end) both;
-      animation-delay: calc(var(--t0) + var(--i) * 32ms);
+    /* The specimen breaks up block by block, in coarse steps, like a signal losing its lock... */
+    .paper__block {
+      animation: paper-break 0.8s steps(6, end) both;
+      animation-delay: calc(var(--t0) + var(--k) * 90ms);
     }
 
     .paper__noise {
@@ -343,15 +498,15 @@ const sizes = ["xs", "sm", "base", "md", "lg", "xl"];
       animation-delay: var(--t0), var(--t0);
     }
 
-    /* The specimen is held back until the static has taken over; its blocks then come out of the noise one after another. */
-    .paper__block {
-      animation: paper-resolve 0.7s var(--site-ease) both;
-      animation-delay: calc(var(--t0) + 1s + var(--k) * 110ms);
+    /* ...and the JSON resolves out of the static line by line, top to bottom. */
+    .paper__line {
+      animation: paper-lock 0.9s steps(7, end) both;
+      animation-delay: calc(var(--t0) + 0.8s + var(--i) * 34ms);
     }
 
     /*
-     * On a phone the page is below the first screen, so the JSON breaking into static and resolving into the specimen follows the scroll: it
-     * plays as the page comes into view and plays back when the reader scrolls up. A browser that cannot do that keeps the timed version.
+     * On a phone the page is below the first screen, so the change follows the scroll: it plays as the page comes into view and plays back when
+     * the reader scrolls up. A browser that cannot do that keeps the timed version.
      */
     @supports (animation-timeline: view()) {
       @media (max-width: 767px) {
@@ -359,25 +514,25 @@ const sizes = ["xs", "sm", "base", "md", "lg", "xl"];
           view-timeline: --paper block;
         }
 
-        .paper__line {
+        .paper__block {
           animation-timeline: --paper;
           animation-duration: auto;
           animation-delay: 0s;
-          animation-range: entry calc(8% + var(--i) * 1.2%) entry calc(34% + var(--i) * 1.2%);
+          animation-range: entry calc(2% + var(--k) * 4%) entry calc(26% + var(--k) * 4%);
         }
 
         .paper__noise {
           animation-timeline: --paper, auto;
           animation-duration: auto, 0.45s;
           animation-delay: 0s, 0s;
-          animation-range: entry 10% entry 80%, normal;
+          animation-range: entry 10% entry 76%, normal;
         }
 
-        .paper__block {
+        .paper__line {
           animation-timeline: --paper;
           animation-duration: auto;
           animation-delay: 0s;
-          animation-range: entry calc(52% + var(--k) * 6%) entry calc(78% + var(--k) * 6%);
+          animation-range: entry calc(38% + var(--i) * 1.1%) entry calc(62% + var(--i) * 1.1%);
         }
       }
     }
@@ -392,30 +547,58 @@ const sizes = ["xs", "sm", "base", "md", "lg", "xl"];
     }
   }
 
-  /* A feather: it sways from side to side and turns as it comes down, each swing smaller, and settles flat and facing forward. */
+  /*
+   * A feather, more than a leaf: it glides in wide swings, close to flat at first (turned well back) and standing up as it settles, each swing
+   * smaller than the last, and it bends the opposite way at each turn. It ends flat, facing forward.
+   */
   @keyframes paper-fall {
     0% {
-      transform: translate3d(14%, -21rem, 0) rotateZ(-24deg) rotateY(78deg) rotateX(18deg);
+      --bend: -78deg;
+      transform: translate3d(62%, -21rem, 0) rotateZ(-34deg) rotateY(72deg) rotateX(64deg);
     }
-    13% {
-      transform: translate3d(-12%, -16rem, 0) rotateZ(18deg) rotateY(-54deg) rotateX(-12deg);
+    12% {
+      --bend: 60deg;
+      transform: translate3d(-52%, -17rem, 0) rotateZ(27deg) rotateY(-62deg) rotateX(50deg);
     }
-    28% {
-      transform: translate3d(10%, -10.5rem, 0) rotateZ(-13deg) rotateY(40deg) rotateX(9deg);
+    26% {
+      --bend: -46deg;
+      transform: translate3d(40%, -12rem, 0) rotateZ(-20deg) rotateY(48deg) rotateX(38deg);
     }
-    44% {
-      transform: translate3d(-7%, -6.5rem, 0) rotateZ(9deg) rotateY(-28deg) rotateX(-6deg);
+    42% {
+      --bend: 32deg;
+      transform: translate3d(-27%, -7.6rem, 0) rotateZ(13deg) rotateY(-34deg) rotateX(25deg);
     }
-    60% {
-      transform: translate3d(5%, -3.4rem, 0) rotateZ(-6deg) rotateY(17deg) rotateX(4deg);
+    58% {
+      --bend: -20deg;
+      transform: translate3d(16%, -4.2rem, 0) rotateZ(-8deg) rotateY(21deg) rotateX(14deg);
     }
-    76% {
-      transform: translate3d(-3%, -1.3rem, 0) rotateZ(3.5deg) rotateY(-9deg) rotateX(-2deg);
+    74% {
+      --bend: 11deg;
+      transform: translate3d(-7%, -1.7rem, 0) rotateZ(4deg) rotateY(-10deg) rotateX(6deg);
     }
-    90% {
-      transform: translate3d(1%, -0.25rem, 0) rotateZ(-1deg) rotateY(3deg) rotateX(0.6deg);
+    88% {
+      --bend: -4deg;
+      transform: translate3d(2%, -0.4rem, 0) rotateZ(-1.2deg) rotateY(3.5deg) rotateX(1.6deg);
     }
     100% {
+      --bend: 0deg;
+      transform: none;
+    }
+  }
+
+  /* The depth on the page behind: far off and faint while the page is high, close and firm when it lands. */
+  @keyframes paper-shadow {
+    0%,
+    52% {
+      opacity: 0;
+      transform: translate3d(8%, 3rem, 0) scale(1.1);
+    }
+    76% {
+      opacity: 0.45;
+      transform: translate3d(3%, 1.2rem, 0) scale(1.04);
+    }
+    100% {
+      opacity: 1;
       transform: none;
     }
   }
@@ -426,7 +609,7 @@ const sizes = ["xs", "sm", "base", "md", "lg", "xl"];
       transform: none;
     }
     17% {
-      opacity: 0.35;
+      opacity: 0.4;
       transform: translateX(var(--dbm-space-1)) skewX(-8deg);
     }
     34% {
@@ -438,11 +621,34 @@ const sizes = ["xs", "sm", "base", "md", "lg", "xl"];
       transform: translateX(var(--dbm-space-2));
     }
     70% {
-      opacity: 0.8;
+      opacity: 0.75;
       transform: translateX(calc(-1 * var(--dbm-space-1))) skewX(-4deg);
     }
     100% {
       opacity: 0;
+      transform: none;
+    }
+  }
+
+  @keyframes paper-lock {
+    0% {
+      opacity: 0;
+      transform: translateX(calc(-1 * var(--dbm-space-2))) skewX(8deg);
+    }
+    22% {
+      opacity: 0.8;
+      transform: translateX(var(--dbm-space-2)) skewX(-6deg);
+    }
+    44% {
+      opacity: 0.2;
+      transform: translateX(calc(-1 * var(--dbm-space-1)));
+    }
+    66% {
+      opacity: 0.9;
+      transform: translateX(var(--dbm-space-1)) skewX(4deg);
+    }
+    100% {
+      opacity: 1;
       transform: none;
     }
   }
@@ -469,17 +675,6 @@ const sizes = ["xs", "sm", "base", "md", "lg", "xl"];
     to {
       -webkit-mask-position: 60px 37px;
       mask-position: 60px 37px;
-    }
-  }
-
-  @keyframes paper-resolve {
-    from {
-      opacity: 0;
-      transform: translateY(var(--dbm-space-2));
-    }
-    to {
-      opacity: 1;
-      transform: none;
     }
   }
 

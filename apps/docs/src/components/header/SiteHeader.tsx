@@ -42,7 +42,7 @@ function PanelToolLinks() {
 }
 
 /**
- * The home page's header (guidelines/docs-site/02-structure.md §1, ADR-0220), a ghost bar that sticks. From `lg` it is three
+ * The home page's header (guidelines/docs-site/02-structure.md §1, ADR-0220), a frosted bar that sticks. From `lg` it is three
  * columns: the wordmark and the version at the start, the Docs and Foundations menus and the Components link centred, and the
  * icon buttons (search, mode, GitHub) at the end. Below `lg` it is three columns too, the menu button, the wordmark
  * (centred), and search with the mode toggle; the menus become expandable groups in the menu panel, and Storybook and GitHub
@@ -51,7 +51,7 @@ function PanelToolLinks() {
  */
 export function SiteHeader({ version, placements }: SiteHeaderProps) {
   return (
-    <Navbar sticky variant="ghost" collapseBelow="lg" className={styles.header}>
+    <Navbar sticky variant="frosted" collapseBelow="lg" className={styles.header}>
       <Navbar.Row columns="balanced" columnsBelow="lg" className={styles.row}>
         <Navbar.MenuButton column="start" variant="tertiary" />
         <Navbar.Brand href="/" column="center" aria-label={`DBM System v${version}, home`} className={styles.brand}>

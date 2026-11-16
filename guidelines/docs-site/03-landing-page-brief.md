@@ -28,7 +28,7 @@ One story: what it is and why it is different (1–2), the facts (3), the breadt
 
 | # | Section | Content | Interaction and motion |
 |---|---|---|---|
-| 1 | **Hero** | The tagline, one supporting sentence, the install line (package-manager tabs, copy); the primary action Get started, the secondary All components | A **page of the manual**, drawn in CSS 3D from the tokens: on load it falls into place like a feather and settles facing forward; it shows a real token entry as the JSON an agent reads, which breaks into static and resolves into a specimen of the primitive tokens; as the reader scrolls it tilts, skews and lifts, and it returns when they scroll back |
+| 1 | **Hero** | The tagline, one supporting sentence, the install line (package-manager tabs, copy); the primary action Get started, the secondary All components | A **page of the manual**, on `bg.brand-subtle` and drawn in CSS 3D from the tokens: on load it glides down like a feather, in wide swings and slightly bent, showing a specimen of the primitive tokens, and settles facing forward; the specimen then breaks into static and resolves into the JSON an agent reads (a real entry, `bg.brand-subtle`, from the token index); as the reader scrolls it tilts, skews and lifts and returns when they scroll back, and on desktop it leans toward the pointer |
 | 2 | **Built for agents** | Why an agent works from facts, not guesses: the manifest, `AGENTS.md`, the token index; `llms.txt` labelled in development until S4; a link to the AI agents page | The reader picks a component from a short list and sees it rendered beside the manifest JSON an agent reads for it, with the props in use highlighted in both. A switch flips between the two views on a phone |
 | 3 | **Specification** | The datasheet of real figures read from the packages at build: components and hooks, two brands in two modes, the runtime dependencies, React, the WCAG 2.2 AA target, what ships for agents, MIT, the current version | Terms and values in rows, not a strip of big numbers; hovering a row shows where the figure comes from; the version links to the Changelog |
 | 4 | **All components** | Every component and shipped shell from the manifest (the example pages are in Storybook's Templates Index): name, tier, category, one sentence, each linking to its Docs page in Storybook. The same one-line descriptions as Storybook's Components Index, so the two can't drift | A DBM `DataTable` with a search box and tier and category filters; a compact first view with "Show all" |
@@ -37,7 +37,7 @@ One story: what it is and why it is different (1–2), the facts (3), the breadt
 | 7 | **Start in three steps** | Install; import the stylesheet and a theme; render a component. Real code, each with a copy button | A package-manager switch; ends on Getting started and All components |
 | — | **Footer** | The site footer ([02-structure.md](./02-structure.md) §1) | |
 
-**On a phone** the page does not fall; the JSON breaking into the specimen follows the scroll, and it still tilts as the reader scrolls, the theme card's scroll steps become its controls alone, and each composition is designed for the width, not shrunk.
+**On a phone** the page does not fall; the specimen breaking into the JSON follows the scroll, and it still tilts as the reader scrolls, the theme card's scroll steps become its controls alone, and each composition is designed for the width, not shrunk.
 
 ## 4. Look and feel
 

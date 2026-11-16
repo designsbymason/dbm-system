@@ -56,7 +56,10 @@ import Marketing from "../layouts/Marketing.astro";
     align-items: center;
   }
 
+  /* The text is above the page of the manual, so when the page glides across it the headline stays readable. */
   .hero__text {
+    position: relative;
+    z-index: 1;
     grid-column: 1 / -1;
     display: grid;
     grid-template-columns: minmax(0, 1fr);

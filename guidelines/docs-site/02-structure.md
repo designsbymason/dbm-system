@@ -6,7 +6,7 @@
 
 The site is `https://dbm-system.com` (the apex is canonical; `www` redirects). It is the home page; the documentation is Storybook at `/storybook/` ([ADR-0220](../adr/0220-the-docs-website-is-the-home-page-only-and-storybook-is-the-documentation-with-a-header-that-links-into-it-and-search-over-its-index-over-docs-pages-on-the-website.md)).
 
-A ghost bar that sticks (transparent until it is stuck). **From `lg` (1024 px) it is three columns**, the two sides sharing the room equally so the middle is truly centred:
+A frosted bar that sticks. **From `lg` (1024 px) it is three columns**, the two sides sharing the room equally so the middle is truly centred:
 
 ```
 [dbM system] [v0.1.x]        Docs ▾   Foundations ▾   Components                [Search] [Mode] [GitHub]
@@ -86,7 +86,7 @@ Site-only CSS uses semantic tokens only; a missing token or component is propose
 
 | Piece | Composed from |
 |---|---|
-| Header and phone menu panel | `Navbar` (a ghost, sticky bar with a `Navbar.Row` in columns), `NavigationMenu`, `Badge`, `IconButton`, `Button` |
+| Header and phone menu panel | `Navbar` (a frosted, sticky bar with a `Navbar.Row` in columns), `NavigationMenu`, `Badge`, `IconButton`, `Button` |
 | Search | `CommandPalette` (`filter={false}`), Storybook's `index.json` |
 | Mode toggle | `IconButton`, `ThemeProvider`, the shared storage key |
 | Install line with package-manager tabs (pnpm, npm, yarn), remembered | `Tabs`, `CodeBlock` |
