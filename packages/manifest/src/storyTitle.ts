@@ -2,9 +2,12 @@ import { readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import type { ManifestTier } from "./types";
 
-const TIERS: Record<string, ManifestTier> = { Atoms: "atom", Molecules: "molecule", Organisms: "organism", Templates: "template" };
+const TIERS: Record<string, ManifestTier> = { Templates: "template" };
 
-/** The tier and category in a story title such as `Atoms/Inputs/Button`, or `undefined` when the title does not follow that shape. */
+/**
+ * The tier and category in a template's story title such as `Templates/Shells/AppShell`, or `undefined` when the title does not follow that
+ * shape. (A component's tier and category are in the catalog, not its title: `catalog.ts`.)
+ */
 export function parseStoryTitle(title: string): { tier: ManifestTier; category: string } | undefined {
   const [first, second, third] = title.split("/");
   const tier = first === undefined ? undefined : TIERS[first];
@@ -13,7 +16,7 @@ export function parseStoryTitle(title: string): { tier: ManifestTier; category: 
 }
 
 /**
- * Reads the tier and category of the component in `directory` from the title of its stories. The component's own
+ * Reads the tier and category of the template in `directory` from the title of its stories. The component's own
  * `<Name>.stories.tsx` is read first; any other story file in the folder is the fallback.
  */
 export function readStoryTitle(directory: string, name: string): { tier: ManifestTier; category: string } | undefined {

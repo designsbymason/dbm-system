@@ -38,17 +38,9 @@ const TIER_NAMES = { atom: "Atoms", molecule: "Molecules", organism: "Organisms"
  */
 const EXAMPLE_PAGE_TAG = "example-page";
 
-/** The top-level groups a component's Docs page can be in: `Components` today's way, and a tier, the way it was before the sidebar was flat. */
-const TIER_GROUPS = new Set(["Atoms", "Molecules", "Organisms"]);
-
-/**
- * The name of the component a Docs title is the page of, or `undefined` when it is not a component's page: `Components/{Name}`, or
- * `{Tier}/{Category}/{Name}` as the titles were before the sidebar was flat. A deeper title (a part, a component's checks) is not.
- */
+/** The name of the component a Docs title is the page of (`Components/{Name}`), or `undefined` when it is not a component's page: a part or a component's checks is deeper. */
 function componentNameOf(parts: string[]): string | undefined {
-  if (parts[0] === "Components") return parts.length === 2 ? parts[1] : undefined;
-  if (TIER_GROUPS.has(parts[0] ?? "")) return parts.length === 3 ? parts[2] : undefined;
-  return undefined;
+  return parts[0] === "Components" && parts.length === 2 ? parts[1] : undefined;
 }
 
 /**

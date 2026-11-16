@@ -28,9 +28,9 @@ export const LIMIT = 12;
 const DOCS_GROUPS = new Set(["Getting started", "Guides", "Resources", "Foundations"]);
 
 /**
- * A title with a component's tier and category in front: `Components/Tabs/Content` is `Molecules/Navigation/Tabs/Content`, as titles
- * were before the sidebar was flat. A title that has them already, or that is not a component's, is as it is. Search describes and
- * ranks a component by this, so what a reader sees and finds does not depend on how Storybook groups it.
+ * A title with a component's tier and category in front: `Components/Tabs/Content` is `Molecules/Navigation/Tabs/Content`. The
+ * components are in one group, so their tier and category are not in the title; search describes and ranks a component by them, as
+ * a reader expects ("Atoms › Inputs"), and finds it by those words. A title that is not a component's is as it is.
  */
 function withPlacement(parts: string[], placements: Placements): string[] {
   const name = parts[1];

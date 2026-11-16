@@ -28,15 +28,13 @@ describe("toRows", () => {
     ]);
   });
 
-  it("gives the same row for the title a component had before the sidebar was flat", () => {
-    const flat = toRows(index(docs("Components/Button")), catalog);
-    const tiered = toRows(index(docs("Atoms/Inputs/Button")), catalog);
-    expect(tiered.map(({ name, tier, category }) => [name, tier, category])).toEqual(flat.map(({ name, tier, category }) => [name, tier, category]));
+  it("trusts the catalog, not the title, for a component's tier and category", () => {
+    const rows = toRows(index(docs("Components/Button")), { Button: { tier: "organism", category: "Layout" } });
+    expect(rows.map(({ tier, category }) => [tier, category])).toEqual([["Organisms", "Layout"]]);
   });
 
-  it("trusts the catalog over the title", () => {
-    const rows = toRows(index(docs("Organisms/Layout/Button")), catalog);
-    expect(rows.map(({ tier, category }) => [tier, category])).toEqual([["Atoms", "Inputs"]]);
+  it("leaves out a title in a tier group, as components are no longer grouped by tier", () => {
+    expect(toRows(index(docs("Atoms/Inputs/Button")), catalog)).toEqual([]);
   });
 
   it("leaves out a page that is not a component's own: a part, a component's checks, a guide, a Foundations page", () => {
