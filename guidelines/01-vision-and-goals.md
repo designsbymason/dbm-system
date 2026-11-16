@@ -12,7 +12,9 @@ DBM System is an **agentic** component library. The word means the library is bu
 
 | Tier | Where it is used | Wording |
 |---|---|---|
-| Tagline | Website hero, page titles | The agentic component library for people and the AI agents that build with them. |
+| Tagline | Website hero, `README.md`, the placeholder page | Let your agent read the manual. |
+| Tagline sentence | Under the tagline in the website hero | DBM System ships its manual as JSON: every component, prop and token, typed, so an agent builds from facts instead of guesses. |
+| Page title | The home page's `<title>` | DBM System: the agentic component library |
 | One sentence | Meta descriptions, the npm `description`, the lead of the Getting started page | An agentic React component library for building web and enterprise applications quickly, consistently and accessibly, with a typed, token-driven API that AI coding agents and developers can both rely on. |
 | Full definition | `README.md`, the GitHub repository description | An agentic, standalone React component library built for both AI coding agents and human developers to compose web and enterprise applications quickly, consistently, and accessibly. Token-driven, multi-brand, multi-theme (light/dark), and built with a strong TypeScript + JSDoc contract so AI agents can work against a structured, predictable API. |
 

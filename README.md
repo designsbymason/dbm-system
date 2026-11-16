@@ -2,9 +2,9 @@
 
 # DBM System
 
-**The agentic React component library for people and the AI agents that build with them.**
+**Let your agent read the manual.**
 
-Accessible, token-driven and fully typed, so an application comes together quickly, looks consistent and works for everyone.
+An agentic React component library: accessible, token-driven and fully typed, with a manifest, a token index and an `AGENTS.md` in the package, so an application comes together quickly, looks consistent and works for everyone.
 
 [![npm](https://img.shields.io/npm/v/@dbm-system/components?label=npm&color=5548a4)](https://www.npmjs.com/package/@dbm-system/components)
 [![CI](https://github.com/designsbymason/dbm-system/actions/workflows/ci.yml/badge.svg)](https://github.com/designsbymason/dbm-system/actions/workflows/ci.yml)

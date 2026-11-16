@@ -44,7 +44,7 @@ Recorded here so they are not re-asked; the detail is in the file named.
 | DBM changes found while building | A new or changed component or token is raised with the maintainer first; the site never hardcodes a value instead | [01-plan.md](./01-plan.md) §6 |
 | Changed Storybook addresses | A short "this page has moved" page at each old address | [04-content-inventory.md](./04-content-inventory.md) §4 |
 | Markdown copies | No "Copy page" button or "View as Markdown" link, at the maintainer's decision; the copies exist for agents | [02-structure.md](./02-structure.md) §6 |
-| Tagline | "The agentic component library for people and the AI agents that build with them." | `01-vision-and-goals.md` §1 |
+| Tagline | "Let your agent read the manual." with the sentence under it in the hero | `01-vision-and-goals.md` §1 |
 | Node and pnpm | The repository's: Node 24 from `.nvmrc` and the pinned pnpm | [02-structure.md](./02-structure.md) §9 |
 | Local development | `pnpm --filter @dbm-system/docs dev` (the `docs` entry in `.claude/launch.json`, port 4321); the `site-artifact` entry serves the assembled site with Storybook on one origin | `apps/docs/README.md` |
 | Story canvases and search engines | `robots.txt` blocks `?path=/story/` addresses but never `iframe.html`; the frame carries `noindex, indexifembedded`; the manager adds `noindex` on story paths and a canonical on Docs paths; the sitemap lists only Docs entries | [02-structure.md](./02-structure.md) §12 |
