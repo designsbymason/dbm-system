@@ -79,7 +79,7 @@ describe("generateManifest on the components package", () => {
     expect(item?.props.length).toBeGreaterThan(0);
   });
 
-  it("reads the tier and category from the story title", () => {
+  it("reads the tier and category from the catalog, and a template's from its story title", () => {
     const tiers = new Set(result.manifest.components.map((component) => component.tier));
     expect([...tiers].sort()).toEqual(["atom", "molecule", "organism", "template"]);
     expect(result.manifest.components.find((component) => component.name === "ConfirmDialog")?.tier).toBe("organism");

@@ -4,7 +4,7 @@ import { withCustomConfig } from "react-docgen-typescript";
 import type { ComponentDoc, PropItem } from "react-docgen-typescript";
 import ts from "typescript";
 import { describeProp, parseExamples, splitDescription, unquote } from "./jsdoc";
-import { readStoryTitle } from "./storyTitle";
+import { placementOf, readCatalog } from "./catalog";
 import type { Manifest, ManifestComponent, ManifestConstant, ManifestParameter, ManifestPart, ManifestProp, ManifestUtility } from "./types";
 
 /** One finding about the source: an error means the manifest entry is incomplete, a warning means it is thinner than it should be. */
@@ -254,10 +254,11 @@ export function generateManifest({ packageRoot }: GenerateOptions): GenerateResu
 
   // 4. The manifest.
   const manifest: Manifest = { schemaVersion: 1, package: "@dbm-system/components", version: pkg.version, components: [], utilities: [], constants: [] };
+  const catalog = readCatalog(root);
   for (const { name, symbol, parts } of compounds) {
     const file = sourceOf(symbol);
-    const story = readStoryTitle(dirname(file), name);
-    if (!story) diagnostics.push({ level: "error", subject: name, message: `no story title like "Atoms/Inputs/${name}" in ${relative(root, dirname(file))}` });
+    const { placement, problem } = placementOf(root, catalog, dirname(file), name);
+    if (problem) diagnostics.push({ level: "error", subject: name, message: problem });
     const doc = docs.get(`${file}::${name}`);
     if (!doc) diagnostics.push({ level: "error", subject: name, message: `react-docgen-typescript found no component named ${name} in ${relative(root, file)}` });
     const { summary, description, examples } = jsdocOf(symbol);
@@ -281,8 +282,8 @@ export function generateManifest({ packageRoot }: GenerateOptions): GenerateResu
 
     manifest.components.push({
       name,
-      tier: story?.tier ?? "atom",
-      category: story?.category ?? "",
+      tier: placement?.tier ?? "atom",
+      category: placement?.category ?? "",
       summary,
       ...(description ? { description } : {}),
       ...refInfo(symbol),
