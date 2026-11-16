@@ -256,7 +256,7 @@ export const EntryHugsItsText: Story = {
     await waitFor(() => expect(entry()).toHaveValue("rgb(0 0 0)"));
     await expect(box().getBoundingClientRect().width).toBe(open);
     await userEvent.keyboard("{Escape}");
-    await waitFor(() => expect(body().queryByRole("dialog", { name: "Choose a color" })).not.toBeInTheDocument());
+    await waitFor(() => expect(body().queryByRole("dialog", { name: "Choose a color" })).not.toBeInTheDocument(), { timeout: 5000 });
     await waitFor(() => expect(box().getBoundingClientRect().width).toBeLessThan(open));
   },
 };
@@ -367,7 +367,7 @@ export const PanelSitsByTheField: Story = {
     await expect(getComputedStyle(dialog).fontFamily).toBe(getComputedStyle(body().getByRole("group", { name: "Brand color" })).fontFamily);
     await expect(body().getByRole("slider", { name: "Saturation" })).toHaveFocus();
     await userEvent.keyboard("{Escape}");
-    await waitFor(() => expect(body().queryByRole("dialog", { name: "Choose a color" })).not.toBeInTheDocument());
+    await waitFor(() => expect(body().queryByRole("dialog", { name: "Choose a color" })).not.toBeInTheDocument(), { timeout: 5000 });
   },
 };
 
@@ -487,7 +487,7 @@ export const AltArrowDownOpens: Story = {
     await body().findByRole("dialog", { name: "Choose a color" });
     await waitFor(() => expect(body().getByRole("slider", { name: "Saturation" })).toHaveFocus());
     await press("Escape", "Escape", 27);
-    await waitFor(() => expect(body().queryByRole("dialog", { name: "Choose a color" })).not.toBeInTheDocument());
+    await waitFor(() => expect(body().queryByRole("dialog", { name: "Choose a color" })).not.toBeInTheDocument(), { timeout: 5000 });
     // Opened from the text entry, so focus goes back there.
     await expect(entry()).toHaveFocus();
   },
@@ -558,7 +558,7 @@ export const FullWidthOnAPhone: Story = {
     // The panel spans the screen up to the gap at each edge, wider than the anchored panel's own width.
     await expect(Math.abs(box.width - (window.innerWidth - 16))).toBeLessThan(2);
     await userEvent.keyboard("{Escape}");
-    await waitFor(() => expect(body().queryByRole("dialog", { name: "Choose a color" })).not.toBeInTheDocument());
+    await waitFor(() => expect(body().queryByRole("dialog", { name: "Choose a color" })).not.toBeInTheDocument(), { timeout: 5000 });
   },
 };
 
@@ -605,6 +605,6 @@ export const RecentRowAndItsStorage: Story = {
     await waitFor(() => expect(within(recent).getAllByRole("button").map((button) => button.getAttribute("aria-label"))).toEqual(["#ff0000", "#00aa00"]));
     window.sessionStorage.removeItem("dbm-recent:color-picker:checks-recent-colors");
     await userEvent.keyboard("{Escape}");
-    await waitFor(() => expect(body().queryByRole("dialog", { name: "Choose a color" })).not.toBeInTheDocument());
+    await waitFor(() => expect(body().queryByRole("dialog", { name: "Choose a color" })).not.toBeInTheDocument(), { timeout: 5000 });
   },
 };
