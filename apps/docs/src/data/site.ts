@@ -78,9 +78,12 @@ export const changelog: SiteLink = link(resources, "Changelog");
 export const accessibility: SiteLink = link(guides, "Accessibility");
 export const quickStart: SiteLink = link(gettingStarted, "Quick start");
 
-/** The footer's links: the Accessibility guide in Storybook, and the site's two legal pages. */
+/** This website's own accessibility statement; the components' guarantees and known exceptions are in the Accessibility guide (`accessibility`). */
+export const accessibilityStatement: SiteLink = { label: "Accessibility", href: "/accessibility" };
+
+/** The footer's links: the site's accessibility statement and its two legal pages. */
 export const footerLinks: SiteLink[] = [
-  accessibility,
+  accessibilityStatement,
   { label: "Privacy Policy", href: "/privacy" },
   { label: "Terms of Use", href: "/terms" },
 ];

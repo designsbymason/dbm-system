@@ -17,7 +17,7 @@
 
 ## 2. Scope
 
-In: the home page (seven sections, [03-landing-page-brief.md](./03-landing-page-brief.md)) with its header and footer; search over Storybook's index; the light and dark toggle; the 404; the Privacy Policy and Terms of Use ([ADR-0224](../adr/0224-the-website-carries-a-privacy-policy-and-terms-of-use-as-two-pages-of-its-own-over-putting-them-in-storybook-or-leaving-them-out.md)); the agent files at the root; in Storybook, the Getting started, Guides and Resources groups ([02-structure.md](./02-structure.md) §2), the All components page, a generated Changelog, indexing and a sitemap, the new logo; the Storybook bridge; the quality gates.
+In: the home page (seven sections, [03-landing-page-brief.md](./03-landing-page-brief.md)) with its header and footer; search over Storybook's index; the light and dark toggle; the 404; the Accessibility statement, Privacy Policy and Terms of Use ([ADR-0224](../adr/0224-the-website-carries-a-privacy-policy-and-terms-of-use-as-two-pages-of-its-own-over-putting-them-in-storybook-or-leaving-them-out.md)); the agent files at the root; in Storybook, the Getting started, Guides and Resources groups ([02-structure.md](./02-structure.md) §2), the All components page, a generated Changelog, indexing and a sitemap, the new logo; the Storybook bridge; the quality gates.
 
 Later: a grid view of All components with a glyph per component; a tokens page; versioned docs (from 1.0); social images; a release banner.
 

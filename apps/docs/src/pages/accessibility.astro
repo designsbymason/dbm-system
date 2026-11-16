@@ -1,0 +1,88 @@
+---
+// The accessibility statement for the website and its documentation (ADR-0224). It says what is aimed for, what is checked and
+// what is not, and how to report a problem. The components' own guarantees and the measured exceptions live once, in Storybook's
+// Accessibility guide, which this page links to and does not repeat.
+import Legal from "../layouts/Legal.astro";
+import { accessibility } from "../data/site";
+---
+
+<Legal
+  title="Accessibility"
+  description="The accessibility standard DBM System's website and documentation aim for, what is checked and what is not, and how to report a problem."
+  updated="16 November 2026"
+>
+  <p>
+    We want everyone to be able to use this website and the documentation in Storybook, whatever they use to read it. This
+    page says what we aim for, what we check and what we have not checked, and how to tell us about a problem.
+  </p>
+
+  <h2>Our aim</h2>
+  <p>
+    We aim for <abbr title="Web Content Accessibility Guidelines">WCAG</abbr> 2.2 level AA on the website, in the
+    documentation and in every component. This is our own assessment: it has not been audited by an independent body, so
+    treat it as a target we work to and measure, not a certificate.
+  </p>
+
+  <h2>What the site does</h2>
+  <ul>
+    <li>A "Skip to content" link is the first thing a keyboard reaches on each page.</li>
+    <li>
+      Everything can be used with a keyboard alone: the menus, search (open it with its button, or with ⌘K or Ctrl K), the
+      mode toggle and the menu panel on a small screen. Focus is always visible, and a menu or panel returns focus to where
+      it came from when it closes.
+    </li>
+    <li>Text and controls are designed to meet the WCAG contrast ratios in both light and dark mode.</li>
+    <li>
+      Light mode is the default, and the toggle in the header switches to dark. Neither relies on colour alone to show
+      meaning.
+    </li>
+    <li>Animation is reduced or removed when your device asks for reduced motion.</li>
+    <li>Pages are built for phone, tablet and desktop widths.</li>
+    <li>Every button, link and field has a name that matches what you see, so voice control works as you would expect.</li>
+  </ul>
+
+  <h2>How we check</h2>
+  <ul>
+    <li>
+      Every page of this site is scanned with an automated accessibility tool (axe) on each change, in light and dark mode,
+      with and without reduced motion. A violation of WCAG 2.2 level A or AA stops the change from being published.
+    </li>
+    <li>
+      Every example in the documentation is run through the same tool in a real browser, and each interactive component is
+      tested for its keyboard and focus behaviour.
+    </li>
+    <li>
+      Each component is also reviewed against a written checklist before it is called finished, and pages are checked by
+      hand with the keyboard alone, at phone, tablet and desktop widths, and in light and dark mode.
+    </li>
+  </ul>
+
+  <h2>What we have not checked</h2>
+  <p>
+    Automated tools find only part of what can go wrong. We have not yet tested with a range of screen readers, on every
+    browser and real device, or in Windows high-contrast mode on a real machine (we emulate forced-colours mode in a
+    browser). Some of the components in the documentation also have measured contrast values below the target, for
+    example the faint track of a slider. Where that is so, it is listed, with the reason, in the
+    <a href={accessibility.href}>Accessibility guide</a>, which also covers what every component guarantees and what stays
+    your job when you build with them.
+  </p>
+
+  <h2>Supported browsers</h2>
+  <p>
+    The last two versions of Chrome, Edge, Firefox and Safari, on desktop and mobile. Internet Explorer is not supported.
+  </p>
+
+  <h2>Tell us about a problem</h2>
+  <p>
+    If something here is hard to use with your setup, please
+    <a href="https://github.com/designsbymason/dbm-system/issues">open an issue on GitHub</a> and tell us the page, what you
+    were trying to do, and which browser and assistive technology you use. We treat accessibility problems as bugs and will
+    say what we can do about yours. Issues are public, so please keep personal information out of them.
+  </p>
+
+  <h2>This statement</h2>
+  <p>
+    We wrote this statement on the date at the top, from our own checks. We will change it when what is true of the site
+    changes.
+  </p>
+</Legal>

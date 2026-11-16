@@ -33,7 +33,7 @@ Every menu link goes into Storybook in the same tab. The menus are on the home p
 
 **Below `lg`** the menu button opens a panel from the start edge: Docs and Foundations as expandable groups (the same labelled simple lists, their links lined up with the top-level labels and a subtle line between groups), Components as a link, and Storybook and GitHub at the foot as ghost buttons that share the width.
 
-**Footer:** one compact row on `bg.brand-subtle`, in three columns: the wordmark at the start, the Accessibility (Storybook's guide), Privacy Policy and Terms of Use links centred, and "DBM System © 2026 Designs By Mason" at the end; below `md` they stack. There is no links section. The links are in `text.brand`, since `text.link` is only 4.5:1 on that band in light. The 404 offers search and the way into the docs.
+**Footer:** one compact row on `bg.brand-subtle`, in three columns: the wordmark at the start, the Accessibility, Privacy Policy and Terms of Use links (the site's own pages) centred, and "DBM System © 2026 Designs By Mason" at the end; below `md` they stack. There is no links section. The links are in `text.brand` in every state (resting, visited, hover, pressed, focus), since `text.link` is only 4.5:1 on that band in light. The 404 offers search and the way into the docs.
 
 ## 2. Site map
 
@@ -43,7 +43,7 @@ Every menu link goes into Storybook in the same tab. The menus are on the home p
 |---|---|---|
 | `/` | The home page | Astro, from [03-landing-page-brief.md](./03-landing-page-brief.md) |
 | `/404` | Not found, with search | Astro |
-| `/privacy`, `/terms` | The Privacy Policy and the Terms of Use ([ADR-0224](../adr/0224-the-website-carries-a-privacy-policy-and-terms-of-use-as-two-pages-of-its-own-over-putting-them-in-storybook-or-leaving-them-out.md)) | Astro, plain prose in `src/pages/` |
+| `/accessibility`, `/privacy`, `/terms` | The accessibility statement for the site, the Privacy Policy and the Terms of Use ([ADR-0224](../adr/0224-the-website-carries-a-privacy-policy-and-terms-of-use-as-two-pages-of-its-own-over-putting-them-in-storybook-or-leaving-them-out.md)) | Astro, plain prose in `src/pages/` |
 | `/AGENTS.md`, `/manifest.json`, `/llms.txt`, `/llms-full.txt`, the Markdown copies | The agent files (§6) | Generated at build; not committed |
 | `/sitemap.xml`, `/robots.txt` | §12 | Generated at assembly by `apps/docs/scripts/assemble-seo.mjs` from Storybook's own; not committed |
 | `/storybook/` | The documentation | The `storybook-static` build |

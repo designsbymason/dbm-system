@@ -19,13 +19,7 @@
     gap: var(--dbm-space-6);
   }
 
-  /* text.link is 4.5:1 on bg.brand-subtle in light, too close to the floor; text.brand is 7:1 there and in dark, and suits the band. */
-.link.link,
-.link.link:hover {
-  color: var(--dbm-text-brand);
-}
-
-.copyright {
+  .copyright {
     justify-self: end;
     text-align: end;
   }
@@ -46,9 +40,14 @@
   gap: var(--dbm-space-2) var(--dbm-space-6);
 }
 
-/* text.link is 4.5:1 on bg.brand-subtle in light, too close to the floor; text.brand is 7:1 there and in dark, and suits the band. */
+/* The links are in the brand colour in every state: resting, visited, hover, pressed and keyboard focus (the ring is the
+   focus cue, the text stays brand). text.link is only 4.5:1 on bg.brand-subtle in light; text.brand is 7:1 there and in dark. */
 .link.link,
-.link.link:hover {
+.link.link:visited,
+.link.link:hover,
+.link.link:active,
+.link.link:focus,
+.link.link:focus-visible {
   color: var(--dbm-text-brand);
 }
 
