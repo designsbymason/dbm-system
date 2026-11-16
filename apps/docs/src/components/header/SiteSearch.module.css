@@ -1,0 +1,16 @@
+/* On a phone the search button is the icon alone, so the bar keeps room for the wordmark, the version and the menu button.
+   The word stays in the page for its name (WCAG 2.5.3); the shortcut is for a keyboard and is not shown. */
+@media not all and (min-width: 768px) {
+  .label.label {
+    position: absolute;
+    inline-size: 1px;
+    block-size: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+
+  .shortcut.shortcut {
+    display: none;
+  }
+}

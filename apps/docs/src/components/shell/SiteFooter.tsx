@@ -1,6 +1,6 @@
 import { Link } from "@dbm-system/components";
 import { footerColumns } from "../../data/site";
-import { LogoMark } from "../LogoMark";
+import { Wordmark } from "../Wordmark";
 import styles from "./SiteFooter.module.css";
 
 /** The site footer: Docs, Components, Resources and Project, then the licence line (02-structure.md §1). */
@@ -26,7 +26,7 @@ export function SiteFooter() {
         ))}
       </div>
       <div className={styles.base}>
-        <LogoMark className={styles.logo} title="dbM" />
+        <Wordmark className={styles.logo} />
         <p className={styles.line}>
           DBM System is open source under the MIT licence. The fonts keep their own licence (SIL Open Font License).
         </p>

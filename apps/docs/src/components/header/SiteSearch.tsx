@@ -2,6 +2,7 @@ import { Button, CommandPalette, Kbd } from "@dbm-system/components";
 import type { CommandItem } from "@dbm-system/components";
 import { MagnifyingGlassIcon } from "@dbm-system/icons";
 import { useRef, useState } from "react";
+import styles from "./SiteSearch.module.css";
 
 interface PagefindResult {
   url: string;
@@ -76,8 +77,8 @@ export function SiteSearch() {
       trigger={
         // The visible word is the name (WCAG 2.5.3, Label in Name); the shortcut is shown but kept from assistive technology.
         <Button variant="secondary" tone="neutral" size="sm" leadingIcon={MagnifyingGlassIcon}>
-          <span>Search</span>
-          <Kbd keys={["mod", "K"]} aria-hidden="true" />
+          <span className={styles.label}>Search</span>
+          <Kbd keys={["mod", "K"]} aria-hidden="true" className={styles.shortcut} />
         </Button>
       }
     />

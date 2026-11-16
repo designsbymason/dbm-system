@@ -4,17 +4,10 @@
 
 .logo {
   display: block;
+  /* About 24px tall; the width follows from the wordmark's shape (02-structure.md §1). */
   height: var(--dbm-space-6);
   width: auto;
   color: var(--dbm-text-brand);
-}
-
-/* Storybook is a different tool: set slightly apart from the site's own sections in the bar (not in the phone menu's
-   stacked list, where the indent would read as nesting). */
-@media (min-width: 1024px) {
-  .workshop {
-    margin-inline-start: var(--dbm-space-4);
-  }
 }
 
 .version {
@@ -26,4 +19,16 @@
 .version:focus-visible {
   outline: 2px solid var(--dbm-border-focus);
   outline-offset: 2px;
+}
+
+.divider.divider {
+  /* A short rule between the mode control and the tool links, not the bar's full height. */
+  block-size: var(--dbm-space-6);
+}
+
+.panelActions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--dbm-space-2);
 }
