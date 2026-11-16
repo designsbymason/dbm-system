@@ -1,0 +1,494 @@
+---
+// The hero's illustration (03-landing-page-brief.md §3, ADR-0217, ADR-0222): a page of the manual. It falls into place like a feather on load,
+// shows the JSON an agent reads (a real token entry from the token index, read at build), breaks up into static, and resolves into a
+// specimen of the primitive tokens drawn with the tokens themselves. As the page scrolls it tilts, skews and lifts, and returns when the page
+// scrolls back. Everything is CSS: the final state is the base style, so reduced motion, a browser without scroll timelines, or no script at
+// all gets the finished specimen, still and complete. It is a picture, so it is hidden from assistive technology and inert.
+import tokens from "@dbm-system/tokens/tokens.json" with { type: "json" };
+
+type Token = { name: string; layer: string; group: string; type: string; values: Record<string, string>; aliases: Record<string, string>; usedBy: string[] };
+const token = (tokens.tokens as unknown as Token[]).find((candidate) => candidate.name === "--dbm-bg-brand");
+if (!token) throw new Error("HeroPaper: no --dbm-bg-brand in the token index");
+
+/** The JSON of one real entry, line by line, as an agent reads it; the long `usedBy` list is cut after three names, as a trimmed excerpt. */
+const used = token.usedBy.slice(0, 3);
+const entries = (record: Record<string, string>) =>
+  Object.entries(record).map(([key, value], index, all) => `    "${key}": "${value}"${index < all.length - 1 ? "," : ""}`);
+const lines = [
+  "{",
+  `  "name": "${token.name}",`,
+  `  "layer": "${token.layer}",`,
+  `  "group": "${token.group}",`,
+  `  "type": "${token.type}",`,
+  `  "values": {`,
+  ...entries(token.values),
+  `  },`,
+  `  "aliases": {`,
+  ...entries(token.aliases),
+  `  },`,
+  `  "usedBy": [`,
+  ...used.map((name) => `    "${name}",`),
+  `    … ${token.usedBy.length - used.length} more`,
+  `  ]`,
+  "}",
+];
+
+/** A line cut into runs the stylesheet can colour: the key, the string after it, and the punctuation. */
+const runs = (line: string) => {
+  const match = /^(\s*)("[^"]+")(: )?(.*)$/.exec(line);
+  if (!match) return [{ text: line, kind: line.trim().startsWith("…") ? "punct" : "punct" }];
+  const [, indent = "", key = "", colon = "", rest = ""] = match;
+  const out = [{ text: indent, kind: "punct" }, { text: key, kind: colon ? "key" : "string" }];
+  if (colon) out.push({ text: colon, kind: "punct" });
+  if (rest) out.push({ text: rest, kind: rest.startsWith('"') || rest.startsWith("[") ? "string" : "punct" });
+  return out;
+};
+
+const ramp = ["50", "100", "200", "300", "400", "500", "600", "700", "800", "900", "950"];
+const spaces = ["1", "2", "3", "4", "6", "8", "12"];
+const radii = ["xs", "sm", "md", "lg", "xl"];
+const sizes = ["xs", "sm", "base", "md", "lg", "xl"];
+---
+
+<div class="paper" aria-hidden="true" inert>
+  <div class="paper__stage">
+    <div class="paper__scroll">
+      <div class="paper__fall">
+        <div class="paper__sheet">
+          <div class="paper__head">
+            <span class="paper__file">tokens.json</span>
+            <span class="paper__page">manual</span>
+          </div>
+          <pre class="paper__json"><code>{
+            lines.map((line, index) => (
+              <span class="paper__line" style={`--i: ${index}`}>{runs(line).map((run) => <span class={`paper__${run.kind}`}>{run.text}</span>)}</span>
+            ))
+          }</code></pre>
+          <div class="paper__ui">
+            <div class="paper__block" style="--k: 0">
+              <p class="paper__label"><span class="token-name">color.purple.50 to 950</span></p>
+              <div class="paper__ramp">
+                {ramp.map((step) => <span style={`background: var(--dbm-color-purple-${step})`}></span>)}
+              </div>
+            </div>
+            <div class="paper__block" style="--k: 1">
+              <p class="paper__label"><span class="token-name">space.1 to 12</span></p>
+              <div class="paper__spaces">
+                {spaces.map((step) => <span style={`inline-size: var(--dbm-space-${step})`}></span>)}
+              </div>
+            </div>
+            <div class="paper__row">
+              <div class="paper__block" style="--k: 2">
+                <p class="paper__label"><span class="token-name">radius.xs to xl</span></p>
+                <div class="paper__radii">
+                  {radii.map((step) => <span style={`border-radius: var(--dbm-radius-${step})`}></span>)}
+                </div>
+              </div>
+              <div class="paper__block" style="--k: 3">
+                <p class="paper__label"><span class="token-name">shadow.xs to md</span></p>
+                <div class="paper__shadows">
+                  <span class="paper__shadow paper__shadow--xs"></span>
+                  <span class="paper__shadow paper__shadow--sm"></span>
+                  <span class="paper__shadow paper__shadow--md"></span>
+                </div>
+              </div>
+            </div>
+            <div class="paper__block" style="--k: 4">
+              <p class="paper__label"><span class="token-name">font.size.xs to xl</span></p>
+              <div class="paper__type">
+                {sizes.map((step) => <span style={`font-size: var(--dbm-font-size-${step})`}>Aa</span>)}
+              </div>
+            </div>
+          </div>
+          <div class="paper__noise"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+  /*
+   * The finished state is the base style: the specimen showing, the JSON and the static not drawn. Everything that moves is added below, inside
+   * `prefers-reduced-motion: no-preference`, so a reader who asked for no motion (or a browser that cannot animate) gets the complete page.
+   */
+  .paper {
+    /* When each part of the sequence begins. The fall takes --fall; the JSON breaks up as it lands; the specimen resolves out of the static. */
+    --fall: 4.2s;
+    --t0: calc(var(--fall) + 0.4s);
+    --paper-w: min(100%, 23rem);
+    display: grid;
+    place-items: center;
+    --paper-sh-xs: var(--dbm-shadow-light-xs);
+    --paper-sh-sm: var(--dbm-shadow-light-sm);
+    --paper-sh-md: var(--dbm-shadow-light-md);
+  }
+
+  :global(:root[data-theme$="-dark"]) .paper {
+    --paper-sh-xs: var(--dbm-shadow-dark-xs);
+    --paper-sh-sm: var(--dbm-shadow-dark-sm);
+    --paper-sh-md: var(--dbm-shadow-dark-md);
+  }
+
+  .paper__stage {
+    inline-size: var(--paper-w);
+    perspective: 1500px;
+  }
+
+  .paper__scroll,
+  .paper__fall {
+    transform-style: preserve-3d;
+  }
+
+  .paper__sheet {
+    position: relative;
+    aspect-ratio: 3 / 4;
+    overflow: hidden;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto 1fr;
+    background: var(--dbm-bg-surface);
+    border: 1px solid var(--site-rule-strong);
+    border-radius: var(--dbm-radius-md);
+    box-shadow: var(--site-shadow-plate);
+  }
+
+  .paper__head {
+    display: flex;
+    justify-content: space-between;
+    padding: var(--dbm-space-3) var(--dbm-space-5);
+    border-block-end: 1px solid var(--site-rule);
+    font-family: var(--dbm-font-family-mono);
+    font-size: var(--dbm-font-size-xs);
+    color: var(--site-pencil);
+  }
+
+  .paper__file {
+    color: var(--site-accent);
+  }
+
+  /* The JSON an agent reads. Not drawn in the finished state. */
+  .paper__json {
+    display: none;
+    grid-area: 2 / 1;
+    align-self: start;
+    margin: 0;
+    padding: var(--dbm-space-4) var(--dbm-space-3);
+    font-family: var(--dbm-font-family-mono);
+    font-size: var(--dbm-font-size-xs);
+    line-height: var(--dbm-line-height-snug);
+    white-space: normal;
+    color: var(--site-graphite);
+  }
+
+  /* Each line keeps its own spaces; the newlines between the generated elements are not part of the JSON. */
+  .paper__line {
+    display: block;
+    white-space: pre;
+  }
+
+  .paper__key {
+    color: var(--site-ink);
+  }
+
+  .paper__string {
+    color: var(--site-accent);
+  }
+
+  .paper__punct {
+    color: var(--site-pencil);
+  }
+
+  /* The specimen: the primitive tokens, drawn with the tokens. */
+  .paper__ui {
+    grid-area: 2 / 1;
+    display: grid;
+    align-content: space-evenly;
+    gap: var(--dbm-space-4);
+    padding: var(--dbm-space-5);
+  }
+
+  .paper__row {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--dbm-space-5);
+  }
+
+  .paper__block {
+    display: grid;
+    gap: var(--dbm-space-2);
+    min-inline-size: 0;
+  }
+
+  .paper__label {
+    margin: 0;
+  }
+
+  .paper__ramp {
+    display: grid;
+    grid-template-columns: repeat(11, minmax(0, 1fr));
+    border-radius: var(--dbm-radius-sm);
+    overflow: hidden;
+    border: 1px solid var(--site-rule);
+  }
+
+  .paper__ramp span {
+    block-size: var(--dbm-space-10);
+  }
+
+  .paper__spaces {
+    display: flex;
+    align-items: flex-end;
+    gap: var(--dbm-space-2);
+  }
+
+  .paper__spaces span {
+    display: block;
+    block-size: var(--dbm-space-3);
+    background: var(--dbm-bg-brand);
+    border-radius: var(--dbm-radius-xs);
+  }
+
+  .paper__radii {
+    display: flex;
+    gap: var(--dbm-space-2);
+  }
+
+  .paper__radii span {
+    display: block;
+    inline-size: var(--dbm-space-6);
+    block-size: var(--dbm-space-6);
+    border: 2px solid var(--dbm-border-brand);
+    background: var(--dbm-bg-brand-subtle);
+  }
+
+  .paper__shadows {
+    display: flex;
+    gap: var(--dbm-space-3);
+    padding-block: var(--dbm-space-1);
+  }
+
+  .paper__shadow {
+    display: block;
+    inline-size: var(--dbm-space-6);
+    block-size: var(--dbm-space-6);
+    background: var(--dbm-bg-surface);
+    border-radius: var(--dbm-radius-sm);
+  }
+
+  .paper__shadow--xs {
+    box-shadow: var(--paper-sh-xs);
+  }
+
+  .paper__shadow--sm {
+    box-shadow: var(--paper-sh-sm);
+  }
+
+  .paper__shadow--md {
+    box-shadow: var(--paper-sh-md);
+  }
+
+  .paper__type {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    font-family: var(--dbm-font-family-secondary);
+    line-height: 1;
+    color: var(--site-ink);
+  }
+
+  /* The static between the two: an alpha mask of noise, coloured by the token, so no colour is written here. Not drawn in the finished state. */
+  .paper__noise {
+    display: none;
+    position: absolute;
+    inset: 0;
+    background: var(--dbm-text-brand);
+    opacity: 0;
+    -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1.1' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 3.2 -1.45'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1.1' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 3.2 -1.45'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    mask-size: 120px 120px;
+    pointer-events: none;
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .paper__json,
+    .paper__noise {
+      display: block;
+    }
+
+    /* On a phone the page does not fall: it is already in place, and the JSON breaks up soon after load. */
+    @media (max-width: 767px) {
+      .paper {
+        --fall: 0s;
+        --t0: 0.9s;
+      }
+    }
+
+    @media (min-width: 768px) {
+      .paper__fall {
+        animation: paper-fall var(--fall) cubic-bezier(0.37, 0, 0.3, 1) both;
+      }
+    }
+
+    /* Each line of JSON breaks up in turn, top to bottom, in coarse steps, like a signal losing its lock. */
+    .paper__line {
+      animation: paper-break 0.9s steps(7, end) both;
+      animation-delay: calc(var(--t0) + var(--i) * 32ms);
+    }
+
+    .paper__noise {
+      animation:
+        paper-static 2.4s linear both,
+        paper-jitter 0.45s steps(5) infinite;
+      animation-delay: var(--t0), var(--t0);
+    }
+
+    /* The specimen is held back until the static has taken over; its blocks then come out of the noise one after another. */
+    .paper__block {
+      animation: paper-resolve 0.7s var(--site-ease) both;
+      animation-delay: calc(var(--t0) + 1s + var(--k) * 110ms);
+    }
+
+    /*
+     * On a phone the page is below the first screen, so the JSON breaking into static and resolving into the specimen follows the scroll: it
+     * plays as the page comes into view and plays back when the reader scrolls up. A browser that cannot do that keeps the timed version.
+     */
+    @supports (animation-timeline: view()) {
+      @media (max-width: 767px) {
+        .paper__sheet {
+          view-timeline: --paper block;
+        }
+
+        .paper__line {
+          animation-timeline: --paper;
+          animation-duration: auto;
+          animation-delay: 0s;
+          animation-range: entry calc(8% + var(--i) * 1.2%) entry calc(34% + var(--i) * 1.2%);
+        }
+
+        .paper__noise {
+          animation-timeline: --paper, auto;
+          animation-duration: auto, 0.45s;
+          animation-delay: 0s, 0s;
+          animation-range: entry 10% entry 80%, normal;
+        }
+
+        .paper__block {
+          animation-timeline: --paper;
+          animation-duration: auto;
+          animation-delay: 0s;
+          animation-range: entry calc(52% + var(--k) * 6%) entry calc(78% + var(--k) * 6%);
+        }
+      }
+    }
+
+    /* Scrolling tilts, skews and lifts the page, and scrolling back puts it down again (the timeline runs both ways). */
+    @supports (animation-timeline: scroll()) {
+      .paper__scroll {
+        animation: paper-tilt linear both;
+        animation-timeline: scroll(root block);
+        animation-range: 0 85vh;
+      }
+    }
+  }
+
+  /* A feather: it sways from side to side and turns as it comes down, each swing smaller, and settles flat and facing forward. */
+  @keyframes paper-fall {
+    0% {
+      transform: translate3d(14%, -21rem, 0) rotateZ(-24deg) rotateY(78deg) rotateX(18deg);
+    }
+    13% {
+      transform: translate3d(-12%, -16rem, 0) rotateZ(18deg) rotateY(-54deg) rotateX(-12deg);
+    }
+    28% {
+      transform: translate3d(10%, -10.5rem, 0) rotateZ(-13deg) rotateY(40deg) rotateX(9deg);
+    }
+    44% {
+      transform: translate3d(-7%, -6.5rem, 0) rotateZ(9deg) rotateY(-28deg) rotateX(-6deg);
+    }
+    60% {
+      transform: translate3d(5%, -3.4rem, 0) rotateZ(-6deg) rotateY(17deg) rotateX(4deg);
+    }
+    76% {
+      transform: translate3d(-3%, -1.3rem, 0) rotateZ(3.5deg) rotateY(-9deg) rotateX(-2deg);
+    }
+    90% {
+      transform: translate3d(1%, -0.25rem, 0) rotateZ(-1deg) rotateY(3deg) rotateX(0.6deg);
+    }
+    100% {
+      transform: none;
+    }
+  }
+
+  @keyframes paper-break {
+    0% {
+      opacity: 1;
+      transform: none;
+    }
+    17% {
+      opacity: 0.35;
+      transform: translateX(var(--dbm-space-1)) skewX(-8deg);
+    }
+    34% {
+      opacity: 1;
+      transform: translateX(calc(-1 * var(--dbm-space-2))) skewX(6deg);
+    }
+    52% {
+      opacity: 0.25;
+      transform: translateX(var(--dbm-space-2));
+    }
+    70% {
+      opacity: 0.8;
+      transform: translateX(calc(-1 * var(--dbm-space-1))) skewX(-4deg);
+    }
+    100% {
+      opacity: 0;
+      transform: none;
+    }
+  }
+
+  @keyframes paper-static {
+    0%,
+    6% {
+      opacity: 0;
+    }
+    26%,
+    58% {
+      opacity: 0.9;
+    }
+    100% {
+      opacity: 0;
+    }
+  }
+
+  @keyframes paper-jitter {
+    from {
+      -webkit-mask-position: 0 0;
+      mask-position: 0 0;
+    }
+    to {
+      -webkit-mask-position: 60px 37px;
+      mask-position: 60px 37px;
+    }
+  }
+
+  @keyframes paper-resolve {
+    from {
+      opacity: 0;
+      transform: translateY(var(--dbm-space-2));
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+
+  @keyframes paper-tilt {
+    from {
+      transform: none;
+    }
+    to {
+      transform: translate3d(0, -4.5rem, 0) rotateX(30deg) rotateY(-26deg) rotateZ(5deg) skew(-5deg, -4deg);
+    }
+  }
+</style>

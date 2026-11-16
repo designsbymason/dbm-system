@@ -45,7 +45,7 @@ Built; see the table above and `07-storybook-and-documentation-standards.md` §1
 
 ### S2 — Site trim and header
 
-Built; see the table above and [02-structure.md](./02-structure.md) §1. Known and left for S3: at exactly 1024 px the home page sample's hero scene is a few pixels wider than the window (`HeroStack`).
+Built; see the table above and [02-structure.md](./02-structure.md) §1.
 
 ### S3 — Home page
 

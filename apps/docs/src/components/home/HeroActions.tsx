@@ -1,5 +1,5 @@
-import { Button, Link } from "@dbm-system/components";
-import { allComponents, quickStart, storybookHref } from "../../data/site";
+import { Button } from "@dbm-system/components";
+import { allComponents, quickStart } from "../../data/site";
 
 /**
  * The hero's calls to action. Built in React rather than in the page because `asChild` needs the link
@@ -14,7 +14,6 @@ export function HeroActions() {
       <Button size="lg" variant="secondary" asChild>
         <a href={allComponents.href}>Browse components</a>
       </Button>
-      <Link href={storybookHref}>Open Storybook</Link>
     </>
   );
 }

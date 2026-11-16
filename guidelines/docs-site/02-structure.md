@@ -146,7 +146,7 @@ Until a file is built, the AI agents page says plainly that it is in development
 
 ## 7. Illustrations
 
-Geometric, diagram-style illustrations drawn in code from the tokens ([ADR-0217](../adr/0217-the-docs-sites-illustrations-are-geometric-svg-and-css-3d-compositions-drawn-in-code-from-the-tokens-over-commissioned-artwork-webgl-or-raster-images.md)), in two techniques: inline SVG (including isometric views) and CSS 3D compositions of live DBM components. Built from the radius scale, the spacing grid and real component silhouettes; coloured from the brand's tonal range and the neutrals, every colour a semantic token, so one asset serves both modes; the final, flat frame under reduced motion; decorative ones `aria-hidden`, informative ones with a `<title>` and `<desc>`. No WebGL. The set: the hero's 3D stack, the home page's section pieces and the 404.
+Geometric, diagram-style illustrations drawn in code from the tokens ([ADR-0217](../adr/0217-the-docs-sites-illustrations-are-geometric-svg-and-css-3d-compositions-drawn-in-code-from-the-tokens-over-commissioned-artwork-webgl-or-raster-images.md)), in two techniques: inline SVG (including isometric views) and CSS 3D compositions (of live DBM components, or of the tokens themselves, as the hero's page of the manual is). Built from the radius scale, the spacing grid and real component silhouettes; coloured from the brand's tonal range and the neutrals, every colour a semantic token, so one asset serves both modes; the final, flat frame under reduced motion; decorative ones `aria-hidden`, informative ones with a `<title>` and `<desc>`. No WebGL. The set: the hero's 3D stack, the home page's section pieces and the 404.
 
 ## 8. Repository layout
 

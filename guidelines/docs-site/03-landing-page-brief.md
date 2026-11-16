@@ -28,7 +28,7 @@ One story: what it is and why it is different (1–2), the facts (3), the breadt
 
 | # | Section | Content | Interaction and motion |
 |---|---|---|---|
-| 1 | **Hero** | The tagline, one supporting sentence, the install line (package-manager tabs, copy); the primary action Get started, the secondary All components | A **CSS 3D stack of live components** (tokens, components, an application screen) that tilts with the pointer; hovering a layer shows its tokens; it settles flat as the reader scrolls |
+| 1 | **Hero** | The tagline, one supporting sentence, the install line (package-manager tabs, copy); the primary action Get started, the secondary All components | A **page of the manual**, drawn in CSS 3D from the tokens: on load it falls into place like a feather and settles facing forward; it shows a real token entry as the JSON an agent reads, which breaks into static and resolves into a specimen of the primitive tokens; as the reader scrolls it tilts, skews and lifts, and it returns when they scroll back |
 | 2 | **Built for agents** | Why an agent works from facts, not guesses: the manifest, `AGENTS.md`, the token index; `llms.txt` labelled in development until S4; a link to the AI agents page | The reader picks a component from a short list and sees it rendered beside the manifest JSON an agent reads for it, with the props in use highlighted in both. A switch flips between the two views on a phone |
 | 3 | **Specification** | The datasheet of real figures read from the packages at build: components and hooks, two brands in two modes, the runtime dependencies, React, the WCAG 2.2 AA target, what ships for agents, MIT, the current version | Terms and values in rows, not a strip of big numbers; hovering a row shows where the figure comes from; the version links to the Changelog |
 | 4 | **All components** | Every component and shipped shell from the manifest (the example pages are in Storybook's Templates Index): name, tier, category, one sentence, each linking to its Docs page in Storybook. The same one-line descriptions as Storybook's Components Index, so the two can't drift | A DBM `DataTable` with a search box and tier and category filters; a compact first view with "Show all" |
@@ -37,7 +37,7 @@ One story: what it is and why it is different (1–2), the facts (3), the breadt
 | 7 | **Start in three steps** | Install; import the stylesheet and a theme; render a component. Real code, each with a copy button | A package-manager switch; ends on Getting started and All components |
 | — | **Footer** | The site footer ([02-structure.md](./02-structure.md) §1) | |
 
-**On a phone** the 3D stack is shallower and responds to scroll instead of the pointer, the theme card's scroll steps become its controls alone, and each composition is designed for the width, not shrunk.
+**On a phone** the page does not fall; the JSON breaking into the specimen follows the scroll, and it still tilts as the reader scrolls, the theme card's scroll steps become its controls alone, and each composition is designed for the width, not shrunk.
 
 ## 4. Look and feel
 
@@ -45,7 +45,7 @@ The page follows the design direction, "an annotated instrument" ([02-structure.
 
 - **Professional first.** Aligned to the grid and highly finished; its personality is in the annotation motif, the editorial type and the interactive sections.
 - **Built with DBM components and tokens.** No hardcoded colour, spacing, type size, radius, shadow or duration. Where the system lacks something the page needs, the token or component is proposed to the maintainer, never replaced by a one-off value.
-- **Illustrations and 3D** ([ADR-0217](../adr/0217-the-docs-sites-illustrations-are-geometric-svg-and-css-3d-compositions-drawn-in-code-from-the-tokens-over-commissioned-artwork-webgl-or-raster-images.md)): the hero's CSS 3D stack of live components and the section pieces, in the brand's tonal range with the neutrals. No WebGL, no abstract shapes.
+- **Illustrations and 3D** ([ADR-0217](../adr/0217-the-docs-sites-illustrations-are-geometric-svg-and-css-3d-compositions-drawn-in-code-from-the-tokens-over-commissioned-artwork-webgl-or-raster-images.md)): the hero's page of the manual and the section pieces, in the brand's tonal range with the neutrals. No WebGL, no abstract shapes.
 - **Parity in dark mode**: designed for light and dark together; a first visit is light ([ADR-0223](../adr/0223-the-sites-mode-is-a-light-and-dark-toggle-that-starts-light-over-light-dark-and-system.md)).
 - **Responsive** across the whole breakpoint scale: phone first.
 - **Voice:** plain, confident, specific, with a dry precision that suits an instrument. Short sentences. No hype words.
@@ -56,7 +56,7 @@ The page follows the design direction, "an annotated instrument" ([02-structure.
 
 **Rules:**
 
-1. **Reduced motion gives a static, complete page.** With `prefers-reduced-motion: reduce` nothing animates, the 3D stack shows flat, and every piece of content and every control is present and usable.
+1. **Reduced motion gives a static, complete page.** With `prefers-reduced-motion: reduce` nothing animates, the hero page shows its finished specimen, and every piece of content and every control is present and usable.
 2. **Content is in the HTML before any script runs.** Animation enhances a page that already works; nothing is hidden until JavaScript reveals it.
 3. **No scroll-jacking.** Scroll speed and direction stay the reader's; pinned sections are short and can be scrolled past at any speed.
 4. **A browser without scroll timelines gets the static page.** Every scroll animation sits inside `@supports (animation-timeline: view())`.
@@ -65,7 +65,7 @@ No script or weight ceiling was adopted: the page's weight is reported in the bu
 
 ## 6. Accessibility of the page itself
 
-The page meets the same bar as the system: WCAG 2.2 AA contrast in both modes (including text over any animated or layered surface), a visible focus ring, a logical heading order and landmarks, keyboard operation of every control (the pointer-driven effects have keyboard or static equivalents), a name for every icon-only button, illustrations either hidden from assistive technology or described, and live components in the 3D stack kept out of the tab order. The accessibility scan in CI covers it ([02-structure.md](./02-structure.md) §11).
+The page meets the same bar as the system: WCAG 2.2 AA contrast in both modes (including text over any animated or layered surface), a visible focus ring, a logical heading order and landmarks, keyboard operation of every control (the pointer-driven effects have keyboard or static equivalents), a name for every icon-only button, illustrations either hidden from assistive technology or described, and the hero's picture (a sheet drawn from the tokens, not live components) hidden from assistive technology and inert. The accessibility scan in CI covers it ([02-structure.md](./02-structure.md) §11).
 
 ## 7. How the page is built and reviewed
 

@@ -2,7 +2,7 @@
 // The home page (guidelines/docs-site/03-landing-page-brief.md). This is the M0 design-direction
 // sample: the hero, the specification and the theming section, in the agreed direction.
 import { HeroActions } from "../components/home/HeroActions";
-import { HeroStack } from "../components/home/HeroStack";
+import HeroPaper from "../components/home/HeroPaper.astro";
 import A11ySection from "../components/home/A11ySection.astro";
 import AgentsSection from "../components/home/AgentsSection.astro";
 import ComponentsSection from "../components/home/ComponentsSection.astro";
@@ -34,7 +34,7 @@ import Marketing from "../layouts/Marketing.astro";
           </div>
         </div>
         <div class="hero__visual">
-          <HeroStack />
+          <HeroPaper />
         </div>
       </div>
     </section>
@@ -95,7 +95,6 @@ import Marketing from "../layouts/Marketing.astro";
     }
     .hero__visual {
       grid-column: 7 / -1;
-      margin-inline-end: calc(-1 * var(--site-gutter));
     }
   }
 </style>

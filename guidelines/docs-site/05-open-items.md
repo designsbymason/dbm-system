@@ -57,7 +57,7 @@ Recorded here so they are not re-asked; the detail is in the file named.
 |---|---|
 | `Sidebar` draws its section labels in capitals, which the design direction's avoid list names; changing it is a change to the design system | The maintainer's decision |
 | The components package doesn't mark its modules `"use client"`, so in the Next.js App Router they must be imported from a file that does (the Frameworks page says so); marking them would be a change to the design system | The maintainer's decision |
-| Whether the brand tonal range needs decorative tokens beyond the semantic ones for the 3D stack and illustrations | S3; raised with the maintainer if so |
+| Whether the brand tonal range needs decorative tokens beyond the semantic ones for the illustrations | S3; raised with the maintainer if so |
 
 ## 4. Gaps this plan depends on
 
