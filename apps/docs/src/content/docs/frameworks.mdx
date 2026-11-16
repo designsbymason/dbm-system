@@ -1,0 +1,85 @@
+---
+title: Frameworks
+description: Where the stylesheet, the theme and the fonts go in Vite, Next.js and Astro, and how the components behave under server rendering.
+---
+
+The setup is the same everywhere: import the stylesheet and a theme once, set the theme on the root element, and load the fonts ([Installation](/docs/installation) has each step). What changes between frameworks is where those lines go.
+
+## Vite
+
+Import the stylesheet and the theme at the top of `src/main.tsx`, and set `data-theme` and the font links in `index.html`. The [quick start](/docs/quick-start) walks through it.
+
+## Next.js
+
+### The App Router
+
+Import the stylesheet and the theme in the root layout, and set the theme on `<html>` there:
+
+```tsx
+// app/layout.tsx
+import "@dbm-system/components/styles.css";
+import "@dbm-system/tokens/css/purple-light.bundled.css";
+
+export default function RootLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <html lang="en" data-theme="purple-light">
+      <body>{children}</body>
+    </html>
+  );
+}
+```
+
+The components use React state and effects, so in the App Router they are client components. The package doesn't mark its modules with `"use client"`, so import them from a file that does:
+
+```tsx
+// app/settings-form.tsx
+"use client";
+
+import { Button, FormField, Input } from "@dbm-system/components";
+
+export function SettingsForm() {
+  return (
+    <form>
+      <FormField label="Work email" name="email">
+        {(field) => <Input {...field} type="email" />}
+      </FormField>
+      <Button type="submit">Save</Button>
+    </form>
+  );
+}
+```
+
+A server component can render `SettingsForm` as usual. The components still render on the server for the first paint; the directive only says where the client boundary is.
+
+For the fonts, the `<link>` tags from [Installation](/docs/installation) go in the root layout's `<head>`, or load Nunito and Lora with Next.js's own font loading, as long as the families are named `Nunito` and `Lora`.
+
+### The Pages Router
+
+Import the stylesheet and the theme in `pages/_app.tsx`, and set `data-theme` on `<Html>` in `pages/_document.tsx`. No directive is needed.
+
+## Astro
+
+Import the stylesheet and the theme in your base layout's frontmatter, and set `data-theme` on `<html>` there. Components render to HTML at build time; add a `client:` directive (`client:load`, `client:visible`) to the ones the reader interacts with:
+
+```astro
+---
+import "@dbm-system/components/styles.css";
+import "@dbm-system/tokens/css/purple-light.bundled.css";
+import { Button } from "@dbm-system/components";
+---
+
+<html lang="en" data-theme="purple-light">
+  <body>
+    <Button client:load>Save</Button>
+  </body>
+</html>
+```
+
+This site is an Astro app built that way.
+
+## Server rendering
+
+- **Every component renders on the server** without touching `window`, `document` or storage during the first render, so server and browser HTML match.
+- **Set the theme in the HTML** (`data-theme` on the root element) so the first paint is already themed. A mode that follows the reader's system setting is only known in the browser: `ThemeProvider` with `mode="system"` applies it after load, so a small script in the head that sets `data-theme` before the first paint avoids a flash.
+- **`ClientOnly`** renders its children only in the browser, for anything of your own that can't render on the server.
+- **One copy of each package.** Install the same version of the four `@dbm-system/*` packages, so the app has one copy of the tokens and the shared code.

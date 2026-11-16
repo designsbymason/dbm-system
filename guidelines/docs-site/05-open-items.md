@@ -49,6 +49,7 @@ Recorded here so they are not re-asked; the detail is in the file named.
 | Storybook's fonts | Bundled into Storybook itself, so it is self-hosted alone and deployed | [ADR-0215](../adr/0215-the-docs-site-and-storybook-self-host-nunito-and-lora-over-loading-them-from-google-fonts.md), amended |
 | Scroll timelines | Baseline "newly available" since October 2026, confirmed on MDN; a browser without them gets the static page | [ADR-0212](../adr/0212-the-docs-site-animates-with-css-scroll-timelines-and-view-transitions-and-adds-motion-only-for-what-css-cannot-do-over-gsap-or-a-javascript-animation-library-by-default.md) |
 | Going live | The site replaces the placeholder at `/` after M1, by the Pages workflow's `PUBLISH_DOCS_SITE` switch; until then it is built and checked on every push | [02-structure.md](./02-structure.md) §9 |
+| Links to unbuilt sections | Each has a fallback to where it lives today (Storybook, the GitHub releases); no live link leads to a missing page | [02-structure.md](./02-structure.md) §1 |
 
 ## 3. Questions not yet decided
 
@@ -58,6 +59,8 @@ Each of these is decided when the work it waits on starts.
 |---|---|
 | How an illustration's reveal runs only once with CSS scroll timelines (which reverse when the reader scrolls back), or whether it may replay | The first illustrations (M1) |
 | `Sidebar` draws its section labels in capitals, which the design direction's avoid list names; changing it is a change to the design system | The maintainer's decision |
+| The components package doesn't mark its modules `"use client"`, so in the Next.js App Router they must be imported from a file that does (the Frameworks page says so); marking them would be a change to the design system | The maintainer's decision |
+| "Copy page" writes to the clipboard through a `ClipboardItem` started in the click; the browser pane used to build the site blocks the clipboard, so it is still to be checked in Chrome, Safari and Firefox | Before going live |
 | How a story that needs Storybook-only parts gets a site-safe form | M2 |
 | How the changelog page reads each package's `CHANGELOG.md` | M5 (the files exist) |
 | How social images are generated | M5 |

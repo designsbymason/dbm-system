@@ -1,8 +1,11 @@
-/* The Article layout's columns (the Documentation Page recipe): the sidebar and the outline are columns from `lg`
-   (1024px); below it the sidebar is a drawer and the outline a sticky row of pills. */
+/* The Article layout's columns (the Documentation Page recipe): the sidebar is a column from `lg` (1024px) and a
+   drawer below it; the outline is a column from `xl` (1280px) and a sticky row of pills below it. */
 
 .article {
   display: grid;
+  /* A shrinkable column: a long code line scrolls inside its block instead of widening the article. */
+  grid-template-columns: minmax(0, 1fr);
+  min-inline-size: 0;
   gap: var(--dbm-space-6);
   max-inline-size: 46rem;
   margin-inline: auto;
@@ -14,17 +17,22 @@
   scroll-margin-block-start: calc(var(--page-shell-header-height, 0px) + var(--dbm-space-16));
 }
 
+/* The header's links are in the bar from `lg`, so the drawer's copy of them is left out of the column. */
 @media (min-width: 1024px) {
-  .outlineRow {
-    display: none;
-  }
-  /* The header's links are in the bar from `lg`, so the drawer's copy of them is left out of the column. */
   .siteSection {
     display: none;
   }
 }
 
-@media not all and (min-width: 1024px) {
+/* The outline is a column from `xl` (1280px): between `lg` and `xl` the sidebar is already a column, and a second one
+   would leave the article too narrow to read, so the outline stays a row of pills there. */
+@media (min-width: 1280px) {
+  .outlineRow {
+    display: none;
+  }
+}
+
+@media not all and (min-width: 1280px) {
   .outline {
     display: none;
   }

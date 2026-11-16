@@ -1,0 +1,53 @@
+---
+title: Accessibility statement
+description: The standard DBM System aims for, how each component is checked, the measured places that fall short, and the browsers it supports.
+---
+
+DBM System aims for **WCAG 2.2 level AA** in every component. That is a target, measured component by component, not a certificate: the known exceptions are listed below so you can judge them for your own product. Accessibility in your app also depends on how the components are used, which stays your job.
+
+## What every component does
+
+- **Contrast.** Text is designed to meet 4.5:1, and the parts that identify a control or its state (icons, borders, focus rings) 3:1, in all four themes. Each pair is measured. Error and critical-alert text aims for 7:1 (AAA).
+- **Keyboard.** Every interaction works from the keyboard, with the focus model its pattern calls for: arrow keys within toolbars, tabs, menus, trees and radio groups, `Escape` to close, and focus returned to where it came from.
+- **Visible focus.** A focus ring appears for keyboard focus and not for a mouse press, and meets the 3:1 floor.
+- **Focus that stays put.** A modal dialog or drawer keeps focus inside it and gives it back when it closes. A layout change never removes the control that has focus.
+- **Names, roles and states.** Interactive parts have an accessible name; state (expanded, selected, invalid, busy) is exposed with ARIA that matches the element's role; a field's label, hint and error are wired together for you. An icon-only button requires a label in its types.
+- **Names that match what you see.** A control's accessible name contains its visible text, so a voice-control user who says what they see reaches it (WCAG 2.5.3).
+- **Announcements.** Components whose content changes on its own, such as `Toast`, `Pagination` and `Stepper`, announce the change once through a live region.
+- **Target size.** Every interactive target is at least 24 by 24 CSS pixels.
+- **Motion.** Looping animation respects the reader's reduced-motion setting.
+- **Forced colours.** Components are checked in forced-colours mode, so borders and indicators that rely on colour still show.
+- **Responsive and right-to-left.** No control is lost at a narrow width, and every component works in both text directions.
+
+## How it is checked
+
+Each component has automated accessibility checks (axe) in a real browser for every story, interaction tests for its keyboard and focus behaviour, and a review against a written checklist that records what was measured. These docs are scanned too, in light and dark, with and without reduced motion, on every change.
+
+## Known exceptions
+
+Measured values that fall below the target, as recorded in the token specification. Some are accepted positions, for example that a decorative border does not identify a control, which a strict reading of WCAG 1.4.11 could dispute.
+
+| Where | Measured | Status |
+|---|---|---|
+| Tracks of `ProgressBar`, `ProgressCircle`, `Switch`, `Slider`, `RangeSlider` and the `ScrollArea` scrollbar | 1.35:1 light, 2.05:1 dark | Accepted: the thumb, fill or handle carries the boundary and state, not the track |
+| `Switch` unchecked hover and `Indicators`' inactive dot | 1.72:1 light, about 3.00:1 dark | Light does not reach 3:1; open for `Indicators`, whose dot is clickable |
+| Resting borders of `Input`, `Textarea`, `Select`, `Checkbox`, secondary `Button` and `IconButton` | 2.32:1 light, 3.00:1 dark | Treated as not state-identifying, so 3:1 is not required |
+| Default borders | about 1.4:1 to 1.5:1 | Decorative; an accepted gap |
+| Decorative accents and subtle fills | about 1.0:1 to 1.3:1 | Decorative, never used to identify a control or a state |
+| `Skeleton` placeholders | about 1.35:1 light, 1.11:1 dark | Decorative and hidden from assistive technology |
+| Highlight icon and border in light mode, on the canvas and the highlight hover fill | 2.84:1 to 2.87:1 | Not used on those surfaces |
+| Tertiary text on the canvas | 4.13:1 light, 2.96:1 dark | Fails; components never place it there |
+| Danger text in light mode, which aims for 7:1 | 5.10:1, 4.86:1 on its subtle fill | Meets AA, short of the AAA aim; dark mode reaches 7:1 |
+| Danger text on the danger subtle hover fill | 4.44:1 light | Fails AA in light; components keep danger text off that fill |
+| Text on a `Carousel` slide dimmed by the optional fade effects | about 3.9:1 part-way through the fade | Below 4.5:1 while dimmed; the effects are off by default |
+| Info text on its subtle fill | 4.5068:1 light | Passes narrowly |
+
+A real Windows high-contrast machine is not yet part of the checks; forced-colours mode is emulated in a browser.
+
+## Supported browsers
+
+The last two versions of Chrome, Edge, Firefox and Safari, on desktop and mobile. Internet Explorer is not supported.
+
+## Report a problem
+
+If something in DBM System or on this site is hard to use with your setup, [open an issue](https://github.com/designsbymason/dbm-system/issues) and say what you were doing, with which browser and assistive technology. Accessibility problems are treated as bugs.

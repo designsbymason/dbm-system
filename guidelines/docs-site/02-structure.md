@@ -17,9 +17,11 @@ The site is `https://dbm-system.com` (the apex is canonical; `www` redirects). T
 | **Templates** | The templates index |
 | **AI agents** | `/agents` |
 | **Storybook** | `/storybook/`, styled as a secondary item marked as the workshop, same tab |
-| Search | `CommandPalette` over the Pagefind index; ⌘K, Ctrl K or `/` |
+| Search | `CommandPalette` over the Pagefind index (`SiteSearch`), opened from the header or with ⌘K or Ctrl K |
 | Version | A menu: Changelog, Roadmap, npm, GitHub releases |
 | GitHub, Mode | Icon buttons with accessible names; Mode is Light, Dark or System |
+
+**Until a section is built**, its links go where it lives today rather than to a missing page: each link in `src/data/site.ts` has a `fallback` (the guides to their Storybook pages, Components and Templates to Storybook, the Changelog to the GitHub releases), used by the menus, the sidebar, the footer and the home page until the page is built; a link with neither is not shown.
 
 **On a phone** the bar keeps the logo, search and a menu button; the menu is one drawer holding the sections as an expandable tree and the current section's pages.
 
@@ -145,8 +147,8 @@ Geometric, diagram-style illustrations drawn in code from the tokens ([ADR-0217]
 |---|---|---|
 | `/manifest.json` | The full component manifest, copied from the built components package | M2 |
 | `/components/<name>.json` | One component's entry, from the manifest's split files ([ADR-0206](../adr/0206-the-manifest-is-also-shipped-as-an-index-and-one-file-per-component-beside-the-whole-file-over-the-single-file-alone-or-waiting-for-an-mcp-server.md)) | M2 |
-| `/AGENTS.md` | The consumer usage guide, copied from the components package | M1 |
-| `<page>.md` | A Markdown copy of every docs, component, hook and function page; each page has a "Copy page" button | M1 for docs pages, M2 for the reference |
+| `/AGENTS.md` | The consumer usage guide, copied from the components package at build | Built |
+| `<page>.md` | A Markdown copy of every docs, component, hook and function page; each page has a "Copy page" button and a "View as Markdown" link | Built for the docs and root pages (their source is plain Markdown, so the copy is the source); the reference pages in M2 |
 | `/llms.txt` | A short curated index of the docs (the llmstxt.org convention) | M5 |
 | `/llms-full.txt` | The documentation as one text file | M5 |
 
@@ -201,7 +203,8 @@ The docs app is not published, so the packages' runtime budget does not apply, b
 | `@dbm-system/tokens`, `utils`, `icons`, `components` | The system the site is built from | MIT |
 | `@storybook/react` | Portable stories for the live examples, at the version the components package's Storybook uses ([ADR-0216](../adr/0216-component-pages-render-the-storybook-stories-as-their-live-examples-through-portable-stories-over-hand-written-examples-or-story-iframes.md)) | MIT |
 | `@fontsource/nunito`, `@fontsource/lora` | Self-hosted fonts for the site and Storybook ([ADR-0215](../adr/0215-the-docs-site-and-storybook-self-host-nunito-and-lora-over-loading-them-from-google-fonts.md)) | SIL Open Font License |
-| `pagefind` | Static search, no service | MIT |
+| `pagefind` (development only) | Static search, no service: `pagefind --site dist` indexes the built pages that mark their content `data-pagefind-body` (the landing page doesn't), and `SiteSearch` loads it in the browser | MIT |
+| `@astrojs/markdown-remark` | Astro's unified Markdown processor, which runs the remark plugin that turns code fences into DBM `CodeBlock`s (Astro 7's default processor runs none) | MIT |
 | `playwright`, `axe-core` (development only) | The accessibility scan (Chromium and axe, the same tools the components' own checks use); the link check and the local server are scripts with no dependency | Apache-2.0, MPL-2.0 |
 | `typescript`, `@types/react`, `@types/react-dom` (development only) | Type-checking the site's TypeScript, at the versions the components package uses | Apache-2.0, MIT |
 | `motion` | **Not added.** Only if a landing review round agrees an interaction needs it ([ADR-0212](../adr/0212-the-docs-site-animates-with-css-scroll-timelines-and-view-transitions-and-adds-motion-only-for-what-css-cannot-do-over-gsap-or-a-javascript-animation-library-by-default.md)) | MIT |

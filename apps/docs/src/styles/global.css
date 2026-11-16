@@ -192,3 +192,96 @@ html[data-mode-transition] ::view-transition-new(root) {
   white-space: nowrap;
   border: 0;
 }
+
+/* ---------- Prose: the Markdown of docs and Resources pages ---------- */
+
+.prose {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--dbm-space-5);
+  font-size: var(--dbm-font-size-base);
+  line-height: var(--dbm-line-height-relaxed);
+  color: var(--site-ink);
+}
+
+.prose > * {
+  margin: 0;
+}
+
+.prose h2 {
+  font-family: var(--dbm-font-family-secondary);
+  font-weight: var(--dbm-font-weight-regular);
+  font-size: var(--dbm-font-size-2xl);
+  line-height: var(--dbm-line-height-tight);
+  letter-spacing: var(--dbm-letter-spacing-tight);
+  margin-block-start: var(--dbm-space-6);
+}
+
+.prose h3 {
+  font-size: var(--dbm-font-size-md);
+  font-weight: var(--dbm-font-weight-semibold);
+  margin-block-start: var(--dbm-space-2);
+}
+
+.prose ul,
+.prose ol {
+  padding-inline-start: var(--dbm-space-6);
+  display: grid;
+  gap: var(--dbm-space-2);
+}
+
+.prose a {
+  color: var(--dbm-text-link);
+  text-underline-offset: 0.2em;
+}
+
+.prose a:focus-visible {
+  outline: 2px solid var(--dbm-border-focus);
+  outline-offset: 2px;
+  border-radius: var(--dbm-radius-xs);
+}
+
+.prose :not(pre) > code {
+  font-family: var(--dbm-font-family-mono);
+  font-size: 0.875em;
+  padding: 0.1em 0.35em;
+  border-radius: var(--dbm-radius-sm);
+  background: var(--dbm-bg-code);
+}
+
+.prose blockquote {
+  padding: var(--dbm-space-4) var(--dbm-space-5);
+  border-inline-start: 3px solid var(--dbm-border-brand);
+  border-radius: var(--dbm-radius-md);
+  background: var(--site-sheet);
+  color: var(--site-graphite);
+}
+
+.prose blockquote > * {
+  margin: 0;
+}
+
+.prose table {
+  border-collapse: collapse;
+  inline-size: 100%;
+  font-size: var(--dbm-font-size-sm);
+  display: block;
+  overflow-x: auto;
+}
+
+.prose th,
+.prose td {
+  text-align: start;
+  vertical-align: top;
+  padding: var(--dbm-space-2) var(--dbm-space-4) var(--dbm-space-2) 0;
+  border-block-end: 1px solid var(--site-rule);
+}
+
+.prose th {
+  color: var(--site-graphite);
+  font-weight: var(--dbm-font-weight-semibold);
+}
+
+.prose strong {
+  font-weight: var(--dbm-font-weight-semibold);
+}

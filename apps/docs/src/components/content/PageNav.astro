@@ -1,0 +1,74 @@
+---
+// Previous and next, in the order the site map gives the built pages (src/data/site.ts).
+import { docsGroups } from "../../data/site";
+
+interface Props {
+  path: string;
+}
+
+const order = docsGroups.flatMap((group) => group.links).filter((link) => link.built && link.href !== "/docs");
+const index = order.findIndex((link) => link.href === Astro.props.path);
+const previous = index > 0 ? order[index - 1] : undefined;
+const next = index >= 0 && index < order.length - 1 ? order[index + 1] : undefined;
+---
+
+{
+  (previous || next) && (
+    <nav class="page-nav" aria-label="Previous and next">
+      {previous ? (
+        <a class="page-nav__link" href={previous.href} rel="prev">
+          <span class="page-nav__dir">Previous</span>
+          <span class="page-nav__title">{previous.label}</span>
+        </a>
+      ) : (
+        <span />
+      )}
+      {next && (
+        <a class="page-nav__link page-nav__link--next" href={next.href} rel="next">
+          <span class="page-nav__dir">Next</span>
+          <span class="page-nav__title">{next.label}</span>
+        </a>
+      )}
+    </nav>
+  )
+}
+
+<style>
+  .page-nav {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--dbm-space-4);
+    padding-block-start: var(--dbm-space-8);
+    border-block-start: 1px solid var(--site-rule);
+  }
+  .page-nav__link {
+    display: grid;
+    gap: var(--dbm-space-1);
+    padding: var(--dbm-space-4);
+    border: 1px solid var(--site-rule);
+    border-radius: var(--dbm-radius-lg);
+    background: var(--site-sheet);
+    color: var(--site-ink);
+    text-decoration: none;
+    transition: border-color var(--dbm-motion-duration-fast) var(--dbm-motion-easing-standard);
+  }
+  .page-nav__link:hover {
+    border-color: var(--dbm-border-brand);
+  }
+  .page-nav__link:focus-visible {
+    outline: 2px solid var(--dbm-border-focus);
+    outline-offset: 2px;
+  }
+  .page-nav__link--next {
+    text-align: end;
+    grid-column: 2;
+  }
+  .page-nav__dir {
+    font-size: var(--dbm-font-size-sm);
+    color: var(--site-graphite);
+  }
+  .page-nav__title {
+    font-family: var(--dbm-font-family-secondary);
+    font-size: var(--dbm-font-size-md);
+  }
+</style>

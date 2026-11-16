@@ -1,8 +1,9 @@
 import { Badge, IconButton, Navbar, NavigationMenu, Sidebar } from "@dbm-system/components";
 import { FlaskIcon, GithubLogoIcon } from "@dbm-system/icons";
-import { componentCategories, docsGroups, primaryLinks, storybookHref } from "../../data/site";
+import { componentCategories, docsGroups, hrefOf, primaryLinks, storybookHref } from "../../data/site";
 import { LogoMark } from "../LogoMark";
 import { ModeMenu } from "./ModeMenu";
+import { SiteSearch } from "./SiteSearch";
 import styles from "./SiteHeader.module.css";
 
 export interface SiteHeaderProps {
@@ -36,11 +37,16 @@ export function SiteHeader({ section, version, withSidebar = false }: SiteHeader
               <NavigationMenu.Content layout="columns">
                 {docsGroups.map((group) => (
                   <NavigationMenu.Group key={group.label} label={group.label}>
-                    {group.links.map((link) => (
-                      <NavigationMenu.Link key={link.href} href={link.href} description={link.description}>
-                        {link.label}
-                      </NavigationMenu.Link>
-                    ))}
+                    {group.links.map((link) => {
+                      const href = hrefOf(link);
+                      return (
+                        href && (
+                          <NavigationMenu.Link key={link.href} href={href} description={link.description}>
+                            {link.label}
+                          </NavigationMenu.Link>
+                        )
+                      );
+                    })}
                   </NavigationMenu.Group>
                 ))}
               </NavigationMenu.Content>
@@ -50,16 +56,17 @@ export function SiteHeader({ section, version, withSidebar = false }: SiteHeader
               <NavigationMenu.Content layout="columns">
                 <NavigationMenu.Group label="By category" columns={2}>
                   {componentCategories.map((link) => (
-                    <NavigationMenu.Link key={link.href} href={link.href} description={link.description}>
+                    <NavigationMenu.Link key={link.href} href={hrefOf(link)} description={link.description}>
                       {link.label}
                     </NavigationMenu.Link>
                   ))}
                 </NavigationMenu.Group>
                 <NavigationMenu.Group label="Reference">
-                  <NavigationMenu.Link href="/components" description="Every component, with filters">
+                  {/* Storybook until the component pages exist (M2). */}
+                  <NavigationMenu.Link href={storybookHref} description="Every component, with its playground">
                     All components
                   </NavigationMenu.Link>
-                  <NavigationMenu.Link href="/components#hooks-and-functions" description="The hooks and functions that ship with it">
+                  <NavigationMenu.Link href="/storybook/?path=/docs/guides-hooks-and-utilities--docs" description="The hooks and functions that ship with it">
                     Hooks and functions
                   </NavigationMenu.Link>
                 </NavigationMenu.Group>
@@ -67,7 +74,7 @@ export function SiteHeader({ section, version, withSidebar = false }: SiteHeader
             </NavigationMenu.Item>
             {primaryLinks.map((link) => (
               <NavigationMenu.Item key={link.href}>
-                <NavigationMenu.Link href={link.href} current={section === link.href || undefined}>
+                <NavigationMenu.Link href={hrefOf(link)} current={section === link.href || undefined}>
                   {link.label}
                 </NavigationMenu.Link>
               </NavigationMenu.Item>
@@ -82,6 +89,9 @@ export function SiteHeader({ section, version, withSidebar = false }: SiteHeader
         </NavigationMenu>
       </Navbar.Links>
       <Navbar.Actions>
+        <Navbar.Action>
+          <SiteSearch />
+        </Navbar.Action>
         <Navbar.Action hideBelow="md">
           <a className={styles.version} href="https://github.com/designsbymason/dbm-system/releases">
             <Badge tone="neutral" variant="subtle">{`v${version}`}</Badge>

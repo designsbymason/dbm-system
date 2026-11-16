@@ -189,6 +189,12 @@ overrides:
   # per the §3.1 rule that every override gets an upper bound. Floor is the latest 6.x
   # patch, 6.16.2. Found via `pnpm audit`, 2026-10-28.
   qs: ">=6.16.2 <7.0.0"
+  # Not an advisory: a compatibility floor. `hast-util-raw@9.2.0` (Astro's Markdown pipeline in apps/docs, via
+  # `@astrojs/markdown-remark`'s `rehype-raw`) calls `tokenizer.flushCharacters()`, which parse5 added in 8.1.0, but
+  # declares `parse5: ^8.0.0`, so the lockfile's 8.0.1 (also used by jsdom) was reused and the docs build failed with
+  # "flushCharacters is not a function". Found 2026-11-16. Capped at `<9.0.0` per the §3.1 rule that every override
+  # gets an upper bound. Remove once hast-util-raw declares the floor itself.
+  "parse5@^8": ">=8.1.1 <9.0.0"
 patchedDependencies:
   # Bridges brace-expansion's >=2 export shape (see the brace-expansion
   # override above) so the >=5.0.8 override doesn't crash this package's

@@ -1,6 +1,6 @@
 import { BackToTop, Breadcrumb, PageShell, Sidebar, TableOfContents } from "@dbm-system/components";
 import type { ReactNode } from "react";
-import { docsGroups, primaryLinks, storybookHref } from "../../data/site";
+import { docsGroups, hrefOf, primaryLinks, storybookHref } from "../../data/site";
 import { SiteHeader } from "../header/SiteHeader";
 import { SiteFooter } from "./SiteFooter";
 import styles from "./SiteShell.module.css";
@@ -68,18 +68,23 @@ export function SiteShell({ kind, version, section, path, outline = [], breadcru
               <Sidebar.Nav aria-label="Docs">
                 {docsGroups.map((group) => (
                   <Sidebar.Section key={group.label} label={group.label}>
-                    {group.links.map((link) => (
-                      <Sidebar.Item key={link.href} href={link.href} current={path === link.href || undefined}>
-                        {link.label}
-                      </Sidebar.Item>
-                    ))}
+                    {group.links.map((link) => {
+                      const href = hrefOf(link);
+                      return (
+                        href && (
+                          <Sidebar.Item key={link.href} href={href} current={path === link.href || undefined}>
+                            {link.label}
+                          </Sidebar.Item>
+                        )
+                      );
+                    })}
                   </Sidebar.Section>
                 ))}
                 {/* On a phone and a tablet the header's links live here, so there is one drawer. */}
                 <Sidebar.Section label="dbm-system.com" className={styles.siteSection}>
-                  <Sidebar.Item href="/components">Components</Sidebar.Item>
+                  <Sidebar.Item href={storybookHref}>Components</Sidebar.Item>
                   {primaryLinks.map((link) => (
-                    <Sidebar.Item key={link.href} href={link.href}>
+                    <Sidebar.Item key={link.href} href={hrefOf(link)}>
                       {link.label}
                     </Sidebar.Item>
                   ))}

@@ -21,7 +21,14 @@ createServer((request, response) => {
   const clean = pathname.replace(/\/$/, "");
   const file = [join(root, clean), join(root, clean, "index.html"), join(root, `${clean}.html`)].find((candidate) => existsSync(candidate) && statSync(candidate).isFile());
   if (!file) {
-    response.writeHead(404, { "content-type": "text/plain" }).end("Not found");
+    // As GitHub Pages does: the site's own 404 page, with a 404 status.
+    const notFound = join(root, "404.html");
+    if (existsSync(notFound)) {
+      response.writeHead(404, { "content-type": "text/html" });
+      createReadStream(notFound).pipe(response);
+    } else {
+      response.writeHead(404, { "content-type": "text/plain" }).end("Not found");
+    }
     return;
   }
   response.writeHead(200, { "content-type": types[extname(file)] ?? "application/octet-stream" });

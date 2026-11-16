@@ -8,7 +8,7 @@ Storybook sources are in `packages/components/src/guides/` and `packages/compone
 
 | Today | Goes to | Notes |
 |---|---|---|
-| Getting started (the welcome, the five installation steps, the fonts, where releases and issues live, the agent files, the Components and Templates tables) | `/docs/introduction`, `/docs/installation` and `/agents` on the site; a pointer page stays in Storybook and keeps the component index | The component index reads Storybook's own `index.json`, so it stays Storybook's |
+| Getting started (the welcome, the five installation steps, the fonts, where releases and issues live, the agent files, the Components and Templates tables) | `/docs/introduction`, `/docs/installation` and `/agents` on the site (built in M1); Storybook's page becomes a pointer that keeps the component index when the guides move (M4) | The component index reads Storybook's own `index.json`, so it stays Storybook's |
 | Guides / Theming | `/docs/guides/theming` | Port; the live examples become islands |
 | Guides / Accessibility | `/docs/guides/accessibility` | Port; the known-exceptions table is copied from `03-token-system-spec.md` and must stay in step (it also feeds `/accessibility-statement`) |
 | Guides / Responsive and right-to-left | `/docs/guides/responsive-and-rtl` | Port; the two component lists are checked against the code |

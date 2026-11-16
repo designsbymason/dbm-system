@@ -1,0 +1,35 @@
+---
+title: Roadmap
+description: What is built, what comes next, and what is not planned.
+---
+
+DBM System is pre-1.0 and built by one maintainer. This page says what exists today and what comes next, without dates.
+
+## Built
+
+- **The component library**, published to npm with provenance: atoms, molecules and organisms across nine categories, each with full types, documentation, Storybook stories and accessibility checks.
+- **The design tokens**: three layers, two brands (Purple and Emerald), each in light and dark.
+- **Two application shells**, `AppShell` (with a sidebar) and `PageShell` (without), and example pages built on them in Storybook.
+- **For agents**: the component manifest, the token index and `AGENTS.md`, shipped in the packages.
+- **Storybook**, public at [/storybook/](/storybook/).
+- **This site's foundation**, and the first docs pages.
+
+## Next
+
+- **This site**: the component, hook and function pages, generated from the manifest with live examples; then the guides (theming, accessibility, responsive and right-to-left, composition, hooks, icons); then the agent files (`llms.txt`, `llms-full.txt`) and the changelog.
+- **More templates**: page-level examples such as sign-in, settings and dashboard pages, built on the shells.
+- **1.0**: a stable API, after which these docs keep a version for each major release.
+
+## Later
+
+- **Agent tooling**: an MCP server that answers questions from the manifest, and a scaffolder.
+- **A Figma library** generated from the same tokens.
+- **React Native** components, sharing the token layer.
+
+## Not planned
+
+- Components for frameworks other than React (Vue, Svelte, Angular).
+- A visual theme-builder tool.
+- A third brand, until a real need for one exists.
+
+Have a need this doesn't cover? [Open an issue](https://github.com/designsbymason/dbm-system/issues).

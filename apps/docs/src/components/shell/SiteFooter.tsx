@@ -1,5 +1,5 @@
 import { Link } from "@dbm-system/components";
-import { footerColumns } from "../../data/site";
+import { footerColumns, hrefOf } from "../../data/site";
 import { LogoMark } from "../LogoMark";
 import styles from "./SiteFooter.module.css";
 
@@ -14,13 +14,18 @@ export function SiteFooter() {
               {column.label}
             </h2>
             <ul className={styles.links}>
-              {column.links.map((link) => (
-                <li key={link.href}>
-                  <Link href={link.href} size="sm" underline="hover">
-                    {link.label}
-                  </Link>
-                </li>
-              ))}
+              {column.links.map((link) => {
+                const href = hrefOf(link);
+                return (
+                  href && (
+                    <li key={link.href}>
+                      <Link href={href} size="sm" underline="hover">
+                        {link.label}
+                      </Link>
+                    </li>
+                  )
+                );
+              })}
             </ul>
           </nav>
         ))}

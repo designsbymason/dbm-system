@@ -2,7 +2,7 @@
 
 The plan, structure and supporting references for the DBM System documentation website, `https://dbm-system.com`, and for how Storybook sits beside it at `/storybook/`. These files are a **current-state reference, not a changelog**, like the numbered docs in `guidelines/`. A real fork in the road is recorded as an ADR in `../adr/` and linked from here, not narrated here.
 
-**Status:** M0, the foundation, is built except the two links between component pages, which come with M2 (`01-plan.md` §3): the approved design direction, the Astro app with the Marketing and Article layouts, the header menus, the phone drawer and the footer, the shared mode and fonts, the Storybook bridge, and the link check and accessibility scan in the Pages workflow. The site is built and checked on every push and replaces the placeholder at `https://dbm-system.com` after M1; Storybook is live at `/storybook/`. Next: M1, the docs core.
+**Status:** M0, the foundation, and M1, the docs core, are built (`01-plan.md` §3): the Astro app, the Marketing and Article layouts, the shared mode and fonts, the Storybook bridge, the gates, and the docs pages, search, the Markdown copies and the first illustrations. The site is built and checked on every push and replaces the placeholder at `https://dbm-system.com` when the Pages workflow's `PUBLISH_DOCS_SITE` switch is turned on; Storybook is live at `/storybook/`. Next: M2, the component pages.
 
 ## Files
 

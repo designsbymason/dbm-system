@@ -1,0 +1,15 @@
+/* The shared palette of the site's illustrations (ADR-0217): the brand's tonal range and the neutrals, every colour a
+   semantic token, so an illustration follows light and dark with the page. */
+.ill {
+  display: block;
+  inline-size: 100%;
+  block-size: auto;
+}
+.ill .paper { fill: var(--dbm-bg-surface); }
+.ill .edge { fill: none; stroke: var(--dbm-border-neutral); stroke-width: 1.5; }
+.ill .wash { fill: var(--dbm-bg-brand-subtle); }
+.ill .wash-strong { fill: var(--dbm-bg-brand-subtle-hover); }
+.ill .ink { fill: var(--dbm-bg-brand); }
+.ill .ink-line { fill: none; stroke: var(--dbm-border-brand); stroke-width: 1.5; stroke-linecap: round; }
+.ill .rule { fill: none; stroke: var(--dbm-border-neutral); stroke-width: 1.5; stroke-linecap: round; }
+.ill .mute { fill: var(--dbm-bg-neutral-subtle-hover); }

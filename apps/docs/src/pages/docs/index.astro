@@ -1,0 +1,125 @@
+---
+// Docs home (02-structure.md §2): the four groups, each with its illustration and its pages. A page not built yet is
+// shown where its fallback lives (a guide's Storybook page), or not at all.
+import Foundations from "../../illustrations/Foundations.astro";
+import GetStarted from "../../illustrations/GetStarted.astro";
+import Guides from "../../illustrations/Guides.astro";
+import Resources from "../../illustrations/Resources.astro";
+import { docsGroups, hrefOf } from "../../data/site";
+import Marketing from "../../layouts/Marketing.astro";
+
+const art = { "Get started": GetStarted, Guides, Foundations, Resources } as const;
+const blurbs: Record<string, string> = {
+  "Get started": "What DBM System is, how to install it, and a first themed page.",
+  Guides: "How theming, accessibility, layout, composition and the icons work. They move here from Storybook soon; until then they open there.",
+  Foundations: "The design tokens every component reads, in three layers.",
+  Resources: "Releases, what comes next, short answers, and the accessibility statement.",
+};
+const groups = docsGroups.map((group) => ({
+  ...group,
+  Art: art[group.label as keyof typeof art],
+  links: group.links.filter((link) => link.href !== "/docs").map((link) => ({ ...link, to: hrefOf(link) })).filter((link) => link.to),
+}));
+---
+
+<Marketing title="Docs: DBM System" description="Install DBM System, learn how it works, and find your way around its components and tokens." section="/docs">
+  <section class="site-frame docs-home" aria-labelledby="docs-heading" data-pagefind-body>
+    <header class="docs-home__head">
+      <h1 id="docs-heading" class="display docs-home__title">Docs</h1>
+      <p class="lede">
+        Start with the <a href="/docs/introduction">introduction</a>, or go straight to <a href="/docs/installation">installation</a> and the
+        <a href="/docs/quick-start">quick start</a>. Every page is also plain Markdown, for you or your coding agent.
+      </p>
+    </header>
+    <div class="docs-home__grid">
+      {
+        groups.map(({ label, Art, links }) => (
+          <section class="group" aria-labelledby={`group-${label}`}>
+            <div class="group__art">{Art && <Art />}</div>
+            <h2 id={`group-${label}`} class="display group__title">
+              {label}
+            </h2>
+            <p class="group__blurb">{blurbs[label]}</p>
+            <ul class="group__links">
+              {links.map((link) => (
+                <li>
+                  <a href={link.to}>{link.label}</a>
+                  {link.description && <span>{link.description}</span>}
+                </li>
+              ))}
+            </ul>
+          </section>
+        ))
+      }
+    </div>
+  </section>
+</Marketing>
+
+<style>
+  .docs-home {
+    display: grid;
+    gap: var(--dbm-space-12);
+    padding-block: var(--dbm-space-12) var(--dbm-space-20);
+  }
+  .docs-home__head {
+    display: grid;
+    gap: var(--dbm-space-4);
+    max-inline-size: 44rem;
+  }
+  .docs-home__title {
+    font-size: var(--dbm-font-size-5xl);
+  }
+  .docs-home a {
+    color: var(--dbm-text-link);
+    text-underline-offset: 0.2em;
+  }
+  .docs-home a:focus-visible {
+    outline: 2px solid var(--dbm-border-focus);
+    outline-offset: 2px;
+    border-radius: var(--dbm-radius-xs);
+  }
+  .docs-home__grid {
+    display: grid;
+    gap: var(--dbm-space-6);
+  }
+  @media (min-width: 768px) {
+    .docs-home__grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+  .group {
+    display: grid;
+    gap: var(--dbm-space-3);
+    align-content: start;
+    padding: var(--dbm-space-6);
+    border: 1px solid var(--site-rule);
+    border-radius: var(--dbm-radius-xl);
+    background: var(--site-sheet);
+  }
+  .group__art {
+    inline-size: min(100%, 12rem);
+    margin-block-end: var(--dbm-space-2);
+  }
+  .group__title {
+    font-size: var(--dbm-font-size-2xl);
+  }
+  .group__blurb {
+    margin: 0;
+    color: var(--site-graphite);
+  }
+  .group__links {
+    list-style: none;
+    margin: var(--dbm-space-2) 0 0;
+    padding: 0;
+    display: grid;
+    gap: var(--dbm-space-3);
+  }
+  .group__links li {
+    display: grid;
+    gap: var(--dbm-space-1);
+  }
+  .group__links span {
+    font-size: var(--dbm-font-size-sm);
+    color: var(--site-graphite);
+  }
+</style>

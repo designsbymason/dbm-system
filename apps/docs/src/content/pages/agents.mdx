@@ -1,0 +1,47 @@
+---
+title: AI agents
+description: How a coding agent builds with DBM System from facts instead of guesses, and the files it reads.
+---
+
+DBM System is written to be read by machines as well as people. A coding agent working in your app can look up exactly which components exist, what each prop accepts and how the parts fit, rather than inventing an API that isn't there.
+
+## Where an agent should start
+
+Point it at `AGENTS.md` in the components package, or [`/AGENTS.md`](/AGENTS.md) on this site. It is the short guide for an agent: where to look, how to set up, the rules that hold across every component, and every public name. A prompt to start from:
+
+```text
+We use DBM System (@dbm-system/components). Before writing UI code, read
+node_modules/@dbm-system/components/AGENTS.md and the manifest it points to.
+Only use components, parts and props the manifest lists, and style with the
+semantic tokens (var(--dbm-…)), never literal values.
+```
+
+## The manifest
+
+Every component, prop, part, hook and function, as JSON, shipped inside `@dbm-system/components` and always matching the version installed:
+
+| File | What it holds |
+|---|---|
+| `@dbm-system/components/manifest/index.json` | Every component with its tier, category and one sentence, and the path of its file. Read this first; it is small |
+| `@dbm-system/components/manifest/components/<Name>.json` | One component in full: its props (type, required, default, allowed values, description), its parts, the native props it takes, its examples |
+| `@dbm-system/components/manifest/utilities.json` | Every hook, function and constant |
+| `@dbm-system/components/manifest.json` | All of the above in one file |
+| `@dbm-system/components/manifest.schema.json` | The shape of each file |
+
+The manifest is generated from the components' types and documentation on every build, and the build fails if a prop is undocumented, so it can't drift from the code.
+
+## The tokens
+
+`@dbm-system/tokens/tokens.json` lists every design token with its value in each of the four themes and which components use it. An agent styling your own markup can pick the right semantic token from it.
+
+## Every page as Markdown
+
+Each page of these docs is also plain Markdown at its own address: add `.md` to the path, for example [`/docs/installation.md`](/docs/installation.md). The "Copy page" button at the top of a page copies it, to paste into a chat.
+
+## In active development
+
+- **`llms.txt` and `llms-full.txt`**: a short index of these docs and the whole of them as one text file, for tools that read that convention.
+- **The manifest on this site**, at `/manifest.json`, and one file per component, with the component pages.
+- **An MCP server**: a way for an agent to ask questions of the manifest instead of reading files. Planned once the API is stable.
+
+None of these exist yet; this page will say when they do.

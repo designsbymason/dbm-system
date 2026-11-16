@@ -1,0 +1,48 @@
+---
+title: Foundations
+description: The design tokens every component reads, in three layers, and where to see each family in every theme.
+---
+
+A design token is a named value: a colour, a step of space, a size of type, a radius, a shadow, a duration. Components never hold a literal value; they read tokens. That is what lets one set of components carry two brands in light and dark without a line of component code changing.
+
+## Three layers
+
+1. **Primitive.** Raw values with no meaning: colour scales such as `purple.600`, the spacing steps, radii, shadows, durations and easings, breakpoints.
+2. **Semantic.** What a value is for: `bg.brand`, `text.primary`, `border.focus`, `space.4`. Each semantic token points at a primitive, and there is one set per theme (brand and mode). The names stay the same in every theme; only what they point at changes.
+3. **Component.** The few values a single component needs that don't belong in the shared scales. They are added only when a component needs one.
+
+Components reference semantic tokens, never primitives. So does your own code: use `bg.brand`, not `purple.600`, and the theme switch reaches your parts of the page too.
+
+## Names in CSS and in code
+
+In CSS, a token is a custom property with the `--dbm-` prefix and its path joined by hyphens:
+
+```css
+.panel {
+  background: var(--dbm-bg-surface);
+  color: var(--dbm-text-primary);
+  padding: var(--dbm-space-4);
+  border-radius: var(--dbm-radius-lg);
+}
+```
+
+In TypeScript, `@dbm-system/tokens` exports the same values as typed constants, and `@dbm-system/tokens/tokens.json` lists every token with its value in each theme and which components use it.
+
+## The token families
+
+Each family has a page in Storybook that shows it in the brand and mode you choose from Storybook's toolbar:
+
+- [Overview](/storybook/?path=/docs/foundations-overview--docs): how the families fit together.
+- [Color](/storybook/?path=/docs/foundations-color--docs): the scales, the semantic colours and every measured contrast pair.
+- [Typography](/storybook/?path=/docs/foundations-typography--docs): Nunito and Lora, the fluid type scale, weights, line heights.
+- [Spacing](/storybook/?path=/docs/foundations-spacing--docs): the 4 px scale from `space.0` to `space.32`.
+- [Radius](/storybook/?path=/docs/foundations-radius--docs): from `radius.none` to `radius.full`.
+- [Shadows](/storybook/?path=/docs/foundations-shadows--docs): elevation, with separate light and dark values.
+- [Motion](/storybook/?path=/docs/foundations-motion--docs): durations, easings and scales, and how reduced motion is respected.
+- [Icon sizes](/storybook/?path=/docs/foundations-iconsizes--docs): the sizes icons take beside text.
+- [Breakpoints](/storybook/?path=/docs/foundations-breakpoints--docs): from `sm` (640 px) to `3xl` (1920 px).
+- [Miscellaneous](/storybook/?path=/docs/foundations-miscellaneous--docs): border widths, opacity and the stacking order.
+
+## Themes
+
+The four themes are `purple-light`, `purple-dark`, `emerald-light` and `emerald-dark`. A theme is a file of semantic tokens; choosing one is setting `data-theme` on the root element. [Installation](/docs/installation) shows how.

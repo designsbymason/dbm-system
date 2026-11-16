@@ -40,7 +40,7 @@ The milestones are the docs website's own, inside the roadmap's Phase 9 (`01-vis
 
 | Deliverable | Done when | Status |
 |---|---|---|
-| Design direction | First, before any layout: a short direction page (concept, type roles, colour use, the annotation motif, motion, the avoid list; [02-structure.md](./02-structure.md) §3) and one sample page built in it, approved by the maintainer. Checked against the avoid list | Done: approved, with its four changes to the brief and the paper, logo and icon-button tweaks; the direction page is `/direction` (not indexed) |
+| Design direction | First, before any layout: a short direction page (concept, type roles, colour use, the annotation motif, motion, the avoid list; [02-structure.md](./02-structure.md) §3) and one sample page built in it, approved by the maintainer. Checked against the avoid list | Done: approved, with its four changes to the brief and the paper, logo and icon-button tweaks; the review page was removed once the Introduction existed, and its content lives in 02 §3 and the brief |
 | `apps/docs` | An Astro app with the React and MDX integrations builds, with a local dev entry in `.claude/launch.json` beside Storybook's | Done: Astro 7; `docs` and `site-artifact` entries in `.claude/launch.json` |
 | Layouts | The three page types (Marketing, Article, Reference) on `PageShell` ([02-structure.md](./02-structure.md) §3), with the header, the large menus, the phone drawer, breadcrumbs and the footer | Done for Marketing and Article (the shell in `apps/docs/src/components/shell/`, the map in `src/data/site.ts`); Reference is built on Article in M2 |
 | Mode | Light, dark and system, chosen by the reader, remembered, with no flash on load | Done; shared with Storybook |
@@ -52,7 +52,7 @@ The milestones are the docs website's own, inside the roadmap's Phase 9 (`01-vis
 
 ### M1 — Docs core
 
-Docs home, Introduction, Installation, Quick start, Frameworks, the Foundations overview, AI agents, the Accessibility statement, FAQ, Roadmap and the 404; search (Pagefind behind `CommandPalette`); previous and next links; the first illustrations. Done when each page is live and reviewed.
+Docs home, Introduction, Installation, Quick start, Frameworks, the Foundations overview, AI agents, the Accessibility statement, FAQ, Roadmap and the 404; search (Pagefind behind `CommandPalette`); previous and next links; the first illustrations. Done when each page is live and reviewed. **Status: built** (the pages in `apps/docs/src/content/` and `src/pages/`, the illustrations in `src/illustrations/`), with every page as Markdown and `/AGENTS.md` from §7 of 02; live when the Pages workflow's `PUBLISH_DOCS_SITE` switch is turned on.
 
 ### M2 — Components
 

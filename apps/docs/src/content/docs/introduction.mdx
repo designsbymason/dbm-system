@@ -1,0 +1,38 @@
+---
+title: Introduction
+description: An accessible React component library built on one set of design tokens, for developers and the AI coding agents working beside them.
+---
+
+DBM System is a React component library for building web and enterprise applications quickly, consistently and accessibly. It is built to be read by AI coding agents as well as by people: every component is typed, documented prop by prop, and described in a machine-readable manifest that ships in the package.
+
+## What is in the box
+
+- **Components** across nine categories, from layout and typography to data tables, date pickers and command palettes, plus two application shells. The [component index](/components) lists them all.
+- **Design tokens** that every component reads: colour, spacing, type, radius, shadow and motion. One semantic layer carries two brands, Purple and Emerald, each in light and dark, so a theme changes without touching a component.
+- **Icons** from Phosphor, typed and named like `PlusIcon`.
+- **A manifest** of every component, prop, part, hook and function, and an `AGENTS.md` guide for coding agents. See [AI agents](/agents).
+
+## The packages
+
+| Package | What it holds | Install it? |
+|---|---|---|
+| `@dbm-system/components` | The components, their stylesheet, the manifest and `AGENTS.md` | Yes |
+| `@dbm-system/tokens` | The design tokens, as theme CSS and as typed constants | Yes: your app imports a theme from it |
+| `@dbm-system/icons` | The Phosphor icon set, typed | Yes, if you use icons |
+| `@dbm-system/utils` | Helpers the components are built on | No: what an app needs from it is re-exported by the components |
+
+The four packages are released together at one version. Install the same version of each.
+
+## Principles
+
+- **Tokens, never literal values.** Components reference semantic tokens (`bg.brand`, `space.4`), never a raw colour or size, which is what makes a theme switch free.
+- **Accessible by default.** WCAG 2.2 AA is the target for every component: contrast, keyboard operation, visible focus, names, roles and states. The [accessibility statement](/accessibility-statement) lists what is measured and the known exceptions.
+- **Responsive and right-to-left.** Every component works across the whole breakpoint scale and in both text directions.
+- **Very few dependencies.** Radix UI primitives for interaction and Phosphor for icons. Nothing else at runtime.
+- **An app ships what it imports.** Each component is its own module, so a bundler leaves out the ones you don't use.
+
+## Where things stand
+
+The packages are on npm at `0.1.x`. The API is pre-1.0: a breaking change before `1.0.0` bumps the minor version, and its changelog says how to migrate. The [roadmap](/roadmap) has what is built and what comes next.
+
+Ready to start? [Install it](/docs/installation), or follow the [quick start](/docs/quick-start).
