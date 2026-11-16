@@ -1,0 +1,90 @@
+import { Meta } from "@storybook/addon-docs/blocks";
+import { Callout, FileTable } from "../../.storybook/blocks";
+import { ThemeSync } from "../../.storybook/blocks/foundations";
+import { VisuallyHidden } from "../atoms/VisuallyHidden";
+
+<Meta title="Getting started/AI agents" />
+
+<ThemeSync />
+
+<VisuallyHidden asChild><h2>Intro</h2></VisuallyHidden>
+
+# AI agents
+
+DBM System is written to be read by machines as well as people. A coding agent working in your app can look up
+exactly which components exist, what each prop accepts and how the parts fit, rather than inventing an API that
+isn't there. Everything below ships inside the packages, so it always matches the version installed.
+
+## Where an agent should start
+
+Point it at `AGENTS.md` at the root of `@dbm-system/components`. It is the short guide for an agent: where to
+look, how to set up, the rules that hold across every component, and every public name. A prompt to start from:
+
+```text
+We use DBM System (@dbm-system/components). Before writing UI code, read
+node_modules/@dbm-system/components/AGENTS.md and the manifest it points to.
+Only use components, parts and props the manifest lists, and style with the
+semantic tokens (var(--dbm-…)), never literal values.
+```
+
+## The manifest
+
+Every component, prop, part, hook and function, as JSON, generated from the components' types and documentation
+on every build. The build fails if a prop is undocumented, so the manifest can't drift from the code.
+
+<FileTable
+  label="The manifest files"
+  rows={[
+    {
+      name: "@dbm-system/components/manifest/index.json",
+      description: "Every component with its tier, category and one sentence, and the path of its file. Read this first; it is small.",
+    },
+    {
+      name: "@dbm-system/components/manifest/components/<Name>.json",
+      description: "One component in full: its props (type, required, default, allowed values, description), its parts, the native props it takes and its examples.",
+    },
+    {
+      name: "@dbm-system/components/manifest/utilities.json",
+      description: "Every hook, function and constant.",
+    },
+    {
+      name: "@dbm-system/components/manifest.json",
+      description: "All of the above in one file.",
+    },
+    {
+      name: "@dbm-system/components/manifest.schema.json",
+      description: "The shape of each file.",
+    },
+  ]}
+/>
+
+## The tokens
+
+<FileTable
+  label="The token index"
+  rows={[
+    {
+      name: "@dbm-system/tokens/tokens.json",
+      description: "Every design token, its value in each of the four themes, and which components use it. An agent styling your own markup can pick the right semantic token from it.",
+    },
+  ]}
+/>
+
+## In this documentation
+
+Every component has a Docs page here with full types and a snippet for each example, and
+[All components](?path=/docs/getting-started-all-components--docs) lists them.
+
+<Callout tone="info" title="In active development">
+
+Not built yet, so do not rely on them:
+
+- **`llms.txt` and `llms-full.txt`:** a short index of these docs and the whole of them as one text file, for
+  tools that read that convention.
+- **A Markdown copy of each docs page**, and the manifest published beside the docs.
+- **An MCP server:** a way for an agent to ask questions of the manifest instead of reading files. Planned once
+  the API is stable.
+
+This page will say when they exist.
+
+</Callout>

@@ -1,0 +1,101 @@
+import { Meta } from "@storybook/addon-docs/blocks";
+import { RelatedLinks } from "../../.storybook/blocks";
+import { ThemeSync } from "../../.storybook/blocks/foundations";
+import { VisuallyHidden } from "../atoms/VisuallyHidden";
+
+<Meta title="Getting started/Introduction" />
+
+<ThemeSync />
+
+<VisuallyHidden asChild><h2>Intro</h2></VisuallyHidden>
+
+# Introduction
+
+Welcome to the DBM System documentation.
+
+DBM System is an agentic React component library for building web and enterprise applications quickly,
+consistently and accessibly, with a typed, token-driven API that AI coding agents and developers can both
+rely on.
+
+"Agentic" means it is built to be read by AI coding agents as well as people. Every component has full
+types, a hand-written snippet for each example, and checks for accessibility, responsive layout and
+right-to-left text. It is built on a small set of design tokens, so the same components carry two brands,
+**Purple** and **Emerald**, each in light and dark. It depends on very little: only Radix UI primitives
+for interaction and Phosphor for icons.
+
+## What is in the box
+
+- **Components** across nine categories, from layout and typography to data tables, date pickers and command
+  palettes, plus two application shells. [All components](?path=/docs/getting-started-all-components--docs) lists
+  them with a search and filters.
+- **Design tokens** that every component reads: colour, spacing, type, radius, shadow and motion. One semantic
+  layer carries two brands, each in light and dark, so a theme changes without touching a component.
+- **Icons** from Phosphor, typed and named like `PlusIcon`.
+- **A manifest** of every component, prop, part, hook and function, and an `AGENTS.md` guide for coding agents.
+  See [AI agents](?path=/docs/getting-started-ai-agents--docs).
+
+## The packages
+
+| Package | What it holds | Install it? |
+|---|---|---|
+| `@dbm-system/components` | The components, their stylesheet, the manifest and `AGENTS.md` | Yes |
+| `@dbm-system/tokens` | The design tokens, as theme CSS and as typed constants | Yes: your app imports a theme from it |
+| `@dbm-system/icons` | The Phosphor icon set, typed | Yes, if you use icons |
+| `@dbm-system/utils` | Helpers the components are built on | No: what an app needs from it is re-exported by the components |
+
+The four packages are released together at one version. Install the same version of each.
+
+## Principles
+
+- **Tokens, never literal values.** Components reference semantic tokens (`bg.brand`, `space.4`), never a raw
+  colour or size, which is what makes a theme switch free.
+- **Accessible by default.** WCAG 2.2 AA is the target for every component: contrast, keyboard operation,
+  visible focus, names, roles and states. The [Accessibility guide](?path=/docs/guides-accessibility--docs)
+  lists what is measured and the known exceptions.
+- **Responsive and right-to-left.** Every component works across the whole breakpoint scale and in both text
+  directions.
+- **Very few dependencies.** Radix UI primitives for interaction and Phosphor for icons. Nothing else at runtime.
+- **An app ships what it imports.** Each component is its own module, so a bundler leaves out the ones you
+  don't use.
+
+## Where things stand
+
+The packages are on npm at `0.1.x`. The API is pre-1.0: a breaking change before `1.0.0` bumps the minor
+version, and its [changelog](?path=/docs/resources-changelog--docs) says how to migrate. The
+[roadmap](?path=/docs/resources-roadmap--docs) has what is built and what comes next.
+
+Found a problem or have an idea? [Open an issue](https://github.com/designsbymason/dbm-system/issues). If DBM
+System is useful to you, a star on [GitHub](https://github.com/designsbymason/dbm-system) is the best way to
+support it.
+
+## Where to go next
+
+<RelatedLinks
+  items={[
+    {
+      name: "Installation",
+      description: "Install the packages, import the stylesheet and a theme, and load the fonts.",
+      href: "?path=/docs/getting-started-installation--docs",
+    },
+    {
+      name: "Quick start",
+      description: "From an empty Vite app to a themed page with a form, in five steps.",
+      href: "?path=/docs/getting-started-quick-start--docs",
+    },
+    {
+      name: "Frameworks",
+      description: "Where the setup goes in Vite, Next.js and Astro, and server rendering.",
+      href: "?path=/docs/getting-started-frameworks--docs",
+    },
+    {
+      name: "AI agents",
+      description: "The files a coding agent reads to build with DBM System from facts.",
+      href: "?path=/docs/getting-started-ai-agents--docs",
+    },
+    {
+      name: "All components",
+      description: "Every component and template, with a search and filters.",
+      href: "?path=/docs/getting-started-all-components--docs",
+    },
+  ]}
+/>

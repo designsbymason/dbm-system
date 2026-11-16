@@ -123,12 +123,21 @@ const preview: Preview = {
         // annotated for the same reason `a`/`b` above can't be.
         // @ts-expect-error — `title` can't be typed; see comment above
         const topLevelGroup = (title) => title.split("/")[0] ?? title;
-        // Getting started (the welcome page, with the component index) first,
-        // then the written guides, then the token reference, then the tiers
+        // Getting started (the introduction, installation and the component index) first,
+        // then the written guides, the resources (changelog, roadmap, FAQ), then the token reference, then the tiers
         // (Atoms, then Molecules, Organisms and Templates alphabetically; the template groups come out in the
         // inventory's own order, Shells first).
-        const groupPriority = ["Getting started", "Guides", "Foundations", "Atoms"];
+        const groupPriority = ["Getting started", "Guides", "Resources", "Foundations", "Atoms"];
         const templateGroups = ["Shells", "Authentication", "Data pages", "Settings and account", "System and utility pages"];
+        const gettingStartedOrder = [
+          "Getting started/Introduction",
+          "Getting started/Installation",
+          "Getting started/Quick start",
+          "Getting started/Frameworks",
+          "Getting started/AI agents",
+          "Getting started/All components",
+        ];
+        const resourcesOrder = ["Resources/Changelog", "Resources/Roadmap", "Resources/FAQ"];
         const guidesOrder = [
           "Guides/Theming",
           "Guides/Accessibility",
@@ -162,6 +171,12 @@ const preview: Preview = {
             );
           }
           return aGroup.localeCompare(bGroup, undefined, { numeric: true });
+        }
+        if (aGroup === "Getting started") {
+          return gettingStartedOrder.indexOf(a.title) - gettingStartedOrder.indexOf(b.title);
+        }
+        if (aGroup === "Resources") {
+          return resourcesOrder.indexOf(a.title) - resourcesOrder.indexOf(b.title);
         }
         if (aGroup === "Guides") {
           return guidesOrder.indexOf(a.title) - guidesOrder.indexOf(b.title);

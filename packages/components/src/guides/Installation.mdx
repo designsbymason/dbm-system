@@ -1,0 +1,137 @@
+import { Meta } from "@storybook/addon-docs/blocks";
+import { ReferenceTable, RelatedLinks } from "../../.storybook/blocks";
+import { ThemeSync } from "../../.storybook/blocks/foundations";
+import { VisuallyHidden } from "../atoms/VisuallyHidden";
+
+<Meta title="Getting started/Installation" />
+
+<ThemeSync />
+
+<VisuallyHidden asChild><h2>Intro</h2></VisuallyHidden>
+
+# Installation
+
+The packages are on npm at `0.1.x`, and the API is pre-1.0: a breaking change before `1.0.0` bumps the minor
+version and says how to migrate in its [changelog](?path=/docs/resources-changelog--docs). These steps are
+checked on every change: the packed packages are installed into an empty app, bundled with esbuild and with
+webpack, and a component is checked in a browser in light and dark.
+
+**What you need:** React 18 or newer (a peer dependency), and a bundler that can import CSS. Vite, webpack,
+esbuild and the frameworks built on them all can.
+
+## 1. Install the packages
+
+The components, the tokens (your app imports a theme from them) and the icons:
+
+```bash
+pnpm add @dbm-system/components @dbm-system/tokens @dbm-system/icons
+```
+
+With npm, `npm install`; with yarn or bun, `yarn add` or `bun add`, and the same three packages.
+
+## 2. Import the stylesheet and a theme
+
+Once, in your app's entry:
+
+```ts
+import "@dbm-system/components/styles.css";
+import "@dbm-system/tokens/css/purple-light.bundled.css";
+```
+
+`styles.css` holds every component's CSS. Each bundled theme file holds the primitives, the component tokens
+and that theme's semantic tokens:
+
+<ReferenceTable
+  plainFirstColumn
+  columns={["Theme", "File"]}
+  rows={[
+    ["Purple, light", "`purple-light.bundled.css`"],
+    ["Purple, dark", "`purple-dark.bundled.css`"],
+    ["Emerald, light", "`emerald-light.bundled.css`"],
+    ["Emerald, dark", "`emerald-dark.bundled.css`"],
+  ]}
+/>
+
+## 3. Choose the theme
+
+Set it on the root element, so the first paint is already themed:
+
+```html
+<html data-theme="purple-light">
+```
+
+The themes are `purple-light`, `purple-dark`, `emerald-light` and `emerald-dark`. To switch at runtime, or to
+offer more than one theme without repeating the shared files, see the
+[Theming guide](?path=/docs/guides-theming--docs): it covers `ThemeProvider`, which sets the attribute for you
+and can follow the system's light or dark setting.
+
+## 4. Load the fonts
+
+The components use Nunito (the interface) and Lora (editorial text). The package ships no fonts; without them
+the browser's fallback fonts are used. Load them from Google Fonts, in your page's head:
+
+```html
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link
+  href="https://fonts.googleapis.com/css2?family=Lora:wght@400;500;600;700&family=Nunito:wght@400;500;600;700&display=swap"
+  rel="stylesheet"
+/>
+```
+
+Or host them yourself: both are open source (SIL Open Font License). Download the variable `.woff2` files and
+declare them:
+
+```css
+@font-face {
+  font-family: "Nunito";
+  font-style: normal;
+  font-weight: 400 700;
+  font-display: swap;
+  src: url("/fonts/nunito-variable.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "Lora";
+  font-style: normal;
+  font-weight: 400 700;
+  font-display: swap;
+  src: url("/fonts/lora-variable.woff2") format("woff2");
+}
+```
+
+## 5. Use a component
+
+```tsx
+import { Button } from "@dbm-system/components";
+
+export function Example() {
+  return <Button>Save</Button>;
+}
+```
+
+Style your own code with the tokens, never with literal values: `var(--dbm-bg-brand)`, `var(--dbm-space-4)`. The
+[Foundations pages](?path=/docs/foundations-overview--docs) list every token, and the components work the same
+under server rendering and in the browser.
+
+## Next
+
+<RelatedLinks
+  items={[
+    {
+      name: "Quick start",
+      description: "Builds a small themed page with a form.",
+      href: "?path=/docs/getting-started-quick-start--docs",
+    },
+    {
+      name: "Frameworks",
+      description: "Next.js, Vite, Astro and server rendering.",
+      href: "?path=/docs/getting-started-frameworks--docs",
+    },
+    {
+      name: "Theming",
+      description: "Switch brand and mode at runtime, and offer more than one theme.",
+      href: "?path=/docs/guides-theming--docs",
+    },
+  ]}
+/>

@@ -1,157 +1,36 @@
 import { Meta } from "@storybook/addon-docs/blocks";
-import { ComponentIndex, FileTable, FoundationsCards, RelatedLinks } from "../../.storybook/blocks";
+import { RelatedLinks } from "../../.storybook/blocks";
 import { ThemeSync } from "../../.storybook/blocks/foundations";
 import { VisuallyHidden } from "../atoms/VisuallyHidden";
 
-<Meta title="Getting started" />
+{/* The old address of the single Getting started page (`?path=/docs/getting-started--docs`), kept because static Pages
+    cannot redirect (docs-site/04-content-inventory.md §4). It is not in the sidebar. Remove it when nobody arrives here. */}
+<Meta title="Moved/Getting started" id="getting-started" tags={["!dev"]} />
 
 <ThemeSync />
 
 <VisuallyHidden asChild><h2>Intro</h2></VisuallyHidden>
 
-# Getting started
+# This page has moved
 
-Welcome to the DBM System documentation.
-
-DBM System is an agentic React component library for building web and enterprise applications quickly,
-consistently and accessibly, with a typed, token-driven API that AI coding agents and developers can both
-rely on.
-
-"Agentic" means it is built to be read by AI coding agents as well as people. Every component has full
-types, a hand-written snippet for each example, and checks for accessibility, responsive layout and
-right-to-left text. It is built on a small set of design tokens, so the same components carry two brands,
-**Purple** and **Emerald**, each in light and dark. It depends on very little: only Radix UI primitives
-for interaction and Phosphor for icons.
-
-The sections below run from installing the library, through the guides and the tokens behind it, to the
-components themselves.
-
-## Installation
-
-The packages are on npm at `0.1.x`, and the API is pre-1.0: a breaking change before `1.0.0` bumps the minor
-version and says how to migrate in its changelog, which is on each [GitHub release](https://github.com/designsbymason/dbm-system/releases).
-These steps are checked on every change against the packed packages installed into an empty app.
-
-**What you need:** React 18 or newer (a peer dependency), and a bundler that can import CSS (Vite, webpack and
-esbuild all can).
-
-**1. Install** the components, the tokens (the theme CSS) and the icons:
-
-```bash
-pnpm add @dbm-system/components @dbm-system/tokens @dbm-system/icons
-```
-
-**2. Import** the stylesheet and one theme once, in your app's entry:
-
-```ts
-import "@dbm-system/components/styles.css";
-import "@dbm-system/tokens/css/purple-light.bundled.css";
-```
-
-**3. Choose the theme** on the root element:
-
-```html
-<html data-theme="purple-light">
-```
-
-The themes are `purple-light`, `purple-dark`, `emerald-light` and `emerald-dark`. The Theming guide covers
-switching between them at runtime, with `ThemeProvider`.
-
-**4. Load the fonts.** The package ships no fonts. The components use `Nunito` and `Lora`; without them the
-browser's fallback fonts are used. Load them from Google Fonts, in your page's `<head>`:
-
-```html
-<link rel="preconnect" href="https://fonts.googleapis.com" />
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link
-  href="https://fonts.googleapis.com/css2?family=Lora:wght@400;500;600;700&family=Nunito:wght@400;500;600;700&display=swap"
-  rel="stylesheet"
-/>
-```
-
-or host them yourself: the package README has the `@font-face` declarations.
-
-**5. Use a component.**
-
-```tsx
-import { Button } from "@dbm-system/components";
-
-export function Example() {
-  return <Button>Save</Button>;
-}
-```
-
-Style with the tokens, never with literal values: `var(--dbm-bg-brand)`, `var(--dbm-space-4)`. The Foundations pages
-below list every token, and the components work the same under server rendering and in the browser.
-
-Found a problem or have an idea? [Open an issue](https://github.com/designsbymason/dbm-system/issues). If DBM System is
-useful to you, a star on [GitHub](https://github.com/designsbymason/dbm-system) is the best way to support it.
-
-## Guides
+Getting started is now three pages. Choose the one you came for:
 
 <RelatedLinks
   items={[
     {
-      name: "Theming",
-      description: "Switch brand and mode, and how the token families and the provider work.",
-      href: "/?path=/docs/guides-theming--docs",
+      name: "Introduction",
+      description: "What DBM System is, what is in the packages, and where to go next.",
+      href: "?path=/docs/getting-started-introduction--docs",
     },
     {
-      name: "Accessibility",
-      description: "What the components guarantee, the known exceptions, and what stays your job.",
-      href: "/?path=/docs/guides-accessibility--docs",
+      name: "Installation",
+      description: "Install the packages, import the stylesheet and a theme, and load the fonts.",
+      href: "?path=/docs/getting-started-installation--docs",
     },
     {
-      name: "Responsive and right-to-left",
-      description: "Breakpoints, responsive props, logical CSS and the dir prop.",
-      href: "/?path=/docs/guides-responsive-and-right-to-left--docs",
-    },
-    {
-      name: "Hooks and utilities",
-      description: "Every hook and helper the package exports, with options and returns.",
-      href: "/?path=/docs/guides-hooks-and-utilities--docs",
-    },
-    {
-      name: "Composition patterns",
-      description: "Live arrangements of components that come up in nearly every app.",
-      href: "/?path=/docs/guides-composition-patterns--docs",
-    },
-    {
-      name: "Icons",
-      description: "The icons the components use, their weights, and the full Phosphor set.",
-      href: "/?path=/docs/guides-icons--docs",
+      name: "All components",
+      description: "Every component and template, with a search and filters.",
+      href: "?path=/docs/getting-started-all-components--docs",
     },
   ]}
 />
-
-## Foundations
-
-The design tokens behind every component: each is a named value, read live from the token package. Start with the [Foundations overview](?path=/docs/foundations-overview--docs).
-
-<FoundationsCards />
-
-<ComponentIndex />
-
-## For AI agents
-
-Everything an agent needs ships inside the packages, so it can work from structured facts instead of guessing:
-
-<FileTable
-  label="Files for AI agents"
-  rows={[
-    {
-      name: "AGENTS.md",
-      description: "At the root of @dbm-system/components: the rules for using the library, with a list of every component. Start here.",
-    },
-    {
-      name: "@dbm-system/components/manifest/index.json",
-      description: "Every component in one small file, with the path of its full description (props, parts and examples).",
-    },
-    {
-      name: "@dbm-system/tokens/tokens.json",
-      description: "Every design token, its value in each theme, and which components use it.",
-    },
-  ]}
-/>
-
-Every component page here has full types and a snippet for each example. An MCP server is planned.

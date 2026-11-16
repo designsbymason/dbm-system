@@ -5,5 +5,5 @@
     "rootDir": "src"
   },
   "include": ["src"],
-  "exclude": ["src/guides/GettingStarted.checks.stories.tsx"]
+  "exclude": ["src/guides/AllComponents.checks.stories.tsx"]
 }

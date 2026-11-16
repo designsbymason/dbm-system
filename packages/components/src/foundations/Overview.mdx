@@ -80,8 +80,9 @@ Reference it directly in CSS Modules: `padding: var(--dbm-space-4);`. There is n
 JS import required to use a token inside a component's own `.module.css` file — the custom
 properties are already globally available once the token stylesheets (`primitives.css`,
 `component-tokens.css` and one file per theme in use, from `@dbm-system/tokens/css/`) are loaded,
-once, for the whole app. How a consuming app loads them is not settled yet; the Installation section of
-[Getting started](?path=/docs/getting-started--docs) will say when it is.
+once, for the whole app. [Installation](?path=/docs/getting-started-installation--docs) shows how an app loads
+them. In TypeScript, `@dbm-system/tokens` exports the same values as typed constants, and
+`@dbm-system/tokens/tokens.json` lists every token with its value in each theme and which components use it.
 
 ## What's covered here
 

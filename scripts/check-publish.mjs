@@ -125,7 +125,7 @@ for (const name of PACKAGES) {
 }
 
 // 5. The consumer guide (ADR-0175): what it tells an app to import and set must exist.
-const GUIDE_FILES = [...PACKAGES.map((name) => join("packages", name, "README.md")), join("packages", "components", "AGENTS.md"), join("packages", "components", "src", "guides", "GettingStarted.mdx"), join("packages", "components", "src", "guides", "Theming.mdx")];
+const GUIDE_FILES = [...PACKAGES.map((name) => join("packages", name, "README.md")), join("packages", "components", "AGENTS.md"), ...["Installation", "QuickStart", "Frameworks", "Theming"].map((page) => join("packages", "components", "src", "guides", `${page}.mdx`))];
 
 /** The file in `directory` that `exports` maps `subpath` (`./css/purple-light.bundled.css`) to, or `undefined` when it does not. */
 function resolveExport(directory, exportsMap, subpath) {

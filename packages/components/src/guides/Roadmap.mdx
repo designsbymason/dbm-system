@@ -1,0 +1,45 @@
+import { Meta } from "@storybook/addon-docs/blocks";
+import { ThemeSync } from "../../.storybook/blocks/foundations";
+import { VisuallyHidden } from "../atoms/VisuallyHidden";
+
+<Meta title="Resources/Roadmap" />
+
+<ThemeSync />
+
+<VisuallyHidden asChild><h2>Intro</h2></VisuallyHidden>
+
+# Roadmap
+
+DBM System is pre-1.0 and built by one maintainer. This page says what exists today and what comes next, without
+dates.
+
+## Built
+
+- **The component library**, published to npm with provenance: atoms, molecules and organisms across nine
+  categories, each with full types, documentation, Storybook stories and accessibility checks.
+- **The design tokens**: three layers, two brands (Purple and Emerald), each in light and dark.
+- **Two application shells**, `AppShell` (with a sidebar) and `PageShell` (without), and example pages built on
+  them in the Templates section.
+- **For agents**: the component manifest, the token index and `AGENTS.md`, shipped in the packages.
+- **This documentation**: the guides, the Foundations pages and a Docs page for every component.
+
+## Next
+
+- **The home page** of dbm-system.com, with a header that links into these docs.
+- **More for agents**: `llms.txt`, `llms-full.txt` and a Markdown copy of each docs page.
+- **More templates**: page-level examples such as sign-in, settings and dashboard pages, built on the shells.
+- **1.0**: a stable API, after which these docs keep a version for each major release.
+
+## Later
+
+- **Agent tooling**: an MCP server that answers questions from the manifest, and a scaffolder.
+- **A Figma library** generated from the same tokens.
+- **React Native** components, sharing the token layer.
+
+## Not planned
+
+- Components for frameworks other than React (Vue, Svelte, Angular).
+- A visual theme-builder tool.
+- A third brand, until a real need for one exists.
+
+Have a need this doesn't cover? [Open an issue](https://github.com/designsbymason/dbm-system/issues).

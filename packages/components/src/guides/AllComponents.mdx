@@ -1,0 +1,18 @@
+import { Meta } from "@storybook/addon-docs/blocks";
+import { ComponentIndex } from "../../.storybook/blocks";
+import { ThemeSync } from "../../.storybook/blocks/foundations";
+import { VisuallyHidden } from "../atoms/VisuallyHidden";
+
+<Meta title="Getting started/All components" />
+
+<ThemeSync />
+
+<VisuallyHidden asChild><h2>Intro</h2></VisuallyHidden>
+
+# All components
+
+Every component and template, with a line on each. Search by name, or filter by tier and category; a name opens
+its Docs page. The lists are built from this Storybook's own index, so a new component appears here without an
+edit to the page.
+
+<ComponentIndex />
