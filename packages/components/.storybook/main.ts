@@ -74,8 +74,8 @@ const config: StorybookConfig = {
     },
     "@storybook/addon-vitest",
   ],
-  // Served beside the manager, so `./public/logo.svg` becomes `logo.svg` next to
-  // `index.html` (at `/storybook/logo.svg` on dbm-system.com) — referenced as
+  // Served beside the manager, so `./public/logo-light.svg` becomes `logo-light.svg` next to
+  // `index.html` (at `/storybook/logo-light.svg` on dbm-system.com) — referenced as
   // `brandImage` in theme.ts for the sidebar logo.
   staticDirs: ["./public"],
   managerHead: (head) => `${head}${managerHead}`,

@@ -61,6 +61,8 @@
     "check-guidelines": "node scripts/check-guidelines.mjs",
     "test:visual": "playwright test",
     "test:visual:update": "playwright test --update-snapshots",
+    "generate-logo": "node scripts/generate-logo.mjs",
+    "check-logo": "node scripts/generate-logo.mjs --check",
     "check-snippets": "node scripts/check-snippets.mjs"
   },
   "peerDependencies": {

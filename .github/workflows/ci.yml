@@ -61,6 +61,10 @@ jobs:
       - name: Check Foundations token coverage
         run: pnpm --filter @dbm-system/components check-foundations-token-coverage
 
+      # Storybook's two logo files are generated from the `text.brand` token; fails when a committed file is stale.
+      - name: Check the Storybook logo matches the tokens
+        run: pnpm --filter @dbm-system/components check-logo
+
       # Warn-only (`::warning` annotations, always exits 0): the guideline docs drifting from each
       # other and from the code never fails a build. `continue-on-error` keeps a bug in the script
       # itself from doing so either.
