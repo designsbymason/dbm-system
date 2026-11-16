@@ -13,22 +13,12 @@ export interface SiteHeaderProps {
   version: string;
 }
 
-const storybookLabel = "Storybook, the documentation";
 const githubLabel = "DBM System on GitHub";
 
-/** Storybook as a tertiary icon button with an accessible name and a tooltip (the link carries the name too, for lint). */
-function StorybookLink() {
-  return (
-    <IconButton asChild icon={FlaskIcon} aria-label={storybookLabel} tooltip="Storybook" variant="tertiary" size="sm">
-      <a href={storybookHref} aria-label={storybookLabel} />
-    </IconButton>
-  );
-}
-
-/** GitHub, the same way. */
+/** GitHub as a tertiary icon button with an accessible name and a tooltip (the link carries the name too, for lint). */
 function GithubLink() {
   return (
-    <IconButton asChild icon={GithubLogoIcon} aria-label={githubLabel} tooltip="GitHub" variant="tertiary" size="sm">
+    <IconButton asChild icon={GithubLogoIcon} aria-label={githubLabel} tooltip="GitHub" variant="tertiary" size="md">
       <a href={githubHref} aria-label={githubLabel} />
     </IconButton>
   );
@@ -51,7 +41,7 @@ function PanelToolLinks() {
 /**
  * The home page's header (guidelines/docs-site/02-structure.md §1, ADR-0220), a ghost bar that sticks. From `lg` it is three
  * columns: the wordmark and the version at the start, the Docs and Foundations menus and the Components link centred, and the
- * icon buttons (search, mode, Storybook, GitHub) at the end. Below `lg` it is three columns too, the menu button, the wordmark
+ * icon buttons (search, mode, GitHub) at the end. Below `lg` it is three columns too, the menu button, the wordmark
  * (centred), and search with the mode toggle; the menus become expandable groups in the menu panel, and Storybook and GitHub
  * move to its foot as labelled buttons. The columns below `lg` are `Navbar.Row`'s own, so the wordmark is centred however
  * wide the two sides are.
@@ -106,9 +96,6 @@ export function SiteHeader({ version }: SiteHeaderProps) {
           </Navbar.Action>
           <Navbar.Action>
             <ModeToggle />
-          </Navbar.Action>
-          <Navbar.Action hideBelow="lg">
-            <StorybookLink />
           </Navbar.Action>
           <Navbar.Action hideBelow="lg">
             <GithubLink />

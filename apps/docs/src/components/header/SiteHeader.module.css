@@ -52,6 +52,11 @@
   }
 }
 
+/* Each group's label in a dropdown or in the phone menu is in capitals. */
+.group.group > p {
+  text-transform: uppercase;
+}
+
 /* The icon buttons are one group with one space between each. */
 .actions.actions {
   gap: var(--dbm-space-1);

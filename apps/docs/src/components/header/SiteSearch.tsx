@@ -135,7 +135,7 @@ export function SiteSearch() {
           aria-label="Search"
           tooltip="Search"
           variant="tertiary"
-          size="sm"
+          size="md"
           data-site-search
         />
       }

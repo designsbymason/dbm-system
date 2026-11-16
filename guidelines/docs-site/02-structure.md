@@ -9,7 +9,7 @@ The site is `https://dbm-system.com` (the apex is canonical; `www` redirects). I
 A ghost bar that sticks (transparent until it is stuck). **From `lg` (1024 px) it is three columns**, the two sides sharing the room equally so the middle is truly centred:
 
 ```
-[dbM system] [v0.1.x]        Docs ▾   Foundations ▾   Components                [Search] [Mode] [Storybook] [GitHub]
+[dbM system] [v0.1.x]        Docs ▾   Foundations ▾   Components                [Search] [Mode] [GitHub]
 ```
 
 **Below `lg` it is three columns too** (`Navbar.Row`'s `columns`), with the wordmark centred however wide the sides are:
@@ -22,10 +22,10 @@ A ghost bar that sticks (transparent until it is stuck). **From `lg` (1024 px) i
 |---|---|
 | Logo | The "dbM system" wordmark, inline SVG coloured with `text.brand`, about 24 px tall; links to `/` |
 | Version | The current version as a subtle brand-toned `Badge` inside the home link, read from the packages at build; shown from `lg` only, so the wordmark is alone and centred below it |
-| **Docs** | A simple dropdown list of Storybook pages, no descriptions, in three labelled groups side by side: Getting started (with AI agents), Guides, Resources |
+| **Docs** | A simple dropdown list of Storybook pages, no descriptions, in three groups side by side, each with its label in capitals: Getting started (with AI agents), Guides, Resources |
 | **Foundations** | A simple dropdown list, one link per Storybook Foundations page, in one labelled group |
 | **Components** | A direct link (no menu) to Storybook's All components page |
-| Icon buttons | Search, the mode toggle, Storybook and GitHub: tertiary `IconButton`s with accessible names and tooltips, one group with one equal space between each, no divider. Search and the mode toggle stay in the bar at every width; Storybook and GitHub are in the bar from `lg` and in the menu panel's foot (as labelled buttons) below it |
+| Icon buttons | Search, the mode toggle and GitHub: tertiary `IconButton`s at the bar's medium size, with accessible names and tooltips (the name alone, no shortcut), one group with one small equal space between each, no divider. Search and the mode toggle stay in the bar at every width; GitHub is in the bar from `lg`, and below it in the menu panel's foot. Storybook is not in the bar (the Docs menu and Components link lead into it); it is a button in the menu panel's foot |
 | Search | A `CommandPalette` over Storybook's `index.json`: every Docs page, component and story by title; a result opens in Storybook. Opened by its icon button or with ⌘K or Ctrl K. From `lg` it is the palette's usual panel; **below `lg` it opens as a bottom sheet, 85% of the screen tall** (the palette's panel restyled in `SiteSearch.module.css`, since the component has no sheet presentation) |
 | Mode | An icon button that toggles light and dark; a first visit is light; remembered and shared with Storybook ([ADR-0223](../adr/0223-the-sites-mode-is-a-light-and-dark-toggle-that-starts-light-over-light-dark-and-system.md)) |
 

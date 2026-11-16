@@ -22,5 +22,5 @@ export function ModeToggle() {
     applyMode(next, box ? { x: box.left + box.width / 2, y: box.top + box.height / 2 } : undefined);
   };
 
-  return <IconButton ref={trigger} icon={icon} aria-label={name} tooltip={name} variant="tertiary" size="sm" onClick={toggle} />;
+  return <IconButton ref={trigger} icon={icon} aria-label={name} tooltip={name} variant="tertiary" size="md" onClick={toggle} />;
 }
