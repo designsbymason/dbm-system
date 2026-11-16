@@ -17,7 +17,7 @@ No page exists twice. Where the site and Storybook both cover something, the two
 | The package README and Installation | Both stay (npm readers need the README); `check-publish` keeps the README, `AGENTS.md` and the Getting started pages consistent, and the new pages join that check |
 | Storybook's other guides, the Foundations pages, the component Docs pages, Templates | Stay where they are |
 
-## 2. What leaves the site (S2)
+## 2. What left the site (S2)
 
 The `/docs/*`, `/agents`, `/faq`, `/roadmap` and `/accessibility-statement` pages; the Article layout, the docs sidebar and outline, previous and next; Pagefind; the `.md` copies of site pages (replaced in S4 by copies of Storybook's pages). Their content is in Storybook first (§1). The site's illustrations for those pages move with them only if Storybook can render them; otherwise they are retired.
 

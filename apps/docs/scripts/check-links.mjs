@@ -1,9 +1,9 @@
 #!/usr/bin/env node
 /**
  * The link check (guidelines/docs-site/02-structure.md §11): every internal link and asset in the built site must
- * resolve to a file in it, and every same-page `#fragment` to an id on the page. A link to a page that isn't built yet
- * is allowed only while `src/data/site.ts` lists it as planned (`plannedPaths`), so the list shrinks as pages land and
- * a typo is never excused. External links are not fetched: no network in the gate.
+ * resolve to a file in it, and every same-page `#fragment` to an id on the page. A link into Storybook's pages
+ * (`/storybook/?path=/docs/<id>`) must name an entry in its `index.json`, so a renamed Docs page breaks the build and
+ * not the reader. External links are not fetched: no network in the gate.
  *
  *   node scripts/check-links.mjs [root]
  *
@@ -13,7 +13,6 @@
 import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 import { dirname, join, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import { plannedPaths } from "../src/data/site.ts";
 
 /* eslint-disable no-console -- a CLI check's report */
 
@@ -24,7 +23,8 @@ if (!existsSync(root)) {
   process.exit(1);
 }
 const hasStorybook = existsSync(join(root, "storybook", "index.html"));
-const planned = new Set(plannedPaths);
+/** The ids of Storybook's entries, when it is built beside the site. */
+const storybookIds = hasStorybook ? new Set(Object.keys(JSON.parse(readFileSync(join(root, "storybook", "index.json"), "utf8")).entries)) : undefined;
 
 /** The site's own pages: every .html file, except Storybook's (its links are its own). */
 const pages = [];
@@ -68,9 +68,14 @@ for (const page of pages) {
     const url = new URL(value, `https://site.invalid${pagePath}`);
     const pathname = url.pathname;
     if (pathname.startsWith("/storybook/") && !hasStorybook) continue;
+    const storybookPath = pathname.startsWith("/storybook/") ? url.searchParams.get("path") : null;
+    const entry = storybookPath?.match(/^\/(?:docs|story)\/(.+)$/)?.[1];
+    if (entry !== undefined && storybookIds && !storybookIds.has(entry)) {
+      failures.push(`${pagePath}: "${value}" names no entry in Storybook's index.json`);
+      continue;
+    }
     if (fileFor(pathname)) continue;
-    if (planned.has(pathname.replace(/\/$/, "") || "/")) continue;
-    failures.push(`${pagePath}: "${value}" resolves to nothing in the build, and src/data/site.ts doesn't list it as planned`);
+    failures.push(`${pagePath}: "${value}" resolves to nothing in the build`);
   }
 }
 
@@ -80,4 +85,4 @@ if (failures.length > 0) {
   for (const failure of [...new Set(failures)]) console.error(`  - ${failure}`);
   process.exit(1);
 }
-console.log(`check-links: all resolve (${planned.size} planned pages allowed until they are built)`);
+console.log("check-links: all resolve");

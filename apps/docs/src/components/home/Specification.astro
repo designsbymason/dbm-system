@@ -1,11 +1,9 @@
 ---
 // The facts, as a specification sheet rather than a strip of big numbers (an instrument has a
 // datasheet). Every value is read from the packages at build (facts.ts).
-import { docsGroups, hrefOf } from "../../data/site";
+import { accessibility, changelog } from "../../data/site";
 import { facts } from "./facts";
 
-// The changelog page comes later (M5); until then its fallback (the GitHub releases) is where the history is.
-const changelog = docsGroups.flatMap((group) => group.links).find((link) => link.label === "Changelog");
 
 const list = (items: string[]) =>
   items.length < 2 ? items.join("") : `${items.slice(0, -1).join(", ")} and ${items.at(-1)}`;
@@ -15,10 +13,10 @@ const rows = [
   { term: "Themes", detail: `${list(facts.brands)}, each in ${list(facts.modes)}` },
   { term: "Runtime dependencies", detail: list(facts.thirdParty) },
   { term: "React", detail: `${facts.react.replace(">=", "")} and later, safe to render on the server` },
-  { term: "Accessibility", detail: "WCAG 2.2 AA is the target.", link: { href: "/accessibility-statement", text: "Read the known exceptions" } },
+  { term: "Accessibility", detail: "WCAG 2.2 AA is the target.", link: { href: accessibility.href, text: "Read the known exceptions" } },
   { term: "For agents", detail: "A typed component manifest, a token index and AGENTS.md ship in the package" },
   { term: "Licence", detail: "MIT" },
-  { term: "Version", detail: `${facts.version}, before 1.0.`, link: { href: (changelog && hrefOf(changelog)) ?? "/changelog", text: "Read the changelog" } },
+  { term: "Version", detail: `${facts.version}, before 1.0.`, link: { href: changelog.href, text: "Read the changelog" } },
 ];
 ---
 

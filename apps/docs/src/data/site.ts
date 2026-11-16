@@ -1,22 +1,13 @@
-// The site's map in one place (guidelines/docs-site/02-structure.md §1 and §2, ADR-0213): the header's large menus,
-// the footer, the docs sidebar and the link check all read it. `built` says whether the page exists yet; a link to a
-// page that isn't built is allowed by the link check only while it is listed here as planned.
-import manifest from "@dbm-system/components/manifest.json" with { type: "json" };
+// The site's map in one place (guidelines/docs-site/02-structure.md §1, ADR-0220): the header's menus and the footer
+// read it. The documentation is Storybook, so every docs link goes into it, in the same tab; the ids are the Docs
+// pages' ids in Storybook's index (packages/components/src/guides/ and src/foundations/), and the link check fails on
+// any of them that the built Storybook does not have.
 
 export interface SiteLink {
   label: string;
   href: string;
   /** One line under the link in a large menu. */
   description?: string;
-  /** Whether the page exists. Planned pages may be linked; the link check fails on any other missing page. */
-  built: boolean;
-  /** Where the link goes until the page is built (a guide's Storybook page, say); without one an unbuilt link isn't shown. */
-  fallback?: string;
-}
-
-/** Where a link should go today: the page itself once built, its fallback until then, or nowhere. */
-export function hrefOf(link: SiteLink): string | undefined {
-  return link.built ? link.href : link.fallback;
 }
 
 export interface SiteGroup {
@@ -24,92 +15,75 @@ export interface SiteGroup {
   links: SiteLink[];
 }
 
+/** Where Storybook is on this origin. */
+export const storybookHref = "/storybook/";
+
+/** The Storybook address of a Docs page, from its id (`guides-theming` for `guides-theming--docs`). */
+const page = (id: string) => `${storybookHref}?path=/docs/${id}--docs`;
+
 export const docsGroups: SiteGroup[] = [
   {
-    label: "Get started",
+    label: "Getting started",
     links: [
-      { label: "Docs home", href: "/docs", description: "Where everything is", built: true },
-      { label: "Introduction", href: "/docs/introduction", description: "What DBM is and what is in the box", built: true },
-      { label: "Installation", href: "/docs/installation", description: "Packages, stylesheet, theme and fonts", built: true },
-      { label: "Quick start", href: "/docs/quick-start", description: "An empty app to a themed page", built: true },
-      { label: "Frameworks", href: "/docs/frameworks", description: "Next.js, Vite, Astro and server rendering", built: true },
+      { label: "Introduction", href: page("getting-started-introduction"), description: "What DBM is and what is in the box" },
+      { label: "Installation", href: page("getting-started-installation"), description: "Packages, stylesheet, theme and fonts" },
+      { label: "Quick start", href: page("getting-started-quick-start"), description: "An empty app to a themed page" },
+      { label: "Frameworks", href: page("getting-started-frameworks"), description: "Next.js, Vite, Astro and server rendering" },
     ],
   },
   {
     label: "Guides",
     links: [
-      { label: "Theming", href: "/docs/guides/theming", description: "Brands, modes and your own tokens", built: false, fallback: "/storybook/?path=/docs/guides-theming--docs" },
-      { label: "Accessibility", href: "/docs/guides/accessibility", description: "What every component does for you", built: false, fallback: "/storybook/?path=/docs/guides-accessibility--docs" },
-      { label: "Responsive and right-to-left", href: "/docs/guides/responsive-and-rtl", description: "Breakpoints and both directions", built: false, fallback: "/storybook/?path=/docs/guides-responsive-and-right-to-left--docs" },
-      { label: "Composition patterns", href: "/docs/guides/composition-patterns", description: "Putting components together", built: false, fallback: "/storybook/?path=/docs/guides-composition-patterns--docs" },
-      { label: "Hooks and utilities", href: "/docs/guides/hooks-and-utilities", description: "The functions that ship with it", built: false, fallback: "/storybook/?path=/docs/guides-hooks-and-utilities--docs" },
-      { label: "Icons", href: "/docs/guides/icons", description: "Phosphor, sized and coloured", built: false, fallback: "/storybook/?path=/docs/guides-icons--docs" },
+      { label: "Theming", href: page("guides-theming"), description: "Brands, modes and your own tokens" },
+      { label: "Accessibility", href: page("guides-accessibility"), description: "What every component does for you" },
+      { label: "Responsive and right-to-left", href: page("guides-responsive-and-right-to-left"), description: "Breakpoints and both directions" },
+      { label: "Composition patterns", href: page("guides-composition-patterns"), description: "Putting components together" },
+      { label: "Hooks and utilities", href: page("guides-hooks-and-utilities"), description: "The functions that ship with it" },
+      { label: "Icons", href: page("guides-icons"), description: "Phosphor, sized and coloured" },
     ],
-  },
-  {
-    label: "Foundations",
-    links: [{ label: "Foundations", href: "/docs/foundations", description: "Tokens, the three layers and naming", built: true }],
   },
   {
     label: "Resources",
     links: [
-      { label: "Changelog", href: "/changelog", description: "Every release", built: false, fallback: "https://github.com/designsbymason/dbm-system/releases" },
-      { label: "Roadmap", href: "/roadmap", description: "Built, next and not planned", built: true },
-      { label: "FAQ", href: "/faq", description: "Short answers", built: true },
-      { label: "Accessibility statement", href: "/accessibility-statement", description: "The target and the known exceptions", built: true },
+      { label: "Changelog", href: page("resources-changelog"), description: "Every release" },
+      { label: "Roadmap", href: page("resources-roadmap"), description: "Built, next and not planned" },
+      { label: "FAQ", href: page("resources-faq"), description: "Short answers" },
+      { label: "AI agents", href: page("getting-started-ai-agents"), description: "The files an agent reads" },
     ],
   },
 ];
 
-const slug = (text: string) => text.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
-
-/** The functional categories, the navigation axis (ADR-0006), from the manifest; Shells are under Templates. */
-export const componentCategories: SiteLink[] = [...new Set(manifest.components.map((component) => component.category))]
-  .filter((category) => category !== "Shells")
-  .sort()
-  .map((category) => ({
-    label: category,
-    href: `/components#${slug(category)}`,
-    description: `${manifest.components.filter((component) => component.category === category).length} components`,
-    built: false,
-    // Until the component pages exist (M2), Storybook is where the components are.
-    fallback: "/storybook/",
-  }));
-
-export const primaryLinks: SiteLink[] = [
-  { label: "Templates", href: "/templates", built: false, fallback: "/storybook/" },
-  { label: "AI agents", href: "/agents", built: true },
+export const foundationsLinks: SiteLink[] = [
+  { label: "Overview", href: page("foundations-overview"), description: "The three layers and the naming" },
+  { label: "Color", href: page("foundations-color"), description: "The scales, the semantic colours and every contrast pair" },
+  { label: "Typography", href: page("foundations-typography"), description: "Nunito, Lora and the fluid scale" },
+  { label: "Spacing", href: page("foundations-spacing"), description: "The 4 px scale" },
+  { label: "Radius", href: page("foundations-radius"), description: "From none to full" },
+  { label: "Shadows", href: page("foundations-shadows"), description: "Elevation in light and dark" },
+  { label: "Motion", href: page("foundations-motion"), description: "Durations, easings and reduced motion" },
+  { label: "Icon sizes", href: page("foundations-iconsizes"), description: "Sizes beside text" },
+  { label: "Miscellaneous", href: page("foundations-miscellaneous"), description: "Border widths, opacity and stacking" },
+  { label: "Breakpoints", href: page("foundations-breakpoints"), description: "From sm to 3xl" },
 ];
 
-export const storybookHref = "/storybook/";
+/** The header's Components link and the home page's way in: Storybook's All components page. */
+export const allComponents: SiteLink = { label: "All components", href: page("getting-started-all-components") };
+export const changelog: SiteLink = docsGroups[2].links[0];
+export const accessibility: SiteLink = docsGroups[1].links[1];
+export const quickStart: SiteLink = docsGroups[0].links[2];
 
 export const footerColumns: SiteGroup[] = [
-  { label: "Docs", links: [...docsGroups[0].links.slice(1), ...docsGroups[2].links] },
-  { label: "Components", links: [{ label: "All components", href: "/components", built: false, fallback: "/storybook/" }, ...componentCategories] },
-  { label: "Resources", links: [...docsGroups[3].links, { label: "AI agents", href: "/agents", built: true }] },
+  { label: "Docs", links: [...docsGroups[0].links, docsGroups[1].links[0], docsGroups[1].links[1]] },
+  { label: "Components", links: [allComponents, { label: "Foundations", href: foundationsLinks[0].href }, { label: "Hooks and utilities", href: docsGroups[1].links[4].href }] },
+  { label: "Resources", links: docsGroups[2].links },
   {
     label: "Project",
     links: [
-      { label: "GitHub", href: "https://github.com/designsbymason/dbm-system", built: true },
-      { label: "npm", href: "https://www.npmjs.com/package/@dbm-system/components", built: true },
-      { label: "Issues", href: "https://github.com/designsbymason/dbm-system/issues", built: true },
-      { label: "Security", href: "https://github.com/designsbymason/dbm-system/security/policy", built: true },
-      { label: "Licence (MIT)", href: "https://github.com/designsbymason/dbm-system/blob/main/LICENSE", built: true },
+      { label: "GitHub", href: "https://github.com/designsbymason/dbm-system" },
+      { label: "npm", href: "https://www.npmjs.com/package/@dbm-system/components" },
+      { label: "Issues", href: "https://github.com/designsbymason/dbm-system/issues" },
+      { label: "Security", href: "https://github.com/designsbymason/dbm-system/security/policy" },
+      { label: "Licence (MIT)", href: "https://github.com/designsbymason/dbm-system/blob/main/LICENSE" },
     ],
   },
 ];
-
-/** Every page the site links to before it exists. The link check reads this list. */
-export const plannedPaths: string[] = [
-  ...new Set(
-    [...docsGroups.flatMap((group) => group.links), ...componentCategories, ...primaryLinks, ...footerColumns.flatMap((column) => column.links)]
-      .filter((link) => !link.built && link.href.startsWith("/"))
-      .map((link) => link.href.split("#")[0]),
-  ),
-  "/components",
-];
-
-/** The docs group a page belongs to, for its breadcrumbs. */
-export function groupOf(href: string): SiteGroup | undefined {
-  return docsGroups.find((group) => group.links.some((link) => link.href === href));
-}

@@ -41,7 +41,6 @@ pnpm-debug.log*
 # Docs website (apps/docs): generated output, rebuilt on every deploy
 apps/docs/dist/
 apps/docs/.astro/
-apps/docs/public/pagefind/
 apps/docs/public/manifest.json
 apps/docs/public/llms.txt
 apps/docs/public/llms-full.txt

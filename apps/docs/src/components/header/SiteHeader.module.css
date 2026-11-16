@@ -17,13 +17,6 @@
   }
 }
 
-/* The sidebar's menu button is for a phone and a tablet; from `lg` the sidebar is a column. */
-@media (min-width: 1024px) {
-  .menuButton {
-    display: none;
-  }
-}
-
 .version {
   display: inline-flex;
   border-radius: var(--dbm-radius-full);

@@ -1,35 +1,27 @@
-import { Badge, IconButton, Navbar, NavigationMenu, Sidebar } from "@dbm-system/components";
+import { Badge, IconButton, Navbar, NavigationMenu } from "@dbm-system/components";
 import { FlaskIcon, GithubLogoIcon } from "@dbm-system/icons";
-import { componentCategories, docsGroups, hrefOf, primaryLinks, storybookHref } from "../../data/site";
+import { allComponents, changelog, docsGroups, foundationsLinks, storybookHref } from "../../data/site";
 import { LogoMark } from "../LogoMark";
 import { ModeMenu } from "./ModeMenu";
 import { SiteSearch } from "./SiteSearch";
 import styles from "./SiteHeader.module.css";
 
 export interface SiteHeaderProps {
-  /** The top-level section the page belongs to (`/docs`, `/components`, …), marked as current. */
-  section?: string;
   /** The published version, read from the components package at build. */
   version: string;
-  /**
-   * An Article or Reference page has a docs sidebar: below `lg` the header's links move into the sidebar's panel and
-   * the header shows its menu button, so a phone has one menu button and one drawer (the Documentation Page recipe).
-   */
-  withSidebar?: boolean;
 }
 
 /**
- * The site header (guidelines/docs-site/02-structure.md §1, ADR-0213): Docs and Components open large menus, then
- * Templates, AI agents and Storybook; the version, GitHub and the mode menu at the end. Search joins it in M1.
+ * The site header (guidelines/docs-site/02-structure.md §1, ADR-0220): Docs and Foundations open menus of Storybook pages,
+ * Components links to All components, then Storybook; search, the version, GitHub and the mode menu at the end.
  */
-export function SiteHeader({ section, version, withSidebar = false }: SiteHeaderProps) {
+export function SiteHeader({ version }: SiteHeaderProps) {
   return (
-    <Navbar sticky collapseBelow={withSidebar ? "never" : "lg"} className={styles.header}>
-      {withSidebar && <Sidebar.MenuButton variant="ghost" size="sm" className={styles.menuButton} aria-label="Site and section menu" />}
+    <Navbar sticky collapseBelow="lg" className={styles.header}>
       <Navbar.Brand href="/" aria-label="DBM System, home">
         <LogoMark className={styles.logo} title="dbM" />
       </Navbar.Brand>
-      <Navbar.Links aria-label="Main" hideBelow={withSidebar ? "lg" : undefined}>
+      <Navbar.Links aria-label="Main">
         <NavigationMenu>
           <NavigationMenu.List>
             <NavigationMenu.Item value="docs">
@@ -37,49 +29,31 @@ export function SiteHeader({ section, version, withSidebar = false }: SiteHeader
               <NavigationMenu.Content layout="columns">
                 {docsGroups.map((group) => (
                   <NavigationMenu.Group key={group.label} label={group.label}>
-                    {group.links.map((link) => {
-                      const href = hrefOf(link);
-                      return (
-                        href && (
-                          <NavigationMenu.Link key={link.href} href={href} description={link.description}>
-                            {link.label}
-                          </NavigationMenu.Link>
-                        )
-                      );
-                    })}
+                    {group.links.map((link) => (
+                      <NavigationMenu.Link key={link.href} href={link.href} description={link.description}>
+                        {link.label}
+                      </NavigationMenu.Link>
+                    ))}
                   </NavigationMenu.Group>
                 ))}
               </NavigationMenu.Content>
             </NavigationMenu.Item>
-            <NavigationMenu.Item value="components">
-              <NavigationMenu.Trigger>Components</NavigationMenu.Trigger>
+            <NavigationMenu.Item value="foundations">
+              <NavigationMenu.Trigger>Foundations</NavigationMenu.Trigger>
               <NavigationMenu.Content layout="columns">
-                <NavigationMenu.Group label="By category" columns={2}>
-                  {componentCategories.map((link) => (
-                    <NavigationMenu.Link key={link.href} href={hrefOf(link)} description={link.description}>
+                <NavigationMenu.Group label="Design tokens" columns={2}>
+                  {foundationsLinks.map((link) => (
+                    <NavigationMenu.Link key={link.href} href={link.href} description={link.description}>
                       {link.label}
                     </NavigationMenu.Link>
                   ))}
                 </NavigationMenu.Group>
-                <NavigationMenu.Group label="Reference">
-                  {/* Storybook until the component pages exist (M2). */}
-                  <NavigationMenu.Link href={storybookHref} description="Every component, with its playground">
-                    All components
-                  </NavigationMenu.Link>
-                  <NavigationMenu.Link href="/storybook/?path=/docs/guides-hooks-and-utilities--docs" description="The hooks and functions that ship with it">
-                    Hooks and functions
-                  </NavigationMenu.Link>
-                </NavigationMenu.Group>
               </NavigationMenu.Content>
             </NavigationMenu.Item>
-            {primaryLinks.map((link) => (
-              <NavigationMenu.Item key={link.href}>
-                <NavigationMenu.Link href={hrefOf(link)} current={section === link.href || undefined}>
-                  {link.label}
-                </NavigationMenu.Link>
-              </NavigationMenu.Item>
-            ))}
-            {/* Storybook is a different tool, the workshop: set apart, with its own mark. */}
+            <NavigationMenu.Item>
+              <NavigationMenu.Link href={allComponents.href}>Components</NavigationMenu.Link>
+            </NavigationMenu.Item>
+            {/* Storybook is the workshop as well as the docs: set apart, with its own mark. */}
             <NavigationMenu.Item className={styles.workshop}>
               <NavigationMenu.Link href={storybookHref} icon={FlaskIcon}>
                 Storybook
@@ -93,7 +67,7 @@ export function SiteHeader({ section, version, withSidebar = false }: SiteHeader
           <SiteSearch />
         </Navbar.Action>
         <Navbar.Action hideBelow="md">
-          <a className={styles.version} href="https://github.com/designsbymason/dbm-system/releases">
+          <a className={styles.version} href={changelog.href}>
             <Badge tone="neutral" variant="subtle">{`v${version}`}</Badge>
             <span className="visually-hidden">, release notes</span>
           </a>

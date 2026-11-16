@@ -183,14 +183,12 @@ The docs app is not published, so the packages' runtime budget does not apply, b
 |---|---|---|
 | `astro` | The site framework, static output | MIT |
 | `@astrojs/react` | React islands for live DBM components | MIT |
-| `@astrojs/mdx`, `@astrojs/markdown-remark` | MDX and the unified Markdown processor; leave in S2 if the site has no Markdown content left | MIT |
 | `react`, `react-dom` | Required by the islands and by DBM | MIT |
 | `@dbm-system/tokens`, `utils`, `icons`, `components` | The system the site is built from | MIT |
 | `@fontsource/nunito`, `@fontsource/lora` | Self-hosted fonts for the site and Storybook ([ADR-0215](../adr/0215-the-docs-site-and-storybook-self-host-nunito-and-lora-over-loading-them-from-google-fonts.md)) | SIL Open Font License |
 | `motion` | Pointer and spring interaction on the home page only ([ADR-0222](../adr/0222-the-home-pages-motion-is-expressive-with-motion-allowed-for-pointer-and-spring-interaction-over-the-restrained-motion-of-the-first-direction.md)); added when first used in S3 | MIT |
 | `playwright`, `axe-core` (development only) | The accessibility scan; the link check and the local server are scripts with no dependency | Apache-2.0, MPL-2.0 |
 | `typescript`, `@types/react`, `@types/react-dom` (development only) | Type-checking, at the versions the components package uses | Apache-2.0, MIT |
-| `pagefind` (development only) | **Leaves in S2**: search moves to Storybook's index | MIT |
 
 No animation library is ever a dependency of `packages/*` ([ADR-0140](../adr/0140-the-design-system-takes-no-animation-library-and-animates-with-css-and-the-motion-tokens-over-keeping-motion-as-an-optional-peer-dependency.md)); a lint rule enforces it.
 
