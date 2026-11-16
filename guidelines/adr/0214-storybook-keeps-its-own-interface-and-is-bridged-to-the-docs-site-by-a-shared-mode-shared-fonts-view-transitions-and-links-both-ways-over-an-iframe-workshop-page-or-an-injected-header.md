@@ -1,6 +1,6 @@
 # 0214 — Storybook keeps its own interface and is bridged to the docs site by a shared mode, shared fonts, view transitions and links both ways, over an iframe workshop page or an injected header
 
-**Status:** Accepted · **Date:** 2026-11-15
+**Status:** Accepted, the search-engine part superseded by [0221](./0221-storybooks-docs-pages-are-indexed-by-search-engines-with-plain-text-copies-for-agents-over-keeping-storybook-out-of-results.md) · **Date:** 2026-11-15
 
 ## Context
 The docs site and Storybook share one domain ([ADR-0170](./0170-the-docs-website-is-an-astro-app-with-react-islands-deployed-with-storybook-as-one-github-pages-site-on-the-apex-of-dbm-system-com.md)), and moving between them should feel like one site. Storybook's manager is already themed from the tokens (fonts, colours, radius) and follows its own Brand and Mode toolbar. But the reader's light or dark choice does not carry across, each loads its own fonts, a navigation between them flashes a blank page, the logo links to GitHub rather than the site, and its logo image uses a root path that does not resolve under `/storybook/`.

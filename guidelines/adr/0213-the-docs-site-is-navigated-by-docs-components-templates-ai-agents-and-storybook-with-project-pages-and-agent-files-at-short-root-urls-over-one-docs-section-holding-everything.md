@@ -1,6 +1,6 @@
 # 0213 — The docs site is navigated by Docs, Components, Templates, AI agents and Storybook, with project pages and agent files at short root URLs, over one Docs section holding everything
 
-**Status:** Accepted · **Date:** 2026-11-15
+**Status:** Superseded by [0220](./0220-the-docs-website-is-the-home-page-only-and-storybook-is-the-documentation-with-a-header-that-links-into-it-and-search-over-its-index-over-docs-pages-on-the-website.md) · **Date:** 2026-11-15
 
 ## Context
 The first site map put almost everything under `/docs`: onboarding, guides, the Foundations overview, the agent page, the changelog and the accessibility statement. Its top bar was Docs, Components, Templates and Storybook. That mixes learning, reference and project news in one sidebar, buries the agent story (the system's first claim is that it is agentic) at `/docs/for-ai-agents`, and gives the 14 hooks and 4 functions the manifest documents no page at all. URLs are hard to change once shared, so the map is decided before the site is built.

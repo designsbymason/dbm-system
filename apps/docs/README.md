@@ -26,4 +26,4 @@ Telemetry and the dev toolbar are off.
 - `src/components/home/`: the home page sample's sections.
 - `scripts/`: the scoped token themes, the link check, the accessibility scan and the local server.
 
-The plan, structure, landing page brief and open items are in `guidelines/docs-site/`; the decisions are ADRs 0170 to 0173 and 0212 to 0217 in `guidelines/adr/`.
+The plan, structure, landing page brief and open items are in `guidelines/docs-site/`; the decisions are ADRs 0170, 0172, 0173, 0212, 0214, 0215, 0217 and 0220 to 0223 in `guidelines/adr/`. Under the current plan the site becomes the home page and its docs pages move to Storybook (S1 and S2).

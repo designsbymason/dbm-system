@@ -1,6 +1,6 @@
 # 0171 — Docs website content comes from the manifest for facts and MDX for prose, and the guides move out of Storybook, which keeps the component pages, over reusing Storybook's MDX, a separate copy, or keeping both
 
-**Status:** Accepted · **Date:** 2026-11-03 · **Amended 2026-11-03** — Foundations stay in Storybook only, and the docs website has one overview page that links to them; the decision itself is unchanged
+**Status:** Superseded by [0220](./0220-the-docs-website-is-the-home-page-only-and-storybook-is-the-documentation-with-a-header-that-links-into-it-and-search-over-its-index-over-docs-pages-on-the-website.md) · **Date:** 2026-11-03 · **Amended 2026-11-03** — Foundations stay in Storybook only, and the docs website has one overview page that links to them; the decision itself is unchanged
 
 ## Context
 Storybook already holds a Docs page per component, a Foundations group, a Getting started page and six guides (Theming, Accessibility, Responsive and right-to-left, Hooks and utilities, Composition patterns, Icons). Those pages are written with Storybook-only blocks. A docs website needs a home for concepts and guides, a front door, and component references that stay correct as components change.

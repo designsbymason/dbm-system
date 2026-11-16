@@ -1,6 +1,6 @@
 # 0216 — Component pages render the Storybook stories as their live examples through portable stories, over hand-written examples or story iframes
 
-**Status:** Accepted · **Date:** 2026-11-15
+**Status:** Superseded by [0220](./0220-the-docs-website-is-the-home-page-only-and-storybook-is-the-documentation-with-a-header-that-links-into-it-and-search-over-its-index-over-docs-pages-on-the-website.md) · **Date:** 2026-11-15
 
 ## Context
 Each component page on the docs site shows live examples with their code ([ADR-0171](./0171-docs-website-content-comes-from-the-manifest-for-facts-and-mdx-for-prose-and-the-guides-move-out-of-storybook-which-keeps-the-component-pages.md)). Storybook already has, for every component, stories that show its variants and states, and a hand-written snippet per example for "Show code" ([ADR-0020](./0020-show-code-uses-hand-written-snippets-over-storybook-generated-source.md)). Writing the examples a second time for the site would double the work and let the two drift.
