@@ -1,21 +1,31 @@
-// The reader's mode: one key on the origin, shared with Storybook (ADR-0214).
-export type SiteMode = "light" | "dark" | "system";
+// The reader's mode: light or dark, one key on the origin, shared with Storybook (ADR-0214, ADR-0223).
+export type SiteMode = "light" | "dark";
 
 export const MODE_KEY = "dbm-mode";
 
+/** The system's own setting, used only to settle a stored "system" from before the toggle (ADR-0223). */
+function systemMode(): SiteMode {
+  return matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+}
+
+/**
+ * The mode to start in: the stored one, and light on a first visit. A stored "system" is read as light or dark once and
+ * replaced by that choice, so it never comes back. The same rule is in `Base.astro`'s inline script, which runs before
+ * the first paint.
+ */
 export function readMode(): SiteMode {
   try {
     const value = localStorage.getItem(MODE_KEY);
-    if (value === "light" || value === "dark" || value === "system") return value;
+    if (value === "light" || value === "dark") return value;
+    if (value === "system") {
+      const settled = systemMode();
+      localStorage.setItem(MODE_KEY, settled);
+      return settled;
+    }
   } catch {
-    // Storage can be blocked; the system preference still applies.
+    // Storage can be blocked; the first visit's light applies.
   }
-  return "system";
-}
-
-function themeFor(mode: SiteMode): string {
-  const dark = mode === "dark" || (mode === "system" && matchMedia("(prefers-color-scheme: dark)").matches);
-  return dark ? "purple-dark" : "purple-light";
+  return "light";
 }
 
 /** Applies a mode, with a short reveal from `origin` when the browser and the reader allow motion. */
@@ -26,7 +36,7 @@ export function applyMode(mode: SiteMode, origin?: { x: number; y: number }) {
     // Not remembered, but still applied.
   }
   const root = document.documentElement;
-  const theme = themeFor(mode);
+  const theme = mode === "dark" ? "purple-dark" : "purple-light";
   const update = () => {
     root.dataset.theme = theme;
     root.dataset.mode = mode;

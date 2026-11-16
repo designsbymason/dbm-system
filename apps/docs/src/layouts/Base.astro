@@ -38,17 +38,22 @@ const canonical = new URL(Astro.url.pathname, Astro.site);
     <link rel="canonical" href={canonical} />
     {noindex && <meta name="robots" content="noindex" />}
     <link rel="icon" href="/logo.svg" type="image/svg+xml" />
-    <meta name="color-scheme" content="light dark" />
+    <meta name="color-scheme" content="light" />
     <script is:inline>
-      // The reader's mode, applied before the first paint so there is no flash. One key on the
-      // origin, shared with Storybook at /storybook/ (ADR-0214): "light", "dark" or "system".
+      // The reader's mode, applied before the first paint so there is no flash. One key on the origin, shared with
+      // Storybook at /storybook/ (ADR-0214): "light" or "dark", and light on a first visit (ADR-0223). A stored "system"
+      // from before the toggle is read as light or dark once and replaced by that choice (the same rule as mode.ts).
       (function () {
-        var mode = "system";
+        var mode = "light";
         try {
-          mode = localStorage.getItem("dbm-mode") || "system";
+          var stored = localStorage.getItem("dbm-mode");
+          if (stored === "system") {
+            stored = matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+            localStorage.setItem("dbm-mode", stored);
+          }
+          if (stored === "dark") mode = "dark";
         } catch (e) {}
-        var dark = mode === "dark" || (mode === "system" && matchMedia("(prefers-color-scheme: dark)").matches);
-        document.documentElement.dataset.theme = dark ? "purple-dark" : "purple-light";
+        document.documentElement.dataset.theme = mode === "dark" ? "purple-dark" : "purple-light";
         document.documentElement.dataset.mode = mode;
       })();
     </script>

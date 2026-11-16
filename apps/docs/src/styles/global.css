@@ -60,6 +60,16 @@ body {
   color: var(--site-ink);
 }
 
+/* The browser's own parts (scrollbars, form controls, the canvas before paint) follow the chosen mode, not the system's:
+   a first visit is light whatever the system says (ADR-0223). */
+:root[data-theme="purple-light"] {
+  color-scheme: light;
+}
+
+:root[data-theme="purple-dark"] {
+  color-scheme: dark;
+}
+
 /* ---------- Layout: a 12-column grid with deliberate offsets ---------- */
 
 .site-frame {

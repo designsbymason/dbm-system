@@ -2,7 +2,7 @@ import { Badge, Button, Divider, IconButton, Navbar, NavigationMenu } from "@dbm
 import { FlaskIcon, GithubLogoIcon } from "@dbm-system/icons";
 import { allComponents, changelog, docsGroups, foundationsLinks, storybookHref } from "../../data/site";
 import { Wordmark } from "../Wordmark";
-import { ModeMenu } from "./ModeMenu";
+import { ModeToggle } from "./ModeToggle";
 import { SiteSearch } from "./SiteSearch";
 import styles from "./SiteHeader.module.css";
 
@@ -45,7 +45,7 @@ function PanelToolLinks() {
  * The home page's header (guidelines/docs-site/02-structure.md §1, ADR-0220): the wordmark and the version, then Docs and
  * Foundations menus of Storybook pages and a Components link; search, the mode control, and Storybook and GitHub after a
  * divider. Below `lg` the bar keeps the wordmark, the version, search and the menu button; the menus become expandable
- * groups in the menu panel and the mode control, Storybook and GitHub move to the panel's foot.
+ * groups in the menu panel and the mode toggle, Storybook and GitHub move to the panel's foot as labelled buttons.
  */
 export function SiteHeader({ version }: SiteHeaderProps) {
   return (
@@ -97,7 +97,7 @@ export function SiteHeader({ version }: SiteHeaderProps) {
           <SiteSearch />
         </Navbar.Action>
         <Navbar.Action hideBelow="lg">
-          <ModeMenu />
+          <ModeToggle />
         </Navbar.Action>
         <Navbar.Action hideBelow="lg">
           <Divider orientation="vertical" className={styles.divider} />
@@ -108,7 +108,7 @@ export function SiteHeader({ version }: SiteHeaderProps) {
       </Navbar.Actions>
       <Navbar.PanelActions>
         <div className={styles.panelActions}>
-          <ModeMenu />
+          <ModeToggle labelled />
           <PanelToolLinks />
         </div>
       </Navbar.PanelActions>
