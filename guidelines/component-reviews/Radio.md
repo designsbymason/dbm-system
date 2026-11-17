@@ -216,6 +216,13 @@ underlying resolution logic at the unit-test level. Full re-verification, whole 
 `tsup` build, `check-component-bundle-size` (`Radio` 1.09KB JS / 0.59KB CSS, still within budget) —
 all clean.
 
+## Post-Finalization follow-up (2026-11-17, at explicit direction) — the circle's edge clears 3:1
+
+The unchecked circle is identified by its edge alone, and `border.neutral` was 2.32:1 on `bg.surface` in the two light themes, under the 3:1 that WCAG 1.4.11 asks of a
+control's boundary. The resting edge is now `border.neutral-strong` (4.70:1 on the surface in the light themes, 6.08:1 in the dark ones) and the hover edge `border.strong`
+(6.88:1 and 10.47:1), read back from the rendered control in a real browser in all four themes. The checked and error edges are unchanged. The same change as `Checkbox`
+([Checkbox.md](./Checkbox.md)); a defect fix (question 2 of the three-question test, `06-engineering-standards.md` §9) at explicit direction: the component stays Finalized.
+
 ## Post-Finalization follow-up (2026-09-19, at explicit direction) — copy-pasteable "Show code"
 
 Same review as the molecules' and the first seven atoms' (standard: `07-storybook-and-documentation-standards.md` §4.2). Findings: all five generated snippets spelled out defaults and empty placeholders with a no-op `onCheckedChange`, and **"Inside a RadioGroup (preview)" printed Radix internals** — `<React.ForwardRef onValueChange={() => {}}>` around `<React.Context value>` — because the story hand-wired a Radix `RadioGroupPrimitive.Root` and the package's internal `RadioGroupContext`, from before the `RadioGroup` molecule existed. Its own comment said it should be rewritten once `RadioGroup` was built. **That story is now rewritten to use the real `RadioGroup`** (labelled, with the same state), its `(preview)` suffix is dropped from the story name and the Docs heading, and the now-unused Radix and context imports are removed. Every story now sets `parameters.docs.source.code` to a hand-written snippet from the new `Radio.snippets.ts`, and the Playground builds its snippet from the live controls (always writing the `value` a radio means). The snippets and Playground combinations were typechecked against the real types. **Finalized status unchanged** — story-file and docs-only, no component code, props, or tokens touched.

@@ -2,7 +2,9 @@
   align-items: center;
   appearance: none;
   background-color: var(--dbm-bg-surface);
-  border: var(--dbm-border-width-1) solid var(--dbm-border-neutral);
+  /* The box's edge is what identifies an unchecked control, so it needs 3:1 against what it sits on (WCAG 1.4.11): `border.neutral-strong`
+     is 4.70:1 on `bg.surface` in the light themes and 6.08:1 in the dark ones (`border.neutral` was 2.32:1 in the light themes). */
+  border: var(--dbm-border-width-1) solid var(--dbm-border-neutral-strong);
   border-radius: var(--dbm-radius-xs);
   cursor: pointer;
   display: inline-flex;
@@ -27,7 +29,7 @@
 }
 
 .root:hover:not(:disabled):not(.error) {
-  border-color: var(--dbm-border-neutral-strong);
+  border-color: var(--dbm-border-strong);
 }
 
 .root:focus-visible {

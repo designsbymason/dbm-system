@@ -35,6 +35,14 @@ and `storybook` browser-mode (408/408) projects, `tsup` build, `check-component-
 
 Same review as the molecules' and the first seven atoms' (standard: `07-storybook-and-documentation-standards.md` §4.2). Findings: all six generated snippets spelled out defaults and empty placeholders (`hasError={false}`, `required={false}`, `name=""`, `value=""`, `aria-label=""`) and a no-op `onCheckedChange`; "Custom check/indeterminate icons" printed the icons as `$$typeof` garbage; and "Select-all / indeterminate pattern" showed every checkbox as `checked={false}` **and** `defaultChecked={false}` — contradictory, and no state. Every story now sets `parameters.docs.source.code` to a hand-written snippet from the new `Checkbox.snippets.ts`; the select-all one shows the real `useState` (as a comment) and the real `.map`. The Playground builds its snippet from the live controls, including the icon controls. The snippets and Playground combinations were typechecked against the real types. **Finalized status unchanged** — story-file and docs-only, no component code, props, or tokens touched.
 
+## Post-Finalization follow-up (2026-11-17, at explicit direction) — the box's edge clears 3:1
+
+The unchecked box is identified by its edge alone, and `border.neutral` was 2.32:1 on `bg.surface` in the two light themes (and 2.22:1 on the subtle fill), under the 3:1
+that WCAG 1.4.11 asks of a control's boundary. The resting edge is now `border.neutral-strong` (4.70:1 on the surface in the light themes, 6.08:1 in the dark ones; `Tree`
+already used it) and the hover edge `border.strong`, so a hover cue remains. Read back from the rendered box in a real browser in all four themes: 4.70:1 and 6.88:1
+(rest and hover) in the light themes, 6.08:1 and 10.47:1 in the dark ones. Not covered: a box directly on `bg.canvas` in the dark themes (2.96:1), which a checkbox does not usually sit on.
+`Radio` got the same change. A defect fix (question 2 of the three-question test, `06-engineering-standards.md` §9) at explicit direction: the component stays Finalized.
+
 ## Post-Finalization follow-up (2026-10-17, at explicit direction) — an invisible hit area of at least 24 × 24px
 
 `DataTable`'s review found that a `Checkbox` at `xs`, `sm` and `md` is drawn 12, 16 and 20px, under the 24 × 24px minimum target that
