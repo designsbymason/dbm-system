@@ -13,7 +13,7 @@ From the repo root, in this order (each stops the run on a failure you can't exp
 2. `pnpm check-radix-single-copy` (the lockfile holds one version of each shared Radix package; `02` §3.2 step 4)
 3. `pnpm lint` (ESLint, then both type checks)
 4. `pnpm build`
-5. `pnpm check-publish` (packs each public package, then publint, @arethetypeswrong/cli, a look at the packed package.json and the consumer guide's imports and install line; needs the build)
+5. `pnpm check-publish` (packs each public package, then publint, @arethetypeswrong/cli, a look at the packed package.json, the `"use client"` marker on the components package's two entries and the consumer guide's imports and install line; needs the build)
 6. `pnpm check-manifest` (generates the component manifest and fails on a schema problem or anything undocumented, on a stale generated list in `AGENTS.md` or `CLAUDE.md` (`pnpm sync-agents` rewrites them), or on a name `AGENTS.md` uses that does not exist; needs the build)
 7. `pnpm --filter @dbm-system/components check-component-bundle-size`
 8. `pnpm --filter @dbm-system/components check-foundations-token-coverage`
@@ -23,7 +23,7 @@ From the repo root, in this order (each stops the run on a failure you can't exp
 12. `pnpm test` (unit)
 13. `pnpm --filter @dbm-system/components test:storybook` (real browser: stories, `play` functions, axe)
 14. `pnpm --filter @dbm-system/components test:visual` (run it from `packages/components`, as CI does; the root has no such script; the Playwright visual-regression suite; it needs the Storybook dev server, so start it with `preview_start` if it is not running, and report a snapshot difference with the story it is on, never update snapshots)
-15. `pnpm check-fresh-app` (packs the four public packages, installs them into an empty app with npm, bundles a `Button` with the stylesheet and a bundled theme with esbuild and with webpack, and checks the page in Chromium; needs the network and Playwright's Chromium, as `browser-tests` has)
+15. `pnpm check-fresh-app` (packs the four public packages, installs them into an empty app with pnpm, bundles a `Button` with the stylesheet and a bundled theme with esbuild and with webpack, builds a Next.js App Router app (Turbopack and webpack) whose server page imports the package and hydrates it, and checks the pages in Chromium; needs the network and Playwright's Chromium, as `browser-tests` has)
 
 With `quick`, run only 3, 10 and 12. With a step name, run just that step.
 
