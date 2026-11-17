@@ -98,3 +98,13 @@
     inline-size: min(44rem, calc(100vw - 2rem));
   }
 }
+
+/* At the top of the page the bar has no line under it; the line appears once the page has scrolled and the bar is stuck over content (the
+   Navbar sets `data-stuck` on the header then). The colour is made transparent, not the width removed, so the bar does not change height. */
+.row.row {
+  transition: border-color var(--dbm-motion-duration-base) var(--dbm-motion-easing-standard);
+}
+
+:global(header[data-variant="frosted"]:not([data-stuck])) .row.row {
+  border-block-end-color: transparent;
+}

@@ -1,8 +1,8 @@
 ---
 // The hero's illustration (03-landing-page-brief.md §3, ADR-0217, ADR-0222): a page of the manual. On desktop it glides down like a feather, in
 // wide swings and slightly bent, showing a specimen of the primitive tokens while it falls; once it is in position the specimen breaks up and
-// the JSON an agent reads resolves in its place (a real token entry, read from the token index at build). The page then turns, every few
-// seconds, through the subtle backgrounds of the system (brand, warning, success, info, danger), each page tinted as its own token. It tilts,
+// the JSON an agent reads resolves in its place (a real token entry, read from the token index at build). The page then turns, every several
+// seconds, to the next brand token (the sheet stays brand-subtle). It tilts,
 // skews and lifts as the page scrolls and returns when it scrolls back, leans toward the pointer, and floats a little at rest. On a phone it
 // does not fall or tilt: the specimen breaks into the JSON when the page scrolls into view.
 // Everything that moves is added on top of a finished state, which is the base style: the first JSON page, still. Reduced motion, a browser
@@ -11,8 +11,8 @@ import tokens from "@dbm-system/tokens/tokens.json" with { type: "json" };
 
 type Token = { name: string; layer: string; group: string; type: string; values: Record<string, string>; aliases: Record<string, string>; usedBy: string[] };
 
-/** The pages of the manual: the subtle background of each tone, in the order the page turns. Each page is tinted as the token it shows. */
-const tones = ["brand", "warning", "success", "info", "danger"];
+/** The pages of the manual: the brand tokens, in the order the page turns. The first is the one drawn on load. */
+const pageTokens = ["--dbm-bg-brand-subtle", "--dbm-bg-brand", "--dbm-bg-brand-hover", "--dbm-border-brand", "--dbm-text-brand"];
 
 /** The JSON of one real entry, line by line, as an agent reads it; the long `usedBy` list is cut after three names, as a trimmed excerpt. */
 function jsonOf(token: Token): string[] {
@@ -50,15 +50,10 @@ const runs = (line: string) => {
   return out;
 };
 
-const pages = tones.map((tone) => {
-  const token = (tokens.tokens as unknown as Token[]).find((candidate) => candidate.name === `--dbm-bg-${tone}-subtle`);
-  if (!token) throw new Error(`HeroPaper: no --dbm-bg-${tone}-subtle in the token index`);
-  return {
-    bg: `var(--dbm-bg-${tone}-subtle)`,
-    edge: `var(--dbm-border-${tone})`,
-    accent: `var(--dbm-text-${tone})`,
-    lines: jsonOf(token).map(runs),
-  };
+const pages = pageTokens.map((name) => {
+  const token = (tokens.tokens as unknown as Token[]).find((candidate) => candidate.name === name);
+  if (!token) throw new Error(`HeroPaper: no ${name} in the token index`);
+  return { lines: jsonOf(token).map(runs) };
 });
 const first = pages[0];
 if (!first) throw new Error("HeroPaper: no pages");
@@ -231,7 +226,7 @@ const sizes = ["xs", "sm", "base", "md", "lg", "xl"];
       ask();
     });
 
-    // 3. Turning the page: every few seconds it turns, like a card, to the next page of the manual. Each page is tinted as the token it shows.
+    // 3. Turning the page: every several seconds it turns, like a card, to the next page of the manual (the next brand token).
     var pages = [];
     try {
       pages = JSON.parse(root.querySelector(".paper__pages").textContent);
@@ -243,9 +238,6 @@ const sizes = ["xs", "sm", "base", "md", "lg", "xl"];
     var shown = 0;
     var relockTimer = 0;
     function show(page) {
-      root.style.setProperty("--paper-bg", page.bg);
-      root.style.setProperty("--paper-edge", page.edge);
-      root.style.setProperty("--paper-accent", page.accent);
       root.classList.add("paper--cycled", "paper--relock");
       var codes = root.querySelectorAll(".paper__json code");
       for (var c = 0; c < codes.length; c += 1) {
@@ -282,7 +274,7 @@ const sizes = ["xs", "sm", "base", "md", "lg", "xl"];
           away.cancel();
           back.cancel();
           turning = false;
-          window.setTimeout(next, 6200);
+          window.setTimeout(next, 8000);
         };
       };
     }
@@ -398,7 +390,7 @@ const sizes = ["xs", "sm", "base", "md", "lg", "xl"];
     transform: translateX(calc(var(--part, 0) * -100cqw / var(--n)));
   }
 
-  /* The page is tinted as the token it shows: `--paper-bg`, `--paper-edge` and `--paper-accent` are set as it turns, and are brand's until then. */
+  /* The page is brand-subtle, with the brand edge and the brand text colour. */
   .paper__sheet {
     position: relative;
     aspect-ratio: 3 / 4;
@@ -406,8 +398,8 @@ const sizes = ["xs", "sm", "base", "md", "lg", "xl"];
     display: grid;
     grid-template-columns: minmax(0, 1fr);
     grid-template-rows: auto 1fr;
-    background: var(--paper-bg, var(--dbm-bg-brand-subtle));
-    border: 1px solid var(--paper-edge, var(--dbm-border-brand));
+    background: var(--dbm-bg-brand-subtle);
+    border: 1px solid var(--dbm-border-brand);
     border-radius: var(--dbm-radius-md);
   }
 
@@ -415,7 +407,7 @@ const sizes = ["xs", "sm", "base", "md", "lg", "xl"];
     display: flex;
     justify-content: space-between;
     padding: var(--dbm-space-3) var(--dbm-space-5);
-    border-block-end: 1px solid color-mix(in srgb, var(--paper-edge, var(--dbm-border-brand)) 35%, transparent);
+    border-block-end: 1px solid color-mix(in srgb, var(--dbm-border-brand) 35%, transparent);
     font-family: var(--dbm-font-family-mono);
     font-size: var(--dbm-font-size-xs);
     color: var(--site-graphite);
@@ -423,7 +415,7 @@ const sizes = ["xs", "sm", "base", "md", "lg", "xl"];
   }
 
   .paper__file {
-    color: var(--paper-accent, var(--dbm-text-brand));
+    color: var(--dbm-text-brand);
   }
 
   /* The JSON an agent reads: the finished state. */
@@ -451,7 +443,7 @@ const sizes = ["xs", "sm", "base", "md", "lg", "xl"];
   }
 
   .paper__string {
-    color: var(--paper-accent, var(--dbm-text-brand));
+    color: var(--dbm-text-brand);
   }
 
   .paper__punct {
