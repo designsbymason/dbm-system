@@ -56,6 +56,8 @@ export function Example() {
   .start__steps,
   .start__note {
     grid-column: 1 / -1;
+    /* A grid item's minimum width is its content's, so without this a long line of code would widen the page; the code blocks scroll instead. */
+    min-inline-size: 0;
   }
 
   .start__text {
@@ -81,12 +83,15 @@ export function Example() {
     margin: 0;
     padding: 0;
     display: grid;
+    grid-template-columns: minmax(0, 1fr);
     gap: var(--dbm-space-8);
     counter-reset: step;
   }
 
   .start__step {
     display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    min-inline-size: 0;
     gap: var(--dbm-space-3);
     counter-increment: step;
     padding-block-start: var(--dbm-space-4);
