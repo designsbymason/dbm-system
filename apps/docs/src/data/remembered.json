@@ -1,0 +1,16 @@
+{
+  "_about": "What the site keeps in a visitor's browser, in one place: the Privacy Policy lists the choices from here, and scripts/check-privacy.mjs holds the site to it. A choice that is added, or code that starts to use browser storage, is added here in the same commit as the page's wording.",
+  "choices": [
+    { "key": "dbm-mode", "what": "whether you chose light or dark mode, shared between the home page and the documentation" },
+    { "key": "dbm-package-manager", "what": "the package manager you chose in the install commands (pnpm, npm or yarn)" }
+  ],
+  "storageFiles": [
+    "apps/docs/src/components/header/mode.ts",
+    "apps/docs/src/components/home/InstallLine.tsx",
+    "apps/docs/src/layouts/Base.astro",
+    "packages/components/.storybook/main.ts",
+    "packages/components/.storybook/manager.ts",
+    "packages/components/.storybook/preview.tsx"
+  ],
+  "storybookOwnKeyPrefixes": ["@storybook/", "lastViewedStoryIds", "storybook/"]
+}

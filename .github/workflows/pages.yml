@@ -75,6 +75,11 @@ jobs:
         working-directory: apps/docs
         run: pnpm check-accessibility
 
+      # The Privacy Policy against what the site does: the files that use browser storage, the keys written, no cookies, no other origin.
+      - name: Check the Privacy Policy matches what the site does
+        working-directory: apps/docs
+        run: pnpm check-privacy _artifact
+
       - name: Assemble the site
         run: |
           mkdir -p _site

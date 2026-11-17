@@ -33,7 +33,7 @@ Every menu link goes into Storybook in the same tab. The menus are on the home p
 
 **Below `lg`** the menu button opens a panel from the start edge: Docs and Foundations as expandable groups (the same labelled simple lists, their links lined up with the top-level labels and a subtle line between groups), Components as a link, and Storybook and GitHub at the foot as ghost buttons that share the width.
 
-**Footer:** one compact row on `bg.brand-subtle`, in three columns: the wordmark at the start, the Accessibility, Privacy Policy and Terms of Use links (the site's own pages) centred, and "DBM System © 2026 Designs By Mason" at the end; below `md` they stack. There is no links section. The links are in `text.brand` in every state (resting, visited, hover, pressed, focus), since `text.link` is only 4.5:1 on that band in light. The 404 offers search and the way into the docs.
+**Footer:** one compact row on `bg.brand-subtle`, in three columns: the wordmark at the start, the Accessibility, Privacy Policy and Terms of Use links (the site's own pages) centred, and "DBM System © 2026 Designs by Mason" at the end; below `md` they stack. There is no links section. The links are in `text.brand` in every state (resting, visited, hover, pressed, focus), since `text.link` is only 4.5:1 on that band in light. The 404 offers search and the way into the docs.
 
 ## 2. Site map
 
@@ -207,6 +207,7 @@ No animation library is ever a dependency of `packages/*` ([ADR-0140](../adr/014
 |---|---|---|
 | Link check | Any internal link or asset that resolves to nothing in the build, including links into `/storybook/` (checked against Storybook's `index.json`), and any same-page `#fragment` with no id (`apps/docs/scripts/check-links.mjs`) | Built |
 | Accessibility scan | An axe-core WCAG 2.2 A or AA violation on any built page, in light and dark, with and without reduced motion (`apps/docs/scripts/check-accessibility.mjs`) | Built |
+| Privacy check | The Privacy Policy no longer matching the site: a file that uses browser storage or cookies and is not listed in `src/data/remembered.json`; a key written to local or session storage that is neither a listed choice nor one of Storybook's own; a listed choice never written; a cookie; or a request to another origin, found by driving the built site and Storybook in Chromium (`apps/docs/scripts/check-privacy.mjs`). The policy's list of choices is built from the same file | Built |
 | Animation libraries | `gsap`, `motion` or a similar library imported in `packages/*` (`no-restricted-imports` in `packages/eslint-config/base.js`) | Built |
 | Storybook docs | Storybook's own checks and the guide-file consistency in `check-publish`, which the new Getting started pages join (and `check-logo` for the logo files) | Built |
 

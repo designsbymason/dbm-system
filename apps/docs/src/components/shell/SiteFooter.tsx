@@ -24,7 +24,7 @@ export function SiteFooter() {
             ))}
           </ul>
         </nav>
-        <p className={styles.copyright}>DBM System © 2026 Designs By Mason</p>
+        <p className={styles.copyright}>DBM System © 2026 Designs by Mason</p>
       </div>
     </div>
   );

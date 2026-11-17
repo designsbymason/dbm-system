@@ -1,17 +1,19 @@
 ---
 // The Privacy Policy (ADR-0224). It says only what is true of the site as built: no accounts, cookies, analytics or
 // third-party scripts. A change to that (an analytics tool, say) changes this page in the same commit.
+import remembered from "../data/remembered.json";
 import Legal from "../layouts/Legal.astro";
 ---
 
 <Legal
   title="Privacy Policy"
   description="What DBM System's website and documentation do and do not collect: no accounts, no cookies, no analytics."
-  updated="16 November 2026"
+  updated="17 November 2026"
 >
   <p>
-    DBM System is a React component library made by Designs By Mason ("we", "us"). This policy covers this website,
-    including the documentation in Storybook at dbm-system.com/storybook. It is short because there is little to say.
+    DBM System is a React component library made by Designs by Mason ("we", "us"). This policy covers this website,
+    including the documentation in Storybook at dbm-system.com/storybook. It is short because there is little to say. The rules for
+    using the site are in the <a href="/terms">Terms of Use</a>.
   </p>
 
   <h2>The short version</h2>
@@ -24,11 +26,22 @@ import Legal from "../layouts/Legal.astro";
 
   <h2>What stays in your browser</h2>
   <p>
-    The site remembers whether you chose light or dark mode, so the choice is still there on your next visit and is shared
-    between the home page and the documentation. It is stored in your browser's local storage under the name
-    <code>dbm-mode</code>, holds only the word "light" or "dark", and never leaves your device. Storybook may also keep its own
-    interface settings, such as the layout of its panels and the pages you last viewed, in local storage, and some interactive examples may keep their own
-    state there. You can remove all of it at any time by clearing this site's data in your browser's settings.
+    The site remembers the choices below so they are still there on your next visit. Each is kept in your browser's local
+    storage, holds only the choice itself, and never leaves your device.
+  </p>
+  <ul>
+    {
+      remembered.choices.map((choice) => (
+        <li>
+          <code>{choice.key}</code>: {choice.what}
+        </li>
+      ))
+    }
+  </ul>
+  <p>
+    Storybook may also keep its own interface settings, such as the layout of its panels and the pages you last viewed, in local
+    or session storage, and some interactive examples may keep their own state there. You can remove all of it at any time by
+    clearing this site's data in your browser's settings.
   </p>
 
   <h2>Fonts and other resources</h2>

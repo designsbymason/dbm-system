@@ -9,7 +9,7 @@ Build the workspace packages first (`pnpm build` at the root), then:
 - `pnpm --filter @dbm-system/docs dev`: the site at `http://localhost:4321` (the `docs` entry in `.claude/launch.json`). A change to a CSS module can show a page load late in the development server; reload twice, or restart it, before judging a style.
 - `pnpm --filter @dbm-system/docs build`: the static site in `dist/`.
 - `pnpm --filter @dbm-system/docs typecheck`: the TypeScript files.
-- `pnpm --filter @dbm-system/docs check-links [folder]`, `check-counts [folder]` and `check-accessibility [folder]`: the gates, on `dist/` by default (the count check also reads Storybook, so give it the assembled artifact): the links resolve, the manifest, Storybook and the home page count the same components, and the pages pass the accessibility scan.
+- `pnpm --filter @dbm-system/docs check-links [folder]`, `check-counts [folder]`, `check-accessibility [folder]` and `check-privacy [folder]`: the gates, on `dist/` by default (the count and privacy checks also read Storybook, so give them the assembled artifact): the links resolve, the manifest, Storybook and the home page count the same components, the pages pass the accessibility scan, and the Privacy Policy matches what the site keeps in the browser.
 - To try the Storybook bridge on one origin, assemble the site with Storybook (`cp -R dist/. _artifact/ && cp -R ../../packages/components/storybook-static _artifact/storybook` after `pnpm --filter @dbm-system/components build-storybook`) and serve it with `node scripts/serve.mjs` (the `site-artifact` entry, port 4322).
 
 Telemetry and the dev toolbar are off.
