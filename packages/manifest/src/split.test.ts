@@ -28,6 +28,9 @@ const manifest: Manifest = {
     { name: "Box", tier: "atom", category: "Layout", summary: "The base primitive. It renders a div.", importName: "Box", source: "src/atoms/Box/Box.tsx", asChild: false, as: true, extends: [], props: [], parts: [], examples: [] },
     { name: "Menu", tier: "organism", category: "Navigation", summary: "A menu.", importName: "Menu", source: "src/organisms/Menu/Menu.tsx", asChild: false, as: false, extends: [], props: [], parts: [], examples: [] },
   ],
+  helpers: [
+    { name: "BoxProvider", helperOf: "Box", tier: "atom", category: "Layout", summary: "Shares a thing. It is a helper.", importName: "BoxProvider", source: "src/atoms/Box/BoxProvider.tsx", asChild: false, as: false, extends: [], props: [], parts: [], examples: [] },
+  ],
   utilities: [{ name: "useThing", kind: "hook", summary: "Does a thing. Twice.", signature: "(): void", params: [], returns: "void", examples: [] }],
   constants: [{ name: "thing", type: "string", summary: "A thing." }],
 };
@@ -35,7 +38,7 @@ const manifest: Manifest = {
 describe("splitManifest", () => {
   const files = splitManifest(manifest);
   it("writes an index, a file per component and the utilities", () => {
-    expect(Object.keys(files).sort()).toEqual(["components/Box.json", "components/Menu.json", "index.json", "utilities.json"]);
+    expect(Object.keys(files).sort()).toEqual(["components/Box.json", "components/Menu.json", "helpers/BoxProvider.json", "index.json", "utilities.json"]);
   });
   it("puts a short row for each component and function in the index, with the path to read it in full", () => {
     expect(files["index.json"]).toEqual({
@@ -46,6 +49,7 @@ describe("splitManifest", () => {
         { name: "Box", tier: "atom", category: "Layout", summary: "The base primitive.", file: "components/Box.json" },
         { name: "Menu", tier: "organism", category: "Navigation", summary: "A menu.", file: "components/Menu.json" },
       ],
+      helpers: [{ name: "BoxProvider", helperOf: "Box", summary: "Shares a thing.", file: "helpers/BoxProvider.json" }],
       utilities: [{ name: "useThing", kind: "hook", summary: "Does a thing." }],
       utilitiesFile: "utilities.json",
     });
@@ -58,9 +62,11 @@ describe("splitManifest", () => {
     expect(validateManifestFile("index", files["index.json"])).toEqual([]);
     expect(validateManifestFile("utilitiesFile", files["utilities.json"])).toEqual([]);
     expect(validateManifestFile("component", files["components/Box.json"])).toEqual([]);
+    expect(validateManifestFile("helper", files["helpers/BoxProvider.json"])).toEqual([]);
   });
   it("is caught when a file is the wrong shape", () => {
     expect(validateManifestFile("index", { schemaVersion: 1 })).toContain("index.components: missing");
     expect(validateManifestFile("component", { name: "Box" })).toContain("component.tier: missing");
+    expect(validateManifestFile("helper", files["components/Box.json"])).toContain("helper.helperOf: missing");
   });
 });

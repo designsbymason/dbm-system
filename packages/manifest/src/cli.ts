@@ -43,6 +43,7 @@ if (splitFolder) {
   const folder = resolve(splitFolder);
   // Only what this writes is removed, so a stale component file never outlives its component.
   rmSync(join(folder, "components"), { recursive: true, force: true });
+  rmSync(join(folder, "helpers"), { recursive: true, force: true });
   rmSync(join(folder, "index.json"), { force: true });
   rmSync(join(folder, "utilities.json"), { force: true });
   for (const [file, content] of Object.entries(splitManifest(manifest))) {
@@ -51,14 +52,14 @@ if (splitFolder) {
     // Compact: these files are read by agents, and indentation costs them tokens.
     writeFileSync(target, `${JSON.stringify(content)}\n`);
     splitCount += 1;
-    const kind: ManifestFileKind = file === "index.json" ? "index" : file === "utilities.json" ? "utilitiesFile" : "component";
+    const kind: ManifestFileKind = file === "index.json" ? "index" : file === "utilities.json" ? "utilitiesFile" : file.startsWith("helpers/") ? "helper" : "component";
     for (const problem of validateManifestFile(kind, content)) problems.push(`${file}: ${problem}`);
   }
 }
 const errors = diagnostics.filter((entry) => entry.level === "error");
 const warnings = diagnostics.filter((entry) => entry.level === "warning");
 process.stdout.write(
-  `dbm-manifest: ${manifest.components.length} components, ${manifest.utilities.length} functions and ${manifest.constants.length} constants written to ${out} (${errors.length} errors, ${warnings.length} warnings, ${problems.length} schema problems)${splitFolder ? `; ${splitCount} split files in ${splitFolder}` : ""}\n`,
+  `dbm-manifest: ${manifest.components.length} components, ${manifest.helpers.length} helpers, ${manifest.utilities.length} functions and ${manifest.constants.length} constants written to ${out} (${errors.length} errors, ${warnings.length} warnings, ${problems.length} schema problems)${splitFolder ? `; ${splitCount} split files in ${splitFolder}` : ""}\n`,
 );
 if (!process.argv.includes("--quiet")) {
   for (const entry of diagnostics) process.stdout.write(`  ${entry.level === "error" ? "error  " : "warning"} ${entry.subject}: ${entry.message}\n`);

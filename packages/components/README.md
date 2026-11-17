@@ -103,8 +103,9 @@ The package ships a machine-readable index of every component, its props and par
 
 | File | What it holds |
 |---|---|
-| `@dbm-system/components/manifest/index.json` | Every component (name, tier, category, one sentence) and the path of its file; read this first, about 35 KB |
+| `@dbm-system/components/manifest/index.json` | Every component and helper (name, tier, category, one sentence) and the path of its file; read this first, about 35 KB |
 | `@dbm-system/components/manifest/components/<Name>.json` | One component in full: its props, parts and examples |
+| `@dbm-system/components/manifest/helpers/<Name>.json` | One helper in full (a component that supports another, such as `TooltipProvider`; `helperOf` names it) |
 | `@dbm-system/components/manifest/utilities.json` | Every hook, function and constant |
 | `@dbm-system/components/manifest.json` | All of the above in one file |
 | `@dbm-system/components/manifest.schema.json` | The shape of each file |

@@ -50,7 +50,8 @@ describe("generateManifest on the components package", () => {
     expect(find("Button")).toMatchObject({ forwardsRef: true, refElement: "HTMLButtonElement" });
     expect(find("Input")).toMatchObject({ forwardsRef: true, refElement: "HTMLInputElement" });
     // Roots with no element of their own take no ref, and neither do providers.
-    for (const name of ["Tooltip", "Dialog", "Menu", "TooltipProvider"]) expect(find(name)?.forwardsRef, name).toBe(false);
+    for (const name of ["Tooltip", "Dialog", "Menu"]) expect(find(name)?.forwardsRef, name).toBe(false);
+    expect(result.manifest.helpers.find((helper) => helper.name === "TooltipProvider")?.forwardsRef).toBe(false);
     expect(result.manifest.components.filter((component) => component.forwardsRef).length).toBeGreaterThan(100);
     // A polymorphic component's ref type is a type parameter, which says nothing, so it is left out.
     expect(find("Box")).toMatchObject({ forwardsRef: true });
@@ -111,9 +112,21 @@ describe("generateManifest on the components package", () => {
     const { constants, utilities, components } = result.manifest;
     expect(constants.map((constant) => constant.name)).toEqual(expect.arrayContaining(["pythonLanguage", "yamlLanguage"]));
     expect(constants.every((constant) => constant.summary !== "" && constant.type !== "")).toBe(true);
-    const all = [...components.map((entry) => entry.name), ...utilities.map((entry) => entry.name), ...constants.map((entry) => entry.name)];
+    const all = [...components.map((entry) => entry.name), ...result.manifest.helpers.map((entry) => entry.name), ...utilities.map((entry) => entry.name), ...constants.map((entry) => entry.name)];
     expect(new Set(all).size).toBe(all.length);
     expect(all.length).toBeGreaterThan(150);
+  });
+
+  it("lists a component written in another's folder as a helper of it, not as a component", () => {
+    const { components, helpers } = result.manifest;
+    expect(helpers.map((helper) => helper.name)).toEqual(["HoverCardProvider", "ImageViewerButton", "TooltipProvider"]);
+    expect(helpers.map((helper) => helper.helperOf)).toEqual(["HoverCard", "ImageViewer", "Tooltip"]);
+    for (const helper of helpers) {
+      expect(components.some((component) => component.name === helper.name), helper.name).toBe(false);
+      expect(components.some((component) => component.name === helper.helperOf), helper.helperOf).toBe(true);
+    }
+    // Every component is written in a folder of its own name.
+    for (const component of components) expect(component.source.split("/").at(-2), component.name).toBe(component.name);
   });
 
   it("finds nothing undocumented: no prop without a description, no component, part or function without a summary or example", () => {
@@ -124,7 +137,7 @@ describe("generateManifest on the components package", () => {
     const files = splitManifest(result.manifest);
     const index = files["index.json"];
     expect(validateManifestFile("index", index)).toEqual([]);
-    expect(Object.keys(files)).toHaveLength(result.manifest.components.length + 2);
+    expect(Object.keys(files)).toHaveLength(result.manifest.components.length + result.manifest.helpers.length + 2);
     // What an agent reads first, and the most it reads for one component, in characters (about four to a token).
     expect(JSON.stringify(index).length).toBeLessThan(45_000);
     for (const component of result.manifest.components) {
@@ -132,6 +145,10 @@ describe("generateManifest on the components package", () => {
       expect(file).toBe(component);
       expect(validateManifestFile("component", file)).toEqual([]);
       expect(JSON.stringify(file).length).toBeLessThan(70_000);
+    }
+    for (const helper of result.manifest.helpers) {
+      expect(files[`helpers/${helper.name}.json`]).toBe(helper);
+      expect(validateManifestFile("helper", files[`helpers/${helper.name}.json`])).toEqual([]);
     }
     expect(validateManifestFile("utilitiesFile", files["utilities.json"])).toEqual([]);
     const rows = (index as { components: { name: string; summary: string }[] }).components;

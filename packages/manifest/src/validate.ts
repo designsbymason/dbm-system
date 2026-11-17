@@ -48,7 +48,7 @@ function check(value: unknown, node: SchemaNode, path: string, problems: string[
 }
 
 /** The parts of the schema that describe a file of the split layout (ADR-0206). */
-export type ManifestFileKind = "index" | "component" | "utilitiesFile";
+export type ManifestFileKind = "index" | "component" | "helper" | "utilitiesFile";
 
 /** Checks one file of the split layout against its definition in the schema, and returns what is wrong with it. */
 export function validateManifestFile(kind: ManifestFileKind, value: unknown): string[] {

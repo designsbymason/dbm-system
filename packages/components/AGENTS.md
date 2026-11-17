@@ -5,7 +5,7 @@ React components for web and enterprise apps. Every component, prop and part is 
 ## Find what you need
 
 1. Read `@dbm-system/components/manifest/index.json`: every component with its tier, category and a sentence, and the path of its file.
-2. Read `@dbm-system/components/manifest/components/<Name>.json` for each component you use: its `props` (type, required, default, allowed `values`, description), its `parts` (such as `Menu.Item`), the native props it also takes (`extends`) and its `examples`.
+2. Read `@dbm-system/components/manifest/components/<Name>.json` for each component you use: its `props` (type, required, default, allowed `values`, description), its `parts` (such as `Menu.Item`), the native props it also takes (`extends`) and its `examples`. A helper (a name under Helpers below, such as `TooltipProvider`) is read the same way from `manifest/helpers/<Name>.json`; its `helperOf` names the component it supports.
 3. Hooks, functions and constants are in `manifest/utilities.json`; `manifest.schema.json` describes each file. The manifest is for the installed version.
 
 ## Set up
@@ -64,9 +64,9 @@ Never write a colour, a spacing value or a duration as a literal. The same value
 
 To switch themes at runtime, set `data-theme` yourself, or wrap the app in `ThemeProvider` (`brand` is `purple` or `emerald`, `mode` is `light`, `dark` or `system`) and read it with `useTheme`.
 
-## Components, hooks and functions
+## Components, helpers, hooks and functions
 
-Every public name, by tier and category. `manifest/index.json` has a sentence on each.
+Every public name, by tier and category. A helper supports a component and has no page of its own. `manifest/index.json` has a sentence on each.
 
 <!-- components:start -->
 
@@ -78,7 +78,7 @@ Every public name, by tier and category. `manifest/index.json` has a sentence on
 - Layout: Affix, AspectRatio, Bleed, Box, Center, Container, Divider, GridItem, Spacer, Stack
 - Media: Icon, Image, Indicators
 - Navigation: BackToTop
-- Overlay: Backdrop, Collapse, Tooltip, TooltipProvider
+- Overlay: Backdrop, Collapse, Tooltip
 - Typography: Blockquote, Code, Heading, Highlight, Kbd, Link, ListItem, Text
 - Utility: ClientOnly, DirectionProvider, FocusTrap, Portal, SkipLink, ThemeProvider, VisuallyHidden
 
@@ -89,7 +89,7 @@ Every public name, by tier and category. `manifest/index.json` has a sentence on
 - Inputs: ButtonGroup, Calendar, CheckboxGroup, EditableText, FieldGroup, FormField, NumberInput, PasswordInput, PinInput, RadioGroup, RangeSlider, RatingInput, SearchInput, Select, Slider, TagsInput, TimePicker, TimeRangePicker, ToggleGroup, Toolbar
 - Layout: Grid, PageHeader, ScrollArea, Splitter
 - Navigation: Breadcrumb, TableOfContents, Tabs
-- Overlay: Accordion, HoverCard, HoverCardProvider, Popover
+- Overlay: Accordion, HoverCard, Popover
 - Typography: CodeBlock, List
 
 **Organisms**
@@ -97,13 +97,15 @@ Every public name, by tier and category. `manifest/index.json` has a sentence on
 - Data Display: DataTable, Timeline, Tree
 - Feedback: Toast
 - Inputs: ColorPicker, Combobox, DatePicker, DateRangePicker, FileUpload, Form, MultiSelect
-- Media: Carousel, ImageViewer, ImageViewerButton
+- Media: Carousel, ImageViewer
 - Navigation: CommandPalette, EditorTabs, Menu, Menubar, Navbar, NavigationMenu, Sidebar, Stepper
 - Overlay: AlertDialog, ConfirmDialog, ContextMenu, Dialog, Drawer, Tour
 
 **Templates**
 
 - Shells: AppShell, PageShell
+
+**Helpers:** HoverCardProvider, ImageViewerButton, TooltipProvider
 
 **Hooks:** useAppShell, useCommandPaletteController, useContextMenuController, useDataTable, useDirection, useFormController, useFormState, useImageViewerController, useMenubarController, usePersistentDismiss, useRecentCommands, useSidebar, useTheme, useToast
 

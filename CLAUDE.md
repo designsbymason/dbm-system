@@ -107,7 +107,7 @@ To start a session, run `/start [task]` (`.claude/commands/start.md`): with no t
 Other project commands, in `.claude/commands/`: `/plan-component <Name>` (propose scope, API and tokens; writes nothing), `/review-component <Name>` (the §9 review as a prioritized list; no edits), `/plan-template <Name>` and `/review-template <Name>` (the same two for a template, a shell or a page), `/refresh-deps` (the §3.2 dependency pass as a plan), `/verify` (the steps CI runs, one after another, on the working tree; `quick` for lint, guidelines and unit tests; read-only), and `/after-push` (classify the push, watch CI if it contained code, report per job).
 
 ## Component index (auto-synced)
-The list below is generated from the component manifest: every public component by tier and category, then the hooks and functions, names only. `pnpm sync-agents` rewrites it (the same list is in `packages/components/AGENTS.md`) and `pnpm check-manifest` fails in CI when it is stale, so never hand-edit between the markers. Read it before building anything, to see what exists instead of guessing or hallucinating a component; `guidelines/04-component-inventory.md` has each one's tier and scope, and after a build `packages/components/dist/manifest/index.json` has a sentence on each.
+The list below is generated from the component manifest: every public component by tier and category, then the helpers (components that support another and have no page of their own), the hooks and the functions, names only. `pnpm sync-agents` rewrites it (the same list is in `packages/components/AGENTS.md`) and `pnpm check-manifest` fails in CI when it is stale, so never hand-edit between the markers. Read it before building anything, to see what exists instead of guessing or hallucinating a component; `guidelines/04-component-inventory.md` has each one's tier and scope, and after a build `packages/components/dist/manifest/index.json` has a sentence on each.
 
 <!-- AUTO-GENERATED-COMPONENT-INDEX:START -->
 
@@ -119,7 +119,7 @@ The list below is generated from the component manifest: every public component 
 - Layout: Affix, AspectRatio, Bleed, Box, Center, Container, Divider, GridItem, Spacer, Stack
 - Media: Icon, Image, Indicators
 - Navigation: BackToTop
-- Overlay: Backdrop, Collapse, Tooltip, TooltipProvider
+- Overlay: Backdrop, Collapse, Tooltip
 - Typography: Blockquote, Code, Heading, Highlight, Kbd, Link, ListItem, Text
 - Utility: ClientOnly, DirectionProvider, FocusTrap, Portal, SkipLink, ThemeProvider, VisuallyHidden
 
@@ -130,7 +130,7 @@ The list below is generated from the component manifest: every public component 
 - Inputs: ButtonGroup, Calendar, CheckboxGroup, EditableText, FieldGroup, FormField, NumberInput, PasswordInput, PinInput, RadioGroup, RangeSlider, RatingInput, SearchInput, Select, Slider, TagsInput, TimePicker, TimeRangePicker, ToggleGroup, Toolbar
 - Layout: Grid, PageHeader, ScrollArea, Splitter
 - Navigation: Breadcrumb, TableOfContents, Tabs
-- Overlay: Accordion, HoverCard, HoverCardProvider, Popover
+- Overlay: Accordion, HoverCard, Popover
 - Typography: CodeBlock, List
 
 **Organisms**
@@ -138,13 +138,15 @@ The list below is generated from the component manifest: every public component 
 - Data Display: DataTable, Timeline, Tree
 - Feedback: Toast
 - Inputs: ColorPicker, Combobox, DatePicker, DateRangePicker, FileUpload, Form, MultiSelect
-- Media: Carousel, ImageViewer, ImageViewerButton
+- Media: Carousel, ImageViewer
 - Navigation: CommandPalette, EditorTabs, Menu, Menubar, Navbar, NavigationMenu, Sidebar, Stepper
 - Overlay: AlertDialog, ConfirmDialog, ContextMenu, Dialog, Drawer, Tour
 
 **Templates**
 
 - Shells: AppShell, PageShell
+
+**Helpers:** HoverCardProvider, ImageViewerButton, TooltipProvider
 
 **Hooks:** useAppShell, useCommandPaletteController, useContextMenuController, useDataTable, useDirection, useFormController, useFormState, useImageViewerController, useMenubarController, usePersistentDismiss, useRecentCommands, useSidebar, useTheme, useToast
 

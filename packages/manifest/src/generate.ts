@@ -1,11 +1,11 @@
 import { existsSync, readdirSync, readFileSync } from "node:fs";
-import { dirname, join, relative, resolve } from "node:path";
+import { basename, dirname, join, relative, resolve } from "node:path";
 import { withCustomConfig } from "react-docgen-typescript";
 import type { ComponentDoc, PropItem } from "react-docgen-typescript";
 import ts from "typescript";
 import { describeProp, parseExamples, splitDescription, unquote } from "./jsdoc";
 import { placementOf, readCatalog } from "./catalog";
-import type { Manifest, ManifestComponent, ManifestConstant, ManifestParameter, ManifestPart, ManifestProp, ManifestUtility } from "./types";
+import type { Manifest, ManifestComponent, ManifestConstant, ManifestHelper, ManifestParameter, ManifestPart, ManifestProp, ManifestUtility } from "./types";
 
 /** One finding about the source: an error means the manifest entry is incomplete, a warning means it is thinner than it should be. */
 export interface ManifestDiagnostic {
@@ -253,7 +253,7 @@ export function generateManifest({ packageRoot }: GenerateOptions): GenerateResu
   };
 
   // 4. The manifest.
-  const manifest: Manifest = { schemaVersion: 1, package: "@dbm-system/components", version: pkg.version, components: [], utilities: [], constants: [] };
+  const manifest: Manifest = { schemaVersion: 1, package: "@dbm-system/components", version: pkg.version, components: [], helpers: [], utilities: [], constants: [] };
   const catalog = readCatalog(root);
   for (const { name, symbol, parts } of compounds) {
     const file = sourceOf(symbol);
@@ -280,7 +280,7 @@ export function generateManifest({ packageRoot }: GenerateOptions): GenerateResu
       partEntries.push({ name: partName, summary: partSummary, ...refInfo(part.symbol), extends: read.extends, props: partProps });
     }
 
-    manifest.components.push({
+    const entry = {
       name,
       tier: placement?.tier ?? "atom",
       category: placement?.category ?? "",
@@ -295,9 +295,19 @@ export function generateManifest({ packageRoot }: GenerateOptions): GenerateResu
       props,
       parts: byName(partEntries),
       examples,
-    } satisfies ManifestComponent);
+    } satisfies ManifestComponent;
+    // A component written in another component's folder (`TooltipProvider` in `Tooltip/`) supports it and has no page of its own.
+    const folder = basename(dirname(file));
+    if (folder === name) manifest.components.push(entry);
+    else manifest.helpers.push({ ...entry, helperOf: folder });
   }
   manifest.components = byName(manifest.components);
+  manifest.helpers = byName(manifest.helpers);
+  for (const helper of manifest.helpers) {
+    if (!manifest.components.some((component) => component.name === helper.helperOf)) {
+      diagnostics.push({ level: "error", subject: helper.name, message: `it is written in the folder of ${helper.helperOf}, which is not a component` });
+    }
+  }
 
   // 5. The hooks and functions: lowercase value exports that can be called.
   for (const exported of checker.getExportsOfModule(moduleSymbol)) {
@@ -330,7 +340,7 @@ export function generateManifest({ packageRoot }: GenerateOptions): GenerateResu
   manifest.utilities = byName(manifest.utilities);
 
   // 6. Every other exported value, and a check that nothing the package exports was left out of the manifest.
-  const listed = new Set([...manifest.components.map((component) => component.name), ...manifest.utilities.map((utility) => utility.name)]);
+  const listed = new Set([...manifest.components.map((component) => component.name), ...manifest.helpers.map((helper) => helper.name), ...manifest.utilities.map((utility) => utility.name)]);
   for (const exported of checker.getExportsOfModule(moduleSymbol)) {
     const symbol = resolveAlias(exported);
     if (!(symbol.flags & ts.SymbolFlags.Value) || listed.has(exported.name)) continue;
@@ -354,7 +364,7 @@ export function generateManifest({ packageRoot }: GenerateOptions): GenerateResu
   manifest.constants = byName(manifest.constants);
 
   // A component folder whose exports reach the manifest nowhere has dropped out of it (a component no longer callable, say).
-  const described = [...manifest.components.map((entry) => entry.source), ...manifest.utilities.flatMap((entry) => (entry.source ? [entry.source] : [])), ...manifest.constants.flatMap((entry) => (entry.source ? [entry.source] : []))];
+  const described = [...manifest.components.map((entry) => entry.source), ...manifest.helpers.map((entry) => entry.source), ...manifest.utilities.flatMap((entry) => (entry.source ? [entry.source] : [])), ...manifest.constants.flatMap((entry) => (entry.source ? [entry.source] : []))];
   for (const tier of ["atoms", "molecules", "organisms", "templates"]) {
     const tierDirectory = join(root, "src", tier);
     if (!existsSync(tierDirectory)) continue;

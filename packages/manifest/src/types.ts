@@ -85,6 +85,16 @@ export interface ManifestComponent {
   examples: ManifestExample[];
 }
 
+/**
+ * One exported component that supports another and has no page of its own (`TooltipProvider` supports `Tooltip`). It is written in
+ * its component's folder, takes that folder's tier and category, and is described in full like a component; it is listed apart so
+ * that "components" means what has a page of its own.
+ */
+export interface ManifestHelper extends ManifestComponent {
+  /** The component whose folder it is written in and which it supports (`Tooltip`). */
+  helperOf: string;
+}
+
 /** One parameter of a hook or function. */
 export interface ManifestParameter {
   /** The parameter's name. */
@@ -139,8 +149,10 @@ export interface Manifest {
   package: "@dbm-system/components";
   /** The version of `@dbm-system/components` this describes. */
   version: string;
-  /** Every public component, sorted by name. */
+  /** Every public component that has a page of its own, sorted by name. */
   components: ManifestComponent[];
+  /** Every exported component that supports another and has no page of its own, sorted by name. */
+  helpers: ManifestHelper[];
   /** Every exported hook and function, sorted by name. */
   utilities: ManifestUtility[];
   /** Every other exported value, sorted by name. */
@@ -158,6 +170,18 @@ export interface ManifestIndexComponent {
   /** The first sentence of the component's summary. */
   summary: string;
   /** Where the whole entry is, relative to the `manifest` folder (`components/Button.json`). */
+  file: string;
+}
+
+/** One helper's row in `manifest/index.json`. */
+export interface ManifestIndexHelper {
+  /** The helper's name, as imported. */
+  name: string;
+  /** The component it supports. */
+  helperOf: string;
+  /** The first sentence of its summary. */
+  summary: string;
+  /** Where the whole entry is, relative to the `manifest` folder (`helpers/TooltipProvider.json`). */
   file: string;
 }
 
@@ -181,6 +205,8 @@ export interface ManifestIndex {
   version: string;
   /** Every public component, sorted by name. */
   components: ManifestIndexComponent[];
+  /** Every helper, sorted by name. */
+  helpers: ManifestIndexHelper[];
   /** Every exported hook and function, sorted by name; each is in full in `utilities.json`. */
   utilities: ManifestIndexUtility[];
   /** Where the hooks, functions and constants are in full, relative to the `manifest` folder. */

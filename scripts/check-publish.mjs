@@ -79,10 +79,12 @@ for (const name of PACKAGES) {
     // The manifest says which release it describes, so a stale one is caught here.
     const shipped = JSON.parse(readFileSync(join(dir, "dist", "manifest.json"), "utf8"));
     if (shipped.version !== pkg.version) fail(pkg.name, `dist/manifest.json describes version ${shipped.version}, not ${pkg.version}`);
-    // One file per component, and none for a component that is gone (ADR-0206).
-    const expectedFiles = new Set(shipped.components.map((component) => `dist/manifest/components/${component.name}.json`));
-    for (const file of expectedFiles) if (!files.includes(file)) fail(pkg.name, `the tarball is missing ${file}`);
-    for (const file of files) if (file.startsWith("dist/manifest/components/") && !expectedFiles.has(file)) fail(pkg.name, `the tarball holds ${file}, which no component in the manifest has`);
+    // One file per component and per helper, and none for one that is gone (ADR-0206).
+    for (const [folder, entries, noun] of [["components", shipped.components, "component"], ["helpers", shipped.helpers, "helper"]]) {
+      const expectedFiles = new Set(entries.map((entry) => `dist/manifest/${folder}/${entry.name}.json`));
+      for (const file of expectedFiles) if (!files.includes(file)) fail(pkg.name, `the tarball is missing ${file}`);
+      for (const file of files) if (file.startsWith(`dist/manifest/${folder}/`) && !expectedFiles.has(file)) fail(pkg.name, `the tarball holds ${file}, which no ${noun} in the manifest has`);
+    }
   }
   for (const path of files) if (FORBIDDEN.some((pattern) => pattern.test(path))) fail(pkg.name, `the tarball holds ${path}`);
   console.log(`  ${files.length} files in the tarball`);

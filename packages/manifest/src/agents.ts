@@ -34,6 +34,8 @@ export function renderAgentsList(manifest: Manifest): string {
     }
     lines.push("");
   }
+  const helpers = sorted(manifest.helpers.map((helper) => helper.name));
+  if (helpers.length > 0) lines.push(`**Helpers:** ${helpers.join(", ")}`, "");
   for (const [heading, kind] of [["Hooks", "hook"], ["Functions", "function"]] as const) {
     const names = sorted(manifest.utilities.filter((utility) => utility.kind === kind).map((utility) => utility.name));
     if (names.length > 0) lines.push(`**${heading}:** ${names.join(", ")}`, "");
@@ -70,7 +72,7 @@ const NOT_COMPONENTS = new Set(["Nunito", "Lora"]);
 const PLACEHOLDERS = new Set(["Name"]);
 
 /** Field names of the manifest's own files, which the text may name: `forwardsRef` says whether a component takes a ref. */
-const MANIFEST_FIELDS = new Set(["usedBy", "forwardsRef", "refElement", "importName"]);
+const MANIFEST_FIELDS = new Set(["usedBy", "forwardsRef", "refElement", "importName", "helperOf"]);
 
 /** Attributes in the text that belong to the page, not to a component: `data-theme` on the root element chooses a theme. */
 const NOT_PROPS = new Set(["data-theme"]);
@@ -104,11 +106,11 @@ export function agentsProblems(text: string, manifest: Manifest, tokenNames: Rea
   const handWritten = start !== -1 && end > start ? `${text.slice(0, start)}${text.slice(end + AGENTS_END.length)}` : text;
 
   const parts = new Map<string, { name: string; props: Set<string> }>();
-  for (const component of manifest.components) {
+  for (const component of [...manifest.components, ...manifest.helpers]) {
     parts.set(component.name, { name: component.name, props: new Set(component.props.map((prop) => prop.name)) });
     for (const part of component.parts) parts.set(part.name, { name: part.name, props: new Set(part.props.map((prop) => prop.name)) });
   }
-  const everyProp = new Set(manifest.components.flatMap((component) => [...component.props, ...component.parts.flatMap((part) => part.props)].map((prop) => prop.name)));
+  const everyProp = new Set([...manifest.components, ...manifest.helpers].flatMap((component) => [...component.props, ...component.parts.flatMap((part) => part.props)].map((prop) => prop.name)));
   const utilities = new Set(manifest.utilities.map((utility) => utility.name));
 
   const spans = [...handWritten.matchAll(/```[\s\S]*?```|`[^`\n]+`/g)].map((match) => match[0]);

@@ -22,6 +22,7 @@ const manifest: Manifest = {
   package: "@dbm-system/components",
   version: "0.1.0",
   components: [component("Select", "molecule", "Inputs"), component("Box", "atom", "Layout"), component("Button", "atom", "Inputs"), component("Menu", "organism", "Navigation")],
+  helpers: [{ ...component("BoxProvider", "atom", "Layout"), helperOf: "Box" }],
   utilities: [
     { name: "useToast", kind: "hook", summary: "Raises toasts.", signature: "(): void", params: [], returns: "void", examples: [] },
     { name: "filterTree", kind: "function", summary: "Narrows a tree.", signature: "(): void", params: [], returns: "void", examples: [] },
@@ -34,7 +35,7 @@ describe("renderAgentsList", () => {
   const list = renderAgentsList(manifest);
   it("lists components by tier and category, names only", () => {
     expect(list).toBe(
-      ["**Atoms**", "", "- Inputs: Button", "- Layout: Box", "", "**Molecules**", "", "- Inputs: Select", "", "**Organisms**", "", "- Navigation: Menu", "", "**Hooks:** useTheme, useToast", "", "**Functions:** filterTree"].join("\n"),
+      ["**Atoms**", "", "- Inputs: Button", "- Layout: Box", "", "**Molecules**", "", "- Inputs: Select", "", "**Organisms**", "", "- Navigation: Menu", "", "**Helpers:** BoxProvider", "", "**Hooks:** useTheme, useToast", "", "**Functions:** filterTree"].join("\n"),
     );
   });
   it("is the same text every time", () => {
@@ -81,10 +82,15 @@ describe("agentsProblems", () => {
   const known: Manifest = {
     ...manifest,
     components: [withProps("Button", ["asChild", "leadingIcon", "className", "aria-label"]), withProps("Menu", [], [{ name: "Menu.Item", props: ["onSelect"] }])],
+    helpers: [{ ...withProps("TooltipProvider", ["delay"]), helperOf: "Tooltip" }],
     utilities: [{ name: "useTheme", kind: "hook", summary: "x", signature: "", params: [], returns: "", examples: [] }],
   };
   const tokens = new Set(["--dbm-bg-brand"]);
   const check = (text: string) => agentsProblems(text, known, tokens);
+
+  it("counts a helper as a component the text may name, with its props", () => {
+    expect(check("`<TooltipProvider delay={1}>` and `TooltipProvider`")).toEqual([]);
+  });
 
   it("accepts text whose names, props, tokens and examples the manifest backs", () => {
     expect(check("Use `Button` and `Menu.Item` with `asChild`, `useTheme`, `aria-label` and `var(--dbm-bg-brand)`: `<Button asChild leadingIcon={X}>Go</Button>` and `Nunito`.")).toEqual([]);

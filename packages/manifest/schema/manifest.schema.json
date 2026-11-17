@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://dbm-system.com/manifest.schema.json",
   "title": "DBM System component manifest",
-  "description": "The agent-readable index of the components, hooks, functions and constants in one release of @dbm-system/components (ADR-0205). The root describes manifest.json; the split files are described under $defs: manifest/index.json is `index`, manifest/components/<Name>.json is `component`, manifest/utilities.json is `utilitiesFile` (ADR-0206).",
+  "description": "The agent-readable index of the components, hooks, functions and constants in one release of @dbm-system/components (ADR-0205). The root describes manifest.json; the split files are described under $defs: manifest/index.json is `index`, manifest/components/<Name>.json is `component`, manifest/helpers/<Name>.json is `helper`, manifest/utilities.json is `utilitiesFile` (ADR-0206).",
   "type": "object",
   "required": [
     "schemaVersion",
@@ -25,9 +25,16 @@
     },
     "components": {
       "type": "array",
-      "description": "Every public component, sorted by name.",
+      "description": "Every public component that has a page of its own, sorted by name.",
       "items": {
         "$ref": "#/$defs/component"
+      }
+    },
+    "helpers": {
+      "type": "array",
+      "description": "Every exported component that supports another and has no page of its own, sorted by name.",
+      "items": {
+        "$ref": "#/$defs/helper"
       }
     },
     "utilities": {
@@ -372,6 +379,12 @@
             "$ref": "#/$defs/indexComponent"
           }
         },
+        "helpers": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/indexHelper"
+          }
+        },
         "utilities": {
           "type": "array",
           "items": {
@@ -474,6 +487,133 @@
           "items": {
             "$ref": "#/$defs/constant"
           }
+        }
+      }
+    },
+    "helper": {
+      "type": "object",
+      "required": [
+        "name",
+        "tier",
+        "category",
+        "summary",
+        "importName",
+        "source",
+        "asChild",
+        "as",
+        "extends",
+        "props",
+        "parts",
+        "examples",
+        "helperOf"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "The component's name, as imported (`Button`)."
+        },
+        "tier": {
+          "enum": [
+            "atom",
+            "molecule",
+            "organism",
+            "template"
+          ],
+          "description": "From the story title's first segment."
+        },
+        "category": {
+          "type": "string",
+          "description": "From the story title's second segment (`Inputs`)."
+        },
+        "summary": {
+          "type": "string",
+          "description": "The first paragraph of the component's JSDoc."
+        },
+        "description": {
+          "type": "string",
+          "description": "The rest of the component's JSDoc, when there is more than the summary."
+        },
+        "importName": {
+          "type": "string",
+          "description": "What to import from `@dbm-system/components`."
+        },
+        "source": {
+          "type": "string",
+          "description": "The component file. This is the path in the repository, relative to packages/components. The published package ships only dist, so it does not exist in an installed copy; it is for linking to the source, not for opening."
+        },
+        "asChild": {
+          "type": "boolean",
+          "description": "Whether it merges its props onto a single child element."
+        },
+        "as": {
+          "type": "boolean",
+          "description": "Whether it renders as another element through an `as` prop."
+        },
+        "extends": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "The native or library prop types it inherits, by name (`ComponentPropsWithoutRef<\"button\">`). Not listed in `props`."
+        },
+        "props": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/prop"
+          },
+          "description": "Only the props this system declares or overrides, sorted by name."
+        },
+        "parts": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/part"
+          },
+          "description": "The parts of a compound component (`Menu.Item`), sorted by name."
+        },
+        "examples": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/example"
+          }
+        },
+        "forwardsRef": {
+          "type": "boolean",
+          "description": "Whether a `ref` passed to it reaches an element: it is made with `forwardRef`. A component with no single root element (a provider, `Tooltip`) takes none. Added without raising schemaVersion: a manifest without it is still valid."
+        },
+        "refElement": {
+          "type": "string",
+          "description": "The element type a ref gives (`HTMLButtonElement`), when it forwards one."
+        },
+        "helperOf": {
+          "type": "string",
+          "description": "The component whose folder it is written in and which it supports (Tooltip)."
+        }
+      },
+      "description": "One exported component that supports another and has no page of its own (TooltipProvider supports Tooltip): described in full like a component, listed apart."
+    },
+    "indexHelper": {
+      "type": "object",
+      "description": "One helper's row in manifest/index.json.",
+      "required": [
+        "name",
+        "helperOf",
+        "summary",
+        "file"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "helperOf": {
+          "type": "string"
+        },
+        "summary": {
+          "type": "string"
+        },
+        "file": {
+          "type": "string"
         }
       }
     }

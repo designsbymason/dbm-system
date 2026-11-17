@@ -1,4 +1,4 @@
-import type { Manifest, ManifestComponent, ManifestIndex, ManifestUtilitiesFile } from "./types";
+import type { Manifest, ManifestComponent, ManifestHelper, ManifestIndex, ManifestUtilitiesFile } from "./types";
 
 // A sentence ends at ., ! or ? followed by a space and a capital letter or a backtick; these end in a full stop without ending one.
 const ABBREVIATIONS = /(?:\be\.g|\bi\.e|\betc|\bvs|\bcf)\.$/i;
@@ -17,10 +17,10 @@ export function firstSentence(summary: string): string {
 }
 
 /** The files of the split layout, by path relative to the `manifest` folder, each the object to write as JSON. */
-export type SplitFiles = Record<string, ManifestIndex | ManifestUtilitiesFile | ManifestComponent>;
+export type SplitFiles = Record<string, ManifestIndex | ManifestUtilitiesFile | ManifestComponent | ManifestHelper>;
 
 /**
- * The split layout of ADR-0206: an index, one file per component (its entry in the manifest, unchanged) and one file for the hooks,
+ * The split layout of ADR-0206: an index, one file per component and one per helper (its entry in the manifest, unchanged) and one file for the hooks,
  * functions and constants. Nothing here adds information; it is the same manifest cut into parts.
  */
 export function splitManifest(manifest: Manifest): SplitFiles {
@@ -37,11 +37,13 @@ export function splitManifest(manifest: Manifest): SplitFiles {
         summary: firstSentence(component.summary),
         file: `components/${component.name}.json`,
       })),
+      helpers: manifest.helpers.map((helper) => ({ name: helper.name, helperOf: helper.helperOf, summary: firstSentence(helper.summary), file: `helpers/${helper.name}.json` })),
       utilities: manifest.utilities.map((utility) => ({ name: utility.name, kind: utility.kind, summary: firstSentence(utility.summary) })),
       utilitiesFile: "utilities.json",
     },
     "utilities.json": { schemaVersion, package: name, version, utilities: manifest.utilities, constants: manifest.constants },
   };
   for (const component of manifest.components) files[`components/${component.name}.json`] = component;
+  for (const helper of manifest.helpers) files[`helpers/${helper.name}.json`] = helper;
   return files;
 }
