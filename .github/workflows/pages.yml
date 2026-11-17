@@ -63,6 +63,10 @@ jobs:
         working-directory: apps/docs
         run: pnpm check-links _artifact
 
+      - name: Check the component counts agree
+        working-directory: apps/docs
+        run: pnpm check-counts _artifact
+
       - name: Install Playwright browser
         working-directory: apps/docs
         run: pnpm exec playwright install --with-deps chromium

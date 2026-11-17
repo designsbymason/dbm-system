@@ -27,13 +27,12 @@ const TIERS: Record<string, { label: TierName; folder: string }> = {
 const slug = (text: string) => text.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
 
 /**
- * Every component and shipped shell, by name. A part that is its own export without a page of its own (`TooltipProvider`,
- * `ImageViewerButton`, `HoverCardProvider`) is left out: its folder is its parent component's, whose page documents it. A Docs page's
- * id keeps the tier and category the component was filed under when its page was made (ADR-0225), which the tier and category here
- * are, and the link check fails the build on any address Storybook does not have.
+ * Every component, by name: the manifest's `components`, which is what has a page of its own, the application shells (template-level
+ * components) included. A helper (`TooltipProvider`) is in the manifest's `helpers`, not here. A Docs page's id keeps the tier and
+ * category the component was filed under when its page was made (ADR-0225), which the tier and category here are, and the link check
+ * fails the build on any address Storybook does not have.
  */
 export const componentRows: ComponentRow[] = manifest.components
-  .filter((component) => component.source.split("/").at(-2) === component.name)
   .map((component) => {
     const tier = TIERS[component.tier];
     if (!tier) throw new Error(`componentRows: unknown tier "${component.tier}" on ${component.name}`);
@@ -49,5 +48,5 @@ export const componentRows: ComponentRow[] = manifest.components
   })
   .sort((a, b) => a.name.localeCompare(b.name, undefined, { sensitivity: "base" }));
 
-export const componentCount = componentRows.filter((row) => row.tier !== "Template").length;
-export const shellCount = componentRows.length - componentCount;
+/** How many components there are: the number the home page, Storybook's Components Index and the manifest all show (`scripts/check-counts.mjs`). */
+export const componentCount = componentRows.length;
