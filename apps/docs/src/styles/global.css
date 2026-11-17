@@ -21,6 +21,21 @@
   --site-gutter: var(--dbm-space-4);
   --site-max: var(--dbm-breakpoint-xl);
   --site-ease: var(--dbm-motion-easing-emphasized);
+  /* The page's vertical rhythm: every section's top and bottom padding, so the space between two sections is twice this, the same at every
+     seam. It steps down with the width: a phone, a tablet, a desktop. */
+  --site-section-space: var(--dbm-space-12);
+}
+
+@media (min-width: 768px) {
+  :root {
+    --site-section-space: var(--dbm-space-16);
+  }
+}
+
+@media (min-width: 1024px) {
+  :root {
+    --site-section-space: var(--dbm-space-20);
+  }
 }
 
 :root[data-theme$="-dark"] {

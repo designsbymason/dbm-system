@@ -79,7 +79,7 @@ const label = (theme: string) => {
   }
 
   .themes__stage {
-    padding-block: var(--dbm-space-20);
+    padding-block: var(--site-section-space);
   }
 
   .themes__grid {
@@ -91,12 +91,18 @@ const label = (theme: string) => {
     grid-column: 1 / -1;
     display: grid;
     grid-template-columns: minmax(0, 1fr);
-    gap: var(--dbm-space-6);
+    gap: var(--dbm-space-4);
     align-content: start;
   }
 
   .themes__title {
     font-size: var(--dbm-font-size-3xl);
+  }
+
+  /* The sentence is followed by the controls (and then the readout) at the page's sentence-to-content distance: its own gap and this. */
+  .themes__switch,
+  .themes__readout {
+    margin-block-start: var(--dbm-space-4);
   }
 
   .themes__readout {
@@ -181,7 +187,7 @@ const label = (theme: string) => {
      is made. The text block steps aside (`display: contents`) so its parts can be ordered around the copies. */
   @media (max-width: 1023.98px) {
     .themes__grid {
-      row-gap: var(--dbm-space-6);
+      row-gap: var(--dbm-space-4);
     }
 
     .themes__text {
