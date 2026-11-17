@@ -30,6 +30,10 @@ const collapseClass = {
   never: undefined,
 } as const;
 
+/** The first control a person can choose with: not a section's Clear button, which a press takes out of the page (06 §9). */
+const FIRST_CONTROL = 'button:not([disabled]):not([data-sheet-clear]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), a[href], [tabindex]:not([tabindex="-1"])';
+const firstControl = (root: ParentNode | null) => root?.querySelector<HTMLElement>(FIRST_CONTROL) ?? null;
+
 /** A `TableToolbar.Filter` element, found by its display name (the part is defined beside the bar, which imports this one). */
 const isFilter = (child: ReactNode): child is ReactElement<TableToolbarFilterProps> =>
   isValidElement(child) && (child.type as { displayName?: string }).displayName === "TableToolbar.Filter";
@@ -63,6 +67,8 @@ export const TableToolbarFilters = forwardRef<HTMLDivElement, TableToolbarFilter
     const buttonRef = useRef<HTMLButtonElement | null>(null);
     const rootRef = useRef<HTMLDivElement | null>(null);
     const inlineRef = useRef<HTMLDivElement | null>(null);
+    const sectionsRef = useRef<HTMLDivElement | null>(null);
+    const doneRef = useRef<HTMLButtonElement | null>(null);
     // Which form keyboard focus is in, kept from the focus events: the form it is in can be taken out of the page by a change of width, and
     // reading where focus is at that moment is unreliable (the browser drops it from a hidden element only on its next render).
     const focusIn = useRef<"inline" | "button" | null>(null);
@@ -163,13 +169,23 @@ export const TableToolbarFilters = forwardRef<HTMLDivElement, TableToolbarFilter
               )}
             </Button>
           </Drawer.Trigger>
-          <Drawer.Content side="bottom" size="lg">
+          {/* Focus starts on the first filter control, not on the first tabbable thing, which is a section's Clear: Enter right after opening would clear it. */}
+          <Drawer.Content
+            side="bottom"
+            size="lg"
+            onOpenAutoFocus={(event) => {
+              const first = firstControl(sectionsRef.current);
+              if (!first) return;
+              event.preventDefault();
+              first.focus();
+            }}
+          >
             <Drawer.Header>
               <Drawer.Title>{labels.title}</Drawer.Title>
               <Drawer.Description>{labels.description}</Drawer.Description>
             </Drawer.Header>
             <Drawer.Body>
-              <div className={styles.sheetSections}>
+              <div ref={sectionsRef} className={styles.sheetSections}>
                 {sheetFilters.map((filter, index) => {
                   const clear = filter.props.labels?.clear ?? "Clear";
                   return (
@@ -180,7 +196,18 @@ export const TableToolbarFilters = forwardRef<HTMLDivElement, TableToolbarFilter
                         </Heading>
                         {/* The same Clear the filter's own panel offers: while some of it is applied and it was given `onClear`. */}
                         {safeCount(filter.props.count) > 0 && filter.props.onClear && (
-                          <Button variant="ghost" size="sm" onClick={filter.props.onClear} aria-label={`${clear} ${filter.props.label}`}>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            data-sheet-clear=""
+                            // The press takes this button out of the page (nothing is applied any more), so keyboard focus goes to the section's first
+                            // control first: otherwise it falls to the dialog itself (06 §9).
+                            onClick={(event) => {
+                              firstControl(event.currentTarget.closest("section"))?.focus();
+                              filter.props.onClear?.();
+                            }}
+                            aria-label={`${clear} ${filter.props.label}`}
+                          >
                             {clear}
                           </Button>
                         )}
@@ -193,12 +220,21 @@ export const TableToolbarFilters = forwardRef<HTMLDivElement, TableToolbarFilter
             </Drawer.Body>
             <Drawer.Footer>
               {onClearAll && (
-                <Button variant="secondary" disabled={total === 0} onClick={onClearAll}>
+                <Button
+                  variant="secondary"
+                  disabled={total === 0}
+                  // Nothing is applied after this, so the button turns itself off, and a disabled button drops keyboard focus to the page behind the
+                  // sheet: hand it to the other enabled control first (06 §9).
+                  onClick={() => {
+                    doneRef.current?.focus();
+                    onClearAll();
+                  }}
+                >
                   {labels.clearAll}
                 </Button>
               )}
               <Drawer.Close asChild>
-                <Button>{labels.done}</Button>
+                <Button ref={doneRef}>{labels.done}</Button>
               </Drawer.Close>
             </Drawer.Footer>
           </Drawer.Content>

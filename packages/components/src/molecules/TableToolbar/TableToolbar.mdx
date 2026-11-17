@@ -172,6 +172,7 @@ default) the bar draws one **Filters** button, with the number of filters applie
 - **An open sheet closes** if the bar grows past the step (a window resized, a sidebar closed), and focus returns to the button it was opened from.
 - **Focus keeps its place when the form changes.** If keyboard focus is on an inline filter when the bar narrows, it goes to the "Filters" button; when the bar widens it goes back to a filter. Focus that was somewhere else is left alone.
 - **A filter's own `onClear` is offered in its section** ("Clear Status") while some of it is applied, and a `disabled` filter is drawn inline, disabled, with no section in the sheet.
+- **Focus in the sheet:** it starts on the first filter control, not on a section's Clear, which Enter would press. Pressing a section's Clear moves focus to that section's first control, and pressing **Clear all** moves it to **Done**, since each of those buttons goes (or turns itself off) once nothing is applied; focus never falls to the page behind the sheet.
 - **`dir`** is the direction of the inline toolbar's arrow keys (left out, the nearest `DirectionProvider`'s, else left to right); put a `DirectionProvider` around a right-to-left page so the sheet, which is drawn into the body, follows it too.
 
 <Canvas of={TableToolbarStories.FiltersAsASheet} />

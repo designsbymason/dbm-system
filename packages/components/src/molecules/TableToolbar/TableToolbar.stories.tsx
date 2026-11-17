@@ -742,6 +742,84 @@ export const FiltersSheetByRealKeys: Story = {
   },
 };
 
+/** Waits for the sheet to finish sliding in (its bottom edge on the window's), so a click lands on what it was aimed at. */
+const settledAtTheBottom = async (sheet: HTMLElement) => {
+  await waitFor(() => expect(Math.abs(sheet.getBoundingClientRect().bottom - window.innerHeight)).toBeLessThan(2));
+};
+
+/** Closes the sheet and waits for it, and its exit, to be gone, so the accessibility run that follows sees a settled page. */
+const closeTheSheet = async () => {
+  await realKey("Escape");
+  await waitFor(() => expect(within(document.body).queryByRole("dialog")).toBeNull());
+  await waitFor(() => expect(document.body.querySelector("[data-radix-focus-guard]")).toBeNull());
+};
+
+export const FiltersSheetStartsOnAControlNotOnClear: Story = {
+  ...hidden,
+  tags: ["!dev"],
+  name: "Filters — the sheet starts with focus on the first filter control, not on a section's Clear, which Enter would press — interaction test",
+  render: () => (
+    <div style={{ inlineSize: "24rem" }}>
+      <FiltersDemo />
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    // Apply one choice and close, so that on the next opening the first section has a Clear in front of its controls.
+    await realClick(canvas.getByRole("button", { name: "Filters" }));
+    const first = await within(document.body).findByRole("dialog");
+    await settledAtTheBottom(first);
+    await realClick(within(first).getByRole("checkbox", { name: "Open" }));
+    await realClick(within(first).getByRole("button", { name: "Done" }));
+    await waitFor(() => expect(within(document.body).queryByRole("dialog")).toBeNull());
+    await realClick(canvas.getByRole("button", { name: "Filters, 1 active" }));
+    const sheet = await within(document.body).findByRole("dialog");
+    await settledAtTheBottom(sheet);
+    await expect(within(sheet).getByRole("button", { name: "Clear Status" })).toBeInTheDocument();
+    await waitFor(() => expect(within(sheet).getByRole("checkbox", { name: "Open" })).toHaveFocus());
+    await closeTheSheet();
+  },
+};
+
+export const FiltersSheetKeepsFocusWhenAClearGoesAway: Story = {
+  ...hidden,
+  tags: ["!dev"],
+  name: "Filters — pressing a section's Clear, or Clear all, with the keyboard keeps focus in the sheet, on a control and not on the page behind — interaction test",
+  render: () => (
+    <div style={{ inlineSize: "24rem" }}>
+      <FiltersDemo />
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await realClick(canvas.getByRole("button", { name: "Filters" }));
+    const sheet = await within(document.body).findByRole("dialog");
+    await settledAtTheBottom(sheet);
+    // A section's Clear: the press leaves nothing applied, so the button goes. Focus goes to that section's first control.
+    await realClick(within(sheet).getByRole("checkbox", { name: "Open" }));
+    const clear = await within(sheet).findByRole("button", { name: "Clear Status" });
+    clear.focus();
+    await realKey("Enter");
+    await waitFor(() => expect(within(sheet).queryByRole("button", { name: "Clear Status" })).toBeNull());
+    const section = within(sheet).getByRole("heading", { level: 3, name: "Status" }).closest("section") as HTMLElement;
+    await expect(section.contains(document.activeElement)).toBe(true);
+    await expect(document.activeElement?.getAttribute("role")).toBe("checkbox");
+    // Clear all: the press disables it. Focus goes to the other enabled control, Done, and stays in the sheet.
+    await realClick(within(sheet).getByRole("checkbox", { name: "Open" }));
+    const clearAll = await waitFor(() => {
+      const found = within(sheet).getByRole("button", { name: "Clear all" });
+      if ((found as HTMLButtonElement).disabled) throw new Error("Clear all is not enabled yet");
+      return found;
+    });
+    clearAll.focus();
+    await realKey("Enter");
+    await waitFor(() => expect(within(sheet).getByRole("button", { name: "Clear all" })).toBeDisabled());
+    await expect(sheet.contains(document.activeElement)).toBe(true);
+    await expect(within(sheet).getByRole("button", { name: "Done" })).toHaveFocus();
+    await closeTheSheet();
+  },
+};
+
 export const FiltersSheetClosesWhenTheBarGrows: Story = {
   ...hidden,
   tags: ["!dev"],
