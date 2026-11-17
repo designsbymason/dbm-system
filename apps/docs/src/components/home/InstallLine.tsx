@@ -1,7 +1,6 @@
 import { CodeBlock, Tabs } from "@dbm-system/components";
 import { useEffect, useState } from "react";
-
-const packages = "@dbm-system/components @dbm-system/tokens @dbm-system/icons";
+import { installPackages as packages } from "./installPackages";
 const managers = [
   { id: "pnpm", command: `pnpm add ${packages}` },
   { id: "npm", command: `npm install ${packages}` },
@@ -10,8 +9,11 @@ const managers = [
 const KEY = "dbm-package-manager";
 const CHANGED = "dbm-package-manager-change";
 
-/** The install line, in the reader's package manager (remembered), with a copy button. */
-export function InstallLine() {
+/**
+ * The install line, in the reader's package manager (remembered), with a copy button. `copyLabel` names that button where one page holds
+ * several (the steps); left out, the button keeps the component's own "Copy code".
+ */
+export function InstallLine({ copyLabel }: { copyLabel?: string }) {
   const [manager, setManager] = useState("pnpm");
 
   useEffect(() => {
@@ -51,7 +53,13 @@ export function InstallLine() {
       </Tabs.List>
       {managers.map((m) => (
         <Tabs.Content key={m.id} value={m.id}>
-          <CodeBlock code={m.command} language="bash" copyable aria-label={`Install with ${m.id}`} />
+          <CodeBlock
+            code={m.command}
+            language="bash"
+            copyable
+            aria-label={`Install with ${m.id}`}
+            labels={copyLabel ? { copy: copyLabel } : undefined}
+          />
         </Tabs.Content>
       ))}
     </Tabs>

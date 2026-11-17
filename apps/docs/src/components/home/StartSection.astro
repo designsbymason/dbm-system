@@ -3,12 +3,14 @@
 // button. The package-manager tabs are the hero's, so a choice made there is the choice here.
 import { installation } from "../../data/site";
 import { CodeStep } from "./CodeStep";
+import { facts } from "./facts";
 import { InstallLine } from "./InstallLine";
 import { StartActions } from "./StartActions";
 
-const imports = `import "@dbm-system/components/styles.css";
-import "@dbm-system/tokens/css/purple-light.bundled.css";`;
-const html = `<html data-theme="purple-light">`;
+// The package names and the first theme come from the packages (facts.ts), so a snippet cannot name something that no longer exists.
+const imports = `import "${facts.install.stylesheet}";
+import "${facts.install.themeFile}";`;
+const html = `<html data-theme="${facts.install.theme}">`;
 const render = `import { Button } from "@dbm-system/components";
 
 export function Example() {
@@ -28,17 +30,17 @@ export function Example() {
     <ol class="start__steps">
       <li class="start__step">
         <h3>Install</h3>
-        <InstallLine client:visible />
+        <InstallLine client:visible copyLabel="Copy install command" />
       </li>
       <li class="start__step">
         <h3>Import the stylesheet and a theme</h3>
-        <CodeStep client:visible code={imports} language="ts" label="Import the stylesheet and a theme" />
+        <CodeStep client:visible code={imports} language="ts" label="Import the stylesheet and a theme" copyLabel="Copy the stylesheet imports" />
         <p>Then choose the theme on the root element:</p>
-        <CodeStep client:visible code={html} language="html" label="Choose the theme" />
+        <CodeStep client:visible code={html} language="html" label="Choose the theme" copyLabel="Copy the theme attribute" />
       </li>
       <li class="start__step">
         <h3>Render a component</h3>
-        <CodeStep client:visible code={render} language="tsx" label="Render a component" />
+        <CodeStep client:visible code={render} language="tsx" label="Render a component" copyLabel="Copy the component example" />
       </li>
     </ol>
     <p class="start__note">
