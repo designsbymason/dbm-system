@@ -5,7 +5,7 @@ import type { ComponentDoc, PropItem } from "react-docgen-typescript";
 import ts from "typescript";
 import { describeProp, parseExamples, splitDescription, unquote } from "./jsdoc";
 import { placementOf, readCatalog } from "./catalog";
-import type { Manifest, ManifestComponent, ManifestConstant, ManifestHelper, ManifestParameter, ManifestPart, ManifestProp, ManifestUtility } from "./types";
+import type { Manifest, ManifestComponent, ManifestConstant, ManifestParameter, ManifestPart, ManifestProp, ManifestUtility } from "./types";
 
 /** One finding about the source: an error means the manifest entry is incomplete, a warning means it is thinner than it should be. */
 export interface ManifestDiagnostic {

@@ -31,8 +31,7 @@ export type PlacementResult = { placement: Placement; problem?: undefined } | { 
  * the catalog under the name of its folder (the main component's name; a helper that shares the folder, such as `TooltipProvider`, takes
  * its folder's entry), and the entry's tier must be the tier of the folder it is in.
  */
-export function placementOf(root: string, catalog: Catalog, directory: string, name: string): PlacementResult {
-  void name;
+export function placementOf(root: string, catalog: Catalog, directory: string, _name: string): PlacementResult {
   const [tierFolder, folder] = relative(join(root, "src"), directory).split(sep);
   const folderTier = tierFolder === undefined ? undefined : TIER_FOLDERS[tierFolder];
   if (folderTier === undefined || folder === undefined) {
