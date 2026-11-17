@@ -79,7 +79,6 @@ const link = (group: SiteGroup, label: string): SiteLink => {
 const [gettingStarted, guides, resources] = docsGroups as [SiteGroup, SiteGroup, SiteGroup];
 export const changelog: SiteLink = link(resources, "Changelog");
 export const accessibility: SiteLink = link(guides, "Accessibility");
-export const responsive: SiteLink = link(guides, "Responsive and right-to-left");
 export const quickStart: SiteLink = link(gettingStarted, "Quick start");
 export const installation: SiteLink = link(gettingStarted, "Installation");
 export const aiAgents: SiteLink = link(gettingStarted, "AI agents");

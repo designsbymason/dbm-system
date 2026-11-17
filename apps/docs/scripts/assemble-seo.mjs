@@ -8,8 +8,7 @@
  *   node scripts/assemble-seo.mjs <root> [--home]
  *
  * `--home` adds the site's own pages to the sitemap: the home page, and every other page the site builds at its root (the
- * Privacy Policy and the Terms of Use, ADR-0224; not the 404, and not a page marked `noindex`, such as the composition the home page
- * shows in a frame). Leave it out while the root is the placeholder (the site goes
+ * Privacy Policy and the Terms of Use, ADR-0224; not the 404, and not a page marked `noindex`). Leave it out while the root is the placeholder (the site goes
  * live in S3). Every other address in the sitemap must be a Docs entry in Storybook's `index.json`, or the run fails.
  */
 import { existsSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
