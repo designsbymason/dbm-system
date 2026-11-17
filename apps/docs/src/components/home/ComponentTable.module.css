@@ -1,6 +1,9 @@
 /* The home page's component table. Semantic tokens only; the toolbar rules follow the ones Storybook's Index page uses. */
 .table {
   container-type: inline-size;
+  /* The table's pinned header cells sit one layer above the table's own pinned cells, which is above the site header's layer; a stacking
+     context of its own keeps those layers inside the table, so the sticky site header always paints over it. */
+  isolation: isolate;
 }
 
 /* A fixed layout takes each column's width from its header, so an empty-state row cannot nudge a column. The table is never narrower
@@ -92,6 +95,73 @@
   display: flex;
   justify-content: center;
   margin-block-start: var(--dbm-space-4);
+}
+
+/* A phone: below the table's own minimum width each row stacks, the name with its tier badge, then the category, then the description, so
+   nothing is cut off and nothing needs a sideways swipe. The column headers (and so the sort buttons) are kept for assistive technology
+   but not drawn; the list stays in name order. */
+@container (max-width: 39.99rem) {
+  /* The table keeps its table semantics (its display is not changed); a fixed layout at the full width gives each stacked row the whole width. */
+  .table table {
+    inline-size: 100%;
+    min-inline-size: 0;
+    table-layout: fixed;
+  }
+
+  .table thead {
+    block-size: 1px;
+    clip-path: inset(50%);
+    inline-size: 1px;
+    overflow: hidden;
+    position: absolute;
+  }
+
+  .table tbody tr {
+    column-gap: var(--dbm-space-3);
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    inline-size: 100%;
+    padding-block: var(--dbm-space-2);
+  }
+
+  .table tbody > tr > * {
+    border: 0;
+    /* The columns' widths are set inline for the wide layout, so these two need the override. */
+    inline-size: auto !important;
+    max-inline-size: none !important;
+    min-inline-size: 0;
+    overflow: visible;
+    overflow-wrap: anywhere;
+    padding-block: var(--dbm-space-1);
+    text-overflow: clip;
+    white-space: normal;
+  }
+
+  .table tbody > tr > *:only-child,
+  .table tbody > tr > *:nth-child(3),
+  .table tbody > tr > *:nth-child(4) {
+    grid-column: 1 / -1;
+  }
+
+  .table tbody > tr > *:nth-child(1) {
+    grid-column: 1;
+    grid-row: 1;
+  }
+
+  .table tbody > tr > *:nth-child(2) {
+    align-self: center;
+    grid-column: 2;
+    grid-row: 1;
+  }
+
+  .table tbody > tr > *:nth-child(3) {
+    color: var(--dbm-text-secondary);
+    grid-row: 2;
+  }
+
+  .table tbody > tr > *:nth-child(4) {
+    grid-row: 3;
+  }
 }
 
 /* Narrow: the count on its own line, the search across the width, then the two filters sharing the next line. */

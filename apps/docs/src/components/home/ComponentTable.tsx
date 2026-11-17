@@ -120,7 +120,7 @@ export function ComponentTable({ rows }: { rows: ComponentRow[] }) {
     (row) =>
       (tiers.length === 0 || tiers.includes(row.tier)) &&
       (categories.length === 0 || categories.includes(row.category)) &&
-      (needle === "" || row.name.toLowerCase().includes(needle)),
+      (needle === "" || row.name.toLowerCase().includes(needle) || row.description.toLowerCase().includes(needle)),
   );
   const filtering = needle !== "" || tiers.length > 0 || categories.length > 0;
   // The compact view is a box of one height whatever the rows (a filter that leaves two rows, or none, does not shrink it); the full view
