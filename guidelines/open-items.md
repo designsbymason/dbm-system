@@ -20,7 +20,6 @@ and passes on a rerun), *Maintenance* (due on a date or after an event).
 | Item | Kind | Affects | Detail | Waits on |
 |---|---|---|---|---|
 | The boxed text-entry controls draw their edge in `border.neutral`, 2.3:1 on the surface in the two light themes, under the 3:1 a control's edge needs (WCAG 1.4.11); `Checkbox` and `Radio` moved to `border.neutral-strong` for the same reason | Standard | `Input`, `Textarea`, `Select`, `TagsInput`, `ToggleGroup`, `ButtonGroup`, `ColorPicker`, `DatePicker` and the other boxed fields | [03-token-system-spec.md](./03-token-system-spec.md) (`border.neutral`) | The maintainer's decision |
-| `Sidebar` draws its section labels in capitals, which the website's design direction names in its avoid list | Decision | `Sidebar` | [Sidebar.md](./component-reviews/Sidebar.md) | The maintainer's decision |
 | `DataTable.Pagination` with `layout="centered"` is built and not reviewed | Review | `DataTable` | [DataTable.md](./component-reviews/DataTable.md) | A review pass |
 | `TableToolbar`'s `Filters` group is built and not reviewed | Review | `TableToolbar` | [TableToolbar.md](./component-reviews/TableToolbar.md) | A review pass |
 

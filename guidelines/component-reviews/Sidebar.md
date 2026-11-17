@@ -95,3 +95,12 @@ A bug fix to a Finalized component, found by the AppShell verification pass; Fin
 ## Pieces drawn inside an `asChild` item, and its rail tooltip, 2026-11-15 (additive; stays Finalized)
 
 At explicit direction ([ADR-0218](../adr/0218-an-aschild-component-draws-its-own-icons-spinner-and-caption-inside-the-slotted-element-with-radix-slottable-over-dropping-them-or-asking-the-consumer-to-put-them-in-the-child.md), adopted here): with `asChild`, `Sidebar.Item`'s `icon`, label and description wrappers, `badge` and an external link's icon and cue are drawn inside the slotted element, around its own content, with Radix `Slottable`; the description is its `aria-describedby` as for any item. The label, the rail's initial letter, the truncation tooltip and an external address are worked out from the slotted element's own text and `href`. In the rail an `asChild` item's tooltip is now its own text, falling back to its `aria-label` only when it has none (it was the `aria-label` alone, so a router link named by its text had no tooltip). Not changed: the current page is still matched from the item's own `href`, not the slotted element's (a follow-up if wanted). The kinds-of-item story and snippet pass `icon={UsersIcon}` instead of drawing the icon in the link by hand; the Docs' router example already did, and is now true. Two unit tests added and one rewritten.
+
+## Decision: the section headings stay in capitals (2026-11-17, at explicit direction; nothing changed)
+
+Asked whether `Sidebar` should draw its section headings in capitals, since the website's design direction was thought to avoid them. It does not: the avoid list in
+[docs-site/02-structure.md](../docs-site/02-structure.md) §3 names no typography, and the one nearby rule (no numbered or all-caps *eyebrow* above a home page section's headline) is about
+that page's section openers, not a component's group labels. The website's own docs dropdown sets its group labels in capitals. Small group and section labels in capitals are the system's
+pattern: `Menu`, `ContextMenu` and `Menubar` group labels, `Select` and `Combobox` group labels (`OptionList`), `TableToolbar`'s heading and `Stat`'s label, so `Sidebar` is consistent with
+them, and `text-transform` leaves the accessible name unchanged. Kept. Not decided and not done: only `OptionList` adds `letter-spacing: wide` to its capitals; `Sidebar`, `Menu` and
+`TableToolbar` set them tight at the small text size, a polish item that would touch several Finalized components. No code, style or API changed; the component stays Finalized.
