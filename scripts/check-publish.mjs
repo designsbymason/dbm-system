@@ -7,6 +7,7 @@
  *   3. @arethetypeswrong/cli finds the types resolving for ESM, CommonJS and bundler consumers (JSON and CSS data exports are left out of this one);
  *   4. the package.json inside the tarball `pnpm pack` makes has no `workspace:` specifier left, depends on a sibling public package at
  *      exactly this package's version (the packages are one fixed group, ADR-0202), and depends on no private package.
+ *   5. the components package's `dist/index.js` and `dist/index.cjs` start with `"use client"` and their source maps still line up (ADR-0227).
  * Exits non-zero on any failure, so CI fails the build.
  *
  * Run from the repository root: `pnpm check-publish`.
@@ -88,6 +89,20 @@ for (const name of PACKAGES) {
   }
   for (const path of files) if (FORBIDDEN.some((pattern) => pattern.test(path))) fail(pkg.name, `the tarball holds ${path}`);
   console.log(`  ${files.length} files in the tarball`);
+
+  // The components package's two public entries are client code in the App Router (ADR-0227): each starts with the directive, and its
+  // source map has the one empty first line that the directive adds, so it still lines up with the file.
+  if (name === "components") {
+    for (const entry of ["dist/index.js", "dist/index.cjs"]) {
+      const code = readFileSync(join(dir, entry), "utf8");
+      if (!code.startsWith('"use client";\n')) fail(pkg.name, `${entry} does not start with "use client"`);
+      const { mappings } = JSON.parse(readFileSync(join(dir, `${entry}.map`), "utf8"));
+      if (mappings !== "" && (!mappings.startsWith(";") || mappings.split(";").length > code.split("\n").length)) {
+        fail(pkg.name, `${entry}.map does not line up with the file after the "use client" line was added`);
+      }
+    }
+    console.log('  "use client" entries ok');
+  }
 
   // 4. The package.json inside the tarball pnpm makes (the one a publish through pnpm sends).
   const packFolder = mkdtempSync(join(tmpdir(), "dbm-pack-"));

@@ -7,8 +7,13 @@
  * - `prune`, after it: removes the stylesheet esbuild writes beside each per-component entry (`dist/atoms/Button.css`
  *   and so on). Nothing imports them: the package ships one stylesheet, `dist/index.css` (`./styles.css`, ADR-0175),
  *   which already holds every component's CSS, so the copies would only add weight to the published package.
+ * - `mark`, after `prune`: puts `"use client";` first in the two public entries, `dist/index.js` and `dist/index.cjs` (ADR-0227).
+ *   Nothing else is marked: the exports map exposes only those two files, and the per-component modules are imported from them, so they
+ *   are in the client graph too. The directive cannot be written in the source, because the build drops it (Rollup's tree shaking with
+ *   a warning, esbuild without one from a module that is not an entry). Each entry's source map gets a leading `;`, which is the one
+ *   empty line the directive adds, so the map stays exact.
  */
-import { readdirSync, rmSync, statSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from "node:fs";
 import { join, relative } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -35,7 +40,22 @@ if (step === "clean") {
   };
   walk(DIST);
   console.log(`dist-files: removed ${removed} per-entry stylesheet files; dist/index.css is the package's stylesheet`);
+} else if (step === "mark") {
+  const DIRECTIVE = '"use client";\n';
+  for (const name of ["index.js", "index.cjs"]) {
+    const file = join(DIST, name);
+    const code = readFileSync(file, "utf8");
+    if (code.startsWith(DIRECTIVE)) continue; // already marked: running the step twice changes nothing
+    writeFileSync(file, DIRECTIVE + code);
+    const mapFile = `${file}.map`;
+    if (existsSync(mapFile)) {
+      const map = JSON.parse(readFileSync(mapFile, "utf8"));
+      map.mappings = `;${map.mappings}`;
+      writeFileSync(mapFile, JSON.stringify(map));
+    }
+  }
+  console.log('dist-files: dist/index.js and dist/index.cjs start with "use client"');
 } else {
-  console.error('dist-files: pass "clean" or "prune"');
+  console.error('dist-files: pass "clean", "prune" or "mark"');
   process.exit(1);
 }

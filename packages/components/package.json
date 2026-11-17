@@ -44,7 +44,7 @@
     "access": "public"
   },
   "scripts": {
-    "build": "node scripts/dist-files.mjs clean && tsup && node scripts/dist-files.mjs prune && node ../manifest/dist/cli.js --root . --out dist/manifest.json --with-schema --split dist/manifest --quiet",
+    "build": "node scripts/dist-files.mjs clean && tsup && node scripts/dist-files.mjs prune && node scripts/dist-files.mjs mark && node ../manifest/dist/cli.js --root . --out dist/manifest.json --with-schema --split dist/manifest --quiet",
     "dev": "tsup --watch",
     "lint": "eslint . && pnpm typecheck && pnpm typecheck:storybook",
     "typecheck": "tsc --noEmit",
