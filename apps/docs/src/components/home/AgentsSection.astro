@@ -119,19 +119,21 @@ const files = [
   }
 
   @media (min-width: 1024px) {
+    /* The heading and the sentence beside it share a line, the sentence centred against the heading however many lines it takes. */
     .agents__title {
       grid-column: 1 / span 4;
+      align-self: center;
       margin-block-end: 0;
     }
 
     .agents__lede {
       grid-column: 5 / -1;
-      margin-block-end: var(--dbm-space-10);
+      align-self: center;
+      margin-block-end: 0;
     }
 
-    /* The heading is taller than the lede beside it, so the list starts a step below the heading. */
     .agents__files {
-      margin-block-start: var(--dbm-space-8);
+      margin-block-start: var(--dbm-space-10);
     }
   }
 </style>

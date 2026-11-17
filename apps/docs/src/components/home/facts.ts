@@ -3,6 +3,7 @@ import components from "@dbm-system/components/package.json";
 import manifest from "@dbm-system/components/manifest.json";
 import icons from "@dbm-system/icons/package.json";
 import tokens from "@dbm-system/tokens/tokens.json";
+import { componentCount, shellCount } from "./componentRows";
 
 const deps = Object.keys(components.dependencies ?? {});
 const thirdParty = [
@@ -17,7 +18,9 @@ const title = (word: string) => word[0].toUpperCase() + word.slice(1);
 
 export const facts = {
   version: components.version,
-  componentCount: manifest.components.length,
+  /** The components and the application shells, counted as the home page's table counts them (not the manifest's helper exports). */
+  componentCount,
+  shellCount,
   utilityCount: manifest.utilities.length,
   react: (components.peerDependencies as Record<string, string>).react,
   thirdParty,
