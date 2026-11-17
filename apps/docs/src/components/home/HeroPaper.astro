@@ -1,18 +1,15 @@
 ---
 // The hero's illustration (03-landing-page-brief.md §3, ADR-0217, ADR-0222): a page of the manual. On desktop it glides down like a feather, in
 // wide swings and slightly bent, showing a specimen of the primitive tokens while it falls; once it is in position the specimen breaks up and
-// the JSON an agent reads resolves in its place (a real token entry, read from the token index at build). The page then turns, every several
-// seconds, to the next brand token (the sheet stays brand-subtle). It tilts,
-// skews and lifts as the page scrolls and returns when it scrolls back, leans toward the pointer, and floats a little at rest. On a phone it
-// does not fall or tilt: the specimen breaks into the JSON when the page scrolls into view.
-// Everything that moves is added on top of a finished state, which is the base style: the first JSON page, still. Reduced motion, a browser
+// the JSON an agent reads resolves in its place (a real token entry, `bg.brand-subtle`, read from the token index at build). It tilts, skews
+// and lifts as the page scrolls and returns when it scrolls back, leans toward the pointer, and floats a little at rest. On a phone it does not
+// fall or tilt: the specimen breaks into the JSON when the page scrolls into view.
+// Everything that moves is added on top of a finished state, which is the base style: the JSON page, still. Reduced motion, a browser
 // without scroll timelines, or no script all get that complete page. It is a picture, so it is hidden from assistive technology and inert.
 import tokens from "@dbm-system/tokens/tokens.json" with { type: "json" };
 
 type Token = { name: string; layer: string; group: string; type: string; values: Record<string, string>; aliases: Record<string, string>; usedBy: string[] };
 
-/** The pages of the manual: the brand tokens, in the order the page turns. The first is the one drawn on load. */
-const pageTokens = ["--dbm-bg-brand-subtle", "--dbm-bg-brand", "--dbm-bg-brand-hover", "--dbm-border-brand", "--dbm-text-brand"];
 
 /** The JSON of one real entry, line by line, as an agent reads it; the long `usedBy` list is cut after three names, as a trimmed excerpt. */
 function jsonOf(token: Token): string[] {
@@ -50,13 +47,9 @@ const runs = (line: string) => {
   return out;
 };
 
-const pages = pageTokens.map((name) => {
-  const token = (tokens.tokens as unknown as Token[]).find((candidate) => candidate.name === name);
-  if (!token) throw new Error(`HeroPaper: no ${name} in the token index`);
-  return { lines: jsonOf(token).map(runs) };
-});
-const first = pages[0];
-if (!first) throw new Error("HeroPaper: no pages");
+const token = (tokens.tokens as unknown as Token[]).find((candidate) => candidate.name === "--dbm-bg-brand-subtle");
+if (!token) throw new Error("HeroPaper: no --dbm-bg-brand-subtle in the token index");
+const lines = jsonOf(token).map(runs);
 
 const ramp = ["50", "100", "200", "300", "400", "500", "600", "700", "800", "900", "950"];
 const spaces = ["1", "2", "3", "4", "6", "8", "12"];
@@ -70,7 +63,7 @@ const sizes = ["xs", "sm", "base", "md", "lg", "xl"];
     <div class="paper__hover">
       <div class="paper__scroll">
         <div class="paper__fall">
-          <div class="paper__turn">
+          <div class="paper__body">
             <div class="paper__shadow"></div>
             <div class="paper__sheet">
               <div class="paper__head">
@@ -78,7 +71,7 @@ const sizes = ["xs", "sm", "base", "md", "lg", "xl"];
                 <span class="paper__page">manual</span>
               </div>
               <pre class="paper__json"><code>{
-                first.lines.map((line, index) => (
+                lines.map((line, index) => (
                   <span class="paper__line" style={`--i: ${index}`}>{line.map((run) => <span class={`paper__${run.kind}`}>{run.text}</span>)}</span>
                 ))
               }</code></pre>
@@ -126,7 +119,6 @@ const sizes = ["xs", "sm", "base", "md", "lg", "xl"];
       </div>
     </div>
   </div>
-  <script type="application/json" class="paper__pages" set:html={JSON.stringify(pages)} />
 </div>
 
 <script is:inline>
@@ -170,10 +162,10 @@ const sizes = ["xs", "sm", "base", "md", "lg", "xl"];
 
     // 1. The bend: the sheet is cut into hinged strips, each turned a little more than the last, so it curves as it falls. Each strip holds a
     //    copy of the sheet, shifted to show its own slice. The strips straighten to nothing as the page lands.
-    var turn = root.querySelector(".paper__turn");
-    var sheet = turn && turn.querySelector(".paper__sheet");
+    var wrap = root.querySelector(".paper__body");
+    var sheet = wrap && wrap.querySelector(".paper__sheet");
     var count = 5;
-    if (turn && sheet) {
+    if (wrap && sheet) {
       root.style.setProperty("--n", String(count));
       var previous = null;
       for (var index = 0; index < count; index += 1) {
@@ -183,7 +175,7 @@ const sizes = ["xs", "sm", "base", "md", "lg", "xl"];
         part.style.setProperty("--part", String(index));
         win.appendChild(part);
         strip.appendChild(win);
-        (previous || turn).appendChild(strip);
+        (previous || wrap).appendChild(strip);
         previous = strip;
       }
     }
@@ -226,68 +218,9 @@ const sizes = ["xs", "sm", "base", "md", "lg", "xl"];
       ask();
     });
 
-    // 3. Turning the page: every several seconds it turns, like a card, to the next page of the manual (the next brand token).
-    var pages = [];
-    try {
-      pages = JSON.parse(root.querySelector(".paper__pages").textContent);
-    } catch (error) {
-      pages = [];
-    }
-    var visible = true;
-    var turning = false;
-    var shown = 0;
-    var relockTimer = 0;
-    function show(page) {
-      root.classList.add("paper--cycled", "paper--relock");
-      var codes = root.querySelectorAll(".paper__json code");
-      for (var c = 0; c < codes.length; c += 1) {
-        codes[c].textContent = "";
-        for (var n = 0; n < page.lines.length; n += 1) {
-          var line = make("span", "paper__line");
-          line.style.setProperty("--i", String(n));
-          for (var r = 0; r < page.lines[n].length; r += 1) {
-            var run = make("span", "paper__" + page.lines[n][r].kind);
-            run.textContent = page.lines[n][r].text;
-            line.appendChild(run);
-          }
-          codes[c].appendChild(line);
-        }
-      }
-      window.clearTimeout(relockTimer);
-      relockTimer = window.setTimeout(function () {
-        root.classList.remove("paper--relock");
-      }, 2400);
-    }
-    function next() {
-      if (pages.length < 2 || !turn) return;
-      if (turning || document.hidden || !visible) {
-        window.setTimeout(next, 1500);
-        return;
-      }
-      turning = true;
-      shown = (shown + 1) % pages.length;
-      var away = turn.animate([{ transform: "rotateY(0deg)" }, { transform: "rotateY(-90deg)" }], { duration: 430, easing: "cubic-bezier(0.5, 0, 0.9, 0.6)", fill: "forwards" });
-      away.onfinish = function () {
-        show(pages[shown]);
-        var back = turn.animate([{ transform: "rotateY(90deg)" }, { transform: "rotateY(0deg)" }], { duration: 560, easing: "cubic-bezier(0.2, 0.6, 0.3, 1)", fill: "forwards" });
-        back.onfinish = function () {
-          away.cancel();
-          back.cancel();
-          turning = false;
-          window.setTimeout(next, 8000);
-        };
-      };
-    }
-    if ("IntersectionObserver" in window) {
-      new IntersectionObserver(function (entries) {
-        visible = !!(entries[0] && entries[0].isIntersecting);
-      }).observe(root);
-    }
+    // 3. Landing: the parallax starts once the page is down.
     root.addEventListener("animationend", function (event) {
-      if (event.animationName !== "paper-fall") return;
-      landed = true;
-      // The first page has been read by the time the JSON has resolved; the page turns a little after that.
-      window.setTimeout(next, 4800);
+      if (event.animationName === "paper-fall") landed = true;
     });
   })();
 </script>
@@ -336,7 +269,7 @@ const sizes = ["xs", "sm", "base", "md", "lg", "xl"];
   .paper__hover,
   .paper__scroll,
   .paper__fall,
-  .paper__turn,
+  .paper__body,
   .paper__strip {
     transform-style: preserve-3d;
   }
@@ -347,11 +280,11 @@ const sizes = ["xs", "sm", "base", "md", "lg", "xl"];
       scale(calc(1 + var(--near, 0) * 0.02)) rotateY(calc(var(--mx, 0) * 9deg)) rotateX(calc(var(--my, 0) * -7deg));
   }
 
-  .paper__turn {
+  .paper__body {
     position: relative;
   }
 
-  /* The depth on the page behind. It is the sheet's own outline with its shadow, inside the turning sheet, so it turns with it; it is shown
+  /* The depth on the page behind. It is the sheet's own outline with its shadow, inside the sheet's wrapper, so it moves with it; it is shown
      only once the page is down (a shadow under a page in the air would be a flat shape that does not follow it). */
   .paper__shadow {
     position: absolute;
@@ -369,7 +302,7 @@ const sizes = ["xs", "sm", "base", "md", "lg", "xl"];
     transform: rotateY(calc(var(--bend) / var(--n)));
   }
 
-  .paper__turn > .paper__strip {
+  .paper__body > .paper__strip {
     inline-size: calc(100% / var(--n));
   }
 
@@ -607,7 +540,7 @@ const sizes = ["xs", "sm", "base", "md", "lg", "xl"];
       }
 
       /* Once it is down it floats, barely: a few pixels over several seconds. */
-      .paper__turn {
+      .paper__body {
         animation: paper-float 7s ease-in-out infinite alternate;
         animation-delay: var(--fall);
       }
@@ -635,17 +568,6 @@ const sizes = ["xs", "sm", "base", "md", "lg", "xl"];
     .paper--wait .paper__line,
     .paper--wait .paper__sweep {
       animation-play-state: paused;
-    }
-
-    /* After the first turn, a page's lines resolve as soon as it is shown, and the light passes over it again. */
-    .paper--cycled .paper__line {
-      animation: paper-relock 0.7s steps(6, end) both;
-      animation-delay: calc(var(--i) * 26ms);
-    }
-
-    .paper--relock .paper__sweep {
-      animation: paper-sweep-again 1.2s ease-out both;
-      animation-delay: 0.5s;
     }
 
     /* Scrolling tilts, skews and lifts the page, and scrolling back puts it down again (the timeline runs both ways). Desktop only. */
@@ -784,40 +706,7 @@ const sizes = ["xs", "sm", "base", "md", "lg", "xl"];
     }
   }
 
-  /* The same, under another name, so that a page's lines play it again each time it turns. */
-  @keyframes paper-relock {
-    0% {
-      opacity: 0;
-      transform: translateX(calc(-1 * var(--dbm-space-2))) skewX(8deg);
-    }
-    22% {
-      opacity: 0.8;
-      transform: translateX(var(--dbm-space-2)) skewX(-6deg);
-    }
-    44% {
-      opacity: 0.2;
-      transform: translateX(calc(-1 * var(--dbm-space-1)));
-    }
-    66% {
-      opacity: 0.9;
-      transform: translateX(var(--dbm-space-1)) skewX(4deg);
-    }
-    100% {
-      opacity: 1;
-      transform: none;
-    }
-  }
-
   @keyframes paper-sweep {
-    from {
-      transform: translateX(-130%);
-    }
-    to {
-      transform: translateX(130%);
-    }
-  }
-
-  @keyframes paper-sweep-again {
     from {
       transform: translateX(-130%);
     }
