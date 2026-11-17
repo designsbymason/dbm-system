@@ -14,7 +14,7 @@ const groups: SpecGroup[] = [
     title: "What it is",
     art: "is",
     rows: [
-      { term: "Components", detail: `${facts.componentCount} components, ${facts.shellCount} application shells, and ${facts.utilityCount} hooks and functions` },
+      { term: "Components", detail: `${facts.componentCount + facts.shellCount} components and ${facts.utilityCount} hooks & functions` },
       { term: "Themes", detail: `${list(facts.brands)}, each in ${list(facts.modes)}` },
       { term: "Version", detail: facts.version },
     ],
