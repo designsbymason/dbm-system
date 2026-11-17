@@ -69,6 +69,37 @@ export const TargetSizeAtEverySize: Story = {
   },
 };
 
+// `Indicators` draws steps smaller than 24 by 24 pixels, a step apart by less than 24 (12 to 20 for dots, 20 for the smallest bars). WCAG 2.5.8 is met
+// for them by its "equivalent control" exception: the carousel also draws a previous and a next button, which are at least that size and reach every slide.
+// So wherever the indicators are drawn with the buttons in their place, both buttons must be there and big enough.
+export const IndicatorsHaveAnEquivalentControl: Story = {
+  name: "Wherever the indicators are drawn, a previous and a next button of at least 24 by 24 pixels are drawn too",
+  render: () => (
+    <div style={{ display: "grid", gap: "var(--dbm-space-8)" }}>
+      {(["auto", "overlay", "bar"] as const).flatMap((controls) =>
+        (["dots", "outlined", "bars"] as const).map((indicators) => (
+          <div key={`${controls}-${indicators}`} data-case={`${controls} ${indicators}`}>
+            <Demo size="xs" controls={controls} indicators={indicators} aria-label={`${controls} ${indicators}`} />
+          </div>
+        )),
+      )}
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    const cases = Array.from(canvasElement.querySelectorAll<HTMLElement>("[data-case]"));
+    await expect(cases.length).toBe(9);
+    for (const entry of cases) {
+      const within_ = within(entry);
+      await expect(within_.getAllByRole("button", { name: /^Go to slide/ }).length).toBeGreaterThan(1);
+      for (const name of ["Previous slide", "Next slide"]) {
+        const rect = box(within_.getByRole("button", { name }));
+        await expect(rect.width).toBeGreaterThanOrEqual(24);
+        await expect(rect.height).toBeGreaterThanOrEqual(24);
+      }
+    }
+  },
+};
+
 export const ScrollsToTheSlide: Story = {
   name: "Next brings the next slide's start edge to the track's start edge, and previous brings it back",
   render: () => <Demo aria-label="Scroll" />,

@@ -1,6 +1,6 @@
 # Carousel — review findings
 
-**Status:** Finalized 2026-10-31, declared by the maintainer after the final review round below. Open at finalization: the `Indicators` target size (a Finalized atom, no change made) and the checks not run in a real browser (Safari and Firefox, a real touch swipe, a full dark-mode and Emerald-brand pass).
+**Status:** Finalized 2026-10-31, declared by the maintainer after the final review round below. Open at finalization: the `Indicators` target size (met since 2026-11-17 through the equivalent-control exception, below) and the checks not run in a real browser (Safari and Firefox, a real touch swipe, a full dark-mode and Emerald-brand pass).
 
 ## Second round (ADR-0148)
 
@@ -27,7 +27,7 @@ A hand-rolled organism with no new dependency ([ADR-0147](../adr/0147-carousel-s
 
 ## Open findings
 
-- **`Indicators` (Finalized) is below the 24 × 24 px target size** at every size step (its dots are 4–12 px with no extended hit area, and the gaps do not satisfy the spacing exception to WCAG 2.5.8). Found while writing the target-size check, which therefore measures the previous, next and pause buttons only. Fixing it needs an authorized change to `Indicators` and the three-question test (`06` §9, "Whether an authorized fix reopens finalized status"); nothing was changed there.
+- **`Indicators` (Finalized) is below the 24 × 24 px target size** (its steps are 4–12 px with no extended hit area; the spacing exception to WCAG 2.5.8 holds for `bars` at `sm` and up only, not for `dots`, `outlined` or `bars` at `xs`). **Resolved 2026-11-17 through the criterion's equivalent-control exception** ([Indicators.md](./Indicators.md)): the carousel draws previous and next buttons of at least 24 × 24 px that reach every slide (unless `controls="hidden"`), and `Checks` → `IndicatorsHaveAnEquivalentControl` fails if either is missing or smaller beside any look of the indicators. Not covered: `controls="hidden"` with no `Carousel.Previous` or `Carousel.Next` of your own leaves the dots without that control; the Docs page for `Indicators` says a standalone use has to provide one.
 - **Focus-ring room along the track is the gap, up to 8px:** with a gap under 8px a ring on a control at the very start or end of a slide is partly clipped (a neighbour would show in more room). Documented.
 - **Not covered by a real-browser check:** the media hold (unit-tested only), `lazy` (unit-tested only) and the vertical-height warning (unit-tested with measured sizes).
 - **A drag starting on a card's text selects nothing and starts a drag**; `data-carousel-no-drag` opts an element out. Documented.

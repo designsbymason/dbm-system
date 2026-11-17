@@ -170,6 +170,14 @@ as in a real consuming app.
 - The optional progress label (`showLabel`) renders as plain, non-`aria-hidden` text next to the
   group — not marked decorative, matching `ProgressBar`'s own value-label precedent. It's a sibling
   of the group, not a child of it, so it never becomes part of any dot's own accessible name.
+- **Target size (WCAG 2.5.8):** the steps are 4 to 12 px across, and apart from `variant="bars"` at `sm` and
+  up (26 px or more from one step's centre to the next) their centres are closer than the 24 px the criterion
+  asks for, so they meet it through its **equivalent control** exception: the function (reaching any step) is
+  also on a control that is at least 24 by 24 px. A `Carousel` draws previous and next buttons of that
+  size (not with `controls="hidden"`, unless you place a `Carousel.Previous` and `Carousel.Next` of your own),
+  and a check in the real browser fails if they stop. **Used on its own, you provide that control**: a
+  previous and a next button of your own, or `variant="bars"` from `sm` up. A larger invisible hit area would
+  not help: at these spacings each area would cover the centre of its neighbour.
 - **Contrast:** the inactive dot's fill (`bg.track-strong`) and the active dot's fill (`bg.brand`)
   are both verified against `bg.surface` at the WCAG 1.4.11 3:1 non-text floor, across every brand
   and mode combination — see Design tokens used below. `variant="outlined"`'s ring (`border.neutral-

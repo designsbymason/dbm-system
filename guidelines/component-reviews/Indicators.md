@@ -405,3 +405,17 @@ Under the three-question test in `06-engineering-standards.md` §9 this is a pre
 re-finalization**: re-verified — types and JSDoc, stories and Docs page, tests, and rendering. Rendering is unchanged, and provably so: with the rename reversed, all seven files
 are byte-identical to what was committed, so no logic, style, token or behaviour changed. Not re-run, because nothing they cover was touched: the contrast and theming checks and the
 feature-completeness pass. A first pass missed nothing here; the two class selectors that pattern skipped were in `Tabs`, not `Indicators`.
+
+## Post-Finalization follow-up (2026-11-17, at explicit direction) — target size (WCAG 2.5.8)
+
+Found while writing `Carousel`'s target-size check, which measured the buttons only. Measured here in a real browser at every size and variant, the steps are 4 to 12 px across and
+the centre-to-centre spacing between inactive steps is 12, 14, 16, 18 and 20 px for `dots` and `outlined` (`xs` to `xl`), and 20, 26, 32, 38 and 44 px for `bars`. The criterion's spacing
+exception needs 24 px, so `dots` and `outlined` fail at every size and `bars` only at `xs` (the earlier note that every step failed was too broad for `bars`).
+
+Chosen, at the maintainer's direction, over widening the spacing: the **equivalent-control exception**. Widening each step to 24 px (a gap of `space-6` minus the step) kept the rule but made
+`xs`, `sm` and `md` dots read as separate specks (seen side by side in a real browser), and `md` is `Carousel`'s default; an invisible 24 px hit area on top of the old gaps would make each
+step's area cover its neighbour's centre, so a press on one dot would reach the next. The function the dots give (reaching any slide) is also on `Carousel`'s previous and next buttons (drawn unless `controls="hidden"`), which are at
+least 24 × 24 px. It is a reading of the criterion, not a change to the component: a carousel is covered while those buttons are drawn, and **a standalone `Indicators` is not**, so the
+JSDoc and the Docs page say so (provide a previous and next button of your own, or use `bars` from `sm` up). No style, token, prop or behaviour changed: by question 1 of the three-question test
+(`06-engineering-standards.md` §9) this is wording, so the component stays Finalized. `Carousel`'s hidden `Checks` group gained `IndicatorsHaveAnEquivalentControl`, which draws all three
+indicator looks under all three placements of the buttons and requires both buttons to be there and at least 24 × 24 px; it fails when they are hidden.

@@ -35,6 +35,14 @@ const variantClass: Record<IndicatorsVariant, string | undefined> = {
  * already inside the group — so an external autoplay/next-button change
  * never steals focus.
  *
+ * **Target size (WCAG 2.5.8):** the steps are smaller than 24 by 24 px and,
+ * except for `bars` at `sm` and up, closer than 24 px centre to centre, so
+ * the criterion is met by an equivalent control: `Carousel` draws previous
+ * and next buttons that are at least that size and reach every slide (not
+ * with `controls="hidden"` unless you place your own). Used alone, give the
+ * same function to a control that is that size (a previous and next
+ * button), or use `bars` from `sm` up.
+ *
  * @example
  * ```tsx
  * <Indicators count={5} activeIndex={index} onIndexChange={setIndex} />
