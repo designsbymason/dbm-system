@@ -10,6 +10,8 @@ import { componentRows } from "./componentRows";
     <div class="components__text">
       <h2 id="components-heading" class="display components__title">All components</h2>
       <p class="lede">This list is read from the same manifest an agent reads. Each name opens its Docs page in Storybook.</p>
+      <!-- Out of sight until it takes keyboard focus; the list below is long, so a keyboard can step past it to the next section. -->
+      <a class="components__skip" href="#themes-heading">Skip the component list</a>
     </div>
     <div class="components__table">
       <ComponentTable client:visible rows={componentRows} />
@@ -31,6 +33,32 @@ import { componentRows } from "./componentRows";
     display: grid;
     gap: var(--dbm-space-4);
     margin-block-end: var(--dbm-space-8);
+    position: relative;
+  }
+
+  /* Hidden until focused, then drawn in the gap between the sentence and the table, so showing it moves nothing. */
+  .components__skip {
+    block-size: 1px;
+    clip-path: inset(50%);
+    inline-size: 1px;
+    overflow: hidden;
+    position: absolute;
+    white-space: nowrap;
+  }
+
+  .components__skip:focus {
+    block-size: auto;
+    clip-path: none;
+    color: var(--dbm-text-link);
+    font-size: var(--dbm-font-size-sm);
+    inline-size: auto;
+    inset-block-end: calc(var(--dbm-space-8) * -1);
+    inset-inline-start: 0;
+    outline: 2px solid var(--dbm-border-focus);
+    outline-offset: 2px;
+    border-radius: var(--dbm-radius-xs);
+    overflow: visible;
+    text-underline-offset: 0.2em;
   }
 
   .components__title {
