@@ -111,7 +111,6 @@ const sizes = ["xs", "sm", "base", "md", "lg", "xl"];
                   </div>
                 </div>
               </div>
-              <div class="paper__sheen"></div>
               <div class="paper__sweep"></div>
             </div>
           </div>
@@ -482,23 +481,13 @@ const sizes = ["xs", "sm", "base", "md", "lg", "xl"];
     color: var(--site-ink);
   }
 
-  /* The light on the paper: a soft highlight that follows the pointer, and one sweep across the sheet when the JSON has resolved. Neither is
-     drawn in the finished state. The highlight and the sweep are the surface colour, so they follow light and dark. */
-  .paper__sheen,
+  /* The light on the paper: one sweep across the sheet when the JSON has resolved, not drawn in the finished state. It is the surface colour,
+     so it follows light and dark. */
   .paper__sweep {
     display: none;
     position: absolute;
     inset: 0;
     pointer-events: none;
-  }
-
-  .paper__sheen {
-    opacity: calc(var(--near, 0) * 0.7);
-    background: radial-gradient(
-      circle at calc(50% + var(--mx, 0) * 45%) calc(45% + var(--my, 0) * 45%),
-      color-mix(in srgb, var(--dbm-bg-surface) 65%, transparent),
-      transparent 58%
-    );
   }
 
   .paper__sweep {
@@ -513,12 +502,6 @@ const sizes = ["xs", "sm", "base", "md", "lg", "xl"];
 
     .paper__sweep {
       display: block;
-    }
-
-    @media (hover: hover) and (min-width: 768px) {
-      .paper__sheen {
-        display: block;
-      }
     }
 
     /* On a phone the page does not fall or tilt: it is already in place, and the specimen breaks into the JSON once it scrolls into view. */
