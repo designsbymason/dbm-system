@@ -143,6 +143,6 @@ export const ShellsEndWithAnAsterisk: Story = {
     await expect(within(templates).getByRole("link", { name: "Landing page" }).textContent).toBe("Landing page");
     await expect(within(canvas.getByRole("table", { name: "Components" })).queryByText("*")).toBeNull();
     await expect(within(canvas.getByRole("table", { name: "Components" })).getByRole("link", { name: "AppShell" })).toBeVisible();
-    await expect(canvas.getByText(/^\* A template-level component: it ships in the package/)).toBeVisible();
+    await expect(canvas.getByText(/^\* A template-level component\. Its page is listed under Components/)).toBeVisible();
   },
 };

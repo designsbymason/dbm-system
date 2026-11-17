@@ -417,17 +417,15 @@ export function ComponentIndex({ index, section }: { index?: Record<string, RawE
         <>
           <h2 id="templates">Templates</h2>
           <p className="dbm-getting-started__lede">
-            Templates are page-level compositions of the components: the application shells, which are components that ship in the
-            package, and the example pages an app copies.
+            Templates are page-level compositions of the components. Shells are template-level components that ship in the package,
+            and the other templates are example pages whose code you can copy into your app.
           </p>
           {templates.length > 0 ? (
             <>
               <IndexTable wrapNames columns={TEMPLATE_COLUMNS} rows={templates} label="Templates" emptyState="No templates yet." />
               {templates.some((row) => row.component) && (
                 <p className="dbm-getting-started__note dbm-getting-started__footnote">
-                  * A template-level component: it ships in the package, so you import it, and its page is also listed with the
-                  components. The other templates are example pages. Nothing is imported from them: copy the page into your app
-                  and replace its data and words.
+                  * A template-level component. Its page is listed under Components.
                 </p>
               )}
             </>
