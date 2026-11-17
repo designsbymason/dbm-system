@@ -1,0 +1,119 @@
+/* The specification cards: three in a row from the tablet step, stacked below it. Semantic tokens only; the drawings use brand shades. */
+.cards {
+  display: grid;
+  gap: var(--dbm-space-6);
+  grid-template-columns: minmax(0, 1fr);
+}
+
+@media (min-width: 768px) {
+  .cards {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+.card {
+  background: var(--dbm-bg-surface);
+}
+
+/* The drawing sits on the lightest brand shade, edge to edge, with a hairline under it. */
+.media {
+  background: var(--dbm-bg-brand-subtle);
+  border-block-end: 1px solid var(--dbm-border-brand-subtle);
+}
+
+.art {
+  display: block;
+  inline-size: 100%;
+  max-inline-size: 24rem;
+  margin-inline: auto;
+  block-size: auto;
+}
+
+/* Six shades of the brand colour, lightest to darkest, and the lines drawn in it. */
+.c0 {
+  fill: var(--dbm-bg-surface);
+}
+
+.c1 {
+  fill: var(--dbm-bg-brand-subtle-hover);
+}
+
+.c2 {
+  fill: color-mix(in srgb, var(--dbm-bg-brand) 28%, var(--dbm-bg-surface));
+}
+
+.c3 {
+  fill: color-mix(in srgb, var(--dbm-bg-brand) 58%, var(--dbm-bg-surface));
+}
+
+.c4 {
+  fill: var(--dbm-bg-brand);
+}
+
+.c5 {
+  fill: var(--dbm-bg-brand-hover);
+}
+
+.line {
+  fill: none;
+  stroke: var(--dbm-border-brand);
+  stroke-width: 1.5;
+}
+
+.link {
+  fill: none;
+  stroke: var(--dbm-border-brand);
+  stroke-width: 2;
+  stroke-dasharray: 3 6;
+  stroke-linecap: round;
+}
+
+.ring {
+  fill: none;
+  stroke: var(--dbm-border-brand);
+  stroke-width: 3;
+}
+
+.tick {
+  fill: none;
+  stroke: var(--dbm-bg-surface);
+  stroke-width: 3;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.brace {
+  fill: none;
+  stroke: var(--dbm-border-brand);
+  stroke-width: 3;
+  stroke-linecap: round;
+}
+
+/* The facts: a small label over each, with a hairline between. */
+.list {
+  display: grid;
+  margin: 0;
+}
+
+.row {
+  display: grid;
+  gap: var(--dbm-space-1);
+  padding-block: var(--dbm-space-3);
+  border-block-start: 1px solid var(--site-rule);
+}
+
+.row:first-child {
+  border-block-start: 0;
+  padding-block-start: 0;
+}
+
+.row dt {
+  font-size: var(--dbm-font-size-sm);
+  font-weight: var(--dbm-font-weight-semibold);
+  color: var(--site-graphite);
+}
+
+.row dd {
+  margin: 0;
+  color: var(--dbm-text-primary);
+}
