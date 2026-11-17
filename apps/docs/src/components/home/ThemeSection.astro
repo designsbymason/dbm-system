@@ -6,16 +6,19 @@
 import "../../styles/generated/scoped-themes.css";
 import { facts, tokenValues } from "./facts";
 import { ThemeComposition } from "./ThemeComposition";
+import { ThemeSwitcher } from "./ThemeSwitcher";
 
 const brand = tokenValues("--dbm-bg-brand");
 const surface = tokenValues("--dbm-bg-surface");
+const brands = facts.themes.map((t) => t.split("-")[0]).filter((b, i, all) => all.indexOf(b) === i);
+const modes = facts.themes.map((t) => t.split("-")[1]).filter((m, i, all) => all.indexOf(m) === i);
 const label = (theme: string) => {
   const [b, m] = theme.split("-");
   return `${b[0].toUpperCase()}${b.slice(1)}, ${m}`;
 };
 ---
 
-<section class="themes" aria-labelledby="themes-heading">
+<section class="themes" aria-labelledby="themes-heading" data-themes>
   <div class="themes__run">
     <div class="themes__stage site-frame">
       <div class="grid-12 themes__grid">
@@ -24,6 +27,9 @@ const label = (theme: string) => {
           <p class="lede">
             {`Every component reads the same semantic tokens. Load another theme file and the whole interface follows: ${facts.brands.length} brands, each in light and dark, and not one component changed.`}
           </p>
+          <div class="themes__switch">
+            <ThemeSwitcher client:load themes={facts.themes} brands={brands} modes={modes} />
+          </div>
           <table class="themes__readout">
             <caption class="visually-hidden">The value of two tokens in each theme</caption>
             <thead>
@@ -36,7 +42,7 @@ const label = (theme: string) => {
             <tbody>
               {
                 facts.themes.map((theme, index) => (
-                  <tr class="themes__row" style={`--i: ${index}`}>
+                  <tr class="themes__row" data-theme-key={theme} style={`--i: ${index}`}>
                     <th scope="row">{label(theme)}</th>
                     <td>
                       <span class="themes__swatch" style={`background: ${brand[theme]}`} />
@@ -55,7 +61,7 @@ const label = (theme: string) => {
         <div class="themes__copies" aria-hidden="true" inert>
           {
             facts.themes.map((theme, index) => (
-              <figure class="themes__copy" data-theme-scope={theme} style={`--i: ${index}`}>
+              <figure class="themes__copy" data-theme-scope={theme} data-theme-key={theme} style={`--i: ${index}`}>
                 <ThemeComposition id={theme} />
                 <figcaption>{label(theme)}</figcaption>
               </figure>
@@ -156,6 +162,21 @@ const label = (theme: string) => {
     }
   }
 
+  /* With the controls running (they set `data-picked`), one composition shows, the picked one, and its readout row is marked. */
+  .themes[data-picked] .themes__copies {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .themes[data-picked] .themes__copy:not([data-on]) {
+    display: none;
+  }
+
+  .themes__row[data-on] th,
+  .themes__row[data-on] td {
+    color: var(--site-ink);
+    font-weight: var(--dbm-font-weight-semibold);
+  }
+
   @media (min-width: 1024px) {
     .themes__text {
       grid-column: 1 / span 5;
@@ -168,6 +189,20 @@ const label = (theme: string) => {
   /* Scrolled: the stage holds still and the themes change in turn. Wide screens only, where the stage fits the window. */
   @supports (animation-timeline: view()) {
     @media (prefers-reduced-motion: no-preference) and (min-width: 1024px) {
+      .themes__switch {
+        display: none;
+      }
+
+      .themes[data-picked] .themes__copy:not([data-on]) {
+        display: grid;
+      }
+
+      .themes__row[data-on] th,
+      .themes__row[data-on] td {
+        color: inherit;
+        font-weight: var(--dbm-font-weight-regular);
+      }
+
       .themes__run {
         block-size: 360vh;
         view-timeline: --themes block;

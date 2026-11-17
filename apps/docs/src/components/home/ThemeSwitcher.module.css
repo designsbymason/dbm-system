@@ -1,0 +1,16 @@
+.controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--dbm-space-4) var(--dbm-space-6);
+}
+
+.group {
+  align-items: center;
+  display: flex;
+  gap: var(--dbm-space-3);
+}
+
+.label {
+  color: var(--dbm-text-secondary);
+  font-size: var(--dbm-font-size-sm);
+}
