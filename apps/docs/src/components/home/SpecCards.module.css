@@ -89,22 +89,16 @@
   stroke-linecap: round;
 }
 
-/* The facts: a small label over each, with a hairline between. */
+/* The facts: a small label over each, a step apart. */
 .list {
   display: grid;
+  gap: var(--dbm-space-5);
   margin: 0;
 }
 
 .row {
   display: grid;
   gap: var(--dbm-space-1);
-  padding-block: var(--dbm-space-3);
-  border-block-start: 1px solid var(--site-rule);
-}
-
-.row:first-child {
-  border-block-start: 0;
-  padding-block-start: 0;
 }
 
 .row dt {
@@ -116,4 +110,153 @@
 .row dd {
   margin: 0;
   color: var(--dbm-text-primary);
+}
+
+/*
+ * The choreography of the drawings (SpecArt.tsx). The finished drawing is the base style. Only when motion is allowed, and a small script on the
+ * page has found the drawing (`data-armed`), is a drawing held back; it plays each time it scrolls into view (`data-seen`), from either direction,
+ * and is held back again when it leaves, so it plays again when it returns. Pieces take their part from a class and their start from `--d`.
+ */
+.drop,
+.pop,
+.grow,
+.slide,
+.press {
+  transform-box: fill-box;
+}
+
+.pop {
+  transform-origin: center;
+}
+
+.grow {
+  transform-origin: left center;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .art[data-armed] :is(.drop, .pop, .grow, .slide, .fade, .flow, .draw) {
+    opacity: 0;
+  }
+
+  .art[data-seen] .drop {
+    animation: spec-drop 0.95s cubic-bezier(0.2, 0.85, 0.25, 1) var(--d, 0ms) both;
+  }
+
+  .art[data-seen] .pop {
+    animation: spec-pop 0.7s cubic-bezier(0.2, 0.9, 0.3, 1.2) var(--d, 0ms) both;
+  }
+
+  .art[data-seen] .grow {
+    animation: spec-grow 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) var(--d, 0ms) both;
+  }
+
+  .art[data-seen] .slide {
+    animation: spec-slide 0.7s cubic-bezier(0.3, 0.9, 0.3, 1.1) var(--d, 0ms) both;
+  }
+
+  .art[data-seen] .draw {
+    stroke-dasharray: 1;
+    animation: spec-draw 0.9s cubic-bezier(0.4, 0, 0.2, 1) var(--d, 0ms) both;
+  }
+
+  .art[data-seen] .press {
+    animation: spec-press 0.55s ease-in-out var(--d, 0ms) both;
+  }
+
+  /* The lines come in, then their dashes keep moving along them for as long as the drawing is in view. */
+  .art[data-seen] .flow {
+    animation:
+      spec-fade 0.6s ease var(--d, 0ms) both,
+      spec-flow 1.6s linear calc(var(--d, 0ms) + 0.6s) infinite;
+  }
+}
+
+@keyframes spec-drop {
+  0% {
+    opacity: 0;
+    transform: translateY(calc(-1 * var(--dbm-space-10)));
+  }
+  55% {
+    opacity: 1;
+    transform: translateY(var(--dbm-space-1));
+  }
+  100% {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes spec-pop {
+  0% {
+    opacity: 0;
+    transform: scale(0);
+  }
+  70% {
+    opacity: 1;
+    transform: scale(1.1);
+  }
+  100% {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes spec-grow {
+  from {
+    opacity: 0;
+    transform: scaleX(0);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes spec-slide {
+  from {
+    opacity: 0;
+    transform: translateX(calc(-1 * var(--dbm-space-3)));
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes spec-draw {
+  from {
+    opacity: 1;
+    stroke-dashoffset: 1;
+  }
+  to {
+    opacity: 1;
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes spec-press {
+  0% {
+    transform: none;
+  }
+  40% {
+    transform: translateY(var(--dbm-space-1));
+  }
+  100% {
+    transform: none;
+  }
+}
+
+@keyframes spec-fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes spec-flow {
+  to {
+    stroke-dashoffset: -18;
+  }
 }

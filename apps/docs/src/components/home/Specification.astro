@@ -44,6 +44,29 @@ const groups: SpecGroup[] = [
   <SpecCards groups={groups} />
 </section>
 
+<script is:inline>
+  // The drawings play when they scroll into view, from either direction, and are held back again when they leave, so they play again when they
+  // return. Only for a reader who has not asked for reduced motion; otherwise the drawings stay as they are, finished (SpecArt.tsx).
+  (function () {
+    if (!window.matchMedia("(prefers-reduced-motion: no-preference)").matches || !("IntersectionObserver" in window)) return;
+    var arts = document.querySelectorAll(".spec [data-art]");
+    if (arts.length === 0) return;
+    var watcher = new IntersectionObserver(
+      function (entries) {
+        entries.forEach(function (entry) {
+          if (entry.isIntersecting) entry.target.setAttribute("data-seen", "");
+          else entry.target.removeAttribute("data-seen");
+        });
+      },
+      { threshold: 0.4 },
+    );
+    arts.forEach(function (art) {
+      art.setAttribute("data-armed", "");
+      watcher.observe(art);
+    });
+  })();
+</script>
+
 <style>
   .spec {
     padding-block: var(--dbm-space-16);
