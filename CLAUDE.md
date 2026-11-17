@@ -65,8 +65,9 @@ packages/
   icons/             Phosphor Icons wrapper
   components/        The actual DBM component library (published npm package; each component's tier and category are in src/componentCatalog.json) — atoms,
                      molecules and organisms, plus src/templates/ (shells that ship,
-                     AppShell and PageShell; page-level templates are story-only
-                     examples, ADR-0179). Shared internals live in src/internal/. Also holds its own .storybook/ config, src/foundations/
+                     AppShell and PageShell, which are components in the template tier and
+                     sit with the others in Storybook; page-level templates are story-only
+                     examples, ADR-0179, ADR-0226). Shared internals live in src/internal/. Also holds its own .storybook/ config, src/foundations/
                      (Storybook-only token reference pages) and src/guides/ (the Getting
                      started page and guide pages); neither is shipped in the package)
   manifest/          Private build tool (not published): generates the JSON component manifest
@@ -92,7 +93,7 @@ Full rationale for each choice: `guidelines/02-tech-stack-and-structure.md`.
 |---|---|
 | Adding/changing a design token | `guidelines/03-token-system-spec.md` |
 | Building a new component | `guidelines/04-component-inventory.md` (tier + scope); then its entry in `packages/components/src/componentCatalog.json` and a `Components/{Name}` story title (`guidelines/07-storybook-and-documentation-standards.md` §3, ADR-0225) |
-| Building a template (a shell that ships, or a story-only page) and in what order | `guidelines/04-component-inventory.md` (Templates, with its build order) and ADR-0179 |
+| Building a template (a shell that ships, or a story-only page) and in what order | `guidelines/04-component-inventory.md` (Templates, with its build order), ADR-0179 and ADR-0226 (a shell is `Components/{Name}` with a catalog entry; a page is `Templates/{Name}`) |
 | Unsure about a dependency or tool choice | `guidelines/02-tech-stack-and-structure.md` |
 | Overall project goals/scope | `guidelines/01-vision-and-goals.md` |
 | A component's props, file structure, or definition of done | `guidelines/05-component-api-conventions.md` |

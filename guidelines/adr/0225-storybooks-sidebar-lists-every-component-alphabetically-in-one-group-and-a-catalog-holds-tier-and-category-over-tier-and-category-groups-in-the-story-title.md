@@ -1,6 +1,6 @@
 # 0225 — Storybook's sidebar lists every component alphabetically in one group, and a catalog holds each component's tier and category, over tier and category groups in the story title
 
-**Status:** Accepted · **Date:** 2026-11-16 · Partly supersedes [0006](./0006-functional-categories-over-atomic-tier-navigation.md) (the sidebar as a navigation axis; the categories themselves stand)
+**Status:** Accepted · **Date:** 2026-11-16 · Partly superseded by [0226](./0226-the-application-shells-are-components-in-the-template-tier-and-the-manifest-lists-helpers-apart-over-keeping-the-shells-in-templates-and-counting-helpers-as-components.md) (Templates keep `Templates/{Group}/{Name}`: the shells are now components and the pages are flat) · Partly supersedes [0006](./0006-functional-categories-over-atomic-tier-navigation.md) (the sidebar as a navigation axis; the categories themselves stand)
 
 ## Context
 Storybook's sidebar grouped components as `{Tier}/{Category}/{Component}` (`Atoms/Inputs/Button`): three tiers, nine categories, so a reader opened two groups to find a component, and had to know both where it was filed. The same title was the only place a component's tier and category were written, so the manifest, the All components table and the site's search all parsed it. Storybook derives every story id from the title, so changing a title would have changed every address.
