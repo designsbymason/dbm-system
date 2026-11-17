@@ -1,7 +1,3 @@
-.header {
-  view-transition-name: site-header;
-}
-
 .logo {
   display: block;
   /* About 24px tall; the width follows from the wordmark's shape (02-structure.md §1). */

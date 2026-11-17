@@ -82,8 +82,10 @@ import Marketing from "../layouts/Marketing.astro";
     gap: var(--dbm-space-3) var(--dbm-space-5);
   }
 
+  /* Below the text on a phone and a tablet, with room above it, so the page of the manual never sits against the actions. */
   .hero__visual {
     grid-column: 1 / -1;
+    margin-block-start: var(--dbm-space-10);
   }
 
   @media (min-width: 1024px) {
@@ -98,6 +100,7 @@ import Marketing from "../layouts/Marketing.astro";
     }
     .hero__visual {
       grid-column: 7 / -1;
+      margin-block-start: 0;
     }
   }
 </style>

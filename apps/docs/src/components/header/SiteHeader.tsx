@@ -51,7 +51,7 @@ function PanelToolLinks() {
  */
 export function SiteHeader({ version, placements }: SiteHeaderProps) {
   return (
-    <Navbar sticky variant="frosted" collapseBelow="lg" className={styles.header}>
+    <Navbar sticky variant="frosted" collapseBelow="lg">
       <Navbar.Row columns="balanced" columnsBelow="lg" className={styles.row}>
         <Navbar.MenuButton column="start" variant="tertiary" />
         <Navbar.Brand href="/" column="center" aria-label={`DBM System v${version}, home`} className={styles.brand}>
