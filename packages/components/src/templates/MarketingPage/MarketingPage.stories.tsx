@@ -13,7 +13,8 @@ type DemoArgs = Pick<MarketingPageProps, "features" | "proof">;
 const noControls = { features: { control: false }, proof: { control: false } } as const;
 
 const meta: Meta<DemoArgs> = {
-  title: "Templates/Data pages/Marketing Page",
+  title: "Templates/Marketing Page",
+  id: "templates-data-pages-marketing-page",
   // A story-only example page, not a component: the Getting started page marks it with an asterisk (the tag reaches its Docs entry).
   tags: ["example-page"],
   parameters: { layout: "fullscreen", fullBleed: true },

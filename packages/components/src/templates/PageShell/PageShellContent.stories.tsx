@@ -3,7 +3,8 @@ import { PageShell } from "./PageShell";
 
 // Docs-only (guidelines/adr/0013) — `PageShell.Content`'s own props get their own Properties table on PageShell.mdx.
 const meta: Meta<typeof PageShell.Content> = {
-  title: "Templates/Shells/PageShell/Content",
+  title: "Components/PageShell/Content",
+  id: "templates-shells-pageshell-content",
   component: PageShell.Content,
   tags: ["!dev"],
   argTypes: {

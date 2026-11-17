@@ -23,7 +23,8 @@ type PlaygroundArgs = PageShellProps & {
 };
 
 const meta: Meta<PlaygroundArgs> = {
-  title: "Templates/Shells/PageShell",
+  title: "Components/PageShell",
+  id: "templates-shells-pageshell",
   component: PageShell,
   subcomponents: {},
   parameters: { layout: "fullscreen", fullBleed: true },

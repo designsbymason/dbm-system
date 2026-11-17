@@ -3,7 +3,7 @@
  * anything that reads the file without this package; change the two together.
  */
 
-/** A component's tier: from the components package's catalog (`src/componentCatalog.json`), or, for a template, from its story title. */
+/** A component's tier, from the components package's catalog (`src/componentCatalog.json`). A template-level component (an application shell) is the `template` tier. */
 export type ManifestTier = "atom" | "molecule" | "organism" | "template";
 
 /** One example of a component in use. */
@@ -52,7 +52,7 @@ export interface ManifestPart {
 export interface ManifestComponent {
   /** The component's name, as imported (`Button`). */
   name: string;
-  /** From the components package's catalog (a template's, from its story title). */
+  /** From the components package's catalog. */
   tier: ManifestTier;
   /** From the same place (`Inputs`). */
   category: string;
@@ -163,7 +163,7 @@ export interface Manifest {
 export interface ManifestIndexComponent {
   /** The component's name, as imported. */
   name: string;
-  /** From the components package's catalog (a template's, from its story title). */
+  /** From the components package's catalog. */
   tier: ManifestTier;
   /** From the same place. */
   category: string;

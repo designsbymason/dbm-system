@@ -22,10 +22,9 @@ beforeAll(() => {
       Button: { tier: "atom", category: "Inputs" },
       Tooltip: { tier: "atom", category: "Overlay" },
       Misplaced: { tier: "molecule", category: "Layout" },
+      AppShell: { tier: "template", category: "Shells" },
     }),
   );
-  writeFileSync(dir("templates", "AppShell", "AppShell.stories.tsx"), `const meta = {\n  title: "Templates/Shells/AppShell",\n};\n`);
-  writeFileSync(dir("templates", "Untitled", "Untitled.stories.tsx"), `const meta = {\n  title: "Components/Untitled",\n};\n`);
 });
 
 afterAll(() => rmSync(root, { recursive: true, force: true }));
@@ -59,14 +58,14 @@ describe("placementOf", () => {
     expect(result.problem).toContain(`puts "Misplaced" in the molecule tier, but its folder is in src/atoms`);
   });
 
-  it("reads a template from the title of its stories, as templates have no catalog entry", () => {
+  it("puts a template-level component where the catalog says, like any other", () => {
     expect(placementOf(root, catalog(), dir("templates", "AppShell"), "AppShell")).toEqual({ placement: { tier: "template", category: "Shells" } });
   });
 
-  it("reports a template whose stories have no Templates title", () => {
+  it("reports a template-level component the catalog does not list", () => {
     const result = placementOf(root, catalog(), dir("templates", "Untitled"), "Untitled");
     expect(result.placement).toBeUndefined();
-    expect(result.problem).toContain(`no story title like "Templates/Shells/Untitled"`);
+    expect(result.problem).toBe(`no entry for "Untitled" in ${CATALOG_PATH}`);
   });
 
   it("reports a component outside the four folders", () => {

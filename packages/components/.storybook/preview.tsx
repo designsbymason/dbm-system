@@ -95,9 +95,9 @@ const preview: Preview = {
       // roughly increasing specialization) — alphabetical would scatter
       // Overview into the middle of the list. Within Components, the Index
       // first, then every component alphabetically by name (no tier or
-      // category groups; they are in src/componentCatalog.json); within
-      // Templates, the Index first, then the template groups in the
-      // inventory's order; within a
+      // category groups; they are in src/componentCatalog.json; the
+      // application shells are components, so they are among them); within
+      // Templates, the Index first, then the example pages alphabetically; within a
       // component, the hand-authored Docs page (see
       // guidelines/07-storybook-and-documentation-standards.md §4) always
       // sorts first, then the Playground story, then everything else in
@@ -129,10 +129,9 @@ const preview: Preview = {
         const topLevelGroup = (title) => title.split("/")[0] ?? title;
         // Getting started (the introduction, installation, quick start, frameworks and AI agents) first, then the written guides, the
         // token reference, then Components (the Index first, then every component alphabetically by name, a component's parts under
-        // it), then Templates (the Index first, then the template groups in the inventory's own order, Shells first), then the
-        // resources (changelog, roadmap, FAQ).
+        // it; the application shells are components, so they fall in the same order), then Templates (the Index first, then the example
+        // pages alphabetically), then the resources (changelog, roadmap, FAQ).
         const groupPriority = ["Getting started", "Guides", "Foundations", "Components", "Templates", "Resources"];
-        const templateGroups = ["Shells", "Authentication", "Data pages", "Settings and account", "System and utility pages"];
         const gettingStartedOrder = [
           "Getting started/Introduction",
           "Getting started/Installation",
@@ -188,21 +187,13 @@ const preview: Preview = {
           return foundationsOrder.indexOf(a.title) - foundationsOrder.indexOf(b.title);
         }
         if (aGroup === "Components" || aGroup === "Templates") {
-          // The Index page (and its hidden checks) leads the group; every component after it falls to the alphabetical order below,
-          // and the template groups to their own order.
+          // The Index page (and its hidden checks) leads the group; every component or template after it falls to the alphabetical order
+          // below.
           // @ts-expect-error — `title` can't be typed; see comment above
           const inIndex = (title) => title === `${aGroup}/Index` || title.startsWith(`${aGroup}/Index/`);
           const aIndex = inIndex(a.title);
           const bIndex = inIndex(b.title);
           if (aIndex !== bIndex) return aIndex ? -1 : 1;
-        }
-        if (aGroup === "Templates") {
-          // The template groups in the inventory's own order, not alphabetical (Shells would come out after Data pages).
-          // @ts-expect-error — `title` can't be typed; see comment above
-          const templateGroup = (title) => templateGroups.indexOf(title.split("/")[1] ?? "");
-          const aTemplate = templateGroup(a.title);
-          const bTemplate = templateGroup(b.title);
-          if (aTemplate !== bTemplate) return (aTemplate === -1 ? templateGroups.length : aTemplate) - (bTemplate === -1 ? templateGroups.length : bTemplate);
         }
         if (a.title !== b.title) {
           return a.title.localeCompare(b.title, undefined, { numeric: true });

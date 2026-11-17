@@ -3,7 +3,8 @@ import { PageShell } from "./PageShell";
 
 // Docs-only (guidelines/adr/0013) — `PageShell.Footer`'s own props get their own Properties table on PageShell.mdx.
 const meta: Meta<typeof PageShell.Footer> = {
-  title: "Templates/Shells/PageShell/Footer",
+  title: "Components/PageShell/Footer",
+  id: "templates-shells-pageshell-footer",
   component: PageShell.Footer,
   tags: ["!dev"],
   argTypes: {

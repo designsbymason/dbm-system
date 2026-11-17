@@ -7,7 +7,8 @@ import { MarketingPage, marketingCopy } from "./MarketingPageStoryKit";
 // Hidden real-browser checks (guidelines/adr/0013): what jsdom can't do (layout, a breakpoint, sticking, scrolling, a real press, print). They run in the
 // `storybook` (Chromium) project; the test window is 1200px wide unless a story pins another.
 const meta: Meta = {
-  title: "Templates/Data pages/Marketing Page/Checks",
+  title: "Templates/Marketing Page/Checks",
+  id: "templates-data-pages-marketing-page-checks",
   tags: ["!dev"],
   parameters: { layout: "fullscreen", fullBleed: true },
 };

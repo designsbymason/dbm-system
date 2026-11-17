@@ -29,9 +29,9 @@ const TIER_LABEL: Record<Tier, ComponentTier> = {
   Templates: "Template",
 };
 
-const COMPONENT_TIERS: Exclude<Tier, "Templates">[] = ["Atoms", "Molecules", "Organisms"];
+const COMPONENT_TIERS: Tier[] = ["Atoms", "Molecules", "Organisms", "Templates"];
 
-/** The inventory's categories in the order `07-storybook-and-documentation-standards.md` §3 lists them. */
+/** The inventory's categories in the order `07-storybook-and-documentation-standards.md` §3 lists them, then Shells (the template tier's). */
 const CATEGORY_ORDER = [
   "Layout",
   "Typography",
@@ -42,6 +42,7 @@ const CATEGORY_ORDER = [
   "Overlay",
   "Media",
   "Utility",
+  "Shells",
 ];
 
 /** `./` from the preview iframe is Storybook's root, so `?path=` there opens a page in the full shell. */
@@ -173,10 +174,11 @@ function SearchIconButton({ query, onChange }: { query: string; onChange: (next:
 }
 
 /**
- * The columns of both tables. Fixed shares of the width, so choosing a filter never moves a column. With `markPages`, the name of an
- * example page template ends with an asterisk, which the note under the table explains.
+ * The columns of both tables. Fixed shares of the width, so choosing a filter never moves a column. The Templates table has no Tier or
+ * Category column (every row is a template), and the name of a template-level component in it ends with an asterisk, which the note under
+ * the table explains.
  */
-const columnsFor = (markPages: boolean): DataTableColumn<IndexRow>[] => [
+const allColumns = (templates: boolean): DataTableColumn<IndexRow>[] => [
   {
     id: "name",
     header: "Name",
@@ -184,13 +186,13 @@ const columnsFor = (markPages: boolean): DataTableColumn<IndexRow>[] => [
     cell: (row) => (
       <a className="dbm-getting-started__link" href={docsHref(row.id)} target="_top">
         {row.name}
-        {markPages && row.examplePage && <span aria-hidden="true">*</span>}
-        {markPages && row.examplePage && <VisuallyHidden> (example page)</VisuallyHidden>}
+        {templates && row.component && <span aria-hidden="true">*</span>}
+        {templates && row.component && <VisuallyHidden> (template-level component)</VisuallyHidden>}
       </a>
     ),
     sortable: true,
     rowHeader: true,
-    width: "22%",
+    width: templates ? "30%" : "22%",
   },
   {
     id: "tier",
@@ -217,9 +219,12 @@ const columnsFor = (markPages: boolean): DataTableColumn<IndexRow>[] => [
     accessor: (row) => componentDescriptions[row.name] ?? "",
     cell: (row) => componentDescriptions[row.name] ?? "—",
     wrap: true,
-    width: "45%",
+    width: templates ? "70%" : "45%",
   },
 ];
+
+const columnsFor = (templates: boolean): DataTableColumn<IndexRow>[] =>
+  allColumns(templates).filter((column) => !templates || column.id === "name" || column.id === "description");
 
 const COMPONENT_COLUMNS = columnsFor(false);
 const TEMPLATE_COLUMNS = columnsFor(true);
@@ -304,7 +309,8 @@ export function ComponentIndex({ index, section }: { index?: Record<string, RawE
     return () => controller.abort();
   }, [index]);
 
-  const components = useMemo(() => (entries ?? []).filter((row) => row.tier !== "Templates"), [entries]);
+  // The components are every row with a page under Components, the application shells included; the templates are the shells and the example pages.
+  const components = useMemo(() => (entries ?? []).filter((row) => row.component), [entries]);
   const templates = useMemo(() => (entries ?? []).filter((row) => row.tier === "Templates"), [entries]);
 
   const categoryOptions = useMemo(() => {
@@ -335,7 +341,7 @@ export function ComponentIndex({ index, section }: { index?: Record<string, RawE
           <h2 id="components">Components</h2>
           <p className="dbm-getting-started__lede">
             Every component opens its own page with a live Playground, props, usage guidance, accessibility notes and a
-            copyable snippet for each example. They come in three tiers: an{" "}
+            copyable snippet for each example. They come in four tiers: an{" "}
             <Badge tone={toneForTier.Atom} size="sm" variant="subtle">
               Atom
             </Badge>{" "}
@@ -343,11 +349,15 @@ export function ComponentIndex({ index, section }: { index?: Record<string, RawE
             <Badge tone={toneForTier.Molecule} size="sm" variant="subtle">
               Molecule
             </Badge>{" "}
-            combines a few atoms into one working unit, and an{" "}
+            combines a few atoms into one working unit, an{" "}
             <Badge tone={toneForTier.Organism} size="sm" variant="subtle">
               Organism
             </Badge>{" "}
-            is a complete pattern. The list is read from Storybook itself, so it always matches the sidebar.
+            is a complete pattern, and a{" "}
+            <Badge tone={toneForTier.Template} size="sm" variant="subtle">
+              Template
+            </Badge>{" "}
+            is a page-level component, such as an application shell. The list is read from Storybook itself, so it always matches the sidebar.
           </p>
 
           {failed ? (
@@ -407,14 +417,16 @@ export function ComponentIndex({ index, section }: { index?: Record<string, RawE
         <>
           <h2 id="templates">Templates</h2>
           <p className="dbm-getting-started__lede">
-            Templates are page-level compositions of the components above: a dashboard shell, an auth flow and so on.
+            Templates are page-level compositions of the components: the application shells, which are components that ship in the
+            package, and the example pages an app copies.
           </p>
           {templates.length > 0 ? (
             <>
               <IndexTable wrapNames columns={TEMPLATE_COLUMNS} rows={templates} label="Templates" emptyState="No templates yet." />
-              {templates.some((row) => row.examplePage) && (
+              {templates.some((row) => row.component) && (
                 <p className="dbm-getting-started__note dbm-getting-started__footnote">
-                  * An example page template, not a component. Nothing is imported from the package: copy the page into your app
+                  * A template-level component: it ships in the package, so you import it, and its page is also listed with the
+                  components. The other templates are example pages. Nothing is imported from them: copy the page into your app
                   and replace its data and words.
                 </p>
               )}

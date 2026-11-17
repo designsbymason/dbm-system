@@ -3,7 +3,8 @@ import { AppShell } from "./AppShell";
 
 // Docs-only (guidelines/adr/0013) — `AppShell.Main`'s own props get their own Properties table on AppShell.mdx.
 const meta: Meta<typeof AppShell.Main> = {
-  title: "Templates/Shells/AppShell/Main",
+  title: "Components/AppShell/Main",
+  id: "templates-shells-appshell-main",
   component: AppShell.Main,
   tags: ["!dev"],
   argTypes: {

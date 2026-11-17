@@ -17,7 +17,8 @@ const noControls = {
 } as const;
 
 const meta: Meta<DemoArgs> = {
-  title: "Templates/Data pages/Data Table List Page",
+  title: "Templates/Data Table List Page",
+  id: "templates-data-pages-data-table-list-page",
   // A story-only example page, not a component: the Getting started page marks it with an asterisk (the tag reaches its Docs entry).
   tags: ["example-page"],
   parameters: { layout: "fullscreen", fullBleed: true },

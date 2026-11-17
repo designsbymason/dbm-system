@@ -3,7 +3,8 @@ import { AppShell } from "./AppShell";
 
 // Docs-only (guidelines/adr/0013) — `AppShell.State`'s own props get their own Properties table on AppShell.mdx.
 const meta: Meta<typeof AppShell.State> = {
-  title: "Templates/Shells/AppShell/State",
+  title: "Components/AppShell/State",
+  id: "templates-shells-appshell-state",
   component: AppShell.State,
   tags: ["!dev"],
   argTypes: {

@@ -10,6 +10,7 @@ const catalog: Catalog = {
   Button: { tier: "atom", category: "Inputs" },
   Card: { tier: "molecule", category: "Data Display" },
   Sidebar: { tier: "organism", category: "Navigation" },
+  AppShell: { tier: "template", category: "Shells" },
 };
 
 const docs = (title: string, tags: string[] = []): [string, RawEntry] => {
@@ -54,21 +55,26 @@ describe("toRows", () => {
     expect(toRows(index(story), catalog)).toEqual([]);
   });
 
-  it("lists a template by its title, marks an example page by its tag, and ignores the catalog for it", () => {
-    const rows = toRows(index(docs("Templates/Shells/AppShell"), docs("Templates/Data pages/Data Table List Page", ["example-page"])), catalog);
-    expect(rows.map(({ name, tier, category, examplePage }) => [name, tier, category, examplePage])).toEqual([
-      ["AppShell", "Templates", "Shells", false],
-      ["Data Table List Page", "Templates", "Data pages", true],
+  it("lists an application shell with the components, in the template tier, and an example page by its Templates title", () => {
+    const rows = toRows(index(docs("Components/AppShell"), docs("Templates/Data Table List Page", ["example-page"])), catalog);
+    expect(rows.map(({ name, tier, category, component, examplePage }) => [name, tier, category, component, examplePage])).toEqual([
+      ["AppShell", "Templates", "Shells", true, false],
+      ["Data Table List Page", "Templates", "Pages", false, true],
     ]);
   });
 
+  it("marks an example page by its tag, and leaves out a title nested deeper under Templates", () => {
+    const rows = toRows(index(docs("Templates/Landing page"), docs("Templates/Landing page/Checks"), docs("Templates/Shells/Old")), catalog);
+    expect(rows.map(({ name, examplePage }) => [name, examplePage])).toEqual([["Landing page", false]]);
+  });
+
   it("does not list the Templates Index page, which is the page of the table, as a template", () => {
-    const rows = toRows(index(docs("Templates/Index"), docs("Templates/Shells/AppShell"), docs("Components/Index")), catalog);
+    const rows = toRows(index(docs("Templates/Index"), docs("Components/AppShell"), docs("Components/Index")), catalog);
     expect(rows.map((row) => row.name)).toEqual(["AppShell"]);
   });
 
   it("sorts by name, whatever the case", () => {
-    const rows = toRows(index(docs("Components/Sidebar"), docs("Templates/Shells/AppShell"), docs("Components/Button")), catalog);
+    const rows = toRows(index(docs("Components/Sidebar"), docs("Components/AppShell"), docs("Components/Button")), catalog);
     expect(rows.map((row) => row.name)).toEqual(["AppShell", "Button", "Sidebar"]);
   });
 
@@ -77,6 +83,6 @@ describe("toRows", () => {
     const names = Object.keys(real);
     const rows = toRows(index(...names.map((name) => docs(`Components/${name}`))), real);
     expect(rows.map((row) => row.name).sort()).toEqual([...names].sort());
-    expect(rows.every((row) => row.tier !== "Templates")).toBe(true);
+    expect(rows.filter((row) => row.tier === "Templates").map((row) => row.name)).toEqual(["AppShell", "PageShell"]);
   });
 });

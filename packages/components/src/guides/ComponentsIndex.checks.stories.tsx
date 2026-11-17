@@ -28,10 +28,10 @@ const index: Record<string, RawEntry> = Object.fromEntries([
   docs("Components/Tabs"),
   docs("Components/DataTable"),
   docs("Components/Sidebar"),
-  docs("Templates/Shells/AppShell"),
-  // Grouped under a shell group on purpose: the asterisk follows the tag, not the group.
-  docs("Templates/Shells/Landing page", ["example-page"]),
-  docs("Templates/Data pages/Data Table List Page", ["example-page"]),
+  // A shell is a component in the template tier (its tier and category are the catalog's); the example pages are Templates titles.
+  docs("Components/AppShell"),
+  docs("Templates/Landing page", ["example-page"]),
+  docs("Templates/Data Table List Page", ["example-page"]),
 ]);
 
 const render = () => (
@@ -74,7 +74,7 @@ export const PhoneToolbarIsTheCountAndAGroupOfIconButtons: Story = {
     const box = await within(document.body).findByRole("searchbox", { name: "Search components" });
     await waitFor(() => expect(box).toHaveFocus());
     await userEvent.keyboard("sidebar");
-    await waitFor(() => expect(tools.getByText("1 of 6 components")).toBeVisible());
+    await waitFor(() => expect(tools.getByText("1 of 7 components")).toBeVisible());
     // (Escape in a search box clears it, so the panel is closed by pressing its button again.)
     await userEvent.click(search);
     await waitFor(() => expect(within(document.body).queryByRole("searchbox")).toBeNull());
@@ -93,20 +93,20 @@ export const PhoneToolbarIsTheCountAndAGroupOfIconButtons: Story = {
 };
 
 export const PhoneTemplateNamesWrapAndShowTheAsterisk: Story = {
-  name: "On a phone a long template name wraps in full and its asterisk is visible — layout test",
+  name: "On a phone a long template name is shown in full, and a shell's asterisk is visible — layout test",
   globals: { viewport: { value: "mobile1", isRotated: false } },
   render,
   play: async ({ canvasElement }) => {
     await expect(window.innerWidth).toBeLessThan(768);
     const canvas = within(canvasElement);
     const templates = await canvas.findByRole("table", { name: "Templates" });
-    const link = await within(templates).findByRole("link", { name: /^Data Table List Page/ });
+    const page = await within(templates).findByRole("link", { name: /^Data Table List Page/ });
+    // The name is whole: it is never cut off (it wraps onto lines if the column is narrow), so no text is clipped.
+    await expect((page.closest("th") as HTMLElement).scrollWidth).toBeLessThanOrEqual((page.closest("th") as HTMLElement).clientWidth + 1);
+    await expect(getComputedStyle(page).textOverflow).not.toBe("ellipsis");
+    // A shell's asterisk is drawn and stays inside its cell.
+    const link = within(templates).getByRole("link", { name: /^AppShell/ });
     const cell = link.closest("th") as HTMLElement;
-    // The name is whole: it wraps onto lines instead of being cut off, so no text is clipped, and the asterisk is drawn.
-    await expect(cell.scrollWidth).toBeLessThanOrEqual(cell.clientWidth + 1);
-    await expect(getComputedStyle(link).textOverflow).not.toBe("ellipsis");
-    const oneLine = within(templates).getByRole("link", { name: "AppShell" }).getBoundingClientRect().height;
-    await expect(link.getBoundingClientRect().height).toBeGreaterThan(oneLine * 1.5);
     const star = link.querySelector('[aria-hidden="true"]') as HTMLElement;
     await expect(star.textContent).toBe("*");
     const cellBox = cell.getBoundingClientRect();
@@ -128,20 +128,21 @@ export const WideToolbarHasNoIconButtons: Story = {
   },
 };
 
-export const ExamplePagesEndWithAnAsterisk: Story = {
-  name: "An example page template ends with an asterisk, in the Templates table only, and a note under it says what it means",
+export const ShellsEndWithAnAsterisk: Story = {
+  name: "A template-level component (a shell) ends with an asterisk, in the Templates table only, and a note under it says what it means",
   render,
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     const templates = await canvas.findByRole("table", { name: "Templates" });
-    const page = await within(templates).findByRole("link", { name: /^Data Table List Page/ });
-    // The asterisk is after the name, hidden from assistive technology, which is told "(example page)".
-    await expect(page.textContent).toMatch(/^Data Table List Page\*\s*\(example page\)$/);
-    await expect(page.querySelector('[aria-hidden="true"]')?.textContent).toBe("*");
-    // The tag decides, not the group: a page under a shell group is marked too. A shell that ships is not, and the Components table has no asterisks.
-    await expect(within(templates).getByRole("link", { name: /^Landing page/ }).textContent).toMatch(/^Landing page\*/);
-    await expect(within(templates).getByRole("link", { name: "AppShell" }).textContent).toBe("AppShell");
+    const shell = await within(templates).findByRole("link", { name: /^AppShell/ });
+    // The asterisk is after the name, hidden from assistive technology, which is told "(template-level component)".
+    await expect(shell.textContent).toMatch(/^AppShell\*\s*\(template-level component\)$/);
+    await expect(shell.querySelector('[aria-hidden="true"]')?.textContent).toBe("*");
+    // The example pages are not marked, and the Components table has no asterisks (the shell is listed there, without one).
+    await expect(within(templates).getByRole("link", { name: "Data Table List Page" }).textContent).toBe("Data Table List Page");
+    await expect(within(templates).getByRole("link", { name: "Landing page" }).textContent).toBe("Landing page");
     await expect(within(canvas.getByRole("table", { name: "Components" })).queryByText("*")).toBeNull();
-    await expect(canvas.getByText(/^\* An example page template, not a component/)).toBeVisible();
+    await expect(within(canvas.getByRole("table", { name: "Components" })).getByRole("link", { name: "AppShell" })).toBeVisible();
+    await expect(canvas.getByText(/^\* A template-level component: it ships in the package/)).toBeVisible();
   },
 };

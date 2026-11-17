@@ -3,7 +3,8 @@ import { AppShell } from "./AppShell";
 
 // Docs-only (guidelines/adr/0013) — `AppShell.Footer`'s own props get their own Properties table on AppShell.mdx.
 const meta: Meta<typeof AppShell.Footer> = {
-  title: "Templates/Shells/AppShell/Footer",
+  title: "Components/AppShell/Footer",
+  id: "templates-shells-appshell-footer",
   component: AppShell.Footer,
   tags: ["!dev"],
   argTypes: {

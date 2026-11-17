@@ -14,7 +14,8 @@ function visibleText(root: ReturnType<typeof within>, matcher: string | RegExp |
 // Hidden real-browser checks (guidelines/adr/0013): what jsdom can't do (layout at a width, direction, forced colours, print, a real
 // pointer, where focus lands). They run in the `storybook` (Chromium) project; the test window is 1200px wide unless a story pins another.
 const meta: Meta = {
-  title: "Templates/Data pages/Data Table List Page/Checks",
+  title: "Templates/Data Table List Page/Checks",
+  id: "templates-data-pages-data-table-list-page-checks",
   tags: ["!dev"],
   parameters: { layout: "fullscreen", fullBleed: true },
 };

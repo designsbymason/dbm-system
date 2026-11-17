@@ -8,7 +8,7 @@ import { describe, expect, it } from "vitest";
 // and honest. (They run from the package's own folder.)
 const root = join(process.cwd(), "src");
 
-type Tier = "atom" | "molecule" | "organism";
+type Tier = "atom" | "molecule" | "organism" | "template";
 interface Entry {
   tier: Tier;
   category: string;
@@ -16,17 +16,23 @@ interface Entry {
 
 const catalog = JSON.parse(readFileSync(join(root, "componentCatalog.json"), "utf8")) as Record<string, Entry>;
 
-/** The nine categories of `04-component-inventory.md`, which `07-storybook-and-documentation-standards.md` §3 lists in this order. */
-const CATEGORIES = ["Layout", "Typography", "Inputs", "Data Display", "Navigation", "Feedback", "Overlay", "Media", "Utility"];
+/** The nine categories of `04-component-inventory.md`, which `07-storybook-and-documentation-standards.md` §3 lists in this order, and Shells, the one a template-level component has. */
+const CATEGORIES = ["Layout", "Typography", "Inputs", "Data Display", "Navigation", "Feedback", "Overlay", "Media", "Utility", "Shells"];
 
-const TIER_FOLDERS: Record<string, Tier> = { atoms: "atom", molecules: "molecule", organisms: "organism" };
+const TIER_FOLDERS: Record<string, Tier> = { atoms: "atom", molecules: "molecule", organisms: "organism", templates: "template" };
+
+// A folder in `src/templates` is a template-level component when the package exports it (an application shell), and otherwise a story-only
+// example page, which is not a component and has no entry.
+const barrel = readFileSync(join(root, "index.ts"), "utf8");
 
 /** Every component folder (`src/atoms/Button`, …): a folder in a tier folder that holds the component's own stories. */
 const folders = new Map<string, Tier>();
 for (const [folder, tier] of Object.entries(TIER_FOLDERS)) {
   for (const name of readdirSync(join(root, folder))) {
     const dir = join(root, folder, name);
-    if (statSync(dir).isDirectory() && existsSync(join(dir, `${name}.stories.tsx`))) folders.set(name, tier);
+    if (!statSync(dir).isDirectory() || !existsSync(join(dir, `${name}.stories.tsx`))) continue;
+    if (folder === "templates" && !barrel.includes(`./templates/${name}"`)) continue;
+    folders.set(name, tier);
   }
 }
 
@@ -50,9 +56,11 @@ describe("component catalog", () => {
     expect(wrong.map(([name, entry]) => `${name}: ${entry.tier} but in ${folders.get(name)}'s folder`)).toEqual([]);
   });
 
-  it("uses only the nine categories", () => {
+  it("uses only the nine categories and Shells, and Shells only for a template-level component", () => {
     const wrong = Object.entries(catalog).filter(([, entry]) => !CATEGORIES.includes(entry.category));
     expect(wrong.map(([name, entry]) => `${name}: "${entry.category}"`)).toEqual([]);
+    const shells = Object.entries(catalog).filter(([, entry]) => (entry.category === "Shells") !== (entry.tier === "template"));
+    expect(shells.map(([name]) => name), "Shells is the category of the template tier, and only of it").toEqual([]);
   });
 
   it("keeps its entries in alphabetical order, so a change reads as one line", () => {

@@ -21,9 +21,12 @@ describe("template example pages", () => {
     const stories = readdirSync(join(templates, folder)).filter((file) => file.endsWith(".stories.tsx") && !file.includes(".checks."));
     const main = stories
       .map((file) => readFileSync(join(templates, folder, file), "utf8"))
-      .find((source) => /^\s*title:\s*"Templates\/[^/"]+\/[^/"]+"/m.test(source));
-    expect(main, `${folder} has a main story titled Templates/{Group}/{Name}`).toBeDefined();
+      .find((source) => /^\s*title:\s*"(?:Components|Templates)\/[^/"]+"/m.test(source));
+    expect(main, `${folder} has a main story titled Components/{Name} or Templates/{Name}`).toBeDefined();
     const exported = index.includes(`./templates/${folder}"`);
+    // A template the package exports is a template-level component, so its page is in Components; an example page's is in Templates.
+    const title = /^\s*title:\s*"((?:Components|Templates)\/[^/"]+)"/m.exec(main as string)?.[1];
+    expect(title?.startsWith(exported ? "Components/" : "Templates/"), `${folder}: titled "${title}", but ${exported ? "it ships, so it is under Components" : "it is an example page, so it is under Templates"}`).toBe(true);
     const tagged = /tags:\s*\[[^\]]*"example-page"/.test(main as string);
     expect(tagged, exported ? `${folder} ships from the package, so it is not an example page` : `${folder} is not exported, so its main story needs tags: ["example-page"]`).toBe(!exported);
   });

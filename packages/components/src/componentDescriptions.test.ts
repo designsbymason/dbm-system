@@ -4,7 +4,7 @@ import { describe, expect, it } from "vitest";
 import { componentDescriptions } from "./componentDescriptions";
 
 // The Index page's component table has a Description column read from `src/componentDescriptions.ts`. A component is
-// whatever is in `src/componentCatalog.json`, and a template is a main story titled `Templates/{Category}/{Name}`; each needs a line
+// whatever is in `src/componentCatalog.json` (the application shells included), and an example page is a main story titled `Templates/{Name}`; each needs a line
 // there, and a line for a component that no longer exists is removed. (The tests run from the package's own folder.)
 const root = join(process.cwd(), "src");
 
@@ -18,7 +18,7 @@ function storiesFiles(dir: string): string[] {
 
 const components = new Set<string>(Object.keys(JSON.parse(readFileSync(join(root, "componentCatalog.json"), "utf8")) as Record<string, unknown>));
 for (const file of storiesFiles(join(root, "templates"))) {
-  const match = /^\s*title:\s*"Templates\/[^/"]+\/([^/"]+)"/m.exec(readFileSync(file, "utf8"));
+  const match = /^\s*title:\s*"Templates\/([^/"]+)"/m.exec(readFileSync(file, "utf8"));
   if (match?.[1]) components.add(match[1]);
 }
 

@@ -8,7 +8,8 @@ import { DemoLayersShell, DemoNavigationShell, DemoPlainHeaderShell, DemoShell, 
 // Hidden real-browser checks (guidelines/adr/0013): what jsdom can't do (layout, a breakpoint, scrolling, forced colours). They run in the
 // `storybook` (Chromium) project; the test window is 1200px wide unless a story pins another.
 const meta: Meta = {
-  title: "Templates/Shells/AppShell/Checks",
+  title: "Components/AppShell/Checks",
+  id: "templates-shells-appshell-checks",
   tags: ["!dev"],
   parameters: { layout: "fullscreen", fullBleed: true },
 };

@@ -3,7 +3,8 @@ import { PageShell } from "./PageShell";
 
 // Docs-only (guidelines/adr/0013) — `PageShell.SkipLink`'s own props get their own Properties table on PageShell.mdx.
 const meta: Meta<typeof PageShell.SkipLink> = {
-  title: "Templates/Shells/PageShell/SkipLink",
+  title: "Components/PageShell/SkipLink",
+  id: "templates-shells-pageshell-skiplink",
   component: PageShell.SkipLink,
   tags: ["!dev"],
   argTypes: {

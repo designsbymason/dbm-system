@@ -3,7 +3,8 @@ import { AppShell } from "./AppShell";
 
 // Docs-only (guidelines/adr/0013) — `AppShell.Banner`'s own props get their own Properties table on AppShell.mdx.
 const meta: Meta<typeof AppShell.Banner> = {
-  title: "Templates/Shells/AppShell/Banner",
+  title: "Components/AppShell/Banner",
+  id: "templates-shells-appshell-banner",
   component: AppShell.Banner,
   tags: ["!dev"],
   argTypes: {

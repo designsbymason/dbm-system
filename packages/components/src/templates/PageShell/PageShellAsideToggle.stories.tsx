@@ -3,7 +3,8 @@ import { PageShell } from "./PageShell";
 
 // Docs-only (guidelines/adr/0013) — `PageShell.AsideToggle`'s own props get their own Properties table on PageShell.mdx.
 const meta: Meta<typeof PageShell.AsideToggle> = {
-  title: "Templates/Shells/PageShell/AsideToggle",
+  title: "Components/PageShell/AsideToggle",
+  id: "templates-shells-pageshell-asidetoggle",
   component: PageShell.AsideToggle,
   tags: ["!dev"],
   argTypes: {

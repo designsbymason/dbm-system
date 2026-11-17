@@ -80,10 +80,11 @@ describe("generateManifest on the components package", () => {
     expect(item?.props.length).toBeGreaterThan(0);
   });
 
-  it("reads the tier and category from the catalog, and a template's from its story title", () => {
+  it("reads the tier and category from the catalog, an application shell's included", () => {
     const tiers = new Set(result.manifest.components.map((component) => component.tier));
     expect([...tiers].sort()).toEqual(["atom", "molecule", "organism", "template"]);
     expect(result.manifest.components.find((component) => component.name === "ConfirmDialog")?.tier).toBe("organism");
+    expect(result.manifest.components.filter((component) => component.tier === "template").map((component) => [component.name, component.category])).toEqual([["AppShell", "Shells"], ["PageShell", "Shells"]]);
   });
 
   it("reads a compound component's summary and example from the root it is built from, and a shared part's from the part it points at", () => {
