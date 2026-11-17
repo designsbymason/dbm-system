@@ -4,7 +4,7 @@ How a release of the four public packages (`@dbm-system/components`, `tokens`, `
 
 ## Make a release
 
-1. **Add a changeset** with every change that should reach a consumer: `pnpm changeset`, pick the packages and the bump (`minor` for a breaking change before 1.0, `patch` otherwise), and write the changelog entry for a reader. Commit it with the change.
+1. **Add a changeset** with every change that should reach a consumer: `pnpm changeset`, pick the packages and the bump (`minor` for a breaking change before 1.0, `patch` otherwise), and write the changelog entry for a reader. Commit it with the change. The changelog is formatted by `.changeset/changelog.mjs`, which is Changesets' own except that it writes no "Updated dependencies" lines (the four packages move together, so they would only repeat); what a release changed is what the changesets say.
 2. **Merge to `main`.** The Release workflow (`.github/workflows/release.yml`) runs the build, `check-publish`, `check-manifest` and the unit tests, then opens or updates a pull request titled "chore: version packages" that holds the version bumps and changelogs.
 3. **Review that pull request**: the versions and the changelog text are what consumers will read. Merging it is the release checkpoint.
 4. **Squash-merge it** (the repository allows squash merges only). The workflow runs again, publishes the four packages with provenance, and pushes a git tag for each (`@dbm-system/<name>@<version>`).
