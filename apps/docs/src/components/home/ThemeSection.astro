@@ -177,6 +177,31 @@ const label = (theme: string) => {
     font-weight: var(--dbm-font-weight-semibold);
   }
 
+  /* Below the two-column layout the controls, the composition they change and then the readout follow one another, so a choice is seen where it
+     is made. The text block steps aside (`display: contents`) so its parts can be ordered around the copies. */
+  @media (max-width: 1023.98px) {
+    .themes__grid {
+      row-gap: var(--dbm-space-6);
+    }
+
+    .themes__text {
+      display: contents;
+    }
+
+    .themes__text > * {
+      grid-column: 1 / -1;
+    }
+
+    .themes__copies {
+      order: 1;
+      margin-block: var(--dbm-space-4);
+    }
+
+    .themes__readout {
+      order: 2;
+    }
+  }
+
   @media (min-width: 1024px) {
     .themes__text {
       grid-column: 1 / span 5;
@@ -256,9 +281,28 @@ const label = (theme: string) => {
         12%, 100% { opacity: 1; }
       }
 
+      /* The first and last rows follow their copies, which hold at the start and the end: the first is marked from the start, the last to the end. */
+      .themes__row[style*="--i: 0"] {
+        animation-name: row-first;
+      }
+
+      .themes__row[style*="--i: 3"] {
+        animation-name: row-last;
+      }
+
       @keyframes row-step {
         0%, 100% { color: var(--site-pencil); }
         12%, 88% { color: var(--site-ink); }
+      }
+
+      @keyframes row-first {
+        0%, 88% { color: var(--site-ink); }
+        100% { color: var(--site-pencil); }
+      }
+
+      @keyframes row-last {
+        0% { color: var(--site-pencil); }
+        12%, 100% { color: var(--site-ink); }
       }
     }
   }

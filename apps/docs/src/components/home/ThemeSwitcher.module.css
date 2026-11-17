@@ -10,7 +10,9 @@
   gap: var(--dbm-space-3);
 }
 
+/* One width for both labels, so the two button groups start at the same place when they stack. */
 .label {
   color: var(--dbm-text-secondary);
   font-size: var(--dbm-font-size-sm);
+  min-inline-size: var(--dbm-space-12);
 }

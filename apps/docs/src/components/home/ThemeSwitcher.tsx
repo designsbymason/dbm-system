@@ -1,5 +1,5 @@
 import { ToggleGroup } from "@dbm-system/components";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import styles from "./ThemeSwitcher.module.css";
 
 const cap = (word: string) => word[0].toUpperCase() + word.slice(1);
@@ -12,6 +12,7 @@ const cap = (word: string) => word[0].toUpperCase() + word.slice(1);
 export function ThemeSwitcher({ themes, brands, modes }: { themes: string[]; brands: string[]; modes: string[] }) {
   const [brand, setBrand] = useState(brands[0]);
   const [mode, setMode] = useState(modes[0]);
+  const controls = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const picked = `${brand}-${mode}`;
@@ -22,13 +23,27 @@ export function ThemeSwitcher({ themes, brands, modes }: { themes: string[]; bra
       if (el.dataset.themeKey === picked) el.setAttribute("data-on", "");
       else el.removeAttribute("data-on");
     }
+    // The readout's picked row is also named for assistive technology, but only while these controls are what picks it: on a wide screen with
+    // motion the controls are hidden and the page's scroll picks the row, which a script here cannot follow.
+    const rows = section.querySelectorAll<HTMLElement>("tr[data-theme-key]");
+    const markRows = () => {
+      const running = controls.current !== null && controls.current.offsetParent !== null;
+      for (const row of rows) {
+        if (running && row.dataset.themeKey === picked) row.setAttribute("aria-current", "true");
+        else row.removeAttribute("aria-current");
+      }
+    };
+    markRows();
+    window.addEventListener("resize", markRows);
     return () => {
+      window.removeEventListener("resize", markRows);
+      for (const row of rows) row.removeAttribute("aria-current");
       delete section.dataset.picked;
     };
   }, [brand, mode, themes]);
 
   return (
-    <div className={styles.controls} data-themes-controls>
+    <div className={styles.controls} data-themes-controls ref={controls}>
       <div className={styles.group}>
         <span id="themes-brand-label" className={styles.label}>
           Brand
