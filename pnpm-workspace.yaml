@@ -13,6 +13,15 @@ auditConfig:
     # guidelines/02-tech-stack-and-structure.md. Remove this entry the same day a patched release
     # ships and gets pinned via a capped override below.
     - GHSA-gcqx-w48m-w2h4
+    # picomatch's ReDoS through single-branch repeated extglobs (GHSA-fc5q-39xc-vjpf, high), vulnerable
+    # `<=4.0.7`, with no patched version: GitHub's advisory data has no `firstPatchedVersion`, and 4.0.7
+    # is the latest release on the registry as of 2026-11-17, so an override cannot pin to a fix that does
+    # not exist yet (the audit's own "patched in >=4.0.8" line is wrong). Not in the production tree of any
+    # public package; reached only through build and test tooling (Astro, `tinyglobby`, `fdir`, Vitest's
+    # matchers) matching this repo's own patterns. Assessment and exit condition: §3.1 of
+    # guidelines/02-tech-stack-and-structure.md. Remove this entry the same day a patched release ships
+    # and gets pinned via a capped override below.
+    - GHSA-fc5q-39xc-vjpf
 # pnpm's default minimum release age holds back a version that is only days old. `qs@6.16.2` is the
 # patched release for GHSA-6pq8-jhm2-2vcw (see the `qs` override below), so it is let through now,
 # 2026-10-28. Remove this entry once the release is older than the minimum age.
