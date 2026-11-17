@@ -19,7 +19,6 @@ and passes on a rerun), *Maintenance* (due on a date or after an event).
 
 | Item | Kind | Affects | Detail | Waits on |
 |---|---|---|---|---|
-| A pinned `Table` header, and pinned columns, paint over a consumer's sticky bar: `Table`'s layers join the page's own stacking context | Defect | `Table`, `DataTable` | [Table.md](./component-reviews/Table.md) (open defect, with the proposed one-line fix) | The maintainer's go-ahead to fix |
 | The same shape in `Tabs` and `Toolbar` (scroll buttons at the sticky step) and in the `AppShell` and `PageShell` layers | Check | `Tabs`, `Toolbar`, `AppShell`, `PageShell` | [Table.md](./component-reviews/Table.md) (the audit table) | A real-browser test of each under a sticky `Navbar` |
 | `Checkbox`'s box outline is 2.3:1 on the surface in the two light themes, under the 3:1 a control's edge needs; `Tree` already uses `border.neutral-strong` | Standard | `Checkbox` | [03-token-system-spec.md](./03-token-system-spec.md) (Open questions) | The maintainer's decision |
 | `Indicators` is below the 24 × 24 px target size at every size step, with no extended hit area (WCAG 2.5.8) | Standard | `Indicators`, so `Carousel` | [Carousel.md](./component-reviews/Carousel.md) (open findings) | The maintainer's decision |

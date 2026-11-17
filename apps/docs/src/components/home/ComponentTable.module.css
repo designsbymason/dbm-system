@@ -1,9 +1,6 @@
 /* The home page's component table. Semantic tokens only; the toolbar rules follow the ones Storybook's Index page uses. */
 .table {
   container-type: inline-size;
-  /* The table's pinned header cells sit one layer above the table's own pinned cells, which is above the site header's layer; a stacking
-     context of its own keeps those layers inside the table, so the sticky site header always paints over it. */
-  isolation: isolate;
 }
 
 /* A fixed layout takes each column's width from its header, so an empty-state row cannot nudge a column. The table is never narrower

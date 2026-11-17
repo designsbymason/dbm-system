@@ -11,6 +11,10 @@
 .container {
   overflow: auto;
   position: relative;
+  /* A pinned header and pinned columns take layers one and two above `z-index.sticky`. Without a stacking context of their own those layers
+     join the page's, and a consumer's sticky bar (a `Navbar`, at `z-index.sticky`) that the table scrolls under is painted over by the
+     table's header. Isolating the container keeps the layers inside it; their order among themselves is unchanged. */
+  isolation: isolate;
 }
 
 .containerBordered {

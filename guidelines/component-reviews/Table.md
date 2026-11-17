@@ -482,21 +482,21 @@ caveat is recorded on the prop: a cell that spans columns isn't pinned and moves
 
 Found while building the data-table list page. The visually hidden name of `DataTable`'s row-actions column is an absolutely positioned span at the table's far edge, and with no positioned ancestor its containing block was outside the scroll frame, so the frame did not clip it and a table wider than the window made the page scroll sideways by one pixel past the table's end (a 773px document in a 375px window, and a phone that expands its layout to fit). `.container` now has `position: relative`. A defect fix (question 2 of the three-question test, `06-engineering-standards.md` §9): the component stays Finalized. A real-browser check in `DataTable.checks.stories.tsx` fails without it.
 
-## Open defect: the pinned header paints over a consumer's sticky bar (found 2026-11-17, not yet fixed)
-
-Listed in [open-items.md](../open-items.md), which is where it is removed once fixed.
+## Defect fix: the pinned header no longer paints over a consumer's sticky bar (found and fixed 2026-11-17, at explicit direction)
 
 Found on the docs site's home page: the "All components" `DataTable` (with `stickyHeader`) showed its header row in front of the site's sticky
 `Navbar` while scrolling. `Table`'s pinned header cells sit at `--dbm-z-index-sticky` + 1 (one above the pinned first column's
 cells, which is deliberate) and `Navbar` sits at `--dbm-z-index-sticky`. `.container` is `position: relative` and `overflow: auto` but creates no
 stacking context, so those layers join the page's own and win over any sticky bar that overlaps the table. Any app with a sticky bar above a
-`Table` or `DataTable` that has `stickyHeader` or a pinned column meets it. Reproduced on the site, where it is worked around in the site's own
-CSS (`isolation: isolate` on the table's wrapper); not yet reproduced in a Storybook story.
+`Table` or `DataTable` that has `stickyHeader` or a pinned column meets it. Reproduced in a real browser with a wheel scroll: a sticky `Navbar` over a
+`Table` with `stickyHeader` and `stickyFirstColumn`, scrolled until they overlap, hit-tested at the overlap (the table's corner cell was on top).
 
-**Proposed fix, for the maintainer to approve:** `isolation: isolate` on `.container`, so the table's layers stay inside it. Then a story or
-real-browser check of a sticky `Navbar` over a sticky-header `Table`. This is a change to a published package (`@dbm-system/components`), so it
-needs a changeset and goes out with the next release. `Table` stays Finalized until the maintainer says otherwise; a fix is an authorized
-post-Finalization change.
+**Fix:** `isolation: isolate` on `.container`, so the table's layers stay inside it; their order among themselves is unchanged. The container already
+clipped (`overflow: auto`, `position: relative`), so nothing else about it changes. A real-browser check in `Table.checks.stories.tsx` scrolls a sticky
+`Navbar` over a pinned header and column and requires the bar to be what is hit at the overlap; it fails without the fix. The docs site's home page
+had worked around it with `isolation: isolate` on its own table wrapper, which is removed, and the site was checked again on a build with a wheel scroll.
+A defect fix (question 2 of the three-question test, `06-engineering-standards.md` §9): the component stays Finalized. It is a change to a published
+package, so it has a changeset and goes out with the next release.
 
 ### Audit: which other components have the same shape (found by reading the stylesheets; none reproduced in a browser)
 
@@ -506,7 +506,7 @@ the like) are meant to sit above the page, so they are not in this list.
 
 | Component | What leaks | Verdict |
 |---|---|---|
-| `Table` / `DataTable` | Pinned header, pinned columns at sticky + 1 and + 2 | **Confirmed** |
+| `Table` / `DataTable` | Pinned header, pinned columns at sticky + 1 and + 2 | **Confirmed and fixed** |
 | `Tabs` | Scroll buttons at sticky, the list wrapper at dropdown | Check: ties with a sticky bar and wins on source order |
 | `Toolbar` | Scroll buttons at sticky, the scroller at dropdown | Check: the same shape as `Tabs` |
 | `AppShell` and `PageShell` | Header, aside and banner at sticky + 1 to + 3 | Check: the shell is the page, so likely intended; a consumer's own sticky bar inside one loses |
