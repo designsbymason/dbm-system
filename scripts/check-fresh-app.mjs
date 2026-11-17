@@ -9,14 +9,17 @@
  *   4. builds the same entry with webpack in production mode and requires the component stylesheet's rules to be in the output. esbuild
  *      and Vite keep a CSS import even when the package says `sideEffects: false`; webpack drops it, which leaves an app unstyled with
  *      no error (Next.js builds on it), so only this build can show that the package's `sideEffects` still keeps the stylesheet;
+ *   4b. builds a Next.js App Router app (Turbopack and webpack) whose server page, with no "use client" of its own, imports components from the
+ *      package, and requires the prerendered HTML to hold them and the page to hydrate in Chromium without an error (ADR-0227);
  *   5. loads the page in Chromium and requires no errors, the component styles and the token CSS to have reached the bundle, and the
  *      button to be drawn from the theme's tokens, in light and again after `data-theme` changes to dark.
- * Needs the packages built, a Chromium for Playwright and the network (`pnpm install` of React, webpack and the packages' dependencies). Nothing is
+ * Needs the packages built, a Chromium for Playwright and the network (`pnpm install` of React, webpack, Next.js and the packages' dependencies; the two build tools are in the temporary app only). Nothing is
  * written into the repository. Exits non-zero on a failure.
  *
  * Run from the repository root: `pnpm check-fresh-app`.
  */
-import { execFileSync } from "node:child_process";
+import { execFileSync, spawn } from "node:child_process";
+import { createServer } from "node:net";
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import { tmpdir } from "node:os";
@@ -63,7 +66,7 @@ try {
         "@dbm-system/icons": file("icons"),
       },
       // Only the temporary app has these; none of them is a dependency of this repository.
-      devDependencies: { webpack: "5.101.0", "css-loader": "7.1.2", "style-loader": "4.0.0" },
+      devDependencies: { webpack: "5.101.0", "css-loader": "7.1.2", "style-loader": "4.0.0", next: "16.4.6" },
     }),
   );
   // The packed packages depend on each other at the release version, which is not on the registry yet, so each is pointed at its tarball
@@ -164,6 +167,95 @@ createRoot(document.getElementById("root")).render(createElement(Button, null, "
     if (!/\.Button_root ?\{/.test(bundle)) fail("webpack dropped the component stylesheet: `@dbm-system/components/styles.css` is not kept by the package's sideEffects");
     if (!bundle.includes("--dbm-bg-brand:")) fail("webpack dropped the token CSS");
     if (failures.length === before) console.log(`  webpack production build keeps the stylesheet (${Math.round(bundle.length / 1024)} KB)`);
+  }
+
+  // 4b. A Next.js App Router app (ADR-0227): a server page, with no "use client" in its own files, imports components straight from the
+  // package. It builds only because the package's entry starts with "use client"; without that, a server file that imports it fails at
+  // build time (a hook or `createContext` is not a function). Built with Turbopack and with webpack, the HTML it prerenders must hold
+  // the components, and the page is then loaded in Chromium to see it hydrate without an error.
+  const nextApp = join(app, "next-app");
+  mkdirSync(join(nextApp, "app"), { recursive: true });
+  writeFileSync(join(nextApp, "package.json"), JSON.stringify({ name: "next-app", private: true, type: "module" }));
+  writeFileSync(
+    join(nextApp, "app", "layout.jsx"),
+    `import "@dbm-system/components/styles.css";
+import "@dbm-system/tokens/css/purple-light.bundled.css";
+
+export default function Layout({ children }) {
+  return (
+    <html lang="en" data-theme="purple-light">
+      <body>{children}</body>
+    </html>
+  );
+}
+`,
+  );
+  writeFileSync(
+    join(nextApp, "app", "page.jsx"),
+    `import { Button, Stack, Text } from "@dbm-system/components";
+
+export default function Page() {
+  return (
+    <Stack>
+      <Text>Server page</Text>
+      <Button>Save</Button>
+    </Stack>
+  );
+}
+`,
+  );
+  const nextBin = join(app, "node_modules", "next", "dist", "bin", "next");
+  const nextEnv = { ...process.env, NEXT_TELEMETRY_DISABLED: "1", NODE_ENV: "production" };
+  let nextOk = true;
+  for (const [label, flags] of [["Turbopack", []], ["webpack", ["--webpack"]]]) {
+    rmSync(join(nextApp, ".next"), { recursive: true, force: true });
+    try {
+      execFileSync("node", [nextBin, "build", ...flags], { cwd: nextApp, env: nextEnv, stdio: "pipe", encoding: "utf8" });
+    } catch (error) {
+      nextOk = false;
+      fail(`the Next.js (${label}) build of a server page that imports the package failed:\n${String(error.stdout ?? "")}${String(error.stderr ?? error.message)}`.slice(0, 2000));
+      continue;
+    }
+    const html = readFileSync(join(nextApp, ".next", "server", "app", "index.html"), "utf8");
+    if (!/<button[^>]*class="[^"]*Button_root/.test(html) || !html.includes("Server page")) {
+      nextOk = false;
+      fail(`the Next.js (${label}) page was prerendered without the Button and the Text`);
+    } else console.log(`  Next.js App Router (${label}): a server page imports the package and prerenders it`);
+  }
+  if (nextOk) {
+    // The last build is webpack's; run it and hydrate the page.
+    const port = await new Promise((resolve) => {
+      const probe = createServer().listen(0, () => {
+        const { port: free } = probe.address();
+        probe.close(() => resolve(free));
+      });
+    });
+    const server = spawn("node", [nextBin, "start", "-p", String(port)], { cwd: nextApp, env: nextEnv, stdio: "pipe" });
+    const output = [];
+    server.stdout.on("data", (chunk) => output.push(String(chunk)));
+    server.stderr.on("data", (chunk) => output.push(String(chunk)));
+    const browser = await chromium.launch();
+    try {
+      for (let attempt = 0; attempt < 60; attempt += 1) {
+        if (await fetch(`http://127.0.0.1:${port}/`).then((response) => response.ok, () => false)) break;
+        await new Promise((resolve) => setTimeout(resolve, 500));
+      }
+      const page = await browser.newPage();
+      const errors = [];
+      page.on("pageerror", (error) => errors.push(error.message));
+      page.on("console", (message) => message.type() === "error" && errors.push(message.text()));
+      await page.goto(`http://127.0.0.1:${port}/`);
+      await page.waitForSelector("button");
+      // Hydration runs once the scripts have loaded; a mismatch or a client-reference error is reported through the console or as a page error.
+      await page.waitForLoadState("networkidle");
+      if (errors.length > 0) fail(`the Next.js page reported errors in the browser: ${errors.join("; ")}`);
+      else console.log("  Next.js App Router: the server-rendered page hydrates without an error");
+    } catch (error) {
+      fail(`the Next.js page did not load: ${error instanceof Error ? error.message : String(error)}\n${output.join("").slice(-800)}`);
+    } finally {
+      await browser.close();
+      server.kill("SIGKILL");
+    }
   }
 
   // 5. Load it.
