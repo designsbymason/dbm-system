@@ -39,6 +39,7 @@ Recorded here so they are not re-asked; the detail is in the file named.
 | All components | The Index page, first in Storybook's Components group, and a filterable section on the home page, both from the same data | [02-structure.md](./02-structure.md) §2 |
 | Accessibility guide and statement | One page under Guides | [04-content-inventory.md](./04-content-inventory.md) §1 |
 | Illustrations and 3D | Geometric SVG and CSS 3D compositions of live components, in the brand's tonal range with the neutrals; no WebGL | [ADR-0217](../adr/0217-the-docs-sites-illustrations-are-geometric-svg-and-css-3d-compositions-drawn-in-code-from-the-tokens-over-commissioned-artwork-webgl-or-raster-images.md) |
+| Illustration colour | The semantic tokens only, with tone from opacity or `color-mix`; no decorative tokens | [ADR-0217](../adr/0217-the-docs-sites-illustrations-are-geometric-svg-and-css-3d-compositions-drawn-in-code-from-the-tokens-over-commissioned-artwork-webgl-or-raster-images.md) |
 | Showing two brands | The token theme files re-scoped to a wrapper element at build, so the theme card can wear each theme | [03-landing-page-brief.md](./03-landing-page-brief.md) §3 |
 | Fonts | Self-hosted Nunito and Lora for the site and Storybook | [ADR-0215](../adr/0215-the-docs-site-and-storybook-self-host-nunito-and-lora-over-loading-them-from-google-fonts.md) |
 | DBM changes found while building | A new or changed component or token is raised with the maintainer first; the site never hardcodes a value instead | [01-plan.md](./01-plan.md) §6 |
@@ -53,11 +54,7 @@ Recorded here so they are not re-asked; the detail is in the file named.
 
 ## 3. Questions not yet decided
 
-| Question | Waits on |
-|---|---|
-| `Sidebar` draws its section labels in capitals, which the design direction's avoid list names; changing it is a change to the design system | The maintainer's decision |
-| The components package doesn't mark its modules `"use client"`, so in the Next.js App Router they must be imported from a file that does (the Frameworks page says so); marking them would be a change to the design system | The maintainer's decision |
-| Whether the brand tonal range needs decorative tokens beyond the semantic ones for the illustrations | S3; raised with the maintainer if so |
+None about the website. Open items about the design system and the published packages are in [../open-items.md](../open-items.md).
 
 ## 4. Gaps this plan depends on
 

@@ -18,6 +18,7 @@ Internal reference documents for the DBM System, an agentic React component libr
 | `adr/` | Individual, immutable Architecture Decision Records: the *why* behind a real fork-in-the-road decision. The numbered docs point here (`See ADR-0012`) instead of narrating a decision's reasoning inline. `adr/README.md` has the template, naming convention and the bar for what qualifies |
 | `docs-site/` | The plan, structure and supporting references for the docs website at `dbm-system.com` and how Storybook sits beside it at `/storybook/`: the landing page brief, the content inventory, the open items, and what is gitignored and what belongs in the private notes folder instead. A living reference like the numbered docs; its decisions are ADRs 0170–0173 |
 | `component-reviews/` | One file per component with a completed `06-engineering-standards.md` §9 review pass: what was checked, found and fixed, and its Finalized status and date. A living document per component, not immutable like `adr/`. `component-reviews/README.md` has the conventions |
+| `open-items.md` | What is unresolved in the design system and the published packages: decisions waiting on the maintainer, defects and standards shortfalls found and not yet fixed, and work built but not reviewed. An index with a link to the detail; a closed item is deleted. The website has its own list in `docs-site/05-open-items.md` |
 
 ## Reading order for new context (human or agent)
 

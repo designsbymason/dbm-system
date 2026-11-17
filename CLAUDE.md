@@ -102,6 +102,7 @@ Full rationale for each choice: `guidelines/02-tech-stack-and-structure.md`.
 | The docs website (plan, structure, landing page, Storybook's role) | `guidelines/docs-site/` |
 | Making a release, or anything about npm publishing, trusted publishing or the release workflow | `RELEASING.md` (and ADR-0176, ADR-0211) |
 | Understanding *why* a past architecture/API decision was made | `guidelines/adr/` |
+| What is unresolved in the design system or the packages (decisions, defects, standards shortfalls, unreviewed builds), or logging a new one | `guidelines/open-items.md` |
 
 To start a session, run `/start [task]` (`.claude/commands/start.md`): with no task it gives a general picture of where the project stands (phase, what is in flight, what is next, flakes and open decisions); with a task it reads only the guidelines that task needs. Either way it verifies against the repo with `pnpm check-guidelines` and reports before any work.
 
