@@ -324,7 +324,7 @@ to the last one.
 
 `layout="centered"` arranges the footer as the page size at the start, the page controls in the middle and the range at the end. The two outer columns are equal, so the controls stay
 centred whatever the range says (`showSummary` and `showPageSize` leave their column empty rather than moving them). Below `collapseBelow` (`"md"`, 48rem, by default; `"sm"` to `"xl"`, or `"never"`)
-the controls take the first row and the page size and the range sit at the two ends under them. The switch is a container query on the footer's own width, so a table beside a sidebar stacks when it has no
+the page size and the range sit at the two ends of the first row and the controls take the row under them (the page size stays first, as it is for a keyboard). The switch is a container query on the footer's own width, so a table beside a sidebar stacks when it has no
 room, whatever the window says; in this layout the part draws a box around the footer that is the container, and it takes `className`, `style`, `id` and `data-testid`. The box needs a width of its own (it is a block in the table's column, so it fills it); a table placed as a shrink-to-fit flex item would give it none. `collapseBelow` is ignored with `layout="split"`, and says so once in development. A change of page size is announced by the
 table ("Showing 25 of 87 rows"), as with the default layout.
 

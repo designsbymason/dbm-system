@@ -901,15 +901,39 @@ const centred = (width: string, footer: { collapseBelow?: "sm" | "md" | "lg" | "
   </div>
 );
 
-/** The footer's three parts, and whether the controls have a row of their own above the page size and the range. */
+/** The footer's three parts, and whether the controls have a row of their own under the page size and the range. */
 function footerParts(canvasElement: HTMLElement) {
   const canvas = within(canvasElement);
   const box = canvas.getByTestId("footer").getBoundingClientRect();
   const pages = canvas.getByRole("navigation", { name: "Pagination" }).getBoundingClientRect();
   const select = canvas.getByRole("combobox", { name: "Rows per page" }).getBoundingClientRect();
   const range = visibleMatch(canvas, rangeMatcher).getBoundingClientRect();
-  return { box, pages, select, range, stacked: pages.bottom <= select.top + 1 };
+  return { box, pages, select, range, stacked: select.bottom <= pages.top + 1 };
 }
+
+/** Where each Tab stop of the footer is, in the order Tab reaches them, starting from the page size select. */
+async function tabStopsInTheFooter(canvasElement: HTMLElement) {
+  const canvas = within(canvasElement);
+  const footer = canvas.getByTestId("footer");
+  const select = canvas.getByRole("combobox", { name: "Rows per page" });
+  select.focus();
+  await expect(select).toHaveFocus();
+  const stops = [select.getBoundingClientRect()];
+  for (let step = 0; step < 24; step += 1) {
+    await userEvent.tab();
+    const active = document.activeElement as HTMLElement;
+    if (!footer.contains(active)) break;
+    stops.push(active.getBoundingClientRect());
+  }
+  return stops;
+}
+
+/** Whether each stop is on the same row as the one before and to its right, or on a row below it: never back up the page (WCAG 2.4.3). */
+const followsTheDrawnOrder = (stops: DOMRect[]) =>
+  stops.every((stop, index) => {
+    const before = stops[index - 1];
+    return !before || stop.top > before.top + 8 || (Math.abs(stop.top - before.top) <= 8 && stop.left >= before.left - 1);
+  });
 
 export const CentredFooterKeepsTheControlsInTheMiddle: Story = {
   name: "Centred footer — the page controls stay in the middle of the footer as the range changes, the page size at the start and the range at the end — layout test",
@@ -936,7 +960,7 @@ export const CentredFooterKeepsTheControlsInTheMiddle: Story = {
 };
 
 export const CentredFooterStacksWhenNarrow: Story = {
-  name: "Centred footer — below the step the controls take the first row and the page size and the range sit at the two ends under them — layout test",
+  name: "Centred footer — below the step the page size and the range sit at the two ends of the first row and the controls take the row under them — layout test",
   render: () => centred("24rem"),
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
@@ -944,13 +968,36 @@ export const CentredFooterStacksWhenNarrow: Story = {
     const pages = canvas.getByRole("navigation", { name: "Pagination" }).getBoundingClientRect();
     const select = canvas.getByRole("combobox", { name: "Rows per page" }).getBoundingClientRect();
     const range = visibleMatch(canvas, rangeMatcher).getBoundingClientRect();
-    await expect(pages.bottom).toBeLessThanOrEqual(select.top + 1);
+    await expect(select.bottom).toBeLessThanOrEqual(pages.top + 1);
     await expect(Math.abs(select.top - range.top)).toBeLessThan(20);
     await expect(select.left - box.left).toBeLessThan(4);
     await expect(box.right - range.right).toBeLessThan(4);
     await expect(select.right).toBeLessThan(range.left);
     await expect(pages.right).toBeLessThanOrEqual(box.right + 1);
     await expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(window.innerWidth);
+  },
+};
+
+// Tab follows the page's order (the page size, then the controls); the stacked layout draws the page size first too, so the keyboard never jumps back up the footer.
+export const CentredFooterTabOrderStacked: Story = {
+  name: "Centred footer — stacked, Tab goes from the page size to the controls, down the footer and never back up — keyboard test",
+  render: () => centred("44rem"),
+  play: async ({ canvasElement }) => {
+    await expect(footerParts(canvasElement).stacked).toBe(true);
+    const stops = await tabStopsInTheFooter(canvasElement);
+    await expect(stops.length).toBeGreaterThan(4);
+    await expect(followsTheDrawnOrder(stops)).toBe(true);
+  },
+};
+
+export const CentredFooterTabOrderInOneLine: Story = {
+  name: "Centred footer — in one line, Tab goes from the page size to the controls, left to right — keyboard test",
+  render: () => centred("60rem"),
+  play: async ({ canvasElement }) => {
+    await expect(footerParts(canvasElement).stacked).toBe(false);
+    const stops = await tabStopsInTheFooter(canvasElement);
+    await expect(stops.length).toBeGreaterThan(4);
+    await expect(followsTheDrawnOrder(stops)).toBe(true);
   },
 };
 

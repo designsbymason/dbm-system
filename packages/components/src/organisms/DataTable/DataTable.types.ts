@@ -460,7 +460,8 @@ export interface DataTablePaginationProps
   /**
    * How the footer is arranged. `"split"` puts the range and the page size at the start and the page controls at the end, wrapping when there is no
    * room. `"centered"` puts the page size at the start, the page controls in the middle (centred whatever the range says) and the range at the end;
-   * below `collapseBelow` the controls take the first row and the page size and the range sit at the two ends under them. `showSummary` and
+   * below `collapseBelow` the page size and the range sit at the two ends of the first row and the controls take the row under them (the page size stays
+   * first, as it is for a keyboard). `showSummary` and
    * `showPageSize` leave their column empty. The part draws a box around the footer, which holds `className`, `style`, `id` and `data-testid`.
    * @default 'split'
    */

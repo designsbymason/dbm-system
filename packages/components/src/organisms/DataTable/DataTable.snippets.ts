@@ -40,8 +40,8 @@ export const dataTableSnippets = {
 
   centredFooter: `${columnsNote}
 {/* layout="centered" puts the page size at the start, the page controls in the middle (centred whatever the range says) and the range at the end.
-    Below collapseBelow (the footer's own width: "md", 48rem, by default) the controls take the first row and the page size and the range sit at the two
-    ends under them. A change of page size is announced by the table ("Showing 25 of 87 rows"). */}
+    Below collapseBelow (the footer's own width: "md", 48rem, by default) the page size and the range sit at the two ends of the first
+    row and the controls take the row under them. A change of page size is announced by the table ("Showing 25 of 87 rows"). */}
 <DataTable aria-label="Team" columns={columns} data={rows} defaultPageSize={10} pageSizeOptions={[5, 10, 25]}>
   <DataTable.Pagination layout="centered" />
 </DataTable>`,

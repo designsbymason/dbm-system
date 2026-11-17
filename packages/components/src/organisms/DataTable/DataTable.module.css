@@ -242,32 +242,34 @@ tr[data-selected] > .selectCell {
   white-space: nowrap;
 }
 
-/* Below the step the controls take the first row, and the page size and the range sit at the two ends under them. A container query cannot read a
-   custom property, so the breakpoint tokens' widths are written out. */
+/* Below the step the page size and the range sit at the two ends of the first row, and the controls take the row under them. The page size comes first
+   because it is first in the page: a keyboard moves from it to the controls, so the controls must be the row below it, and the range is not focusable.
+   (Controls first would send Tab from the lower row up to the upper one.) A container query cannot read a custom property, so the breakpoint tokens'
+   widths are written out. */
 @container not (min-width: 40rem) {
   .collapseSm {
-    grid-template-areas: "pages pages" "size range";
+    grid-template-areas: "size range" "pages pages";
     grid-template-columns: auto minmax(0, 1fr);
   }
 }
 
 @container not (min-width: 48rem) {
   .collapseMd {
-    grid-template-areas: "pages pages" "size range";
+    grid-template-areas: "size range" "pages pages";
     grid-template-columns: auto minmax(0, 1fr);
   }
 }
 
 @container not (min-width: 64rem) {
   .collapseLg {
-    grid-template-areas: "pages pages" "size range";
+    grid-template-areas: "size range" "pages pages";
     grid-template-columns: auto minmax(0, 1fr);
   }
 }
 
 @container not (min-width: 80rem) {
   .collapseXl {
-    grid-template-areas: "pages pages" "size range";
+    grid-template-areas: "size range" "pages pages";
     grid-template-columns: auto minmax(0, 1fr);
   }
 }
