@@ -1,17 +1,12 @@
 ---
-// Section 2 (03-landing-page-brief.md §3): why an agent works from facts. The demo shows a real manifest entry beside the component it
-// describes; the rows under it are the files an agent reads, with sizes read at build. `llms.txt` is labelled "in active development"
-// until it exists (S4), never as available.
+// Section 2 (03-landing-page-brief.md §3): why an agent works from facts, and the files it reads. Informational: nothing here is typed in
+// that could go out of date (no sizes or counts); the files are named and described. `llms.txt` is labelled "in active development" until
+// it exists (S4), never as available.
 import { Badge } from "@dbm-system/components";
-import indexJson from "@dbm-system/components/manifest/index.json" with { type: "json" };
 import { aiAgents } from "../../data/site";
-import { AgentDemo } from "./AgentDemo";
-import { agentExcerpts } from "./agentExcerpts";
-
-const indexKb = Math.round(JSON.stringify(indexJson).length / 1024);
 
 const files = [
-  { name: "manifest/index.json", detail: `Every component with its tier, category and a sentence. Read this first; it is about ${indexKb} KB.` },
+  { name: "manifest/index.json", detail: "Every component with its tier, category and a sentence. Read this first." },
   { name: "manifest/components/<Name>.json", detail: "One component in full: its props, parts, the native props it takes and its examples." },
   { name: "AGENTS.md", detail: "The rules that hold across components, and every public name." },
   { name: "tokens.json", detail: "Every design token, its value in each theme, and which components use it." },
@@ -24,11 +19,7 @@ const files = [
     <h2 id="agents-heading" class="display agents__title">What your agent reads</h2>
     <p class="lede agents__lede">
       Before it writes a line, an agent can read the same typed manifest this page does: every prop, its type, its allowed values and its default.
-      Pick a component to see it.
     </p>
-    <div class="agents__demo">
-      <AgentDemo client:visible excerpts={agentExcerpts} />
-    </div>
     <dl class="agents__files">
       {
         files.map((file) => (
@@ -59,7 +50,6 @@ const files = [
 
   .agents__title,
   .agents__lede,
-  .agents__demo,
   .agents__files,
   .agents__more {
     grid-column: 1 / -1;
@@ -75,7 +65,7 @@ const files = [
   }
 
   .agents__files {
-    margin: var(--dbm-space-10) 0 0;
+    margin: 0;
     border-block-start: 1px solid var(--site-rule-strong);
   }
 
@@ -137,6 +127,11 @@ const files = [
     .agents__lede {
       grid-column: 5 / -1;
       margin-block-end: var(--dbm-space-10);
+    }
+
+    /* The heading is taller than the lede beside it, so the list starts a step below the heading. */
+    .agents__files {
+      margin-block-start: var(--dbm-space-8);
     }
   }
 </style>
