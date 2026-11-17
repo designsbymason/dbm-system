@@ -498,7 +498,7 @@ had worked around it with `isolation: isolate` on its own table wrapper, which i
 A defect fix (question 2 of the three-question test, `06-engineering-standards.md` §9): the component stays Finalized. It is a change to a published
 package, so it has a changeset and goes out with the next release.
 
-### Audit: which other components have the same shape (found by reading the stylesheets; none reproduced in a browser)
+### Audit: which other components have the same shape (found by reading the stylesheets; `Tabs` and `Toolbar` then reproduced in a real browser and fixed)
 
 The risk is a component that is part of the page flow and gives a part of itself a `z-index` at or above the dropdown step (1000), with no
 stacking context around it. A consumer's sticky bar (1100) or sticky element then ties with or loses to it. Overlays (Dialog, Drawer, Popover, Tooltip, Select and
@@ -507,14 +507,13 @@ the like) are meant to sit above the page, so they are not in this list.
 | Component | What leaks | Verdict |
 |---|---|---|
 | `Table` / `DataTable` | Pinned header, pinned columns at sticky + 1 and + 2 | **Confirmed and fixed** |
-| `Tabs` | Scroll buttons at sticky, the list wrapper at dropdown | Check: ties with a sticky bar and wins on source order |
-| `Toolbar` | Scroll buttons at sticky, the scroller at dropdown | Check: the same shape as `Tabs` |
-| `AppShell` and `PageShell` | Header, aside and banner at sticky + 1 to + 3 | Check: the shell is the page, so likely intended; a consumer's own sticky bar inside one loses |
-| `TableOfContents` | Itself sticky, a marker at sticky | Likely fine: it is the sticky layer; check against a sticky `Navbar` |
+| `Tabs` | Scroll buttons at sticky, the list wrapper at dropdown | **Confirmed and fixed** (2026-11-17): with a real wheel scroll the end scroll button was what a point inside a sticky `Navbar` hit, so it painted over the bar and took clicks through it; `.listWrapper` is now `isolation: isolate`. `Tabs.checks.stories.tsx` fails without it. |
+| `Toolbar` | Scroll buttons at sticky, the scroller at dropdown | **Confirmed and fixed** (2026-11-17), the same way: `.frame` is now `isolation: isolate`. `Toolbar.checks.stories.tsx` fails without it. |
+| `AppShell` and `PageShell` | Header, aside and banner at sticky + 1 to + 3 | By design, not tested in a browser: the shell is the page, its header, aside and banner sit above its own content on purpose, and a sticky bar inside it passing under them is the intended order. The only way to meet the defect is a shell embedded under another page-level sticky bar, which is not a supported composition. |
+| `TableOfContents` | Itself sticky, a marker at sticky | Fine, not tested in a browser: it is a sticky layer like `Affix`, so it behaves as any sticky element does and a consumer sets its `top` below a bar |
 | `Affix`, sticky `Navbar` | Sticky by design | Fine: they are the layer others sit under |
 | `Sidebar` | Already `isolation: isolate` | Fine |
 | `Carousel`, `Timeline`, `Splitter`, `CodeBlock`, `Navbar` (inner), shared menu | `z-index` of 1 or base + 1 | Low: below every layer a consumer is likely to use, so they cannot beat a sticky bar; isolation would still be tidier |
 
-**Not done:** the "Check" rows need a real-browser test (a sticky `Navbar` above each, scrolled so they overlap) before any code changes. If more than
-one is confirmed, the rule belongs in `06-engineering-standards.md` §9 ("a part with a `z-index` at or above `dropdown` sits in a stacking
+Three components were confirmed, so the rule is in `06-engineering-standards.md` §9 ("a part with a `z-index` at or above `dropdown` sits in a stacking
 context of its own") and not here.

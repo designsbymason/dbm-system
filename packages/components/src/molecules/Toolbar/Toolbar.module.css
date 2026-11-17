@@ -169,6 +169,9 @@
   --toolbar-fade: var(--dbm-bg-surface);
   box-sizing: border-box;
   display: inline-flex;
+  /* The scroll buttons sit at `z-index.sticky`, the layer of a `Navbar`; without a stacking context of their own they join the page's and,
+     coming later in it, paint over (and take clicks through) a sticky bar the page scrolls the toolbar beneath. */
+  isolation: isolate;
   max-inline-size: 100%;
   min-block-size: 0;
   min-inline-size: 0;

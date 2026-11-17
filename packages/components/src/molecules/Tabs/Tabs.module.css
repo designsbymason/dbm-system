@@ -125,6 +125,9 @@
    one that does, the same reason a flex item needs it anywhere else in this
    system. */
 .listWrapper {
+  /* The scroll buttons sit at `z-index.sticky`, the layer of a `Navbar`; without a stacking context of their own they join the page's and,
+     coming later in it, paint over (and take clicks through) a sticky bar the page scrolls the tabs beneath. */
+  isolation: isolate;
   min-block-size: 0;
   min-inline-size: 0;
   position: relative;
