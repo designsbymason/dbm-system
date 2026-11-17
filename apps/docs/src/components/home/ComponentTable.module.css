@@ -10,7 +10,10 @@
   table-layout: fixed;
 }
 
-.table :global([class*="_row_"]) {
+/* The toolbar's own parts are given these classes, doubled with `.table` so they win over the component's own rules (which would put the count at
+   the far end and cap the search box's width). The count and the two filters have fixed widths, so a longer choice cannot move anything
+   beside it; the search box takes what is left. */
+.table .row {
   align-items: center;
   column-gap: var(--dbm-space-6);
   display: flex;
@@ -18,15 +21,17 @@
   row-gap: var(--dbm-space-3);
 }
 
-.summary {
+.table .summary {
   flex: none;
+  margin-inline-start: 0;
   min-inline-size: 9.5rem;
   text-align: start;
   white-space: nowrap;
 }
 
-.table :global([class*="_search_"]) {
+.table .search {
   flex: 1 1 6rem;
+  max-inline-size: none;
   min-inline-size: 0;
 }
 
@@ -42,10 +47,12 @@
   white-space: nowrap;
 }
 
-.filter {
+/* The choice at the start of the button and the chevron at the end; the button's width is set on it, so it does not change with the choice. */
+.filtergroup .filter {
+  flex: none;
   gap: var(--dbm-space-2);
   justify-content: space-between;
-  min-inline-size: 8.5rem;
+  min-inline-size: 0;
   padding-inline: var(--dbm-space-3);
   text-align: start;
 }
@@ -54,6 +61,14 @@
   display: grid;
   gap: var(--dbm-space-2);
   min-inline-size: 11rem;
+}
+
+/* The table keeps one height whether every row or none match, and its scroll area always reserves room for the scrollbar, so nothing
+   below it moves and no column narrows when one appears. `--table-min` is set by the component: the compact box's height, the full
+   height held while a filter narrows it, or nothing for the full view. */
+.table :global([class*="Table_container"]) {
+  min-block-size: var(--table-min, 0px);
+  scrollbar-gutter: stable;
 }
 
 /* The brand text colour, not the link blue: the blue measures 4.49:1 on the striped rows in the light themes. */
@@ -85,7 +100,7 @@
     flex: 1 0 100%;
   }
 
-  .table :global([class*="_search_"]) {
+  .table .search {
     flex: 1 0 100%;
   }
 

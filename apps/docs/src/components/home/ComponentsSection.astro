@@ -2,18 +2,14 @@
 // Section 4 (03-landing-page-brief.md §3): every component and shipped shell, from the manifest. The same one-line descriptions as
 // Storybook's Index page, and each name opens its Docs page there.
 import { ComponentTable } from "./ComponentTable";
-import { componentCount, componentRows, shellCount } from "./componentRows";
-import { templatesIndex } from "../../data/site";
+import { componentRows } from "./componentRows";
 ---
 
 <section id="components" class="components site-frame" aria-labelledby="components-heading">
   <div class="grid-12">
     <div class="components__text">
       <h2 id="components-heading" class="display components__title">All components</h2>
-      <p class="lede">
-        {`${componentCount} components and ${shellCount} application shells, read from the same manifest an agent reads. Each name opens its Docs page in Storybook, and the example pages are in `}
-        <a href={templatesIndex.href}>Templates</a>.
-      </p>
+      <p class="lede">This list is read from the same manifest an agent reads. Each name opens its Docs page in Storybook.</p>
     </div>
     <div class="components__table">
       <ComponentTable client:visible rows={componentRows} />
@@ -41,14 +37,4 @@ import { templatesIndex } from "../../data/site";
     font-size: var(--dbm-font-size-3xl);
   }
 
-  .lede a {
-    color: var(--dbm-text-link);
-    text-underline-offset: 0.2em;
-  }
-
-  .lede a:focus-visible {
-    outline: 2px solid var(--dbm-border-focus);
-    outline-offset: 2px;
-    border-radius: var(--dbm-radius-xs);
-  }
 </style>

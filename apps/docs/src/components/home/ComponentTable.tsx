@@ -1,6 +1,7 @@
 import { Badge, Button, Checkbox, CheckboxGroup, DataTable, SearchInput, TableToolbar } from "@dbm-system/components";
 import type { DataTableColumn } from "@dbm-system/components";
-import { useId, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
+import type { CSSProperties } from "react";
 import type { ComponentRow, TierName } from "./componentRows";
 import styles from "./ComponentTable.module.css";
 
@@ -47,8 +48,24 @@ const columns: DataTableColumn<ComponentRow>[] = [
 /** What a filter's button says: "All" while nothing is chosen, the choice while it is one, else a count. */
 const filterValue = (chosen: string[]) => (chosen.length === 0 ? "All" : chosen.length === 1 ? (chosen[0] ?? "All") : `${chosen.length} selected`);
 
-/** One toolbar filter: its name as plain text before a button that shows the choice, over a panel of checkboxes headed by "All". */
-function ChoiceFilter({ name, options, chosen, onChange }: { name: string; options: string[]; chosen: string[]; onChange: (next: string[]) => void }) {
+/**
+ * One toolbar filter: its name as plain text before a button that shows only the choice, at the start with the chevron at the end, over a
+ * panel of checkboxes headed by "All".
+ */
+function ChoiceFilter({
+  name,
+  options,
+  chosen,
+  onChange,
+  width,
+}: {
+  name: string;
+  options: string[];
+  chosen: string[];
+  onChange: (next: string[]) => void;
+  /** The button's width, fixed, so a longer choice ("Organism") cannot change it or move anything beside it. */
+  width: string;
+}) {
   const id = useId();
   return (
     <div className={styles.filtergroup}>
@@ -60,6 +77,7 @@ function ChoiceFilter({ name, options, chosen, onChange }: { name: string; optio
         aria-labelledby={`${id}-label ${id}-button`}
         label={filterValue(chosen)}
         className={styles.filter}
+        style={{ inlineSize: width }}
         labels={{ panel: () => `${name} filter` }}
       >
         <div className={styles.panel}>
@@ -89,6 +107,9 @@ export function ComponentTable({ rows }: { rows: ComponentRow[] }) {
   const [tiers, setTiers] = useState<string[]>([]);
   const [categories, setCategories] = useState<string[]>([]);
   const [expanded, setExpanded] = useState(false);
+  /** The height the table has with every row showing, kept while a filter narrows it, so nothing below it moves. */
+  const [fullHeight, setFullHeight] = useState(0);
+  const box = useRef<HTMLDivElement>(null);
 
   const present = new Set(rows.map((row) => row.category));
   const categoryOptions = CATEGORY_ORDER.filter((category) => present.has(category));
@@ -102,10 +123,20 @@ export function ComponentTable({ rows }: { rows: ComponentRow[] }) {
       (needle === "" || row.name.toLowerCase().includes(needle)),
   );
   const filtering = needle !== "" || tiers.length > 0 || categories.length > 0;
-  const compact = !expanded && !filtering;
+  // The compact view is a box of one height whatever the rows (a filter that leaves two rows, or none, does not shrink it); the full view
+  // is as tall as every row, and while a filter narrows it keeps that height.
+  const bounded = !expanded;
+
+  useEffect(() => {
+    if (!expanded || filtering) return;
+    const container = box.current?.querySelector<HTMLElement>('[class*="Table_container"]');
+    if (container) setFullHeight(container.offsetHeight);
+  }, [expanded, filtering, rows.length]);
+
+  const held = bounded ? COMPACT_HEIGHT : filtering ? `${fullHeight}px` : "0px";
 
   return (
-    <div className={styles.table}>
+    <div className={styles.table} ref={box} style={{ "--table-min": held } as CSSProperties}>
       <DataTable
         aria-label="Components"
         columns={columns}
@@ -113,13 +144,13 @@ export function ComponentTable({ rows }: { rows: ComponentRow[] }) {
         getRowId={(row) => row.name}
         tone="brand"
         striped
-        stickyHeader={compact}
-        maxHeight={compact ? COMPACT_HEIGHT : undefined}
+        stickyHeader={bounded}
+        maxHeight={bounded ? COMPACT_HEIGHT : undefined}
         defaultSort={[{ columnId: "name", direction: "ascending" }]}
         emptyState="No component matches. Try a shorter search or clear a filter."
       >
         <DataTable.Toolbar aria-label="Component list tools">
-          <TableToolbar.Row>
+          <TableToolbar.Row className={styles.row}>
             <TableToolbar.Summary
               className={styles.summary}
               count={shown.length}
@@ -129,7 +160,7 @@ export function ComponentTable({ rows }: { rows: ComponentRow[] }) {
                 resultsOf: (count: number, total: number) => `${count} of ${total} components`,
               }}
             />
-            <TableToolbar.Search>
+            <TableToolbar.Search className={styles.search}>
               <SearchInput
                 aria-label="Search components"
                 placeholder="Search"
@@ -138,18 +169,17 @@ export function ComponentTable({ rows }: { rows: ComponentRow[] }) {
                 onClear={() => setQuery("")}
               />
             </TableToolbar.Search>
-            <ChoiceFilter name="Tier" options={tierOptions} chosen={tiers} onChange={setTiers} />
-            <ChoiceFilter name="Category" options={categoryOptions} chosen={categories} onChange={setCategories} />
+            <ChoiceFilter name="Tier" options={tierOptions} chosen={tiers} onChange={setTiers} width="8.25rem" />
+            <ChoiceFilter name="Category" options={categoryOptions} chosen={categories} onChange={setCategories} width="9.25rem" />
           </TableToolbar.Row>
         </DataTable.Toolbar>
       </DataTable>
-      {!filtering && (
-        <div className={styles.more}>
-          <Button variant="secondary" size="sm" aria-expanded={expanded} onClick={() => setExpanded((open) => !open)}>
-            {expanded ? "Show fewer" : `Show all ${rows.length}`}
-          </Button>
-        </div>
-      )}
+      {/* Kept in place (and out of the tab order) while a filter is on, so what is below the table does not move. */}
+      <div className={styles.more} style={{ visibility: filtering ? "hidden" : "visible" }}>
+        <Button variant="secondary" size="sm" aria-expanded={expanded} onClick={() => setExpanded((open) => !open)}>
+          {expanded ? "Show fewer" : `Show all ${rows.length}`}
+        </Button>
+      </div>
     </div>
   );
 }

@@ -84,9 +84,6 @@ export const quickStart: SiteLink = link(gettingStarted, "Quick start");
 export const installation: SiteLink = link(gettingStarted, "Installation");
 export const aiAgents: SiteLink = link(gettingStarted, "AI agents");
 
-/** Storybook's Index page of the templates: the example pages and the shells that ship. */
-export const templatesIndex: SiteLink = { label: "Templates", href: page("templates-index") };
-
 /** This website's own accessibility statement; the components' guarantees and known exceptions are in the Accessibility guide (`accessibility`). */
 export const accessibilityStatement: SiteLink = { label: "Accessibility", href: "/accessibility" };
 
