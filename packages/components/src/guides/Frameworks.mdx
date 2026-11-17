@@ -39,8 +39,31 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 }
 ```
 
-The components use React state and effects, so in the App Router they are client components. The package doesn't
-mark its modules with `"use client"`, so import them from a file that does:
+The package marks its entry with `"use client"`, so a server component can import components from it and render
+them, with no wrapper file:
+
+```tsx
+// app/page.tsx: a server component
+import { Button, Stack, Text } from "@dbm-system/components";
+
+export default function Page() {
+  return (
+    <Stack>
+      <Text>Welcome back</Text>
+      <Button>Continue</Button>
+    </Stack>
+  );
+}
+```
+
+The components still render on the server for the first paint and hydrate on the client. The import is a client
+component, so a server file has the limits any client component has, and a file that needs one of these starts with
+`"use client"` itself:
+
+- **A part of a compound** (`Card.Header`, `Tabs.List`) can't be read from a server file. Import it from a client file.
+- **A function can't be passed as a prop**: an event handler such as `onClick`, or a render function such as
+  `FormField`'s child.
+- **A hook** (`useTheme`, `useToast`) can't be called in a server file.
 
 ```tsx
 // app/settings-form.tsx
@@ -60,8 +83,8 @@ export function SettingsForm() {
 }
 ```
 
-A server component can render `SettingsForm` as usual. The components still render on the server for the first
-paint; the directive only says where the client boundary is.
+A server component renders `SettingsForm` as usual. Importing the components from a file that has `"use client"`
+keeps working too.
 
 For the fonts, the `<link>` tags from [Installation](?path=/docs/getting-started-installation--docs) go in the root
 layout's `<head>`, or load Nunito and Lora with Next.js's own font loading, as long as the families are named

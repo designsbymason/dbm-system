@@ -49,7 +49,7 @@ Mirroring the accessibility principle in `CLAUDE.md`: **there is no "responsive 
 ## 6. Browser & rendering environment targets
 
 - **Target: last 2 versions of evergreen browsers** (Chrome, Firefox, Safari, Edge). No IE11, no legacy Safari polyfills. This is what makes `clamp()`, CSS custom properties, and CSS Grid usable without fallbacks.
-- **SSR/RSC safety:** no unguarded access to `window`/`document`/`localStorage` at module scope or during initial render — guard with `typeof window !== 'undefined'` or an effect, since components should degrade gracefully in a server-rendered environment even though full RSC support is a "later" goal per the roadmap.
+- **SSR/RSC safety:** no unguarded access to `window`/`document`/`localStorage` at module scope or during initial render — guard with `typeof window !== 'undefined'` or an effect, since components should degrade gracefully in a server-rendered environment. A component is client code in the App Router: the package entry starts with `"use client"` (written by the build, not in a source file, which the build would drop; [ADR-0227](adr/0227-the-components-package-marks-its-public-entry-as-client-code-over-leaving-the-marker-to-each-app-or-splitting-a-server-safe-entry.md)), so do not add the directive to a component's own file.
 
 ## 7. Internationalization & RTL
 

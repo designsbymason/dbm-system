@@ -99,7 +99,7 @@ dbm-system/
 | Language | TypeScript (strict mode) | Types double as the source for the agent manifest; non-negotiable for a serious component API |
 | Monorepo orchestration | Turborepo | Fast incremental builds/caching across packages; simpler than Nx for a library-focused monorepo |
 | Package manager | pnpm | Efficient workspace linking, strict dependency isolation (avoids phantom deps — important for a "limited deps" goal). **`engines`:** the root `package.json` requires Node `>=24` and pnpm `>=11` (the contributor toolchain, matching `.nvmrc` and `packageManager`); the four published packages declare none, since they are browser libraries whose runtime range is React's (`peerDependencies`), and an `engines` field would make strict installs fail for no reason |
-| Framework target | React 18+ | Your stated target; keep an eye on RSC/Server Component compatibility for components that don't need interactivity |
+| Framework target | React 18+ | Your stated target; keep an eye on RSC/Server Component compatibility for components that don't need interactivity; the package entry starts with `"use client"` ([ADR-0227](adr/0227-the-components-package-marks-its-public-entry-as-client-code-over-leaving-the-marker-to-each-app-or-splitting-a-server-safe-entry.md)) |
 | Accessibility/interaction primitives | Radix UI Primitives | See section 1 — foundational, unstyled, industry-standard |
 | Styling | CSS Modules + CSS Custom Properties | Scoped classnames at build time, zero runtime cost, tokens flow in as CSS vars |
 | Token pipeline | Style Dictionary | Single JSON source → CSS vars (web, as separate files and as one bundle per brand and mode, without the token descriptions), TS constants (typed token access), future RN output |

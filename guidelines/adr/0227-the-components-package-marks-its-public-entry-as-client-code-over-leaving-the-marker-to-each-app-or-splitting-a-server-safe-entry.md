@@ -1,6 +1,6 @@
 # 0227 — The components package marks its public entry as client code, over leaving the marker to each app or splitting a server-safe entry
 
-**Status:** Proposed (not approved; nothing in the package changes until the maintainer accepts it) · **Date:** 2026-11-17
+**Status:** Accepted · **Date:** 2026-11-17
 
 ## Context
 In the Next.js App Router a module runs on the server unless it, or a module that imports it, starts with `"use client"`. `@dbm-system/components` has no marker, so an app has to import it from a file that has one (the Frameworks page says so), and an import from a server file fails at build time with a message about a hook that the app never wrote.
@@ -18,7 +18,7 @@ Measured on the built package (`dist/`, 120 ES entries), not assumed:
   - *Which files:* marking only `dist/index.js` gives the same results as marking all 153 files. The exports map exposes only that file, so the per-component entries are internal.
   - *Consumer warnings:* Vite 8 prints a `MODULE_LEVEL_DIRECTIVE` notice for each module that carries the directive. An app importing the package already gets 65, from Radix; marking all 153 files raised that to 218, and marking only `dist/index.js` to 66.
 
-## Decision (proposed)
+## Decision
 - **Only the public entries start with `"use client";`: `dist/index.js` and `dist/index.cjs`.** Everything else in `dist/` is imported from them, so it is in the client graph. A step in `scripts/dist-files.mjs` (after `tsup`, before the manifest) prepends the directive and shifts the file's source map by the one line (a leading `;` in its `mappings`). No source file carries it, since the build would drop it.
 - **The package has one entry, as ADR-0219 left it.** There is no server-safe entry and no per-component subpath.
 - **A check keeps it:** `dist/index.js` and `dist/index.cjs` begin with the directive and its source map still points at the right lines (in `check-publish`, no new dependency), and `check-fresh-app` gains a Next.js App Router step that imports a component from a server file (needs `next` in the temporary app only; the maintainer approves that first).

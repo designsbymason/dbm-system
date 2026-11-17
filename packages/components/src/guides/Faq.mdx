@@ -29,9 +29,10 @@ React 18 and later.
 
 ## Does it work with server rendering?
 
-Yes. Every component renders on the server without touching browser-only APIs. In the Next.js App Router, use
-the components from a file marked `"use client"`. [Frameworks](?path=/docs/getting-started-frameworks--docs) has
-the details.
+Yes. Every component renders on the server without touching browser-only APIs. The package's entry is marked
+`"use client"`, so in the Next.js App Router a server component can import and render a component directly. A file
+that reads a part (`Card.Header`), passes a function as a prop or calls a hook needs `"use client"` of its own.
+[Frameworks](?path=/docs/getting-started-frameworks--docs) has the details.
 
 ## How big is it?
 
