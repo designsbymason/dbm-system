@@ -4,12 +4,14 @@
 // it exists (S4), never as available.
 import { Badge } from "@dbm-system/components";
 import { aiAgents } from "../../data/site";
+import { facts } from "./facts";
 
+// Each file is named with its package, from the packages themselves (facts.ts checks that the files are there).
 const files = [
-  { name: "manifest/index.json", detail: "Every component with its tier, category and a sentence. Read this first." },
-  { name: "manifest/components/<Name>.json", detail: "One component in full: its props, parts, the native props it takes and its examples." },
-  { name: "AGENTS.md", detail: "The rules that hold across components, and every public name." },
-  { name: "tokens.json", detail: "Every design token, its value in each theme, and which components use it." },
+  { name: facts.agentFiles.manifestIndex, detail: "Every component with its tier, category and a sentence. Read this first." },
+  { name: facts.agentFiles.manifestComponent, detail: "One component in full: its props, parts, the native props it takes and its examples." },
+  { name: facts.agentFiles.agents, detail: "The rules that hold across components, and every public name." },
+  { name: facts.agentFiles.tokens, detail: "Every design token, its value in each theme, and which components use it." },
   { name: "llms.txt", detail: "A short index of the documentation for tools that read that convention.", inDevelopment: true },
 ];
 ---
@@ -25,7 +27,18 @@ const files = [
         files.map((file) => (
           <div class="agents__file">
             <dt>
-              <code>{file.name}</code>
+              <code>
+                {file.name.split("/").map((part, index, parts) => (
+                  <Fragment>
+                    {part}
+                    {index < parts.length - 1 && (
+                      <>
+                        /<wbr />
+                      </>
+                    )}
+                  </Fragment>
+                ))}
+              </code>
               {file.inDevelopment && (
                 <Badge tone="warning" size="sm" variant="subtle">
                   In active development
@@ -119,6 +132,12 @@ const files = [
   }
 
   @media (min-width: 1024px) {
+    /* The names carry their package and are long, so their column is wider than the descriptions' share of it was; a name that still
+       does not fit breaks after a slash. */
+    .agents__file {
+      grid-template-columns: minmax(0, 5fr) minmax(0, 6fr);
+    }
+
     /* The heading and the sentence beside it share a line, the sentence centred against the heading however many lines it takes. */
     .agents__title {
       grid-column: 1 / span 4;

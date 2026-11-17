@@ -24,11 +24,20 @@ const title = (word: string) => word[0].toUpperCase() + word.slice(1);
  */
 const theme = themes[0] as string;
 const packages = "../../../../../packages";
-for (const file of [`components/dist/index.css`, `tokens/build/css/${theme}.bundled.css`]) {
+/** Throws unless the file is in the built packages, so a page that names it cannot name something that is not there. */
+function inPackages(file: string, namedBy: string) {
   if (!existsSync(new URL(`${packages}/${file}`, import.meta.url))) {
-    throw new Error(`facts: ${file} is not in the built packages, but the home page's steps import it (is the build missing?)`);
+    throw new Error(`facts: ${file} is not in the built packages, but ${namedBy} names it (is the build missing?)`);
   }
 }
+inPackages(`components/dist/index.css`, "the home page's steps");
+inPackages(`tokens/build/css/${theme}.bundled.css`, "the home page's steps");
+
+// "What your agent reads" names each file with the package it is in, which an agent needs to find it.
+inPackages(`components/dist/manifest/index.json`, "the agents section");
+inPackages(`components/dist/manifest/components`, "the agents section");
+inPackages(`components/AGENTS.md`, "the agents section");
+inPackages(`tokens/build/tokens.json`, "the agents section");
 
 export const facts = {
   version: components.version,
@@ -45,6 +54,13 @@ export const facts = {
     theme,
     stylesheet: `${components.name}/styles.css`,
     themeFile: `${tokensPackage.name}/css/${theme}.bundled.css`,
+  },
+  /** The files an agent reads, each named with its package. */
+  agentFiles: {
+    manifestIndex: `${components.name}/manifest/index.json`,
+    manifestComponent: `${components.name}/manifest/components/<Name>.json`,
+    agents: `${components.name}/AGENTS.md`,
+    tokens: `${tokensPackage.name}/tokens.json`,
   },
 };
 
