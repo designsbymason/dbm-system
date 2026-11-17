@@ -12,7 +12,7 @@ The plan, structure and supporting references for `https://dbm-system.com`: the 
 | [02-structure.md](./02-structure.md) | The header, the site map and Storybook's sidebar, the design direction, the Storybook bridge, motion, the agent files, illustrations, the repository layout, build and deploy, dependencies, quality gates, SEO |
 | [03-landing-page-brief.md](./03-landing-page-brief.md) | The brief for the home page: audience, what must stay true, the six sections, look and feel, motion rules |
 | [04-content-inventory.md](./04-content-inventory.md) | Where each piece of documentation goes in Storybook, what leaves the site, and the old addresses |
-| [05-open-items.md](./05-open-items.md) | The settings changed outside the repository, what is settled, the questions not yet decided, and the gaps |
+| [05-open-items.md](./05-open-items.md) | The settings changed outside the repository, what is settled, the questions about the website not yet decided, and the gaps (design-system open items are in [../open-items.md](../open-items.md)) |
 | [06-gitignore-and-private-notes.md](./06-gitignore-and-private-notes.md) | What is gitignored and why, and what belongs in the private notes folder instead of here |
 
 ## The decisions behind them

@@ -1,6 +1,6 @@
 # Docs website — open items
 
-Assumptions to confirm, questions not yet decided, and the settings the maintainer changes outside the repository. Remove an item here when it is settled, and record a real decision as an ADR.
+Assumptions to confirm, questions not yet decided, and the settings the maintainer changes outside the repository. Remove an item here when it is settled, and record a real decision as an ADR. Open items about the design system and the published packages are not kept here: they are in [../open-items.md](../open-items.md).
 
 ## 1. Settings changed outside the repository
 

@@ -74,7 +74,8 @@ packages/
                      from TS + JSDoc; the components build runs it
   eslint-config/      Shared lint rules
   tsconfig/           Shared TypeScript configs
-guidelines/          Internal reference docs — current-state specs, inventories, conventions.
+guidelines/          Internal reference docs — current-state specs, inventories, conventions, and open-items.md
+                       (what is unresolved in the design system, the packages and their pipeline).
   adr/                Individual, effectively immutable Architecture Decision Records (the "why"
                        behind a real fork-in-the-road decision) — numbered 01-07 files
                        point here rather than narrating decisions inline.
@@ -104,7 +105,7 @@ Full rationale for each choice: `guidelines/02-tech-stack-and-structure.md`.
 | Understanding *why* a past architecture/API decision was made | `guidelines/adr/` |
 | What is unresolved in the design system or the packages (decisions, defects, standards shortfalls, unreviewed builds), or logging a new one | `guidelines/open-items.md` |
 
-To start a session, run `/start [task]` (`.claude/commands/start.md`): with no task it gives a general picture of where the project stands (phase, what is in flight, what is next, flakes and open decisions); with a task it reads only the guidelines that task needs. Either way it verifies against the repo with `pnpm check-guidelines` and reports before any work.
+To start a session, run `/start [task]` (`.claude/commands/start.md`): with no task it gives a general picture of where the project stands (phase, what is in flight, what is next, flakes and open decisions, read from `guidelines/open-items.md`); with a task it reads only the guidelines that task needs. Either way it verifies against the repo with `pnpm check-guidelines` and reports before any work.
 
 Other project commands, in `.claude/commands/`: `/plan-component <Name>` (propose scope, API and tokens; writes nothing), `/review-component <Name>` (the §9 review as a prioritized list; no edits), `/plan-template <Name>` and `/review-template <Name>` (the same two for a template, a shell or a page), `/refresh-deps` (the §3.2 dependency pass as a plan), `/verify` (the steps CI runs, one after another, on the working tree; `quick` for lint, guidelines and unit tests; read-only), and `/after-push` (classify the push, watch CI if it contained code, report per job).
 

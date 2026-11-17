@@ -30,7 +30,7 @@ Internal reference documents for the DBM System, an agentic React component libr
 6. `06-engineering-standards.md` — the code-quality and process discipline behind all of the above
 7. `07-storybook-and-documentation-standards.md` — how a component's Storybook docs/showcase must meet the same bar as its code
 
-`adr/` and `component-reviews/` aren't part of this linear reading order — both are lookup folders (the "why" behind a decision, and a specific component's own findings), consulted on demand rather than read start to finish.
+`open-items.md` (what is unresolved now) is read alongside it when a session starts. `adr/` and `component-reviews/` aren't part of this linear reading order — both are lookup folders (the "why" behind a decision, and a specific component's own findings), consulted on demand rather than read start to finish.
 
 ## Conventions for this folder
 - Numbered prefixes control reading order, not chronology — renumber if a doc's role changes.

@@ -27,6 +27,6 @@ From the repo root, in this order (each stops the run on a failure you can't exp
 
 With `quick`, run only 3, 10 and 12. With a step name, run just that step.
 
-For a failure: say whether it is a known flake (my memory notes and the "Post-Finalization" entries in `guidelines/component-reviews/`) and rerun that one test or folder alone to see; a failure on code the working tree changed, or one that repeats alone, is not a flake until shown. Reproduce before proposing a fix, and propose it without applying it.
+For a failure: say whether it is a known flake (the flake rows in `guidelines/open-items.md`, my memory notes and the "Post-Finalization" entries in `guidelines/component-reviews/`) and rerun that one test or folder alone to see; a failure on code the working tree changed, or one that repeats alone, is not a flake until shown. Reproduce before proposing a fix, and propose it without applying it.
 
 Reply with a table of step, result and anything that needs me (warning counts, sizes against budgets, flakes rerun and how they ended), and say what was not run and why. Then wait for my instruction.

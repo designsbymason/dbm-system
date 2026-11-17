@@ -189,6 +189,8 @@ A running record of foundational decisions, cross-referenced to the detailed doc
 
 ## 12. Risks & open questions
 
+What is unresolved right now is listed in [`open-items.md`](open-items.md); the entries below are the standing risks and how they are met.
+
 - **AA vs. AAA compliance target:** AA is the enforced floor everywhere; AAA is a target, not a requirement, for error/critical-alert text only (`guidelines/adr/0002`). The error-text pairings were measured in all four themes: dark clears 7:1, and light mode stays at AA (5.10:1 for `text.danger` on `bg.surface`) as a known gap ([ADR-0178](adr/0178-light-mode-error-text-stays-at-aa-on-red-600-over-splitting-the-text-token-to-reach-the-aaa-target.md)).
 - **Storybook's docgen vs. the manifest generator:** Storybook uses `react-docgen`, which drops inherited native props from the Properties table (components work around it by hand, `05-component-api-conventions.md` §3); the manifest extracts with `react-docgen-typescript` itself ([ADR-0174](adr/0174-the-manifest-generator-extracts-props-itself-with-react-docgen-typescript-over-reusing-storybooks-docgen-output.md)). A check that the two agree where they overlap is built (`packages/manifest/src/storybookDocgen.test.ts`).
 - **Storybook's Accessibility panel needs `@storybook/addon-vitest`**, not just `@storybook/addon-a11y`, so `pnpm test:storybook:watch` must run alongside `pnpm storybook` (`guidelines/adr/0003`).

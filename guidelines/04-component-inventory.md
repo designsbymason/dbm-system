@@ -183,7 +183,7 @@ Non-visual/structural helpers other components are built from.
 
 ---
 
-## Templates (page-level composition, deferred to v1.5/v2)
+## Templates (page-level composition)
 
 Not individual components, but composed patterns — worth planning for since a template meaningfully reduces time-to-first-app for a common structure (a dashboard shell, an auth flow) versus composing it from scratch every time, but these should come **after** the underlying components exist, not before. They exist now: every component below is built.
 

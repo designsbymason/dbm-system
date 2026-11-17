@@ -14,12 +14,12 @@ CLAUDE.md and my memory are already loaded; don't re-read them. Pick the mode:
 
 ## General mode (no task)
 
-1. Read `guidelines/01-vision-and-goals.md` §13 (the roadmap and each phase's status) and the status sentences at the top of `guidelines/04-component-inventory.md` (what is built, what is next, the templates' build order).
+1. Read `guidelines/open-items.md` (what is unresolved in the design system, the packages and their pipeline), `guidelines/01-vision-and-goals.md` §13 (the roadmap and each phase's status) and the status sentences at the top of `guidelines/04-component-inventory.md` (what is built, what is next, the templates' build order).
 2. Verify against the repo, not the docs: run `pnpm check-guidelines`, `git status` and `git log --oneline -15`, and look at what changed recently (the files and folders the last commits touched).
 3. Reply with a short summary:
    - which phase the project is in and what is in flight (unpushed or uncommitted work, anything built but not Finalized);
    - what the inventory and the roadmap say comes next;
-   - known flakes, accepted advisories and open decisions that could affect the next task (from my memory index and the guidelines);
+   - known flakes, accepted advisories and open decisions that could affect the next task (from `guidelines/open-items.md`, and my memory index for anything not yet there);
    - anything `check-guidelines` or the git state flagged;
    - the commands that fit the likely next steps: `/plan-component`, `/review-component`, `/plan-template`, `/review-template`, `/refresh-deps`, `/verify`, `/after-push`.
 
@@ -30,11 +30,11 @@ CLAUDE.md and my memory are already loaded; don't re-read them. Pick the mode:
    - **a component:** `04-component-inventory.md`, `05-component-api-conventions.md`, `06-engineering-standards.md` (§8 process rules, §9 review checklist) and `07-storybook-and-documentation-standards.md` §4–§6;
    - **a template:** `04` (Templates, its build order and naming rule), ADR-0179 and ADR-0184, `05` §1 and §8, `06` §9 (the template items) and `07` §3–§6 and §11, and the finished templates' review files;
    - **a token:** `03-token-system-spec.md`; **a dependency or tool:** `02-tech-stack-and-structure.md`; **the docs site:** `guidelines/docs-site/`.
-3. Verify against the repo, not the docs: run `pnpm check-guidelines`, `git status` and `git log --oneline -15`, and open the packages or folders the task touches.
+3. Check `guidelines/open-items.md` for rows that affect the task (and `guidelines/docs-site/05-open-items.md` for a docs site task). Verify against the repo, not the docs: run `pnpm check-guidelines`, `git status` and `git log --oneline -15`, and open the packages or folders the task touches.
 4. Reply with a short summary:
    - the task as you understand it, and its kind;
    - what already exists for it, and what the relevant guidelines require;
-   - open decisions, known flakes or accepted advisories that could affect it;
+   - open decisions, known flakes or accepted advisories that could affect it (from the open-items rows you found);
    - anything `check-guidelines` or the git state flagged;
    - the command that fits next, if one does: `/plan-component` or `/plan-template` before building something new, `/review-component` or `/review-template` for a finished one, `/verify` before a commit or a push.
 
