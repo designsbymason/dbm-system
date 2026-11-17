@@ -112,9 +112,9 @@ Expressive on the home page, calm in Storybook ([ADR-0222](../adr/0222-the-home-
 | Layer | What | How |
 |---|---|---|
 | Micro-interactions | Hover, press, focus, copy feedback, menu and palette entrances, on most interactive elements | The DBM components' own transitions; site additions use the motion tokens (`duration.fast` to `slower`, `easing.standard` and `emphasized`, `scale.98` and `102`) |
-| Pointer and spring | The hero's tilting stack, layers lifting on hover, controls that respond to the pointer | Motion (MIT), loaded on the home page only, for what CSS cannot express |
+| Pointer and spring | The hero page leaning toward the pointer on desktop, controls that respond to the pointer | A small script and CSS so far; Motion (MIT) is allowed on the home page only for what CSS cannot express, and is not used yet |
 | Page transitions | Between the home page and Storybook, and the mode change | Cross-document View Transitions; the mode change is a short reveal from the toggle. No client router |
-| Scroll-driven | Entrances that assemble a section's composition, the hero settling flat, the theme card stepping through the themes on wide screens | CSS scroll timelines (`scroll()`, `view()`, named ranges), sticky sections, `@property` custom properties, SVG stroke drawing |
+| Scroll-driven | The Specification's drawings playing as they scroll into view (armed by an observer, from either direction), the hero page tilting as the page scrolls, the theme card stepping through the themes on wide screens | CSS scroll timelines (`scroll()`, `view()`, named ranges), sticky sections, `@property` custom properties, SVG stroke drawing |
 
 **Rules:** reduced motion gives a static, complete page with every control present; content is in the HTML before any script; no scroll-jacking; time-based motion uses the motion tokens; every scroll animation is inside `@supports (animation-timeline: view())`, and a browser without it gets the static page.
 
@@ -153,7 +153,7 @@ Geometric, diagram-style illustrations drawn in code from the tokens ([ADR-0217]
 apps/
   docs/                    The Astro app: the home page, the 404, the agent files
     src/
-      pages/               Routes: /, 404, /AGENTS.md and the other agent files
+      pages/               Routes: /, 404, /AGENTS.md and the other agent files, and the Accessibility, Privacy and Terms pages
       components/          The header, the footer and the home page's sections, built on DBM
       illustrations/       The SVG illustrations, as Astro components
       layouts/             The page layout
@@ -195,7 +195,7 @@ The docs app is not published, so the packages' runtime budget does not apply, b
 | `react`, `react-dom` | Required by the islands and by DBM | MIT |
 | `@dbm-system/tokens`, `utils`, `icons`, `components` | The system the site is built from | MIT |
 | `@fontsource/nunito`, `@fontsource/lora` | Self-hosted fonts for the site and Storybook ([ADR-0215](../adr/0215-the-docs-site-and-storybook-self-host-nunito-and-lora-over-loading-them-from-google-fonts.md)) | SIL Open Font License |
-| `motion` | Pointer and spring interaction on the home page only ([ADR-0222](../adr/0222-the-home-pages-motion-is-expressive-with-motion-allowed-for-pointer-and-spring-interaction-over-the-restrained-motion-of-the-first-direction.md)); added when first used in S3 | MIT |
+| `motion` | Pointer and spring interaction on the home page only ([ADR-0222](../adr/0222-the-home-pages-motion-is-expressive-with-motion-allowed-for-pointer-and-spring-interaction-over-the-restrained-motion-of-the-first-direction.md)); not added: nothing on the home page needs it so far | MIT |
 | `playwright`, `axe-core` (development only) | The accessibility scan; the link check and the local server are scripts with no dependency | Apache-2.0, MPL-2.0 |
 | `typescript`, `@types/react`, `@types/react-dom` (development only) | Type-checking, at the versions the components package uses | Apache-2.0, MIT |
 

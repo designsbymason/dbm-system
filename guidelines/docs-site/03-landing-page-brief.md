@@ -24,7 +24,7 @@ No testimonials, company logos, download counts, comparisons with other librarie
 
 ## 3. Sections, in order
 
-One story: what it is and why it is different (1–2), the facts (3), the breadth (4), proof that it works (5–6), the way in (7). Every section opens with a Lora headline and one sentence, and every claim is something the reader can try or check.
+One story: what it is and why it is different (1–2), the facts (3), the breadth (4), proof that it works (5), the way in (6). Every section opens with a Lora headline and one sentence, and every claim is something the reader can try or check.
 
 | # | Section | Content | Interaction and motion |
 |---|---|---|---|
@@ -36,7 +36,7 @@ One story: what it is and why it is different (1–2), the facts (3), the breadt
 | 6 | **Start in three steps** | Install; import the stylesheet and a theme; render a component. Real code, each with a copy button | A package-manager switch; ends on Quick start and Guides (Storybook's Quick start page and its first Guides page, Theming); the code blocks scroll inside their frames and never widen the page |
 | — | **Footer** | The site footer ([02-structure.md](./02-structure.md) §1) | |
 
-**On a phone** the page does not fall or tilt: the specimen breaks into the JSON once the page scrolls into view, with room above it, the theme card's scroll steps become its controls alone, and each composition is designed for the width, not shrunk.
+**On a phone** the page does not fall or tilt: the specimen breaks into the JSON once the page scrolls into view, with room above it, the theme card's scroll steps become its Brand and Mode controls alone, and each composition is designed for the width, not shrunk.
 
 ## 4. Look and feel
 
