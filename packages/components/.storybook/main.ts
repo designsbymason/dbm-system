@@ -71,7 +71,15 @@ const config: StorybookConfig = {
   // `.mdx` docs pages live alongside their component's stories (see
   // guidelines/07-storybook-and-documentation-standards.md §4) — matched
   // separately since they don't follow the `*.stories.*` naming pattern.
-  stories: ["../src/**/*.stories.@(ts|tsx)", "../src/**/*.mdx"],
+  //
+  // The published build (`pnpm build-storybook` sets STORYBOOK_PUBLIC_BUILD) leaves out the `*.checks.stories` files: they are the
+  // hidden test stories (`!dev`, about half of all stories) that only the real-browser tests and the visual suite run, no docs page
+  // shows one, and left in they were 2.3 MB of the build and 575 KB of `index.json`, which the manager, every docs page and the
+  // website's search each fetch. `test:storybook`, `test:visual` and `pnpm storybook` still see them.
+  stories: [
+    process.env.STORYBOOK_PUBLIC_BUILD ? "../src/**/!(*.checks).stories.@(ts|tsx)" : "../src/**/*.stories.@(ts|tsx)",
+    "../src/**/*.mdx",
+  ],
   // `@storybook/addon-viewport` and interaction/play-function testing are
   // both core-bundled in Storybook 10 (`storybook/viewport`,
   // `storybook/test`) — no separate addon packages needed for either.

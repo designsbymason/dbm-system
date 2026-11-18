@@ -9,7 +9,7 @@ import { imagePlaygroundSnippet, imageSnippets } from "./Image.snippets";
 // across every story that needs a real, loadable image. The broken-src
 // stories below deliberately keep an invalid URL instead, since their whole
 // point is demonstrating the fallback.
-const PLACEHOLDER_IMAGE_URL = "/placeholder-img.png";
+const PLACEHOLDER_IMAGE_URL = "/placeholder-img.jpg";
 
 const radiusOptions = [
   "none",

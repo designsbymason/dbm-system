@@ -1291,7 +1291,7 @@ describe("Playground snippets for the eleven media, overlay and utility atoms", 
   });
 
   it("Image writes src and alt always, the ratio as a fraction, and only what differs", () => {
-    expect(imagePlaygroundSnippet({ src: "/placeholder-img.png", alt: "Placeholder image", objectFit: "cover", position: "center", radius: "none", loading: "lazy" })).toBe(
+    expect(imagePlaygroundSnippet({ src: "/placeholder-img.jpg", alt: "Placeholder image", objectFit: "cover", position: "center", radius: "none", loading: "lazy" })).toBe(
       '<div style={{ width: "16rem" }}>\n  <Image src="/hero.jpg" alt="Placeholder image" />\n</div>',
     );
     expect(imagePlaygroundSnippet({ src: "/a.png", alt: "A", aspectRatio: 4 / 3, width: 200, height: "10rem" }, "20rem")).toBe(

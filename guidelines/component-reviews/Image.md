@@ -130,7 +130,7 @@ and `check-component-bundle-size` (1.48KB JS / 0.44KB CSS gzipped — within bud
 
 **Added after the initial pass, part 3 (at explicit direction, 2026-09-04): a real placeholder
 photo, replacing the generated SVG-rectangle placeholders.** User-provided image saved to
-`.storybook/public/placeholder-img.png` (1000×667, ~3:2 landscape) — Storybook-tooling-only, not
+`.storybook/public/placeholder-img.jpg` (1000×667, ~3:2 landscape) — Storybook-tooling-only, not
 shipped in the published package, matching the same `staticDirs`-served pattern already
 established for the sidebar logo (`.storybook/public/logo.svg`, wired in `.storybook/main.ts`).
 Replaced both prior data-URI constants (`PHOTO_URL`, and `WIDE_PHOTO_URL` — a separate wider

@@ -54,7 +54,7 @@
     "test:storybook": "vitest run --project=storybook",
     "test:storybook:watch": "vitest --project=storybook",
     "storybook": "node scripts/generate-changelog.mjs && storybook dev -p 6006",
-    "build-storybook": "node scripts/generate-changelog.mjs && storybook build && node scripts/generate-seo.mjs",
+    "build-storybook": "node scripts/generate-changelog.mjs && STORYBOOK_PUBLIC_BUILD=1 storybook build && node scripts/generate-seo.mjs",
     "check-storybook-bundle-size": "node scripts/check-storybook-bundle-size.mjs",
     "check-component-bundle-size": "node scripts/check-component-bundle-size.mjs",
     "check-foundations-token-coverage": "node scripts/check-foundations-token-coverage.mjs",

@@ -3,7 +3,7 @@
 // Hand-written rather than generated from the rendered story: the Playground, "Locked
 // aspect ratio" and "Rounded" panels print every default (`loading="lazy" objectFit="cover"
 // position="center" radius="none"`) and `aspectRatio={1.3333333333333333}` /
-// `{1.7777777777777777}`, with the story's own `/placeholder-img.png`; eight panels show the
+// `{1.7777777777777777}`, with the story's own `/placeholder-img.jpg`; eight panels show the
 // story object itself, built from `radiusOptions`, `objectFitOptions`, `positionOptions` and
 // a `PLACEHOLDER_IMAGE_URL` constant in the stories file. An `Image` fills its container's
 // width, so each snippet keeps the one sized container that shows it. Each snippet here is
@@ -85,7 +85,7 @@ export interface ImagePlaygroundSnippetArgs {
 }
 
 // The stories' own placeholder file; a reader's snippet gets a path that reads like an app's.
-const storyPlaceholder = "/placeholder-img.png";
+const storyPlaceholder = "/placeholder-img.jpg";
 
 const dimension = (name: string, value: number | string | undefined): string | undefined => {
   if (value === undefined || value === "") return undefined;
