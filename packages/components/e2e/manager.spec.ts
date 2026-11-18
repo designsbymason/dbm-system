@@ -56,6 +56,14 @@ test.describe("Storybook manager customisations", () => {
     await expect(page.locator('meta[name="robots"][data-dbm-seo]')).toHaveCount(0);
   });
 
+  test("a Docs path links its Markdown copy and a story path does not", async ({ page }) => {
+    await page.goto(DOCS);
+    await expect(page.locator('link[rel="alternate"][type="text/markdown"][data-dbm-seo]')).toHaveAttribute("href", "https://dbm-system.com/docs/atoms-inputs-button.md");
+    await page.goto(STORY);
+    await expect(page.locator('meta[name="robots"][data-dbm-seo]')).toHaveCount(1);
+    await expect(page.locator('link[rel="alternate"][type="text/markdown"]')).toHaveCount(0);
+  });
+
   test("a stored dark mode is applied before the page is drawn", async ({ page }) => {
     await page.addInitScript(() => localStorage.setItem("dbm-mode", "dark"));
     await page.goto(DOCS);

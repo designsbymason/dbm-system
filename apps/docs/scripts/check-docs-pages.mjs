@@ -9,6 +9,9 @@
  * - an uncaught error or a `console.error` while it loads;
  * - a request to the Storybook's own origin that fails (a missing image, script or stylesheet).
  *
+ * It also reads the manager's `index.html` as a crawler that runs no script would: a static title (not Storybook's default), a
+ * description, and a `<noscript>` block (written by the components package's `generate-seo`).
+ *
  *   node scripts/check-docs-pages.mjs [root] [--only <id>]
  *
  * `root` is the assembled artifact (Storybook in `root/storybook/`), default `_artifact`. `--only` checks one page by its Docs id.
@@ -33,6 +36,16 @@ const entries = Object.values(JSON.parse(readFileSync(join(storybookDir, "index.
 const pages = entries.filter((entry) => entry.type === "docs" && entry.tags?.includes("dev") && (only === undefined || entry.id === only));
 if (pages.length === 0) {
   console.error(`check-docs-pages: no Docs page${only ? ` with the id ${only}` : ""} in Storybook's index`);
+  process.exit(1);
+}
+
+const shell = readFileSync(join(storybookDir, "index.html"), "utf8");
+const shellProblems = [];
+if (/<title>[^<]*storybook - Storybook<\/title>/i.test(shell) || !/<title>[^<]+<\/title>/.test(shell)) shellProblems.push("no static title (it is Storybook's default)");
+if (!/<meta name="description" content="[^"]{40,}"/.test(shell)) shellProblems.push("no static description");
+if (!/<noscript>[\s\S]*llms\.txt[\s\S]*<\/noscript>/.test(shell)) shellProblems.push("no <noscript> block linking llms.txt");
+if (shellProblems.length > 0) {
+  console.error(`check-docs-pages: the manager's index.html has ${shellProblems.join("; ")}`);
   process.exit(1);
 }
 

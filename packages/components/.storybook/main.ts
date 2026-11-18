@@ -22,23 +22,32 @@ const managerHead = `
   <script>
     (function () {
       var base = "https://dbm-system.com/storybook/";
-      function head(tag, attrs) {
-        var el = document.head.querySelector(tag + "[data-dbm-seo]");
-        if (!el) { el = document.createElement(tag); el.setAttribute("data-dbm-seo", ""); document.head.appendChild(el); }
+      function head(key, tag, attrs) {
+        var el = document.head.querySelector('[data-dbm-seo="' + key + '"]');
+        if (!el) { el = document.createElement(tag); el.setAttribute("data-dbm-seo", key); document.head.appendChild(el); }
         for (var name in attrs) el.setAttribute(name, attrs[name]);
         return el;
       }
+      function drop(key) {
+        var el = document.head.querySelector('[data-dbm-seo="' + key + '"]');
+        if (el) el.remove();
+      }
       function sync() {
         var path = new URLSearchParams(location.search).get("path") || "";
-        var robots = document.head.querySelector('meta[name="robots"][data-dbm-seo]');
-        var canonical = document.head.querySelector('link[rel="canonical"][data-dbm-seo]');
         if (path.indexOf("/story/") === 0) {
-          head("meta", { name: "robots", content: "noindex" });
-          if (canonical) canonical.remove();
+          head("robots", "meta", { name: "robots", content: "noindex" });
+          drop("canonical");
+          drop("markdown");
         } else {
-          if (robots) robots.remove();
-          if (path.indexOf("/docs/") === 0) head("link", { rel: "canonical", href: base + "?path=" + path });
-          else if (canonical) canonical.remove();
+          drop("robots");
+          if (path.indexOf("/docs/") === 0) {
+            head("canonical", "link", { rel: "canonical", href: base + "?path=" + path });
+            // The page's Markdown copy, written at the website's assembly (one file per Docs page, ADR-0228).
+            head("markdown", "link", { rel: "alternate", type: "text/markdown", href: "https://dbm-system.com/docs/" + path.slice(6).replace(/--docs$/, "") + ".md" });
+          } else {
+            drop("canonical");
+            drop("markdown");
+          }
         }
       }
       ["pushState", "replaceState"].forEach(function (method) {

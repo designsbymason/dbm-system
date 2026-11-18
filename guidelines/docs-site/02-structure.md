@@ -232,7 +232,8 @@ Not adopted: a Lighthouse score or a hard page-weight budget. The home page's we
 |---|---|
 | `robots.txt` | `Disallow: /storybook/*?path=/story/`; `iframe.html` is never disallowed |
 | The preview's head (`iframe.html`) | `<meta name="robots" content="noindex, indexifembedded">`: the frame is never a result itself, but its content counts for the page that embeds it |
-| The manager's head (`managerHead`) | A short script: `noindex` on a story path, a canonical URL on a Docs path (the static head is the same for every path, so only a script can tell them apart) |
+| The manager's head (`managerHead`) | A short script: `noindex` on a story path, on a Docs path a canonical URL and a `rel="alternate" type="text/markdown"` link to the page's copy (§6); the static head is the same for every path, so only a script can tell them apart |
+| The manager's `index.html` | A static title, description and share tags, and a `<noscript>` block of links to `llms.txt`, `llms-full.txt` and the Introduction's copy, written after the build by `generate-seo.mjs` (`patchManagerShell`) for a crawler that runs no script; no canonical (it differs per page); `check-docs-pages` fails without them |
 | `sitemap.xml` | The home page (once the site is live) and the Docs entries; `assemble-seo.mjs` fails when an entry is not in `index.json` |
 
 How well a search engine renders the manager and its frame is checked in Search Console after launch; the plain-text copies (§6) make the docs readable either way.
