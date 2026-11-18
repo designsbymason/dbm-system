@@ -16,7 +16,7 @@ permissions:
   contents: read
 
 env:
-  # The go-live switch for the docs site at the root. "false": the placeholder stays at /.
+  # The docs site at the root. "false" puts the placeholder in .github/pages/ back at /.
   PUBLISH_DOCS_SITE: "true"
 
 # Only the newest deployment matters; never cancel one that is already publishing.
