@@ -73,6 +73,11 @@ jobs:
         working-directory: apps/docs
         run: pnpm check-links _artifact
 
+      # No scroll timeline folded into an `animation` shorthand, which current Chrome rejects whole (the theme section went blank in the build).
+      - name: Check the built CSS
+        working-directory: apps/docs
+        run: pnpm check-css _artifact
+
       # The agent files are whole and agree with the rest: a copy of every Docs page, llms.txt and llms-full.txt in form, the package's own manifest.json and AGENTS.md.
       - name: Check the agent files
         working-directory: apps/docs

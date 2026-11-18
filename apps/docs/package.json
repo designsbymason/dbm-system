@@ -18,7 +18,8 @@
     "assemble-seo": "node scripts/assemble-seo.mjs",
     "test": "node --test \"scripts/agent-files/*.test.mjs\"",
     "generate-agent-files": "node scripts/generate-agent-files.mjs",
-    "check-agent-files": "node scripts/check-agent-files.mjs"
+    "check-agent-files": "node scripts/check-agent-files.mjs",
+    "check-css": "node scripts/check-css.mjs"
   },
   "dependencies": {
     "@astrojs/react": "^7.1.9",
