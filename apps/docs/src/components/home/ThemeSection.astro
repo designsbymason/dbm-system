@@ -12,6 +12,13 @@ const brand = tokenValues("--dbm-bg-brand");
 const surface = tokenValues("--dbm-bg-surface");
 const brands = facts.themes.map((t) => t.split("-")[0]).filter((b, i, all) => all.indexOf(b) === i);
 const modes = facts.themes.map((t) => t.split("-")[1]).filter((m, i, all) => all.indexOf(m) === i);
+// The themes in the order the section steps through them. In light mode that is the token order (each brand light, then dark); when the
+// reader's mode is dark each brand starts from its dark theme, so Purple dark comes first. Both orders are in the HTML and CSS picks one by
+// the page's mode (`html[data-mode]`), so switching the mode in the header re-orders the section with no script.
+const lightOrder = facts.themes;
+const darkOrder = brands.flatMap((b) => [...modes].reverse().map((m) => `${b}-${m}`)).filter((t) => facts.themes.includes(t));
+// What a slot is: the first holds still at the start, the last at the end, every other fades in and out.
+const position = (slot: number) => (slot === 0 ? "first" : slot === lightOrder.length - 1 ? "last" : "step");
 const label = (theme: string) => {
   const [b, m] = theme.split("-");
   return `${b[0].toUpperCase()}${b.slice(1)}, ${m}`;
@@ -39,29 +46,39 @@ const label = (theme: string) => {
                 <th scope="col"><span class="token-name">bg.surface</span></th>
               </tr>
             </thead>
-            <tbody>
-              {
-                facts.themes.map((theme, index) => (
-                  <tr class="themes__row" data-theme-key={theme} style={`--i: ${index}`}>
-                    <th scope="row">{label(theme)}</th>
-                    <td>
-                      <span class="themes__swatch" style={`background: ${brand[theme]}`} />
-                      <code>{brand[theme]}</code>
-                    </td>
-                    <td>
-                      <span class="themes__swatch" style={`background: ${surface[theme]}`} />
-                      <code>{surface[theme]}</code>
-                    </td>
-                  </tr>
-                ))
-              }
-            </tbody>
+            {
+              [
+                ["light", lightOrder],
+                ["dark", darkOrder],
+              ].map(([order, themes]) => (
+                <tbody data-order={order}>
+                  {(themes as string[]).map((theme, index) => (
+                    <tr class="themes__row" data-theme-key={theme} style={`--i: ${index}; --row-anim: row-${position(index)}`}>
+                      <th scope="row">{label(theme)}</th>
+                      <td>
+                        <span class="themes__swatch" style={`background: ${brand[theme]}`} />
+                        <code>{brand[theme]}</code>
+                      </td>
+                      <td>
+                        <span class="themes__swatch" style={`background: ${surface[theme]}`} />
+                        <code>{surface[theme]}</code>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              ))
+            }
           </table>
         </div>
         <div class="themes__copies" aria-hidden="true" inert>
           {
-            facts.themes.map((theme, index) => (
-              <figure class="themes__copy" data-theme-scope={theme} data-theme-key={theme} style={`--i: ${index}`}>
+            facts.themes.map((theme) => (
+              <figure
+                class="themes__copy"
+                data-theme-scope={theme}
+                data-theme-key={theme}
+                style={`--slot-light: ${lightOrder.indexOf(theme)}; --slot-dark: ${darkOrder.indexOf(theme)}; --anim-light: theme-${position(lightOrder.indexOf(theme))}; --anim-dark: theme-${position(darkOrder.indexOf(theme))}`}
+              >
                 <ThemeComposition id={theme} />
                 <figcaption>{label(theme)}</figcaption>
               </figure>
@@ -157,6 +174,28 @@ const label = (theme: string) => {
     color: var(--dbm-text-primary);
   }
 
+  /* The themes' order follows the page's mode: each brand starts from its dark theme when the mode is dark, so Purple dark is first. The copies
+     take their slot (and, when scrolled, their fade) from the property pair for the mode; the readout has a body for each order and shows one. */
+  .themes__copy {
+    --slot: var(--slot-light);
+    --anim: var(--anim-light);
+    order: var(--slot);
+  }
+
+  :global(html[data-mode="dark"]) .themes__copy {
+    --slot: var(--slot-dark);
+    --anim: var(--anim-dark);
+  }
+
+  .themes__readout tbody[data-order="dark"],
+  :global(html[data-mode="dark"]) .themes__readout tbody[data-order="light"] {
+    display: none;
+  }
+
+  :global(html[data-mode="dark"]) .themes__readout tbody[data-order="dark"] {
+    display: table-row-group;
+  }
+
   .themes__copy figcaption {
     font-size: var(--dbm-font-size-xs);
     color: var(--dbm-text-secondary);
@@ -249,24 +288,20 @@ const label = (theme: string) => {
         display: grid;
       }
 
+      /* The fade and the slot come from the properties for the page's mode: the first copy and its row hold at the start and the last at the end
+         (the first is marked from the start, the last to the end), every other fades in and out. */
       .themes__copy {
         grid-area: 1 / 1;
         opacity: 0;
         animation: theme-step linear both;
+        animation-name: var(--anim);
         animation-timeline: --themes;
-        animation-range: contain calc(var(--i) * 25%) contain calc((var(--i) + 1) * 25%);
-      }
-
-      .themes__copy[style*="--i: 0"] {
-        animation-name: theme-first;
-      }
-
-      .themes__copy[style*="--i: 3"] {
-        animation-name: theme-last;
+        animation-range: contain calc(var(--slot) * 25%) contain calc((var(--slot) + 1) * 25%);
       }
 
       .themes__row {
         animation: row-step linear both;
+        animation-name: var(--row-anim);
         animation-timeline: --themes;
         animation-range: contain calc(var(--i) * 25%) contain calc((var(--i) + 1) * 25%);
       }
@@ -285,15 +320,6 @@ const label = (theme: string) => {
       @keyframes theme-last {
         0% { opacity: 0; }
         12%, 100% { opacity: 1; }
-      }
-
-      /* The first and last rows follow their copies, which hold at the start and the end: the first is marked from the start, the last to the end. */
-      .themes__row[style*="--i: 0"] {
-        animation-name: row-first;
-      }
-
-      .themes__row[style*="--i: 3"] {
-        animation-name: row-last;
       }
 
       @keyframes row-step {

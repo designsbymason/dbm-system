@@ -7,12 +7,26 @@ const cap = (word: string) => word[0].toUpperCase() + word.slice(1);
 /**
  * The brand and mode controls for the theming section where its scroll-driven step-through does not run (a phone, a tablet, reduced
  * motion, a browser without scroll timelines): they show one composition at a time and mark the readout row that matches. The
- * section itself holds all four copies, so with no script every one shows. The scroll version hides these controls in CSS.
+ * section itself holds all four copies, so with no script every one shows. The scroll version hides these controls in CSS. The mode starts
+ * as the page's (the header's toggle) and follows it.
  */
 export function ThemeSwitcher({ themes, brands, modes }: { themes: string[]; brands: string[]; modes: string[] }) {
   const [brand, setBrand] = useState(brands[0]);
   const [mode, setMode] = useState(modes[0]);
   const controls = useRef<HTMLDivElement>(null);
+
+  // The mode starts as the page's and follows it: switching the mode in the header picks that mode here too (the section's order follows it in CSS).
+  useEffect(() => {
+    const root = document.documentElement;
+    const follow = () => {
+      const site = root.dataset.mode;
+      if (site && modes.includes(site)) setMode(site);
+    };
+    follow();
+    const observer = new MutationObserver(follow);
+    observer.observe(root, { attributes: true, attributeFilter: ["data-mode"] });
+    return () => observer.disconnect();
+  }, [modes]);
 
   useEffect(() => {
     const picked = `${brand}-${mode}`;
