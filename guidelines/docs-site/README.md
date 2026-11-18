@@ -2,7 +2,7 @@
 
 The plan, structure and supporting references for `https://dbm-system.com`: the home page, and Storybook at `/storybook/`, which is the documentation ([ADR-0220](../adr/0220-the-docs-website-is-the-home-page-only-and-storybook-is-the-documentation-with-a-header-that-links-into-it-and-search-over-its-index-over-docs-pages-on-the-website.md)). These files are a **current-state reference, not a changelog**, like the numbered docs in `guidelines/`. A real fork in the road is recorded as an ADR in `../adr/` and linked from here, not narrated here.
 
-**Status:** M0, the foundation, and M1, the docs core under the first plan, are built (`01-plan.md` §3). The plan is now: S1, Storybook docs; S2, site trim and header; S3, the home page, after which the site goes live at the root; S4, the agent files. Next: S1. Storybook is live at `/storybook/`; the site is built and checked on every push, with the placeholder still at the root.
+**Status:** M0 (the foundation), M1 (the docs core under the first plan), S1 (Storybook docs), S2 (the site trimmed to the home page, with its header), S3 (the home page) and S4 (the agent files) are built (`01-plan.md` §3). Storybook and the agent files are live at `/storybook/` and the root; the site is built and checked on every push, with the placeholder still at the root until the maintainer turns on the `PUBLISH_DOCS_SITE` switch.
 
 ## Files
 

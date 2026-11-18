@@ -9,7 +9,7 @@ The site is `https://dbm-system.com` (the apex is canonical; `www` redirects). I
 A frosted bar that sticks (the `Navbar` variant `frosted`: a translucent surface that blurs what scrolls behind it), with no line under it at the top of the page: the line appears once the page has scrolled (the Navbar's `data-stuck`). The header carries no `view-transition-name`: a named element is a backdrop root, and the blur of its own surface could then see nothing behind the bar. **From `lg` (1024 px) it is three columns**, the two sides sharing the room equally so the middle is truly centred:
 
 ```
-[dbM system] [v0.1.x]        Docs ▾   Foundations ▾   Components                [Search] [Mode] [GitHub]
+[dbM system] [v0.x.y]        Docs ▾   Foundations ▾   Components                [Search] [Mode] [GitHub]
 ```
 
 **Below `lg` it is three columns too** (`Navbar.Row`'s `columns`), with the wordmark centred however wide the sides are:
@@ -184,7 +184,7 @@ One GitHub Actions workflow, run on every push to `main` while the packages are 
 5. Run the gates on that artifact (§11).
 6. Publish it with the Pages actions. Until the maintainer turns it on, the workflow's `PUBLISH_DOCS_SITE` switch is `"false"`: the placeholder in `.github/pages/` stays at the root while the site is built and checked, and Storybook is published at `/storybook/` either way.
 
-Pull requests get the build and the gates; only `main` deploys. From 1.0 the deploy moves to release tags. Development and previews import the workspace packages (which resolve to their built `dist`).
+`main` builds, runs the gates and deploys, and a failed gate stops the deploy. Pull requests are checked by `ci.yml` only (`pages.yml` runs on a push to `main` and by hand); giving them the Pages gates too, with their own concurrency group and a deploy job guarded to `main`, is an option for when pull requests are in use. From 1.0 the deploy moves to release tags. Development and previews import the workspace packages (which resolve to their built `dist`).
 
 ## 10. Dependencies of `apps/docs`
 

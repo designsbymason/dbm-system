@@ -21,7 +21,7 @@ CLAUDE.md and my memory are already loaded; don't re-read them. Pick the mode:
    - what the inventory and the roadmap say comes next;
    - known flakes, accepted advisories and open decisions that could affect the next task (from `guidelines/open-items.md`, and my memory index for anything not yet there);
    - anything `check-guidelines` or the git state flagged;
-   - the commands that fit the likely next steps: `/plan-component`, `/review-component`, `/plan-template`, `/review-template`, `/refresh-deps`, `/verify`, `/after-push`.
+   - the commands that fit the likely next steps: `/plan-component`, `/review-component`, `/plan-template`, `/review-template`, `/refresh-deps`, `/verify`, `/after-push`, `/build`.
 
 ## Task mode (a task given)
 

@@ -25,6 +25,8 @@ From the repo root, in this order (each stops the run on a failure you can't exp
 14. `pnpm --filter @dbm-system/components test:visual` (run it from `packages/components`, as CI does; the root has no such script; the Playwright visual-regression suite; it needs the Storybook dev server, so start it with `preview_start` if it is not running, and report a snapshot difference with the story it is on, never update snapshots)
 15. `pnpm check-fresh-app` (packs the four public packages, installs them into an empty app with pnpm, bundles a `Button` with the stylesheet and a bundled theme with esbuild and with webpack, builds a Next.js App Router app (Turbopack and webpack) whose server page imports the package and hydrates it, and checks the pages in Chromium; needs the network and Playwright's Chromium, as `browser-tests` has)
 
+The docs site's own gates (the link, count, privacy, CSS and agent-files checks and the accessibility scan) are in `pages.yml`, not `ci.yml`, so they are not in this list; `/build` runs the agent-files and CSS checks on a fresh assembly.
+
 With `quick`, run only 3, 10 and 12. With a step name, run just that step.
 
 For a failure: say whether it is a known flake (the flake rows in `guidelines/open-items.md`, my memory notes and the "Post-Finalization" entries in `guidelines/component-reviews/`) and rerun that one test or folder alone to see; a failure on code the working tree changed, or one that repeats alone, is not a flake until shown. Reproduce before proposing a fix, and propose it without applying it.

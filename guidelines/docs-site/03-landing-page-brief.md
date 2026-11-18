@@ -17,7 +17,7 @@ The page says only what the repository supports (`01-vision-and-goals.md`):
 - Very few dependencies: Radix UI primitives for interaction and Phosphor for icons.
 - Built to be read by people and agents: full types, a snippet for each example, and a component manifest shipped in the package.
 - WCAG 2.2 AA is the **target**; the known exceptions are in the Accessibility guide and the page links to it.
-- **Published to npm at `0.1.x`, pre-1.0.** Install steps, the manifest, `AGENTS.md` and `llms.txt` are available and shown as such; an MCP server would be labelled "in active development" until it exists, never as available.
+- **Published to npm, pre-1.0.** Install steps, the manifest, `AGENTS.md` and `llms.txt` are available and shown as such; an MCP server would be labelled "in active development" until it exists, never as available.
 - **Every number and list on the page is generated at build** from the manifest, the tokens or the packages, never typed in.
 
 No testimonials, company logos, download counts, comparisons with other libraries or pricing. No other design system is named anywhere in the repository or its output.

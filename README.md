@@ -64,6 +64,7 @@ An agent building with the library should start here:
 | [`AGENTS.md`](./packages/components/AGENTS.md) | The rules for using the library, with a list of every component |
 | `@dbm-system/components/manifest/index.json` | Every component in one small file, with the path of its full description |
 | `@dbm-system/tokens/tokens.json` | Every design token, its value in each theme and which components use it |
+| [`dbm-system.com/llms.txt`](https://dbm-system.com/llms.txt) | For an agent that has not installed the packages: an index of the documentation, each page as Markdown (`manifest.json` and `AGENTS.md` are served at the same root) |
 
 ## Packages
 

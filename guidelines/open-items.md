@@ -31,6 +31,7 @@ code (a runner, a registry) is listed only if it can block a release (`RELEASING
 
 | Item | Kind | Affects | Detail | Waits on |
 |---|---|---|---|---|
+| The static Storybook build is 25,859 KB of its 26,000 KB budget (about 0.5% headroom; the rule in `07` §10 is to look into the growth within about 5%), so the next page or story that adds weight fails `check-storybook-bundle-size` | Decision | CI (`ci` job) | [07-storybook-and-documentation-standards.md](./07-storybook-and-documentation-standards.md) (the static build) | The maintainer: find what grew and trim it, or raise the budget with the reason recorded |
 | The `browser-tests` job runs on a pinned Ubuntu image while GitHub moves `ubuntu-latest` to 26.04 (window ends 2026-11-19) | Maintenance | CI | [02](./02-tech-stack-and-structure.md) §3 (Scheduled maintenance) | 2026-11-19: drop the pin if the job stayed green |
 | Dependencies are refreshed by hand and nothing prompts it | Maintenance | The whole repository | [02](./02-tech-stack-and-structure.md) §3.2 and [ADR-0022](./adr/0022-dependency-updates-are-a-manual-refresh-pass-not-dependabot-version-prs.md) | The next refresh pass |
 | The accepted `deepmerge` advisory (dev-only, never shipped) stays accepted until a release past the fixed version reaches the registry; the override and its `ignoreGhsas` entry then change together | Maintenance | `packages/tokens` build | [02](./02-tech-stack-and-structure.md) §3.1 and §3 (Scheduled maintenance) | A `deepmerge` release at or past 4.3.2, checked at each refresh pass |
