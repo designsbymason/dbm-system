@@ -11,7 +11,7 @@ An agentic React component library: accessible, token-driven and fully typed, wi
 [![License: MIT](https://img.shields.io/npm/l/@dbm-system/components?color=1a6e63)](./LICENSE)
 [![TypeScript](https://img.shields.io/badge/TypeScript-strict-3178c6)](https://www.typescriptlang.org)
 
-[**Documentation**](https://dbm-system.com) · [**Storybook**](https://dbm-system.com/storybook/) · [**npm**](https://www.npmjs.com/package/@dbm-system/components) · [**Report an issue**](https://github.com/designsbymason/dbm-system/issues)
+[**Documentation**](https://dbm-system.com/storybook/) · [**Website**](https://dbm-system.com) · [**npm**](https://www.npmjs.com/package/@dbm-system/components) · [**Report an issue**](https://github.com/designsbymason/dbm-system/issues)
 
 </div>
 
@@ -21,9 +21,10 @@ An agentic React component library: accessible, token-driven and fully typed, wi
 
 - **Built for agents as well as people.** Every component has full TypeScript types, JSDoc and a snippet for each example. The package ships a machine-readable manifest of every component, an index of every design token and an `AGENTS.md` usage guide, so a coding agent works from structured facts instead of guessing.
 - **Token-driven theming.** One semantic token layer carries two brands, Purple and Emerald, each in light and dark. Switching a theme changes no component code.
-- **Accessible by default.** WCAG AA is the minimum for every component: contrast, keyboard navigation, focus states and ARIA, with automated checks on each one.
+- **Accessible by default.** WCAG 2.2 AA is the goal for every component: contrast, keyboard navigation, focus states and ARIA, with automated checks on each one. The known exceptions are listed in the [Accessibility guide](https://dbm-system.com/storybook/?path=/docs/guides-accessibility--docs).
 - **Responsive and right-to-left.** Every component works across the whole breakpoint scale and in both text directions.
 - **A small dependency surface.** Radix UI Primitives for interaction and Phosphor Icons, nothing else at runtime. Animation is plain CSS driven by motion tokens.
+- **Works where you build.** Vite, Next.js (App Router and Pages Router, and a server file can import the components) and Astro, with server rendering; the [Frameworks guide](https://dbm-system.com/storybook/?path=/docs/getting-started-frameworks--docs) has the setup for each.
 - **More than 100 components.** Atoms, molecules and organisms, plus application shells, from buttons and form fields to data tables, command palettes and date pickers.
 
 ## Quick start
@@ -32,7 +33,7 @@ An agentic React component library: accessible, token-driven and fully typed, wi
 pnpm add @dbm-system/components @dbm-system/tokens @dbm-system/icons
 ```
 
-React 18 or newer is a peer dependency. Import the stylesheet and one theme once, in your app's entry, and choose the theme on the root element:
+React 18 or newer is a peer dependency, and the last two versions of Chrome, Edge, Firefox and Safari are supported. Import the stylesheet and one theme once, in your app's entry, and choose the theme on the root element:
 
 ```ts
 import "@dbm-system/components/styles.css";
@@ -82,7 +83,8 @@ The API is pre-1.0: a breaking change before `1.0.0` bumps the minor version, an
 
 ## Documentation
 
-- [dbm-system.com](https://dbm-system.com) for the documentation site, and [Storybook](https://dbm-system.com/storybook/) for every component with live examples, controls and accessibility checks
+- [Storybook](https://dbm-system.com/storybook/) is the documentation: the getting-started pages, guides, the foundations (tokens) and a page for every component with live examples, controls and accessibility checks; [dbm-system.com](https://dbm-system.com) is the home page
+- The [releases](https://github.com/designsbymason/dbm-system/releases) and each package's `CHANGELOG.md` for what changed and how to migrate
 - Each package's README for its install and use
 - [`guidelines/`](./guidelines) for the architecture decisions, token specification, component inventory, API conventions and engineering standards
 - [`CLAUDE.md`](./CLAUDE.md) for orientation when working in this repository with an AI coding agent
