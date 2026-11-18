@@ -31,7 +31,7 @@ export function buildSitemap(index) {
 export const SITE = "https://dbm-system.com/";
 export const SHELL_TITLE = "DBM System Storybook: components, tokens and guides";
 export const SHELL_DESCRIPTION =
-  "Documentation for DBM System, an agentic, standalone React component library built for both AI coding agents and developers alike.";
+  "Documentation for DBM System, an agentic React component library built for both AI coding agents and developers alike.";
 
 /** The manager's `index.html` with a static title, description, share tags and a `<noscript>` block of links. */
 export function patchManagerShell(html) {

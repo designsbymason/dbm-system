@@ -31,7 +31,7 @@ const tokens = require("@dbm-system/tokens");
 const c = tokens.primitives.color;
 
 export const TAGLINE = "Let your agent read the manual.";
-export const SUBLINE = "An agentic, standalone React component library built for both AI coding agents and developers alike.";
+export const SUBLINE = "An agentic React component library built for both AI coding agents and developers alike.";
 const IMAGE_ALT = "DBM System: let your agent read the manual. A card of the Button component's manifest beside the tagline.";
 
 /** The round logo without its `clipPath` wrapper (the circle already is the shape), as the tab icon. */

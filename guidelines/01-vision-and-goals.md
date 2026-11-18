@@ -6,18 +6,18 @@
 
 ## 1. Executive summary
 
-DBM System is an **agentic** component library. The word means the library is built for AI coding agents as much as for people: every component has full TypeScript types and JSDoc, a hand-written snippet for each example, and a token-driven API, so an agent can work against a structured, predictable contract and a developer gets the same clarity. It is a standalone, dependency-light React library built from first principles for the age of AI-assisted development, to build web and enterprise applications quickly, consistently, and accessibly.
+DBM System is an **agentic** component library. The word means the library is built for AI coding agents as much as for people: every component has full TypeScript types and JSDoc, a hand-written snippet for each example, and a token-driven API, so an agent can work against a structured, predictable contract and a developer gets the same clarity. It is a dependency-light React library built from first principles for the age of AI-assisted development, to build web and enterprise applications quickly, consistently, and accessibly.
 
 **Canonical wording.** Other documents and pages quote these; change them here first.
 
 | Tier | Where it is used | Wording |
 |---|---|---|
 | Tagline | Website hero, `README.md`, the placeholder page | Let your agent read the manual. |
-| Lede | Under the tagline in the website hero, and the social image | An agentic, standalone React component library built for both AI coding agents and developers alike. |
+| Lede | Under the tagline in the website hero, and the social image | An agentic React component library built for both AI coding agents and developers alike. |
 | Manual sentence | The lede of "What your agent reads" on the home page | DBM System ships its manual as JSON: every component, prop and token, typed, so an agent builds from facts instead of guesses. |
 | Page title | The home page's `<title>` | DBM System: the agentic component library |
 | One sentence | Meta descriptions, the npm `description`, the lead of the Getting started page | An agentic React component library for building web and enterprise applications quickly, consistently and accessibly, with a typed, token-driven API that AI coding agents and developers can both rely on. |
-| Full definition | `README.md`, the GitHub repository description | An agentic, standalone React component library built for both AI coding agents and human developers to compose web and enterprise applications quickly, consistently, and accessibly. Token-driven, multi-brand, multi-theme (light/dark), and built with a strong TypeScript + JSDoc contract so AI agents can work against a structured, predictable API. |
+| Full definition | `README.md`, the GitHub repository description | An agentic React component library built for both AI coding agents and human developers to compose web and enterprise applications quickly, consistently, and accessibly. Token-driven, multi-brand, multi-theme (light/dark), and built with a strong TypeScript + JSDoc contract so AI agents can work against a structured, predictable API. |
 
 It will ship as a versioned npm package, backed by a token-driven multi-brand theming system, a Storybook workshop, and — later — a documentation website and a companion Figma component library derived from the same design tokens.
 
@@ -47,7 +47,7 @@ DBM System exists to avoid both traps: a real, versioned, installable package �
 
 ### Primary goals
 1. **Agent-usable from day one.** Every component ships with complete TypeScript types and JSDoc sufficient to feed an auto-generated, machine-readable component manifest — giving AI agents a structured, authoritative contract instead of requiring them to infer behavior from scraped docs.
-2. **Standalone and dependency-light.** Minimize what consumers are forced to install. Every dependency taken on (currently: Radix UI Primitives and Phosphor Icons through `packages/icons`) is a deliberate, justified exception, not a default.
+2. **Dependency-light.** Minimize what consumers are forced to install. Every dependency taken on (currently: Radix UI Primitives and Phosphor Icons through `packages/icons`) is a deliberate, justified exception, not a default.
 3. **Free/open-source tooling throughout.** No paid SaaS anywhere in the build, test, or hosting pipeline — the system should be buildable and maintainable by anyone without a procurement conversation.
 4. **Token-driven, multi-brand, multi-mode.** A rigorous 3-layer token architecture (primitive → semantic → component) that supports multiple brand themes and light/dark modes without touching component code.
 5. **Accessible by default, not by retrofit.** WCAG AA as the enforced floor on every component — contrast, keyboard navigation, focus handling, ARIA semantics — verified, not assumed.
