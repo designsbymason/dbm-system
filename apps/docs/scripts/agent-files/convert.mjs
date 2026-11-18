@@ -221,6 +221,11 @@ async function convertElement(node, env) {
     // Plain wrappers and the few HTML elements the pages use.
     case "div":
       return await convertChildren(node.children, env);
+    // A folded block (the Changelog's earlier releases): its summary is a bold line and its content follows, all of it in the text.
+    case "details":
+      return await convertChildren(node.children, env);
+    case "summary":
+      return [paragraph(strong(text(plainText({ children: node.children }))))];
     case "p":
       return [paragraph(...asPhrasing(await convertChildren(node.children, env)))];
     case "kbd":

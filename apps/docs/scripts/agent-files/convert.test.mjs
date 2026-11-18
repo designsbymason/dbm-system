@@ -76,6 +76,11 @@ describe("convertPage", () => {
     assert.match(out, /- tint: `#f9f9ff`/);
   });
 
+  it("writes a folded block as its summary in bold and then its content, so nothing folded is lost", async () => {
+    const out = await convert("<details>\n<summary>Earlier releases: 0.1.x (3)</summary>\n\n## 0.1.2\n\n- A fix.\n\n</details>\n");
+    assert.match(out, /\*\*Earlier releases: 0\.1\.x \(3\)\*\*\n\n## 0\.1\.2\n\n- A fix\./);
+  });
+
   it("fails on an element it has no text form for, naming the page and the element", async () => {
     await assert.rejects(() => convert("<div><Sparkle /></div>\n"), /guides-example--docs: <Sparkle>: no text form/);
   });

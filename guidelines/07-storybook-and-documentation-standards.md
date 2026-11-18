@@ -405,7 +405,7 @@ A guide's code samples are fenced code in the MDX, so nothing compiles them: **c
 
 | Page | Covers |
 |---|---|
-| Changelog | Generated at build from the four packages' `CHANGELOG.md` (`scripts/generate-changelog.mjs`, run first by `storybook` and `build-storybook`) into `src/guides/Changelog.generated.mdx`, which is gitignored: a section per package, newest version first. Release notes are escaped for MDX outside code, and a package with no version section fails the run |
+| Changelog | Generated at build from the four packages' `CHANGELOG.md` (`scripts/generate-changelog.mjs`, run first by `storybook` and `build-storybook`) into `src/guides/Changelog.generated.mdx`, which is gitignored: one section per release across the four packages (they version together; a package that did not change is left out of it), newest first, each version an `h2` so the table of contents lists it. Only the latest `RELEASE_LIMIT` (10) releases are shown: the newest series (`0.2.x`) is open, each earlier series in the window is a folded `<details>`, and an "Older releases" section links to the GitHub releases and each package's `CHANGELOG.md`. Release notes are escaped for MDX outside code, and a package with no version section fails the run. Tests: `scripts/generate-changelog.test.mjs`. The agent copy has the same content (a `details` is its summary in bold and its content) |
 | Roadmap | What is built, next, later and not planned, without dates. **Update it when a phase lands** |
 | FAQ | Short answers to the questions asked first |
 

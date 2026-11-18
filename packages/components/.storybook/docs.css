@@ -1304,3 +1304,25 @@
 .dbm-getting-started__filetable th[scope="row"] code {
   overflow-wrap: anywhere;
 }
+
+/* The Changelog's folded releases (`<details>`, scripts/generate-changelog.mjs): the earlier series of the latest ten releases. The summary
+   is the control, so it looks like one (a pointer, semibold, a focus ring) and sets its own text colour, as every block here does, because a
+   block that sets none inherits Storybook's near-black in dark mode. */
+.sbdocs-content details {
+  border-block-start: var(--dbm-border-width-1) solid var(--dbm-border-neutral-subtle);
+  margin-block: var(--dbm-space-8);
+  padding-block-start: var(--dbm-space-4);
+}
+
+.sbdocs-content summary {
+  border-radius: var(--dbm-radius-sm);
+  color: var(--dbm-text-primary);
+  cursor: pointer;
+  font-weight: var(--dbm-font-weight-semibold);
+  margin-block-end: var(--dbm-space-4);
+}
+
+.sbdocs-content summary:focus-visible {
+  outline: var(--dbm-border-width-2) solid var(--dbm-border-focus);
+  outline-offset: var(--dbm-space-1);
+}
