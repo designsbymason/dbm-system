@@ -1,5 +1,17 @@
 # @dbm-system/components
 
+## 0.2.1
+
+### Patch Changes
+
+- 8d63cc3: `Checkbox` and `Radio`: the edge of an unchecked box or circle is now `border.neutral-strong` (4.70:1 on the surface in the light themes, 6.08:1 in the dark ones; it was 2.32:1 in the light themes, under the 3:1 WCAG 1.4.11 asks of a control's boundary), and it darkens to `border.strong` on hover. The checked, error and disabled looks are unchanged.
+- 34b2207: `DataTable.Pagination` with `layout="centered"`: below `collapseBelow` the page size and the range now sit at the two ends of the first row and the page controls take the row under them, so Tab moves down the footer instead of from the lower row back up to the upper one (WCAG 2.4.3). The wide and one-row layouts are unchanged.
+- dfe3784: `Indicators`: its description now says how it meets WCAG 2.5.8 (target size): the steps are smaller than 24 by 24 px, so the criterion is met through an equivalent control, which `Carousel` draws unless its controls are hidden (previous and next buttons of at least that size). Used on its own, provide that control yourself, or use `variant="bars"` from `sm` up. Nothing in how it looks or behaves changed.
+- ee347f4: The package's entries, `dist/index.js` and `dist/index.cjs`, start with `"use client"`, so in the Next.js App Router a server file can import and render a component without a wrapper file. A server file still cannot read a part of a compound (`Card.Header`), pass a function or an event handler as a prop, or call a hook; a file that does needs `"use client"` of its own. Importing from a file that has the marker keeps working.
+- a417fce: `Table` and `DataTable`: a pinned header and pinned columns no longer paint over a sticky bar (a `Navbar`, for example) that the page scrolls the table beneath. The table's container is now its own stacking context, so its layers stay inside it.
+- 71376d4: `TableToolbar.Filters`, in its bottom sheet: keyboard focus no longer falls out of the sheet. Pressing a section's "Clear" now moves focus to that section's first control, and "Clear all" moves it to "Done", instead of dropping it to the dialog or to the page behind; and the sheet now opens with focus on the first filter control, not on a section's "Clear" (which Enter would press).
+- 40fefef: `Tabs` and `Toolbar`: the scroll buttons at the end of a scrolling list no longer paint over, or take clicks through, a sticky bar (a `Navbar`, for example) that the page scrolls the component beneath. Each component's frame is now its own stacking context, so the buttons' layer stays inside it.
+
 ## 0.2.0
 
 ### Minor Changes
