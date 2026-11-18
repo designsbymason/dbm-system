@@ -47,7 +47,7 @@ Recorded here so they are not re-asked; the detail is in the file named.
 | Markdown copies | No "Copy page" button or "View as Markdown" link, at the maintainer's decision; the copies exist for agents | [02-structure.md](./02-structure.md) §6 |
 | Tagline | "Let your agent read the manual." with the sentence under it in the hero | `01-vision-and-goals.md` §1 |
 | Node and pnpm | The repository's: Node 24 from `.nvmrc` and the pinned pnpm | [02-structure.md](./02-structure.md) §9 |
-| Local development | `pnpm --filter @dbm-system/docs dev` (the `docs` entry in `.claude/launch.json`, port 4321); the `site-artifact` entry serves the assembled site with Storybook on one origin | `apps/docs/README.md` |
+| Local development | `pnpm --filter @dbm-system/docs dev` (the `site-dev` entry in `.claude/launch.json`, port 4321); the `site-preview` entry serves the assembled site with Storybook on one origin | `apps/docs/README.md` |
 | Story canvases and search engines | `robots.txt` blocks `?path=/story/` addresses but never `iframe.html`; the frame carries `noindex, indexifembedded`; the manager adds `noindex` on story paths and a canonical on Docs paths; the sitemap lists only Docs entries | [02-structure.md](./02-structure.md) §12 |
 | Address of a Markdown copy | `/docs/<id>.md`, the Storybook id without `--docs`; Properties tables read from the rendered pages | [ADR-0228](../adr/0228-the-agent-files-are-generated-by-a-script-in-the-docs-app-from-storybooks-mdx-and-its-rendered-property-tables-over-an-astro-endpoint-a-storybook-addon-or-the-manifest.md) |
 | Storybook blocks in the Markdown copies | Converted at build, one text form per block; an unknown block fails the build | [02-structure.md](./02-structure.md) §6 |

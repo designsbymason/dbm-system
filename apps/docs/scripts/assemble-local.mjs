@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Assembles the site with Storybook beside it in `_artifact/`, the way the Pages workflow does, so the `site-artifact` server (and the
+ * Assembles the site with Storybook beside it in `_artifact/`, the way the Pages workflow does, so the `site-preview` server (and the
  * gates) look at current files. The folder is deleted and rebuilt each time, so it cannot be a stale copy.
  *
  *   pnpm assemble-local [--skip-storybook]
@@ -54,4 +54,4 @@ run("writing the agent files", "pnpm", ["generate-agent-files", "_artifact"], do
 run("checking the agent files", "pnpm", ["check-agent-files", "_artifact"], docs);
 run("checking the built CSS", "pnpm", ["check-css", "_artifact"], docs);
 
-console.log(`\nassemble-local: ready in ${artifact}; serve it with \`node scripts/serve.mjs _artifact 4322\` (the site-artifact entry in .claude/launch.json)`);
+console.log(`\nassemble-local: ready in ${artifact}; serve it with \`node scripts/serve.mjs _artifact 4322\` (the site-preview entry in .claude/launch.json)`);

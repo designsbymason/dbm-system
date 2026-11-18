@@ -8,13 +8,13 @@
       "port": 6006
     },
     {
-      "name": "docs",
+      "name": "site-dev",
       "runtimeExecutable": "pnpm",
       "runtimeArgs": ["--filter", "@dbm-system/docs", "run", "dev"],
       "port": 4321
     },
     {
-      "name": "site-artifact",
+      "name": "site-preview",
       "runtimeExecutable": "node",
       "runtimeArgs": ["apps/docs/scripts/serve.mjs", "_artifact", "4322"],
       "port": 4322

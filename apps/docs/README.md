@@ -6,11 +6,11 @@ The website for `https://dbm-system.com`: an Astro app with React islands, deplo
 
 Build the workspace packages first (`pnpm build` at the root), then:
 
-- `pnpm --filter @dbm-system/docs dev`: the site at `http://localhost:4321` (the `docs` entry in `.claude/launch.json`). A change to a CSS module can show a page load late in the development server; reload twice, or restart it, before judging a style.
+- `pnpm --filter @dbm-system/docs dev`: the site at `http://localhost:4321` (the `site-dev` entry in `.claude/launch.json`). A change to a CSS module can show a page load late in the development server; reload twice, or restart it, before judging a style.
 - `pnpm --filter @dbm-system/docs build`: the static site in `dist/`.
 - `pnpm --filter @dbm-system/docs typecheck`: the TypeScript files.
 - `pnpm --filter @dbm-system/docs check-links [folder]`, `check-counts [folder]`, `check-accessibility [folder]` and `check-privacy [folder]`: the gates, on `dist/` by default (the count and privacy checks also read Storybook, so give them the assembled artifact): the links resolve, the manifest, Storybook and the home page count the same components, the pages pass the accessibility scan, and the Privacy Policy matches what the site keeps in the browser.
-- `pnpm --filter @dbm-system/docs assemble-local [--skip-storybook]`: assembles the site with Storybook beside it in `_artifact/` the way the Pages workflow does (builds the home page and Storybook, copies both, writes `robots.txt`, `sitemap.xml` and the agent files, then checks the agent files and the built CSS). It deletes and rebuilds the folder each time, so it is never a stale copy; `--skip-storybook` reuses the Storybook already built, for a change to the home page alone. Serve it with `node scripts/serve.mjs` (the `site-artifact` entry, port 4322), which reads files per request, so a reload shows the new folder. The workspace packages must be built first (`pnpm build`).
+- `pnpm --filter @dbm-system/docs assemble-local [--skip-storybook]`: assembles the site with Storybook beside it in `_artifact/` the way the Pages workflow does (builds the home page and Storybook, copies both, writes `robots.txt`, `sitemap.xml` and the agent files, then checks the agent files and the built CSS). It deletes and rebuilds the folder each time, so it is never a stale copy; `--skip-storybook` reuses the Storybook already built, for a change to the home page alone. Serve it with `node scripts/serve.mjs` (the `site-preview` entry, port 4322), which reads files per request, so a reload shows the new folder. The workspace packages must be built first (`pnpm build`).
 
 Telemetry and the dev toolbar are off.
 
