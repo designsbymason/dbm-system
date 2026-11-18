@@ -15,8 +15,11 @@ export interface SiteGroup {
   links: SiteLink[];
 }
 
-/** Where Storybook is on this origin. */
-export const storybookHref = "/storybook/";
+/**
+ * Where Storybook is. On the published site it is beside the site, at `/storybook/`. The development server has no Storybook beside it, so
+ * there every link into Storybook goes to Storybook's own development server (`pnpm storybook`, port 6006), which has to be running.
+ */
+export const storybookHref = import.meta.env.DEV ? "http://localhost:6006/" : "/storybook/";
 
 /** The Storybook address of a Docs page, from its id (`guides-theming` for `guides-theming--docs`). */
 const page = (id: string) => `${storybookHref}?path=/docs/${id}--docs`;

@@ -7,11 +7,8 @@ import { find, prepare } from "./searchIndex";
 import type { IndexEntry, Placements, Searchable } from "./searchIndex";
 import styles from "./SiteSearch.module.css";
 
-/**
- * Where Storybook is. On the published site it is beside the site, at `/storybook/`. The development server has no Storybook beside it,
- * so there search reads the Storybook development server (`pnpm storybook`, port 6006) when one is running.
- */
-const storybookBase = import.meta.env.DEV ? "http://localhost:6006/" : storybookHref;
+/** Where Storybook is (`data/site.ts`): beside the site when published, Storybook's own development server on the development server. */
+const storybookBase = storybookHref;
 
 const unavailable = import.meta.env.DEV ? "Start Storybook (pnpm storybook) to search." : "Search is not available right now.";
 

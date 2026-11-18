@@ -1,6 +1,7 @@
 ---
 // The Terms of Use (ADR-0224): the rules for using the site and its documentation. The software has its own licence
 // (the MIT licence in the repository), which these terms point to and do not replace.
+import { storybookHref } from "../data/site";
 import Legal from "../layouts/Legal.astro";
 ---
 
@@ -30,9 +31,9 @@ import Legal from "../layouts/Legal.astro";
   <h2>No warranty</h2>
   <p>
     The site and the software are provided "as is", without a warranty of any kind. DBM System is before version 1.0, so its
-    API can change between releases; the <a href="/storybook/?path=/docs/resources-changelog--docs">changelog</a> says when it
+    API can change between releases; the <a href={`${storybookHref}?path=/docs/resources-changelog--docs`}>changelog</a> says when it
     does. We aim for WCAG 2.2 AA in every component and list the known exceptions in the
-    {" "}<a href="/storybook/?path=/docs/guides-accessibility--docs">Accessibility guide</a>, but we cannot promise that anything
+    {" "}<a href={`${storybookHref}?path=/docs/guides-accessibility--docs`}>Accessibility guide</a>, but we cannot promise that anything
     you build with it meets any standard. Testing your own product remains your job.
   </p>
 

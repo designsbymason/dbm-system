@@ -17,7 +17,7 @@ Telemetry and the dev toolbar are off.
 
 ## Where things are
 
-- `src/data/site.ts`: the site map: every docs link, which goes into Storybook (the header menus and the footer read it).
+- `src/data/site.ts`: the site map: every docs link, which goes into Storybook (the header menus and the footer read it). `storybookHref` is `/storybook/` in a build; on the development server it is Storybook's own development server (`http://localhost:6006/`, `pnpm storybook`), so the links there open it, and need it running.
 - `src/components/shell/`: the page shell (`PageShell`, the header, the footer).
 - `src/layouts/`: `Base` (fonts, tokens, the mode before first paint) and `Marketing` (the page type the site has).
 - `src/pages/`: the routes: `/`, the 404, and the Accessibility statement, Privacy Policy and Terms of Use (`accessibility.astro`, `privacy.astro` and `terms.astro`, on the `Legal` layout; ADR-0224). Their text says what the site does and checks, so a change to that changes them.
