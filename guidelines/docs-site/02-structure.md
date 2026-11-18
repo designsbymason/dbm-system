@@ -183,7 +183,7 @@ One GitHub Actions workflow, run on every push to `main` while the packages are 
 3. Build the site. Once Storybook is built too, write the agent files from the manifest and Storybook's MDX and rendered pages (§6).
 4. Assemble one artifact: the site at the root and `storybook-static` in `storybook/`. Then `assemble-seo.mjs` writes the root `robots.txt` and `sitemap.xml` from what Storybook's build left (§12).
 5. Run the gates on that artifact (§11).
-6. Publish it with the Pages actions. Until the maintainer turns it on, the workflow's `PUBLISH_DOCS_SITE` switch is `"false"`: the placeholder in `.github/pages/` stays at the root while the site is built and checked, and Storybook is published at `/storybook/` either way.
+6. Publish it with the Pages actions. The workflow's `PUBLISH_DOCS_SITE` switch is `"true"`, so the site is at the root; set to `"false"` the placeholder in `.github/pages/` is at the root instead while the site is still built and checked, and Storybook is published at `/storybook/` either way.
 
 `main` builds, runs the gates and deploys, and a failed gate stops the deploy. Pull requests are checked by `ci.yml` only (`pages.yml` runs on a push to `main` and by hand); giving them the Pages gates too, with their own concurrency group and a deploy job guarded to `main`, is an option for when pull requests are in use. From 1.0 the deploy moves to release tags. Development and previews import the workspace packages (which resolve to their built `dist`).
 

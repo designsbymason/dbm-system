@@ -51,7 +51,6 @@ Recorded here so they are not re-asked; the detail is in the file named.
 | Story canvases and search engines | `robots.txt` blocks `?path=/story/` addresses but never `iframe.html`; the frame carries `noindex, indexifembedded`; the manager adds `noindex` on story paths and a canonical on Docs paths; the sitemap lists only Docs entries | [02-structure.md](./02-structure.md) §12 |
 | Address of a Markdown copy | `/docs/<id>.md`, the Storybook id without `--docs`; Properties tables read from the rendered pages | [ADR-0228](../adr/0228-the-agent-files-are-generated-by-a-script-in-the-docs-app-from-storybooks-mdx-and-its-rendered-property-tables-over-an-astro-endpoint-a-storybook-addon-or-the-manifest.md) |
 | Storybook blocks in the Markdown copies | Converted at build, one text form per block; an unknown block fails the build | [02-structure.md](./02-structure.md) §6 |
-| Going live | The site replaces the placeholder at `/` when the maintainer turns on the Pages workflow's `PUBLISH_DOCS_SITE` switch (S3 and S4 are built) | [02-structure.md](./02-structure.md) §9 |
 
 ## 3. Questions not yet decided
 

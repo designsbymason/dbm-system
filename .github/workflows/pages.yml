@@ -1,9 +1,9 @@
 # Combined Pages deployment (ADR-0170): the site at / and Storybook at /storybook/.
 # Every push builds the docs site (apps/docs) and runs its gates: the link check on the
 # site with Storybook beside it, and the accessibility scan (docs-site/02-structure.md §11).
-# What is published at / is the placeholder in .github/pages/ until PUBLISH_DOCS_SITE is
-# "true", which is switched on when the M1 docs core exists (docs-site/01-plan.md); Storybook
-# is published at /storybook/ either way. The custom domain (dbm-system.com) is set in the
+# What is published at / is the site (apps/docs) while PUBLISH_DOCS_SITE is "true"; set it
+# to "false" to put the placeholder in .github/pages/ back at the root. Storybook is
+# published at /storybook/ either way. The custom domain (dbm-system.com) is set in the
 # repository's Pages settings, not by a CNAME file.
 name: Pages
 
@@ -17,7 +17,7 @@ permissions:
 
 env:
   # The go-live switch for the docs site at the root. "false": the placeholder stays at /.
-  PUBLISH_DOCS_SITE: "false"
+  PUBLISH_DOCS_SITE: "true"
 
 # Only the newest deployment matters; never cancel one that is already publishing.
 concurrency:

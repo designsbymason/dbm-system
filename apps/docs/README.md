@@ -1,6 +1,6 @@
 # docs
 
-The website for `https://dbm-system.com`: an Astro app with React islands, deployed with Storybook as one GitHub Pages site. The site is the home page, the 404, the accessibility and legal pages and the agent files; Storybook, at `/storybook/`, is the documentation (`guidelines/docs-site/01-plan.md`, ADR-0220). The docs pages that were once here (M1) now live in Storybook (S1), and the site was trimmed to match (S2). It is built and checked on every push and replaces the placeholder at the root when the Pages workflow's `PUBLISH_DOCS_SITE` switch is turned on (after S3).
+The website for `https://dbm-system.com`: an Astro app with React islands, deployed with Storybook as one GitHub Pages site. The site is the home page, the 404, the accessibility and legal pages and the agent files; Storybook, at `/storybook/`, is the documentation (`guidelines/docs-site/01-plan.md`, ADR-0220). The docs pages that were once here (M1) now live in Storybook (S1), and the site was trimmed to match (S2). It is built and checked on every push and is published at the root while the Pages workflow's `PUBLISH_DOCS_SITE` switch is `"true"` (`"false"` puts the placeholder back).
 
 ## Run it
 

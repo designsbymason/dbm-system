@@ -35,9 +35,9 @@ An agentic, standalone React component library built for both AI coding agents a
 ```
 apps/
   docs/            The website's home page (Astro with React islands; Storybook is the documentation,
-                     ADR-0220). Built and checked on every push, while dbm-system.com shows the placeholder
-                     from .github/pages/ until the maintainer turns the site on (the PUBLISH_DOCS_SITE
-                     switch). Also writes the agent files at assembly (a Markdown copy of each Docs page,
+                     ADR-0220). Built and checked on every push and live at dbm-system.com (the
+                     PUBLISH_DOCS_SITE switch in pages.yml; "false" puts the placeholder from
+                     .github/pages/ back at the root). Also writes the agent files at assembly (a Markdown copy of each Docs page,
                      llms.txt, llms-full.txt), published either way
   storybook/        Wrapper for the public Storybook build (currently a stub; the build is already
                      published at dbm-system.com/storybook/ by .github/workflows/pages.yml — the

@@ -40,7 +40,7 @@ The milestones are inside the roadmap's Phase 9 (`01-vision-and-goals.md` §13).
 | **S3, the home page**: the six sections of [03-landing-page-brief.md](./03-landing-page-brief.md), reviewed over rounds against the running page | Built; the maintainer called it done on 2026-11-17 |
 | **S4, the agent files**: a Markdown copy of every Storybook Docs page, `llms.txt`, `llms-full.txt`, `manifest.json` and `AGENTS.md` at the root, generated at assembly, with their check ([ADR-0228](../adr/0228-the-agent-files-are-generated-by-a-script-in-the-docs-app-from-storybooks-mdx-and-its-rendered-property-tables-over-an-astro-endpoint-a-storybook-addon-or-the-manifest.md)) | Built |
 
-The site is built and checked on every push and is not yet published at the root: the workflow's `PUBLISH_DOCS_SITE` switch is the one step left, and the maintainer turns it on. Meanwhile the root is the placeholder, and the workflow still writes its `robots.txt` and `sitemap.xml` so Storybook's pages are indexed, and publishes the agent files at the root.
+The site is built and checked on every push and is published at the root: the workflow's `PUBLISH_DOCS_SITE` switch is `"true"`. Set to `"false"` it puts the placeholder back at the root (a rollback), and the workflow then still writes its `robots.txt` and `sitemap.xml` so Storybook's pages are indexed, and publishes the agent files at the root.
 
 ### S1 — Storybook docs
 
