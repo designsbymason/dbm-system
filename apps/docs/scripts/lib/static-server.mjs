@@ -12,7 +12,9 @@ const TYPES = { ".html": "text/html", ".js": "text/javascript", ".mjs": "text/ja
 export async function serveFolder(folder) {
   const server = createServer((request, response) => {
     const pathname = decodeURIComponent(new URL(request.url, "http://localhost").pathname);
-    const file = join(folder, pathname === "/" ? "index.html" : pathname);
+    // As GitHub Pages does: a folder serves its index.html.
+    const asked = join(folder, pathname);
+    const file = existsSync(asked) && statSync(asked).isDirectory() ? join(asked, "index.html") : asked;
     if (!file.startsWith(folder) || !existsSync(file) || !statSync(file).isFile()) {
       response.writeHead(404).end("Not found");
       return;

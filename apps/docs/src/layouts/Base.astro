@@ -16,6 +16,12 @@ import "@dbm-system/tokens/css/purple-light.css";
 import "@dbm-system/tokens/css/purple-dark.css";
 import "@dbm-system/components/styles.css";
 import "../styles/global.css";
+import { purpleDark, purpleLight } from "@dbm-system/tokens";
+// The three faces the first screen draws (the body, the headings and the hero's serif), preloaded so a slow connection does not draw the
+// page in a fallback face and then swap. The same files the stylesheets name, so the preload is used and not fetched twice.
+import nunito400 from "@fontsource/nunito/files/nunito-latin-400-normal.woff2?url";
+import nunito600 from "@fontsource/nunito/files/nunito-latin-600-normal.woff2?url";
+import lora600 from "@fontsource/lora/files/lora-latin-600-normal.woff2?url";
 
 interface Props {
   title: string;
@@ -26,6 +32,9 @@ interface Props {
 
 const { title, description, noindex = false } = Astro.props;
 const canonical = new URL(Astro.url.pathname, Astro.site);
+// The share image, with the size and the description it is announced with (public/social.png, written by scripts/generate-brand-assets.mjs).
+const shareImage = new URL("/social.png", Astro.site);
+const shareImageAlt = "DBM System: let your agent read the manual. A card of the Button component's manifest beside the tagline.";
 ---
 
 <!doctype html>
@@ -37,7 +46,27 @@ const canonical = new URL(Astro.url.pathname, Astro.site);
     <meta name="description" content={description} />
     <link rel="canonical" href={canonical} />
     {noindex && <meta name="robots" content="noindex" />}
-    <link rel="icon" href="/logo.svg" type="image/svg+xml" />
+    {[nunito400, nunito600, lora600].map((href) => <link rel="preload" as="font" type="font/woff2" href={href} crossorigin />)}
+    <link rel="icon" href="/favicon.ico" sizes="48x48" />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <link rel="manifest" href="/site.webmanifest" />
+    <meta name="theme-color" content={purpleLight.bg["neutral-subtle"]} media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content={purpleDark.bg["neutral-subtle"]} media="(prefers-color-scheme: dark)" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="DBM System" />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonical} />
+    <meta property="og:image" content={shareImage} />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content={shareImageAlt} />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={title} />
+    <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content={shareImage} />
+    <meta name="twitter:image:alt" content={shareImageAlt} />
     <meta name="color-scheme" content="light" />
     <script is:inline>
       // The reader's mode, applied before the first paint so there is no flash. One key on the origin, shared with

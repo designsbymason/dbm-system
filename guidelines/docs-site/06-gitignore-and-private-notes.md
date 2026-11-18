@@ -28,7 +28,7 @@ Added for the docs website:
 | `.local/` | The private notes folder (below) |
 | `.claude/settings.local.json` | One person's Claude Code permission settings. The shared `.claude/commands/` and `launch.json` stay tracked. It was ignored only by a personal global gitignore, so it is listed here for every clone |
 
-`apps/docs/public/` also holds committed files (favicons, the logo, the web app manifest). Only the generated ones are ignored, by name.
+`apps/docs/public/` also holds committed files (the icons, the web app manifest and the share image, written by `scripts/generate-brand-assets.mjs`), and `apps/docs/brand/` the round logo they come from. Only the generated ones are ignored, by name.
 
 ## 2. What is committed and public
 

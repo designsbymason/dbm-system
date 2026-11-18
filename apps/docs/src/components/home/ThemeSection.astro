@@ -35,7 +35,7 @@ const label = (theme: string) => {
             {`Every component reads the same semantic tokens. Load another theme file and the whole interface follows: ${facts.brands.length} brands, each in light and dark, and not one component changed.`}
           </p>
           <div class="themes__switch">
-            <ThemeSwitcher client:load themes={facts.themes} brands={brands} modes={modes} />
+            <ThemeSwitcher client:visible themes={facts.themes} brands={brands} modes={modes} />
           </div>
           <table class="themes__readout">
             <caption class="visually-hidden">The value of two tokens in each theme</caption>

@@ -78,6 +78,21 @@ jobs:
         working-directory: apps/docs
         run: pnpm check-css _artifact
 
+      # The icons, the web manifest and the share image the pages announce are there, the right size and still the logo.
+      - name: Check the brand assets
+        working-directory: apps/docs
+        run: pnpm check-brand-assets _artifact
+
+      # The home page behaves: the mode toggle, the menus, the search, the theme section in both orders, reduced motion and a phone.
+      - name: Check the home page behaves
+        working-directory: apps/docs
+        run: pnpm check-home-page _artifact
+
+      # What the home page weighs, in the log and the job summary, with a warning (never a failure) past a soft limit.
+      - name: Report the home page weight
+        working-directory: apps/docs
+        run: pnpm report-weight _artifact
+
       # Every Docs page of the built Storybook draws, with a heading, no errors and no failed requests (the story tests do not open MDX pages).
       - name: Check the Docs pages render
         working-directory: apps/docs

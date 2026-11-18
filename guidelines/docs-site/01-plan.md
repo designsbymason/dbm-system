@@ -19,7 +19,7 @@
 
 In: the home page (six sections, [03-landing-page-brief.md](./03-landing-page-brief.md)) with its header and footer; search over Storybook's index; the light and dark toggle; the 404; the Accessibility statement, Privacy Policy and Terms of Use ([ADR-0224](../adr/0224-the-website-carries-a-privacy-policy-and-terms-of-use-as-two-pages-of-its-own-over-putting-them-in-storybook-or-leaving-them-out.md)); the agent files at the root; in Storybook, the Getting started, Guides and Resources groups ([02-structure.md](./02-structure.md) §2), the All components page, a generated Changelog, indexing and a sitemap, the new logo; the Storybook bridge; the quality gates.
 
-Later: a grid view of All components with a glyph per component; a tokens page; versioned docs (from 1.0); social images; a release banner.
+Later: a grid view of All components with a glyph per component; a tokens page; versioned docs (from 1.0); a release banner.
 
 Out: docs pages on the website itself; a blog; analytics; a brand switcher or a text-direction switch for the site; a Figma library; an MCP server.
 
@@ -71,7 +71,7 @@ Built: `/manifest.json`, `llms.txt`, `llms-full.txt` and a Markdown copy of each
 | Risk | What reduces it |
 |---|---|
 | Search engines index Storybook's JavaScript-rendered docs only partly | The plain-text copies and `llms-full.txt` generated from the same MDX (S4), and a sitemap ([ADR-0221](../adr/0221-storybooks-docs-pages-are-indexed-by-search-engines-with-plain-text-copies-for-agents-over-keeping-storybook-out-of-results.md)) |
-| The home page becomes heavy with expressive motion | CSS first; Motion only for pointer and spring interaction and only on the home page; its weight is reported in the build log and reviewed by hand each round |
+| The home page becomes heavy with expressive motion | CSS first; Motion only for pointer and spring interaction and only on the home page; its weight is reported in the build log and job summary, with a soft limit that warns |
 | Scroll timelines unsupported in a reader's browser | Every scroll animation is inside `@supports`; such a browser gets the complete static page |
 | A Storybook upgrade breaks the bridge, the sidebar order or the indexing setup | Configuration and head files only, no Storybook internals; rechecked in the upgrade checklist |
 | Storybook's Docs pages fall below the home page's quality | They get the same review rounds as the home page in S1 |

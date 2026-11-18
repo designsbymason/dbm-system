@@ -7,7 +7,7 @@
  *
  * 1. builds the home page (`dist/`); 2. builds Storybook (`storybook-static/`; `--skip-storybook` reuses the one that is there, for a
  * change to the home page alone, and builds it when there is none); 3. copies both into `_artifact/`; 4. writes the root `robots.txt` and `sitemap.xml` and the agent
- * files; 5. runs the agent-files and CSS checks. It starts no server and touches no git state: `_artifact/`, `dist/` and
+ * files; 5. runs the agent-files, CSS and brand-asset checks and prints the home page's weight (`pnpm check-home-page` and `check-docs-pages` are the slower checks, run on their own). It starts no server and touches no git state: `_artifact/`, `dist/` and
  * `storybook-static/` are all ignored. The workspace packages must already be built (`pnpm build` at the root).
  */
 import { spawnSync } from "node:child_process";
@@ -50,5 +50,7 @@ run("writing robots.txt and sitemap.xml", "node", ["scripts/assemble-seo.mjs", "
 run("writing the agent files", "pnpm", ["generate-agent-files", "_artifact"], docs);
 run("checking the agent files", "pnpm", ["check-agent-files", "_artifact"], docs);
 run("checking the built CSS", "pnpm", ["check-css", "_artifact"], docs);
+run("checking the brand assets", "pnpm", ["check-brand-assets", "_artifact"], docs);
+run("the home page weight", "pnpm", ["report-weight", "_artifact"], docs);
 
 console.log(`\nassemble-local: ready in ${artifact}; serve it with \`node scripts/serve.mjs _artifact 4322\` (the site-preview entry in .claude/launch.json)`);

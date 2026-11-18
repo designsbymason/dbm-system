@@ -47,7 +47,8 @@ function PanelToolLinks() {
  * icon buttons (search, mode, GitHub) at the end. Below `lg` it is three columns too, the menu button, the wordmark
  * (centred), and search with the mode toggle; the menus become expandable groups in the menu panel, and Storybook and GitHub
  * move to its foot as labelled buttons. The columns below `lg` are `Navbar.Row`'s own, so the wordmark is centred however
- * wide the two sides are.
+ * wide the two sides are. No link in the bar or its menus carries the external mark (`external={false}`): on the development server they are
+ * absolute, because Storybook is on another port, and `NavigationMenu.Link` would otherwise open them in a new tab with an icon.
  */
 export function SiteHeader({ version, placements }: SiteHeaderProps) {
   return (
@@ -67,7 +68,7 @@ export function SiteHeader({ version, placements }: SiteHeaderProps) {
                   {docsGroups.map((group) => (
                     <NavigationMenu.Group key={group.label} label={group.label} className={styles.group}>
                       {group.links.map((link) => (
-                        <NavigationMenu.Link key={link.href} href={link.href}>
+                        <NavigationMenu.Link key={link.href} href={link.href} external={false}>
                           {link.label}
                         </NavigationMenu.Link>
                       ))}
@@ -80,7 +81,7 @@ export function SiteHeader({ version, placements }: SiteHeaderProps) {
                 <NavigationMenu.Content className={styles.menuPanel}>
                   <NavigationMenu.Group label="Design tokens" className={styles.group}>
                     {foundationsLinks.map((link) => (
-                      <NavigationMenu.Link key={link.href} href={link.href}>
+                      <NavigationMenu.Link key={link.href} href={link.href} external={false}>
                         {link.label}
                       </NavigationMenu.Link>
                     ))}
@@ -88,7 +89,7 @@ export function SiteHeader({ version, placements }: SiteHeaderProps) {
                 </NavigationMenu.Content>
               </NavigationMenu.Item>
               <NavigationMenu.Item>
-                <NavigationMenu.Link href={allComponents.href}>Components</NavigationMenu.Link>
+                <NavigationMenu.Link href={allComponents.href} external={false}>Components</NavigationMenu.Link>
               </NavigationMenu.Item>
             </NavigationMenu.List>
           </NavigationMenu>
