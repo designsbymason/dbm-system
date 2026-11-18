@@ -44,7 +44,7 @@ Every menu link goes into Storybook in the same tab. The menus are on the home p
 | `/` | The home page | Astro, from [03-landing-page-brief.md](./03-landing-page-brief.md) |
 | `/404` | Not found, with search | Astro |
 | `/accessibility`, `/privacy`, `/terms` | The accessibility statement for the site, the Privacy Policy and the Terms of Use ([ADR-0224](../adr/0224-the-website-carries-a-privacy-policy-and-terms-of-use-as-two-pages-of-its-own-over-putting-them-in-storybook-or-leaving-them-out.md)) | Astro, plain prose in `src/pages/` |
-| `/AGENTS.md`; later `/manifest.json`, `/llms.txt`, `/llms-full.txt` and the Markdown copies (S4) | The agent files (§6) | `/AGENTS.md` is served today; the rest are generated at build, not committed, and not built yet |
+| `/AGENTS.md`, `/manifest.json`, `/llms.txt`, `/llms-full.txt` and `/docs/<id>.md` | The agent files (§6) | Generated at assembly by `apps/docs/scripts/generate-agent-files.mjs`, not committed; published whether or not the home page is live |
 | `/sitemap.xml`, `/robots.txt` | §12 | Generated at assembly by `apps/docs/scripts/assemble-seo.mjs` from Storybook's own (it leaves out a root page marked `noindex`); not committed |
 | `/storybook/` | The documentation | The `storybook-static` build |
 
@@ -122,11 +122,11 @@ Expressive on the home page, calm in Storybook ([ADR-0222](../adr/0222-the-home-
 
 | File | What | When |
 |---|---|---|
-| `/AGENTS.md` | The consumer usage guide, copied from the components package at build | Built |
-| `/manifest.json` | The full component manifest, copied from the built components package | S4 |
-| `<page>.md` | A Markdown copy of each Storybook Docs page, generated from its MDX at build ([ADR-0221](../adr/0221-storybooks-docs-pages-are-indexed-by-search-engines-with-plain-text-copies-for-agents-over-keeping-storybook-out-of-results.md)) | S4 |
-| `/llms.txt` | A short curated index of the docs (the llmstxt.org convention) | S4 |
-| `/llms-full.txt` | The documentation as one text file | S4 |
+| `/AGENTS.md` | The consumer usage guide, copied byte for byte from the components package | Built (S4) |
+| `/manifest.json` | The full component manifest, copied byte for byte from the built components package | Built (S4) |
+| `<page>.md` | A Markdown copy of each Storybook Docs page, generated from its MDX at build ([ADR-0221](../adr/0221-storybooks-docs-pages-are-indexed-by-search-engines-with-plain-text-copies-for-agents-over-keeping-storybook-out-of-results.md)), at `/docs/<id>.md` with the id as Storybook has it, without `--docs` | Built (S4) |
+| `/llms.txt` | A short curated index of the docs (the llmstxt.org convention): the pages in the sidebar's order, a sentence each, the Resources under Optional | Built (S4) |
+| `/llms-full.txt` | Every copy in one file, in the sidebar's order (about 3 MiB; the index and the single pages are the lighter way in) | Built (S4) |
 
 **How the copies are made:** each Storybook Docs page's MDX is parsed with the unified tools at build. Headings, prose, lists, tables and code pass through; imports, `<Meta>` and `<ThemeSync />` are dropped; every block has its own text form, and a block with none fails the build, so nothing disappears silently:
 
@@ -141,7 +141,9 @@ Expressive on the home page, calm in Storybook ([ADR-0222](../adr/0222-the-home-
 
 Links become absolute, pointing at the `.md` copy where one exists. A check fails if a Docs page in `index.json` has no copy; `llms-full.txt` is built from the same output.
 
-Until a file is built, the AI agents page says plainly that it is in development.
+**How they are written** ([ADR-0228](../adr/0228-the-agent-files-are-generated-by-a-script-in-the-docs-app-from-storybooks-mdx-and-its-rendered-property-tables-over-an-astro-endpoint-a-storybook-addon-or-the-manifest.md)): `apps/docs/scripts/generate-agent-files.mjs` runs on the assembled site once Storybook is built, in both of the workflow's branches, so the files are published while the placeholder is still at the root. The prose and structure of a page come from its MDX; a Properties table is read from the rendered page in headless Chromium, because the page shows Storybook's own prepared prop descriptions and the manifest differs from them (it has no `children` prop, among other things); a `Canvas` is a link to its story and its hand-written snippet; the Foundations visuals are tables of the token values; a block with no text form fails the build, as does a page whose Properties table count differs from its MDX's. The module hooks in `agent-files/ts-source-hooks.mjs` let Node read the components package's own TypeScript (the snippets, the component rows and descriptions) without a bundler. `pnpm check-agent-files` (§11) holds the result to the site.
+
+The AI agents page says what the website serves and, in an info callout, what is still in development (the MCP server).
 
 ## 7. Illustrations
 
@@ -153,14 +155,14 @@ Geometric, diagram-style illustrations drawn in code from the tokens ([ADR-0217]
 apps/
   docs/                    The Astro app: the home page, the 404, the agent files
     src/
-      pages/               Routes: /, 404, /AGENTS.md and the other agent files, and the Accessibility, Privacy and Terms pages
+      pages/               Routes: /, 404, and the Accessibility, Privacy and Terms pages (the agent files are written at assembly, not routes)
       components/          The header, the footer and the home page's sections, built on DBM
       illustrations/       The SVG illustrations, as Astro components
       layouts/             The page layout
       data/                The header's links into Storybook
       styles/              Site-only CSS on DBM tokens
     public/                Favicons, the web app manifest, the logo
-    scripts/               The scoped token themes, the agent files, the link check, the accessibility scan, the local server
+    scripts/               The scoped token themes, the agent files (`generate-agent-files.mjs`, `agent-files/`) and their check, the link check, the accessibility scan, the local server
 packages/components/
   src/guides/              Storybook's Getting started, Guides and Resources pages (MDX)
   src/foundations/         Storybook's Foundations pages
@@ -177,10 +179,10 @@ One GitHub Actions workflow, run on every push to `main` while the packages are 
 
 1. Install with pnpm on the Node version in `.nvmrc`, and build the packages through Turborepo.
 2. Build Storybook (`pnpm build-storybook`) to `storybook-static`, with the generated Changelog and logo files.
-3. Build the site, and write the agent files from the manifest and Storybook's MDX.
+3. Build the site. Once Storybook is built too, write the agent files from the manifest and Storybook's MDX and rendered pages (§6).
 4. Assemble one artifact: the site at the root and `storybook-static` in `storybook/`. Then `assemble-seo.mjs` writes the root `robots.txt` and `sitemap.xml` from what Storybook's build left (§12).
 5. Run the gates on that artifact (§11).
-6. Publish it with the Pages actions. Until S3 the workflow's `PUBLISH_DOCS_SITE` switch is `"false"`: the placeholder in `.github/pages/` stays at the root while the site is built and checked, and Storybook is published at `/storybook/` either way.
+6. Publish it with the Pages actions. Until the maintainer turns it on, the workflow's `PUBLISH_DOCS_SITE` switch is `"false"`: the placeholder in `.github/pages/` stays at the root while the site is built and checked, and Storybook is published at `/storybook/` either way.
 
 Pull requests get the build and the gates; only `main` deploys. From 1.0 the deploy moves to release tags. Development and previews import the workspace packages (which resolve to their built `dist`).
 
@@ -209,6 +211,7 @@ No animation library is ever a dependency of `packages/*` ([ADR-0140](../adr/014
 | Link check | Any internal link or asset that resolves to nothing in the build, including links into `/storybook/` (checked against Storybook's `index.json`), and any same-page `#fragment` with no id (`apps/docs/scripts/check-links.mjs`) | Built |
 | Accessibility scan | An axe-core WCAG 2.2 A or AA violation on any built page, in light and dark, with and without reduced motion (`apps/docs/scripts/check-accessibility.mjs`) | Built |
 | Privacy check | The Privacy Policy no longer matching the site: a file that uses browser storage or cookies and is not listed in `src/data/remembered.json`; a key written to local or session storage that is neither a listed choice nor one of Storybook's own; a listed choice never written; a cookie; or a request to another origin, found by driving the built site and Storybook in Chromium (`apps/docs/scripts/check-privacy.mjs`). The policy's list of choices is built from the same file | Built |
+| Agent files | A Docs page with no Markdown copy or a copy with no page; MDX left in a copy; a broken link in a copy or in `llms.txt`; an `llms.txt` out of form or missing a page; an `llms-full.txt` that is not every copy in order; a `manifest.json` or `AGENTS.md` that differs from the package's (`apps/docs/scripts/check-agent-files.mjs`, with unit tests in `scripts/agent-files/`) | Built |
 | Animation libraries | `gsap`, `motion` or a similar library imported in `packages/*` (`no-restricted-imports` in `packages/eslint-config/base.js`) | Built |
 | Storybook docs | Storybook's own checks and the guide-file consistency in `check-publish`, which the new Getting started pages join (and `check-logo` for the logo files) | Built |
 

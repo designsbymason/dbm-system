@@ -75,16 +75,47 @@ on every build. The build fails if a prop is undocumented, so the manifest can't
 Every component has a Docs page here with full types and a snippet for each example, and
 the [Components index](?path=/docs/components-index--docs) lists them.
 
+## On the website
+
+The files above ship in the packages. The same documentation is also served as plain text at the root of
+dbm-system.com, for an agent that has not installed anything yet, or that reads the web and does not run Storybook:
+
+<FileTable
+  label="The agent files on the website"
+  rows={[
+    {
+      name: "https://dbm-system.com/llms.txt",
+      description: "A short index of these docs in the llmstxt.org form: every page with a sentence, each linked to its Markdown copy. Start here.",
+    },
+    {
+      name: "https://dbm-system.com/docs/<id>.md",
+      description: "A Markdown copy of one docs page: its prose, tables and code samples, with a link to each live example. llms.txt lists every address.",
+    },
+    {
+      name: "https://dbm-system.com/llms-full.txt",
+      description: "Every docs page in one file, in the sidebar's order. Large; read the index and the pages you need unless a tool wants it all.",
+    },
+    {
+      name: "https://dbm-system.com/manifest.json",
+      description: "The manifest in one file: the same file as @dbm-system/components/manifest.json.",
+    },
+    {
+      name: "https://dbm-system.com/AGENTS.md",
+      description: "The agent guide: the same file as @dbm-system/components/AGENTS.md.",
+    },
+  ]}
+/>
+
+The copies are made from these pages when the site is built, so they match what is here. The Properties tables are the
+ones shown on each page, and a live example is a link to it.
+
 <Callout tone="info" title="In active development">
 
-Not built yet, so do not rely on them:
+Not built yet, so do not rely on it:
 
-- **`llms.txt` and `llms-full.txt`:** a short index of these docs and the whole of them as one text file, for
-  tools that read that convention.
-- **A Markdown copy of each docs page**, and the manifest published beside the docs.
 - **An MCP server:** a way for an agent to ask questions of the manifest instead of reading files. Planned once
   the API is stable.
 
-This page will say when they exist.
+This page will say when it exists.
 
 </Callout>

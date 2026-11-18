@@ -1,8 +1,6 @@
 ---
 // Section 2 (03-landing-page-brief.md §3): why an agent works from facts, and the files it reads. Informational: nothing here is typed in
-// that could go out of date (no sizes or counts); the files are named and described. `llms.txt` is labelled "in active development" until
-// it exists (S4), never as available.
-import { Badge } from "@dbm-system/components";
+// that could go out of date (no sizes or counts); the files are named and described.
 import { aiAgents } from "../../data/site";
 import { facts } from "./facts";
 
@@ -12,7 +10,7 @@ const files = [
   { name: facts.agentFiles.manifestComponent, detail: "One component in full: its props, parts, the native props it takes and its examples." },
   { name: facts.agentFiles.agents, detail: "The rules that hold across components, and every public name." },
   { name: facts.agentFiles.tokens, detail: "Every design token, its value in each theme, and which components use it." },
-  { name: "llms.txt", detail: "A short index of the documentation for tools that read that convention.", inDevelopment: true },
+  { name: "llms.txt", detail: "A short index of the documentation, each page linked to a Markdown copy, for tools that read that convention." },
 ];
 ---
 
@@ -39,11 +37,6 @@ const files = [
                   </Fragment>
                 ))}
               </code>
-              {file.inDevelopment && (
-                <Badge tone="warning" size="sm" variant="subtle">
-                  In active development
-                </Badge>
-              )}
             </dt>
             <dd>{file.detail}</dd>
           </div>

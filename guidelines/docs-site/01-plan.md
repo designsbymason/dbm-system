@@ -37,11 +37,14 @@ The milestones are inside the roadmap's Phase 9 (`01-vision-and-goals.md` §13).
 | **S1, Storybook docs**: the sidebar groups, the ported and merged pages, Getting started split, the Accessibility guide and statement merged, the generated Changelog, indexing with a sitemap and `robots.txt`, the "dbM system" logo in a light and a dark file | Built (`07-storybook-and-documentation-standards.md` §11) |
 | **S2, site trim and header**: the site is the home page, the 404 and the agent files; the new header (wordmark, version, Docs and Foundations menus, Components, search, the light and dark toggle, Storybook and GitHub, the phone menu panel); search over Storybook's index; the footer; the root `robots.txt` and `sitemap.xml` from Storybook's own | Built |
 
-The site is built and checked on every push and is not yet published at the root: the workflow's `PUBLISH_DOCS_SITE` switch stays off until S3. Meanwhile the root is the placeholder, and the workflow still writes its `robots.txt` and `sitemap.xml` so Storybook's pages are indexed.
+| **S3, the home page**: the six sections of [03-landing-page-brief.md](./03-landing-page-brief.md), reviewed over rounds against the running page | Built; the maintainer called it done on 2026-11-17 |
+| **S4, the agent files**: a Markdown copy of every Storybook Docs page, `llms.txt`, `llms-full.txt`, `manifest.json` and `AGENTS.md` at the root, generated at assembly, with their check ([ADR-0228](../adr/0228-the-agent-files-are-generated-by-a-script-in-the-docs-app-from-storybooks-mdx-and-its-rendered-property-tables-over-an-astro-endpoint-a-storybook-addon-or-the-manifest.md)) | Built |
+
+The site is built and checked on every push and is not yet published at the root: the workflow's `PUBLISH_DOCS_SITE` switch is the one step left, and the maintainer turns it on. Meanwhile the root is the placeholder, and the workflow still writes its `robots.txt` and `sitemap.xml` so Storybook's pages are indexed, and publishes the agent files at the root.
 
 ### S1 — Storybook docs
 
-Built; see the table above and `07-storybook-and-documentation-standards.md` §11. The Markdown copies and `llms.txt` are S4.
+Built; see the table above and `07-storybook-and-documentation-standards.md` §11.
 
 ### S2 — Site trim and header
 
@@ -49,11 +52,11 @@ Built; see the table above and [02-structure.md](./02-structure.md) §1.
 
 ### S3 — Home page
 
-Built from [03-landing-page-brief.md](./03-landing-page-brief.md) section by section over review rounds, with expressive motion ([ADR-0222](../adr/0222-the-home-pages-motion-is-expressive-with-motion-allowed-for-pointer-and-spring-interaction-over-the-restrained-motion-of-the-first-direction.md)). Done when the maintainer calls it done; the site then goes live at the root.
+Built from [03-landing-page-brief.md](./03-landing-page-brief.md) section by section over review rounds, with expressive motion ([ADR-0222](../adr/0222-the-home-pages-motion-is-expressive-with-motion-allowed-for-pointer-and-spring-interaction-over-the-restrained-motion-of-the-first-direction.md)); the maintainer called it done on 2026-11-17. The site goes live at the root when `PUBLISH_DOCS_SITE` is turned on.
 
 ### S4 — Agent files
 
-`/manifest.json`, `llms.txt`, `llms-full.txt` and a Markdown copy of each Storybook Docs page, generated at build ([02-structure.md](./02-structure.md) §6).
+Built: `/manifest.json`, `llms.txt`, `llms-full.txt` and a Markdown copy of each Storybook Docs page, generated at assembly ([02-structure.md](./02-structure.md) §6, [ADR-0228](../adr/0228-the-agent-files-are-generated-by-a-script-in-the-docs-app-from-storybooks-mdx-and-its-rendered-property-tables-over-an-astro-endpoint-a-storybook-addon-or-the-manifest.md)).
 
 ## 4. What blocks what
 
