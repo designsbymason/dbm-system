@@ -144,9 +144,10 @@ jobs:
         working-directory: packages/components
         run: pnpm test:storybook
 
-      # Packs the four public packages, installs them into an empty app with npm, bundles a Button with the stylesheet and a bundled theme for
-      # production (esbuild, then webpack, which is the one that drops a stylesheet a package does not mark as a side effect), and
-      # checks the page in Chromium (ADR-0175, ADR-0207). Needs the network; npm install is tried twice.
+      # Packs the four public packages, installs them into an empty app with pnpm, bundles a Button with the stylesheet and a bundled theme for
+      # production (esbuild, then webpack, which is the one that drops a stylesheet a package does not mark as a side effect), builds a Next.js
+      # App Router app (Turbopack and webpack) whose server page imports the package and hydrates, and checks the pages in Chromium
+      # (ADR-0175, ADR-0207, ADR-0227). Needs the network; pnpm install is tried twice.
       - name: Check a fresh app installs and styles the packed packages
         if: ${{ !cancelled() }}
         run: pnpm check-fresh-app
