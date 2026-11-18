@@ -17,7 +17,8 @@
     "check-privacy": "node scripts/check-privacy.mjs",
     "assemble-seo": "node scripts/assemble-seo.mjs",
     "test": "node --test \"scripts/agent-files/*.test.mjs\"",
-    "generate-agent-files": "node scripts/generate-agent-files.mjs"
+    "generate-agent-files": "node scripts/generate-agent-files.mjs",
+    "check-agent-files": "node scripts/check-agent-files.mjs"
   },
   "dependencies": {
     "@astrojs/react": "^7.1.9",

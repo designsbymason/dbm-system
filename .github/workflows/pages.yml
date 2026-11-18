@@ -73,6 +73,11 @@ jobs:
         working-directory: apps/docs
         run: pnpm check-links _artifact
 
+      # The agent files are whole and agree with the rest: a copy of every Docs page, llms.txt and llms-full.txt in form, the package's own manifest.json and AGENTS.md.
+      - name: Check the agent files
+        working-directory: apps/docs
+        run: pnpm check-agent-files _artifact
+
       - name: Check the component counts agree
         working-directory: apps/docs
         run: pnpm check-counts _artifact
