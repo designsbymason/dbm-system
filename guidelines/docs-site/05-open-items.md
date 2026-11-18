@@ -43,7 +43,7 @@ Recorded here so they are not re-asked; the detail is in the file named.
 | Showing two brands | The token theme files re-scoped to a wrapper element at build, so the theme card can wear each theme | [03-landing-page-brief.md](./03-landing-page-brief.md) §3 |
 | Fonts | Self-hosted Nunito and Lora for the site and Storybook | [ADR-0215](../adr/0215-the-docs-site-and-storybook-self-host-nunito-and-lora-over-loading-them-from-google-fonts.md) |
 | DBM changes found while building | A new or changed component or token is raised with the maintainer first; the site never hardcodes a value instead | [01-plan.md](./01-plan.md) §6 |
-| Changed Storybook addresses | A short "this page has moved" page at each old address | [04-content-inventory.md](./04-content-inventory.md) §4 |
+| Changed Storybook addresses | No page kept at an old address (pre-1.0, no known inbound links); revisit from 1.0 | [04-content-inventory.md](./04-content-inventory.md) §4 |
 | Markdown copies | No "Copy page" button or "View as Markdown" link, at the maintainer's decision; the copies exist for agents | [02-structure.md](./02-structure.md) §6 |
 | Tagline | "Let your agent read the manual." with the sentence under it in the hero | `01-vision-and-goals.md` §1 |
 | Node and pnpm | The repository's: Node 24 from `.nvmrc` and the pinned pnpm | [02-structure.md](./02-structure.md) §9 |

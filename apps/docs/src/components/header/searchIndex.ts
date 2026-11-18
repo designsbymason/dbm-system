@@ -39,7 +39,7 @@ function withPlacement(parts: string[], placements: Placements): string[] {
 }
 
 /**
- * The entries a reader sees in Storybook's sidebar (the `dev` tag): not the hidden check stories or the moved page. `base` is where
+ * The entries a reader sees in Storybook's sidebar (the `dev` tag): not the hidden check stories. `base` is where
  * Storybook is (`/storybook/`), which a result opens.
  */
 export function prepare(entries: IndexEntry[], placements: Placements, base: string): Searchable[] {

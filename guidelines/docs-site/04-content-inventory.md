@@ -27,4 +27,4 @@ The site's M1 pages are plain Markdown in MDX, so they port directly; Storybook'
 
 ## 4. Old addresses
 
-A Storybook address that changes (Getting started) keeps a short "this page has moved" page linking to the new one, because static Pages cannot redirect. The site's removed pages were never published at the root, so they need no stubs. The stubs are removed once nobody arrives at the old addresses.
+A Storybook address that changes does not keep a page at the old one: static Pages cannot redirect, and the system is pre-1.0 with no known inbound links. The two addresses that changed in S1 (the single Getting started page, and All components, now the Components Index) had "this page has moved" pages until 2026-11-17, when they were removed. The site's removed pages were never published at the root, so they need none either. From 1.0, an address that changes needs a new decision about keeping the old one.

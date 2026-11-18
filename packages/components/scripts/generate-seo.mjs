@@ -1,8 +1,7 @@
 // Writes the search-engine files for the built Storybook, next to its index.json: a sitemap of the Docs pages and the
 // robots.txt rules (ADR-0221, docs-site/02-structure.md §12). Runs after `storybook build`.
 //
-// - `sitemap.xml` lists only the Docs entries a reader sees in the sidebar (the `dev` tag; a page hidden with `!dev`, such as
-//   the "moved" page, is left out), each at its manager address, `/storybook/?path=/docs/<id>`. Story canvases are never listed.
+// - `sitemap.xml` lists only the Docs entries a reader sees in the sidebar (the `dev` tag; a page hidden with `!dev` is left out), each at its manager address, `/storybook/?path=/docs/<id>`. Story canvases are never listed.
 // - `robots.txt` allows /storybook/ and disallows the story addresses. `iframe.html` is never disallowed: it must stay
 //   crawlable or the Docs pages index empty. A robots.txt only counts at the origin's root, so this copy is the source that the
 //   site's build merges into the root file (S2).
