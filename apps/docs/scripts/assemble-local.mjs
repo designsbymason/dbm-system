@@ -6,7 +6,7 @@
  *   pnpm assemble-local [--skip-storybook]
  *
  * 1. builds the home page (`dist/`); 2. builds Storybook (`storybook-static/`; `--skip-storybook` reuses the one that is there, for a
- * change to the home page alone); 3. copies both into `_artifact/`; 4. writes the root `robots.txt` and `sitemap.xml` and the agent
+ * change to the home page alone, and builds it when there is none); 3. copies both into `_artifact/`; 4. writes the root `robots.txt` and `sitemap.xml` and the agent
  * files; 5. runs the agent-files and CSS checks. It starts no server and touches no git state: `_artifact/`, `dist/` and
  * `storybook-static/` are all ignored. The workspace packages must already be built (`pnpm build` at the root).
  */
@@ -33,13 +33,10 @@ function run(label, command, args, cwd = repo) {
 }
 
 run("building the home page", "pnpm", ["--filter", "@dbm-system/docs", "build"]);
-if (skipStorybook) {
-  if (!existsSync(join(storybookStatic, "index.json"))) {
-    console.error(`assemble-local: --skip-storybook needs a built Storybook in ${storybookStatic}; build it first or leave the flag out`);
-    process.exit(1);
-  }
+if (skipStorybook && existsSync(join(storybookStatic, "index.json"))) {
   console.log("\nassemble-local: reusing the Storybook already built (--skip-storybook)");
 } else {
+  if (skipStorybook) console.log("\nassemble-local: --skip-storybook, but no Storybook has been built yet, so building it");
   run("building Storybook", "pnpm", ["--filter", "@dbm-system/components", "build-storybook"]);
 }
 
