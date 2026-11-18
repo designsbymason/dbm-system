@@ -122,6 +122,13 @@ const config: StorybookConfig = {
     name: "@storybook/react-vite",
     options: {},
   },
+  // One copy of React for the preview and for every package it loads. The dev server's dependency pre-bundle can end up with two
+  // (`02-tech-stack-and-structure.md`, "Adding a dependency while Storybook is running": an "Invalid hook call" from the new package
+  // while the real-browser tests pass); resolving `react` and `react-dom` to a single copy rules that out.
+  viteFinal: (viteConfig) => ({
+    ...viteConfig,
+    resolve: { ...viteConfig.resolve, dedupe: [...(viteConfig.resolve?.dedupe ?? []), "react", "react-dom"] },
+  }),
   // esbuild's local-css loader (see tsup.config.ts) is a build-time-only concern;
   // Vite already has native CSS Modules support, so no extra config is needed here.
   // No paid SaaS / anonymous-usage-phone-home in the build pipeline, per
