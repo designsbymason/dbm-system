@@ -15,7 +15,9 @@
     "check-counts": "node scripts/check-counts.mjs",
     "check-accessibility": "node scripts/check-accessibility.mjs",
     "check-privacy": "node scripts/check-privacy.mjs",
-    "assemble-seo": "node scripts/assemble-seo.mjs"
+    "assemble-seo": "node scripts/assemble-seo.mjs",
+    "test": "node --test \"scripts/agent-files/*.test.mjs\"",
+    "generate-agent-files": "node scripts/generate-agent-files.mjs"
   },
   "dependencies": {
     "@astrojs/react": "^7.1.9",
@@ -34,6 +36,12 @@
     "@types/react-dom": "^19.3.0",
     "axe-core": "^4.14.0",
     "playwright": "^1.65.0",
-    "typescript": "5.9.3"
+    "remark-gfm": "^4.0.1",
+    "remark-mdx": "^3.1.1",
+    "remark-parse": "^11.0.0",
+    "remark-stringify": "^11.0.0",
+    "typescript": "5.9.3",
+    "unified": "^11.0.5",
+    "unist-util-visit": "^5.2.0"
   }
 }
