@@ -1,6 +1,6 @@
 import { Badge, Button, IconButton, Navbar, NavigationMenu } from "@dbm-system/components";
 import { FlaskIcon, GithubLogoIcon } from "@dbm-system/icons";
-import { allComponents, docsGroups, foundationsLinks, storybookHref } from "../../data/site";
+import { allComponents, docsGroups, docsPage, foundationsLinks } from "../../data/site";
 import { Wordmark } from "../Wordmark";
 import { ModeToggle } from "./ModeToggle";
 import type { Placements } from "./searchIndex";
@@ -27,12 +27,15 @@ function GithubLink() {
   );
 }
 
-/** The same two links in the menu panel, ghost buttons that share the width, with their names showing: a touch screen has no tooltip to read an icon from. */
+/**
+ * The same two links in the menu panel, ghost buttons that share the width, with their names showing: a touch screen has no tooltip to read an icon from.
+ * Storybook opens at its Introduction, the first page of the documentation, and not at its bare address.
+ */
 function PanelToolLinks() {
   return (
     <>
       <Button asChild variant="ghost" size="sm" leadingIcon={FlaskIcon} className={styles.panelButton}>
-        <a href={storybookHref}>Storybook</a>
+        <a href={docsPage("getting-started-introduction")}>Storybook</a>
       </Button>
       <Button asChild variant="ghost" size="sm" leadingIcon={GithubLogoIcon} className={styles.panelButton}>
         <a href={githubHref}>GitHub</a>

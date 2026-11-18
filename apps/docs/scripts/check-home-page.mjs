@@ -11,7 +11,7 @@
  * - the theme section: it steps through the themes as the page scrolls, Purple light first in light mode and Purple dark first in dark
  *   mode, and the scroll timelines of that and of the hero's tilt are applied;
  * - reduced motion: the section is static and complete, and its Brand and Mode controls pick one composition and follow the page's mode;
- * - a phone: the menu panel opens with the Docs groups and the page does not scroll sideways;
+ * - a phone: the menu panel opens with the Docs groups, its Storybook button opens Storybook's Introduction, and the page does not scroll sideways;
  * - the first load: no console error, no failed request, no preloaded font left unused.
  *
  *   node scripts/check-home-page.mjs [root]
@@ -179,6 +179,8 @@ await scenario("a phone", { viewport: { width: 375, height: 812 }, hasTouch: tru
     await page.getByRole("button", { name: "Docs" }).first().click();
     await page.getByRole("link", { name: "Introduction" }).first().waitFor({ state: "visible", timeout: 5000 });
   });
+  const storybook = await page.getByRole("link", { name: "Storybook", exact: true }).first().getAttribute("href");
+  assert(storybook?.includes("?path=/docs/getting-started-introduction--docs") === true, `the panel's Storybook button goes to ${storybook}, not Storybook's Introduction`);
   await page.keyboard.press("Escape");
   const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
   assert(overflow <= 0, `the page scrolls sideways by ${overflow}px on a phone`);
