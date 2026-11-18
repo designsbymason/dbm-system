@@ -50,6 +50,11 @@ jobs:
       - name: Build Storybook
         run: pnpm --filter @dbm-system/components build-storybook
 
+      # Chromium reads the Properties tables off the rendered Storybook pages for the agent files, and runs the accessibility scan.
+      - name: Install Playwright browser
+        working-directory: apps/docs
+        run: pnpm exec playwright install --with-deps chromium
+
       # The docs site with Storybook beside it, as it will be published once it goes live: the gates run on this.
       - name: Assemble the docs site with Storybook
         run: |
@@ -59,6 +64,11 @@ jobs:
           # The root robots.txt and sitemap.xml, from Storybook's own (the site's home page included).
           node apps/docs/scripts/assemble-seo.mjs apps/docs/_artifact --home
 
+      # The files an agent reads (ADR-0228): a Markdown copy of every Storybook Docs page, llms.txt, llms-full.txt, manifest.json and AGENTS.md.
+      - name: Write the agent files
+        working-directory: apps/docs
+        run: pnpm generate-agent-files _artifact
+
       - name: Check the links
         working-directory: apps/docs
         run: pnpm check-links _artifact
@@ -66,10 +76,6 @@ jobs:
       - name: Check the component counts agree
         working-directory: apps/docs
         run: pnpm check-counts _artifact
-
-      - name: Install Playwright browser
-        working-directory: apps/docs
-        run: pnpm exec playwright install --with-deps chromium
 
       - name: Scan for accessibility
         working-directory: apps/docs
@@ -90,6 +96,8 @@ jobs:
             cp -R packages/components/storybook-static _site/storybook
             # The placeholder root has no home page to list, but Storybook's pages are indexed (ADR-0221).
             node apps/docs/scripts/assemble-seo.mjs _site
+            # The agent files are published either way: they are about Storybook's pages, not the home page.
+            cp -R apps/docs/_artifact/docs apps/docs/_artifact/llms.txt apps/docs/_artifact/llms-full.txt apps/docs/_artifact/manifest.json apps/docs/_artifact/AGENTS.md _site/
           fi
 
       - name: Upload the site
