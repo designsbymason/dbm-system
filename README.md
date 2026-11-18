@@ -11,7 +11,7 @@ An agentic React component library: accessible, token-driven and fully typed, wi
 [![License: MIT](https://img.shields.io/npm/l/@dbm-system/components?color=1a6e63)](./LICENSE)
 [![TypeScript](https://img.shields.io/badge/TypeScript-strict-3178c6)](https://www.typescriptlang.org)
 
-[**Documentation**](https://dbm-system.com/storybook/) · [**Website**](https://dbm-system.com) · [**npm**](https://www.npmjs.com/package/@dbm-system/components) · [**Report an issue**](https://github.com/designsbymason/dbm-system/issues)
+[**Storybook**](https://dbm-system.com/storybook/) · [**Website**](https://dbm-system.com) · [**npm**](https://www.npmjs.com/package/@dbm-system/components) · [**Report an issue**](https://github.com/designsbymason/dbm-system/issues)
 
 </div>
 
