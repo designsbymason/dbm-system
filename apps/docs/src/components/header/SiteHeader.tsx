@@ -1,5 +1,5 @@
 import { Badge, Button, IconButton, Navbar, NavigationMenu } from "@dbm-system/components";
-import { FlaskIcon, GithubLogoIcon } from "@dbm-system/icons";
+import { BookOpenTextIcon, GithubLogoIcon } from "@dbm-system/icons";
 import { allComponents, docsGroups, docsPage, foundationsLinks } from "../../data/site";
 import { Wordmark } from "../Wordmark";
 import { ModeToggle } from "./ModeToggle";
@@ -34,7 +34,7 @@ function GithubLink() {
 function PanelToolLinks() {
   return (
     <>
-      <Button asChild variant="ghost" size="sm" leadingIcon={FlaskIcon} className={styles.panelButton}>
+      <Button asChild variant="ghost" size="sm" leadingIcon={BookOpenTextIcon} className={styles.panelButton}>
         <a href={docsPage("getting-started-introduction")}>Storybook</a>
       </Button>
       <Button asChild variant="ghost" size="sm" leadingIcon={GithubLogoIcon} className={styles.panelButton}>
