@@ -32,32 +32,62 @@ are. The server is for an agent that would rather ask than read a 1.8 MB manifes
 
 ## Add it to your agent
 
+The server is a standard MCP server, so it works with any MCP client that can start a local server over stdio, not
+only Claude. Whichever client you use, two things are the same:
+
+- **The command is `npx -y @dbm-system/mcp`.** It takes no arguments and needs no environment variables.
+- **It looks for your installed packages in the folder it is started in,** so the agent should start it from your
+  project's root. If it is started somewhere else, it answers from the copies it depends on instead (see
+  "Which version it describes" below).
+
 ### Claude Code
 
-From the root of the project that uses DBM System:
+From the root of the project that uses DBM System, run:
 
 ```bash
 claude mcp add dbm-system -- npx -y @dbm-system/mcp
 ```
 
-That adds it for you in this project. To share it with your team, add `--scope project` before the name: Claude Code
-then writes it to `.mcp.json`, which you can commit.
+That adds the server for you, in this project. To share it with your team instead, add `--scope project`: Claude Code
+then writes it to `.mcp.json` in the project, which you can commit.
 
-### Any other client
-
-Any client that can start a local MCP server over stdio runs it with the command `npx -y @dbm-system/mcp`. Clients
-that take a JSON configuration want an entry like this:
-
-```json
-{
-  "mcpServers": {
-    "dbm-system": { "command": "npx", "args": ["-y", "@dbm-system/mcp"] }
-  }
-}
+```bash
+claude mcp add --scope project dbm-system -- npx -y @dbm-system/mcp
 ```
 
-Start it in the project's folder, because that is where it looks for the installed packages. If the client starts
-servers somewhere else, set the server's working folder to the project's.
+Check that it connected with `claude mcp list`, or with `/mcp` inside a Claude Code session. To take it out again,
+run `claude mcp remove dbm-system`.
+
+### Other clients
+
+Use the same command in whichever way your client takes a local server:
+
+- **A JSON configuration file.** Many clients read a list of servers like this one. The name of the top-level key can
+  differ from one client to the next, so check your client's documentation for it:
+
+  ```json
+  {
+    "mcpServers": {
+      "dbm-system": { "command": "npx", "args": ["-y", "@dbm-system/mcp"] }
+    }
+  }
+  ```
+
+- **A settings screen with an "add server" form.** Choose a local (stdio) server, and enter `npx` as the command and
+  `-y @dbm-system/mcp` as its arguments.
+
+Three things to check if a client cannot start it:
+
+- **It must be able to run a local command.** A client that only connects to servers by web address cannot run this
+  one: it has no hosted version.
+- **Node 24 or later must be installed, and the client must be able to find `npx`.** An app opened from a desktop icon
+  may not see the same `PATH` as your terminal. If so, give the full path to `npx` (`which npx` prints it).
+- **If the client has a setting for the server's working folder,** set it to your project's root.
+
+### Check that it works
+
+Ask the agent a question only the server can answer, such as "List the DBM System components in the Inputs category."
+It should call `dbm_list_components`. In the result, `source.origin` should say `project`.
 
 ## The tools
 
@@ -81,7 +111,8 @@ All seven are read-only. A list takes `limit` and `offset` and says where the ne
 
 Every answer carries a `source` that names the package, its version and an `origin`: `project` for the copy
 installed where the server was started, `bundled` for the copy the server depends on. If an agent describes props
-that do not match your code, check that `origin` first.
+that do not match your code, check that `origin` first. If it says `bundled`, the server was started in a folder that
+does not have your packages: start it from your project's root, or set the client's working folder for it.
 
 ## Limits
 
