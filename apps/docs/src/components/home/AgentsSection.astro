@@ -10,8 +10,13 @@ const files = [
   { name: facts.agentFiles.manifestComponent, detail: "One component in full: its props, parts, the native props it takes and its examples." },
   { name: facts.agentFiles.agents, detail: "The rules that hold across components, and every public name." },
   { name: facts.agentFiles.tokens, detail: "Every design token, its value in each theme, and which components use it." },
+  {
+    name: facts.mcp.name,
+    detail: "Or ask instead of read: start a read-only MCP server with",
+    command: facts.mcp.command,
+    after: "and it answers the same questions from what your project has installed.",
+  },
   { name: "llms.txt", detail: "A short index of the documentation, each page linked to a Markdown copy, for tools that read that convention." },
-  { name: facts.mcp.command, detail: "Or ask instead of read: a read-only MCP server answers the same questions from what your project has installed." },
 ];
 ---
 
@@ -39,7 +44,15 @@ const files = [
                 ))}
               </code>
             </dt>
-            <dd>{file.detail}</dd>
+            <dd>
+              {file.detail}
+              {file.command && (
+                <>
+                  {" "}
+                  <code>{file.command}</code> {file.after}
+                </>
+              )}
+            </dd>
           </div>
         ))
       }
@@ -102,6 +115,13 @@ const files = [
   dd {
     margin: 0;
     color: var(--site-graphite);
+  }
+
+  dd code {
+    font-family: var(--dbm-font-family-mono);
+    font-size: var(--dbm-font-size-sm);
+    color: var(--site-accent);
+    overflow-wrap: anywhere;
   }
 
   .agents__more {
