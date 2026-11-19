@@ -124,7 +124,7 @@ Expressive on the home page, calm in Storybook ([ADR-0222](../adr/0222-the-home-
 | `/AGENTS.md` | The consumer usage guide, copied byte for byte from the components package | Built (S4) |
 | `/manifest.json` | The full component manifest, copied byte for byte from the built components package | Built (S4) |
 | `<page>.md` | A Markdown copy of each Storybook Docs page, generated from its MDX at build ([ADR-0221](../adr/0221-storybooks-docs-pages-are-indexed-by-search-engines-with-plain-text-copies-for-agents-over-keeping-storybook-out-of-results.md)), at `/docs/<id>.md` with the id as Storybook has it, without `--docs` | Built (S4) |
-| `/llms.txt` | A short curated index of the docs (the llmstxt.org convention): the pages in the sidebar's order, a sentence each | Built (S4) |
+| `/llms.txt` | A short curated index of the docs (the llmstxt.org convention): the pages in the sidebar's order, a sentence each (a lead-in such as "Welcome to the docs." is replaced by the next sentence when the two are too long), and the MCP server page also under Start here | Built (S4) |
 | `/llms-full.txt` | Every copy in one file, in the sidebar's order (about 3 MiB; the index and the single pages are the lighter way in) | Built (S4) |
 
 **How the copies are made:** each Storybook Docs page's MDX is parsed with the unified tools at build. Headings, prose, lists, tables and code pass through; imports, `<Meta>` and `<ThemeSync />` are dropped; every block has its own text form, and a block with none fails the build, so nothing disappears silently:

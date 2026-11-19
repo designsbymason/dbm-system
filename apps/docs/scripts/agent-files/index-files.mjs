@@ -19,20 +19,45 @@ export function checkOrder(pages) {
   }
 }
 
-/** The first sentence of a copy's first paragraph (after its heading and tier line), for a page that has no description of its own. */
+/** Whether a line starts a paragraph of prose (not a heading, list, table, quote, code fence or one of the copy's own lines). */
+const isProse = (line) => /^[A-Za-z`*[]/.test(line) && !/^(Tier|Live example|Storybook page|Markdown copy): /.test(line);
+
+/**
+ * The first sentence of a copy's first paragraph (after its heading and tier line), for a page that has no description of its own. A
+ * first sentence that is short takes the next one with it, from the same paragraph or, when it stands alone, the paragraph after it; when
+ * a lone short paragraph ("Welcome to the documentation.") and the next sentence are too long together, the next sentence stands alone.
+ */
 export function firstSentence(markdown) {
   const lines = markdown.split("\n");
-  const start = lines.findIndex((line) => /^[A-Za-z`*[]/.test(line) && !line.startsWith("Tier: ") && !line.startsWith("Live example: "));
+  const start = lines.findIndex(isProse);
   if (start === -1) return "";
-  const paragraph = [];
-  for (const line of lines.slice(start)) {
-    if (line.trim() === "") break;
-    paragraph.push(line.trim());
+  const paragraphAt = (from) => {
+    const paragraph = [];
+    for (const line of lines.slice(from)) {
+      if (line.trim() === "") break;
+      paragraph.push(line.trim());
+    }
+    return paragraph;
+  };
+  const sentencesOf = (paragraph) => {
+    const joined = paragraph.join(" ").replace(/\[([^\]]+)\]\([^)]*\)/g, "$1").replace(/\*\*([^*]+)\*\*/g, "$1");
+    return (joined.match(/.+?[.!?](?=\s|$)/g) ?? [joined]).map((part) => part.trim());
+  };
+  const first = paragraphAt(start);
+  const sentences = sentencesOf(first);
+  const isLeadIn = sentences[0].length < 70;
+  let crossed = false;
+  if (isLeadIn && sentences.length === 1) {
+    const next = lines.findIndex((line, index) => index >= start + first.length && line.trim() !== "");
+    if (next !== -1 && isProse(lines[next])) {
+      sentences.push(...sentencesOf(paragraphAt(next)));
+      crossed = true;
+    }
   }
-  const joined = paragraph.join(" ").replace(/\[([^\]]+)\]\([^)]*\)/g, "$1").replace(/\*\*([^*]+)\*\*/g, "$1");
-  // A first sentence that is only a lead-in ("Welcome to the documentation.") takes the second one with it.
-  const sentences = (joined.match(/.+?[.!?](?=\s|$)/g) ?? [joined]).map((part) => part.trim());
-  const sentence = sentences[0].length < 70 && sentences[1] ? `${sentences[0]} ${sentences[1]}` : sentences[0];
+  const together = `${sentences[0]} ${sentences[1]}`;
+  // A short sentence that has more of its own paragraph after it is a subject, not a greeting: it stays, and the pair is cut to fit.
+  // Only a lone short paragraph ahead of the real first one ("Welcome to the docs.") gives way when the pair is too long.
+  const sentence = isLeadIn && sentences[1] ? (crossed && together.length > 240 ? sentences[1] : together) : sentences[0];
   return sentence.length > 240 ? `${sentence.slice(0, 237).trimEnd()}…` : sentence;
 }
 
@@ -42,6 +67,7 @@ export function firstSentence(markdown) {
  */
 export function buildLlmsTxt({ pages, copies, descriptions, summary }) {
   checkOrder(pages);
+  const mcpPage = pages.find((page) => page.title === "Getting started/MCP server");
   const out = [
     "# DBM System",
     "",
@@ -54,6 +80,7 @@ export function buildLlmsTxt({ pages, copies, descriptions, summary }) {
     `- [AGENTS.md](${SITE_ORIGIN}AGENTS.md): how to set up, and the rules that hold across every component`,
     `- [manifest.json](${SITE_ORIGIN}manifest.json): every component, prop, part, hook and function, as JSON`,
     `- [llms-full.txt](${SITE_ORIGIN}llms-full.txt): every page below, in one file`,
+    ...(mcpPage ? [`- [MCP server](${SITE_ORIGIN}docs/${mcpPage.id.replace(/--docs$/, "")}.md): a read-only server your agent can ask about components, props and tokens instead of reading the files`] : []),
   ];
   for (const group of GROUP_ORDER) {
     const lines = pages
