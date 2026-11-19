@@ -8,6 +8,16 @@ React components for web and enterprise apps. Every component, prop and part is 
 2. Read `@dbm-system/components/manifest/components/<Name>.json` for each component you use: its `props` (type, required, default, allowed `values`, description), its `parts` (such as `Menu.Item`), the native props it also takes (`extends`) and its `examples`. A helper (a name under Helpers below, such as `TooltipProvider`) is read the same way from `manifest/helpers/<Name>.json`; its `helperOf` names the component it supports.
 3. Hooks, functions and constants are in `manifest/utilities.json`; `manifest.schema.json` describes each file. The manifest is for the installed version.
 
+## Ask instead of read
+
+`@dbm-system/mcp` is a read-only MCP server that answers the same questions from the manifest, the token index and this guide, for the versions installed in the project it is started in. Add it to a project with:
+
+```bash
+claude mcp add dbm-system -- npx -y @dbm-system/mcp
+```
+
+Other clients start it with the command `npx -y @dbm-system/mcp` over stdio.
+
 ## Set up
 
 ```bash

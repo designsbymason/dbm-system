@@ -1,5 +1,5 @@
 import { Meta } from "@storybook/addon-docs/blocks";
-import { Callout, FileTable } from "../../.storybook/blocks";
+import { FileTable } from "../../.storybook/blocks";
 import { ThemeSync } from "../../.storybook/blocks/foundations";
 import { VisuallyHidden } from "../atoms/VisuallyHidden";
 
@@ -109,13 +109,12 @@ dbm-system.com, for an agent that has not installed anything yet, or that reads 
 The copies are made from these pages when the site is built, so they match what is here. The Properties tables are the
 ones shown on each page, and a live example is a link to it.
 
-<Callout tone="info" title="In active development">
+## Ask instead of reading files
 
-Built, but not published yet, so do not rely on it:
+An agent that would rather ask than read can run the [MCP server](?path=/docs/getting-started-mcp-server--docs),
+which answers the same questions from the files above: which components exist, what a prop accepts, which token to
+use. It is read-only and reads the versions your project has installed.
 
-- **An MCP server** (`@dbm-system/mcp`): a way for an agent to ask questions of the manifest, the token index and
-  `AGENTS.md` instead of reading files. It is read-only and runs on your machine over stdio. It is not on npm yet.
-
-This page will say when it can be installed.
-
-</Callout>
+```bash
+claude mcp add dbm-system -- npx -y @dbm-system/mcp
+```

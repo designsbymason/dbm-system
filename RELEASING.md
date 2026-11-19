@@ -10,21 +10,11 @@ How a release of the five public packages (`@dbm-system/components`, `tokens`, `
 4. **Squash-merge it** (the repository allows squash merges only). The workflow runs again, publishes the five packages with provenance, and pushes a git tag for each (`@dbm-system/<name>@<version>`).
 5. **Check it**: `npm view @dbm-system/components version` should print the new version, and `npm view @dbm-system/components@<version> dist.attestations` should show a provenance attestation. A new version can take a few minutes to appear on npm.
 
-## Publishing `@dbm-system/mcp` for the first time
-
-`@dbm-system/mcp` ([ADR-0229](guidelines/adr/0229-the-mcp-server-is-built-now-as-a-read-only-server-over-stdio-that-reads-the-shipped-files-over-waiting-for-a-stable-api-a-hosted-server-or-a-server-that-can-write.md), [ADR-0230](guidelines/adr/0230-the-mcp-server-is-a-fifth-public-package-in-the-fixed-version-group-over-folding-it-into-the-components-package-or-leaving-it-outside-the-group.md)) is a public package in the fixed group, at the group's version. The release workflow cannot create a package on npm, so its first version is published by hand, **before** the commit that makes it public is pushed: with it public on `main` and not on npm, the Release workflow's publish step tries it with the OIDC login, which has no trusted publisher yet, and fails.
-
-1. From a clean checkout of the commit that makes it public (the version must equal the other four's), run `pnpm build && pnpm check-publish`, then `cd packages/mcp && pnpm publish --access public --no-git-checks` and approve it with your passkey. It has no provenance, as `0.1.0` had.
-2. On npm, add its trusted publisher: repository `designsbymason/dbm-system`, workflow `release.yml`, no environment, **Allow npm publish** ticked, **Allow npm dist-tag** unticked.
-3. Check `npm view @dbm-system/mcp version`, then push the commit.
-4. Make the documentation say it exists, in one more commit: the "In active development" callout in `packages/components/src/guides/AiAgents.mdx` becomes a section (the install command and the tools, from the package README), the Roadmap line, a line in `packages/components/AGENTS.md`, `docs-site/02-structure.md` §6, `docs-site/03-landing-page-brief.md` and the AI agents sentence in `07-storybook-and-documentation-standards.md`. Delete the open-items row for the first publish.
-5. Every later release goes through the workflow, with provenance.
-
 ## One-time settings (already made)
 
 - **GitHub:** Settings → Actions → "Allow GitHub Actions to create and approve pull requests" is on.
 - **npm:** the `dbm-system` organization owns the scope, and each of the five packages has a trusted publisher: repository `designsbymason/dbm-system`, workflow `release.yml`, no environment, with **Allow npm publish** ticked and **Allow npm dist-tag** unticked. With "Allow npm publish" unticked npm accepts only `npm stage publish`, which Changesets does not run, and the publish step fails.
-- **A new public package** needs the same trusted publisher added on npm, and its first version published by hand, because a trusted publisher can only be added to a package that exists.
+- **A new public package** needs the same trusted publisher added on npm, and its first version published by hand, because a trusted publisher can only be added to a package that exists. Do it in this order: make the package public locally at the group's version (drop `private`, add it to the fixed group in `.changeset/config.json`) and run `pnpm build && pnpm check-publish`; publish it by hand from that commit (`pnpm publish --access public --no-git-checks` in its folder, approved with a passkey); add its trusted publisher on npm; check `npm view <name> version`; and only then push the commit. With it public on `main` and not yet on npm, the publish step of this workflow tries it with the OIDC login, which has no trusted publisher yet, and fails. The first version has no provenance. `@dbm-system/mcp` went out this way at `0.2.1`.
 
 ## When it fails
 

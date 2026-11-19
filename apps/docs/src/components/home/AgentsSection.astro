@@ -1,7 +1,7 @@
 ---
 // Section 2 (03-landing-page-brief.md §3): why an agent works from facts, and the files it reads. Informational: nothing here is typed in
 // that could go out of date (no sizes or counts); the files are named and described.
-import { aiAgents } from "../../data/site";
+import { aiAgents, mcpServer } from "../../data/site";
 import { facts } from "./facts";
 
 // Each file is named with its package, from the packages themselves (facts.ts checks that the files are there).
@@ -11,6 +11,7 @@ const files = [
   { name: facts.agentFiles.agents, detail: "The rules that hold across components, and every public name." },
   { name: facts.agentFiles.tokens, detail: "Every design token, its value in each theme, and which components use it." },
   { name: "llms.txt", detail: "A short index of the documentation, each page linked to a Markdown copy, for tools that read that convention." },
+  { name: facts.mcp.command, detail: "Or ask instead of read: a read-only MCP server answers the same questions from what your project has installed." },
 ];
 ---
 
@@ -45,6 +46,7 @@ const files = [
     </dl>
     <p class="agents__more">
       <a href={aiAgents.href}>How an agent uses them</a>
+      <a href={mcpServer.href}>The MCP server</a>
     </p>
   </div>
 </section>
@@ -103,6 +105,9 @@ const files = [
   }
 
   .agents__more {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--dbm-space-2) var(--dbm-space-6);
     margin: var(--dbm-space-6) 0 0;
   }
 

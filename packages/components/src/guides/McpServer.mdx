@@ -1,0 +1,123 @@
+import { Meta } from "@storybook/addon-docs/blocks";
+import { Callout, ReferenceTable, RelatedLinks } from "../../.storybook/blocks";
+import { ThemeSync } from "../../.storybook/blocks/foundations";
+import { VisuallyHidden } from "../atoms/VisuallyHidden";
+
+<Meta title="Getting started/MCP server" />
+
+<ThemeSync />
+
+<VisuallyHidden asChild><h2>Intro</h2></VisuallyHidden>
+
+# MCP server
+
+`@dbm-system/mcp` is a [Model Context Protocol](https://modelcontextprotocol.io) server for DBM System. A coding
+agent starts it on your machine and asks it which components exist, what a prop accepts, which token to use for a
+colour, and gets the answer from the files the packages already ship, instead of reading them itself.
+
+- **Read-only.** It writes nothing, calls no network service and runs none of your project's code.
+- **Your versions.** It reads the copies of `@dbm-system/components` and `@dbm-system/tokens` installed in the folder
+  it is started from, so an agent sees the props of the version your project has.
+- **Over stdio.** The agent's tooling runs it as a local command. There is no hosted server to sign in to.
+
+Reading the files yourself works too: see [AI agents](?path=/docs/getting-started-ai-agents--docs) for what they
+are. The server is for an agent that would rather ask than read a 1.8 MB manifest.
+
+## What you need
+
+- Node 24 or later, which runs the server.
+- `@dbm-system/components` (and `@dbm-system/tokens`) installed in the project the agent works on, as in
+  [Installation](?path=/docs/getting-started-installation--docs). With neither installed, the server falls back to
+  the copies it depends on, and says so in every answer.
+
+## Add it to your agent
+
+### Claude Code
+
+From the root of the project that uses DBM System:
+
+```bash
+claude mcp add dbm-system -- npx -y @dbm-system/mcp
+```
+
+That adds it for you in this project. To share it with your team, add `--scope project` before the name: Claude Code
+then writes it to `.mcp.json`, which you can commit.
+
+### Any other client
+
+Any client that can start a local MCP server over stdio runs it with the command `npx -y @dbm-system/mcp`. Clients
+that take a JSON configuration want an entry like this:
+
+```json
+{
+  "mcpServers": {
+    "dbm-system": { "command": "npx", "args": ["-y", "@dbm-system/mcp"] }
+  }
+}
+```
+
+Start it in the project's folder, because that is where it looks for the installed packages. If the client starts
+servers somewhere else, set the server's working folder to the project's.
+
+## The tools
+
+All seven are read-only. A list takes `limit` and `offset` and says where the next page starts.
+
+<ReferenceTable
+  plainFirstColumn
+  columns={["Tool", "Use it to"]}
+  rows={[
+    ["`dbm_list_components`", "See what exists: every component and helper with its tier, category and a sentence, filtered by tier or category. “What form inputs are there?”"],
+    ["`dbm_get_component`", "Read one component's manifest entry: its props, parts and examples. Ask for one part, such as `Navbar.Link`, or one section. “What does Button's size accept?”"],
+    ["`dbm_list_utilities`", "List the hooks and functions the components package exports. “Is there a hook for toasts?”"],
+    ["`dbm_get_utility`", "Read one hook, function or constant in full, with its signature and examples."],
+    ["`dbm_get_tokens`", "Look up design tokens by name, layer, group or the component that uses them, with one theme's value on request. “Which tokens does Button use?”"],
+    ["`dbm_search`", "Find components, hooks, functions, constants and tokens by what they do when you do not know the name. “Something to pick a date range.”"],
+    ["`dbm_get_agent_guide`", "Read `AGENTS.md`, the guide that ships with the components package."],
+  ]}
+/>
+
+## Which version it describes
+
+Every answer carries a `source` that names the package, its version and an `origin`: `project` for the copy
+installed where the server was started, `bundled` for the copy the server depends on. If an agent describes props
+that do not match your code, check that `origin` first.
+
+## Limits
+
+- **Components, hooks, functions and tokens only.** The documentation pages are not served by it; an agent that
+  needs them reads the [Markdown copies](?path=/docs/getting-started-ai-agents--docs) on dbm-system.com.
+- **Results are capped at 25,000 characters.** A long list comes back in pages, and a component too large for one
+  result returns its props first, then its parts and examples as they fit, with an `omitted` note naming what to ask
+  for next.
+- **It cannot change your project.** It describes DBM System; it does not scaffold a component or edit a file.
+
+<Callout tone="info" title="Pre-1.0">
+
+DBM System is pre-1.0, and so is this server: a tool's name or the shape of its result can change in a minor version,
+with the change in the release notes.
+
+</Callout>
+
+## If something goes wrong
+
+- **“… is not installed in …”:** the folder the server started in has no `@dbm-system/components`. Install it there,
+  or start the server from the project's root.
+- **“… has no manifest/index.json”:** the installed components package is older than the manifest layout the server
+  reads. Update `@dbm-system/components`.
+- **The server does not start:** check `node --version`. It needs Node 24 or later.
+
+<RelatedLinks
+  items={[
+    {
+      name: "AI agents",
+      description: "The files an agent reads, and the Markdown copies of these docs.",
+      href: "?path=/docs/getting-started-ai-agents--docs",
+    },
+    {
+      name: "Components index",
+      description: "Every component, with a search and filters.",
+      href: "?path=/docs/components-index--docs",
+    },
+  ]}
+/>

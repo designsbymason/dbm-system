@@ -36,6 +36,7 @@ export const docsGroups: SiteGroup[] = [
       { label: "Quick start", href: page("getting-started-quick-start"), description: "An empty app to a themed page" },
       { label: "Frameworks", href: page("getting-started-frameworks"), description: "Next.js, Vite, Astro and server rendering" },
       { label: "AI agents", href: page("getting-started-ai-agents"), description: "The files an agent reads" },
+      { label: "MCP server", href: page("getting-started-mcp-server"), description: "Let an agent ask instead of read" },
     ],
   },
   {
@@ -88,6 +89,7 @@ export const theming: SiteLink = link(guides, "Theming");
 export const introduction: SiteLink = link(gettingStarted, "Introduction");
 export const installation: SiteLink = link(gettingStarted, "Installation");
 export const aiAgents: SiteLink = link(gettingStarted, "AI agents");
+export const mcpServer: SiteLink = link(gettingStarted, "MCP server");
 
 /** This website's own accessibility statement; the components' guarantees and known exceptions are in the Accessibility guide (`accessibility`). */
 export const accessibilityStatement: SiteLink = { label: "Accessibility", href: "/accessibility" };

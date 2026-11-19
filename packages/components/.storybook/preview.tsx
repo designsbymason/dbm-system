@@ -138,6 +138,7 @@ const preview: Preview = {
           "Getting started/Quick start",
           "Getting started/Frameworks",
           "Getting started/AI agents",
+          "Getting started/MCP server",
         ];
         const resourcesOrder = ["Resources/Changelog", "Resources/Roadmap", "Resources/FAQ"];
         const guidesOrder = [

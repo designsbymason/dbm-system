@@ -1,7 +1,7 @@
 // Every figure on the home page is read here, at build, from the packages themselves (03-landing-page-brief.md §2).
 import components from "@dbm-system/components/package.json";
 import manifest from "@dbm-system/components/manifest.json";
-import { existsSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import icons from "@dbm-system/icons/package.json";
 import tokensPackage from "@dbm-system/tokens/package.json";
 import tokens from "@dbm-system/tokens/tokens.json";
@@ -38,6 +38,9 @@ inPackages(`components/dist/manifest/index.json`, "the agents section");
 inPackages(`components/dist/manifest/components`, "the agents section");
 inPackages(`components/AGENTS.md`, "the agents section");
 inPackages(`tokens/build/tokens.json`, "the agents section");
+// The MCP server is run with npx, so the command is built from its package name, and its program has to be built.
+inPackages(`mcp/dist/index.js`, "the agents section");
+const mcpPackage = JSON.parse(readFileSync(new URL(`${packages}/mcp/package.json`, import.meta.url), "utf8")) as { name: string };
 
 export const facts = {
   version: components.version,
@@ -61,6 +64,11 @@ export const facts = {
     manifestComponent: `${components.name}/manifest/components/<Name>.json`,
     agents: `${components.name}/AGENTS.md`,
     tokens: `${tokensPackage.name}/tokens.json`,
+  },
+  /** The MCP server: the command that starts it, named from its package. */
+  mcp: {
+    name: mcpPackage.name,
+    command: `npx -y ${mcpPackage.name}`,
   },
 };
 
