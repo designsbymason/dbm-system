@@ -11,6 +11,8 @@
  *      no error (Next.js builds on it), so only this build can show that the package's `sideEffects` still keeps the stylesheet;
  *   4b. builds a Next.js App Router app (Turbopack and webpack) whose server page, with no "use client" of its own, imports components from the
  *      package, and requires the prerendered HTML to hold them and the page to hydrate in Chromium without an error (ADR-0227);
+ *   6. starts `@dbm-system/mcp` from the app, as an agent's tooling would, and requires it to read the installed packages and answer a tool call
+ *      (`packages/mcp/scripts/check-installed.mjs`);
  *   5. loads the page in Chromium and requires no errors, the component styles and the token CSS to have reached the bundle, and the
  *      button to be drawn from the theme's tokens, in light and again after `data-theme` changes to dark.
  * Needs the packages built, a Chromium for Playwright and the network (`pnpm install` of React, webpack, Next.js and the packages' dependencies; the two build tools are in the temporary app only). Nothing is
@@ -29,6 +31,8 @@ import { build } from "esbuild";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const PACKAGES = ["components", "tokens", "utils", "icons"];
+/** What is packed: the four public packages, and the MCP server, which is installed beside the app as a tool. */
+const PACKED = [...PACKAGES, "mcp"];
 const failures = [];
 const fail = (message) => failures.push(message);
 
@@ -44,9 +48,9 @@ try {
   // 1. Pack.
   const tarballs = join(work, "tarballs");
   mkdirSync(tarballs);
-  for (const name of PACKAGES) execFileSync("pnpm", ["pack", "--pack-destination", tarballs], { cwd: join(root, "packages", name), stdio: "pipe" });
+  for (const name of PACKED) execFileSync("pnpm", ["pack", "--pack-destination", tarballs], { cwd: join(root, "packages", name), stdio: "pipe" });
   const file = (name) => `file:${join(tarballs, readdirSync(tarballs).find((entry) => entry === `dbm-system-${name}-0.0.0.tgz` || entry.startsWith(`dbm-system-${name}-`)))}`;
-  console.log(`  packed ${PACKAGES.length} packages`);
+  console.log(`  packed ${PACKED.length} packages`);
 
   // 2. An empty app. The tokens package is listed too, because the guide has the app import its CSS, and under a strict package manager
   // a package the app does not depend on is not importable.
@@ -64,6 +68,7 @@ try {
         "@dbm-system/components": file("components"),
         "@dbm-system/tokens": file("tokens"),
         "@dbm-system/icons": file("icons"),
+        "@dbm-system/mcp": file("mcp"),
       },
       // Only the temporary app has these; none of them is a dependency of this repository.
       devDependencies: { webpack: "5.101.0", "css-loader": "7.1.2", "style-loader": "4.0.0", next: "16.4.6" },
@@ -71,7 +76,7 @@ try {
   );
   // The packed packages depend on each other at the release version, which is not on the registry yet, so each is pointed at its tarball
   // (pnpm 11 reads overrides from pnpm-workspace.yaml, not package.json).
-  writeFileSync(join(app, "pnpm-workspace.yaml"), `overrides:\n${PACKAGES.map((name) => `  "@dbm-system/${name}": ${JSON.stringify(file(name))}`).join("\n")}\n`);
+  writeFileSync(join(app, "pnpm-workspace.yaml"), `overrides:\n${PACKED.map((name) => `  "@dbm-system/${name}": ${JSON.stringify(file(name))}`).join("\n")}\n`);
   const install = () => execFileSync("pnpm", ["install", "--ignore-scripts"], { cwd: app, stdio: "pipe", encoding: "utf8" });
   try {
     install();
@@ -257,6 +262,10 @@ export default function Page() {
       server.kill("SIGKILL");
     }
   }
+
+  // 6. The MCP server, started from the app the way an agent's tooling starts it: it must read the packages installed there.
+  execFileSync("node", [join(root, "packages", "mcp", "scripts", "check-installed.mjs"), app], { stdio: "pipe", encoding: "utf8" });
+  console.log("  the MCP server reads the installed packages and answers a tool call");
 
   // 5. Load it.
   const browser = await chromium.launch();

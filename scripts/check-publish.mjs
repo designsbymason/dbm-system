@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 /**
- * Checks that each public package (the four that are published; ADR-0209) would publish correctly, after `pnpm build`:
+ * Checks that each public package (the four that are published, ADR-0209, and `@dbm-system/mcp`, a program that is private until its first
+ * version is published by hand, ADR-0230) would publish correctly, after `pnpm build`:
  *   1. the packed file list holds the README, the LICENSE, package.json and the build, and none of the
  *      source, tests, stories or private files;
  *   2. publint finds nothing wrong with `exports`, `main` and the files they point at;
@@ -19,9 +20,11 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
-const PACKAGES = ["components", "tokens", "utils", "icons"];
+const PACKAGES = ["components", "tokens", "utils", "icons", "mcp"];
+/** Packages that are programs, not libraries: a `bin` and no `exports` or types, so they are held to the bin rules and not to the library ones. */
+const PROGRAMS = ["mcp"];
 
-/** Files every tarball must hold, and path patterns none may. */
+/** Files every library tarball must hold, and path patterns none may. A program holds the first three and its `bin` targets. */
 const REQUIRED = ["package.json", "README.md", "LICENSE", "dist/index.js", "dist/index.cjs", "dist/index.d.ts", "dist/index.d.cts"];
 /** Extra files a package must hold: the components package ships its stylesheet (ADR-0175), the manifest with its schema (ADR-0204) and AGENTS.md (ADR-0208), the tokens package its token index (ADR-0210). */
 const REQUIRED_EXTRA = { tokens: ["build/tokens.json"], components: ["AGENTS.md", "dist/index.css", "dist/manifest.json", "dist/manifest.schema.json", "dist/manifest/index.json", "dist/manifest/utilities.json"] };
@@ -38,13 +41,14 @@ const PRIVATE = ["@dbm-system/eslint-config", "@dbm-system/tsconfig", "@dbm-syst
  * a private package.
  */
 function packedManifestProblems(packed, version, publicNames) {
+  // `version` is undefined for a package that is still private, whose version the release does not move yet.
   const problems = [];
   for (const section of DEPENDENCY_SECTIONS) {
     for (const [dependency, range] of Object.entries(packed[section] ?? {})) {
       if (String(range).startsWith("workspace:")) problems.push(`${section}.${dependency} is still "${range}" in the tarball`);
       if (section === "devDependencies") continue;
       if (PRIVATE.includes(dependency)) problems.push(`${section}.${dependency} is a private package, which is never published`);
-      if (publicNames.includes(dependency) && range !== version) problems.push(`${section}.${dependency} is "${range}", not exactly ${version}`);
+      if (version !== undefined && publicNames.includes(dependency) && range !== version) problems.push(`${section}.${dependency} is "${range}", not exactly ${version}`);
     }
   }
   return problems;
@@ -63,7 +67,8 @@ for (const name of PACKAGES) {
 
   // Tools and bundlers read `pkg/package.json`, which a package with an `exports` map must list or `require` throws
   // ERR_PACKAGE_PATH_NOT_EXPORTED.
-  if (pkg.exports?.["./package.json"] !== "./package.json") fail(pkg.name, `exports does not list "./package.json"`);
+  const program = PROGRAMS.includes(name);
+  if (!program && pkg.exports?.["./package.json"] !== "./package.json") fail(pkg.name, `exports does not list "./package.json"`);
 
   // A package that exposes CSS through `exports` must not say it has no side effects: a bundler is then free to drop `import "pkg/styles.css"`
   // from a production build, which leaves the app unstyled without an error (ADR-0207).
@@ -75,7 +80,15 @@ for (const name of PACKAGES) {
   // 1. The packed file list.
   const packed = JSON.parse(execFileSync("npm", ["pack", "--dry-run", "--json", "--ignore-scripts"], { cwd: dir, encoding: "utf8" }));
   const files = packed[0].files.map((file) => file.path);
-  for (const required of [...REQUIRED, ...(REQUIRED_EXTRA[name] ?? [])]) if (!files.includes(required)) fail(pkg.name, `the tarball is missing ${required}`);
+  const bins = Object.values(pkg.bin ?? {}).map((target) => target.replace(/^\.\//, ""));
+  for (const required of program ? [...REQUIRED.slice(0, 3), ...bins] : [...REQUIRED, ...(REQUIRED_EXTRA[name] ?? [])]) if (!files.includes(required)) fail(pkg.name, `the tarball is missing ${required}`);
+  if (program && bins.length === 0) fail(pkg.name, "has no bin, which a program needs");
+  // A program's bin is run by name, so it must start with a shebang and be executable.
+  for (const target of bins) {
+    const entry = packed[0].files.find((file) => file.path === target);
+    if (entry && (entry.mode & 0o111) === 0) fail(pkg.name, `${target} is not executable in the tarball`);
+    if (existsSync(join(dir, target)) && !readFileSync(join(dir, target), "utf8").startsWith("#!/usr/bin/env node\n")) fail(pkg.name, `${target} does not start with the node shebang`);
+  }
   if (name === "components" && files.includes("dist/manifest.json")) {
     // The manifest says which release it describes, so a stale one is caught here.
     const shipped = JSON.parse(readFileSync(join(dir, "dist", "manifest.json"), "utf8"));
@@ -113,7 +126,7 @@ for (const name of PACKAGES) {
       fail(pkg.name, "pnpm pack made no tarball");
     } else {
       const packed = JSON.parse(execFileSync("tar", ["-xzOf", join(packFolder, tarball), "package/package.json"], { encoding: "utf8" }));
-      const problems = packedManifestProblems(packed, pkg.version, PACKAGES.map((entry) => `@dbm-system/${entry}`));
+      const problems = packedManifestProblems(packed, pkg.private ? undefined : pkg.version, PACKAGES.map((entry) => `@dbm-system/${entry}`));
       for (const problem of problems) fail(pkg.name, `the packed package.json: ${problem}`);
       if (problems.length === 0) console.log("  packed package.json ok");
     }
@@ -123,13 +136,14 @@ for (const name of PACKAGES) {
 
   // A JSON or CSS file exposed through `exports` (the schema, the stylesheet) is data, not a module: it has no types or module format for
   // attw to resolve, so it is left out of that check. publint still checks that the file exists.
+  // A program has no types or module format for attw to look at, so it gets publint only.
   const dataEntrypoints = Object.keys(pkg.exports ?? {}).filter((entry) => entry.endsWith(".json") || entry.endsWith(".css"));
   const attwArgs = ["exec", "attw", "--pack", ".", ...(dataEntrypoints.length ? ["--exclude-entrypoints", ...dataEntrypoints] : [])];
 
   // 2 and 3. publint, then are-the-types-wrong, each on the packed package.
   for (const [label, command, args] of [
     ["publint", "pnpm", ["exec", "publint", "--pack", "pnpm", "--strict"]],
-    ["attw", "pnpm", attwArgs],
+    ...(program ? [] : [["attw", "pnpm", attwArgs]]),
   ]) {
     const result = spawnSync(command, args, { cwd: dir, encoding: "utf8" });
     if (result.status !== 0) {

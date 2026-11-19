@@ -10,6 +10,10 @@ How a release of the four public packages (`@dbm-system/components`, `tokens`, `
 4. **Squash-merge it** (the repository allows squash merges only). The workflow runs again, publishes the four packages with provenance, and pushes a git tag for each (`@dbm-system/<name>@<version>`).
 5. **Check it**: `npm view @dbm-system/components version` should print the new version, and `npm view @dbm-system/components@<version> dist.attestations` should show a provenance attestation. A new version can take a few minutes to appear on npm.
 
+## The MCP server package (not yet released)
+
+`@dbm-system/mcp` ([ADR-0229](guidelines/adr/0229-the-mcp-server-is-built-now-as-a-read-only-server-over-stdio-that-reads-the-shipped-files-over-waiting-for-a-stable-api-a-hosted-server-or-a-server-that-can-write.md), [ADR-0230](guidelines/adr/0230-the-mcp-server-is-a-fifth-public-package-in-the-fixed-version-group-over-folding-it-into-the-components-package-or-leaving-it-outside-the-group.md)) is built and checked by CI but is still `"private": true`, so the release workflow neither versions nor publishes it, and `check-publish` does not compare its version with its siblings'. Its first version is published by hand (a new public package, below). To make it public, in one change: set its version to the current group version, remove `"private": true`, add it to the fixed group in `.changeset/config.json`, and change the four packages named in this file to five. Publish it by hand, then add its trusted publisher on npm; the next release goes through the workflow.
+
 ## One-time settings (already made)
 
 - **GitHub:** Settings → Actions → "Allow GitHub Actions to create and approve pull requests" is on.
