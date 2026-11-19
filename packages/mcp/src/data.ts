@@ -1,6 +1,6 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import { locatePackage, SourceError, type LocatedPackage } from "./sources";
+import { locatePackage, SourceError, type Locate, type LocatedPackage } from "./sources";
 
 /** One component or helper row of `manifest/index.json`. */
 export interface IndexRow {
@@ -65,11 +65,18 @@ export const SUPPORTED_SCHEMA_VERSION = 1;
 export interface SourceInfo {
   components: Pick<LocatedPackage, "name" | "version" | "origin">;
   tokens: Pick<LocatedPackage, "name" | "version" | "origin">;
+  /** The folders searched for the project's packages, in order. */
+  searched: readonly string[];
 }
 
 /** Everything the server reads, each file loaded on first use and kept for the life of the process. */
 export interface DbmData {
   info(): SourceInfo;
+  /**
+   * When the components or the tokens came from the copy bundled with this server and not from the project, a message that says so
+   * and how to fix it (ADR-0232); `undefined` when both came from the project.
+   */
+  note(): string | undefined;
   index(): ManifestIndex;
   /** One component's or helper's manifest entry, found by name without regard to case, or `undefined` when there is none. */
   component(name: string): { row: IndexRow; entry: unknown } | undefined;
@@ -101,15 +108,20 @@ function editDistance(a: string, b: string): number {
   return previous[y.length] ?? 0;
 }
 
-/** Opens the installed packages, looking in `startDir` first, and returns the readers. Nothing is read until a reader is called. */
-export function openData(startDir: string): DbmData {
+/**
+ * Opens the installed packages, looking in `startDirs` in order and then at this server's own dependencies, and returns the readers.
+ * `warnings` are what was wrong with a setting that named a folder; they go into the note a fallback carries. Nothing is read until
+ * a reader is called.
+ */
+export function openData(startDirs: string | readonly string[], warnings: readonly string[] = [], locate: Locate = locatePackage): DbmData {
+  const folders = typeof startDirs === "string" ? [startDirs] : startDirs;
   const cache = new Map<string, unknown>();
   const once = <T>(key: string, load: () => T): T => {
     if (!cache.has(key)) cache.set(key, load());
     return cache.get(key) as T;
   };
-  const components = () => once("components-package", () => locatePackage("@dbm-system/components", startDir));
-  const tokens = () => once("tokens-package", () => locatePackage("@dbm-system/tokens", startDir));
+  const components = () => once("components-package", () => locate("@dbm-system/components", folders));
+  const tokens = () => once("tokens-package", () => locate("@dbm-system/tokens", folders));
 
   const index = () =>
     once("index", () => {
@@ -127,7 +139,18 @@ export function openData(startDir: string): DbmData {
     info: () => ({
       components: { name: components().name, version: components().version, origin: components().origin },
       tokens: { name: tokens().name, version: tokens().version, origin: tokens().origin },
+      searched: folders,
     }),
+    note() {
+      const bundled = [components(), tokens()].filter((pkg) => pkg.origin === "bundled");
+      if (bundled.length === 0) return undefined;
+      const described = bundled.map((pkg) => `${pkg.name}@${pkg.version}`).join(" and ");
+      return [
+        `These answers come from the copy bundled with @dbm-system/mcp (${described}), not from your project: no ${bundled.map((pkg) => pkg.name).join(" or ")} was found from ${folders.join(" or ")}.`,
+        ...warnings,
+        "Start the server from your project's root, or set DBM_SYSTEM_PROJECT_DIR (or pass --project <folder>) to it.",
+      ].join(" ");
+    },
     index,
     component(name) {
       const wanted = name.toLowerCase();

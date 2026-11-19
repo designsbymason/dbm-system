@@ -37,8 +37,9 @@ Whichever client you use, two things are the same:
 
 - **The command is `npx -y @dbm-system/mcp`.** It takes no arguments and needs no environment variables.
 - **It looks for your installed packages in the folder it is started in,** so the agent should start it from your
-  project's root. If it is started somewhere else, it answers from the copies it depends on instead (see
-  "Which version it describes" below).
+  project's root. If your client starts it somewhere else, point it at the project: set the environment variable
+  `DBM_SYSTEM_PROJECT_DIR` to your project's root, or add `--project <folder>` to the arguments. With neither, it
+  answers from the copies it depends on and says so (see "Which version it describes" below).
 
 ### Claude Code
 
@@ -54,6 +55,9 @@ then writes it to `.mcp.json` in the project, which you can commit.
 ```bash
 claude mcp add --scope project dbm-system -- npx -y @dbm-system/mcp
 ```
+
+Claude Code also tells the server where your project is, through the `CLAUDE_PROJECT_DIR` variable it sets, and the
+server reads it when it is started somewhere else.
 
 Check that it connected with `claude mcp list`, or with `/mcp` inside a Claude Code session. To take it out again,
 run `claude mcp remove dbm-system`.
@@ -76,13 +80,31 @@ Use the same command in whichever way your client takes a local server:
 - **A settings screen with an "add server" form.** Choose a local (stdio) server, and enter `npx` as the command and
   `-y @dbm-system/mcp` as its arguments.
 
+If the client starts servers from a folder that is not your project, tell the server where the project is. Add an
+environment variable to the entry (or the form's environment field), with the full path to your project's root:
+
+```json
+{
+  "mcpServers": {
+    "dbm-system": {
+      "command": "npx",
+      "args": ["-y", "@dbm-system/mcp"],
+      "env": { "DBM_SYSTEM_PROJECT_DIR": "/path/to/your/project" }
+    }
+  }
+}
+```
+
+Or put `--project /path/to/your/project` after `-y @dbm-system/mcp` in the arguments.
+
 Three things to check if a client cannot start it:
 
 - **It must be able to run a local command.** A client that only connects to servers by web address cannot run this
   one: it has no hosted version.
 - **Node 24 or later must be installed, and the client must be able to find `npx`.** An app opened from a desktop icon
   may not see the same `PATH` as your terminal. If so, give the full path to `npx` (`which npx` prints it).
-- **If the client has a setting for the server's working folder,** set it to your project's root.
+- **If the client can set the server's working folder,** set it to your project's root. Otherwise use
+  `DBM_SYSTEM_PROJECT_DIR` or `--project`, as above.
 
 ### Check that it works
 
@@ -111,8 +133,9 @@ All seven are read-only. A list takes `limit` and `offset` and says where the ne
 
 Every answer carries a `source` that names the package, its version and an `origin`: `project` for the copy
 installed where the server was started, `bundled` for the copy the server depends on. If an agent describes props
-that do not match your code, check that `origin` first. If it says `bundled`, the server was started in a folder that
-does not have your packages: start it from your project's root, or set the client's working folder for it.
+that do not match your code, check that `origin` first. If it says `bundled`, the result also carries a `note` that says
+so, names the folders the server searched and how to fix it: the server was started in a folder that does not have
+your packages, so start it from your project's root, or set `DBM_SYSTEM_PROJECT_DIR` to it.
 
 ## Limits
 
@@ -136,6 +159,9 @@ with the change in the release notes.
   or start the server from the project's root.
 - **“… has no manifest/index.json”:** the installed components package is older than the manifest layout the server
   reads. Update `@dbm-system/components`.
+- **A result's `note` says the answers come from the bundled copy:** the server did not find your packages from the
+  folders it searched. Set `DBM_SYSTEM_PROJECT_DIR` to your project's root, as above, and check that
+  `@dbm-system/components` is installed there.
 - **The server does not start:** check `node --version`. It needs Node 24 or later.
 
 <RelatedLinks

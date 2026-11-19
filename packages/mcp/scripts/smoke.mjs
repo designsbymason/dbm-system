@@ -1,6 +1,7 @@
 /**
  * Self-check: starts the built server over stdio the way an agent's tooling would, from a folder where the packages are not installed
- * (so it reads the copies it depends on), calls each tool, and exits non-zero on any failure.
+ * (so it reads the copies it depends on), calls each tool, then starts it again the ways a client might start it in the wrong folder
+ * (ADR-0232), and exits non-zero on any failure.
  * Run with: pnpm build && node scripts/smoke.mjs
  */
 import { strict as assert } from "node:assert";
@@ -14,10 +15,19 @@ import { getDefaultEnvironment, StdioClientTransport } from "@modelcontextprotoc
 const entry = fileURLToPath(new URL("../dist/index.js", import.meta.url));
 const emptyProject = mkdtempSync(join(tmpdir(), "dbm-mcp-smoke-"));
 
-const client = new Client({ name: "smoke-test", version: "1.0.0" });
+/** The folder of this package, which has the workspace's components and tokens linked in `node_modules`, so it stands for a project. */
+const project = fileURLToPath(new URL("..", import.meta.url));
+
+/** Starts the server the way a client might. The child gets only a safe default environment, so no NODE_PATH leaks the workspace's packages in. */
+async function start({ cwd = emptyProject, env = {}, args = [] } = {}) {
+  const started = new Client({ name: "smoke-test", version: "1.0.0" });
+  await started.connect(new StdioClientTransport({ command: "node", args: [entry, ...args], cwd, env: { ...getDefaultEnvironment(), ...env } }));
+  return started;
+}
+const listOnce = async (started) => (await started.callTool({ name: "dbm_list_components", arguments: { limit: 1 } })).structuredContent;
+
+const client = await start();
 try {
-  // The child gets only a safe default environment, so no NODE_PATH leaks the workspace's packages in.
-  await client.connect(new StdioClientTransport({ command: "node", args: [entry], cwd: emptyProject, env: getDefaultEnvironment() }));
 
   const { tools } = await client.listTools();
   assert.deepEqual(
@@ -49,6 +59,34 @@ try {
   const missing = await client.callTool({ name: "dbm_get_component", arguments: { name: "Buton" } });
   assert.equal(missing.isError, true);
   assert.match(missing.content[0].text, /Did you mean 'Button'/);
+
+  assert.match(list.structuredContent.note, /DBM_SYSTEM_PROJECT_DIR/, "the bundled copy must say how to reach the project's");
+
+  // Started in the wrong folder, the server can still be told where the project is, three ways, and then it says nothing about a fallback.
+  for (const [label, options] of [
+    ["DBM_SYSTEM_PROJECT_DIR", { env: { DBM_SYSTEM_PROJECT_DIR: project } }],
+    ["--project", { args: ["--project", project] }],
+    ["CLAUDE_PROJECT_DIR", { env: { CLAUDE_PROJECT_DIR: project } }],
+  ]) {
+    const told = await start(options);
+    try {
+      const result = await listOnce(told);
+      assert.equal(result.source.origin, "project", `${label} must make it read the project's packages`);
+      assert.equal(result.note, undefined, `${label}: no fallback note when the project answers`);
+    } finally {
+      await told.close();
+    }
+  }
+
+  // A setting that names no folder is not a crash: it falls back, and the note names the setting.
+  const wrong = await start({ env: { DBM_SYSTEM_PROJECT_DIR: join(emptyProject, "does-not-exist") } });
+  try {
+    const result = await listOnce(wrong);
+    assert.equal(result.source.origin, "bundled");
+    assert.match(result.note, /DBM_SYSTEM_PROJECT_DIR is ".*does-not-exist", which is not a folder/);
+  } finally {
+    await wrong.close();
+  }
 
   console.error("Smoke test passed");
 } finally {

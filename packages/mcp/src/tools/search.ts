@@ -1,7 +1,7 @@
 import type { McpServer } from "@modelcontextprotocol/server";
 import * as z from "zod/v4";
 import type { DbmData } from "../data";
-import { pageShape, pagedResult, pagingInput, READ_ONLY } from "./shared";
+import { noteShape, pageShape, pagedResult, pagingInput, READ_ONLY, sourceNote } from "./shared";
 
 const KINDS = ["component", "helper", "hook", "function", "constant", "token"] as const;
 
@@ -51,7 +51,7 @@ Examples:
       }),
       outputSchema: z.object({
         ...pageShape,
-        note: z.string().optional().describe("Present when no result contained every word and the results hold only some of them."),
+        note: noteShape,
         results: z.array(z.object({ kind: z.enum(KINDS), name: z.string(), summary: z.string() })),
       }),
       annotations: READ_ONLY,
@@ -78,7 +78,7 @@ Examples:
       const results = (partial ? scored.sort((a, b) => a.missing - b.missing || rank(a, b)) : exact).map(({ candidate }) => candidate);
       return pagedResult(results, offset, limit, (items, page) => ({
         ...page,
-        ...(partial && results.length > 0 ? { note: "No result contains every word of the query, so these contain some of the words." } : {}),
+        ...sourceNote(data, partial && results.length > 0 ? "No result contains every word of the query, so these contain some of the words." : undefined),
         results: items,
       }));
     },

@@ -1,5 +1,6 @@
 import type { CallToolResult } from "@modelcontextprotocol/server";
 import * as z from "zod/v4";
+import type { DbmData } from "../data";
 
 /** The most characters of text one result may carry. A page stays under it by holding fewer items, never by cutting text. */
 export const CHARACTER_LIMIT = 25_000;
@@ -28,6 +29,15 @@ export const sourceShape = z.object({
   version: z.string(),
   origin: z.enum(["project", "bundled"]).describe("`project` is the copy installed where the server was started; `bundled` is the copy this server depends on."),
 });
+
+/** The `note` field a result carries when its answers come from the bundled copy and not the project's (ADR-0232). */
+export const noteShape = z.string().optional().describe("Present when the answers come from the copy bundled with the server and not from your project, or, for a search, when no result contained every word. It says why and what to do.");
+
+/** `{ note }` when the data came from the bundled copy, and nothing otherwise, for spreading into a result. */
+export function sourceNote(data: DbmData, ...more: Array<string | undefined>): { note?: string } {
+  const note = [...more, data.note()].filter((entry): entry is string => Boolean(entry)).join(" ");
+  return note ? { note } : {};
+}
 
 /** A result carrying `data` as structured content and, as the protocol asks, the same data as JSON text. Compact, because an agent reads it. */
 export function jsonResult(data: Record<string, unknown>): CallToolResult {

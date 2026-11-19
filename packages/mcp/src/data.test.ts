@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { openData } from "./data";
+import type { Locate, LocatedPackage } from "./sources";
 import { locatePackage, SourceError } from "./sources";
 
 const here = new URL("..", import.meta.url).pathname;
@@ -14,8 +15,8 @@ describe("openData", () => {
   });
 
   it("says how to install a package that is nowhere to be found", () => {
-    expect(() => locatePackage("@dbm-system/not-a-package", here)).toThrow(SourceError);
-    expect(() => locatePackage("@dbm-system/not-a-package", here)).toThrow(/npm install @dbm-system\/not-a-package/);
+    expect(() => locatePackage("@dbm-system/not-a-package", [here])).toThrow(SourceError);
+    expect(() => locatePackage("@dbm-system/not-a-package", [here])).toThrow(/npm install @dbm-system\/not-a-package/);
   });
 
   it("reads the manifest index", () => {
@@ -46,5 +47,26 @@ describe("openData", () => {
     const names = data.index().components.map((row) => row.name);
     expect(data.suggest("Buton", names)).toContain("Button");
     expect(data.suggest("zzzzzzzz", names)).toEqual([]);
+  });
+
+  describe("the note a fallback carries", () => {
+    /** A stand-in locator that finds both packages in the bundled copies, as when the project has none. */
+    const bundledOnly: Locate = (name) => ({ name, version: "9.9.9", root: "/bundled", origin: "bundled", resolveExport: () => "/nowhere" }) as LocatedPackage;
+
+    it("is absent when the project's packages answer", () => {
+      expect(data.note()).toBeUndefined();
+    });
+
+    it("says the answers are the bundled copy's, names the folders searched and how to fix it", () => {
+      const note = openData(["/work/a", "/work/b"], [], bundledOnly).note();
+      expect(note).toContain("@dbm-system/components@9.9.9 and @dbm-system/tokens@9.9.9");
+      expect(note).toContain("/work/a or /work/b");
+      expect(note).toContain("DBM_SYSTEM_PROJECT_DIR");
+      expect(note).toContain("--project");
+    });
+
+    it("includes what was wrong with the setting", () => {
+      expect(openData(["/work/a"], ['DBM_SYSTEM_PROJECT_DIR is "/x", which is not a folder.'], bundledOnly).note()).toContain('"/x", which is not a folder');
+    });
   });
 });

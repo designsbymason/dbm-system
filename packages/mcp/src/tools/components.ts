@@ -1,7 +1,7 @@
 import type { McpServer } from "@modelcontextprotocol/server";
 import * as z from "zod/v4";
 import type { DbmData } from "../data";
-import { CHARACTER_LIMIT, errorResult, jsonResult, pageShape, pagedResult, pagingInput, READ_ONLY, sourceShape } from "./shared";
+import { CHARACTER_LIMIT, errorResult, jsonResult, noteShape, pageShape, pagedResult, pagingInput, READ_ONLY, sourceNote, sourceShape } from "./shared";
 
 function sourceOf(data: DbmData) {
   const { components } = data.info();
@@ -31,6 +31,7 @@ Examples:
       }),
       outputSchema: z.object({
         source: sourceShape,
+        note: noteShape,
         ...pageShape,
         components: z.array(z.object({ name: z.string(), kind: z.enum(["component", "helper"]), tier: z.string().optional(), category: z.string().optional(), helper_of: z.string().optional(), summary: z.string() })),
       }),
@@ -44,7 +45,7 @@ Examples:
           .map((row) => ({ name: row.name, kind: "component" as const, tier: row.tier, category: row.category, summary: row.summary })),
         ...(include_helpers && !tier && !category ? index.helpers.map((row) => ({ name: row.name, kind: "helper" as const, helper_of: row.helperOf, summary: row.summary })) : []),
       ];
-      return pagedResult(rows, offset, limit, (components, page) => ({ source: sourceOf(data), ...page, components }));
+      return pagedResult(rows, offset, limit, (components, page) => ({ source: sourceOf(data), ...sourceNote(data), ...page, components }));
     },
   );
 
@@ -90,7 +91,7 @@ Use dbm_list_components or dbm_search when you do not know the exact name.`,
               : `${entry.name} has no part '${part}'.${close.length ? ` Did you mean ${close.map((n) => `'${n}'`).join(", ")}?` : ""} Its parts are: ${parts.map((candidate) => candidate.name).join(", ")}.`,
           );
         }
-        return jsonResult({ source, component: entry.name, part: match });
+        return jsonResult({ source, ...sourceNote(data), component: entry.name, part: match });
       }
 
       const core: Record<string, unknown> = Object.fromEntries(Object.entries(entry).filter(([key]) => !(SECTIONS as readonly string[]).includes(key)));
@@ -110,7 +111,7 @@ Use dbm_list_components or dbm_search when you do not know the exact name.`,
           omitted.push({ section, characters: JSON.stringify(value).length, fetch: `dbm_get_component with name='${entry.name}' and include=['${section}']` });
         }
       }
-      return jsonResult({ source, component: core, ...(omitted.length ? { omitted } : {}), ...(outlined ? { note: "parts lists each part's name and summary only." } : {}) });
+      return jsonResult({ source, component: core, ...(omitted.length ? { omitted } : {}), ...sourceNote(data, outlined ? "parts lists each part's name and summary only." : undefined) });
     },
   );
 }

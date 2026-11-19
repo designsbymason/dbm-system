@@ -15,6 +15,8 @@ export interface LocatedPackage {
   root: string;
   /** Whether the project or this server's own dependencies supplied it. */
   origin: Origin;
+  /** For a package found in the project, the folder it was resolved from. */
+  foundFrom?: string;
   /** Resolves a file the package's `exports` names, such as `@dbm-system/components/manifest/index.json`, to an absolute path. */
   resolveExport: (subpath: string) => string;
 }
@@ -30,16 +32,19 @@ function tryResolve(require: NodeJS.Require, specifier: string): string | undefi
   }
 }
 
+/** Finds an installed package; the tests give the readers a stand-in for this. */
+export type Locate = (name: string, startDirs: readonly string[]) => LocatedPackage;
+
 /**
- * Finds an installed package, looking from `startDir` first so the server describes the version the project has, then from
- * this server's own dependencies.
+ * Finds an installed package, looking from each of `startDirs` in turn so the server describes the version the project has, then
+ * from this server's own dependencies.
  */
-export function locatePackage(name: string, startDir: string): LocatedPackage {
-  const candidates: Array<[NodeJS.Require, Origin]> = [
-    [createRequire(join(startDir, "dbm-system-mcp.js")), "project"],
-    [createRequire(import.meta.url), "bundled"],
+export const locatePackage: Locate = (name, startDirs) => {
+  const candidates: Array<[NodeJS.Require, Origin, string | undefined]> = [
+    ...startDirs.map((dir): [NodeJS.Require, Origin, string] => [createRequire(join(dir, "dbm-system-mcp.js")), "project", dir]),
+    [createRequire(import.meta.url), "bundled", undefined],
   ];
-  for (const [require, origin] of candidates) {
+  for (const [require, origin, foundFrom] of candidates) {
     const manifestPath = tryResolve(require, `${name}/package.json`);
     if (!manifestPath) continue;
     const { version } = JSON.parse(readFileSync(manifestPath, "utf8")) as { version: string };
@@ -48,6 +53,7 @@ export function locatePackage(name: string, startDir: string): LocatedPackage {
       version,
       root: dirname(manifestPath),
       origin,
+      ...(foundFrom ? { foundFrom } : {}),
       resolveExport(subpath) {
         const resolved = tryResolve(require, `${name}/${subpath}`);
         if (!resolved) {
@@ -57,5 +63,5 @@ export function locatePackage(name: string, startDir: string): LocatedPackage {
       },
     };
   }
-  throw new SourceError(`${name} is not installed in ${startDir}. Install it there with \`npm install ${name}\`.`);
-}
+  throw new SourceError(`${name} is not installed in ${startDirs.join(" or ")}. Install it there with \`npm install ${name}\`.`);
+};

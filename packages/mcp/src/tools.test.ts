@@ -2,6 +2,7 @@ import { Client, StreamableHTTPClientTransport } from "@modelcontextprotocol/cli
 import { createMcpHandler } from "@modelcontextprotocol/server";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { openData } from "./data";
+import { locatePackage } from "./sources";
 import { createServer } from "./server";
 import { CHARACTER_LIMIT } from "./tools/shared";
 
@@ -198,5 +199,47 @@ describe("the tools", () => {
   it("dbm_get_agent_guide returns the shipped guide", async () => {
     const guide = await call("dbm_get_agent_guide");
     expect(guide.text).toBe(data.agentsGuide());
+  });
+});
+
+describe("when the answers come from the bundled copy", () => {
+  // The real packages, reported as the bundled ones, as when the server is started in a folder that has no packages of its own.
+  const bundled = openData([new URL("..", import.meta.url).pathname], [], (name, dirs) => ({ ...locatePackage(name, dirs), origin: "bundled" }));
+  const bundledClient = new Client({ name: "bundled-test", version: "1.0.0" }, { versionNegotiation: { mode: "auto" } });
+  const bundledHandler = createMcpHandler(() => createServer(bundled));
+
+  beforeAll(async () => {
+    await bundledClient.connect(new StreamableHTTPClientTransport(new URL("http://test.local/mcp"), { fetch: (url, init) => bundledHandler.fetch(new Request(url, init)) }));
+  });
+  afterAll(async () => {
+    await bundledClient.close();
+  });
+
+  const bundledCall = async (name: string, args: Record<string, unknown>) => (await bundledClient.callTool({ name, arguments: args })).structuredContent as Body;
+
+  it.each([
+    ["dbm_list_components", { limit: 1 }],
+    ["dbm_get_component", { name: "Button", include: [] }],
+    ["dbm_get_component", { name: "Navbar", part: "Link" }],
+    ["dbm_list_utilities", { limit: 1 }],
+    ["dbm_get_utility", { name: "useToast" }],
+    ["dbm_get_tokens", { limit: 1 }],
+    ["dbm_search", { query: "date range" }],
+  ])("%s says so in a note", async (name, args) => {
+    const body = await bundledCall(name, args);
+    expect(body.note).toContain("bundled with @dbm-system/mcp");
+    expect(body.note).toContain("DBM_SYSTEM_PROJECT_DIR");
+  });
+
+  it("keeps a search's own note beside it", async () => {
+    const body = await bundledCall("dbm_search", { query: "remembers closed", kinds: ["hook"] });
+    expect(body.note).toContain("some of the words");
+    expect(body.note).toContain("bundled with @dbm-system/mcp");
+  });
+
+  it("is silent when the project's packages answer", async () => {
+    for (const [name, args] of [["dbm_list_components", { limit: 1 }], ["dbm_get_tokens", { limit: 1 }], ["dbm_search", { query: "date range" }]] as const) {
+      expect((await call(name, args)).data?.note, name).toBeUndefined();
+    }
   });
 });

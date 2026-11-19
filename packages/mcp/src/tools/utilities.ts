@@ -1,7 +1,7 @@
 import type { McpServer } from "@modelcontextprotocol/server";
 import * as z from "zod/v4";
 import type { DbmData } from "../data";
-import { errorResult, jsonResult, pageShape, pagedResult, pagingInput, READ_ONLY, sourceShape } from "./shared";
+import { errorResult, jsonResult, noteShape, pageShape, pagedResult, pagingInput, READ_ONLY, sourceNote, sourceShape } from "./shared";
 
 /** Registers the tools that list and describe hooks, functions and constants. */
 export function registerUtilityTools(server: McpServer, data: DbmData): void {
@@ -23,6 +23,7 @@ Example: "Is there a hook for toasts?" -> kind="hook"`,
       }),
       outputSchema: z.object({
         source: sourceShape,
+        note: noteShape,
         ...pageShape,
         utilities: z.array(z.object({ name: z.string(), kind: z.string(), summary: z.string() })),
       }),
@@ -30,7 +31,7 @@ Example: "Is there a hook for toasts?" -> kind="hook"`,
     },
     async ({ kind, limit, offset }) => {
       const rows = data.index().utilities.filter((row) => !kind || row.kind === kind);
-      return pagedResult(rows, offset, limit, (utilities, page) => ({ source: source(), ...page, utilities }));
+      return pagedResult(rows, offset, limit, (utilities, page) => ({ source: source(), ...sourceNote(data), ...page, utilities }));
     },
   );
 
@@ -55,7 +56,7 @@ Use dbm_list_utilities or dbm_search when you do not know the exact name.`,
         const close = data.suggest(name, [...file.utilities, ...file.constants].map((entry) => entry.name));
         return errorResult(`No hook, function or constant named '${name}'.${close.length ? ` Did you mean ${close.map((n) => `'${n}'`).join(", ")}?` : ""} Use dbm_list_utilities or dbm_search to find the name.`);
       }
-      return jsonResult({ source: source(), utility: found });
+      return jsonResult({ source: source(), ...sourceNote(data), utility: found });
     },
   );
 }

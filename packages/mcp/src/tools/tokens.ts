@@ -1,7 +1,7 @@
 import type { McpServer } from "@modelcontextprotocol/server";
 import * as z from "zod/v4";
 import type { DbmData, TokenEntry } from "../data";
-import { errorResult, pageShape, pagedResult, pagingInput, READ_ONLY } from "./shared";
+import { errorResult, noteShape, pageShape, pagedResult, pagingInput, READ_ONLY, sourceNote } from "./shared";
 
 /** One token as the tool returns it: the index's own fields, with the per-theme maps reduced to one value when a theme is asked for. */
 function forTheme(token: TokenEntry, theme: string | undefined): Record<string, unknown> {
@@ -36,6 +36,7 @@ Examples:
         version: z.string().describe("The version of the tokens package."),
         origin: z.enum(["project", "bundled"]),
         themes: z.array(z.string()),
+        note: noteShape,
         ...pageShape,
         tokens: z.array(z.record(z.string(), z.unknown())),
       }),
@@ -56,7 +57,7 @@ Examples:
           (!user || token.usedBy?.some((component) => component.toLowerCase() === user)),
       );
       const { tokens: info } = data.info();
-      return pagedResult(matches, offset, limit, (tokens, page) => ({ version: info.version, origin: info.origin, themes: index.themes, ...page, tokens: tokens.map((token) => forTheme(token, theme)) }));
+      return pagedResult(matches, offset, limit, (tokens, page) => ({ version: info.version, origin: info.origin, themes: index.themes, ...sourceNote(data), ...page, tokens: tokens.map((token) => forTheme(token, theme)) }));
     },
   );
 }

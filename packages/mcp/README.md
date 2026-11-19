@@ -38,7 +38,7 @@ or, for a client that takes a JSON configuration:
 }
 ```
 
-It starts in the folder the agent runs in, so a project without `@dbm-system/components` installed gets the copies this package depends on (the answers say which with `origin`).
+It looks for `@dbm-system/components` and `@dbm-system/tokens` in the folder it is started in. If your client starts it somewhere else, name your project's root with the `DBM_SYSTEM_PROJECT_DIR` environment variable or a `--project <folder>` argument (Claude Code also sets `CLAUDE_PROJECT_DIR`, which it reads), for example `"env": { "DBM_SYSTEM_PROJECT_DIR": "/path/to/your/project" }` in the JSON entry. With none of them it answers from the copies this package depends on: every answer says which with `source.origin`, and a result that comes from the bundled copy carries a `note` that says so and what to do.
 
 The repository's `packages/mcp/evaluation/` holds ten questions with verified answers for measuring how well an agent uses the tools.
 
