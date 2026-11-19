@@ -56,6 +56,9 @@ dbm-system/
 │   ├── manifest/                  # Build tool: generates JSON component manifest from TS + JSDoc
 │   │   └── src/
 │   │
+│   ├── mcp/                       # Read-only stdio MCP server (@dbm-system/mcp, ADR-0229 to ADR-0231): reads the manifest, token index and AGENTS.md the packages ship; private until it is wired into the release
+│   │   └── src/
+│   │
 │   ├── eslint-config/              # Shared lint rules
 │   └── tsconfig/                   # Shared TS configs
 │

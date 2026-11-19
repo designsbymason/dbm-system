@@ -1,0 +1,50 @@
+{
+  "name": "@dbm-system/mcp",
+  "version": "0.2.1",
+  "private": true,
+  "description": "A read-only MCP server, run over stdio, that answers an AI agent's questions about the DBM System components, hooks, functions and tokens from the files the packages ship.",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/designsbymason/dbm-system.git",
+    "directory": "packages/mcp"
+  },
+  "homepage": "https://dbm-system.com",
+  "bugs": {
+    "url": "https://github.com/designsbymason/dbm-system/issues"
+  },
+  "type": "module",
+  "bin": {
+    "dbm-system-mcp": "./dist/index.js"
+  },
+  "files": [
+    "dist"
+  ],
+  "engines": {
+    "node": ">=24"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "lint": "eslint . && tsc --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@dbm-system/components": "workspace:*",
+    "@dbm-system/tokens": "workspace:*",
+    "@modelcontextprotocol/server": "^2.4.0",
+    "zod": "^4.6.7"
+  },
+  "devDependencies": {
+    "@dbm-system/eslint-config": "workspace:*",
+    "@dbm-system/tsconfig": "workspace:*",
+    "@types/node": "^24.13.3",
+    "eslint": "^10.14.0",
+    "tsup": "^8.5.1",
+    "typescript": "5.9.3",
+    "vitest": "^4.1.12"
+  }
+}

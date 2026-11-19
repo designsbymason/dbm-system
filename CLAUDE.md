@@ -75,6 +75,9 @@ packages/
                      started page and guide pages); neither is shipped in the package)
   manifest/          Private build tool (not published): generates the JSON component manifest
                      from TS + JSDoc; the components build runs it
+  mcp/               The read-only stdio MCP server (@dbm-system/mcp, ADR-0229 to ADR-0231): answers an agent's
+                     questions about components, hooks, functions and tokens from the files the packages
+                     ship. Under construction; private until it is wired into the release
   eslint-config/      Shared lint rules
   tsconfig/           Shared TypeScript configs
 guidelines/          Internal reference docs — current-state specs, inventories, conventions, and open-items.md

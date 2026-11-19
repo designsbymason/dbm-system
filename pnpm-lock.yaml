@@ -392,6 +392,43 @@ importers:
         specifier: '>=4.1.11 <5.0.0'
         version: 4.1.12(@types/node@24.13.3)(@vitest/browser-playwright@4.1.12)(jsdom@29.1.1)(vite@8.3.4(@types/node@24.13.3)(esbuild@0.28.2)(yaml@2.9.1))
 
+  packages/mcp:
+    dependencies:
+      '@dbm-system/components':
+        specifier: workspace:*
+        version: link:../components
+      '@dbm-system/tokens':
+        specifier: workspace:*
+        version: link:../tokens
+      '@modelcontextprotocol/server':
+        specifier: ^2.4.0
+        version: 2.4.0
+      zod:
+        specifier: '>=4.6.7 <5.0.0'
+        version: 4.6.7
+    devDependencies:
+      '@dbm-system/eslint-config':
+        specifier: workspace:*
+        version: link:../eslint-config
+      '@dbm-system/tsconfig':
+        specifier: workspace:*
+        version: link:../tsconfig
+      '@types/node':
+        specifier: ^24.13.3
+        version: 24.13.3
+      eslint:
+        specifier: ^10.14.0
+        version: 10.14.0
+      tsup:
+        specifier: ^8.5.1
+        version: 8.5.1(postcss@8.5.28)(typescript@5.9.3)(yaml@2.9.1)
+      typescript:
+        specifier: 5.9.3
+        version: 5.9.3
+      vitest:
+        specifier: '>=4.1.11 <5.0.0'
+        version: 4.1.12(@types/node@24.13.3)(@vitest/browser-playwright@4.1.12)(jsdom@29.1.1)(vite@8.3.4(@types/node@24.13.3)(esbuild@0.28.2)(yaml@2.9.1))
+
   packages/tokens:
     devDependencies:
       '@dbm-system/tsconfig':
@@ -1532,6 +1569,14 @@ packages:
     peerDependencies:
       '@types/react': '>=16'
       react: '>=16'
+
+  '@modelcontextprotocol/core@2.4.0':
+    resolution: {integrity: sha512-z8QBKqdfXLPzkLQuG4xp8hrVEMm1PZ1IgxMN2sMbJiFiAKOWXnAzogXn2W4aqIBlP1ea6U5yiqVquvUNM1Cj6Q==}
+    engines: {node: '>=20'}
+
+  '@modelcontextprotocol/server@2.4.0':
+    resolution: {integrity: sha512-rgR9yxSaAJ+bcsi/XroT/S2AfPiIWloXAnrdfYSCms9ivVju0ishu/wW0J21Ho6+ZOR1r7RyeRbjiRuF87ix5Q==}
+    engines: {node: '>=20'}
 
   '@napi-rs/wasm-runtime@1.2.5':
     resolution: {integrity: sha512-HshSvXzmBxNzqejd3k/KemgQ3hdREUYFRRrgxOZ+gPljDIsO2SDZrVZMd4Z/HsxudQbE62OVyVFE8z9BCurfjA==}
@@ -7158,6 +7203,15 @@ snapshots:
       '@types/mdx': 2.0.14
       '@types/react': 19.3.0
       react: 19.3.1
+
+  '@modelcontextprotocol/core@2.4.0':
+    dependencies:
+      zod: 4.6.7
+
+  '@modelcontextprotocol/server@2.4.0':
+    dependencies:
+      '@modelcontextprotocol/core': 2.4.0
+      zod: 4.6.7
 
   '@napi-rs/wasm-runtime@1.2.5(@emnapi/core@1.11.0)(@emnapi/runtime@1.11.0)':
     dependencies:
