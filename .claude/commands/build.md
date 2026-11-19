@@ -9,7 +9,7 @@ This writes only ignored build output (`packages/*/dist`, `apps/docs/dist`, the 
 
 **No option: everything.**
 
-1. `pnpm build` (the four packages; turbo-cached, so a few seconds when nothing changed). The home page imports the packages' built `dist/`, so skipping this can show stale components.
+1. `pnpm build` (the packages; turbo-cached, so a few seconds when nothing changed). The home page imports the packages' built `dist/`, so skipping this can show stale components.
 2. `pnpm --filter @dbm-system/docs assemble-local`. It builds Storybook and the home page, deletes and rebuilds `apps/docs/_artifact/` from them, writes `robots.txt`, `sitemap.xml` and the agent files, runs `check-agent-files`, `check-css` and `check-brand-assets`, and prints the home page's weight (`apps/docs/README.md`). It takes about 40 seconds.
 3. `pnpm --filter @dbm-system/components check-storybook-bundle-size`; report the total and the largest chunk against their budgets (the total has had little headroom).
 4. Make the preview reachable (below).

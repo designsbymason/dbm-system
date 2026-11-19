@@ -21,7 +21,7 @@ In: the home page (six sections, [03-landing-page-brief.md](./03-landing-page-br
 
 Later: a grid view of All components with a glyph per component; a tokens page; versioned docs (from 1.0); a release banner.
 
-Out: docs pages on the website itself; a blog; analytics; a brand switcher or a text-direction switch for the site; a Figma library; an MCP server.
+Out: docs pages on the website itself; a blog; analytics; a brand switcher or a text-direction switch for the site; a Figma library; an MCP server (it is its own package, `packages/mcp`; the site links to its Storybook page).
 
 ## 3. Milestones
 

@@ -112,6 +112,8 @@ The package ships a machine-readable index of every component, its props and par
 
 `AGENTS.md`, at the root of this package, is the short guide for a coding agent: where to look, how to set up, the rules that hold across components, and every public name. The manifest is for the version you installed.
 
+An agent that would rather ask than read can use the read-only MCP server, [`@dbm-system/mcp`](https://www.npmjs.com/package/@dbm-system/mcp), which answers from these same files for the versions your project has installed. It is run with `npx` and is not a dependency of your app; the [MCP server page](https://dbm-system.com/storybook/?path=/docs/getting-started-mcp-server--docs) shows how to add it to an agent.
+
 ## Links
 
 - Documentation and Storybook: https://dbm-system.com

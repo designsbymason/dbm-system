@@ -10,7 +10,7 @@ React components for web and enterprise apps. Every component, prop and part is 
 
 ## Ask instead of read
 
-`@dbm-system/mcp` is a read-only MCP server that answers the same questions from the manifest, the token index and this guide, for the versions installed in the project it is started in. Add it to a project with:
+`@dbm-system/mcp` is a read-only MCP server that answers the same questions from the manifest, the token index and this guide, for the versions installed in the project it is started in (if your client starts it elsewhere, set `DBM_SYSTEM_PROJECT_DIR` to the project's root, or pass `--project <folder>`). Add it to a project with:
 
 ```bash
 claude mcp add dbm-system -- npx -y @dbm-system/mcp

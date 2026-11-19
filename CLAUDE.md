@@ -102,6 +102,7 @@ Full rationale for each choice: `guidelines/02-tech-stack-and-structure.md`.
 | Building a new component | `guidelines/04-component-inventory.md` (tier + scope); then its entry in `packages/components/src/componentCatalog.json` and a `Components/{Name}` story title (`guidelines/07-storybook-and-documentation-standards.md` §3, ADR-0225) |
 | Building a template (a shell that ships, or a story-only page) and in what order | `guidelines/04-component-inventory.md` (Templates, with its build order), ADR-0179 and ADR-0226 (a shell is `Components/{Name}` with a catalog entry; a page is `Templates/{Name}`) |
 | Unsure about a dependency or tool choice | `guidelines/02-tech-stack-and-structure.md` |
+| Changing the MCP server (`packages/mcp`): its tools, how it finds a project, its docs | ADR-0229 to ADR-0232, `guidelines/01-vision-and-goals.md` §13.1, and the tool-names test in `packages/mcp/src/docs.test.ts`, which holds the README, the Storybook page and `AGENTS.md` to the registered tools |
 | Overall project goals/scope | `guidelines/01-vision-and-goals.md` |
 | A component's props, file structure, or definition of done | `guidelines/05-component-api-conventions.md` |
 | Reviewing or finalizing a component, or how to work across sessions | `guidelines/06-engineering-standards.md` (§8 process rules, §9 review checklist) |
