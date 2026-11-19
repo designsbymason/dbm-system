@@ -1,6 +1,6 @@
 # Figma library — plan (draft for approval)
 
-**Status:** approved by the maintainer 2026-11-19; Phase 0 in progress, nothing is written to Figma yet. Decided in [ADR-0233](../adr/0233-the-figma-library-is-written-from-the-built-tokens-by-a-one-way-script-over-the-tokens-studio-plugin-or-typing-the-variables-by-hand.md), [ADR-0234](../adr/0234-figma-is-a-design-tool-outside-the-build-test-and-hosting-pipelines-and-the-file-needs-professional-or-higher-over-applying-the-free-tooling-rule-to-it.md), [ADR-0235](../adr/0235-the-figma-library-is-one-file-with-a-page-per-category-and-one-lean-spec-frame-per-component-over-split-files-pages-per-tier-or-full-documentation-in-figma.md) and [ADR-0236](../adr/0236-the-figma-variables-are-four-collections-primitives-semantic-with-four-theme-modes-component-and-viewport-over-one-collection-or-a-collection-per-theme.md); the **(ADR)** marks below point to them.
+**Status:** approved by the maintainer 2026-11-19; Phase 0 and Phase 1 (the variables) are done, and styles and foundations (Phase 2) are next. Decided in [ADR-0233](../adr/0233-the-figma-library-is-written-from-the-built-tokens-by-a-one-way-script-over-the-tokens-studio-plugin-or-typing-the-variables-by-hand.md), [ADR-0234](../adr/0234-figma-is-a-design-tool-outside-the-build-test-and-hosting-pipelines-and-the-file-needs-professional-or-higher-over-applying-the-free-tooling-rule-to-it.md), [ADR-0235](../adr/0235-the-figma-library-is-one-file-with-a-page-per-category-and-one-lean-spec-frame-per-component-over-split-files-pages-per-tier-or-full-documentation-in-figma.md) and [ADR-0236](../adr/0236-the-figma-variables-are-four-collections-primitives-semantic-with-four-theme-modes-component-and-viewport-over-one-collection-or-a-collection-per-theme.md); the **(ADR)** marks below point to them.
 
 ## 1. Goals
 
@@ -57,16 +57,20 @@ Checks before the first commit: `.local/` is in `.gitignore` and `.githooks/pre-
 
 | Collection | Modes | Holds |
 |---|---|---|
-| Primitives | one | Colour scales, spacing, radius, border widths, opacity, durations, z-index, breakpoint widths, font families, weights and sizes |
-| Semantic | purple-light, purple-dark, emerald-light, emerald-dark | `bg.*`, `text.*`, `border.*`, `icon.*`, each aliasing a primitive, with the same names as the theme files |
-| Component | one | The 35 component token files (avatar sizes, row heights, widths), aliasing primitives where they can |
-| Viewport | mobile, tablet, desktop | The fluid type and spacing steps as fixed values, because Figma cannot hold `clamp()` |
+| Primitives | one (`Value`) | 164 variables: colour scales, spacing, radius, border widths, opacity, icon sizes, breakpoint widths, font families and weights; the unitless line-height and letter-spacing ratios and the z-index scale are held with no scope, as reference values |
+| Semantic | purple-light, purple-dark, emerald-light, emerald-dark | 117 `bg`, `text`, `border` and `icon` variables, each aliasing a primitive, with the same names as the theme files |
+| Component | one (`Value`) | 121 of the 35 component token files' 135 tokens, as pixel numbers; 14 are not representable (see below) |
+| Viewport | mobile (375), tablet (768), desktop (1280) | The 11 font-size steps, the fluid ones evaluated at each width from their `clamp()`; the widths are the sizes a design is drawn at, not tokens |
 
-**Rules:** a variable is named by its token path with slashes (`color/bg/brand`), the same segments as the CSS custom property; a semantic variable aliases a primitive and never holds a raw value; scopes are set so a colour variable cannot be applied to a spacing field; every variable carries the token's `$description`. The script writes only what the tokens contain: adding a token in the repo and re-running it adds the variable.
+**Rules:** a variable is named by its token group, then the rest of the token's name, with a colour as `color/<hue>/<step>` and a component size step as its own segment (`color/purple/600`, `bg/brand-hover`, `space/4`, `avatar/size/lg`); its web code syntax is the CSS custom property (`var(--dbm-bg-brand-hover)`); a semantic variable aliases a primitive and never holds a raw value; scopes are set so a colour variable cannot be applied to a spacing field; every variable carries the token's `$description`. The script writes only what the tokens contain: adding a token in the repo and re-running it adds the variable.
 
-**Styles:** text styles per type step and font family; effect styles for each shadow, colour-bound where Figma allows; a grid style per breakpoint. Motion (durations and easing) is documented on the Motion page, not made a variable.
+**Styles:** text styles per type step and font family; effect styles for each shadow, colour-bound where Figma allows; a grid style per breakpoint. Motion (durations and easing) is documented on the Motion page, not made a variable ([ADR-0236](../adr/0236-the-figma-variables-are-four-collections-primitives-semantic-with-four-theme-modes-component-and-viewport-over-one-collection-or-a-collection-per-theme.md)).
 
-**Verification:** after each run the script reports variable counts per collection and mode against the token files, and flags any mismatch.
+**The sync script** is `scripts/figma-sync.mjs` (private, not published, no dependencies). It reads `packages/tokens/build/tokens.json` and writes one JavaScript body per collection into `.local/figma/payloads/`, each the code of one Figma MCP `use_figma` call, plus `90-verify.js`. A payload creates or updates by name, so a rerun changes only what differs. The MCP is called by the agent, not by the script, so a token change reaches Figma by running the script and sending its payloads in order (Primitives, Viewport, Component, Semantic).
+
+**Verification:** `90-verify.js` is read-only and returns, per collection, the counts, the modes, and every variable whose type, value in any mode (an alias is followed to its primitive), web code syntax or scope differs from the tokens; it was clean for all 413 variables. Figma stores a number as a 32-bit float, so a number is compared to a millionth.
+
+**Not in Figma as variables:** the 14 component tokens in `em`, `ch` or `%` (the `heading` trim offsets, the `link` icon sizing, the date and time picker segment widths, the table-of-contents and tags-input widths, and the command-palette tag width), which depend on the font or the parent and have no pixel value; shadows (Phase 2, effect styles); motion; the mono family is held as `ui-monospace`, which Figma has no font for.
 
 ## 6. Build rules for every component
 
