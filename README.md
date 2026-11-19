@@ -19,7 +19,7 @@ An agentic React component library: accessible, token-driven and fully typed, wi
 
 ## Why DBM System
 
-- **Built for agents as well as people.** Every component has full TypeScript types, JSDoc and a snippet for each example. The package ships a machine-readable manifest of every component, an index of every design token and an `AGENTS.md` usage guide, so a coding agent works from structured facts instead of guessing.
+- **Built for agents as well as people.** Every component has full TypeScript types, JSDoc and a snippet for each example. The package ships a machine-readable manifest of every component, an index of every design token and an `AGENTS.md` usage guide, and a read-only MCP server a coding agent can ask, so it works from structured facts instead of guessing.
 - **Token-driven theming.** One semantic token layer carries two brands, Purple and Emerald, each in light and dark. Switching a theme changes no component code.
 - **Accessible by default.** WCAG 2.2 AA is the goal for every component: contrast, keyboard navigation, focus states and ARIA, with automated checks on each one. The known exceptions are listed in the [Accessibility guide](https://dbm-system.com/storybook/?path=/docs/guides-accessibility--docs).
 - **Responsive and right-to-left.** Every component works across the whole breakpoint scale and in both text directions.
@@ -65,6 +65,7 @@ An agent building with the library should start here:
 | [`AGENTS.md`](./packages/components/AGENTS.md) | The rules for using the library, with a list of every component |
 | `@dbm-system/components/manifest/index.json` | Every component in one small file, with the path of its full description |
 | `@dbm-system/tokens/tokens.json` | Every design token, its value in each theme and which components use it |
+| [`@dbm-system/mcp`](./packages/mcp) | A read-only MCP server the agent can ask instead of reading the files: which components exist, what a prop accepts, which token to use. Add it with `claude mcp add dbm-system -- npx -y @dbm-system/mcp`; the [MCP server page](https://dbm-system.com/storybook/?path=/docs/getting-started-mcp-server--docs) covers other clients |
 | [`dbm-system.com/llms.txt`](https://dbm-system.com/llms.txt) | For an agent that has not installed the packages: an index of the documentation, each page as Markdown (`manifest.json` and `AGENTS.md` are served at the same root) |
 
 ## Packages
@@ -77,7 +78,7 @@ The packages are published under the `@dbm-system` npm scope and share one versi
 | [`@dbm-system/tokens`](./packages/tokens) | The design tokens: theme CSS, typed constants and the token index |
 | [`@dbm-system/icons`](./packages/icons) | The typed Phosphor icon set |
 
-[`@dbm-system/utils`](./packages/utils) is published because the components depend on it; an app does not install it. The manifest generator, the ESLint config and the TypeScript config are private tools of this repository.
+[`@dbm-system/mcp`](./packages/mcp) is the MCP server: your coding agent runs it with `npx`, and an app does not install it. [`@dbm-system/utils`](./packages/utils) is published because the components depend on it; an app does not install it. The manifest generator, the ESLint config and the TypeScript config are private tools of this repository.
 
 The API is pre-1.0: a breaking change before `1.0.0` bumps the minor version, and the changelog of each package says how to migrate.
 

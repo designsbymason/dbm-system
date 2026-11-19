@@ -20,8 +20,16 @@ describe("collectReleases", () => {
   it("makes one release of each version, newest first (0.10.0 after 0.9.0), with only the packages that changed", () => {
     const releases = collectReleases(reads(["0.9.0", "0.10.0", "0.2.0"], ["0.2.0"]));
     expect(releases.map((release) => release.version)).toEqual(["0.10.0", "0.9.0", "0.2.0"]);
-    expect(releases[2]?.packages.map((entry) => entry.dir)).toEqual(["components", "tokens", "icons", "utils"]);
+    expect(releases[2]?.packages.map((entry) => entry.dir)).toEqual(["components", "tokens", "icons", "utils", "mcp"]);
     expect(releases[0]?.packages.map((entry) => entry.dir)).toEqual(["components"]);
+  });
+
+  it("leaves a package that joined later out of the releases before it", () => {
+    // `mcp` has no section before 0.2.2, as its changelog starts with the first release the workflow made of it.
+    const releases = collectReleases((dir) => (dir === "mcp" ? changelog("mcp", [["0.2.2", "mcp 0.2.2 entry"]]) : changelog(dir, [["0.2.2", `${dir} 0.2.2 entry`], ["0.2.1", `${dir} 0.2.1 entry`]])));
+    expect(releases.map((release) => release.version)).toEqual(["0.2.2", "0.2.1"]);
+    expect(releases[0]?.packages.map((entry) => entry.dir)).toContain("mcp");
+    expect(releases[1]?.packages.map((entry) => entry.dir)).not.toContain("mcp");
   });
 
   it("fails when a package's changelog has no version section", () => {

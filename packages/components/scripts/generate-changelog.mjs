@@ -1,4 +1,4 @@
-// Writes Storybook's Changelog page (Resources/Changelog) from the four packages' CHANGELOG.md files, which Changesets
+// Writes Storybook's Changelog page (Resources/Changelog) from the five packages' CHANGELOG.md files, which Changesets
 // rewrites on every release (guidelines/docs-site/04-content-inventory.md §1). The page is generated, never committed
 // (src/guides/Changelog.generated.mdx is gitignored), so it cannot disagree with the files; `storybook` and
 // `build-storybook` run this first. A package whose file has no version section fails the run instead of leaving a blank.
@@ -16,6 +16,7 @@ export const PACKAGES = [
   { dir: "tokens", short: "tokens", note: "The design tokens, as theme CSS and typed constants." },
   { dir: "icons", short: "icons", note: "The Phosphor icon set, typed." },
   { dir: "utils", short: "utils", note: "Helpers the components are built on; an app does not install it." },
+  { dir: "mcp", short: "mcp", note: "A read-only MCP server that answers an agent's questions about the components, hooks and tokens." },
 ];
 
 /** Escape what MDX would read as JSX or an expression (`<`, `{`), leaving code spans alone. */
@@ -80,8 +81,9 @@ function compareVersions(a, b) {
 const seriesOf = (version) => `${version.split(".").slice(0, 2).join(".")}.x`;
 
 /**
- * The releases, newest first, each with the packages that changed in it. The four packages are released together at one version, so a
- * release is one entry and a package whose changelog says "No changes in this release." is left out of it.
+ * The releases, newest first, each with the packages that changed in it. The five packages are released together at one version, so a
+ * release is one entry and a package whose changelog says "No changes in this release." is left out of it. A package that joined later
+ * (`mcp` has no section before 0.2.2) simply has nothing in the earlier releases.
  */
 export function collectReleases(read) {
   const byVersion = new Map();
@@ -123,7 +125,7 @@ export function buildPage(read = (dir) => readFileSync(join(packagesDir, dir, "C
     ``,
     `# Changelog`,
     ``,
-    `What changed in each release, newest first. The four packages (\`components\`, \`tokens\`, \`icons\` and \`utils\`) are released together at one`,
+    `What changed in each release, newest first. The five packages (\`components\`, \`tokens\`, \`icons\`, \`utils\` and \`mcp\`) are released together at one`,
     `version, so each release lists the packages that changed. The API is pre-1.0: a breaking change before \`1.0.0\` bumps the minor`,
     `version, and its entry says how to migrate. The page shows the latest ${RELEASE_LIMIT} releases: the current series is open and`,
     `earlier ones are folded. Every release is on [GitHub](${REPOSITORY}/releases).`,

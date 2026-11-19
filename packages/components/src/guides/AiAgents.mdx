@@ -13,7 +13,7 @@ import { VisuallyHidden } from "../atoms/VisuallyHidden";
 
 DBM System is written to be read by machines as well as people. A coding agent working in your app can look up
 exactly which components exist, what each prop accepts and how the parts fit, rather than inventing an API that
-isn't there. Everything below ships inside the packages, so it always matches the version installed.
+isn't there. The files below ship inside the packages, so they always match the version installed.
 
 ## Where an agent should start
 
@@ -111,9 +111,10 @@ ones shown on each page, and a live example is a link to it.
 
 ## Ask instead of reading files
 
-An agent that would rather ask than read can run the [MCP server](?path=/docs/getting-started-mcp-server--docs),
-which answers the same questions from the files above: which components exist, what a prop accepts, which token to
-use. It is read-only and reads the versions your project has installed.
+An agent that would rather ask than read can run the [MCP server](?path=/docs/getting-started-mcp-server--docs)
+(`@dbm-system/mcp`, started with `npx`; your app does not install it), which answers the same questions from the
+files above: which components exist, what a prop accepts, which token to use. It is read-only and reads the versions
+your project has installed.
 
 ```bash
 claude mcp add dbm-system -- npx -y @dbm-system/mcp

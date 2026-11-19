@@ -5,12 +5,13 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { openData } from "./data";
 import { createServer } from "./server";
 
-/** Where the tools are named for readers: the package README, the Storybook page, and `AGENTS.md`, which ships in the components package. */
+/** Where the tools are named for readers: the package README, the Storybook page, `AGENTS.md` (which ships in the components package) and the repository's README. */
 const repo = new URL("../../..", import.meta.url);
 const documents = {
   "packages/mcp/README.md": readFileSync(new URL("packages/mcp/README.md", repo), "utf8"),
   "packages/components/src/guides/McpServer.mdx": readFileSync(new URL("packages/components/src/guides/McpServer.mdx", repo), "utf8"),
   "packages/components/AGENTS.md": readFileSync(new URL("packages/components/AGENTS.md", repo), "utf8"),
+  "README.md": readFileSync(new URL("README.md", repo), "utf8"),
 };
 const listsEveryTool = ["packages/mcp/README.md", "packages/components/src/guides/McpServer.mdx"] as const;
 const toolNames = (text: string) => new Set(text.match(/\bdbm_[a-z_]+\b/g) ?? []);
@@ -43,7 +44,7 @@ describe("the documentation names the tools the server registers", () => {
   it("gives the same command to start it everywhere it shows one", () => {
     const { name } = JSON.parse(readFileSync(new URL("packages/mcp/package.json", repo), "utf8")) as { name: string };
     const command = `claude mcp add dbm-system -- npx -y ${name}`;
-    for (const file of [...listsEveryTool, "packages/components/AGENTS.md"] as const) {
+    for (const file of [...listsEveryTool, "packages/components/AGENTS.md", "README.md"] as const) {
       expect(documents[file], `${file} shows the add command`).toContain(command);
     }
     for (const [file, text] of Object.entries(documents)) {

@@ -16,8 +16,9 @@ agent starts it on your machine and asks it which components exist, what a prop 
 colour, and gets the answer from the files the packages already ship, instead of reading them itself.
 
 - **Read-only.** It writes nothing, calls no network service and runs none of your project's code.
-- **Your versions.** It reads the copies of `@dbm-system/components` and `@dbm-system/tokens` installed in the folder
-  it is started from, so an agent sees the props of the version your project has.
+- **Your versions.** It reads the copies of `@dbm-system/components` and `@dbm-system/tokens` installed in your
+  project (the folder it is started in, or the one you name), so an agent sees the props of the version your project
+  has.
 - **Over stdio.** The agent's tooling runs it as a local command. There is no hosted server to sign in to.
 
 Reading the files yourself works too: see [AI agents](?path=/docs/getting-started-ai-agents--docs) for what they
@@ -28,7 +29,7 @@ are. The server is for an agent that would rather ask than read a 1.8 MB manifes
 - Node 24 or later, which runs the server.
 - `@dbm-system/components` (and `@dbm-system/tokens`) installed in the project the agent works on, as in
   [Installation](?path=/docs/getting-started-installation--docs). With neither installed, the server falls back to
-  the copies it depends on, and says so in every answer.
+  the copies it depends on, and says so in a note on its answers.
 
 ## Add it to your agent
 
@@ -131,11 +132,12 @@ All seven are read-only. A list takes `limit` and `offset` and says where the ne
 
 ## Which version it describes
 
-Every answer carries a `source` that names the package, its version and an `origin`: `project` for the copy
-installed where the server was started, `bundled` for the copy the server depends on. If an agent describes props
-that do not match your code, check that `origin` first. If it says `bundled`, the result also carries a `note` that says
-so, names the folders the server searched and how to fix it: the server was started in a folder that does not have
-your packages, so start it from your project's root, or set `DBM_SYSTEM_PROJECT_DIR` to it.
+A result for components, hooks and functions carries a `source` that names the package, its version and an `origin`;
+a token result carries the tokens package's `version` and `origin`. `project` is the copy installed in your project,
+and `bundled` is the copy the server depends on. If an agent describes props that do not match your code, check that
+`origin` first. If it says `bundled`, the result (a search result too) also carries a `note` that says so, names the
+folders the server searched and how to fix it: the server did not find your packages, so start it from your project's
+root, or set `DBM_SYSTEM_PROJECT_DIR` to it.
 
 ## Limits
 
@@ -155,8 +157,6 @@ with the change in the release notes.
 
 ## If something goes wrong
 
-- **“… is not installed in …”:** the folder the server started in has no `@dbm-system/components`. Install it there,
-  or start the server from the project's root.
 - **“… has no manifest/index.json”:** the installed components package is older than the manifest layout the server
   reads. Update `@dbm-system/components`.
 - **A result's `note` says the answers come from the bundled copy:** the server did not find your packages from the
