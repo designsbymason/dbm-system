@@ -38,7 +38,7 @@ inPackages(`components/dist/manifest/index.json`, "the agents section");
 inPackages(`components/dist/manifest/components`, "the agents section");
 inPackages(`components/AGENTS.md`, "the agents section");
 inPackages(`tokens/build/tokens.json`, "the agents section");
-// The MCP server is run with npx, so the command is built from its package name, and its program has to be built.
+// The MCP server is named from its package, and its program has to be built.
 inPackages(`mcp/dist/index.js`, "the agents section");
 const mcpPackage = JSON.parse(readFileSync(new URL(`${packages}/mcp/package.json`, import.meta.url), "utf8")) as { name: string };
 
@@ -65,10 +65,9 @@ export const facts = {
     agents: `${components.name}/AGENTS.md`,
     tokens: `${tokensPackage.name}/tokens.json`,
   },
-  /** The MCP server: the command that starts it, named from its package. */
+  /** The MCP server, named from its package. */
   mcp: {
     name: mcpPackage.name,
-    command: `npx -y ${mcpPackage.name}`,
   },
 };
 
