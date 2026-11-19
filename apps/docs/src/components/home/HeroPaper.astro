@@ -129,6 +129,12 @@ const sizes = ["xs", "sm", "base", "md", "lg", "xl"];
     var motion = window.matchMedia("(prefers-reduced-motion: no-preference)").matches;
     if (!motion) return;
 
+    // A block that has finished breaking is taken out for good. Safari holds the last step of `steps()` just short of the end value, which
+    // left a block at 12% opacity (a faint ghost of the specimen behind the JSON); the end state must not depend on that rounding.
+    root.addEventListener("animationend", function (event) {
+      if (event.animationName === "paper-break" && event.target.classList) event.target.classList.add("paper__block--gone");
+    });
+
     // On a phone the page is below the first screen: the specimen waits, and breaks into the JSON once the page scrolls into view.
     if (!window.matchMedia("(min-width: 768px)").matches) {
       root.classList.add("paper--wait");
@@ -402,6 +408,13 @@ const sizes = ["xs", "sm", "base", "md", "lg", "xl"];
     display: grid;
     gap: var(--dbm-space-2);
     min-inline-size: 0;
+  }
+
+  /* The animation is dropped, because a running or filled animation overrides a plain declaration. */
+  .paper__block.paper__block--gone {
+    animation: none;
+    opacity: 0;
+    visibility: hidden;
   }
 
   .paper__label {
