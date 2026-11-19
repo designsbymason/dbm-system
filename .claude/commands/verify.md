@@ -23,7 +23,7 @@ From the repo root, in this order (each stops the run on a failure you can't exp
 12. `pnpm test` (unit)
 13. `pnpm --filter @dbm-system/components test:storybook` (real browser: stories, `play` functions, axe)
 14. `pnpm --filter @dbm-system/components test:visual` (run it from `packages/components`, as CI does; the root has no such script; the Playwright visual-regression suite; it needs the Storybook dev server, so start it with `preview_start` if it is not running, and report a snapshot difference with the story it is on, never update snapshots)
-15. `pnpm check-fresh-app` (packs the four public packages, installs them into an empty app with pnpm, bundles a `Button` with the stylesheet and a bundled theme with esbuild and with webpack, builds a Next.js App Router app (Turbopack and webpack) whose server page imports the package and hydrates it, and checks the pages in Chromium; needs the network and Playwright's Chromium, as `browser-tests` has)
+15. `pnpm check-fresh-app` (packs the four public libraries and the MCP server, installs them into an empty app with pnpm, bundles a `Button` with the stylesheet and a bundled theme with esbuild and with webpack, builds a Next.js App Router app (Turbopack and webpack) whose server page imports the package and hydrates it, and checks the pages in Chromium; needs the network and Playwright's Chromium, as `browser-tests` has)
 
 The docs site's own gates (the link, count, privacy, CSS and agent-files checks and the accessibility scan) are in `pages.yml`, not `ci.yml`, so they are not in this list; `/build` runs the agent-files and CSS checks on a fresh assembly.
 

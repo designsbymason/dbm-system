@@ -1,5 +1,5 @@
 # Releases (ADR-0176, ADR-0211): the Changesets action opens or updates a "Version Packages" pull request while changesets are waiting on
-# main; merging that pull request makes the same action publish the four packages to npm with provenance. Publishing authenticates with
+# main; merging that pull request makes the same action publish the public packages to npm with provenance. Publishing authenticates with
 # npm's trusted publishing (OIDC, `id-token: write`), so no npm token is stored in the repository.
 #
 # The pull request the action opens is made with the default token, so GitHub does not run CI on it. The checks therefore run here, in

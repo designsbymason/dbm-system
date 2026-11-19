@@ -1,7 +1,7 @@
 # DBM System
 
 ## What this is
-An agentic React component library built for both AI coding agents and human developers to compose web and enterprise applications quickly, consistently, and accessibly — token-driven, with a strong TypeScript + JSDoc contract so agents can work against a structured, predictable API (canonical wording: `guidelines/01-vision-and-goals.md` §1). Published to npm under the `@dbm-system/*` scope (MIT licensed), the four public packages at one version, through the release workflow in `RELEASING.md`; the API is pre-1.0 (`guidelines/01-vision-and-goals.md` §13, Phase 8). Also home to the documentation: Storybook, hosted at dbm-system.com/storybook/, and a website with the home page and the agent files (`guidelines/docs-site/`). A Figma component library is planned as a future, separate deliverable derived from the same tokens.
+An agentic React component library built for both AI coding agents and human developers to compose web and enterprise applications quickly, consistently, and accessibly — token-driven, with a strong TypeScript + JSDoc contract so agents can work against a structured, predictable API (canonical wording: `guidelines/01-vision-and-goals.md` §1). Published to npm under the `@dbm-system/*` scope (MIT licensed), the five public packages (the four libraries and the MCP server) at one version, through the release workflow in `RELEASING.md`; the API is pre-1.0 (`guidelines/01-vision-and-goals.md` §13, Phase 8). Also home to the documentation: Storybook, hosted at dbm-system.com/storybook/, and a website with the home page and the agent files (`guidelines/docs-site/`). A Figma component library is planned as a future, separate deliverable derived from the same tokens.
 
 **Before making any structural or architectural change, check `guidelines/` — don't assume or re-derive decisions that are already made there.**
 
@@ -77,7 +77,7 @@ packages/
                      from TS + JSDoc; the components build runs it
   mcp/               The read-only stdio MCP server (@dbm-system/mcp, ADR-0229 to ADR-0231): answers an agent's
                      questions about components, hooks, functions and tokens from the files the packages
-                     ship. Under construction; private until it is wired into the release
+                     ship. A program run with npx, not a library; one of the five public packages
   eslint-config/      Shared lint rules
   tsconfig/           Shared TypeScript configs
 guidelines/          Internal reference docs — current-state specs, inventories, conventions, and open-items.md

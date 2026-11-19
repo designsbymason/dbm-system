@@ -1,7 +1,6 @@
 #!/usr/bin/env node
 /**
- * Checks that each public package (the four that are published, ADR-0209, and `@dbm-system/mcp`, a program that is private until its first
- * version is published by hand, ADR-0230) would publish correctly, after `pnpm build`:
+ * Checks that each public package (the four libraries and `@dbm-system/mcp`, a program, ADR-0230) would publish correctly, after `pnpm build`:
  *   1. the packed file list holds the README, the LICENSE, package.json and the build, and none of the
  *      source, tests, stories or private files;
  *   2. publint finds nothing wrong with `exports`, `main` and the files they point at;

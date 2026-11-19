@@ -12,7 +12,7 @@ This is a solo-maintained project, so there is no response-time guarantee. A rep
 
 ## Supported versions
 
-The `@dbm-system/*` packages are published to npm, and the four public packages (`components`, `tokens`, `icons` and `utils`) share one version.
+The `@dbm-system/*` packages are published to npm, and the five public packages (`components`, `tokens`, `icons`, `utils` and `mcp`) share one version.
 
 | Version | Supported |
 |---|---|
