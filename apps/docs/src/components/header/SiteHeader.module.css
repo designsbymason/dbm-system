@@ -87,15 +87,15 @@
   }
 }
 
-/* The Docs panel holds three groups side by side (Getting started, Guides, Resources). Each group's width is the panel's least
-   width, so that is narrowed here, and the greatest width is raised to fit three of them. Only this panel (Foundations is a
-   single list and keeps the usual widths), and only in the bar: in the phone menu the groups stack inside the panel. */
+/* The Docs panel holds two groups side by side (Getting started, Guides). Each group's width is the panel's least width, so that is
+   narrowed here, and the greatest width is raised to fit two of them. Only this panel (Foundations is a single list and keeps the usual
+   widths), and only in the bar: in the phone menu the groups stack inside the panel. */
 @media (min-width: 1024px) {
   .docsPanel.docsPanel {
     --dbm-navigation-menu-panel-min-width: 13rem;
-    --dbm-navigation-menu-panel-max-width: 46rem;
-    /* Three groups of 13rem, their gaps and the panel's padding; a narrower window gets what it has. */
-    inline-size: min(44rem, calc(100vw - 2rem));
+    --dbm-navigation-menu-panel-max-width: 32rem;
+    /* Two groups of 13rem, their gap and the panel's padding; a narrower window gets what it has. */
+    inline-size: min(30rem, calc(100vw - 2rem));
   }
 }
 
