@@ -11,19 +11,23 @@ interface Candidate {
   summary: string;
 }
 
-/** How well a candidate matches every word of the query, or 0 when any word is missing. A name match counts far more than a summary match. */
-function score(candidate: Candidate, words: string[], phrase: string): number {
+/**
+ * How well a candidate matches the query: the points its words earn, and how many of the words it lacks. A name match counts far
+ * more than a summary match, and an exact or leading name match more still.
+ */
+function score(candidate: Candidate, words: string[], phrase: string): { points: number; missing: number } {
   const name = candidate.name.toLowerCase();
   const summary = candidate.summary.toLowerCase();
-  let total = 0;
+  let points = 0;
+  let missing = 0;
   for (const word of words) {
-    if (name.includes(word)) total += 20;
-    else if (summary.includes(word)) total += 3;
-    else return 0;
+    if (name.includes(word)) points += 20;
+    else if (summary.includes(word)) points += 3;
+    else missing += 1;
   }
-  if (name === phrase) total += 100;
-  else if (name.startsWith(phrase)) total += 40;
-  return total;
+  if (points > 0 && name === phrase) points += 100;
+  else if (points > 0 && name.startsWith(phrase)) points += 40;
+  return { points, missing };
 }
 
 /** Registers the tool that searches across everything the server knows. */
@@ -32,7 +36,7 @@ export function registerSearchTool(server: McpServer, data: DbmData): void {
     "dbm_search",
     {
       title: "Search DBM System",
-      description: `Search components, helpers, hooks, functions, constants and design tokens by name and by what they do. Every word of the query must appear in a name or a summary. Best results come first.
+      description: `Search components, helpers, hooks, functions, constants and design tokens by name and by what they do. Results that contain every word of the query come first, best match first. When nothing contains them all, the results that contain some of the words are returned, and "note" says so.
 
 Use it when you know what you need but not the name. Then call dbm_get_component, dbm_get_utility or dbm_get_tokens with the name it returns.
 
@@ -47,6 +51,7 @@ Examples:
       }),
       outputSchema: z.object({
         ...pageShape,
+        note: z.string().optional().describe("Present when no result contained every word and the results hold only some of them."),
         results: z.array(z.object({ kind: z.enum(KINDS), name: z.string(), summary: z.string() })),
       }),
       annotations: READ_ONLY,
@@ -63,13 +68,19 @@ Examples:
       ];
       const phrase = query.trim().toLowerCase();
       const words = phrase.split(/\s+/).filter(Boolean);
-      const results = candidates
+      const scored = candidates
         .filter((candidate) => !kinds || kinds.includes(candidate.kind))
-        .map((candidate) => ({ candidate, score: score(candidate, words, phrase) }))
-        .filter(({ score: value }) => value > 0)
-        .sort((a, b) => b.score - a.score || a.candidate.name.localeCompare(b.candidate.name))
-        .map(({ candidate }) => candidate);
-      return pagedResult(results, offset, limit, (items, page) => ({ ...page, results: items }));
+        .map((candidate) => ({ candidate, ...score(candidate, words, phrase) }))
+        .filter(({ points }) => points > 0);
+      const rank = (a: (typeof scored)[number], b: (typeof scored)[number]) => b.points - a.points || a.candidate.name.localeCompare(b.candidate.name);
+      const exact = scored.filter(({ missing }) => missing === 0).sort(rank);
+      const partial = exact.length === 0 && words.length > 1;
+      const results = (partial ? scored.sort((a, b) => a.missing - b.missing || rank(a, b)) : exact).map(({ candidate }) => candidate);
+      return pagedResult(results, offset, limit, (items, page) => ({
+        ...page,
+        ...(partial && results.length > 0 ? { note: "No result contains every word of the query, so these contain some of the words." } : {}),
+        results: items,
+      }));
     },
   );
 }

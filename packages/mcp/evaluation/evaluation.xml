@@ -1,0 +1,42 @@
+<evaluation>
+  <qa_pair>
+    <question>Among the atoms in the Layout category, which one lists the fewest props in its manifest entry? Answer with the component name only.</question>
+    <answer>Spacer</answer>
+  </qa_pair>
+  <qa_pair>
+    <question>How many molecules in the Inputs category forward their ref to an HTMLInputElement? Answer with a number only.</question>
+    <answer>5</answer>
+  </qa_pair>
+  <qa_pair>
+    <question>In the purple dark theme, which primitive colour token does the semantic token --dbm-bg-brand alias? Answer with the token name only, including the leading dashes.</question>
+    <answer>--dbm-color-purple-300</answer>
+  </qa_pair>
+  <qa_pair>
+    <question>How many design tokens, of every layer, does the Avatar component's own stylesheet use? Answer with a number only.</question>
+    <answer>40</answer>
+  </qa_pair>
+  <qa_pair>
+    <question>A small wrapper component lets every tooltip below it share one hover delay. The component it supports belongs to which tier (atom, molecule, organism or template)? Answer with the tier only.</question>
+    <answer>atom</answer>
+  </qa_pair>
+  <qa_pair>
+    <question>Which component is built from the most parts (the pieces of a compound component, such as Navbar.Link)? Answer with the component name only.</question>
+    <answer>Menubar</answer>
+  </qa_pair>
+  <qa_pair>
+    <question>According to the guide that ships for AI agents, what is the name of the prop that marks a field's invalid state? Answer with the prop name only.</question>
+    <answer>hasError</answer>
+  </qa_pair>
+  <qa_pair>
+    <question>Which exported hook keeps a closed announcement closed the next time the visitor comes back? Answer with the hook name only.</question>
+    <answer>usePersistentDismiss</answer>
+  </qa_pair>
+  <qa_pair>
+    <question>Which component lets a person choose a start and an end within a single day, as opposed to one moment? Answer with the component name only.</question>
+    <answer>TimeRangePicker</answer>
+  </qa_pair>
+  <qa_pair>
+    <question>Of the parts of the Navbar, which one other than the menu button forwards its ref to an HTMLButtonElement? Answer with the full part name only, such as Navbar.Link.</question>
+    <answer>Navbar.Group</answer>
+  </qa_pair>
+</evaluation>

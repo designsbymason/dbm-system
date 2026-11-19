@@ -180,6 +180,14 @@ describe("the tools", () => {
       expect(tokens.data?.results.every((row: { kind: string }) => row.kind === "token")).toBe(true);
     });
 
+    it("falls back to results with some of the words, and says so", async () => {
+      const { data: body } = await call("dbm_search", { query: "remembers closed", kinds: ["hook"] });
+      expect(body?.note).toContain("some of the words");
+      expect(body?.results.map((row: { name: string }) => row.name)).toContain("usePersistentDismiss");
+      const exact = await call("dbm_search", { query: "date range" });
+      expect(exact.data?.note).toBeUndefined();
+    });
+
     it("returns nothing, not an error, when nothing matches", async () => {
       const none = await call("dbm_search", { query: "zzzxqj" });
       expect(none.result.isError).toBeFalsy();

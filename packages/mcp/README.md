@@ -40,6 +40,8 @@ or, for a client that takes a JSON configuration:
 
 It starts in the folder the agent runs in, so a project without `@dbm-system/components` installed gets the copies this package depends on (the answers say which with `origin`).
 
+`evaluation/` holds ten questions with verified answers for measuring how well an agent uses the tools.
+
 This package is under construction and not yet published.
 
 ## Links
