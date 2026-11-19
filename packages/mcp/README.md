@@ -20,6 +20,26 @@ All are read-only. Lists take `limit` and `offset` and say where the next page s
 | `dbm_search` | Components, hooks, functions, constants and tokens by name and by what they do |
 | `dbm_get_agent_guide` | The consumer guide (`AGENTS.md`) that ships with the components package |
 
+## Use it
+
+Once published, add it to an agent from the root of the project that uses DBM System, so it reads the versions that project has installed:
+
+```bash
+claude mcp add dbm-system -- npx -y @dbm-system/mcp
+```
+
+or, for a client that takes a JSON configuration:
+
+```json
+{
+  "mcpServers": {
+    "dbm-system": { "command": "npx", "args": ["-y", "@dbm-system/mcp"] }
+  }
+}
+```
+
+It starts in the folder the agent runs in, so a project without `@dbm-system/components` installed gets the copies this package depends on (the answers say which with `origin`).
+
 This package is under construction and not yet published.
 
 ## Links
