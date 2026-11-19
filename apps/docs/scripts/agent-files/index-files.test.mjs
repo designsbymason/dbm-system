@@ -4,13 +4,13 @@ import { buildLlmsFull, buildLlmsTxt, checkOrder, firstSentence } from "./index-
 
 const pages = [
   { id: "getting-started-introduction--docs", title: "Getting started/Introduction" },
+  { id: "resources-faq--docs", title: "Getting started/FAQ" },
   { id: "atoms-inputs-button--docs", title: "Components/Button" },
-  { id: "resources-faq--docs", title: "Resources/FAQ" },
 ];
 const copies = new Map([
   ["getting-started-introduction--docs", "# Introduction\n\nWelcome. DBM is a library for people and for agents, and this page says where to begin.\n\nStorybook page: <x>\n"],
-  ["atoms-inputs-button--docs", "# Button\n\nTier: Atom · Category: Inputs\n\nThe primary action.\n\nStorybook page: <x>\n"],
   ["resources-faq--docs", "# FAQ\n\nShort answers to the first questions, as people ask them.\n\nStorybook page: <x>\n"],
+  ["atoms-inputs-button--docs", "# Button\n\nTier: Atom · Category: Inputs\n\nThe primary action.\n\nStorybook page: <x>\n"],
 ]);
 const input = { pages, copies, descriptions: { Button: "An action." }, summary: "A library." };
 
@@ -23,15 +23,17 @@ describe("buildLlmsTxt", () => {
     assert.match(out, /## Getting started\n\n- \[Introduction\]\(https:\/\/dbm-system\.com\/docs\/getting-started-introduction\.md\): Welcome\. DBM is a library for people and for agents, and this page says where to begin\./);
     assert.match(out, /- \[Button\]\(https:\/\/dbm-system\.com\/docs\/atoms-inputs-button\.md\): An action\./);
   });
-  it("puts the resources in the Optional section", () => {
-    assert.match(out, /## Optional\n\n### Resources\n\n- \[FAQ\]/);
+  it("lists the FAQ with the Getting started pages, under the id the page has always had, and has no Optional section", () => {
+    assert.match(out, /- \[FAQ\]\(https:\/\/dbm-system\.com\/docs\/resources-faq\.md\): Short answers/);
+    assert.ok(out.indexOf("[FAQ]") < out.indexOf("## Components"));
+    assert.doesNotMatch(out, /## Optional/);
   });
 });
 
 describe("buildLlmsFull", () => {
   it("holds every copy, in order, each followed by the address of its own copy", () => {
     const out = buildLlmsFull(input);
-    assert.ok(out.indexOf("# Introduction") < out.indexOf("# Button") && out.indexOf("# Button") < out.indexOf("# FAQ"));
+    assert.ok(out.indexOf("# Introduction") < out.indexOf("# FAQ") && out.indexOf("# FAQ") < out.indexOf("# Button"));
     assert.equal(out.match(/^Markdown copy: /gm).length, 3);
     assert.match(out, /Markdown copy: https:\/\/dbm-system\.com\/docs\/atoms-inputs-button\.md/);
   });

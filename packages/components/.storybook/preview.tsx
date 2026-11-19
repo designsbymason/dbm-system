@@ -89,7 +89,7 @@ const preview: Preview = {
       // with "Unexpected 'storySort'" at startup.
       //
       // Top-level group order: Getting started, Guides and Foundations
-      // (token reference), then Components, Templates and Resources —
+      // (token reference), then Components and Templates —
       // an explicit order, since alphabetical would scatter them. Within
       // Foundations, an explicit reading order (Overview first, then
       // roughly increasing specialization) — alphabetical would scatter
@@ -127,11 +127,11 @@ const preview: Preview = {
         // annotated for the same reason `a`/`b` above can't be.
         // @ts-expect-error — `title` can't be typed; see comment above
         const topLevelGroup = (title) => title.split("/")[0] ?? title;
-        // Getting started (the introduction, installation, quick start, frameworks and AI agents) first, then the written guides, the
+        // Getting started (the introduction, installation, quick start, frameworks, AI agents, the MCP server, the changelog and the FAQ) first, then the written guides, the
         // token reference, then Components (the Index first, then every component alphabetically by name, a component's parts under
         // it; the application shells are components, so they fall in the same order), then Templates (the Index first, then the example
-        // pages alphabetically), then the resources (changelog, roadmap, FAQ).
-        const groupPriority = ["Getting started", "Guides", "Foundations", "Components", "Templates", "Resources"];
+        // pages alphabetically).
+        const groupPriority = ["Getting started", "Guides", "Foundations", "Components", "Templates"];
         const gettingStartedOrder = [
           "Getting started/Introduction",
           "Getting started/Installation",
@@ -139,8 +139,9 @@ const preview: Preview = {
           "Getting started/Frameworks",
           "Getting started/AI agents",
           "Getting started/MCP server",
+          "Getting started/Changelog",
+          "Getting started/FAQ",
         ];
-        const resourcesOrder = ["Resources/Changelog", "Resources/Roadmap", "Resources/FAQ"];
         const guidesOrder = [
           "Guides/Theming",
           "Guides/Accessibility",
@@ -177,9 +178,6 @@ const preview: Preview = {
         }
         if (aGroup === "Getting started") {
           return gettingStartedOrder.indexOf(a.title) - gettingStartedOrder.indexOf(b.title);
-        }
-        if (aGroup === "Resources") {
-          return resourcesOrder.indexOf(a.title) - resourcesOrder.indexOf(b.title);
         }
         if (aGroup === "Guides") {
           return guidesOrder.indexOf(a.title) - guidesOrder.indexOf(b.title);

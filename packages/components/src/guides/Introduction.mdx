@@ -45,10 +45,11 @@ for interaction and Phosphor for icons.
     ["`@dbm-system/tokens`", "The design tokens, as theme CSS and as typed constants", "Yes: your app imports a theme from it"],
     ["`@dbm-system/icons`", "The Phosphor icon set, typed", "Yes, if you use icons"],
     ["`@dbm-system/utils`", "Helpers the components are built on", "No: what an app needs from it is re-exported by the components"],
+    ["`@dbm-system/mcp`", "A read-only MCP server that answers a coding agent's questions about the components and tokens", "Optional: your agent runs it with `npx`; your app does not install it"],
   ]}
 />
 
-The four packages are released together at one version. Install the same version of each.
+The packages are released together at one version. Install the same version of each one your app uses.
 
 ## Principles
 
@@ -66,8 +67,7 @@ The four packages are released together at one version. Install the same version
 ## Where things stand
 
 The packages are on npm. The API is pre-1.0: a breaking change before `1.0.0` bumps the minor
-version, and its [changelog](?path=/docs/resources-changelog--docs) says how to migrate. The
-[roadmap](?path=/docs/resources-roadmap--docs) has what is built and what comes next.
+version, and its [changelog](?path=/docs/resources-changelog--docs) says how to migrate.
 
 Found a problem or have an idea? [Open an issue](https://github.com/designsbymason/dbm-system/issues). If DBM
 System is useful to you, a star on [GitHub](https://github.com/designsbymason/dbm-system) is the best way to

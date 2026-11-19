@@ -114,6 +114,13 @@ Style your own code with the tokens, never with literal values: `var(--dbm-bg-br
 [Foundations pages](?path=/docs/foundations-overview--docs) list every token, and the components work the same
 under server rendering and in the browser.
 
+## Optional: let your coding agent ask
+
+If you build with an AI coding agent, it can read the manifest and `AGENTS.md` from the packages you just installed
+([AI agents](?path=/docs/getting-started-ai-agents--docs)), or ask a read-only
+[MCP server](?path=/docs/getting-started-mcp-server--docs) instead. The server is its own package, `@dbm-system/mcp`,
+which your agent runs with `npx`; it is not part of the install above, and your app does not depend on it.
+
 ## Next
 
 <RelatedLinks

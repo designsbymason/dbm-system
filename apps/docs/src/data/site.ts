@@ -37,6 +37,9 @@ export const docsGroups: SiteGroup[] = [
       { label: "Frameworks", href: page("getting-started-frameworks"), description: "Next.js, Vite, Astro and server rendering" },
       { label: "AI agents", href: page("getting-started-ai-agents"), description: "The files an agent reads" },
       { label: "MCP server", href: page("getting-started-mcp-server"), description: "Let an agent ask instead of read" },
+      // The changelog and the FAQ moved here from a Resources group; their addresses did not change (the pages keep their ids).
+      { label: "Changelog", href: page("resources-changelog"), description: "Every release" },
+      { label: "FAQ", href: page("resources-faq"), description: "Short answers" },
     ],
   },
   {
@@ -48,14 +51,6 @@ export const docsGroups: SiteGroup[] = [
       { label: "Composition patterns", href: page("guides-composition-patterns"), description: "Putting components together" },
       { label: "Hooks and utilities", href: page("guides-hooks-and-utilities"), description: "The functions that ship with it" },
       { label: "Icons", href: page("guides-icons"), description: "Phosphor, sized and coloured" },
-    ],
-  },
-  {
-    label: "Resources",
-    links: [
-      { label: "Changelog", href: page("resources-changelog"), description: "Every release" },
-      { label: "Roadmap", href: page("resources-roadmap"), description: "Built, next and not planned" },
-      { label: "FAQ", href: page("resources-faq"), description: "Short answers" },
     ],
   },
 ];
@@ -80,8 +75,8 @@ const link = (group: SiteGroup, label: string): SiteLink => {
   if (!found) throw new Error(`site.ts: no "${label}" link in ${group.label}`);
   return found;
 };
-const [gettingStarted, guides, resources] = docsGroups as [SiteGroup, SiteGroup, SiteGroup];
-export const changelog: SiteLink = link(resources, "Changelog");
+const [gettingStarted, guides] = docsGroups as [SiteGroup, SiteGroup];
+export const changelog: SiteLink = link(gettingStarted, "Changelog");
 export const accessibility: SiteLink = link(guides, "Accessibility");
 export const quickStart: SiteLink = link(gettingStarted, "Quick start");
 /** The first page in Guides, where the home page's "Guides" button goes. */

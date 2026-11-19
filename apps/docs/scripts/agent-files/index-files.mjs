@@ -5,9 +5,7 @@
 
 const SITE_ORIGIN = "https://dbm-system.com/";
 /** The sidebar's groups in their order (`storySort` in packages/components/.storybook/preview.tsx), the one Storybook writes into `index.json`. */
-export const GROUP_ORDER = ["Getting started", "Guides", "Foundations", "Components", "Templates", "Resources"];
-/** The sections of `llms.txt` that a reader can leave out when short of room (the llmstxt.org "Optional" section). */
-const OPTIONAL_GROUPS = new Set(["Resources"]);
+export const GROUP_ORDER = ["Getting started", "Guides", "Foundations", "Components", "Templates"];
 
 /** Fails unless the pages are in the sidebar's group order, so `llms.txt` and `llms-full.txt` read the way the sidebar does. */
 export function checkOrder(pages) {
@@ -57,7 +55,6 @@ export function buildLlmsTxt({ pages, copies, descriptions, summary }) {
     `- [manifest.json](${SITE_ORIGIN}manifest.json): every component, prop, part, hook and function, as JSON`,
     `- [llms-full.txt](${SITE_ORIGIN}llms-full.txt): every page below, in one file`,
   ];
-  const optional = [];
   for (const group of GROUP_ORDER) {
     const lines = pages
       .filter((page) => page.title.split("/")[0] === group)
@@ -67,9 +64,8 @@ export function buildLlmsTxt({ pages, copies, descriptions, summary }) {
         return `- [${name}](${SITE_ORIGIN}docs/${page.id.replace(/--docs$/, "")}.md)${note ? `: ${note}` : ""}`;
       });
     if (lines.length === 0) continue;
-    (OPTIONAL_GROUPS.has(group) ? optional : out).push("", `## ${group}`, "", ...lines);
+    out.push("", `## ${group}`, "", ...lines);
   }
-  if (optional.length > 0) out.push("", "## Optional", ...optional.map((line) => (line.startsWith("## ") ? `\n${line}`.replace("## ", "### ") : line)));
   return `${out.join("\n").replace(/\n{3,}/g, "\n\n")}\n`;
 }
 

@@ -25,7 +25,7 @@ export type Placements = Record<string, { tier: string; category: string }>;
 export const LIMIT = 12;
 
 /** The top-level Storybook groups that are documentation; the rest (the components and the templates) are not. */
-const DOCS_GROUPS = new Set(["Getting started", "Guides", "Resources", "Foundations"]);
+const DOCS_GROUPS = new Set(["Getting started", "Guides", "Foundations"]);
 
 /**
  * A title with a component's tier and category in front: `Components/Tabs/Content` is `Molecules/Navigation/Tabs/Content`. The

@@ -22,7 +22,7 @@ A frosted bar that sticks (the `Navbar` variant `frosted`: a translucent surface
 |---|---|
 | Logo | The "dbM system" wordmark, inline SVG coloured with `text.brand`, about 24 px tall; links to `/` |
 | Version | The current version as a subtle brand-toned `Badge` inside the home link, read from the packages at build; shown from `lg` only, so the wordmark is alone and centred below it |
-| **Docs** | A simple dropdown list of Storybook pages, no descriptions, in three groups side by side, each with its label in capitals: Getting started (with AI agents), Guides, Resources |
+| **Docs** | A simple dropdown list of Storybook pages, no descriptions, in two groups side by side, each with its label in capitals: Getting started (with AI agents, the MCP server, the Changelog and the FAQ), Guides |
 | **Foundations** | A simple dropdown list, one link per Storybook Foundations page, in one labelled group |
 | **Components** | A direct link (no menu) to Storybook's Index page (the Components table) |
 | Icon buttons | Search, the mode toggle and GitHub: tertiary `IconButton`s at the bar's medium size, with accessible names and tooltips (the name alone, no shortcut), one group with one small equal space between each, no divider. Search and the mode toggle stay in the bar at every width; GitHub is in the bar from `lg`, and below it in the menu panel's foot. Storybook is not in the bar (the Docs menu and Components link lead into it); it is a button in the menu panel's foot |
@@ -54,12 +54,11 @@ A version path (`/v1/…`) is added from 1.0; until then the site is the latest 
 
 | Group | Pages |
 |---|---|
-| **Getting started** | Introduction · Installation · Quick start · Frameworks · AI agents |
+| **Getting started** | Introduction · Installation · Quick start · Frameworks · AI agents · MCP server · Changelog (generated from the packages' `CHANGELOG.md` at build) · FAQ |
 | **Guides** | Theming · Accessibility (with the statement: guarantees, how it is checked, the known exceptions, browsers, how to report) · Responsive and right-to-left · Composition patterns · Hooks and utilities · Icons |
 | **Foundations** | Overview · Color · Typography · Spacing · Radius · Shadows · Motion · Icon sizes · Miscellaneous · Breakpoints |
 | **Components** | **Index** (the Components table) first, then every component alphabetically by name (the two application shells included), a part under its component; tier and category are in `componentCatalog.json` and the Index table, not in the sidebar ([ADR-0225](../adr/0225-storybooks-sidebar-lists-every-component-alphabetically-in-one-group-and-a-catalog-holds-tier-and-category-over-tier-and-category-groups-in-the-story-title.md)); no component address changes |
 | **Templates** | **Index** (the Templates table, which lists the two application shells with an asterisk and the example pages) first, then the example pages alphabetically, with no sub-groups; the shells themselves are in Components ([ADR-0226](../adr/0226-the-application-shells-are-components-in-the-template-tier-and-the-manifest-lists-helpers-apart-over-keeping-the-shells-in-templates-and-counting-helpers-as-components.md)) |
-| **Resources** | Changelog (generated from the packages' `CHANGELOG.md` at build) · Roadmap · FAQ |
 
 The order is set in `preview.tsx`'s `storySort` (`07-storybook-and-documentation-standards.md` §11). Each group's **Index** holds its table, the Components one the components and the Templates one the templates (the `ComponentIndex` block over `index.json`, with a `section`); every group but Getting started starts collapsed in the sidebar; the home page's All components section shows the same data from the manifest. A page whose address changes keeps a short "moved" page at the old one, since static Pages cannot redirect.
 
@@ -125,7 +124,7 @@ Expressive on the home page, calm in Storybook ([ADR-0222](../adr/0222-the-home-
 | `/AGENTS.md` | The consumer usage guide, copied byte for byte from the components package | Built (S4) |
 | `/manifest.json` | The full component manifest, copied byte for byte from the built components package | Built (S4) |
 | `<page>.md` | A Markdown copy of each Storybook Docs page, generated from its MDX at build ([ADR-0221](../adr/0221-storybooks-docs-pages-are-indexed-by-search-engines-with-plain-text-copies-for-agents-over-keeping-storybook-out-of-results.md)), at `/docs/<id>.md` with the id as Storybook has it, without `--docs` | Built (S4) |
-| `/llms.txt` | A short curated index of the docs (the llmstxt.org convention): the pages in the sidebar's order, a sentence each, the Resources under Optional | Built (S4) |
+| `/llms.txt` | A short curated index of the docs (the llmstxt.org convention): the pages in the sidebar's order, a sentence each | Built (S4) |
 | `/llms-full.txt` | Every copy in one file, in the sidebar's order (about 3 MiB; the index and the single pages are the lighter way in) | Built (S4) |
 
 **How the copies are made:** each Storybook Docs page's MDX is parsed with the unified tools at build. Headings, prose, lists, tables and code pass through; imports, `<Meta>` and `<ThemeSync />` are dropped; every block has its own text form, and a block with none fails the build, so nothing disappears silently:
@@ -165,7 +164,7 @@ apps/
     public/                The icons (`favicon.svg`, `favicon.ico`, the Apple touch icon, two app icons), the web manifest and the share image, all written by `scripts/generate-brand-assets.mjs` and committed
     scripts/               The scoped token themes, the agent files (`generate-agent-files.mjs`, `agent-files/`) and their check, the link check, the accessibility scan, the local server
 packages/components/
-  src/guides/              Storybook's Getting started, Guides and Resources pages (MDX)
+  src/guides/              Storybook's Getting started and Guides pages (MDX)
   src/foundations/         Storybook's Foundations pages
   .storybook/              The sidebar order, the bridge, the logo, the indexing setup
 .github/
