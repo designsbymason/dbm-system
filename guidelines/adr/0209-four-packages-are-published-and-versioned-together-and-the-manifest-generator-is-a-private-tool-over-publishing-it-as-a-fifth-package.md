@@ -1,6 +1,6 @@
 # 0209 — Four packages are published and versioned together, and the manifest generator is a private tool, over publishing it as a fifth package
 
-**Status:** Accepted · **Date:** 2026-11-14
+**Status:** Superseded by [0230](./0230-the-mcp-server-is-a-fifth-public-package-in-the-fixed-version-group-over-folding-it-into-the-components-package-or-leaving-it-outside-the-group.md) · **Date:** 2026-11-14
 
 ## Context
 [ADR-0202](./0202-the-five-public-packages-are-versioned-together-and-the-first-release-is-0-1-0-over-independent-versions-or-a-first-release-at-1-0-0.md) made `components`, `tokens`, `utils`, `icons` and `manifest` one fixed group, released together at `0.1.0`. Writing the guides for the packages showed that `@dbm-system/manifest` has no use outside this repository. The manifest it makes ships inside `@dbm-system/components` ([ADR-0204](./0204-the-manifest-ships-inside-the-components-package-as-manifest-json-with-its-schema-and-the-generator-stays-in-the-manifest-package-over-a-separate-package-that-holds-the-file.md)), and the generator expects this repository's layout: a `src/index.ts` barrel and stories titled `Tier/Category/Name`. A published package an app cannot sensibly use is surface to document, version and support.
