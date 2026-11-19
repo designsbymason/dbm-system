@@ -1,0 +1,110 @@
+# Figma library — plan (draft for approval)
+
+**Status:** approved by the maintainer 2026-11-19; Phase 0 in progress, nothing is written to Figma yet. Decided in [ADR-0233](../adr/0233-the-figma-library-is-written-from-the-built-tokens-by-a-one-way-script-over-the-tokens-studio-plugin-or-typing-the-variables-by-hand.md), [ADR-0234](../adr/0234-figma-is-a-design-tool-outside-the-build-test-and-hosting-pipelines-and-the-file-needs-professional-or-higher-over-applying-the-free-tooling-rule-to-it.md), [ADR-0235](../adr/0235-the-figma-library-is-one-file-with-a-page-per-category-and-one-lean-spec-frame-per-component-over-split-files-pages-per-tier-or-full-documentation-in-figma.md) and [ADR-0236](../adr/0236-the-figma-variables-are-four-collections-primitives-semantic-with-four-theme-modes-component-and-viewport-over-one-collection-or-a-collection-per-theme.md); the **(ADR)** marks below point to them.
+
+## 1. Goals
+
+1. A Figma library that **mirrors the code**: the same tokens, the same themes, the same components, so a designer and an engineer describe one system.
+2. **Tokens flow one way**, from `packages/tokens` into Figma by a script, so the two cannot drift (`../01-vision-and-goals.md` §3).
+3. **Figma used as Figma is meant to be used**: variables with modes, styles, components with properties and slots, auto layout, constraints, no raw values.
+4. A file that is itself **premium, professional and clean**: the design system's own look, built from its own library.
+5. **No change to any published package.** Everything new is outside `packages/*`, in this folder, in `.local/` and in one private script.
+
+Out of scope: templates, hooks, functions and non-visual utilities, Code Connect and right-to-left (deferred to a later phase), any change to `packages/*`.
+
+## 2. Decisions taken
+
+| Area | Decision |
+|---|---|
+| Plan | Figma Professional or higher; the target file is checked through the MCP for four modes before anything is written **(ADR: Figma is a design tool outside the build, test and hosting pipelines, so the free-tooling rule does not apply)** |
+| Token sync | A generated, one-way script reads `packages/tokens/build/tokens.json` and writes variables through the Figma MCP; it is re-runnable and idempotent **(ADR)** |
+| Private data | `.local/figma.json` (file key, node IDs, anything personal); never committed |
+| File layout | One file to start; split by tier only if it becomes slow past about 100 components **(ADR)** |
+| Pages | A page per category, with sections ordered atom, molecule, organism and one frame per component **(ADR)** |
+| Frame content | Lean spec frame; Storybook stays the single source of truth for props and usage |
+| Coverage | Visual components only |
+| Process | Pilot, then a review gate per category in tier order |
+| Look | Three cover concepts first; the chosen direction is recorded here |
+
+## 3. What is gitignored and private
+
+| Item | Where it lives | Why |
+|---|---|---|
+| File key, file URL, node IDs, page IDs | `.local/figma.json` | The work-in-progress file must not be addressable from a public repository |
+| A Figma personal access token, if one is ever used | Never in the repository, never a repository secret; the MCP's own sign-in is used instead | Credentials (`CLAUDE.md`, "Security practices") |
+| Screenshots, exports and scratch payloads from the work | `.local/figma/` | They show unreleased work |
+| The published library's address | `.local/figma.json` until the maintainer decides to publish it | Publication is a separate decision (§8) |
+
+Checks before the first commit: `.local/` is in `.gitignore` and `.githooks/pre-commit` blocks it; the file key is added to the gitignored `.local/blocked-strings.txt` so the guard also catches it in text; `.env.example` is not needed because no environment variable is read. The shape of `figma.json` is documented here, with placeholders only:
+
+```json
+{ "fileKey": "<key>", "url": "<url>", "pages": { "<name>": "<node id>" } }
+```
+
+## 4. Structure of the Figma file
+
+**Pages, in order:** Cover; Getting started (what the file is, how to use the modes, the layer naming, links to Storybook); Foundations (one page each for Color, Typography, Spacing and Radius, Elevation, Motion, Breakpoints, Icons); one page per category (Inputs, Data Display, Feedback, Layout, Media, Navigation, Overlay, Typography, Utility); Not in Figma (what was skipped and why); Changelog (§7).
+
+**A category page** holds one section per tier in the order atoms, molecules, organisms, and in each section one frame per component, sorted by build order. Each frame is the same **spec frame** built from a master component: a header (name, tier tag, one-line description, link to its Storybook page), the component set laid out as a variant matrix, an anatomy callout, the tokens it uses and its accessibility notes (§6). Props, usage and code stay in Storybook.
+
+**Theme previews:** each spec frame appears in a light and a dark pair; brand switching is the page's explicit mode setting on the Semantic collection, so one page shows purple and, flipped, emerald.
+
+**Layer and component names** follow the code: `Button`, `Button/Group`, `Card/Header`, properties named as the prop (`variant`, `size`, `tone`, `state`). A part of a compound component is its own nested component named `Parent/Part`.
+
+## 5. Variables, styles and tokens
+
+**Collections and modes**
+
+| Collection | Modes | Holds |
+|---|---|---|
+| Primitives | one | Colour scales, spacing, radius, border widths, opacity, durations, z-index, breakpoint widths, font families, weights and sizes |
+| Semantic | purple-light, purple-dark, emerald-light, emerald-dark | `bg.*`, `text.*`, `border.*`, `icon.*`, each aliasing a primitive, with the same names as the theme files |
+| Component | one | The 35 component token files (avatar sizes, row heights, widths), aliasing primitives where they can |
+| Viewport | mobile, tablet, desktop | The fluid type and spacing steps as fixed values, because Figma cannot hold `clamp()` |
+
+**Rules:** a variable is named by its token path with slashes (`color/bg/brand`), the same segments as the CSS custom property; a semantic variable aliases a primitive and never holds a raw value; scopes are set so a colour variable cannot be applied to a spacing field; every variable carries the token's `$description`. The script writes only what the tokens contain: adding a token in the repo and re-running it adds the variable.
+
+**Styles:** text styles per type step and font family; effect styles for each shadow, colour-bound where Figma allows; a grid style per breakpoint. Motion (durations and easing) is documented on the Motion page, not made a variable.
+
+**Verification:** after each run the script reports variable counts per collection and mode against the token files, and flags any mismatch.
+
+## 6. Build rules for every component
+
+1. **Built from composition:** a molecule is made of atom instances, an organism of molecule and atom instances, never redrawn.
+2. **Properties:** visual props (`variant`, `size`, `tone`) and states (default, hover, focus, pressed, disabled, loading, error) are variant properties; show and hide are booleans; content is text or instance-swap properties. Event handlers, refs, ARIA and controlled-state props are not modelled.
+3. **Variable-bound everything:** fills, strokes, radius, padding, gap, type and effects are bound to variables or styles; there is no raw value on any layer.
+4. **Auto layout everywhere**, with hug, fill and fixed set on purpose, minimum and maximum widths where the code has them, and constraints so a frame resizes correctly.
+5. **Slots** for open content areas (Card body, Dialog content, Table cells, Tabs panels); the rest are nested components.
+6. **Responsive:** the Viewport modes drive type and spacing; components that change shape (Navbar, Sidebar, Dialog into a sheet, Table) get a `platform` variant property.
+7. **Accessibility annotations** on each spec frame: focus order, contrast of the text and edge pairings against the surface in each mode, and the target size.
+8. **Dev Mode:** each finished component is marked ready for dev, with a description and a link to its Storybook page.
+9. **Icons:** Phosphor icons used by `packages/icons` and the components, as an instance-swappable component set with weight as a property, the used subset only.
+
+## 7. Phases and review gates
+
+Each phase ends with a local checkpoint in the repository (guideline files only), a screenshot review with the maintainer and, from Phase 3 on, a variable-binding audit. No phase starts until the one before is approved; nothing is pushed without showing it first.
+
+| Phase | Work | Done when |
+|---|---|---|
+| 0. Groundwork | `.local/figma.json` and its guard strings; this folder; the ADRs above written; a connection check of the file (plan, modes, fonts Nunito and Lora available) | The maintainer approves the plan; the connection check reports four modes |
+| 1. Variables | The sync script, the four collections, all four themes, with counts checked against the token files | Counts match; a spot check of 20 variables in each mode |
+| 2. Styles and foundations | Text, effect and grid styles; the Foundations pages (Color, Typography, Spacing and Radius, Elevation, Motion, Breakpoints) | Every foundation page matches the Storybook foundations |
+| 3. Look and the spec frame | Three cover concepts; the chosen one built; the spec-frame master; Getting started page; Icons set | The maintainer picks a direction and approves the spec frame |
+| 4. Pilot | Button, Input, Badge and Card, end to end under §6 | The rules hold on all four; changes to §6 are made before more is built |
+| 5. Atoms | Each category in turn, in the order of `../04-component-inventory.md` | Per category: a review and a clean audit |
+| 6. Molecules | The same, built from the atom instances | The same |
+| 7. Organisms | The same, built from molecule and atom instances | The same |
+| 8. Finish | The Not in Figma and Changelog pages; the library published to the team; ready for dev set; the publication decision (§8) | Every audit clean; the Changelog states the `@dbm-system` version the publish matches |
+
+**Versioning rhythm:** a Figma library publish is tied to an npm release; the Changelog page records the package version, the date and what changed in the file.
+
+## 8. Risks, gaps and open questions
+
+- **Layout primitives** (Box, Stack, Grid, GridItem, Center, Container, Bleed, Affix, AspectRatio, Spacer) are CSS concepts that Figma expresses as auto layout itself, not as components. Proposal: document them on the Layout page as auto-layout patterns, and build components only for Divider and the visual ones; the maintainer decides.
+- **Components whose behaviour is the point** (Collapse, Backdrop, FocusTrap, SkipLink, BackToTop) are built only if they have a visual state worth drawing; the rest go on the Not in Figma page.
+- **Overlays** (Dialog, Drawer, Popover, Toast, Tour) are drawn as static frames in each open state.
+- **Mode limits:** the four-mode Semantic collection uses the plan's whole allowance; a third brand needs a higher plan or a second collection.
+- **Fonts:** Nunito and Lora must be available in the file; the connection check confirms this before Phase 1.
+- **Drift:** components are drawn by hand, so a code change to a component is not reflected until the file is updated; the Changelog and a per-release check in `RELEASING.md` are the mitigation, to be decided.
+- **Publication:** whether the finished file is private, a view-only link or a Community file is decided at Phase 8.
+- **Code Connect and RTL** are deferred, not dropped.

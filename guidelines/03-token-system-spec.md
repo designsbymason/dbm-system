@@ -1,6 +1,6 @@
 # DBM System — Token Spec
 
-Companion to `packages/tokens/src/` (the actual generated token files in W3C Design Tokens Community Group format — ready to feed into Style Dictionary and, later, the Tokens Studio Figma plugin for design-file sync).
+Companion to `packages/tokens/src/` (the actual generated token files in W3C Design Tokens Community Group format — ready to feed into Style Dictionary and, for the Figma library, a one-way script ([ADR-0233](adr/0233-the-figma-library-is-written-from-the-built-tokens-by-a-one-way-script-over-the-tokens-studio-plugin-or-typing-the-variables-by-hand.md))).
 
 ## Architecture: 3 layers
 
