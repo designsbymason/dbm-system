@@ -43,7 +43,7 @@ Checks before the first commit: `.local/` is in `.gitignore` and `.githooks/pre-
 
 ## 4. Structure of the Figma file
 
-**Pages, in order:** Cover; Getting started (what the file is, how to use the modes, the layer naming, links to Storybook); Foundations (one page each for Color, Typography, Spacing and Radius, Elevation, Motion, Breakpoints, Icons); one page per category (Inputs, Data Display, Feedback, Layout, Media, Navigation, Overlay, Typography, Utility); Not in Figma (what was skipped and why); Changelog (§7).
+**Pages, in order:** Cover; Getting started (what the file is, how to use the modes, the layer naming, links to Storybook); Foundations (one page, with one section frame each for Color, Typography, Spacing and Radius, Elevation, Motion and Breakpoints, in that order); Icons (its own page); one page per category (Inputs, Data Display, Feedback, Layout, Media, Navigation, Overlay, Typography, Utility); Scope notes (what is not drawn in Figma, and why); Changelog (§7).
 
 **A category page** holds one section per tier in the order atoms, molecules, organisms, and in each section one frame per component, sorted by build order. Each frame is the same **spec frame** built from a master component: a header (name, tier tag, one-line description, link to its Storybook page), the component set laid out as a variant matrix, an anatomy callout, the tokens it uses and its accessibility notes (§6). Props, usage and code stay in Storybook.
 
@@ -84,7 +84,7 @@ Checks before the first commit: `.local/` is in `.gitignore` and `.githooks/pre-
 6. **Responsive:** the Viewport modes drive type and spacing; components that change shape (Navbar, Sidebar, Dialog into a sheet, Table) get a `platform` variant property.
 7. **Accessibility annotations** on each spec frame: focus order, contrast of the text and edge pairings against the surface in each mode, and the target size.
 8. **Dev Mode:** each finished component is marked ready for dev, with a description and a link to its Storybook page.
-9. **Icons:** Phosphor icons used by `packages/icons` and the components, as an instance-swappable component set with weight as a property, the used subset only.
+9. **Icons:** the 58 Phosphor icons the component source uses (from `packages/icons`), on their own Icons page, as an instance-swappable component set with a `weight` property of bold (the library's default), regular and fill, and a size bound to the `icon-size` variables; no other icons are drawn, and the page says how to add one. Its header frame credits Phosphor Icons (MIT licence) and links to the Phosphor website, https://phosphoricons.com, where the full set can be browsed.
 
 ## 7. Phases and review gates
 
@@ -94,20 +94,20 @@ Each phase ends with a local checkpoint in the repository (guideline files only)
 |---|---|---|
 | 0. Groundwork | `.local/figma.json` and its guard strings; this folder; the ADRs above written; a connection check of the file (plan, modes, fonts Nunito and Lora available) | The maintainer approves the plan; the connection check reports four modes |
 | 1. Variables | The sync script, the four collections, all four themes, with counts checked against the token files | Counts match; a spot check of 20 variables in each mode |
-| 2. Styles and foundations | Text, effect and grid styles; the Foundations pages (Color, Typography, Spacing and Radius, Elevation, Motion, Breakpoints) | Every foundation page matches the Storybook foundations |
+| 2. Styles and foundations | Text, effect and grid styles; the Foundations page (a section frame each for Color, Typography, Spacing and Radius, Elevation, Motion, Breakpoints) | Every foundations section matches the Storybook foundations |
 | 3. Look and the spec frame | Three cover concepts; the chosen one built; the spec-frame master; Getting started page; Icons set | The maintainer picks a direction and approves the spec frame |
 | 4. Pilot | Button, Input, Badge and Card, end to end under §6 | The rules hold on all four; changes to §6 are made before more is built |
 | 5. Atoms | Each category in turn, in the order of `../04-component-inventory.md` | Per category: a review and a clean audit |
 | 6. Molecules | The same, built from the atom instances | The same |
 | 7. Organisms | The same, built from molecule and atom instances | The same |
-| 8. Finish | The Not in Figma and Changelog pages; the library published to the team; ready for dev set; the publication decision (§8) | Every audit clean; the Changelog states the `@dbm-system` version the publish matches |
+| 8. Finish | The Scope notes and Changelog pages; the library published to the team; ready for dev set; the publication decision (§8) | Every audit clean; the Changelog states the `@dbm-system` version the publish matches |
 
 **Versioning rhythm:** a Figma library publish is tied to an npm release; the Changelog page records the package version, the date and what changed in the file.
 
 ## 8. Risks, gaps and open questions
 
 - **Layout primitives** (Box, Stack, Grid, GridItem, Center, Container, Bleed, Affix, AspectRatio, Spacer) are CSS concepts that Figma expresses as auto layout itself, not as components. Proposal: document them on the Layout page as auto-layout patterns, and build components only for Divider and the visual ones; the maintainer decides.
-- **Components whose behaviour is the point** (Collapse, Backdrop, FocusTrap, SkipLink, BackToTop) are built only if they have a visual state worth drawing; the rest go on the Not in Figma page.
+- **Components whose behaviour is the point** (Collapse, Backdrop, FocusTrap, SkipLink, BackToTop) are built only if they have a visual state worth drawing; the rest go on the Scope notes page.
 - **Overlays** (Dialog, Drawer, Popover, Toast, Tour) are drawn as static frames in each open state.
 - **Mode limits:** the four-mode Semantic collection uses the plan's whole allowance; a third brand needs a higher plan or a second collection.
 - **Fonts:** Nunito and Lora must be available in the file; the connection check confirms this before Phase 1.
