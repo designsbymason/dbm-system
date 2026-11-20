@@ -136,6 +136,81 @@ for (const token of tokens) {
   }
 }
 
+// ---- Order ----------------------------------------------------------------------------------------------------------
+// Figma lists a collection's variables in the order they were created and has no call to move one, so the order is
+// decided here and the payloads create in it: scales climb (50 to 950, xs to 3xl), related tokens sit together.
+
+const SIZE_STEPS = ["xs", "sm", "base", "md", "lg", "xl", "2xl", "3xl", "4xl", "5xl", "6xl"];
+const GROUPS = ["color", "space", "radius", "border-width", "opacity", "icon-size", "breakpoint", "font-family", "font-weight", "line-height", "letter-spacing", "z-index"];
+const HUES = ["neutral", "gray", "purple", "emerald", "red", "amber", "yellow", "green", "blue"];
+const SPECIAL = {
+  space: ["0", "px"],
+  radius: ["none", "xs", "sm", "md", "lg", "xl", "2xl", "3xl", "full"],
+  "font-family": ["primary", "secondary", "mono"],
+  "font-weight": ["regular", "medium", "semibold", "bold"],
+  "line-height": ["tight", "snug", "normal", "relaxed"],
+  "letter-spacing": ["tight", "normal", "wide"],
+  "z-index": ["base", "dropdown", "sticky", "fixed", "overlay", "modal", "popover", "toast", "tooltip"],
+  "color/neutral": ["white", "black"],
+};
+const TONES = ["brand", "neutral", "info", "success", "warning", "danger", "highlight"];
+const VARIANTS = ["base", "hover", "subtle", "subtle-hover", "strong", "on"];
+const SEMANTIC = {
+  bg: { lead: ["surface", "canvas", "scrim", "overlay", "track", "track-strong", "skeleton"], trail: ["code", "code-block", "code-highlight"] },
+  text: { lead: ["primary", "secondary", "tertiary", "disabled", "link", "white"], trail: [] },
+  border: { lead: ["default", "strong", "focus", "white", "black"], trail: ["code"] },
+  icon: { lead: ["default", "secondary", "disabled", "white"], trail: [] },
+};
+
+const rankIn = (list, key) => (list.includes(key) ? list.indexOf(key) : list.length);
+const numberOr = (key) => (/^\d+$/.test(key) ? Number(key) : Number.POSITIVE_INFINITY);
+
+/** A sortable key (an array compared element by element) for one variable's Figma name. */
+function sortKey(collection, name) {
+  const [group, ...parts] = name.split("/");
+  const rest = parts.join("/");
+  if (collection === "Primitives") {
+    const g = rankIn(GROUPS, group);
+    if (group === "color") {
+      const [hue, step] = parts;
+      const special = SPECIAL[`color/${hue}`];
+      return [g, rankIn(HUES, hue), special ? rankIn(special, step) : numberOr(step)];
+    }
+    if (group === "icon-size" || group === "breakpoint") return [g, rankIn(SIZE_STEPS, rest)];
+    if (group === "border-width" || group === "opacity") return [g, numberOr(rest)];
+    if (group === "space") return [g, SPECIAL.space.includes(rest) ? rankIn(SPECIAL.space, rest) : 2 + numberOr(rest)];
+    return [g, rankIn(SPECIAL[group] ?? [], rest)];
+  }
+  if (collection === "Viewport") return [rankIn(SIZE_STEPS, rest)];
+  if (collection === "Component") {
+    const [token, step] = parts;
+    return [group, token, rankIn(SIZE_STEPS, step ?? "")];
+  }
+  // Semantic: a few general tokens first, then each tone with its variants, then the specialised ones.
+  const spec = SEMANTIC[group];
+  const g = ["bg", "text", "border", "icon"].indexOf(group);
+  if (spec.lead.includes(rest)) return [g, 0, spec.lead.indexOf(rest), 0];
+  if (spec.trail.includes(rest) || rest.startsWith("syntax-")) return [g, 3, spec.trail.indexOf(rest), rest];
+  const on = /^on-(.+)$/.exec(rest);
+  const tone = on ? on[1] : TONES.find((t) => rest === t || rest.startsWith(`${t}-`));
+  if (!tone) throw new Error(`Semantic token without a place in the order: ${name}`);
+  const variant = on ? "on" : rest === tone ? "base" : rest.slice(tone.length + 1);
+  return [g, 1, TONES.indexOf(tone), rankIn(VARIANTS, variant)];
+}
+
+function compare(a, b) {
+  for (let i = 0; i < Math.max(a.length, b.length); i++) {
+    if (a[i] === b[i]) continue;
+    if (typeof a[i] === "number" && typeof b[i] === "number") return a[i] - b[i];
+    return String(a[i]).localeCompare(String(b[i]), "en", { numeric: true });
+  }
+  return 0;
+}
+
+for (const [name, collection] of Object.entries(collections)) {
+  collection.items.sort((x, y) => compare(sortKey(name, x.n), sortKey(name, y.n)));
+}
+
 // ---- Payload text -------------------------------------------------------------------------------------------------
 
 const RUNTIME = `
@@ -207,6 +282,43 @@ for (const name of ["Primitives", "Viewport", "Component", "Semantic"]) {
   });
 }
 
+// A collection that is already in Figma but in the wrong order is rebuilt in place by `95-reorder.js`: it copies each
+// variable (type, scopes, code syntax, description, every mode's value, an alias pointed at the copy of its primitive) in
+// the new order, deletes the old ones and renames the copies. Only needed when the order itself changes.
+const orderPayload = `const ORDER = ${JSON.stringify(Object.fromEntries(Object.entries(collections).map(([k, v]) => [k, v.items.map((e) => e.n)])))};
+const all = await figma.variables.getLocalVariablesAsync();
+const colls = await figma.variables.getLocalVariableCollectionsAsync();
+const byId = new Map(all.map((v) => [v.id, v]));
+const TMP = "~";
+const copies = new Map();
+const made = {};
+for (const name of ["Primitives", "Viewport", "Component", "Semantic"]) {
+  const col = colls.find((c) => c.name === name);
+  const mine = new Map(all.filter((v) => v.variableCollectionId === col.id).map((v) => [v.name, v]));
+  if (mine.size !== ORDER[name].length) throw new Error(name + ": " + mine.size + " variables, expected " + ORDER[name].length);
+  made[name] = [];
+  for (const n of ORDER[name]) {
+    const old = mine.get(n);
+    if (!old) throw new Error("Missing " + n);
+    const nv = figma.variables.createVariable(TMP + n, col, old.resolvedType);
+    nv.scopes = old.scopes;
+    nv.setVariableCodeSyntax("WEB", old.codeSyntax.WEB);
+    nv.description = old.description;
+    for (const [modeId, val] of Object.entries(old.valuesByMode)) {
+      if (val && val.type === "VARIABLE_ALIAS") nv.setValueForMode(modeId, { type: "VARIABLE_ALIAS", id: copies.get(val.id).id });
+      else nv.setValueForMode(modeId, val);
+    }
+    copies.set(old.id, nv);
+    made[name].push([old, nv, n]);
+  }
+}
+for (const name of Object.keys(made)) for (const [old] of made[name]) old.remove();
+for (const name of Object.keys(made)) for (const [, nv, n] of made[name]) nv.name = n;
+return Object.fromEntries(Object.entries(made).map(([k, v]) => [k, v.length]));
+`;
+writeFileSync(join(outDir, "95-reorder.js"), orderPayload);
+written.push(`95-reorder.js (${orderPayload.length} characters)`);
+
 // The check compares every variable in Figma with the tokens: its type, its value in each mode (an alias is followed to
 // its primitive), its code syntax, and that no variable is left on the default "all scopes". Figma stores a number as a
 // 32-bit float, so a number matches to a millionth.
@@ -232,6 +344,7 @@ for (const [name, spec] of Object.entries(X)) {
   const out = { expected: Object.keys(spec.x).length, found: col ? col.variableIds.length : 0, modes: col ? col.modes.map((m) => m.name).join(",") : "missing", bad: [] };
   if (col) {
     out.modesOk = out.modes === spec.m.join(",");
+    out.orderOk = JSON.stringify(col.variableIds.map((id) => byId.get(id).name)) === JSON.stringify(Object.keys(spec.x));
     const mine = new Map(all.filter((v) => v.variableCollectionId === col.id).map((v) => [v.name, v]));
     for (const [n, vals] of Object.entries(spec.x)) {
       const v = mine.get(n);
