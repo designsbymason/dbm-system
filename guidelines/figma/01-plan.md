@@ -24,7 +24,7 @@ Out of scope: templates, hooks, functions and non-visual utilities, Code Connect
 | Frame content | Lean spec frame; Storybook stays the single source of truth for props and usage |
 | Coverage | Visual components only |
 | Process | Pilot, then a review gate per category in tier order |
-| Look | Three cover concepts first; the chosen direction is recorded here |
+| Look | Editorial and quiet, with the cover chosen by the maintainer 2026-11-21: a halftone dot field fading from the top-right corner in the brand tones, over a large Lora title, with a meta row (400+ variables, 100+ components, Multi theme, Light/Dark mode) so no figure on it goes stale; it is built on the Cover page, every fill bound to a variable |
 
 ## 3. What is gitignored and private
 
@@ -102,7 +102,7 @@ Each phase ends with a local checkpoint in the repository (guideline files only)
 | 7. Organisms | The same, built from molecule and atom instances | The same |
 | 8. Finish | The Scope notes and Changelog pages; the library published to the team; ready for dev set; the publication decision (§8) | Every audit clean; the Changelog states the `@dbm-system` version the publish matches |
 
-**Versioning rhythm:** a Figma library publish is tied to an npm release; the Changelog page records the package version, the date and what changed in the file.
+**Versioning rhythm:** a Figma library publish is tied to an npm release, and the version label in the cover's top line is updated at each publish; the Changelog page records the package version, the date and what changed in the file.
 
 ## 8. Risks, gaps and open questions
 
