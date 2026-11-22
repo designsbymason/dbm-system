@@ -72,6 +72,10 @@ The folder and a starter file exist locally; nothing in them is committed.
 
 **Limits:** `git commit --no-verify` skips it, and CI does not run it. GitHub secret scanning and push protection (both on) are the backstop for recognised tokens. A string that is not on your list and does not look like a credential gets through, so the checklist below still matters.
 
+## 4.1 The pre-push changeset check
+
+`.githooks/pre-push` runs `scripts/check-changeset.mjs` before a push to `main` and refuses it when the commits being pushed change a published package and add no changeset ([ADR-0239](../adr/0239-a-change-to-a-published-package-must-add-a-changeset-in-the-same-push-checked-by-a-script-in-ci-and-a-pre-push-hook-over-trusting-the-habit-or-a-per-commit-hook.md)). It is turned on by the same `core.hooksPath` setting as the guard above, and `git push --no-verify` skips it; CI runs the same check.
+
 ## 5. Before every commit
 
 1. `git status` shows no `.local/` path and no `.env` file.

@@ -4,11 +4,21 @@ How a release of the five public packages (`@dbm-system/components`, `tokens`, `
 
 ## Make a release
 
-1. **Add a changeset** with every change that should reach a consumer: `pnpm changeset`, pick the packages and the bump (`minor` for a breaking change before 1.0, `patch` otherwise), and write the changelog entry for a reader. Commit it with the change. The changelog is formatted by `.changeset/changelog.mjs`, which is Changesets' own except that it writes no "Updated dependencies" lines (the four packages move together, so they would only repeat); what a release changed is what the changesets say.
+1. **Add a changeset** with every change that should reach a consumer: `pnpm changeset`, pick the packages and the bump (`minor` for a breaking change before 1.0, `patch` otherwise), and write the changelog entry for a reader. Commit it with the change. `pnpm check-changeset` fails when a range of commits changes what a consumer receives (the source of a published package, not its tests, stories or docs pages) and adds no changeset; CI runs it on every push and pull request, and `.githooks/pre-push` runs it before a push to `main`. A change that needs no release says so with `pnpm changeset --empty`. The changelog is formatted by `.changeset/changelog.mjs`, which is Changesets' own except that it writes no "Updated dependencies" lines (the four packages move together, so they would only repeat); what a release changed is what the changesets say.
 2. **Merge to `main`.** The Release workflow (`.github/workflows/release.yml`) runs the build, `check-publish`, `check-manifest` and the unit tests, then opens or updates a pull request titled "chore: version packages" that holds the version bumps and changelogs.
 3. **Review that pull request**: the versions and the changelog text are what consumers will read. Merging it is the release checkpoint.
 4. **Squash-merge it** (the repository allows squash merges only). The workflow runs again, publishes the five packages with provenance, and pushes a git tag for each (`@dbm-system/<name>@<version>`).
 5. **Check it**: `npm view @dbm-system/components version` should print the new version, and `npm view @dbm-system/components@<version> dist.attestations` should show a provenance attestation. A new version can take a few minutes to appear on npm.
+
+### What the changeset check does not catch
+
+`pnpm check-changeset` (ADR-0239) looks for a changeset's presence in the pushed range, nothing more:
+
+- It does not read the changeset: the packages, the bump and the wording are checked by a person in the Version Packages pull request (step 3).
+- What a consumer receives is a list of path patterns in `scripts/check-changeset.mjs` (the `src/` of the five packages, minus tests, stories, Docs pages, snippets and the Storybook-only pages). A file it misjudges needs an empty changeset or a change to the patterns.
+- It does not see a change to a package's `README.md`, `AGENTS.md` or `package.json`.
+- A changeset pushed later does not satisfy an earlier push: the change and its changeset go in the same push.
+- `git push --no-verify` skips the hook; CI still runs the check. A force-push whose previous commit CI cannot find fails the job instead of skipping.
 
 ## One-time settings (already made)
 

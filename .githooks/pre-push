@@ -1,0 +1,11 @@
+#!/bin/sh
+# Blocks a push to main that changes a published package without adding a changeset (RELEASING.md step 1), so a fix can
+# never miss the next release. Plain shell around scripts/check-changeset.mjs. Turn it on once per clone, with the
+# pre-commit guard:   git config core.hooksPath .githooks
+# (`git push --no-verify` skips it; CI runs the same check on every push and pull request.)
+while read -r _local_ref local_sha remote_ref remote_sha; do
+  [ "$remote_ref" = "refs/heads/main" ] || continue
+  [ "$local_sha" = "0000000000000000000000000000000000000000" ] && continue
+  node scripts/check-changeset.mjs --base "$remote_sha" --head "$local_sha" || exit 1
+done
+exit 0

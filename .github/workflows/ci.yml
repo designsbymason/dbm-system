@@ -10,6 +10,26 @@ permissions:
   contents: read
 
 jobs:
+  # A change to a published package needs a changeset, or the next release leaves it out (`scripts/check-changeset.mjs`, RELEASING.md
+  # step 1). Needs the history of the range, so it has its own checkout and does not install anything.
+  changeset:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: ".nvmrc"
+
+      - name: Check a published package's change has a changeset
+        env:
+          BASE: ${{ github.event.pull_request.base.sha || github.event.before }}
+        run: node scripts/check-changeset.mjs --base "$BASE" --head "$GITHUB_SHA"
+
   ci:
     runs-on: ubuntu-latest
     steps:

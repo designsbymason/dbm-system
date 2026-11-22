@@ -10,7 +10,7 @@ This is a verify step: change no files, commit nothing and push nothing. Run the
 From the repo root, in this order (each stops the run on a failure you can't explain; a failure is reported with its output, never summarised away):
 
 1. `pnpm audit` (the accepted advisories are in `guidelines/02-tech-stack-and-structure.md` §3.1; anything else is a finding)
-2. `pnpm check-radix-single-copy` (the lockfile holds one version of each shared Radix package; `02` §3.2 step 4), then `pnpm check-action-pins` and `pnpm test:scripts` (every action in the workflows is named by its full commit, `02` §3.2 step 3)
+2. `pnpm check-changeset` (a change to a published package has a changeset; RELEASING.md step 1), `pnpm check-radix-single-copy` (the lockfile holds one version of each shared Radix package; `02` §3.2 step 4), then `pnpm check-action-pins` and `pnpm test:scripts` (every action in the workflows is named by its full commit, `02` §3.2 step 3)
 3. `pnpm lint` (ESLint, then both type checks)
 4. `pnpm build`
 5. `pnpm check-publish` (packs each public package, then publint, @arethetypeswrong/cli, a look at the packed package.json, the `"use client"` marker on the components package's two entries and the consumer guide's imports and install line; needs the build)

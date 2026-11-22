@@ -23,7 +23,8 @@
     "version-packages": "changeset version",
     "release": "changeset publish",
     "check-action-pins": "node scripts/check-action-pins.mjs",
-    "test:scripts": "node --test scripts/check-action-pins.test.mjs"
+    "check-changeset": "node scripts/check-changeset.mjs",
+    "test:scripts": "node --test scripts/check-action-pins.test.mjs scripts/check-changeset.test.mjs"
   },
   "devDependencies": {
     "@arethetypeswrong/cli": "^0.18.5",
