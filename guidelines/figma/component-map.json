@@ -210,7 +210,7 @@
               "props": {
                 "tone": "neutral"
               },
-              "recipe": "Primary: fill bg/neutral (bg/neutral-hover on hover) and label text/on-neutral. Secondary: edge border/neutral-strong, label text/secondary, hover fill bg/neutral-subtle. Tertiary: label text/secondary, hover fill bg/neutral-subtle. Ghost: fill bg/neutral-subtle (bg/neutral-subtle-hover on hover), label text/secondary. Icons use tone default, except on the primary (on-brand). Name the instance Button (tone=neutral)."
+              "recipe": "Primary: fill bg/neutral (bg/neutral-hover on hover) and label text/on-neutral. Secondary: edge border/neutral-strong, label text/secondary, hover fill bg/neutral-subtle. Tertiary: label text/secondary, hover fill bg/neutral-subtle. Ghost: fill bg/neutral-subtle (bg/neutral-subtle-hover on hover), label text/secondary. Icons use tone default, except on the primary (on-brand); the icon size follows the button size (xs and sm buttons take the xs icon, md and lg the sm icon, xl the md icon). Name the instance Button (tone=neutral)."
             }
           }
         },
@@ -244,7 +244,7 @@
               "props": {
                 "size": "xs"
               },
-              "recipe": "Label text style Components/Control/xs, horizontal padding space/3, vertical padding space/2 (one pixel less on a secondary, whose border takes it), gap space/2; name the instance Button (size=xs)"
+              "recipe": "Label text style Components/Control/xs, horizontal padding space/3, vertical padding space/2 (one pixel less on a secondary, whose border takes it), gap space/2, icons at the xs icon size; name the instance Button (size=xs)"
             }
           }
         },
