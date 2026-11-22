@@ -282,6 +282,94 @@ for (const name of ["Primitives", "Viewport", "Component", "Semantic"]) {
   });
 }
 
+// ---- Styles (Phase 2) -----------------------------------------------------------------------------------------------
+// Text styles bind their size to the Viewport font-size variable and their family and weight to the Primitives ones, so a
+// frame's Viewport mode resizes the type. The roles below are a design decision (guidelines/figma/01-plan.md §5): the
+// tokens hold the sizes, families, weights and ratios, not which role uses which. Line height and letter spacing are set
+// as the token ratios in percent, because Figma binds those only to pixel variables.
+const ROLES = [
+  { role: "Display", family: "secondary", weight: "medium", lh: "tight", ls: "tight", sizes: ["6xl", "5xl", "4xl", "3xl"], note: "Editorial display headings in Lora" },
+  { role: "Heading", family: "primary", weight: "bold", lh: "snug", ls: "normal", sizes: ["2xl", "xl", "lg", "md", "base", "sm"], note: "Headings in Nunito" },
+  { role: "Body", family: "primary", weight: "regular", lh: "normal", ls: "normal", sizes: ["lg", "md", "base", "sm", "xs"], note: "Running text in Nunito" },
+  { role: "Label", family: "primary", weight: "semibold", lh: "snug", ls: "normal", sizes: ["md", "base", "sm", "xs"], note: "Labels and controls in Nunito" },
+  { role: "Overline", family: "primary", weight: "semibold", lh: "snug", ls: "wide", sizes: ["sm", "xs"], upper: true, note: "Small upper-case captions and table headings in Nunito" },
+];
+const FAMILY_NAME = { primary: "Nunito", secondary: "Lora" };
+const WEIGHT_STYLE = { regular: "Regular", medium: "Medium", semibold: "SemiBold", bold: "Bold" };
+const ratio = (group, name) => Number(tokens.find((t) => t.name === `${PREFIX}${group}-${name}`).value);
+const textStyles = ROLES.flatMap((r) =>
+  r.sizes.map((size) => ({
+    n: `${r.role}/${size}`,
+    fam: FAMILY_NAME[r.family],
+    famVar: `font-family/${r.family}`,
+    style: WEIGHT_STYLE[r.weight],
+    weightVar: `font-weight/${r.weight}`,
+    sizeVar: `font-size/${size}`,
+    lh: Math.round(ratio("line-height", r.lh) * 100),
+    ls: Math.round(Number.parseFloat(tokens.find((t) => t.name === `${PREFIX}letter-spacing-${r.ls}`).value) * 10000) / 100,
+    upper: Boolean(r.upper),
+    d: `${r.note}. Size ${size}, line height ${r.lh}.`,
+  })),
+);
+function parseShadow(css) {
+  return css.split(/,\s*(?=\d+px)/).map((layer) => {
+    const m = /^(-?[\d.]+)px (-?[\d.]+)px ([\d.]+)px rgba\((\d+),\s*(\d+),\s*(\d+),\s*([\d.]+)\)$/.exec(layer.trim());
+    if (!m) throw new Error(`Cannot read shadow layer: ${layer}`);
+    return { x: Number(m[1]), y: Number(m[2]), blur: Number(m[3]), r: m[4] / 255, g: m[5] / 255, b: m[6] / 255, a: Number(m[7]) };
+  });
+}
+const effectStyles = ["light", "dark"].flatMap((theme) =>
+  ["xs", "sm", "md", "lg", "xl"].map((size) => ({
+    n: `Elevation/${theme}/${size}`,
+    layers: parseShadow(tokens.find((t) => t.name === `${PREFIX}shadow-${theme}-${size}`).value),
+    d: `The shadow-${theme}-${size} token, for a surface in ${theme} mode.`,
+  })),
+);
+const gridStyles = [
+  { n: "Grid/mobile", count: 4, gutter: 16, offset: 16, d: "Four columns for a phone, 16 px gutters and margins." },
+  { n: "Grid/tablet", count: 8, gutter: 24, offset: 32, d: "Eight columns for a tablet, 24 px gutters, 32 px margins." },
+  { n: "Grid/desktop", count: 12, gutter: 24, offset: 48, d: "Twelve columns for a desktop, 24 px gutters, 48 px margins." },
+];
+const stylesPayload = `const D = ${JSON.stringify({ text: textStyles, effect: effectStyles, grid: gridStyles })};
+const colls = await figma.variables.getLocalVariableCollectionsAsync();
+const vars = await figma.variables.getLocalVariablesAsync();
+const V = (c, n) => vars.find((v) => v.variableCollectionId === colls.find((x) => x.name === c).id && v.name === n);
+for (const [family, style] of new Set(D.text.map((t) => t.fam + "|" + t.style).map((k) => k.split("|")))) await figma.loadFontAsync({ family, style });
+const desktop = colls.find((c) => c.name === "Viewport").modes.find((m) => m.name === "desktop").modeId;
+const textById = new Map((await figma.getLocalTextStylesAsync()).map((s) => [s.name, s]));
+const effectById = new Map((await figma.getLocalEffectStylesAsync()).map((s) => [s.name, s]));
+const gridById = new Map((await figma.getLocalGridStylesAsync()).map((s) => [s.name, s]));
+const out = { text: 0, effect: 0, grid: 0, boundFields: {}, errors: [] };
+for (const t of D.text) {
+  const s = textById.get(t.n) ?? figma.createTextStyle();
+  s.name = t.n; s.description = t.d;
+  s.fontName = { family: t.fam, style: t.style };
+  s.fontSize = V("Viewport", t.sizeVar).valuesByMode[desktop];
+  s.lineHeight = { unit: "PERCENT", value: t.lh };
+  s.letterSpacing = { unit: "PERCENT", value: t.ls };
+  s.textCase = t.upper ? "UPPER" : "ORIGINAL";
+  for (const [field, name, coll] of [["fontSize", t.sizeVar, "Viewport"], ["fontFamily", t.famVar, "Primitives"], ["fontWeight", t.weightVar, "Primitives"]]) {
+    try { s.setBoundVariable(field, V(coll, name)); out.boundFields[field] = (out.boundFields[field] || 0) + 1; } catch (e) { if (out.errors.length < 4) out.errors.push(t.n + " " + field + ": " + String(e.message || e).slice(0, 120)); }
+  }
+  out.text++;
+}
+for (const e of D.effect) {
+  const s = effectById.get(e.n) ?? figma.createEffectStyle();
+  s.name = e.n; s.description = e.d;
+  s.effects = e.layers.map((l) => ({ type: "DROP_SHADOW", color: { r: l.r, g: l.g, b: l.b, a: l.a }, offset: { x: l.x, y: l.y }, radius: l.blur, spread: 0, visible: true, blendMode: "NORMAL" }));
+  out.effect++;
+}
+for (const g of D.grid) {
+  const s = gridById.get(g.n) ?? figma.createGridStyle();
+  s.name = g.n; s.description = g.d;
+  s.layoutGrids = [{ pattern: "COLUMNS", alignment: "STRETCH", gutterSize: g.gutter, count: g.count, offset: g.offset, visible: true }];
+  out.grid++;
+}
+return out;
+`;
+writeFileSync(join(outDir, "06-styles.js"), stylesPayload);
+written.push(`06-styles.js (${textStyles.length} text, ${effectStyles.length} effect, ${gridStyles.length} grid styles, ${stylesPayload.length} characters)`);
+
 // A collection that is already in Figma but in the wrong order is rebuilt in place by `95-reorder.js`: it copies each
 // variable (type, scopes, code syntax, description, every mode's value, an alias pointed at the copy of its primitive) in
 // the new order, deletes the old ones and renames the copies. Only needed when the order itself changes.
