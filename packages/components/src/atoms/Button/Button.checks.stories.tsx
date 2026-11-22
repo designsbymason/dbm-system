@@ -179,3 +179,32 @@ export const NeutralPressedIconButton: Story = {
     }
   },
 };
+
+const allSizes = ["xs", "sm", "md", "lg", "xl"] as const;
+
+export const SameHeightAcrossVariants: Story = {
+  name: "Every variant is the same height at a given size, the outlined one included",
+  render: () => (
+    <div style={{ display: "grid", gap: "var(--dbm-space-2)", padding: "var(--dbm-space-4)" }}>
+      {allSizes.map((size) => (
+        <div key={size} style={{ display: "flex", flexWrap: "wrap", gap: "var(--dbm-space-2)", alignItems: "flex-start" }}>
+          {(["primary", "secondary", "tertiary", "ghost", "destructive"] as const).map((variant) => (
+            <Button key={variant} size={size} variant={variant}>
+              {size} {variant}
+            </Button>
+          ))}
+        </div>
+      ))}
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    for (const size of allSizes) {
+      const heights = ["primary", "secondary", "tertiary", "ghost", "destructive"].map(
+        (variant) => canvas.getByRole("button", { name: `${size} ${variant}` }).getBoundingClientRect().height,
+      );
+      // the outline adds its own width, which the secondary's block padding gives back
+      expect(Math.max(...heights) - Math.min(...heights)).toBeLessThan(0.1);
+    }
+  },
+};

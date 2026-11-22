@@ -74,35 +74,35 @@
 .sizeXs {
   font-size: var(--dbm-font-size-xs);
   gap: var(--dbm-space-2);
-  padding-block: var(--dbm-space-2);
+  padding-block: calc(var(--dbm-space-2) - var(--button-border-inset, 0px));
   padding-inline: var(--dbm-space-3);
 }
 
 .sizeSm {
   font-size: var(--dbm-font-size-sm);
   gap: var(--dbm-space-2);
-  padding-block: var(--dbm-space-3);
+  padding-block: calc(var(--dbm-space-3) - var(--button-border-inset, 0px));
   padding-inline: var(--dbm-space-4);
 }
 
 .sizeMd {
   font-size: var(--dbm-font-size-base);
   gap: var(--dbm-space-3);
-  padding-block: var(--dbm-space-3);
+  padding-block: calc(var(--dbm-space-3) - var(--button-border-inset, 0px));
   padding-inline: var(--dbm-space-5);
 }
 
 .sizeLg {
   font-size: var(--dbm-font-size-md);
   gap: var(--dbm-space-3);
-  padding-block: var(--dbm-space-4);
+  padding-block: calc(var(--dbm-space-4) - var(--button-border-inset, 0px));
   padding-inline: var(--dbm-space-6);
 }
 
 .sizeXl {
   font-size: var(--dbm-font-size-lg);
   gap: var(--dbm-space-4);
-  padding-block: var(--dbm-space-4);
+  padding-block: calc(var(--dbm-space-4) - var(--button-border-inset, 0px));
   padding-inline: var(--dbm-space-8);
 }
 
@@ -123,6 +123,9 @@
 }
 
 .variantSecondary {
+  /* The outline adds its width to the height, so the block padding gives it back: every variant is the
+     same height at a given size. */
+  --button-border-inset: var(--dbm-border-width-1);
   background-color: transparent;
   border: var(--dbm-border-width-1) solid var(--dbm-border-brand);
   color: var(--dbm-text-brand);

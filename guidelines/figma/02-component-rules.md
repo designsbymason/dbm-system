@@ -52,7 +52,7 @@ A component set draws **the full matrix of valid combinations** in one set ([ADR
 ## 4. Structure of a component
 
 - **Composition:** a molecule is made of atom instances and an organism of molecule and atom instances, never redrawn. A part of a compound component is its own component named `Parent/Part`.
-- **Auto layout, constraints and slots** as in [01-plan.md](./01-plan.md) §6, and every fill, stroke, spacing, radius and type value bound to a variable or a style.
+- **Auto layout, constraints and slots** as in [01-plan.md](./01-plan.md) §6, and every fill, stroke, spacing, radius and type value bound to a variable or a style. The one exception is a value the code derives with `calc()` (the `secondary` Button's block padding, one border width less than the token, so every variant is the same height): it is drawn as that number, unbound.
 - **Responsive:** the Viewport modes drive type and spacing; a component that changes shape at a breakpoint gets a `platform` variant property.
 
 ## 5. The spec frame

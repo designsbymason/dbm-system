@@ -164,7 +164,7 @@ describe("Button", () => {
     );
     expect(screen.getByTestId("btn")).toHaveStyle({
       fontSize: "var(--dbm-font-size-lg)",
-      paddingBlock: "var(--dbm-space-4)",
+      paddingBlock: "calc(var(--dbm-space-4) - var(--button-border-inset, 0px))",
       paddingInline: "var(--dbm-space-8)",
     });
   });
