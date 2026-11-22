@@ -552,13 +552,27 @@ if (gone.length) throw new Error(`NOT_DRAWN names components that no longer exis
 const DRAWN = ["Button"];
 let specIds = {};
 try { specIds = JSON.parse(readFileSync(join(root, ".local", "figma", "spec-ids.json"), "utf8")); } catch { /* none yet */ }
+// A component's Storybook address is its stories file's own `id` (`atoms-inputs-button`), so a link never depends on a naming guess.
+const storyFiles = new Map();
+(function walk(dir) {
+  for (const e of readdirSync(dir, { withFileTypes: true })) {
+    if (e.isDirectory()) walk(join(dir, e.name));
+    else if (e.name.endsWith(".stories.tsx") && !e.name.includes(".checks.")) storyFiles.set(e.name.replace(".stories.tsx", ""), join(dir, e.name));
+  }
+})(join(root, "packages", "components", "src"));
+const storyId = (name) => {
+  const file = storyFiles.get(name);
+  const id = file && /^\s+id: "([^"]+)"/m.exec(readFileSync(file, "utf8"))?.[1];
+  if (!id) throw new Error(`no Storybook id found for ${name}`);
+  return id;
+};
 const tiers = { atom: [], molecule: [], organism: [] };
 for (const [name, { tier, category }] of Object.entries(catalog).sort(([a], [b]) => a.localeCompare(b))) {
   if (name in NOT_DRAWN || !(tier in tiers)) continue;
-  tiers[tier].push({ n: name, c: category, d: DRAWN.includes(name), s: specIds[name] ?? null });
+  tiers[tier].push({ n: name, c: category, i: storyId(name), d: DRAWN.includes(name), s: specIds[name] ?? null });
 }
 const notDrawn = [
-  ...Object.entries(NOT_DRAWN).map(([n, [k, r]]) => ({ n, k, r, l: true })),
+  ...Object.entries(NOT_DRAWN).map(([n, [k, r]]) => ({ n, k, r, i: storyId(n), l: true })),
   ...manifest.helpers.map((h) => ({ n: h.name, k: "Helper", r: "A supporting piece of another component, with no page of its own.", l: false })),
   ...manifest.utilities.filter((x) => x.kind === "hook").map((h) => ({ n: h.name, k: "Hook", r: "Nothing to draw: it is code.", l: false })),
   ...manifest.utilities.filter((x) => x.kind === "function").map((h) => ({ n: h.name, k: "Function", r: "Nothing to draw: it is code.", l: false })),
@@ -596,7 +610,11 @@ const shell = async (name, eyebrow, title, desc) => {
 };
 const rowRule = (r) => { r.strokes = [fillOf("border/default")]; r.strokeTopWeight = 1; r.strokeBottomWeight = 0; r.strokeLeftWeight = 0; r.strokeRightWeight = 0; r.setBoundVariable("paddingTop", S("2")); r.setBoundVariable("paddingBottom", S("2")); };
 const TIER = { atom: ["Atoms", "The smallest pieces: a button, an input, a badge, an icon."], molecule: ["Molecules", "Pieces built from atoms: a card, a select, a tabs bar."], organism: ["Organisms", "Larger pieces built from molecules and atoms: a dialog, a data table, a navbar."] };
-const url = (n) => "https://dbm-system.com/storybook/?path=/docs/components-" + n.toLowerCase() + "--docs";
+// An index name links inside the file: to the component's spec frame once it is drawn, else to its category page when that page exists
+// (a planned component has no frame yet). Its Storybook page is its own column, so both are one click away.
+const pageBy = (name) => figma.root.children.find((p) => p.name.replace(/^[^\\p{L}\\p{N}]+/u, "") === name);
+const inside = (c) => c.s || pageBy(c.c)?.id || null;
+const url = (c) => "https://dbm-system.com/storybook/?path=/docs/" + c.i + "--docs";
 const frames = [];
 
 // Overview
@@ -610,14 +628,15 @@ frames.push(ov.f);
 
 // Index, one frame per tier
 for (const t of ["atom", "molecule", "organism"]) {
-  const s = await shell("Components: " + TIER[t][0], "Index", TIER[t][0], D.counts[t] + " components. " + TIER[t][1]);
+  const s = await shell("Components: " + TIER[t][0], "Index", TIER[t][0], D.counts[t] + " components. " + TIER[t][1] + " A name opens its spec frame, or its category page until it is drawn; Docs opens its Storybook page.");
   const tb = box("VERTICAL", "Table"); put(s.content, tb);
   const th = box("HORIZONTAL", "Header"); th.setBoundVariable("itemSpacing", S("6")); th.setBoundVariable("paddingBottom", S("2")); put(tb, th);
-  for (const [h, w] of [["Component", 260], ["Category", 200], ["In Figma", 0]]) { const x = await T(h, "Overline/xs", "text/tertiary", "Head"); if (w) th.appendChild(fixed(x, w)); else put(th, x); }
+  for (const [h, w] of [["Component", 260], ["Category", 200], ["Storybook", 120], ["In Figma", 0]]) { const x = await T(h, "Overline/xs", "text/tertiary", "Head"); if (w) th.appendChild(fixed(x, w)); else put(th, x); }
   for (const c of D.tiers[t]) {
     const r = box("HORIZONTAL", "Row: " + c.n); r.setBoundVariable("itemSpacing", S("6")); r.counterAxisAlignItems = "MIN"; rowRule(r); put(tb, r);
-    const nm = await T(c.n, "Label/sm", "text/link", "Name"); nm.hyperlink = { type: "URL", value: url(c.n) }; r.appendChild(fixed(nm, 260));
+    const dest = inside(c); const nm = await T(c.n, "Label/sm", dest ? "text/link" : "text/primary", "Name"); if (dest) nm.hyperlink = { type: "NODE", value: dest }; r.appendChild(fixed(nm, 260));
     r.appendChild(fixed(await T(c.c, "Body/sm", "text/secondary", "Category"), 200));
+    const sb = await T("Docs", "Label/sm", "text/link", "Storybook"); sb.hyperlink = { type: "URL", value: url(c) }; r.appendChild(fixed(sb, 120));
     const st = await T(c.d ? "Drawn" : "Planned", "Label/sm", c.d ? "text/success" : "text/tertiary", "Status"); if (c.d && c.s) st.hyperlink = { type: "NODE", value: c.s }; r.appendChild(st);
   }
   frames.push(s.f);
@@ -630,7 +649,7 @@ const th = box("HORIZONTAL", "Header"); th.setBoundVariable("itemSpacing", S("6"
 for (const [h, w] of [["Name", 300], ["Kind", 180], ["Why", 0]]) { const x = await T(h, "Overline/xs", "text/tertiary", "Head"); if (w) th.appendChild(fixed(x, w)); else put(th, x); }
 for (const c of D.notDrawn) {
   const r = box("HORIZONTAL", "Row: " + c.n); r.setBoundVariable("itemSpacing", S("6")); r.counterAxisAlignItems = "MIN"; rowRule(r); put(tb, r);
-  const nm = await T(c.n, "Label/sm", c.l ? "text/link" : "text/primary", "Name"); if (c.l) nm.hyperlink = { type: "URL", value: url(c.n) }; r.appendChild(fixed(nm, 300));
+  const nm = await T(c.n, "Label/sm", c.l ? "text/link" : "text/primary", "Name"); if (c.l) nm.hyperlink = { type: "URL", value: url(c) }; r.appendChild(fixed(nm, 300));
   r.appendChild(fixed(await T(c.k, "Body/sm", "text/secondary", "Kind"), 180)); put(r, await T(c.r, "Body/sm", "text/secondary", "Reason"));
 }
 frames.push(nf.f);

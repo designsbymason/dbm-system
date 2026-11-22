@@ -15,6 +15,7 @@ If no component is given, ask for one. This reads the file and the repository an
    - **Values against the code:** sample sizes (heights at each size, padding, gap, radius) against the CSS and the `icon-button` and similar component tokens, and say where they differ.
    - **Icons:** the tone on each variant's icon is right for its variant and tone, and an icon is shown by a boolean with no swap property.
    - **The spec frame:** the instance is of the master, every text property is filled, every slot is filled, Variants shows instances not the set, Tokens used equals what the set actually binds, the not-modelled names equal the manifest's props minus the mapped ones, and the Storybook link points at the component.
+   - **Configuration:** the set has a description that matches what is drawn (states, variants, what is not modelled) and one documentation link equal to the Storybook Docs address built from the stories file's `id`; the spec frame and the Components page row use the same address.
    - **The file:** it is on the Components page's `DRAWN` list with a spec frame id, and the section and page names follow the plan.
 3. Check each visual claim in a screenshot of the matrix and the spec frame.
 
