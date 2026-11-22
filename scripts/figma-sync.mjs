@@ -10,7 +10,7 @@
 //
 // Usage: node scripts/figma-sync.mjs
 
-import { mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -23,6 +23,8 @@ const REM = 16;
 /** Viewport widths for the three Viewport modes: the width a design is drawn at, not a token. */
 const VIEWPORTS = { mobile: 375, tablet: 768, desktop: 1280 };
 const MAX_CHUNK = 36000;
+/** A smaller chunk for the icons, whose path data is long, so each payload stays easy to send and to retry. */
+const ICON_CHUNK = 12000;
 const SCALE_STEP = /^(.+)-(xs|sm|md|lg|xl|2xl|3xl)$/;
 
 const strip = (css) => css.slice(PREFIX.length);
@@ -369,6 +371,111 @@ return out;
 `;
 writeFileSync(join(outDir, "06-styles.js"), stylesPayload);
 written.push(`06-styles.js (${textStyles.length} text, ${effectStyles.length} effect, ${gridStyles.length} grid styles, ${stylesPayload.length} characters)`);
+
+// ---- Icons (Phase 3) -----------------------------------------------------------------------------------------------
+// The icons the component source imports from `@dbm-system/icons`, drawn from the installed Phosphor package (MIT) in three
+// weights (bold, the library's default, regular and fill). Each becomes a component set `Icon/<Name>` with a `weight`
+// property, its shape filled with the `icon/default` variable and scaling with the instance. Only the used subset is drawn.
+const ICON_GROUPS = {
+  "Arrows and carets": ["ArrowBendDownLeft", "ArrowClockwise", "ArrowCounterClockwise", "ArrowDown", "ArrowLeft", "ArrowRight", "ArrowSquareOut", "ArrowUp", "CaretDoubleLeft", "CaretDoubleRight", "CaretDown", "CaretLeft", "CaretRight", "CaretUpDown", "CaretUp"],
+  "Status and feedback": ["CheckCircle", "Check", "Circle", "Info", "Warning", "WarningCircle", "WarningOctagon", "TrendDown", "TrendUp", "Star"],
+  Actions: ["Copy", "DotsThree", "Eye", "EyeSlash", "Eyedropper", "FlipHorizontal", "MagnifyingGlass", "MagnifyingGlassMinus", "MagnifyingGlassPlus", "Minus", "PencilSimple", "Plus", "PushPin", "Play", "Pause", "UploadSimple", "X", "CornersIn", "CornersOut"],
+  "Objects and layout": ["CalendarBlank", "Clock", "Columns", "File", "FileArrowUp", "Image", "ImageBroken", "List", "ListChecks", "Note", "SidebarSimple", "Tray", "User", "Users"],
+};
+function usedIcons() {
+  const found = new Set();
+  const skip = /\.(stories|test|snippets|types)\.|StoryKit|\/(stories|guides|foundations)\//;
+  (function walk(dir) {
+    for (const e of readdirSync(dir, { withFileTypes: true })) {
+      const path = join(dir, e.name);
+      if (e.isDirectory()) walk(path);
+      else if (/\.tsx?$/.test(e.name) && !skip.test(path)) {
+        const text = readFileSync(path, "utf8");
+        for (const m of text.matchAll(/import\s*\{([^}]*)\}\s*from\s*"@dbm-system\/icons"/g))
+          for (const n of m[1].split(",")) {
+            const name = n.trim().split(/\s+as\s+/)[0];
+            if (/Icon$/.test(name)) found.add(name.slice(0, -4));
+          }
+      }
+    }
+  })(join(root, "packages/components/src"));
+  return [...found].sort();
+}
+const iconDir = join(root, "packages/icons/node_modules/@phosphor-icons/react/dist/defs");
+function iconShapes(name) {
+  const text = readFileSync(join(iconDir, `${name}.es.js`), "utf8");
+  const out = {};
+  for (const weight of ["bold", "regular", "fill"]) {
+    const block = new RegExp(`"${weight}",([\\s\\S]*?)\\n  \\]`).exec(text);
+    if (!block) throw new Error(`${name}: no ${weight} weight`);
+    out[weight] = [...block[1].matchAll(/createElement\("path", \{ d: "([^"]+)"\s*\}/g)].map((m) => m[1]);
+    if (!out[weight].length) throw new Error(`${name}: no path in ${weight}`);
+  }
+  return out;
+}
+const used = usedIcons();
+const grouped = Object.values(ICON_GROUPS).flat();
+const ungrouped = used.filter((n) => !grouped.includes(n));
+const missing = grouped.filter((n) => !used.includes(n));
+if (ungrouped.length || missing.length) throw new Error(`Icon groups are out of step with the source. Add a group for: ${ungrouped.join(", ") || "none"}; no longer used: ${missing.join(", ") || "none"}`);
+const iconItems = Object.entries(ICON_GROUPS).flatMap(([group, names]) => names.map((n) => ({ n, g: group, w: iconShapes(n) })));
+{
+  let part = [], size = 0, index = 1;
+  const flush = () => {
+    if (!part.length) return;
+    const code = `const D = ${JSON.stringify(part)};
+const page = figma.root.children.find((p) => p.name === "Icons");
+await figma.setCurrentPageAsync(page);
+const sem = (await figma.variables.getLocalVariableCollectionsAsync()).find((c) => c.name === "Semantic");
+const iconDefault = (await figma.variables.getLocalVariablesAsync()).find((v) => v.variableCollectionId === sem.id && v.name === "icon/default");
+let maxX = 0;
+for (const c of page.children) maxX = Math.max(maxX, c.x + c.width);
+const existing = new Set(page.children.filter((c) => c.type === "COMPONENT_SET").map((c) => c.name));
+const made = [];
+let x = maxX + 400, y = 0;
+for (const icon of D) {
+  if (existing.has("Icon/" + icon.n)) continue;
+  const variants = [];
+  for (const weight of ["bold", "regular", "fill"]) {
+    const c = figma.createComponent();
+    c.name = "weight=" + weight;
+    c.resize(24, 24);
+    c.fills = [];
+    c.clipsContent = false;
+    const svg = '<svg width="24" height="24" viewBox="0 0 256 256" fill="none" xmlns="http://www.w3.org/2000/svg">' + icon.w[weight].map((d) => '<path d="' + d + '" fill="#000"/>').join("") + "</svg>";
+    const frame = figma.createNodeFromSvg(svg);
+    for (const v of [...frame.children]) {
+      if ("fills" in v) v.fills = [figma.variables.setBoundVariableForPaint({ type: "SOLID", color: { r: 0, g: 0, b: 0 } }, "color", iconDefault)];
+      if ("constraints" in v) v.constraints = { horizontal: "SCALE", vertical: "SCALE" };
+      c.appendChild(v);
+    }
+    frame.remove();
+    page.appendChild(c);
+    variants.push(c);
+  }
+  const set = figma.combineAsVariants(variants, page);
+  set.name = "Icon/" + icon.n;
+  set.description = "Phosphor icon " + icon.n + ", " + icon.g + ". Weight: bold (the library default), regular or fill.";
+  set.layoutMode = "HORIZONTAL"; set.itemSpacing = 16;
+  for (const k of ["paddingLeft", "paddingRight", "paddingTop", "paddingBottom"]) set[k] = 8;
+  set.primaryAxisSizingMode = "AUTO"; set.counterAxisSizingMode = "AUTO";
+  set.x = x; set.y = y; y += 120;
+  made.push([set.id, icon.n]);
+}
+return { made: made.length, ids: made };
+`;
+    writeFileSync(join(outDir, `07-icons-${index}.js`), code);
+    written.push(`07-icons-${index}.js (${part.length} icons, ${code.length} characters)`);
+    index++; part = []; size = 0;
+  };
+  for (const item of iconItems) {
+    const len = JSON.stringify(item).length;
+    if (size + len > ICON_CHUNK && part.length) flush();
+    part.push(item); size += len;
+  }
+  flush();
+}
+writeFileSync(join(root, ".local", "figma", "icons.json"), JSON.stringify({ groups: ICON_GROUPS, count: iconItems.length }, null, 2));
 
 // A collection that is already in Figma but in the wrong order is rebuilt in place by `95-reorder.js`: it copies each
 // variable (type, scopes, code syntax, description, every mode's value, an alias pointed at the copy of its primitive) in
