@@ -27,7 +27,7 @@ The component manifest (`@dbm-system/components/manifest.json`) lists every prop
 | An enumerated visual prop (`size`, `variant`, `tone`, `orientation`, `align`, `side`, `shape`, `overlap`) | A **variant property** with the prop's name and the code's values |
 | An interaction state, which the code gets from CSS (hover, focus, pressed) or from props (`disabled`, `isLoading`, `hasError`, `readOnly`) | One **`state` variant property**, with only the states the component has |
 | A boolean that changes how it looks (`required`, `rounded`, `fullWidth`, `dot`, `clearable`) | A **boolean property** |
-| An icon (`leadingIcon`, `trailingIcon`) | A **boolean** to show it and an **instance swap** that points at the Icons set, with the icon's **`tone`** set as a variant property on the nested instance ([ADR-0238](../adr/0238-an-icon-set-has-a-tone-variant-over-a-contextual-colour-collection-an-overridden-fill-or-a-mask.md)) |
+| An icon (`leadingIcon`, `trailingIcon`) | A **boolean** to show it; the icon is swapped **in place** on the nested instance, with its **`tone`** set as a variant property on each variant (no instance-swap property, which has one default for the whole set) ([ADR-0238](../adr/0238-an-icon-set-has-a-tone-variant-over-a-contextual-colour-collection-an-overridden-fill-or-a-mask.md)) |
 | Text that appears on screen (a label, title, description, placeholder, the text of `children`) | A **text property** |
 | An open content area (a Card body, Dialog content, Table cells, Tabs panels) | A **slot** |
 | A number that changes the look (`value` on Progress, Slider or Rating; a Badge count) | **Not a property**: two or three representative values are drawn as variants or examples |
