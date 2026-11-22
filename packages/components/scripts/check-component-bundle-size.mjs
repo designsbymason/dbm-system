@@ -156,7 +156,9 @@ const JS_BUDGET_OVERRIDES_KB = { TableToolbar: 25, AppShell: 29, Calendar: 12, C
 // `Menu`'s stylesheet grew by about 0.4KB with the sheet presentation (2026-10-24), which every bundle that holds a `Menu` carries:
 // `Sidebar`'s CSS went from 9.75KB to 10.12KB against its 10KB, so its budget is 11KB, and `Toolbar`'s overflow menu took its JS to 11.98KB
 // against 12KB, so its budget is 13KB.
-const CSS_BUDGET_OVERRIDES_KB = { AppShell: 13, CommandPalette: 7, DataTable: 15, TableToolbar: 11.5, Navbar: 11, PageShell: 7, Sidebar: 11, TableOfContents: 7.5 };
+// `Button`'s stylesheet grew a little when `secondary` took the same height as the other variants (2026-11-22): each size's block padding is
+// the token minus the border `secondary` adds. `Toolbar` bundles it and went to 5.01KB against its 5KB, so its budget is 5.1KB.
+const CSS_BUDGET_OVERRIDES_KB = { AppShell: 13, CommandPalette: 7, DataTable: 15, TableToolbar: 11.5, Navbar: 11, PageShell: 7, Sidebar: 11, TableOfContents: 7.5, Toolbar: 5.1 };
 
 // Words only an opt-in extra's code contains, and the component whose bundle must not contain them: `CodeBlock`
 // ships Python, Go and Java as separate exports an app registers (ADR-0027). If a change makes the component
