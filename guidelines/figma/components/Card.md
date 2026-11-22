@@ -23,4 +23,6 @@ See `deviations` in the map: the combined `layout`, states at the stacked layout
 
 ## Review
 
+2026-11-22 (second, after the coverage rule and the trims to 72 variants): re-reviewed. One finding, fixed: the four slot properties were named `Header`, `Body`, `Footer` and `Media` while the map and the spec frame say `header`, `body`, `footer` and `media`; they are renamed. Everything else passed: every combination present, the defaults, binding with nothing unbound, the slots per layout, the edges (no stroke on the transparent variants), the rings, the padding, the dividers and `divided`, the spec frame and its In code, not drawn section against the map, links and the Components row.
+
 2026-11-22: reviewed. One finding, fixed: the transparent edges drew as a faint visible border on instances (see the decision above). Everything else passed: all 696 variants present with no gaps, every value bound, one set property for each of the four slots and for `divided`, the defaults equal to the code's, padding by size, the colours and shadows of each variant and state against the CSS, the spec frame and its links. Approval by the maintainer is pending. The first build was 4,690 by 56,264 px with about 9,700 layers, which led to the coverage rule; the set is now much smaller.

@@ -22,4 +22,6 @@ See `deviations` in the map: `dot` in `variant`, placement drawn by hand, and th
 
 ## Review
 
+2026-11-22 (second, after the coverage rule and all five sizes restored, 105 variants): re-reviewed. One finding, fixed: the grid's top-left cell was an `xl` badge, because the cells were centred in their row and a taller badge sits higher; the cells are now top-aligned, so the default (`md`) is the top-left cell. Everything else passed, including every size against the sizes measured in Storybook (pills 25, 27, 29, 30 and 34 px, dots 4, 8, 12, 16 and 20 px).
+
 2026-11-22: reviewed with no findings; a sentence about the pop animation was added. Approval by the maintainer is pending.
