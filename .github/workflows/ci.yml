@@ -79,6 +79,10 @@ jobs:
       - name: Check the component manifest
         run: pnpm check-manifest
 
+      # The map from each drawn Figma component to the code (guidelines/figma/component-map.json, ADR-0240) against the manifest just built.
+      - name: Check the Figma component map
+        run: pnpm check-figma-map
+
       - name: Check per-component bundle size
         run: pnpm --filter @dbm-system/components check-component-bundle-size
 

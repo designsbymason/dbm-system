@@ -12,6 +12,7 @@ If no component is given, ask for one. This reads the file and the repository an
    - **Binding:** every fill, stroke, spacing, radius, size and opacity on every layer is bound to a variable (an icon instance's own layers excepted), and every text uses a text style. Report counts and a few examples.
    - **Properties:** each Figma property is named as the code's prop, its values are the code's values, its default is the code's default, and none is a prop the rules say not to model. List any prop in code that the spec frame neither maps nor names as not modelled.
    - **Defaults and layout:** each variant property's default equals the code's (size is md), the set is a labelled grid with the default as its top-left cell, and the spec frame's matrix has a header row.
+   - **The map:** the component has an entry in `guidelines/figma/component-map.json` and a file in `guidelines/figma/components/`; its properties, values and defaults equal the set's, and `pnpm check-figma-map` passes. List any property in the file that the map lacks, or the reverse.
    - **The matrix:** the variant count equals the plan's, every valid combination is present, none that cannot occur is, and the axes are in the rules' order. List any gap.
    - **Values against the code:** sample sizes (heights at each size, padding, gap, radius) against the CSS and the `icon-button` and similar component tokens, and say where they differ.
    - **Icons:** the tone on each variant's icon is right for its variant and tone, and an icon is shown by a boolean with no swap property.

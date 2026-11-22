@@ -46,7 +46,7 @@ apps/
                      Storybook actually used today lives in packages/components/.storybook/,
                      not here)
 scripts/            Repo-level checks CI runs from the root: `check-publish` (publint and attw on each
-                     packed public package, its packed package.json, the `"use client"` marker on the components package's two entries, the `@dbm-system/mcp` bin's shebang and executable bit, and the consumer guide's imports and install line) `check-changeset` (a change to a published package's source has a changeset in the same range of commits) `check-radix-single-copy` (one version of each shared
+                     packed public package, its packed package.json, the `"use client"` marker on the components package's two entries, the `@dbm-system/mcp` bin's shebang and executable bit, and the consumer guide's imports and install line) `check-changeset` (a change to a published package's source has a changeset in the same range of commits) `check-figma-map` (the map from each drawn Figma component to the code matches the built manifest, and its status table is current) `check-radix-single-copy` (one version of each shared
                      Radix package in the lockfile) `check-manifest` (the component manifest builds,
                      nothing is undocumented, what the build shipped matches the source, and
                      the generated lists in packages/components/AGENTS.md and below in this file are
@@ -110,6 +110,7 @@ Full rationale for each choice: `guidelines/02-tech-stack-and-structure.md`.
 | Reviewing or finalizing a component, or how to work across sessions | `guidelines/06-engineering-standards.md` (§8 process rules, §9 review checklist) |
 | A Storybook story, Docs page, or a story's "Show code" snippet | `guidelines/07-storybook-and-documentation-standards.md` (§4 template, §4.2 snippets) |
 | The docs website (plan, structure, landing page, Storybook's role) | `guidelines/docs-site/` |
+| The Figma library: its plan, the rules for which props become Figma properties, the map from each drawn component's Figma properties to the code, per-component decisions, naming, and how an agent designs with it or builds from a design | `guidelines/figma/` (start with its README; the map is `component-map.json`, checked by `pnpm check-figma-map`) |
 | Changing a published package end to end (checks, changeset, CI, baselines, the release, pulling it, Figma), making a release, or anything about npm publishing, trusted publishing or the release workflow | `RELEASING.md` (and ADR-0176, ADR-0211) |
 | Understanding *why* a past architecture/API decision was made | `guidelines/adr/` |
 | What is unresolved in the design system or the packages (decisions, defects, standards shortfalls, unreviewed builds), or logging a new one | `guidelines/open-items.md` |

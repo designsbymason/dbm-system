@@ -12,6 +12,12 @@ The plan, decisions and status for the DBM System Figma component library (Phase
 |---|---|
 | [01-plan.md](./01-plan.md) | Goals, scope, the decisions taken, the structure of the Figma file, the build rules, the phases with their review gates, risks and open questions |
 | [02-component-rules.md](./02-component-rules.md) | The standing rules for which components are drawn, which props become Figma properties, the full matrix and the spec frame |
+| [03-agent-guide.md](./03-agent-guide.md) | How an agent designs with the library and how another builds from the design, so they do not drift apart |
+| [04-naming-and-structure.md](./04-naming-and-structure.md) | How pages, sets, properties, layers, variables and styles are named |
+| [05-deviations.md](./05-deviations.md) | The patterns where a Figma property or value is not the code's, and why |
+| [06-maintenance.md](./06-maintenance.md) | What keeps the library and the code in step, and what to do when a component's props change |
+| [component-map.json](./component-map.json) | The machine-readable map from each drawn component's Figma properties to the code, checked by `pnpm check-figma-map` ([ADR-0240](../adr/0240-a-machine-readable-map-from-each-drawn-figma-component-to-the-code-is-checked-against-the-manifest-over-the-spec-frame-alone-or-waiting-for-code-connect.md)) |
+| [components/](./components/README.md) | One file per drawn component: its decisions, differences from the code, what is not drawn and its reviews, with the generated status table |
 
 ## Using the commands on your own file
 

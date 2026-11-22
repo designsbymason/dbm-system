@@ -1,0 +1,515 @@
+{
+  "$comment": "Maps each drawn Figma component to the code. See guidelines/figma/03-agent-guide.md. Checked against the built manifest by `pnpm check-figma-map`. No file key, file address or node id belongs here.",
+  "version": 1,
+  "components": {
+    "Badge": {
+      "tier": "atom",
+      "category": "Data Display",
+      "storybook": "atoms-data-display-badge",
+      "figma": {
+        "set": "Badge",
+        "spec": "Spec: Badge",
+        "page": "Data Display"
+      },
+      "variants": 105,
+      "status": {
+        "state": "reviewed",
+        "reviewed": "2026-11-22",
+        "approved": null
+      },
+      "properties": {
+        "variant": {
+          "kind": "variant",
+          "default": "solid",
+          "values": {
+            "solid": {
+              "props": {
+                "variant": "solid"
+              }
+            },
+            "subtle": {
+              "props": {
+                "variant": "subtle"
+              }
+            },
+            "dot": {
+              "props": {
+                "dot": true
+              },
+              "note": "a dot ignores the solid or subtle choice, so it is a value of variant here"
+            }
+          }
+        },
+        "tone": {
+          "kind": "variant",
+          "default": "danger",
+          "values": {
+            "danger": {
+              "props": {
+                "tone": "danger"
+              }
+            },
+            "brand": {
+              "props": {
+                "tone": "brand"
+              }
+            },
+            "neutral": {
+              "props": {
+                "tone": "neutral"
+              }
+            },
+            "info": {
+              "props": {
+                "tone": "info"
+              }
+            },
+            "success": {
+              "props": {
+                "tone": "success"
+              }
+            },
+            "warning": {
+              "props": {
+                "tone": "warning"
+              }
+            },
+            "highlight": {
+              "props": {
+                "tone": "highlight"
+              }
+            }
+          }
+        },
+        "size": {
+          "kind": "variant",
+          "default": "md",
+          "values": {
+            "md": {
+              "props": {
+                "size": "md"
+              }
+            },
+            "xs": {
+              "props": {
+                "size": "xs"
+              }
+            },
+            "sm": {
+              "props": {
+                "size": "sm"
+              }
+            },
+            "lg": {
+              "props": {
+                "size": "lg"
+              }
+            },
+            "xl": {
+              "props": {
+                "size": "xl"
+              }
+            }
+          }
+        },
+        "ring": {
+          "kind": "boolean",
+          "default": false,
+          "on": {
+            "props": {},
+            "note": "an anchored badge (the anchor prop is set) gets this 2 px surface ring; anchor, position and overlap are placement and are not modelled"
+          }
+        },
+        "label": {
+          "kind": "text",
+          "default": "12",
+          "maps": "children"
+        }
+      },
+      "notModelled": [
+        "anchor",
+        "aria-label",
+        "aria-labelledby",
+        "className",
+        "data-testid",
+        "hideZero",
+        "id",
+        "max",
+        "overlap",
+        "position",
+        "style"
+      ],
+      "deviations": [
+        "dot is a value of variant in Figma, and the dot prop in code",
+        "position and overlap are layout: the badge is placed by hand and the spec frame shows the offsets",
+        "the pop animation is motion and is not drawn"
+      ]
+    },
+    "Button": {
+      "tier": "atom",
+      "category": "Inputs",
+      "storybook": "atoms-inputs-button",
+      "figma": {
+        "set": "Button",
+        "spec": "Spec: Button",
+        "page": "Inputs"
+      },
+      "variants": 450,
+      "status": {
+        "state": "reviewed",
+        "reviewed": "2026-11-22",
+        "approved": null
+      },
+      "properties": {
+        "variant": {
+          "kind": "variant",
+          "default": "primary",
+          "values": {
+            "primary": {
+              "props": {
+                "variant": "primary"
+              }
+            },
+            "secondary": {
+              "props": {
+                "variant": "secondary"
+              }
+            },
+            "tertiary": {
+              "props": {
+                "variant": "tertiary"
+              }
+            },
+            "ghost": {
+              "props": {
+                "variant": "ghost"
+              }
+            },
+            "destructive": {
+              "props": {
+                "variant": "destructive"
+              }
+            }
+          }
+        },
+        "tone": {
+          "kind": "variant",
+          "default": "brand",
+          "values": {
+            "brand": {
+              "props": {
+                "tone": "brand"
+              }
+            },
+            "neutral": {
+              "props": {
+                "tone": "neutral"
+              }
+            }
+          }
+        },
+        "size": {
+          "kind": "variant",
+          "default": "md",
+          "values": {
+            "md": {
+              "props": {
+                "size": "md"
+              }
+            },
+            "xs": {
+              "props": {
+                "size": "xs"
+              }
+            },
+            "sm": {
+              "props": {
+                "size": "sm"
+              }
+            },
+            "lg": {
+              "props": {
+                "size": "lg"
+              }
+            },
+            "xl": {
+              "props": {
+                "size": "xl"
+              }
+            }
+          }
+        },
+        "state": {
+          "kind": "variant",
+          "default": "default",
+          "values": {
+            "default": {
+              "props": {}
+            },
+            "hover": {
+              "props": {},
+              "note": "CSS :hover, no prop"
+            },
+            "focus": {
+              "props": {},
+              "note": "CSS :focus-visible, no prop"
+            },
+            "disabled": {
+              "props": {
+                "disabled": true
+              }
+            },
+            "loading": {
+              "props": {
+                "isLoading": true
+              },
+              "note": "also disables the button"
+            }
+          }
+        },
+        "rounded": {
+          "kind": "variant",
+          "default": "false",
+          "values": {
+            "false": {
+              "props": {
+                "rounded": false
+              }
+            },
+            "true": {
+              "props": {
+                "rounded": true
+              }
+            }
+          }
+        },
+        "leadingIcon": {
+          "kind": "boolean",
+          "default": false,
+          "on": {
+            "props": {
+              "leadingIcon": "<provided>"
+            },
+            "note": "swap the nested icon in place; the tone follows the variant and tone"
+          }
+        },
+        "trailingIcon": {
+          "kind": "boolean",
+          "default": false,
+          "on": {
+            "props": {
+              "trailingIcon": "<provided>"
+            },
+            "note": "swap the nested icon in place; the tone follows the variant and tone"
+          }
+        },
+        "label": {
+          "kind": "text",
+          "default": "Button",
+          "maps": "children"
+        }
+      },
+      "notModelled": [
+        "aria-label",
+        "aria-labelledby",
+        "asChild",
+        "className",
+        "data-testid",
+        "fullWidth",
+        "id",
+        "loadingText",
+        "onClick",
+        "style",
+        "type"
+      ],
+      "deviations": [
+        "destructive ignores tone, so destructive with tone=neutral is not drawn",
+        "rounded is a variant property (false, true), not a boolean, because it changes the corner radius",
+        "fullWidth is set by making the instance fill its container"
+      ]
+    },
+    "Input": {
+      "tier": "atom",
+      "category": "Inputs",
+      "storybook": "atoms-inputs-input",
+      "figma": {
+        "set": "Input",
+        "spec": "Spec: Input",
+        "page": "Inputs"
+      },
+      "variants": 60,
+      "status": {
+        "state": "reviewed",
+        "reviewed": "2026-11-22",
+        "approved": null
+      },
+      "properties": {
+        "size": {
+          "kind": "variant",
+          "default": "md",
+          "values": {
+            "md": {
+              "props": {
+                "size": "md"
+              }
+            },
+            "xs": {
+              "props": {
+                "size": "xs"
+              }
+            },
+            "sm": {
+              "props": {
+                "size": "sm"
+              }
+            },
+            "lg": {
+              "props": {
+                "size": "lg"
+              }
+            },
+            "xl": {
+              "props": {
+                "size": "xl"
+              }
+            }
+          }
+        },
+        "state": {
+          "kind": "variant",
+          "default": "default",
+          "values": {
+            "default": {
+              "props": {}
+            },
+            "hover": {
+              "props": {},
+              "note": "CSS :hover, no prop"
+            },
+            "focus": {
+              "props": {},
+              "note": "CSS :focus-within, no prop"
+            },
+            "error": {
+              "props": {
+                "hasError": true
+              }
+            },
+            "error-focus": {
+              "props": {
+                "hasError": true
+              },
+              "note": "error with CSS :focus-within"
+            },
+            "disabled": {
+              "props": {
+                "disabled": true
+              }
+            }
+          }
+        },
+        "filled": {
+          "kind": "variant",
+          "default": "false",
+          "values": {
+            "false": {
+              "props": {},
+              "note": "empty: the placeholder shows"
+            },
+            "true": {
+              "props": {
+                "value": "<provided>"
+              },
+              "note": "or defaultValue"
+            }
+          }
+        },
+        "prefix": {
+          "kind": "boolean",
+          "default": false,
+          "on": {
+            "props": {
+              "prefix": "<provided>"
+            },
+            "note": "an icon, or text typed over it"
+          }
+        },
+        "suffix": {
+          "kind": "boolean",
+          "default": false,
+          "on": {
+            "props": {
+              "suffix": "<provided>"
+            },
+            "note": "an icon, or text typed over it"
+          }
+        },
+        "clearable": {
+          "kind": "boolean",
+          "default": false,
+          "on": {
+            "props": {
+              "onClear": "<provided>"
+            },
+            "note": "the clear button shows when there is a value and onClear is given"
+          }
+        },
+        "showCount": {
+          "kind": "boolean",
+          "default": false,
+          "on": {
+            "props": {
+              "showCount": true
+            },
+            "note": "needs maxLength"
+          }
+        },
+        "placeholder": {
+          "kind": "text",
+          "default": "Placeholder text",
+          "native": "placeholder"
+        },
+        "value": {
+          "kind": "text",
+          "default": "Value",
+          "maps": "value",
+          "also": [
+            "defaultValue"
+          ]
+        },
+        "count": {
+          "kind": "text",
+          "default": "0/280",
+          "derived": "drawn by showCount from the value length and maxLength"
+        }
+      },
+      "notModelled": [
+        "aria-describedby",
+        "aria-label",
+        "aria-labelledby",
+        "autoComplete",
+        "autoFocus",
+        "className",
+        "data-testid",
+        "form",
+        "formatNumber",
+        "id",
+        "inputMode",
+        "maxLength",
+        "minLength",
+        "name",
+        "pattern",
+        "readOnly",
+        "required",
+        "style",
+        "type"
+      ],
+      "deviations": [
+        "filled is a variant property with no code prop of its own: it only changes the text colour (placeholder or value)",
+        "the Figma variants are 280 px wide and a fixed height per size; the code is width 100% and its height comes from the line height and padding",
+        "the clear button is drawn as its icon only: its hover fill and hit area are not drawn",
+        "disabled together with error, and hover on error or disabled, are not drawn"
+      ]
+    }
+  }
+}
