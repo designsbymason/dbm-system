@@ -521,8 +521,8 @@ writeFileSync(join(root, ".local", "figma", "icons.json"), JSON.stringify({ grou
 
 // ---- The Components page (index of what is drawn and what is not) ------------------------------------------------------
 // Generated from the component catalog, so a component that is added or removed in code appears here or fails this script;
-// nothing is typed by hand. Which components are drawn is `DRAWN` (the node id of each one's spec frame comes from the
-// gitignored `.local/figma/spec-ids.json`, written when the spec frame is built).
+// nothing is typed by hand. Which components are drawn is read from the Figma file when the payload runs: a component is drawn
+// when a category page ("↳ ...") holds a spec frame instance named "Spec: <Name>", and that instance is where its index row links.
 const catalog = JSON.parse(readFileSync(join(root, "packages/components/src/componentCatalog.json"), "utf8"));
 const manifest = JSON.parse(readFileSync(join(root, "packages/components/dist/manifest.json"), "utf8"));
 const NOT_DRAWN = {
@@ -549,9 +549,6 @@ const NOT_DRAWN = {
 const gone = Object.keys(NOT_DRAWN).filter((n) => !(n in catalog));
 if (gone.length) throw new Error(`NOT_DRAWN names components that no longer exist: ${gone.join(", ")}`);
 /** The components built in Figma so far; add a name here when its component set and spec frame are built. */
-const DRAWN = ["Button"];
-let specIds = {};
-try { specIds = JSON.parse(readFileSync(join(root, ".local", "figma", "spec-ids.json"), "utf8")); } catch { /* none yet */ }
 // A component's Storybook address is its stories file's own `id` (`atoms-inputs-button`), so a link never depends on a naming guess.
 const storyFiles = new Map();
 (function walk(dir) {
@@ -569,7 +566,7 @@ const storyId = (name) => {
 const tiers = { atom: [], molecule: [], organism: [] };
 for (const [name, { tier, category }] of Object.entries(catalog).sort(([a], [b]) => a.localeCompare(b))) {
   if (name in NOT_DRAWN || !(tier in tiers)) continue;
-  tiers[tier].push({ n: name, c: category, i: storyId(name), d: DRAWN.includes(name), s: specIds[name] ?? null });
+  tiers[tier].push({ n: name, c: category, i: storyId(name) });
 }
 const notDrawn = [
   ...Object.entries(NOT_DRAWN).map(([n, [k, r]]) => ({ n, k, r, i: storyId(n), l: true })),
@@ -577,10 +574,13 @@ const notDrawn = [
   ...manifest.utilities.filter((x) => x.kind === "hook").map((h) => ({ n: h.name, k: "Hook", r: "Nothing to draw: it is code.", l: false })),
   ...manifest.utilities.filter((x) => x.kind === "function").map((h) => ({ n: h.name, k: "Function", r: "Nothing to draw: it is code.", l: false })),
 ];
-const componentsCode = `const D = ${JSON.stringify({ tiers, notDrawn, counts: Object.fromEntries(Object.entries(tiers).map(([k, v]) => [k, v.length])), drawn: DRAWN.length })};
+const componentsCode = `const D = ${JSON.stringify({ tiers, notDrawn, counts: Object.fromEntries(Object.entries(tiers).map(([k, v]) => [k, v.length])) })};
 const page = figma.root.children.find((p) => p.name.replace(/^[^\\p{L}\\p{N}]+/u, "") === "Components");
 await figma.setCurrentPageAsync(page);
 for (const c of [...page.children]) c.remove();
+// What is drawn is what the file holds: a spec frame instance named "Spec: <Name>" on a category page.
+const specs = new Map();
+for (const p of figma.root.children) { if (!p.name.startsWith("\u21b3")) continue; await p.loadAsync(); for (const n of p.findAllWithCriteria({ types: ["INSTANCE"] })) if (n.name.startsWith("Spec: ")) specs.set(n.name.slice(6), n.id); }
 const colls = await figma.variables.getLocalVariableCollectionsAsync();
 const allVars = await figma.variables.getLocalVariablesAsync();
 const C = Object.fromEntries(colls.map((c) => [c.name, c]));
@@ -613,7 +613,7 @@ const TIER = { atom: ["Atoms", "The smallest pieces: a button, an input, a badge
 // An index name links inside the file: to the component's spec frame once it is drawn, else to its category page when that page exists
 // (a planned component has no frame yet). Its Storybook page is its own column, so both are one click away.
 const pageBy = (name) => figma.root.children.find((p) => p.name.replace(/^[^\\p{L}\\p{N}]+/u, "") === name);
-const inside = (c) => c.s || pageBy(c.c)?.id || null;
+const inside = (c) => specs.get(c.n) || pageBy(c.c)?.id || null;
 const url = (c) => "https://dbm-system.com/storybook/?path=/docs/" + c.i + "--docs";
 const frames = [];
 
@@ -623,7 +623,7 @@ const tiersRow = box("HORIZONTAL", "Tiers"); tiersRow.setBoundVariable("itemSpac
 for (const t of ["atom", "molecule", "organism"]) { const c = card("Tier: " + t); put(tiersRow, c); c.layoutSizingVertical = "FILL"; c.appendChild(await T(String(D.counts[t]), "Display/3xl", "text/brand", "Count")); c.appendChild(await T(TIER[t][0], "Heading/md", "text/primary", "Name")); put(c, wrap(await T(TIER[t][1], "Body/sm", "text/secondary", "Text"), 300)); }
 const how = box("HORIZONTAL", "How"); how.setBoundVariable("itemSpacing", S("6")); put(ov.content, how);
 for (const [t, d] of [["A component set", "Every combination of its variant properties and states is drawn, so any real combination can be set on an instance."], ["Properties are props", "Variant properties are named as the code's props. A prop that is behaviour or passthrough is not modelled, and the spec frame names it."], ["A spec frame", "Each component has one: its variants, properties, tokens used, anatomy, what it is built from, and accessibility notes. Storybook stays the full reference."]]) { const c = card("Note: " + t); put(how, c); c.layoutSizingVertical = "FILL"; c.appendChild(await T(t, "Heading/md", "text/primary", "Title")); put(c, wrap(await T(d, "Body/sm", "text/secondary", "Text"), 300)); }
-const stat = await T(D.drawn + " of " + (D.counts.atom + D.counts.molecule + D.counts.organism) + " components are drawn so far. The rest are planned, in tier order.", "Body/md", "text/secondary", "Progress"); ov.content.appendChild(stat);
+const stat = await T(specs.size + " of " + (D.counts.atom + D.counts.molecule + D.counts.organism) + " components are drawn so far. The rest are planned, in tier order.", "Body/md", "text/secondary", "Progress"); ov.content.appendChild(stat);
 frames.push(ov.f);
 
 // Index, one frame per tier
@@ -637,7 +637,7 @@ for (const t of ["atom", "molecule", "organism"]) {
     const dest = inside(c); const nm = await T(c.n, "Label/sm", dest ? "text/link" : "text/primary", "Name"); if (dest) nm.hyperlink = { type: "NODE", value: dest }; r.appendChild(fixed(nm, 260));
     r.appendChild(fixed(await T(c.c, "Body/sm", "text/secondary", "Category"), 200));
     const sb = await T("Docs", "Label/sm", "text/link", "Storybook"); sb.hyperlink = { type: "URL", value: url(c) }; r.appendChild(fixed(sb, 120));
-    const st = await T(c.d ? "Drawn" : "Planned", "Label/sm", c.d ? "text/success" : "text/tertiary", "Status"); if (c.d && c.s) st.hyperlink = { type: "NODE", value: c.s }; r.appendChild(st);
+    const st = await T(specs.has(c.n) ? "Drawn" : "Planned", "Label/sm", specs.has(c.n) ? "text/success" : "text/tertiary", "Status"); if (specs.has(c.n)) st.hyperlink = { type: "NODE", value: specs.get(c.n) }; r.appendChild(st);
   }
   frames.push(s.f);
 }

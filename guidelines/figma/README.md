@@ -21,4 +21,4 @@ The repository is MIT licensed, so the Figma commands in `.claude/commands/` (`/
 2. Create `.local/figma.json` (gitignored; the shape is in `01-plan.md` §3) with your file's key and URL, and add the key to `.local/blocked-strings.txt` so the pre-commit guard catches it.
 3. Run `/figma-status`, then `/figma-sync` to write the tokens and styles into your file. Each command shows the file's name and asks you to confirm it before the first write.
 
-`DRAWN` in `scripts/figma-sync.mjs` and `.local/figma/spec-ids.json` record what the maintainer has drawn; in your own file, update `DRAWN` as you build.
+Which components are drawn is read from the file itself (a spec frame instance named `Spec: <Name>` on a category page), so nothing in the repository records it and nothing needs updating as you build.
