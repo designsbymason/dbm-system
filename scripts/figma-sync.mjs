@@ -519,6 +519,131 @@ written.push("08-icon-tones.js (the tone variants; set START and END per call)")
 
 writeFileSync(join(root, ".local", "figma", "icons.json"), JSON.stringify({ groups: ICON_GROUPS, count: iconItems.length }, null, 2));
 
+// ---- The Components page (index of what is drawn and what is not) ------------------------------------------------------
+// Generated from the component catalog, so a component that is added or removed in code appears here or fails this script;
+// nothing is typed by hand. Which components are drawn is `DRAWN` (the node id of each one's spec frame comes from the
+// gitignored `.local/figma/spec-ids.json`, written when the spec frame is built).
+const catalog = JSON.parse(readFileSync(join(root, "packages/components/src/componentCatalog.json"), "utf8"));
+const manifest = JSON.parse(readFileSync(join(root, "packages/components/dist/manifest.json"), "utf8"));
+const NOT_DRAWN = {
+  AppShell: ["Template", "Templates are not drawn."],
+  PageShell: ["Template", "Templates are not drawn."],
+  ClientOnly: ["Utility", "No interface: it only controls where a component renders."],
+  DirectionProvider: ["Utility", "No interface: it sets the text direction for a subtree."],
+  FocusTrap: ["Utility", "No interface: it keeps keyboard focus inside a region."],
+  Portal: ["Utility", "No interface: it renders content elsewhere in the page."],
+  ThemeProvider: ["Utility", "No interface: the theme is a variable mode in Figma."],
+  VisuallyHidden: ["Utility", "No interface: it hides content visually and keeps it for assistive technology."],
+  Box: ["Layout primitive", "Auto layout does this in Figma."],
+  Stack: ["Layout primitive", "Auto layout does this in Figma."],
+  Grid: ["Layout primitive", "Auto layout and the grid styles do this in Figma."],
+  GridItem: ["Layout primitive", "Auto layout does this in Figma."],
+  Center: ["Layout primitive", "Auto layout alignment does this in Figma."],
+  Container: ["Layout primitive", "A frame with a maximum width does this in Figma."],
+  Bleed: ["Layout primitive", "A negative margin has no Figma equivalent."],
+  Affix: ["Layout primitive", "Absolute positioning does this in Figma."],
+  AspectRatio: ["Layout primitive", "Aspect-ratio lock does this in Figma."],
+  Spacer: ["Layout primitive", "Auto layout spacing does this in Figma."],
+  Collapse: ["Behaviour", "It animates a height change and has no visual of its own."],
+};
+const gone = Object.keys(NOT_DRAWN).filter((n) => !(n in catalog));
+if (gone.length) throw new Error(`NOT_DRAWN names components that no longer exist: ${gone.join(", ")}`);
+/** The components built in Figma so far; add a name here when its component set and spec frame are built. */
+const DRAWN = ["Button"];
+let specIds = {};
+try { specIds = JSON.parse(readFileSync(join(root, ".local", "figma", "spec-ids.json"), "utf8")); } catch { /* none yet */ }
+const tiers = { atom: [], molecule: [], organism: [] };
+for (const [name, { tier, category }] of Object.entries(catalog).sort(([a], [b]) => a.localeCompare(b))) {
+  if (name in NOT_DRAWN || !(tier in tiers)) continue;
+  tiers[tier].push({ n: name, c: category, d: DRAWN.includes(name), s: specIds[name] ?? null });
+}
+const notDrawn = [
+  ...Object.entries(NOT_DRAWN).map(([n, [k, r]]) => ({ n, k, r, l: true })),
+  ...manifest.helpers.map((h) => ({ n: h.name, k: "Helper", r: "A supporting piece of another component, with no page of its own.", l: false })),
+  ...manifest.utilities.filter((x) => x.kind === "hook").map((h) => ({ n: h.name, k: "Hook", r: "Nothing to draw: it is code.", l: false })),
+  ...manifest.utilities.filter((x) => x.kind === "function").map((h) => ({ n: h.name, k: "Function", r: "Nothing to draw: it is code.", l: false })),
+];
+const componentsCode = `const D = ${JSON.stringify({ tiers, notDrawn, counts: Object.fromEntries(Object.entries(tiers).map(([k, v]) => [k, v.length])), drawn: DRAWN.length })};
+const page = figma.root.children.find((p) => p.name.replace(/^[^\\p{L}\\p{N}]+/u, "") === "Components");
+await figma.setCurrentPageAsync(page);
+for (const c of [...page.children]) c.remove();
+const colls = await figma.variables.getLocalVariableCollectionsAsync();
+const allVars = await figma.variables.getLocalVariablesAsync();
+const C = Object.fromEntries(colls.map((c) => [c.name, c]));
+const V = (c, n) => { const v = allVars.find((x) => x.variableCollectionId === C[c].id && x.name === n); if (!v) throw new Error("missing " + c + ":" + n); return v; };
+const fillOf = (n, c = "Semantic") => figma.variables.setBoundVariableForPaint({ type: "SOLID", color: { r: 0, g: 0, b: 0 } }, "color", V(c, n));
+const S = (n) => V("Primitives", "space/" + n);
+const radius = (f, n) => { for (const k of ["topLeftRadius", "topRightRadius", "bottomLeftRadius", "bottomRightRadius"]) f.setBoundVariable(k, V("Primitives", "radius/" + n)); };
+const mode = (f, c, m) => f.setExplicitVariableModeForCollection(C[c], C[c].modes.find((x) => x.name === m).modeId);
+const styles = new Map((await figma.getLocalTextStylesAsync()).map((s) => [s.name, s]));
+for (const [family, style] of [["Lora", "Medium"], ["Nunito", "Regular"], ["Nunito", "SemiBold"], ["Nunito", "Bold"]]) await figma.loadFontAsync({ family, style });
+const box = (dir, name) => { const f = figma.createAutoLayout(dir); f.name = name; f.fills = []; return f; };
+const T = async (str, styleName, fill, name) => { const t = figma.createText(); t.name = name || str.slice(0, 24); t.fontName = { family: "Nunito", style: "Regular" }; t.characters = str; await t.setTextStyleIdAsync(styles.get(styleName).id); t.fills = [fillOf(fill || "text/primary")]; return t; };
+const put = (parent, node) => { parent.appendChild(node); node.layoutSizingHorizontal = "FILL"; return node; };
+const wrap = (t, w) => { t.textAutoResize = "HEIGHT"; t.resize(w, t.height); return t; };
+const card = (name) => { const f = box("VERTICAL", name); f.fills = [fillOf("bg/surface")]; f.strokes = [fillOf("border/default")]; f.strokeWeight = 1; radius(f, "xl"); for (const k of ["paddingLeft", "paddingRight", "paddingTop", "paddingBottom"]) f.setBoundVariable(k, S("6")); f.setBoundVariable("itemSpacing", S("3")); return f; };
+const fixed = (child, w) => { const a = box("HORIZONTAL", "Cell"); a.resize(w, 16); a.primaryAxisSizingMode = "FIXED"; a.counterAxisSizingMode = "AUTO"; a.appendChild(child); return a; };
+const shell = async (name, eyebrow, title, desc) => {
+  const f = figma.createAutoLayout("VERTICAL"); f.name = name; f.resize(1440, 100); f.primaryAxisSizingMode = "AUTO"; f.counterAxisSizingMode = "FIXED";
+  f.fills = [fillOf("bg/surface")];
+  for (const k of ["paddingLeft", "paddingRight"]) f.setBoundVariable(k, S("24")); for (const k of ["paddingTop", "paddingBottom"]) f.setBoundVariable(k, S("20"));
+  f.setBoundVariable("itemSpacing", S("12")); mode(f, "Semantic", "purple-light"); mode(f, "Viewport", "desktop");
+  const head = box("VERTICAL", "Header"); head.setBoundVariable("itemSpacing", S("3")); put(f, head);
+  head.appendChild(await T(eyebrow, "Overline/sm", "text/brand", "Eyebrow")); head.appendChild(await T(title, "Display/3xl", "text/primary", "Title"));
+  head.appendChild(wrap(await T(desc, "Body/md", "text/secondary", "Description"), 720));
+  const content = box("VERTICAL", "Content"); content.setBoundVariable("itemSpacing", S("10")); put(f, content);
+  return { f, content };
+};
+const rowRule = (r) => { r.strokes = [fillOf("border/default")]; r.strokeTopWeight = 1; r.strokeBottomWeight = 0; r.strokeLeftWeight = 0; r.strokeRightWeight = 0; r.setBoundVariable("paddingTop", S("2")); r.setBoundVariable("paddingBottom", S("2")); };
+const TIER = { atom: ["Atoms", "The smallest pieces: a button, an input, a badge, an icon."], molecule: ["Molecules", "Pieces built from atoms: a card, a select, a tabs bar."], organism: ["Organisms", "Larger pieces built from molecules and atoms: a dialog, a data table, a navbar."] };
+const url = (n) => "https://dbm-system.com/storybook/?path=/docs/components-" + n.toLowerCase() + "--docs";
+const frames = [];
+
+// Overview
+const ov = await shell("Components: Overview", "Components", "How components are structured", "Components are built in three tiers, each from the one before. Every one is a component set with variant and boolean properties, and a spec frame that lists them.");
+const tiersRow = box("HORIZONTAL", "Tiers"); tiersRow.setBoundVariable("itemSpacing", S("6")); put(ov.content, tiersRow);
+for (const t of ["atom", "molecule", "organism"]) { const c = card("Tier: " + t); put(tiersRow, c); c.layoutSizingVertical = "FILL"; c.appendChild(await T(String(D.counts[t]), "Display/3xl", "text/brand", "Count")); c.appendChild(await T(TIER[t][0], "Heading/md", "text/primary", "Name")); put(c, wrap(await T(TIER[t][1], "Body/sm", "text/secondary", "Text"), 300)); }
+const how = box("HORIZONTAL", "How"); how.setBoundVariable("itemSpacing", S("6")); put(ov.content, how);
+for (const [t, d] of [["A component set", "Every combination of its variant properties and states is drawn, so any real combination can be set on an instance."], ["Properties are props", "Variant properties are named as the code's props. A prop that is behaviour or passthrough is not modelled, and the spec frame names it."], ["A spec frame", "Each component has one: its variants, properties, tokens used, anatomy, what it is built from, and accessibility notes. Storybook stays the full reference."]]) { const c = card("Note: " + t); put(how, c); c.layoutSizingVertical = "FILL"; c.appendChild(await T(t, "Heading/md", "text/primary", "Title")); put(c, wrap(await T(d, "Body/sm", "text/secondary", "Text"), 300)); }
+const stat = await T(D.drawn + " of " + (D.counts.atom + D.counts.molecule + D.counts.organism) + " components are drawn so far. The rest are planned, in tier order.", "Body/md", "text/secondary", "Progress"); ov.content.appendChild(stat);
+frames.push(ov.f);
+
+// Index, one frame per tier
+for (const t of ["atom", "molecule", "organism"]) {
+  const s = await shell("Components: " + TIER[t][0], "Index", TIER[t][0], D.counts[t] + " components. " + TIER[t][1]);
+  const tb = box("VERTICAL", "Table"); put(s.content, tb);
+  const th = box("HORIZONTAL", "Header"); th.setBoundVariable("itemSpacing", S("6")); th.setBoundVariable("paddingBottom", S("2")); put(tb, th);
+  for (const [h, w] of [["Component", 260], ["Category", 200], ["In Figma", 0]]) { const x = await T(h, "Overline/xs", "text/tertiary", "Head"); if (w) th.appendChild(fixed(x, w)); else put(th, x); }
+  for (const c of D.tiers[t]) {
+    const r = box("HORIZONTAL", "Row: " + c.n); r.setBoundVariable("itemSpacing", S("6")); r.counterAxisAlignItems = "MIN"; rowRule(r); put(tb, r);
+    const nm = await T(c.n, "Label/sm", "text/link", "Name"); nm.hyperlink = { type: "URL", value: url(c.n) }; r.appendChild(fixed(nm, 260));
+    r.appendChild(fixed(await T(c.c, "Body/sm", "text/secondary", "Category"), 200));
+    const st = await T(c.d ? "Drawn" : "Planned", "Label/sm", c.d ? "text/success" : "text/tertiary", "Status"); if (c.d && c.s) st.hyperlink = { type: "NODE", value: c.s }; r.appendChild(st);
+  }
+  frames.push(s.f);
+}
+
+// Not in Figma
+const nf = await shell("Components: Not in Figma", "Not in Figma", "Not drawn in Figma", "What the code library has that this file does not draw, and why. A component name links to its Storybook page.");
+const tb = box("VERTICAL", "Table"); put(nf.content, tb);
+const th = box("HORIZONTAL", "Header"); th.setBoundVariable("itemSpacing", S("6")); th.setBoundVariable("paddingBottom", S("2")); put(tb, th);
+for (const [h, w] of [["Name", 300], ["Kind", 180], ["Why", 0]]) { const x = await T(h, "Overline/xs", "text/tertiary", "Head"); if (w) th.appendChild(fixed(x, w)); else put(th, x); }
+for (const c of D.notDrawn) {
+  const r = box("HORIZONTAL", "Row: " + c.n); r.setBoundVariable("itemSpacing", S("6")); r.counterAxisAlignItems = "MIN"; rowRule(r); put(tb, r);
+  const nm = await T(c.n, "Label/sm", c.l ? "text/link" : "text/primary", "Name"); if (c.l) nm.hyperlink = { type: "URL", value: url(c.n) }; r.appendChild(fixed(nm, 300));
+  r.appendChild(fixed(await T(c.k, "Body/sm", "text/secondary", "Kind"), 180)); put(r, await T(c.r, "Body/sm", "text/secondary", "Reason"));
+}
+frames.push(nf.f);
+
+const section = figma.createSection(); section.name = "Components";
+let x = 160, h = 0;
+for (const f of frames) { section.appendChild(f); f.x = x; f.y = 160; x += f.width + 160; h = Math.max(h, f.height); }
+section.resizeWithoutConstraints(x, h + 320); section.fills = [fillOf("bg/canvas")];
+return { frames: frames.map((f) => [f.name, Math.round(f.height)]), notDrawn: D.notDrawn.length };
+`;
+writeFileSync(join(outDir, "09-components-page.js"), componentsCode);
+written.push(`09-components-page.js (${Object.values(tiers).flat().length} components, ${notDrawn.length} not drawn, ${componentsCode.length} characters)`);
+
 // A collection that is already in Figma but in the wrong order is rebuilt in place by `95-reorder.js`: it copies each
 // variable (type, scopes, code syntax, description, every mode's value, an alias pointed at the copy of its primitive) in
 // the new order, deletes the old ones and renames the copies. Only needed when the order itself changes.
