@@ -133,6 +133,9 @@ for (const token of tokens) {
       item = { ...base(token, "FLOAT", scopes), v: { Value: Number.parseFloat(token.value) } };
     } else if (token.type === "dimension") {
       item = { ...base(token, "FLOAT", scopes), v: { Value: toPixels(token.value) } };
+    } else if (token.group === "opacity") {
+      // Figma reads an opacity variable as a percentage, so 0.4 is held as 40 (a bound opacity of 0.4 would draw at 0.4%).
+      item = { ...base(token, "FLOAT", scopes), v: { Value: Math.round(Number(token.value) * 10000) / 100 } };
     } else item = { ...base(token, "FLOAT", scopes), v: { Value: Number(token.value) } };
     add("Primitives", item);
   }
@@ -294,6 +297,7 @@ const ROLES = [
   { role: "Heading", family: "primary", weight: "bold", lh: "snug", ls: "normal", sizes: ["2xl", "xl", "lg", "md", "base", "sm"], note: "Headings in Nunito" },
   { role: "Body", family: "primary", weight: "regular", lh: "normal", ls: "normal", sizes: ["lg", "md", "base", "sm", "xs"], note: "Running text in Nunito" },
   { role: "Label", family: "primary", weight: "semibold", lh: "snug", ls: "normal", sizes: ["md", "base", "sm", "xs"], note: "Labels and controls in Nunito" },
+  { role: "Control", family: "primary", weight: "semibold", lh: "tight", ls: "normal", sizes: ["xs", "sm", "base", "md", "lg"], note: "Buttons and other controls in Nunito, with the tight line height the components use" },
   { role: "Overline", family: "primary", weight: "semibold", lh: "snug", ls: "wide", sizes: ["sm", "xs"], upper: true, note: "Small upper-case captions and table headings in Nunito" },
 ];
 const FAMILY_NAME = { primary: "Nunito", secondary: "Lora" };
@@ -475,6 +479,44 @@ return { made: made.length, ids: made };
   }
   flush();
 }
+// `tone` variant on every icon set (ADR-0238): each icon set also has one variant per icon tone, so a component can set an icon's
+// colour as a variant property, and the colour survives swapping the icon. Run after the 07 payloads; it skips a set that already has
+// its tones. START and END pick which sets (sorted by name) a call handles, to keep each call short.
+const ICON_TONES = ["default", "secondary", "disabled", "brand", "danger", "warning", "success", "info", "highlight", "on-brand", "on-danger", "on-warning", "on-success", "on-info", "on-highlight", "white"];
+writeFileSync(
+  join(outDir, "08-icon-tones.js"),
+  `const START = 0, END = 20;
+const TONES = ${JSON.stringify(ICON_TONES)};
+const page = figma.root.children.find((p) => p.name === "Icons");
+await figma.setCurrentPageAsync(page);
+const sem = (await figma.variables.getLocalVariableCollectionsAsync()).find((c) => c.name === "Semantic");
+const vars = await figma.variables.getLocalVariablesAsync();
+const V = (n) => vars.find((v) => v.variableCollectionId === sem.id && v.name === n);
+const paint = (t) => figma.variables.setBoundVariableForPaint({ type: "SOLID", color: { r: 0, g: 0, b: 0 } }, "color", V("icon/" + t));
+const all = page.findAllWithCriteria({ types: ["COMPONENT_SET"] }).filter((s) => s.name.startsWith("Icon/")).sort((a, b) => a.name.localeCompare(b.name));
+let sets = 0, variants = 0;
+for (const set of all.slice(START, END)) {
+  if (set.children.length >= 3 * TONES.length) continue;
+  for (const b of set.children.filter((c) => /^weight=\\w+$/.test(c.name))) b.name = b.name + ", tone=default";
+  const have = new Set(set.children.map((c) => c.name));
+  for (const b of set.children.filter((c) => /, tone=default$/.test(c.name))) for (const t of TONES.slice(1)) {
+    const name = b.name.replace("tone=default", "tone=" + t);
+    if (have.has(name)) continue;
+    const c = b.clone(); c.name = name;
+    for (const vec of c.findAll((x) => x.type === "VECTOR")) vec.fills = [paint(t)];
+    set.appendChild(c); variants++;
+  }
+  const ORDER = (n) => { const o = Object.fromEntries(n.split(", ").map((p) => p.split("="))); return ["bold", "regular", "fill"].indexOf(o.weight) * 100 + TONES.indexOf(o.tone); };
+  [...set.children].sort((a, b) => ORDER(a.name) - ORDER(b.name)).forEach((c, i) => set.insertChild(i, c));
+  set.layoutMode = "HORIZONTAL"; set.layoutWrap = "WRAP"; set.itemSpacing = 16; set.counterAxisSpacing = 16;
+  set.primaryAxisSizingMode = "FIXED"; set.resize(16 * 40 + 8, 100); set.counterAxisSizingMode = "AUTO";
+  sets++;
+}
+return { sets, variants, totalSets: all.length };
+`,
+);
+written.push("08-icon-tones.js (the tone variants; set START and END per call)");
+
 writeFileSync(join(root, ".local", "figma", "icons.json"), JSON.stringify({ groups: ICON_GROUPS, count: iconItems.length }, null, 2));
 
 // A collection that is already in Figma but in the wrong order is rebuilt in place by `95-reorder.js`: it copies each
