@@ -25,7 +25,8 @@ Lessons already paid for, so don't repeat them:
 
 - Opacity variables are percentages (40 is 40%); binding 0.4 draws at 0.4%.
 - An icon's colour is its `tone` variant, set on each variant's own nested instance. There is no instance-swap property for an icon: a swap property has one default for the whole set, so every variant would share one tone. The icon is shown by a boolean and swapped in place.
-- Adding a slot to each variant after combining makes a separate property per variant; build the full component first and clone it, or bind one set-level property.
+- Slots made with `createSlot()` inside every variant before combining merge into one property each (checked on Card); adding a slot to each variant after combining makes a separate property per variant; build the full component first and clone it, or bind one set-level property.
+- A stroke paint with opacity 0 on a variable-bound stroke keeps its opacity on the component but loses it on instances, so a transparent border is drawn as no stroke plus a padding of the border's width bound to its variable.
 - A block moved between parents keeps its old fixed height: set blocks to hug. Frames clip by default, which cuts a focus ring: turn clipping off on test frames and matrix cells.
 - Nested instance children are not available from another page until loaded; an override on them is lost when a property is bound, so set variant properties, not fills.
 - Load every font a script writes to, including ones the text already uses.

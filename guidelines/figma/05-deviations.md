@@ -15,5 +15,7 @@ Figma cannot express everything the code does, and a design file has its own str
 | A fluid size | A fixed width or height in the set (Input 280 px) | `width: 100%`, a height from line height | A variant needs a size; an instance can be resized |
 | Placement and layout props | Examples in the spec frame | `position`, `overlap`, `align`, `side` | They place a component, they do not shape it |
 | Behaviour and passthrough | Not drawn | `max`, `hideZero`, `onChange`, `aria-*`, `className` | They have no look |
+| A state that size and layout do not change | Drawn once, at the default size and layout (Card) | The same CSS state on every size | The full product would be thousands of variants |
+| A shadow that changes with the theme | The light elevation style (Card elevated); the dark one is applied by hand | A shadow token per theme | An effect style cannot switch with a variable mode |
 | Motion | Not drawn | Animations and transitions | A static frame has no motion |
 | An overlay | A static frame of its open state | A live layer | Figma cannot hold a live overlay |

@@ -31,6 +31,7 @@ describe("literalsOf", () => {
     assert.deepEqual(literalsOf("Size", typesText), ["sm", "md"]);
     assert.deepEqual(literalsOf('"a" | "b"'), ["a", "b"]);
     assert.equal(literalsOf("ReactNode", typesText), null);
+    assert.deepEqual(literalsOf("Responsive<Size>", typesText), ["sm", "md"]);
   });
 });
 
@@ -67,6 +68,16 @@ describe("validateEntry", () => {
   it("flags a state that is not drawn, reviewed or approved, and an approved date that does not match the state", () => {
     assert.match(validateEntry("X", { ...good, status: { state: "done" } }, ctx).join("\n"), /status.state is done/);
     assert.match(validateEntry("X", { ...good, status: { state: "reviewed", approved: "2026-01-02" } }, ctx).join("\n"), /approved is a date exactly when/);
+  });
+  it("checks that a slot maps to a part in the manifest", () => {
+    const withSlot = structuredClone(good);
+    withSlot.properties.header = { kind: "slot", maps: "X.Header" };
+    const c = { ...ctx, manifest: { ...manifest, parts: [{ name: "X.Header" }] } };
+    assert.deepEqual(validateEntry("X", withSlot, c), []);
+    const kids = { ...c, manifest: { ...c.manifest, props: [...c.manifest.props, { name: "children", type: "ReactNode", default: "None" }] } };
+    assert.deepEqual(validateEntry("X", withSlot, kids), [], "slots cover children");
+    withSlot.properties.header.maps = "X.Nope";
+    assert.match(validateEntry("X", withSlot, c).join("\n"), /"X.Nope" is not a part in the manifest/);
   });
   it("wants <provided> only for a prop a consumer supplies", () => {
     const bad = structuredClone(good);

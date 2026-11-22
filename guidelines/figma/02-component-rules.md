@@ -48,6 +48,7 @@ The component manifest (`@dbm-system/components/manifest.json`) lists every prop
 
 A component set draws **the full matrix of valid combinations** in one set ([ADR-0237](../adr/0237-a-component-set-draws-the-full-matrix-of-valid-variants-and-states-over-splitting-by-dimension-or-drawing-states-for-one-size.md)): every value of every variant property with every other, and every state, at every size. Button is 450 variants: five variants with two tones (`destructive` ignores the tone, so nine combinations), five sizes, five states (default, hover, focus, disabled, loading) and `rounded` off or on.
 
+- **A state that size and layout do not change is drawn once,** at the default size and layout, for every variant and tone (Card: hover, pressed, focus and disabled at `md` and `stacked`). Where size or layout does change a state, every size is drawn.
 - **A combination that cannot occur is not drawn.** A state a component does not have is left out, and a property that matters only with another (a Badge's `position` only with an `anchor`) is not multiplied across the rest.
 - **The axes run in the same order** in every set: `variant`, `tone`, `size`, `state`, then any others.
 - **The pilot measures it.** The first sets built (Button, Input, Badge, Card) show whether a set this size is workable in Figma. If it is not, the rule changes through a new ADR before more are built.

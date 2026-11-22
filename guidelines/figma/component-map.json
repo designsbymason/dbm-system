@@ -510,6 +510,231 @@
         "the clear button is drawn as its icon only: its hover fill and hit area are not drawn",
         "disabled together with error, and hover on error or disabled, are not drawn"
       ]
+    },
+    "Card": {
+      "tier": "molecule",
+      "category": "Data Display",
+      "storybook": "molecules-data-display-card",
+      "figma": {
+        "set": "Card",
+        "spec": "Spec: Card",
+        "page": "Data Display"
+      },
+      "variants": 696,
+      "status": {
+        "state": "reviewed",
+        "reviewed": "2026-11-22",
+        "approved": null
+      },
+      "properties": {
+        "variant": {
+          "kind": "variant",
+          "default": "outlined",
+          "values": {
+            "outlined": {
+              "props": {
+                "variant": "outlined"
+              }
+            },
+            "elevated": {
+              "props": {
+                "variant": "elevated"
+              }
+            },
+            "filled": {
+              "props": {
+                "variant": "filled"
+              }
+            },
+            "ghost": {
+              "props": {
+                "variant": "ghost"
+              }
+            }
+          }
+        },
+        "tone": {
+          "kind": "variant",
+          "default": "neutral",
+          "values": {
+            "neutral": {
+              "props": {
+                "tone": "neutral"
+              }
+            },
+            "brand": {
+              "props": {
+                "tone": "brand"
+              }
+            },
+            "info": {
+              "props": {
+                "tone": "info"
+              }
+            },
+            "success": {
+              "props": {
+                "tone": "success"
+              }
+            },
+            "warning": {
+              "props": {
+                "tone": "warning"
+              }
+            },
+            "danger": {
+              "props": {
+                "tone": "danger"
+              }
+            }
+          }
+        },
+        "size": {
+          "kind": "variant",
+          "default": "md",
+          "values": {
+            "md": {
+              "props": {
+                "size": "md"
+              }
+            },
+            "xs": {
+              "props": {
+                "size": "xs"
+              }
+            },
+            "sm": {
+              "props": {
+                "size": "sm"
+              }
+            },
+            "lg": {
+              "props": {
+                "size": "lg"
+              }
+            },
+            "xl": {
+              "props": {
+                "size": "xl"
+              }
+            }
+          }
+        },
+        "layout": {
+          "kind": "variant",
+          "default": "stacked",
+          "values": {
+            "stacked": {
+              "props": {},
+              "note": "no Card.Media; the sections stack"
+            },
+            "media-start": {
+              "props": {
+                "mediaPosition": "start"
+              },
+              "note": "Card.Media at the top of a vertical card"
+            },
+            "media-end": {
+              "props": {
+                "mediaPosition": "end"
+              },
+              "note": "Card.Media at the bottom of a vertical card"
+            },
+            "side-start": {
+              "props": {
+                "orientation": "horizontal",
+                "mediaPosition": "start"
+              },
+              "note": "Card.Media beside the content, at the inline start"
+            },
+            "side-end": {
+              "props": {
+                "orientation": "horizontal",
+                "mediaPosition": "end"
+              },
+              "note": "Card.Media beside the content, at the inline end"
+            }
+          }
+        },
+        "state": {
+          "kind": "variant",
+          "default": "default",
+          "values": {
+            "default": {
+              "props": {}
+            },
+            "hover": {
+              "props": {
+                "interactive": true
+              },
+              "note": "CSS :hover; an interactive card is a link or button supplied with asChild"
+            },
+            "pressed": {
+              "props": {
+                "interactive": true
+              },
+              "note": "CSS :active"
+            },
+            "focus": {
+              "props": {
+                "interactive": true
+              },
+              "note": "CSS :focus-visible"
+            },
+            "disabled": {
+              "props": {
+                "interactive": true,
+                "disabled": true
+              }
+            }
+          }
+        },
+        "divided": {
+          "kind": "boolean",
+          "default": false,
+          "on": {
+            "props": {
+              "divided": true
+            }
+          }
+        },
+        "media": {
+          "kind": "slot",
+          "maps": "Card.Media",
+          "note": "only in the four layouts with media"
+        },
+        "header": {
+          "kind": "slot",
+          "maps": "Card.Header"
+        },
+        "body": {
+          "kind": "slot",
+          "maps": "Card.Body"
+        },
+        "footer": {
+          "kind": "slot",
+          "maps": "Card.Footer"
+        }
+      },
+      "notModelled": [
+        "aria-describedby",
+        "aria-label",
+        "aria-labelledby",
+        "asChild",
+        "className",
+        "data-testid",
+        "id",
+        "style"
+      ],
+      "deviations": [
+        "layout is one Figma property for orientation, mediaPosition and whether Card.Media is used; a card without media looks the same in both orientations",
+        "a state is drawn once, at size md and layout stacked, for every variant and tone: size and layout do not change what a state does",
+        "an elevated card is drawn with the light elevation styles; effect styles cannot switch with a theme, so a dark theme applies Elevation/dark/* and border/default by hand",
+        "the variants are 320 px wide (560 px beside the media) with a height that hugs the content; the code is as wide as its container",
+        "orientation can change by breakpoint in code; Figma draws each layout and the designer picks one per frame",
+        "Card.Footer's align and the other part props are layout inside the slot content, not modelled",
+        "in a side layout the footer follows the body; the code pins it to the bottom when the media is taller"
+      ]
     }
   }
 }

@@ -4,7 +4,7 @@
  * packages ship, so two agents (one designing in Figma, one building the code from the design) cannot drift apart:
  *
  * - every component in the map is in the catalog, with the same tier and category, and its Storybook id is the one in its stories file;
- * - every code prop a Figma property maps to is a prop in the built manifest, and every literal value is one the prop's type allows
+ * - every code prop a Figma property maps to is a prop in the built manifest (a slot maps to one of its parts, `Card.Header`), and every literal value is one the prop's type allows
  *   (a prop a consumer supplies, a node or a handler, is written `"<provided>"`);
  * - a Figma property's default maps to the code's default;
  * - every prop in the manifest is mapped by a Figma property or named in `notModelled`, and nothing is both;
@@ -27,6 +27,8 @@ const unquote = (s) => String(s).trim().replace(/^['"]|['"]$/g, "");
 
 /** The string literals a type allows: an inline union in the manifest's type text, or an alias declared in the types file. */
 export function literalsOf(type, typesText = "") {
+  const inner = /^\w+<(\w+)>$/.exec(type);
+  if (inner) type = inner[1];
   const fromText = (text) => [...text.matchAll(/"([^"]*)"|'([^']*)'/g)].map((m) => m[1] ?? m[2]);
   if (/["']/.test(type)) return fromText(type);
   const alias = new RegExp(`export type ${type.replace(/\W/g, "")}\\s*=\\s*([^;]+);`).exec(typesText);
@@ -84,12 +86,16 @@ export function validateEntry(name, entry, ctx) {
       if (!(prop.maps || prop.native || prop.derived)) fail(`${where}: a text property needs maps, native or derived`);
       if (prop.maps) checkProp(prop.maps, PROVIDED, where);
       if (prop.maps && prop.maps !== "children" && props.get(prop.maps) && props.get(prop.maps).type === "boolean") fail(`${where}: maps to a boolean`);
-    } else fail(`${where}: kind must be variant, boolean or text`);
+    } else if (prop.kind === "slot") {
+      const parts = new Set((ctx.manifest.parts ?? []).map((p) => p.name));
+      if (!parts.has(prop.maps)) fail(`${where}: "${prop.maps}" is not a part in the manifest (${[...parts].join(", ") || "none"})`);
+    } else fail(`${where}: kind must be variant, boolean, text or slot`);
     for (const a of prop.also ?? []) {
       if (!props.has(a)) fail(`${where}: also "${a}" is not a prop in the manifest`);
       else mapped.add(a);
     }
   }
+  if (Object.values(entry.properties ?? {}).some((p) => p.kind === "slot")) mapped.add("children");
   const notModelled = new Set(entry.notModelled ?? []);
   for (const n of notModelled) {
     if (!props.has(n)) fail(`notModelled "${n}" is not a prop in the manifest`);
