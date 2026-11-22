@@ -25,7 +25,7 @@ This applies to collaborators, and to anyone working in a fork.
 3. Read `CLAUDE.md` and the numbered documents in `guidelines/` before a structural change: the decisions already made are recorded there.
 4. Before you finish, run the checks CI runs: `pnpm lint`, `pnpm build` and `pnpm test`, plus `pnpm --filter @dbm-system/components test:storybook` for the real-browser stories.
 5. Write commit messages in Conventional Commits form (`feat(button): add a loading state`).
-6. A change that affects what a consumer of a published package sees includes a changeset (`pnpm changeset`, or `pnpm changeset --empty` when nothing needs releasing); `pnpm check-changeset`, the pre-push hook and CI fail a push without one. How a release is made is in [`RELEASING.md`](./RELEASING.md).
+6. A change that affects what a consumer of a published package sees includes a changeset (`pnpm changeset`, or `pnpm changeset --empty` when nothing needs releasing); `pnpm check-changeset`, the pre-push hook and CI fail a push without one. How a release is made, and everything that follows a change to a published package, is in [`RELEASING.md`](./RELEASING.md).
 
 ## License
 
