@@ -14,7 +14,7 @@ With no argument, sync everything below in order. With one, sync only that group
    - **styles:** `06-styles`
    - **icons:** `07-icons-1` to `07-icons-5`, then `08-icon-tones`
    - **components:** `09-components-page`
-4. Run `90-verify.js` and report: variables, modes and styles equal the tokens, in order, with the opacity values as percentages. Any difference is reported with the name and both values.
+4. Run `90-verify.js` and report: variables, modes and styles equal the tokens, in order, with the opacity values as percentages, and every text, effect and grid style present under the name the script gives it (`missing`, `wrong` weight, line height or unbound size, and `extra` styles the script does not make, which is how a regrouped or renamed style shows up). Any difference is reported with the name and both values.
 
 The sync is one-way (ADR-0233): Figma is never read back into the tokens, and nothing here changes a component's own variants; those are drawn with `/build-figma-component`. Say plainly which groups you sent and which you skipped.
 

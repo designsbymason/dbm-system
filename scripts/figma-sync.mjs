@@ -297,7 +297,8 @@ const ROLES = [
   { role: "Heading", family: "primary", weight: "bold", lh: "snug", ls: "normal", sizes: ["2xl", "xl", "lg", "md", "base", "sm"], note: "Headings in Nunito" },
   { role: "Body", family: "primary", weight: "regular", lh: "normal", ls: "normal", sizes: ["lg", "md", "base", "sm", "xs"], note: "Running text in Nunito" },
   { role: "Label", family: "primary", weight: "semibold", lh: "snug", ls: "normal", sizes: ["md", "base", "sm", "xs"], note: "Labels and controls in Nunito" },
-  { role: "Control", family: "primary", weight: "semibold", lh: "tight", ls: "normal", sizes: ["xs", "sm", "base", "md", "lg"], note: "Buttons and other controls in Nunito, with the tight line height the components use" },
+  { role: "Control", group: "Components", family: "primary", weight: "semibold", lh: "tight", ls: "normal", sizes: ["xs", "sm", "base", "md", "lg"], note: "Buttons and other controls in Nunito, with the tight line height the components use" },
+  { role: "Field", group: "Components", family: "primary", weight: "regular", lh: "tight", ls: "normal", sizes: ["xs", "sm", "base", "md", "lg"], note: "The text inside a text field in Nunito, regular weight with the tight line height the components use" },
   { role: "Overline", family: "primary", weight: "semibold", lh: "snug", ls: "wide", sizes: ["sm", "xs"], upper: true, note: "Small upper-case captions and table headings in Nunito" },
 ];
 const FAMILY_NAME = { primary: "Nunito", secondary: "Lora" };
@@ -305,7 +306,7 @@ const WEIGHT_STYLE = { regular: "Regular", medium: "Medium", semibold: "SemiBold
 const ratio = (group, name) => Number(tokens.find((t) => t.name === `${PREFIX}${group}-${name}`).value);
 const textStyles = ROLES.flatMap((r) =>
   r.sizes.map((size) => ({
-    n: `${r.role}/${size}`,
+    n: `${r.group ? `${r.group}/` : ""}${r.role}/${size}`,
     fam: FAMILY_NAME[r.family],
     famVar: `font-family/${r.family}`,
     style: WEIGHT_STYLE[r.weight],
@@ -709,7 +710,16 @@ const expected = Object.fromEntries(
     { m: modes, x: Object.fromEntries(items.map((e) => [e.n, modes.map((mode) => e.v[mode])])) },
   ]),
 );
+// The styles are checked by name too: every text, effect and grid style must exist under the name the script gives it (a text style
+// also with its weight, line height and a size bound to a variable), and a style the script does not make is reported as extra, so a
+// renamed or regrouped style is caught instead of a second one being made beside it.
+const expectedStyles = {
+  text: textStyles.map((t) => ({ n: t.n, style: t.style, lh: t.lh })),
+  effect: effectStyles.map((e) => e.n),
+  grid: gridStyles.map((g) => g.n),
+};
 const verify = `const X = ${JSON.stringify(expected)};
+const ST = ${JSON.stringify(expectedStyles)};
 const all = await figma.variables.getLocalVariablesAsync();
 const colls = await figma.variables.getLocalVariableCollectionsAsync();
 const byId = new Map(all.map((v) => [v.id, v]));
@@ -744,6 +754,21 @@ for (const [name, spec] of Object.entries(X)) {
   out.bad = out.bad.slice(0, 12);
   report[name] = out;
 }
+const styleReport = { missing: [], wrong: [], extra: [] };
+const tHave = new Map((await figma.getLocalTextStylesAsync()).map((s) => [s.name, s]));
+const eHave = new Map((await figma.getLocalEffectStylesAsync()).map((s) => [s.name, s]));
+const gHave = new Map((await figma.getLocalGridStylesAsync()).map((s) => [s.name, s]));
+for (const e of ST.text) {
+  const s = tHave.get(e.n);
+  if (!s) { styleReport.missing.push(e.n); continue; }
+  if (s.fontName.style !== e.style) styleReport.wrong.push(e.n + ": weight " + s.fontName.style + " != " + e.style);
+  if (s.lineHeight.unit !== "PERCENT" || Math.abs(s.lineHeight.value - e.lh) > 0.01) styleReport.wrong.push(e.n + ": line height");
+  if (!(s.boundVariables && s.boundVariables.fontSize)) styleReport.wrong.push(e.n + ": size not bound");
+}
+for (const n of ST.effect) if (!eHave.has(n)) styleReport.missing.push(n);
+for (const n of ST.grid) if (!gHave.has(n)) styleReport.missing.push(n);
+for (const [have, want] of [[tHave, ST.text.map((e) => e.n)], [eHave, ST.effect], [gHave, ST.grid]]) for (const n of have.keys()) if (!want.includes(n)) styleReport.extra.push(n);
+report.styles = { expected: ST.text.length + ST.effect.length + ST.grid.length, missing: styleReport.missing, wrong: styleReport.wrong, extra: styleReport.extra };
 return report;
 `;
 writeFileSync(join(outDir, "90-verify.js"), verify);
