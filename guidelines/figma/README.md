@@ -17,6 +17,7 @@ The plan, decisions and status for the DBM System Figma component library (Phase
 | [05-deviations.md](./05-deviations.md) | The patterns where a Figma property or value is not the code's, and why |
 | [06-maintenance.md](./06-maintenance.md) | What keeps the library and the code in step, and what to do when a component's props change |
 | [component-map.json](./component-map.json) | The machine-readable map from each drawn component's Figma properties to the code, checked by `pnpm check-figma-map` ([ADR-0240](../adr/0240-a-machine-readable-map-from-each-drawn-figma-component-to-the-code-is-checked-against-the-manifest-over-the-spec-frame-alone-or-waiting-for-code-connect.md)) |
+| [07-community-and-code-connect.md](./07-community-and-code-connect.md) | What is decided, recommended and not yet verified about publishing the library as a Community file and about Code Connect, with the test plan |
 | [components/](./components/README.md) | One file per drawn component: its decisions, differences from the code, what is not drawn and its reviews, with the generated status table |
 
 ## Using the commands on your own file

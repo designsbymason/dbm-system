@@ -20,6 +20,7 @@ and passes on a rerun), *Maintenance* (due on a date or after an event).
 | Item | Kind | Affects | Detail | Waits on |
 |---|---|---|---|---|
 | The boxed text-entry controls draw their edge in `border.default` at rest (about 1.35:1 on the surface in the two light themes) and in `border.neutral` on hover (2.3:1), and `ToggleGroup` draws `border.neutral` at rest; all are under the 3:1 a control's edge needs (WCAG 1.4.11). `Checkbox` and `Radio` moved to `border.neutral-strong` for the same reason | Standard | `Input`, `Textarea`, `Select`, `TagsInput`, `ColorPicker`, `DatePicker`, `ToggleGroup` and the other boxed fields | [03-token-system-spec.md](./03-token-system-spec.md) (`border.default`, `border.neutral`) | The maintainer's decision |
+| The Figma library's map from each drawn component to the code (`guidelines/figma/component-map.json`) is not shipped, so an agent working from a copy of the library cannot read it unless it has our repository; shipping it in `@dbm-system/components` and serving it from the MCP server would fix that, with no Figma plan needed | Decision | `@dbm-system/components`, `@dbm-system/mcp` | [figma/07-community-and-code-connect.md](./figma/07-community-and-code-connect.md) | The maintainer's decision; it changes a published package, so it needs an ADR and a changeset |
 
 ## The repository, CI, release and maintenance
 

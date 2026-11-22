@@ -32,6 +32,10 @@ Two agents can meet at this library without meeting each other: one designs a sc
 - An Input instance with `size=md, state=error, filled=true`, `prefix` on and `clearable` on is `<Input size="md" hasError value={value} prefix={<Icon … />} onClear={clear} />`. `filled` has no prop of its own: a value present is `value`; the state `error` is `hasError`; hover and focus are CSS.
 - A Button instance with `rounded=true` and `state=loading` is `<Button rounded isLoading>…</Button>`; `rounded` is a variant in Figma and a boolean prop in code.
 
+## Code Connect
+
+Code Connect is not enabled. The map is the source it will be generated from if it is used (see [07-community-and-code-connect.md](./07-community-and-code-connect.md)), so until then the map and the spec frame are what an agent reads.
+
 ## Related
 
 [02-component-rules.md](./02-component-rules.md) (which props become which Figma properties), [04-naming-and-structure.md](./04-naming-and-structure.md), [05-deviations.md](./05-deviations.md), [components/](./components/README.md) (the decisions per component) and [ADR-0240](../adr/0240-a-machine-readable-map-from-each-drawn-figma-component-to-the-code-is-checked-against-the-manifest-over-the-spec-frame-alone-or-waiting-for-code-connect.md).
