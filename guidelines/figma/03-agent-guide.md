@@ -26,6 +26,13 @@ Two agents can meet at this library without meeting each other: one designs a sc
 5. **Read the component's `deviations` in the map** before trusting a size or a shape: a Figma width is often a drawing choice, not a rule (an Input is 280 px wide in the set and `width: 100%` in code).
 6. **If something is missing or disagrees, stop and say so.** Do not invent a prop or a value; the map or the file is wrong, and the maintainer decides which.
 
+## Values that are not drawn
+
+The library draws a core of each property's values (the coverage rule, [02-component-rules.md](./02-component-rules.md) §3). A value the code has and the file does not is listed in the map under the property's `undrawn`, with a recipe.
+
+- **Designing:** if you need an undrawn value, use the nearest drawn variant, apply the recipe by overriding the instance, and name the instance `Name (prop=value)`, for example `Button (size=xs)` or `Card (tone=danger, size=lg)`. Do not invent a property or a value, and do not change a property on an instance to an undrawn value (Figma would switch to the closest drawn variant).
+- **Building:** read an instance's name for `(prop=value)` pairs and apply them on top of what the properties say. Check each against `undrawn` in the map and the manifest; if it is neither drawn nor listed, stop and say so.
+
 ## Worked examples
 
 - A Badge instance with `variant=dot, tone=danger, size=md` and `ring` on is `<Badge dot tone="danger" size="md" aria-label="New messages" />`, placed on an `anchor`. The dot is a value of `variant` in Figma and the `dot` prop in code.

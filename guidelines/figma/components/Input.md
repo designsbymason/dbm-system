@@ -1,8 +1,10 @@
 # Input in Figma
 
-**What is drawn.** 60 variants: five sizes, six states (default, hover, focus, error, error-focus, disabled), empty or filled. Optional prefix and suffix icons, a clear button and a character count, and text properties for the placeholder, the value and the count.
+**What is drawn.** 36 variants: three sizes (`sm`, `md`, `lg`), six states (default, hover, focus, error, error-focus, disabled), empty or filled. Optional prefix and suffix icons, a clear button and a character count, and text properties for the placeholder, the value and the count.
 
 ## Decisions
+
+- **Coverage: the defaults.** Sizes `sm`, `md` and `lg`, every state at every size, 36 variants. `xs` and `xl` are listed as undrawn in the map, with the text style, padding, height and icon size to apply ([ADR-0242](../../adr/0242-a-component-set-draws-a-core-of-values-with-every-state-at-every-drawn-size-and-documents-the-rest-over-drawing-every-combination-of-every-value.md)).
 
 - **`Components/Field/*` text styles were added.** The field's text is regular weight at the tight line height; `Control/*` is semibold and `Body/*` has a 150% line height, which would make a field taller than a Button. The five styles live under `Components` ([plan §5](../01-plan.md)).
 - **Same height as a Button at every size.** The code's `padding-block` is Button's minus the border, a `calc()`, so Figma draws the vertical padding as the number (7, 11, 11, 15, 15), unbound.

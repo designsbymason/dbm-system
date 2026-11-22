@@ -5,6 +5,7 @@ Nothing in Figma updates itself when the code changes ([01-plan.md](./01-plan.md
 | What | How | When |
 |---|---|---|
 | The map against the code | `pnpm check-figma-map`: every mapped prop and value exists in the built manifest, defaults agree, every prop is mapped or named as not modelled, the status table is current. Runs in CI on every push | Every push |
+| The values left undrawn | `pnpm check-figma-map` also checks that each enumerated property's drawn and undrawn values add up to every value the code's type allows, and that a set over the budget has a recorded exception | Every push |
 | The file against the code | `/figma-drift`: tokens and styles against `90-verify.js`, each drawn component's properties against the map and the manifest, every link in the file | Every release that changes a published package, and when a drawn component's code changes (`RELEASING.md`, item 7 of the sequence) |
 | The tokens into Figma | `/figma-sync`, which regenerates the payloads and sends them in order, then verifies | When a token changes |
 | Where the library stands | `/figma-status` | Start of a Figma session |

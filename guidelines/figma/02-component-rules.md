@@ -44,14 +44,28 @@ The component manifest (`@dbm-system/components/manifest.json`) lists every prop
 5. The component set's own configuration holds a **description** (a short plain-text summary taken from the manifest's summary, naming what is drawn and what is not) and a **documentation link** to its Storybook Docs page, `https://dbm-system.com/storybook/?path=/docs/<id>--docs`. The `<id>` is the `id` in the component's stories file (`atoms-inputs-button`), never built from the name by guessing; `scripts/figma-sync.mjs` reads it, and the Components page links use it. Dev Mode shows both. Figma allows one documentation link per set, so the Icon sets link to the Storybook Icon page (their description credits Phosphor) and the Spec frame master to the repository.
 6. **Every link in the file is checked** with `/figma-drift`: an external one answers 200 (the npm page refuses scripted requests, so `npm view` stands in), a Storybook one names an id in the published `index.json`, and an internal one resolves to a node. A rebuilt frame or set gets a new id, so a page that links to it (Getting started, the Foundations "Go to" links, the Components index) is repointed in the same step.
 
-## 3. The matrix
+## 3. Coverage: what is drawn
 
-A component set draws **the full matrix of valid combinations** in one set ([ADR-0237](../adr/0237-a-component-set-draws-the-full-matrix-of-valid-variants-and-states-over-splitting-by-dimension-or-drawing-states-for-one-size.md)): every value of every variant property with every other, and every state, at every size. Button is 450 variants: five variants with two tones (`destructive` ignores the tone, so nine combinations), five sizes, five states (default, hover, focus, disabled, loading) and `rounded` off or on.
+A component set draws **a core of each property's values** and documents the rest ([ADR-0242](../adr/0242-a-component-set-draws-a-core-of-values-with-every-state-at-every-drawn-size-and-documents-the-rest-over-drawing-every-combination-of-every-value.md), which supersedes ADR-0237). A set is never sparse: Figma switches to the closest drawn variant when a property changes on an instance.
 
-- **A state that size and layout do not change is drawn once,** at the default size and layout, for every variant and tone (Card: hover, pressed, focus and disabled at `md` and `stacked`). Where size or layout does change a state, every size is drawn.
+**Default coverage,** which a component's plan may depart from with a recorded reason:
+
+- **Look variants** (`variant`): all of them.
+- **Tone:** `neutral` and `brand`; every status tone only where the tone means a status (Badge, Alert, Toast and similar).
+- **Size:** `sm`, `md` and `lg`, with `md` the default; `xs` and `xl` are not drawn.
+- **Structure** (Card's `layout`): all of them. A structure variant is drawn at the default state, and the states at the default structure, because structure does not change what a state does.
+- **States:** every interaction state, **at every drawn size.**
+- **Booleans, slots and text:** always.
+
+**Rules:**
+
+- **A budget of about 250 variants per set.** A set over it needs a recorded exception (Button is 360: every state at all four sizes, with `rounded` off and on).
+- **Exceptions are decided at plan time** and recorded in the map (`coverage`) and the component's file. They can widen coverage (Badge keeps all seven tones; Button keeps `xl`) or narrow it (Card draws `sm` and `md`).
+- **Every undrawn value is documented.** The map lists it under the property's `undrawn` with a recipe, the spec frame has its own "In code, not drawn" section (a table: property, value not drawn, how to get it), and `pnpm check-figma-map` checks that drawn plus undrawn equals every value the code's type allows.
 - **A combination that cannot occur is not drawn.** A state a component does not have is left out, and a property that matters only with another (a Badge's `position` only with an `anchor`) is not multiplied across the rest.
-- **The axes run in the same order** in every set: `variant`, `tone`, `size`, `state`, then any others.
-- **The pilot measures it.** The first sets built (Button, Input, Badge, Card) show whether a set this size is workable in Figma. If it is not, the rule changes through a new ADR before more are built.
+- **The axes run in the same order** in every set: `variant`, `tone`, `size`, `state`, then any others, with the default of each first.
+
+**Getting an undrawn value:** override a drawn instance by the recipe, name the instance `Name (prop=value)` (for example `Button (size=xs)`) so a person or an agent reading the design sees what was meant, add the variant in your own copy, or ask for it to be drawn.
 
 ## 4. Structure of a component
 

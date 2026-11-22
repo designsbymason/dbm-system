@@ -11,7 +11,7 @@ The plan, decisions and status for the DBM System Figma component library (Phase
 | File | What it holds |
 |---|---|
 | [01-plan.md](./01-plan.md) | Goals, scope, the decisions taken, the structure of the Figma file, the build rules, the phases with their review gates, risks and open questions |
-| [02-component-rules.md](./02-component-rules.md) | The standing rules for which components are drawn, which props become Figma properties, the full matrix and the spec frame |
+| [02-component-rules.md](./02-component-rules.md) | The standing rules for which components are drawn, which props become Figma properties, what is drawn (the coverage rule) and the spec frame |
 | [03-agent-guide.md](./03-agent-guide.md) | How an agent designs with the library and how another builds from the design, so they do not drift apart |
 | [04-naming-and-structure.md](./04-naming-and-structure.md) | How pages, sets, properties, layers, variables and styles are named |
 | [05-deviations.md](./05-deviations.md) | The patterns where a Figma property or value is not the code's, and why |

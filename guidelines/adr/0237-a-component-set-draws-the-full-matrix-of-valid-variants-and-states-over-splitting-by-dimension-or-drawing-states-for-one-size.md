@@ -1,6 +1,6 @@
 # 0237 — A component set draws the full matrix of valid variants and states, over splitting by dimension or drawing states for one size
 
-**Status:** Accepted · **Date:** 2026-11-22 · **Amended 2026-11-22** — a boolean prop that changes the shape is a variant property, and Button is 450 variants; the decision itself is unchanged · **Amended 2026-11-22** — a state is drawn once, at the default size and layout, when size and layout do not change what it does (Card); the decision itself is unchanged
+**Status:** Superseded by [ADR-0242](./0242-a-component-set-draws-a-core-of-values-with-every-state-at-every-drawn-size-and-documents-the-rest-over-drawing-every-combination-of-every-value.md) · **Date:** 2026-11-22 · **Amended 2026-11-22** — a boolean prop that changes the shape is a variant property, and Button is 450 variants; the decision itself is unchanged · **Amended 2026-11-22** — a state is drawn once, at the default size and layout, when size and layout do not change what it does (Card); the decision itself is unchanged
 
 ## Context
 A component such as Button has several visual props and several states: 5 variants, 2 tones, 5 sizes and 6 states, so 300 combinations. Figma draws each combination as a variant of one component set. Guidance for building Figma libraries suggests keeping a matrix under about 30 variants and splitting a larger one, so the choice was between splitting and drawing it all.

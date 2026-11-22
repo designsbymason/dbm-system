@@ -6,7 +6,8 @@
  * - every component in the map is in the catalog, with the same tier and category, and its Storybook id is the one in its stories file;
  * - every code prop a Figma property maps to is a prop in the built manifest (a slot maps to one of its parts, `Card.Header`), and every literal value is one the prop's type allows
  *   (a prop a consumer supplies, a node or a handler, is written `"<provided>"`);
- * - a Figma property's default maps to the code's default;
+ * - a Figma property's default maps to the code's default, and for an enumerated property (a size, a tone) the drawn values and the `undrawn` ones, each with a recipe, add up to every value the code's type allows (ADR-0242);
+ * - a set of more than 250 variants has a recorded `coverage.exception`;
  * - every prop in the manifest is mapped by a Figma property or named in `notModelled`, and nothing is both;
  * - each component has its decisions file in `guidelines/figma/components/`, and the status table there is the one the map generates;
  * - the map holds no file key, address or node id.
@@ -20,6 +21,8 @@ import { fileURLToPath } from "node:url";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const PROVIDED = "<provided>";
+/** The most variants a set has without a recorded exception (ADR-0242). */
+export const BUDGET = 250;
 const START = "<!-- figma-status:start -->";
 const END = "<!-- figma-status:end -->";
 
@@ -45,6 +48,7 @@ export function validateEntry(name, entry, ctx) {
   if (entry.storybook !== ctx.storyId) fail(`storybook id is ${entry.storybook}, the stories file says ${ctx.storyId}`);
   if (entry.figma?.set !== name || entry.figma?.spec !== `Spec: ${name}`) fail("figma.set or figma.spec does not name the component");
   if (!ctx.hasDecisionsFile) fail(`guidelines/figma/components/${name}.md is missing`);
+  if (entry.variants > BUDGET && !entry.coverage?.exception) fail(`${entry.variants} variants is over the budget of ${BUDGET}; record the reason in coverage.exception`);
   const state = entry.status?.state;
   if (!["drawn", "reviewed", "approved"].includes(state)) fail(`status.state is ${state}; it must be drawn, reviewed or approved`);
   if ((state === "approved") !== Boolean(entry.status?.approved)) fail("status.approved is a date exactly when the state is approved");
@@ -79,6 +83,24 @@ export function validateEntry(name, entry, ctx) {
       if (!keys.includes(prop.default)) fail(`${where}: default "${prop.default}" is not one of its values`);
       for (const [v, def] of Object.entries(prop.values ?? {})) for (const [cp, cv] of Object.entries(def.props ?? {})) checkProp(cp, cv, `${where}=${v}`);
       if (prop.values?.[prop.default]) checkDefault(prop.values[prop.default].props ?? {}, where);
+      for (const [v, def] of Object.entries(prop.undrawn ?? {})) {
+        if (keys.includes(v)) fail(`${where}: "${v}" is both drawn and undrawn`);
+        if (!def.recipe) fail(`${where}: undrawn "${v}" has no recipe`);
+        for (const [cp, cv] of Object.entries(def.props ?? {})) checkProp(cp, cv, `${where} undrawn ${v}`);
+      }
+      // an enumerated property maps every value to one prop: the drawn and undrawn values must be every value the type allows
+      const defs = Object.values(prop.values ?? {});
+      const codeProps = new Set(defs.flatMap((d) => Object.keys(d.props ?? {})));
+      const simple = codeProps.size === 1 && defs.every((d) => Object.keys(d.props ?? {}).length === 1 && typeof Object.values(d.props)[0] === "string");
+      if (simple) {
+        const target = [...codeProps][0];
+        const lits = props.has(target) ? literalsOf(props.get(target).type, ctx.typesText) : null;
+        if (lits) {
+          const covered = new Set([...defs.map((d) => d.props[target]), ...Object.values(prop.undrawn ?? {}).map((d) => d.props?.[target])]);
+          const gone = lits.filter((l) => !covered.has(l));
+          if (gone.length) fail(`${where}: values of ${target} neither drawn nor listed as undrawn: ${gone.join(", ")}`);
+        }
+      }
     } else if (prop.kind === "boolean") {
       if (typeof prop.default !== "boolean") fail(`${where}: default must be a boolean`);
       for (const [cp, cv] of Object.entries(prop.on?.props ?? {})) checkProp(cp, cv, where);

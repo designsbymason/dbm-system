@@ -11,6 +11,7 @@ How things are named, so an agent can find them without a search. The structure 
 | The grid's headings | A frame named `Matrix labels` beside the set | |
 | A variant | `property=value` pairs in the axis order, comma separated | `size=md, state=error, filled=true` |
 | A variant property | The code prop's name, or the name of what it shows when no single prop says so | `variant`, `filled`, `ring` |
+| An instance that uses a value the file does not draw | The component's name and the pairs in brackets | `Button (size=xs)`, `Card (tone=danger, size=lg)` |
 | A boolean property | The prop, shown or hidden | `prefix`, `clearable` |
 | A text property | What the text is | `label`, `placeholder`, `value` |
 | Layers in a component | A short role name, `Label`, `Ring`, `Prefix`, `Clear` | |

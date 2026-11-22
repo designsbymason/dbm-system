@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import { literalsOf, statusTable, validateEntry } from "./check-figma-map.mjs";
+import { BUDGET, literalsOf, statusTable, validateEntry } from "./check-figma-map.mjs";
 
 const typesText = `export type Size = "sm" | "md";`;
 const manifest = {
@@ -68,6 +68,22 @@ describe("validateEntry", () => {
   it("flags a state that is not drawn, reviewed or approved, and an approved date that does not match the state", () => {
     assert.match(validateEntry("X", { ...good, status: { state: "done" } }, ctx).join("\n"), /status.state is done/);
     assert.match(validateEntry("X", { ...good, status: { state: "reviewed", approved: "2026-01-02" } }, ctx).join("\n"), /approved is a date exactly when/);
+  });
+  it("wants every value of an enumerated property drawn or listed as undrawn, with a recipe", () => {
+    const partial = structuredClone(good);
+    delete partial.properties.size.values.sm;
+    assert.match(validateEntry("X", partial, ctx).join("\n"), /neither drawn nor listed as undrawn: sm/);
+    partial.properties.size.undrawn = { sm: { props: { size: "sm" }, recipe: "use the sm padding" } };
+    assert.deepEqual(validateEntry("X", partial, ctx), []);
+    partial.properties.size.undrawn.sm.recipe = "";
+    assert.match(validateEntry("X", partial, ctx).join("\n"), /undrawn "sm" has no recipe/);
+    partial.properties.size.undrawn.md = { props: { size: "md" }, recipe: "x" };
+    assert.match(validateEntry("X", partial, ctx).join("\n"), /"md" is both drawn and undrawn/);
+  });
+  it("wants a recorded exception for a set over the budget", () => {
+    const big = { ...good, variants: BUDGET + 1 };
+    assert.match(validateEntry("X", big, ctx).join("\n"), /over the budget/);
+    assert.deepEqual(validateEntry("X", { ...big, coverage: { exception: "every state at every size" } }, ctx), []);
   });
   it("checks that a slot maps to a part in the manifest", () => {
     const withSlot = structuredClone(good);

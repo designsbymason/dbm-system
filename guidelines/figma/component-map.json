@@ -143,7 +143,10 @@
         "dot is a value of variant in Figma, and the dot prop in code",
         "position and overlap are layout: the badge is placed by hand and the spec frame shows the offsets",
         "the pop animation is motion and is not drawn"
-      ]
+      ],
+      "coverage": {
+        "exception": "All seven tones and all five sizes are drawn: a badge's tone is a status, and its sm, md and lg are only 2 to 3 px apart, so xs and xl are the sizes that differ. 105 variants."
+      }
     },
     "Button": {
       "tier": "atom",
@@ -154,7 +157,7 @@
         "spec": "Spec: Button",
         "page": "Inputs"
       },
-      "variants": 450,
+      "variants": 200,
       "status": {
         "state": "reviewed",
         "reviewed": "2026-11-22",
@@ -200,11 +203,14 @@
               "props": {
                 "tone": "brand"
               }
-            },
+            }
+          },
+          "undrawn": {
             "neutral": {
               "props": {
                 "tone": "neutral"
-              }
+              },
+              "recipe": "Primary: fill bg/neutral (bg/neutral-hover on hover) and label text/on-neutral. Secondary: edge border/neutral-strong, label text/secondary, hover fill bg/neutral-subtle. Tertiary: label text/secondary, hover fill bg/neutral-subtle. Ghost: fill bg/neutral-subtle (bg/neutral-subtle-hover on hover), label text/secondary. Icons use tone default, except on the primary (on-brand). Name the instance Button (tone=neutral)."
             }
           }
         },
@@ -215,11 +221,6 @@
             "md": {
               "props": {
                 "size": "md"
-              }
-            },
-            "xs": {
-              "props": {
-                "size": "xs"
               }
             },
             "sm": {
@@ -236,6 +237,14 @@
               "props": {
                 "size": "xl"
               }
+            }
+          },
+          "undrawn": {
+            "xs": {
+              "props": {
+                "size": "xs"
+              },
+              "recipe": "Label text style Components/Control/xs, horizontal padding space/3, vertical padding space/2 (one pixel less on a secondary, whose border takes it), gap space/2; name the instance Button (size=xs)"
             }
           }
         },
@@ -323,10 +332,14 @@
         "type"
       ],
       "deviations": [
-        "destructive ignores tone, so destructive with tone=neutral is not drawn",
+        "destructive ignores tone; only the brand tone is drawn, and the neutral tone is in undrawn.tone",
         "rounded is a variant property (false, true), not a boolean, because it changes the corner radius",
-        "fullWidth is set by making the instance fill its container"
-      ]
+        "fullWidth is set by making the instance fill its container",
+        "xs is in the code and is not drawn: see undrawn.size"
+      ],
+      "coverage": {
+        "exception": "Widened and narrowed: size xl is drawn (a real marketing size) and every state at every drawn size, with rounded off and on; the neutral tone and size xs are not drawn. 200 variants."
+      }
     },
     "Input": {
       "tier": "atom",
@@ -337,7 +350,7 @@
         "spec": "Spec: Input",
         "page": "Inputs"
       },
-      "variants": 60,
+      "variants": 36,
       "status": {
         "state": "reviewed",
         "reviewed": "2026-11-22",
@@ -353,11 +366,6 @@
                 "size": "md"
               }
             },
-            "xs": {
-              "props": {
-                "size": "xs"
-              }
-            },
             "sm": {
               "props": {
                 "size": "sm"
@@ -367,11 +375,20 @@
               "props": {
                 "size": "lg"
               }
+            }
+          },
+          "undrawn": {
+            "xs": {
+              "props": {
+                "size": "xs"
+              },
+              "recipe": "Text style Components/Field/xs, horizontal padding space/2, vertical padding 7, height 30, icon size icon-size/xs; name the instance Input (size=xs)"
             },
             "xl": {
               "props": {
                 "size": "xl"
-              }
+              },
+              "recipe": "Text style Components/Field/lg, horizontal padding space/4, vertical padding 15, height 59, icon size icon-size/xl; name the instance Input (size=xl)"
             }
           }
         },
@@ -509,7 +526,10 @@
         "the Figma variants are 280 px wide and a fixed height per size; the code is width 100% and its height comes from the line height and padding",
         "the clear button is drawn as its icon only: its hover fill and hit area are not drawn",
         "disabled together with error, and hover on error or disabled, are not drawn"
-      ]
+      ],
+      "coverage": {
+        "note": "Default coverage: sizes sm, md and lg, every state at every size."
+      }
     },
     "Card": {
       "tier": "molecule",
@@ -520,7 +540,7 @@
         "spec": "Spec: Card",
         "page": "Data Display"
       },
-      "variants": 696,
+      "variants": 72,
       "status": {
         "state": "reviewed",
         "reviewed": "2026-11-22",
@@ -566,26 +586,32 @@
               "props": {
                 "tone": "brand"
               }
-            },
+            }
+          },
+          "undrawn": {
             "info": {
               "props": {
                 "tone": "info"
-              }
+              },
+              "recipe": "Edge border/info, and bg/info-subtle behind the header; name the instance Card (tone=info)"
             },
             "success": {
               "props": {
                 "tone": "success"
-              }
+              },
+              "recipe": "Edge border/success, and bg/success-subtle behind the header; name the instance Card (tone=success)"
             },
             "warning": {
               "props": {
                 "tone": "warning"
-              }
+              },
+              "recipe": "Edge border/warning, and bg/warning-subtle behind the header; name the instance Card (tone=warning)"
             },
             "danger": {
               "props": {
                 "tone": "danger"
-              }
+              },
+              "recipe": "Edge border/danger, and bg/danger-subtle behind the header; name the instance Card (tone=danger)"
             }
           }
         },
@@ -597,26 +623,32 @@
               "props": {
                 "size": "md"
               }
-            },
+            }
+          },
+          "undrawn": {
             "xs": {
               "props": {
                 "size": "xs"
-              }
+              },
+              "recipe": "Padding of the header, body and footer space/3; name the instance Card (size=xs)"
             },
             "sm": {
               "props": {
                 "size": "sm"
-              }
+              },
+              "recipe": "Padding of the header, body and footer space/4; name the instance Card (size=sm)"
             },
             "lg": {
               "props": {
                 "size": "lg"
-              }
+              },
+              "recipe": "Padding of the header, body and footer space/8; name the instance Card (size=lg)"
             },
             "xl": {
               "props": {
                 "size": "xl"
-              }
+              },
+              "recipe": "Padding of the header, body and footer space/10; name the instance Card (size=xl)"
             }
           }
         },
@@ -728,13 +760,16 @@
       ],
       "deviations": [
         "layout is one Figma property for orientation, mediaPosition and whether Card.Media is used; a card without media looks the same in both orientations",
-        "a state is drawn once, at size md and layout stacked, for every variant and tone: size and layout do not change what a state does",
         "an elevated card is drawn with the light elevation styles; effect styles cannot switch with a theme, so a dark theme applies Elevation/dark/* and border/default by hand",
         "the variants are 320 px wide (560 px beside the media) with a height that hugs the content; the code is as wide as its container",
         "orientation can change by breakpoint in code; Figma draws each layout and the designer picks one per frame",
         "Card.Footer's align and the other part props are layout inside the slot content, not modelled",
-        "in a side layout the footer follows the body; the code pins it to the bottom when the media is taller"
-      ]
+        "in a side layout the footer follows the body; the code pins it to the bottom when the media is taller",
+        "states are drawn at the stacked layout only: layout does not change what a state does"
+      ],
+      "coverage": {
+        "exception": "Narrowed: only size md and tones neutral and brand are drawn. A card's size only changes the section padding and its tone only the edge and the header tint, so each undrawn value has a one-line recipe."
+      }
     }
   }
 }

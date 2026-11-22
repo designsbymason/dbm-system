@@ -12,9 +12,9 @@ Generated from the map by `pnpm check-figma-map --write`; CI fails when it is st
 | Component | Tier | Category | Variants | State | Reviewed | Approved |
 |---|---|---|---|---|---|---|
 | [Badge](./Badge.md) | atom | Data Display | 105 | reviewed | 2026-11-22 | not yet |
-| [Button](./Button.md) | atom | Inputs | 450 | reviewed | 2026-11-22 | not yet |
-| [Input](./Input.md) | atom | Inputs | 60 | reviewed | 2026-11-22 | not yet |
-| [Card](./Card.md) | molecule | Data Display | 696 | reviewed | 2026-11-22 | not yet |
+| [Button](./Button.md) | atom | Inputs | 200 | reviewed | 2026-11-22 | not yet |
+| [Input](./Input.md) | atom | Inputs | 36 | reviewed | 2026-11-22 | not yet |
+| [Card](./Card.md) | molecule | Data Display | 72 | reviewed | 2026-11-22 | not yet |
 <!-- figma-status:end -->
 
 ## What a component's file holds
