@@ -8,7 +8,7 @@ The rules every component in the Figma library follows. They are standing rules:
 
 A component is drawn when it has something to see: **101 of the 120 components** in `packages/components/src/componentCatalog.json` (34 atoms, 40 molecules, 27 organisms), built in tier order, atoms then molecules then organisms, one review gate per category.
 
-Not drawn, and listed on the Scope notes page with the reason:
+Not drawn, and listed on the Components page's table of what is not drawn, with the reason:
 
 - **Templates:** `AppShell` and `PageShell`.
 - **Non-visual utilities:** `ClientOnly`, `DirectionProvider`, `FocusTrap`, `Portal`, `ThemeProvider`, `VisuallyHidden`.
@@ -16,7 +16,7 @@ Not drawn, and listed on the Scope notes page with the reason:
 - **Behaviour only:** `Collapse`.
 - **Hooks and functions:** nothing to draw.
 
-`Backdrop`, `SkipLink` and `BackToTop` are drawn as visuals. An overlay (`Dialog`, `Drawer`, `Popover`, `Tooltip`, `Toast`, `Tour`) is drawn as a static open state, because Figma cannot hold a live overlay.
+`Backdrop`, `SkipLink` and `BackToTop` are drawn only if they have a visual state worth drawing, decided when their category is reached ([01-plan.md](./01-plan.md) §8). An overlay (`Dialog`, `Drawer`, `Popover`, `Tooltip`, `Toast`, `Tour`) is drawn as a static open state, because Figma cannot hold a live overlay.
 
 ## 2. Which props become Figma properties
 
@@ -26,7 +26,8 @@ The component manifest (`@dbm-system/components/manifest.json`) lists every prop
 |---|---|
 | An enumerated visual prop (`size`, `variant`, `tone`, `orientation`, `align`, `side`, `shape`, `overlap`) | A **variant property** with the prop's name and the code's values |
 | An interaction state, which the code gets from CSS (hover, focus, pressed) or from props (`disabled`, `isLoading`, `hasError`, `readOnly`) | One **`state` variant property**, with only the states the component has |
-| A boolean that changes how it looks (`required`, `rounded`, `fullWidth`, `dot`, `clearable`) | A **boolean property** |
+| A boolean that changes how it looks without changing the shape of the frame (`required`, `fullWidth`, `dot`, `clearable`) | A **boolean property** |
+| A boolean that changes the shape or geometry (`rounded`) | A **variant property** with `false` and `true`, because a boolean property can only show or hide a layer ([ADR-0237](../adr/0237-a-component-set-draws-the-full-matrix-of-valid-variants-and-states-over-splitting-by-dimension-or-drawing-states-for-one-size.md), amended) |
 | An icon (`leadingIcon`, `trailingIcon`) | A **boolean** to show it; the icon is swapped **in place** on the nested instance, with its **`tone`** set as a variant property on each variant (no instance-swap property, which has one default for the whole set) ([ADR-0238](../adr/0238-an-icon-set-has-a-tone-variant-over-a-contextual-colour-collection-an-overridden-fill-or-a-mask.md)) |
 | Text that appears on screen (a label, title, description, placeholder, the text of `children`) | A **text property** |
 | An open content area (a Card body, Dialog content, Table cells, Tabs panels) | A **slot** |
@@ -45,7 +46,7 @@ The component manifest (`@dbm-system/components/manifest.json`) lists every prop
 
 ## 3. The matrix
 
-A component set draws **the full matrix of valid combinations** in one set ([ADR-0237](../adr/0237-a-component-set-draws-the-full-matrix-of-valid-variants-and-states-over-splitting-by-dimension-or-drawing-states-for-one-size.md)): every value of every variant property with every other, and every state, at every size. Button is 5 variants, 2 tones, 5 sizes and 6 states, so 300 variants.
+A component set draws **the full matrix of valid combinations** in one set ([ADR-0237](../adr/0237-a-component-set-draws-the-full-matrix-of-valid-variants-and-states-over-splitting-by-dimension-or-drawing-states-for-one-size.md)): every value of every variant property with every other, and every state, at every size. Button is 450 variants: five variants with two tones (`destructive` ignores the tone, so nine combinations), five sizes, five states (default, hover, focus, disabled, loading) and `rounded` off or on.
 
 - **A combination that cannot occur is not drawn.** A state a component does not have is left out, and a property that matters only with another (a Badge's `position` only with an `anchor`) is not multiplied across the rest.
 - **The axes run in the same order** in every set: `variant`, `tone`, `size`, `state`, then any others.
