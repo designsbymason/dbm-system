@@ -428,7 +428,7 @@ const iconItems = Object.entries(ICON_GROUPS).flatMap(([group, names]) => names.
   const flush = () => {
     if (!part.length) return;
     const code = `const D = ${JSON.stringify(part)};
-const page = figma.root.children.find((p) => p.name === "Icons");
+const page = figma.root.children.find((p) => p.name.replace(/^[^\\p{L}\\p{N}]+/u, "") === "Icons");
 await figma.setCurrentPageAsync(page);
 const sem = (await figma.variables.getLocalVariableCollectionsAsync()).find((c) => c.name === "Semantic");
 const iconDefault = (await figma.variables.getLocalVariablesAsync()).find((v) => v.variableCollectionId === sem.id && v.name === "icon/default");
@@ -487,7 +487,7 @@ writeFileSync(
   join(outDir, "08-icon-tones.js"),
   `const START = 0, END = 20;
 const TONES = ${JSON.stringify(ICON_TONES)};
-const page = figma.root.children.find((p) => p.name === "Icons");
+const page = figma.root.children.find((p) => p.name.replace(/^[^\\p{L}\\p{N}]+/u, "") === "Icons");
 await figma.setCurrentPageAsync(page);
 const sem = (await figma.variables.getLocalVariableCollectionsAsync()).find((c) => c.name === "Semantic");
 const vars = await figma.variables.getLocalVariablesAsync();
