@@ -11,3 +11,4 @@ The plan, decisions and status for the DBM System Figma component library (Phase
 | File | What it holds |
 |---|---|
 | [01-plan.md](./01-plan.md) | Goals, scope, the decisions taken, the structure of the Figma file, the build rules, the phases with their review gates, risks and open questions |
+| [02-component-rules.md](./02-component-rules.md) | The standing rules for which components are drawn, which props become Figma properties, the full matrix and the spec frame |
