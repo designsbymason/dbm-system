@@ -12,3 +12,13 @@ The plan, decisions and status for the DBM System Figma component library (Phase
 |---|---|
 | [01-plan.md](./01-plan.md) | Goals, scope, the decisions taken, the structure of the Figma file, the build rules, the phases with their review gates, risks and open questions |
 | [02-component-rules.md](./02-component-rules.md) | The standing rules for which components are drawn, which props become Figma properties, the full matrix and the spec frame |
+
+## Using the commands on your own file
+
+The repository is MIT licensed, so the Figma commands in `.claude/commands/` (`/plan-figma-component`, `/build-figma-component`, `/review-figma-component`, `/figma-sync`, `/figma-drift`, `/figma-status`, `/figma-publish`) work on any Figma file you own, not only the maintainer's. The maintainer's file is not in the repository and nothing here can reach it; each clone points the commands at its own file:
+
+1. Create a Figma file on a Professional plan or higher (ADR-0234) and connect the Figma MCP server to your Claude Code session; its own sign-in is the only credential, and no token is ever stored in the repository.
+2. Create `.local/figma.json` (gitignored; the shape is in `01-plan.md` §3) with your file's key and URL, and add the key to `.local/blocked-strings.txt` so the pre-commit guard catches it.
+3. Run `/figma-status`, then `/figma-sync` to write the tokens and styles into your file. Each command shows the file's name and asks you to confirm it before the first write.
+
+`DRAWN` in `scripts/figma-sync.mjs` and `.local/figma/spec-ids.json` record what the maintainer has drawn; in your own file, update `DRAWN` as you build.
