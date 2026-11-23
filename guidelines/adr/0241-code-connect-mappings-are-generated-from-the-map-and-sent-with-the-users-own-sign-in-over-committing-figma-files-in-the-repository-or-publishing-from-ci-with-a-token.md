@@ -1,6 +1,6 @@
 # 0241 — Code Connect mappings are generated from the map and sent with the user's own sign-in, over committing Figma files in the repository or publishing from CI with a token
 
-**Status:** Accepted · **Date:** 2026-11-22
+**Status:** Superseded by [0243](./0243-code-connect-mappings-are-entered-in-figmas-own-screen-as-a-path-and-a-name-and-the-prop-mapping-stays-in-the-map-over-generating-and-sending-them-from-the-map.md) · **Date:** 2026-11-22
 
 ## Context
 Figma's Code Connect links a Figma component to a code component with a prop mapping, so Dev Mode and the tools that read a design show the real component (`<Badge dot tone="danger" />`) instead of generated markup. [ADR-0240](./0240-a-machine-readable-map-from-each-drawn-figma-component-to-the-code-is-checked-against-the-manifest-over-the-spec-frame-alone-or-waiting-for-code-connect.md) deferred it and made `guidelines/figma/component-map.json` the source of the mapping. The usual way to use Code Connect is a `*.figma.tsx` file per component in the repository, each naming the Figma file and node it maps, published to Figma from a machine with a personal access token. Two standing rules rule that out for this repository: it is public and MIT licensed, and `guidelines/figma/01-plan.md` §3 keeps the Figma file's key, address and node ids out of it and keeps any Figma token out of the repository and out of its secrets. A fork or a duplicate of the Figma file has different keys and ids as well, so files that name them would be wrong for everyone but us.

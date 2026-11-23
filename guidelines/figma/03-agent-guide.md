@@ -41,7 +41,7 @@ The library draws a core of each property's values (the coverage rule, [02-compo
 
 ## Code Connect
 
-Code Connect is not enabled. The map is the source it will be generated from if it is used (see [07-community-and-code-connect.md](./07-community-and-code-connect.md)), so until then the map and the spec frame are what an agent reads.
+Code Connect holds only a path and a name for each drawn component, entered by hand in Figma ([ADR-0243](../adr/0243-code-connect-mappings-are-entered-in-figmas-own-screen-as-a-path-and-a-name-and-the-prop-mapping-stays-in-the-map-over-generating-and-sending-them-from-the-map.md)); it does not hold the prop mapping, so the map and the spec frame are what an agent reads for that (see [07-community-and-code-connect.md](./07-community-and-code-connect.md)).
 
 ## Related
 
