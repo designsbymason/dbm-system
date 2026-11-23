@@ -8,6 +8,7 @@ Nothing in Figma updates itself when the code changes ([01-plan.md](./01-plan.md
 | The values left undrawn | `pnpm check-figma-map` also checks that each enumerated property's drawn and undrawn values add up to every value the code's type allows, and that a set over the budget has a recorded exception | Every push |
 | The file against the code | `/figma-drift`: tokens and styles against `90-verify.js`, each drawn component's properties against the map and the manifest, every link in the file | Every release that changes a published package, and when a drawn component's code changes (`RELEASING.md`, item 7 of the sequence) |
 | The tokens into Figma | `/figma-sync`, which regenerates the payloads and sends them in order, then verifies | When a token changes |
+| Code Connect against the repository | `/figma-drift` reads each drawn component's mapping and reports a missing one, a wrong name or a source path that no longer exists; a mapping is edited by hand in Figma, so a moved or renamed source file stays stale until it is | When a drawn component's source file moves or is renamed |
 | Where the library stands | `/figma-status` | Start of a Figma session |
 | A component, step by step | `/plan-figma-component`, `/build-figma-component`, `/review-figma-component` | Each new component |
 | The first publish | `/figma-publish` | Once, when the first complete version is ready |

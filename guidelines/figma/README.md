@@ -2,7 +2,7 @@
 
 The plan, decisions and status for the DBM System Figma component library (Phase 11, `../01-vision-and-goals.md` §13). These files are a **current-state reference, not a changelog**, like the numbered docs in `guidelines/`. A real fork in the road is recorded as an ADR in `../adr/` and linked from here, not narrated here.
 
-**Status:** the plan in [01-plan.md](./01-plan.md) is approved. Phases 0 to 3 are built: the groundwork, the 413 variables, the styles and the Foundations page, and the cover, Getting started page, Icons page and Spec frame master. The pilot (Phase 4) is done: Button, Input, Badge and Card are drawn and reviewed, each with a component set, a spec frame, a description and a Storybook link, and the pilot review gate was held 2026-11-22. Phase 5 is next. No package has changed.
+**Status:** the plan in [01-plan.md](./01-plan.md) is approved. Phases 0 to 3 are built: the groundwork, the 413 variables, the styles and the Foundations page, and the cover, Getting started page, Icons page and Spec frame master. The pilot (Phase 4) is done: Button, Input, Badge and Card are drawn and reviewed, each with a component set, a spec frame, a description and a Storybook link, and the pilot review gate was held 2026-11-22. The file was published to the team library once as a working publish (not a tracked version) so Code Connect could be tried; each drawn component is mapped there by path and name ([ADR-0243](../adr/0243-code-connect-mappings-are-entered-in-figmas-own-screen-as-a-path-and-a-name-and-the-prop-mapping-stays-in-the-map-over-generating-and-sending-them-from-the-map.md)). Phase 5 is next. No package has changed.
 
 **Private data never goes in this folder.** The Figma file's key, URL and node IDs live in `.local/figma.json`, which is gitignored (`01-plan.md` §3). Refer to "the Figma file", never its address.
 
@@ -17,7 +17,7 @@ The plan, decisions and status for the DBM System Figma component library (Phase
 | [05-deviations.md](./05-deviations.md) | The patterns where a Figma property or value is not the code's, and why |
 | [06-maintenance.md](./06-maintenance.md) | What keeps the library and the code in step, and what to do when a component's props change |
 | [component-map.json](./component-map.json) | The machine-readable map from each drawn component's Figma properties to the code, checked by `pnpm check-figma-map` ([ADR-0240](../adr/0240-a-machine-readable-map-from-each-drawn-figma-component-to-the-code-is-checked-against-the-manifest-over-the-spec-frame-alone-or-waiting-for-code-connect.md)) |
-| [07-community-and-code-connect.md](./07-community-and-code-connect.md) | What is decided, recommended and not yet verified about publishing the library as a Community file and about Code Connect, with the test plan |
+| [07-community-and-code-connect.md](./07-community-and-code-connect.md) | What is decided, recommended and verified about publishing the library as a Community file and about Code Connect (what the Code Connect test showed on our plan), and what is not yet known |
 | [components/](./components/README.md) | One file per drawn component: its decisions, differences from the code, what is not drawn and its reviews, with the generated status table |
 
 ## Using the commands on your own file

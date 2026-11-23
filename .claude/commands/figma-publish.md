@@ -12,9 +12,11 @@ Run this when the first complete version of the library is ready, not before: th
 3. **Changelog page:** start it, replacing "Not tracked yet": one entry for this version (what is drawn, the tokens and themes, what is not), written from the plan and the Components page, no other design system named. Show it first.
 4. **Components page:** regenerate it from the catalog (`scripts/figma-sync.mjs`) so the index and the not-drawn table are current, and send it.
 5. **Dev-ready:** list the component sets and spec frames to mark ready for development, and mark them on my yes.
-6. **Library publish:** in the Figma app, the maintainer publishes the file's styles, variables and components to the team (the plugin API cannot do this). Give the exact steps and the description to use; wait for me to say it is done.
+6. **Library publish:** the file was published to the team once already as a working publish (2026-11-22, not a tracked version, for Code Connect), so this is a republish. In the Figma app, the maintainer publishes the file's styles, variables and components to the team (the plugin API cannot do this). Give the exact steps and the description to use; wait for me to say it is done.
+6a. **Hidden masters:** a component named with a leading period or underscore (`.Spec frame`) is kept out of a publish; check the publish dialog lists no helper that should be hidden.
 7. **Visibility:** ask me whether the file is private to the team, view-only by link, or on the Community; explain what each exposes (the Community copy is permanent and public) and change nothing until I choose.
-8. **Records:** propose the edits to `guidelines/figma/README.md`, `guidelines/figma/01-plan.md` §7 and the README of the packages that should link to the library (a link goes only in a public place I approve, since the file's address is private data) and, if a decision was taken, its ADR.
+8. **The map in the package:** the map is to ship in `@dbm-system/components` and be served by the MCP server in the same release as the first complete publish ([ADR-0244](../../guidelines/adr/0244-the-figma-map-ships-in-the-components-package-and-the-mcp-server-serves-it-over-leaving-it-in-the-repository-or-adding-it-to-the-manifest.md)); confirm it is built, has its changeset and is in the release.
+9. **Records:** propose the edits to `guidelines/figma/README.md`, `guidelines/figma/01-plan.md` §7 and the README of the packages that should link to the library (a link goes only in a public place I approve, since the file's address is private data) and, if a decision was taken, its ADR.
 
 End with what was published, what was not, and the first drift check's date.
 

@@ -16,6 +16,7 @@ Reply with:
 
 - **Phase:** the current phase, what is done and awaiting my review, and what is next.
 - **Built:** the pages, and the components drawn, N of the total, with the next three.
+- **Code Connect:** how many drawn components have a mapping (read with `get_code_connect_map` on one variant of each, one call per set), and which do not.
 - **Open:** every unresolved decision or unverified claim (for example the in-place icon swap and the Storybook links) with where it is recorded.
 - **Maintenance:** whether any drawn component's source changed since it was drawn (name `/figma-drift` for the full check), and what is uncommitted.
 

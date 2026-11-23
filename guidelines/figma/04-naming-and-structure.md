@@ -7,7 +7,7 @@ How things are named, so an agent can find them without a search. The structure 
 | Page | An emoji and the plain name; a category page starts with `↳ `; a divider page is `---` | `🧩 Components`, `↳ Data Display` |
 | A component's Section | The component's name, filled with `bg/canvas` | `Badge` |
 | A component set | The component's name exactly as in code | `Input` |
-| A spec frame | `Spec: ` and the component's name, an instance of the Spec frame master | `Spec: Input` |
+| A spec frame | `Spec: ` and the component's name, an instance of the Spec frame master, itself named `.Spec frame` so a library publish leaves it out | `Spec: Input` |
 | The grid's headings | A frame named `Matrix labels` beside the set | |
 | A variant | `property=value` pairs in the axis order, comma separated | `size=md, state=error, filled=true` |
 | A variant property | The code prop's name, or the name of what it shows when no single prop says so | `variant`, `filled`, `ring` |
