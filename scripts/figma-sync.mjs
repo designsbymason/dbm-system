@@ -299,6 +299,7 @@ const ROLES = [
   { role: "Label", family: "primary", weight: "semibold", lh: "snug", ls: "normal", sizes: ["md", "base", "sm", "xs"], note: "Labels and controls in Nunito" },
   { role: "Control", group: "Components", family: "primary", weight: "semibold", lh: "tight", ls: "normal", sizes: ["xs", "sm", "base", "md", "lg"], note: "Buttons and other controls in Nunito, with the tight line height the components use" },
   { role: "Field", group: "Components", family: "primary", weight: "regular", lh: "tight", ls: "normal", sizes: ["xs", "sm", "base", "md", "lg"], note: "The text inside a text field in Nunito, regular weight with the tight line height the components use" },
+  { role: "Textarea", group: "Components", family: "primary", weight: "regular", lh: "auto", ls: "normal", sizes: ["xs", "sm", "base", "md", "lg"], note: "The text inside a multi-line field in Nunito, regular weight with the browser's own normal line height, which a textarea falls back to when no line height is set" },
   { role: "Overline", family: "primary", weight: "semibold", lh: "snug", ls: "wide", sizes: ["sm", "xs"], upper: true, note: "Small upper-case captions and table headings in Nunito" },
 ];
 const FAMILY_NAME = { primary: "Nunito", secondary: "Lora" };
@@ -312,7 +313,7 @@ const textStyles = ROLES.flatMap((r) =>
     style: WEIGHT_STYLE[r.weight],
     weightVar: `font-weight/${r.weight}`,
     sizeVar: `font-size/${size}`,
-    lh: Math.round(ratio("line-height", r.lh) * 100),
+    lh: r.lh === "auto" ? "AUTO" : Math.round(ratio("line-height", r.lh) * 100),
     ls: Math.round(Number.parseFloat(tokens.find((t) => t.name === `${PREFIX}letter-spacing-${r.ls}`).value) * 10000) / 100,
     upper: Boolean(r.upper),
     d: `${r.note}. Size ${size}, line height ${r.lh}.`,
@@ -352,7 +353,7 @@ for (const t of D.text) {
   s.name = t.n; s.description = t.d;
   s.fontName = { family: t.fam, style: t.style };
   s.fontSize = V("Viewport", t.sizeVar).valuesByMode[desktop];
-  s.lineHeight = { unit: "PERCENT", value: t.lh };
+  s.lineHeight = t.lh === "AUTO" ? { unit: "AUTO" } : { unit: "PERCENT", value: t.lh };
   s.letterSpacing = { unit: "PERCENT", value: t.ls };
   s.textCase = t.upper ? "UPPER" : "ORIGINAL";
   for (const [field, name, coll] of [["fontSize", t.sizeVar, "Viewport"], ["fontFamily", t.famVar, "Primitives"], ["fontWeight", t.weightVar, "Primitives"]]) {
@@ -762,7 +763,7 @@ for (const e of ST.text) {
   const s = tHave.get(e.n);
   if (!s) { styleReport.missing.push(e.n); continue; }
   if (s.fontName.style !== e.style) styleReport.wrong.push(e.n + ": weight " + s.fontName.style + " != " + e.style);
-  if (s.lineHeight.unit !== "PERCENT" || Math.abs(s.lineHeight.value - e.lh) > 0.01) styleReport.wrong.push(e.n + ": line height");
+  if (e.lh === "AUTO" ? s.lineHeight.unit !== "AUTO" : s.lineHeight.unit !== "PERCENT" || Math.abs(s.lineHeight.value - e.lh) > 0.01) styleReport.wrong.push(e.n + ": line height");
   if (!(s.boundVariables && s.boundVariables.fontSize)) styleReport.wrong.push(e.n + ": size not bound");
 }
 for (const n of ST.effect) if (!eHave.has(n)) styleReport.missing.push(n);

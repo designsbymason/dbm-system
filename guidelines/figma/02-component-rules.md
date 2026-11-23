@@ -59,8 +59,8 @@ A component set draws **a core of each property's values** and documents the res
 
 **Rules:**
 
-- **A budget of about 250 variants per set.** A set over it needs a recorded exception (Button is 360: every state at all four sizes, with `rounded` off and on).
-- **Exceptions are decided at plan time** and recorded in the map (`coverage`) and the component's file. They can widen coverage (Badge keeps all seven tones; Button keeps `xl`) or narrow it (Card draws `sm` and `md`).
+- **A budget of about 250 variants per set.** A set over it needs a recorded exception (Button is 200: `xl` is drawn, so every state at four sizes, with `rounded` off and on, and no `neutral` tone).
+- **Exceptions are decided at plan time** and recorded in the map (`coverage`) and the component's file. They can widen coverage (Badge keeps all seven tones; Button keeps `xl`) or narrow it (Card draws size `md` only, and the tones `neutral` and `brand`).
 - **Every undrawn value is documented.** The map lists it under the property's `undrawn` with a recipe, the spec frame has its own "In code, not drawn" section (a table: property, value not drawn, how to get it), and `pnpm check-figma-map` checks that drawn plus undrawn equals every value the code's type allows.
 - **A combination that cannot occur is not drawn.** A state a component does not have is left out, and a property that matters only with another (a Badge's `position` only with an `anchor`) is not multiplied across the rest.
 - **The axes run in the same order** in every set: `variant`, `tone`, `size`, `state`, then any others, with the default of each first.
