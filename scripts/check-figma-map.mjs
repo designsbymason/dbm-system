@@ -54,7 +54,10 @@ export function validateEntry(name, entry, ctx) {
   if ((state === "approved") !== Boolean(entry.status?.approved)) fail("status.approved is a date exactly when the state is approved");
   const mapped = new Set();
   const checkProp = (prop, value, where) => {
-    if (prop === "children") return;
+    if (prop === "children") {
+      mapped.add("children");
+      return;
+    }
     const p = props.get(prop);
     if (!p) return fail(`${where}: "${prop}" is not a prop in the manifest`);
     mapped.add(prop);
@@ -62,7 +65,7 @@ export function validateEntry(name, entry, ctx) {
     if (value === PROVIDED) {
       if (p.type === "boolean" || lits) fail(`${where}: ${prop} is ${p.type}; write its value, not ${PROVIDED}`);
     } else if (typeof value === "boolean") {
-      if (p.type !== "boolean") fail(`${where}: ${prop} is ${p.type}, not boolean`);
+      if (!/\bboolean\b/.test(p.type)) fail(`${where}: ${prop} is ${p.type}, not boolean`);
     } else if (typeof value === "string") {
       if (!lits) fail(`${where}: ${prop} (${p.type}) has no literal values; write ${PROVIDED}`);
       else if (!lits.includes(value)) fail(`${where}: "${value}" is not a value of ${prop} (${lits.join(", ")})`);

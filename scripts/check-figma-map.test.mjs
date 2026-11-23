@@ -45,6 +45,15 @@ describe("validateEntry", () => {
     assert.match(e, /"huge" is not a value of size/);
     assert.match(e, /"disabld" is not a prop/);
   });
+  it("accepts a boolean or a literal for a union such as boolean | \"mixed\", and a text property that maps children", () => {
+    const m = { props: [...manifest.props, { name: "checked", type: 'boolean | "mixed"', default: "None" }, { name: "children", type: "ReactNode", default: "None" }] };
+    const e = structuredClone(good);
+    e.properties.checked = { kind: "variant", default: "false", values: { false: { props: { checked: false } }, mixed: { props: { checked: "mixed" } } } };
+    e.properties.label = { kind: "text", default: "Label", maps: "children" };
+    assert.deepEqual(validateEntry("X", e, { ...ctx, manifest: m }), []);
+    e.properties.checked.values.false.props = { checked: 1 };
+    assert.match(validateEntry("X", e, { ...ctx, manifest: m }).join("\n"), /unsupported value 1/);
+  });
   it("flags a default that is not the code's default", () => {
     const bad = structuredClone(good);
     bad.properties.size.default = "sm";
