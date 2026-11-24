@@ -1,5 +1,16 @@
 # @dbm-system/components
 
+## 0.3.0
+
+### Minor Changes
+
+- 5a1227d: `CloseButton`: a new `tone` prop, `neutral` or `brand`, and **the default is now `neutral`**. Before, a `CloseButton` was always the brand colour; it is now `icon.default` with a `bg.neutral-subtle` hover fill, the same as `IconButton`'s neutral `tertiary`, and `tone="brand"` gives the earlier look (`icon.brand`, `bg.brand-subtle-hover`). The close buttons that `Dialog`, `Drawer` and `Popover` draw take the new default, so they turn neutral; to keep one brand-coloured, render your own `CloseButton tone="brand"` where the component lets you. Nothing else changes: the sizes, `rounded`, `hasBackground`, the focus ring and the accessible name are as they were.
+
+### Patch Changes
+
+- b33a0fe: `CloseButton`: `tone` gains `white`, for a surface that is dark in every theme (a lightbox, a video, a dark banner). The icon is `icon.white`, the hover fill is `icon.white` at `opacity.20`, the focus ring is `border.white`, and with `hasBackground` the grounding layer is `bg.overlay` instead of `bg.scrim`, so a white icon is never on a white layer. A new `CloseButtonTone` type is exported. `neutral` and `brand` are unchanged.
+- 88eb0d7: `Radio`: a circle drawn smaller than the 24 × 24px minimum target size (`xs`, `sm` and `md`, at 12, 16 and 20px) now has an invisible hit area of that size, so a press near it lands on it, as on `Checkbox`. Nothing visible changes: the circle, its states and its tokens are as they were, and `lg` and `xl` are unchanged.
+
 ## 0.2.3
 
 ### Patch Changes
