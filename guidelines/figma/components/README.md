@@ -13,9 +13,10 @@ Generated from the map by `pnpm check-figma-map --write`; CI fails when it is st
 |---|---|---|---|---|---|---|
 | [Badge](./Badge.md) | atom | Data Display | 105 | reviewed | 2026-11-22 | not yet |
 | [Button](./Button.md) | atom | Inputs | 200 | reviewed | 2026-11-22 | not yet |
-| [Checkbox](./Checkbox.md) | atom | Inputs | 54 | reviewed | 2026-11-23 | not yet |
+| [Checkbox](./Checkbox.md) | atom | Inputs | 54 | approved | 2026-11-23 | 2026-11-23 |
 | [Input](./Input.md) | atom | Inputs | 36 | reviewed | 2026-11-22 | not yet |
-| [Textarea](./Textarea.md) | atom | Inputs | 36 | reviewed | 2026-11-23 | not yet |
+| [Radio](./Radio.md) | atom | Inputs | 36 | reviewed | 2026-11-23 | not yet |
+| [Textarea](./Textarea.md) | atom | Inputs | 36 | approved | 2026-11-23 | 2026-11-23 |
 | [Card](./Card.md) | molecule | Data Display | 72 | reviewed | 2026-11-22 | not yet |
 <!-- figma-status:end -->
 
