@@ -27,4 +27,4 @@ Hover on `error` or `disabled` (no style in the CSS), `disabled` with `error`, `
 
 2026-11-22 (second, after the coverage rule and the trims to 36 variants): re-reviewed with no findings. Checked: all 36 combinations, defaults, binding (only the derived vertical padding unbound), heights equal to Button's at each size, spacing, text styles, edges, rings and opacity per state, icon tones, the spec frame and its In code, not drawn section against the map, links and the Components row.
 
-2026-11-22: reviewed; a link text that still said Button and two notes (width, clear button) were fixed. The edge colours are a known accessibility shortfall (`border.default` at rest, about 1.35:1; `border.neutral` on hover, 2.3:1), tracked in [open-items](../../open-items.md). Approval by the maintainer is pending.
+2026-11-22: reviewed; a link text that still said Button and two notes (width, clear button) were fixed. The edge colours are a known accessibility shortfall (`border.default` at rest, about 1.35:1; `border.neutral` on hover, 2.3:1), tracked in [open-items](../../open-items.md). Approved by the maintainer 2026-11-23.

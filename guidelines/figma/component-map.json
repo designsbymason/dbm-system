@@ -13,9 +13,9 @@
       },
       "variants": 105,
       "status": {
-        "state": "reviewed",
+        "state": "approved",
         "reviewed": "2026-11-22",
-        "approved": null
+        "approved": "2026-11-23"
       },
       "properties": {
         "variant": {
@@ -159,9 +159,9 @@
       },
       "variants": 200,
       "status": {
-        "state": "reviewed",
+        "state": "approved",
         "reviewed": "2026-11-22",
-        "approved": null
+        "approved": "2026-11-23"
       },
       "properties": {
         "variant": {
@@ -352,9 +352,9 @@
       },
       "variants": 36,
       "status": {
-        "state": "reviewed",
+        "state": "approved",
         "reviewed": "2026-11-22",
-        "approved": null
+        "approved": "2026-11-23"
       },
       "properties": {
         "size": {
@@ -542,9 +542,9 @@
       },
       "variants": 72,
       "status": {
-        "state": "reviewed",
+        "state": "approved",
         "reviewed": "2026-11-22",
-        "approved": null
+        "approved": "2026-11-23"
       },
       "properties": {
         "variant": {

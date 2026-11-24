@@ -11,16 +11,16 @@ Generated from the map by `pnpm check-figma-map --write`; CI fails when it is st
 <!-- figma-status:start -->
 | Component | Tier | Category | Variants | State | Reviewed | Approved |
 |---|---|---|---|---|---|---|
-| [Badge](./Badge.md) | atom | Data Display | 105 | reviewed | 2026-11-22 | not yet |
-| [Button](./Button.md) | atom | Inputs | 200 | reviewed | 2026-11-22 | not yet |
+| [Badge](./Badge.md) | atom | Data Display | 105 | approved | 2026-11-22 | 2026-11-23 |
+| [Button](./Button.md) | atom | Inputs | 200 | approved | 2026-11-22 | 2026-11-23 |
 | [Checkbox](./Checkbox.md) | atom | Inputs | 54 | approved | 2026-11-23 | 2026-11-23 |
 | [IconButton](./IconButton.md) | atom | Inputs | 210 | approved | 2026-11-23 | 2026-11-23 |
-| [Input](./Input.md) | atom | Inputs | 36 | reviewed | 2026-11-22 | not yet |
+| [Input](./Input.md) | atom | Inputs | 36 | approved | 2026-11-22 | 2026-11-23 |
 | [Radio](./Radio.md) | atom | Inputs | 36 | approved | 2026-11-23 | 2026-11-23 |
 | [Spinner](./Spinner.md) | atom | Feedback | 64 | approved | 2026-11-23 | 2026-11-23 |
 | [Switch](./Switch.md) | atom | Inputs | 42 | approved | 2026-11-23 | 2026-11-23 |
 | [Textarea](./Textarea.md) | atom | Inputs | 36 | approved | 2026-11-23 | 2026-11-23 |
-| [Card](./Card.md) | molecule | Data Display | 72 | reviewed | 2026-11-22 | not yet |
+| [Card](./Card.md) | molecule | Data Display | 72 | approved | 2026-11-22 | 2026-11-23 |
 <!-- figma-status:end -->
 
 ## What a component's file holds

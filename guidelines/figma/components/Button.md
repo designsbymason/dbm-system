@@ -25,6 +25,6 @@ See `deviations` in the map: `destructive` ignores the tone and only the brand t
 
 2026-11-22 (second, after the coverage rule and the trims to 200 variants): re-reviewed with no findings. Checked: every combination of the drawn values present, the defaults and the top-left cell, binding (only the derived secondary padding unbound), a uniform height at each size, spacing and icon tones against the code, the spec frame and its new In code, not drawn section against the map, links and the Components row.
 
-2026-11-22: reviewed; the `size` default (was `xs`, now `md`), a clipped Properties cell, the set's grid layout, a matrix header row and a Type row in Tokens used were fixed. Approval by the maintainer is pending.
+2026-11-22: reviewed; the `size` default (was `xs`, now `md`), a clipped Properties cell, the set's grid layout, a matrix header row and a Type row in Tokens used were fixed. Approved by the maintainer 2026-11-23.
 
 2026-11-23 (later): the loading ring was moved from a hand-drawn ellipse to the Spinner set (40 variants), at the maintainer's direction. Checked afterwards: no ellipse left in the set, every loading variant the same width and height as before, the tone and size per variant, and the spec frame's Built from line and Opacity row. Re-review is not needed for anything else.
