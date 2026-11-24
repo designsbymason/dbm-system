@@ -19,6 +19,12 @@ const meta: Meta<typeof CloseButton> = {
       description:
         "Controls the button's clickable box and its glyph together, as one step — matches IconButton's own size scale (box sized generously around the glyph, not a tight fit).",
     },
+    tone: {
+      control: "select",
+      options: ["neutral", "brand"],
+      description:
+        "The colour family of the icon and its hover fill: neutral (the default) or brand. Both are IconButton's own tertiary colours at the same tone.",
+    },
     rounded: {
       control: "boolean",
       description:
@@ -75,6 +81,7 @@ const meta: Meta<typeof CloseButton> = {
   // §5).
   args: {
     size: "md",
+    tone: "neutral",
     rounded: false,
     hasBackground: false,
     "aria-label": "Close",
@@ -125,6 +132,19 @@ export const AllSizes: Story = {
           size={size}
         />
       ))}
+    </div>
+  ),
+};
+
+export const Tones: Story = {
+  name: "Tones",
+  parameters: { docs: { source: { code: closeButtonSnippets.tones } } },
+  // `tone` is the point of this pair, so it and `aria-label` are fixed per instance.
+  argTypes: { tone: { control: false }, "aria-label": { control: false } },
+  render: (args) => (
+    <div style={{ display: "flex", gap: "var(--dbm-space-3)", alignItems: "center" }}>
+      <CloseButton {...args} aria-label="Close (neutral)" tone="neutral" />
+      <CloseButton {...args} aria-label="Close (brand)" tone="brand" />
     </div>
   ),
 };

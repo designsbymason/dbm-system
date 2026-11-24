@@ -20,10 +20,11 @@ const sizeClass: Record<ButtonSize, string | undefined> = {
  * and a square-ish shape (pass `rounded` for a circle), with an optional
  * translucent grounding layer (`hasBackground`) for use over unpredictable
  * external content. Styled to match
- * `IconButton`'s own `tertiary` variant exactly (transparent at rest,
- * `icon.brand` icon color, `bg.brand-subtle-hover` on hover, the same box
- * sizing, and the same `rounded` prop/default) — not a context-adaptive
- * control. Reserved for surfaces where a modal-style overlay is involved
+ * `IconButton`'s own `tertiary` variant exactly (transparent at rest, the
+ * same two tones, the same box sizing, and the same `rounded` prop/default):
+ * `neutral` (the default) is `icon.default` with a `bg.neutral-subtle` hover
+ * fill, and `brand` is `icon.brand` with `bg.brand-subtle-hover` — not a
+ * context-adaptive control. Reserved for surfaces where a modal-style overlay is involved
  * (Dialog, Drawer, lightbox, and similar cards/panels), which have no local
  * tone of their own to track. A component whose own tone/color varies per
  * instance (Tag, Alert, Toast) implements its own local remove/dismiss
@@ -36,6 +37,7 @@ const sizeClass: Record<ButtonSize, string | undefined> = {
  * ```tsx
  * <CloseButton onClick={() => setOpen(false)} />
  * <CloseButton size="sm" aria-label="Dismiss notification" onClick={onDismiss} />
+ * <CloseButton tone="brand" aria-label="Close" onClick={() => setOpen(false)} />
  * <CloseButton rounded aria-label="Close" onClick={() => setOpen(false)} />
  * <CloseButton hasBackground aria-label="Close" onClick={() => setOpen(false)} />
  * ```
@@ -44,6 +46,7 @@ export const CloseButton = forwardRef<HTMLButtonElement, CloseButtonProps>(
   (
     {
       size = "md",
+      tone = "neutral",
       rounded = false,
       hasBackground = false,
       className,
@@ -60,6 +63,7 @@ export const CloseButton = forwardRef<HTMLButtonElement, CloseButtonProps>(
       className={cx(
         styles.root,
         sizeClass[size],
+        tone === "brand" && styles.toneBrand,
         rounded && styles.rounded,
         hasBackground && styles.hasBackground,
         className,

@@ -31,21 +31,36 @@ describe("CloseButton", () => {
     expect(onClick).toHaveBeenCalledTimes(1);
   });
 
-  it("always uses the fixed icon.brand token, regardless of an ancestor's own color", () => {
-    // Styled to match IconButton's own `tertiary` variant exactly
-    // (2026-08-25 review) — a fixed brand token, not context-adaptive
-    // `currentColor` inheritance (that was the pre-restyle behavior, when
-    // this component still had to serve Tag's tone-adaptive remove
-    // control; Tag now implements that locally instead). An ancestor's
-    // own `color` must NOT win.
+  it("is neutral by default: the fixed icon.default token, regardless of an ancestor's own color", () => {
+    // Styled to match IconButton's own `tertiary` variant exactly — a fixed token, not context-adaptive `currentColor`
+    // inheritance (that was the pre-restyle behavior, when this component still had to serve Tag's tone-adaptive remove
+    // control; Tag now implements that locally instead). An ancestor's own `color` must NOT win.
     const { container } = render(
       <div style={{ color: "rgb(255, 0, 0)" }}>
         <CloseButton />
       </div>,
     );
     expect(container.querySelector("button")).toHaveStyle({
+      color: "var(--dbm-icon-default)",
+    });
+  });
+
+  it("uses the fixed icon.brand token when tone is brand, regardless of an ancestor's own color", () => {
+    const { container } = render(
+      <div style={{ color: "rgb(255, 0, 0)" }}>
+        <CloseButton tone="brand" />
+      </div>,
+    );
+    expect(container.querySelector("button")).toHaveStyle({
       color: "var(--dbm-icon-brand)",
     });
+  });
+
+  it("uses the neutral hover fill by default and the brand one when tone is brand", () => {
+    const { rerender } = render(<CloseButton aria-label="x" />);
+    expect(screen.getByRole("button").className).not.toMatch(/toneBrand/);
+    rerender(<CloseButton aria-label="x" tone="brand" />);
+    expect(screen.getByRole("button").className).toMatch(/toneBrand/);
   });
 
   it("is disabled when disabled is set", () => {
@@ -144,6 +159,11 @@ describe("CloseButton", () => {
     const { container } = render(<CloseButton rounded />);
     const results = await axe(container);
     expect(results).toHaveNoViolations();
+  });
+
+  it("has no accessibility violations when tone is brand", async () => {
+    const { container } = render(<CloseButton tone="brand" />);
+    expect(await axe(container)).toHaveNoViolations();
   });
 
   it("has no accessibility violations when hasBackground is set", async () => {

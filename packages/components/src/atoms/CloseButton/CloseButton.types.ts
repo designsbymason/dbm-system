@@ -1,5 +1,5 @@
 import type { ComponentPropsWithoutRef, CSSProperties, MouseEventHandler } from "react";
-import type { ButtonSize } from "../Button/Button.types";
+import type { ButtonSize, ButtonTone } from "../Button/Button.types";
 
 export interface CloseButtonProps extends ComponentPropsWithoutRef<"button"> {
   /**
@@ -9,6 +9,13 @@ export interface CloseButtonProps extends ComponentPropsWithoutRef<"button"> {
    * @default 'md'
    */
   size?: ButtonSize;
+  /**
+   * The colour family of the icon and its hover fill: `neutral` (the default) draws the icon in `icon.default` and fills
+   * `bg.neutral-subtle` on hover, and `brand` draws it in `icon.brand` and fills `bg.brand-subtle-hover`. Both are
+   * `IconButton`'s own `tertiary` colours at the same tone, and neither adapts to an ancestor's colour.
+   * @default 'neutral'
+   */
+  tone?: ButtonTone;
   /**
    * Renders as a circle instead of the standard rounded-corner shape —
    * matches `IconButton`'s own `rounded` prop exactly, including its
@@ -20,7 +27,7 @@ export interface CloseButtonProps extends ComponentPropsWithoutRef<"button"> {
    * Adds an optional translucent grounding layer behind the icon (white in
    * light mode, a dark neutral in dark mode) — for a CloseButton placed
    * over unpredictable external content (a photo, a busy hero image)
-   * where the fixed `icon.brand` glyph might not otherwise read clearly
+   * where the icon might not otherwise read clearly
    * against whatever's behind it. Purely a visual grounding aid: there's
    * no fixed WCAG contrast guarantee here, since what this composites
    * over is by definition outside this component's control.

@@ -12,6 +12,10 @@ export const closeButtonSnippets = {
   allSizes: `{/* size: "xs" | "sm" | "md" (default) | "lg" | "xl" */}
 <CloseButton aria-label="Close" size="lg" />`,
 
+  tones: `{/* tone: "neutral" (default) | "brand" */}
+<CloseButton aria-label="Close" />
+<CloseButton aria-label="Close" tone="brand" />`,
+
   onBusyBackground: `{/* hasBackground gives the button a backing fill of its own, so it stays legible over content you
     don't control — an image, a gradient */}
 <CloseButton aria-label="Close" hasBackground />`,
@@ -20,6 +24,7 @@ export const closeButtonSnippets = {
 /** The Playground's live controls, as far as the snippet cares. */
 export interface CloseButtonPlaygroundSnippetArgs {
   size?: string;
+  tone?: string;
   rounded?: boolean;
   hasBackground?: boolean;
   "aria-label"?: string;
@@ -35,6 +40,7 @@ export interface CloseButtonPlaygroundSnippetArgs {
 export function closeButtonPlaygroundSnippet(args: CloseButtonPlaygroundSnippetArgs): string {
   const attributes: string[] = [`aria-label="${args["aria-label"] || "Close"}"`];
   if (args.size && args.size !== "md") attributes.push(`size="${args.size}"`);
+  if (args.tone && args.tone !== "neutral") attributes.push(`tone="${args.tone}"`);
   if (args.rounded) attributes.push("rounded");
   if (args.hasBackground) attributes.push("hasBackground");
   if (args.type && args.type !== "button") attributes.push(`type="${args.type}"`);
