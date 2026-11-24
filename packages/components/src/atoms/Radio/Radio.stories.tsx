@@ -264,3 +264,33 @@ export const SpaceKeyInteraction: Story = {
     await pause(800);
   },
 };
+
+// A circle drawn smaller than the 24 × 24px minimum target (12, 16 and 20px at xs, sm and md) has an invisible hit area of that size, so
+// a press near it still lands on it. `getBoundingClientRect` can't see a pseudo-element, so points 11px either side of the centre are
+// pressed with `elementFromPoint`; and the hit area must not take a press meant for the next circle in a stack.
+export const HitAreaInteraction: Story = {
+  name: "Hit area — interaction test",
+  tags: ["!dev"],
+  render: () => (
+    <div style={{ display: "flex", flexDirection: "column", gap: "var(--dbm-space-2)", alignItems: "flex-start" }}>
+      {(["xs", "sm", "md", "lg", "xl"] as const).map((size) => (
+        <Radio key={size} size={size} aria-label={`Size ${size}`} />
+      ))}
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    const radios = within(canvasElement).getAllByRole("radio");
+    for (const radio of radios) {
+      const rect = radio.getBoundingClientRect();
+      const x = rect.left + rect.width / 2;
+      const y = rect.top + rect.height / 2;
+      for (const [dx, dy] of [[-11, 0], [11, 0]] as const) {
+        await expect(document.elementFromPoint(x + dx, y + dy)).toBe(radio);
+      }
+      // each circle answers at its own centre in a stack: one hit area doesn't cover the next circle
+      await expect(document.elementFromPoint(x, y)).toBe(radio);
+    }
+    // and the circle is measured as it was: a larger hit area changed nothing visible
+    await expect(Math.round((radios[0] as HTMLElement).getBoundingClientRect().width)).toBe(12);
+  },
+};

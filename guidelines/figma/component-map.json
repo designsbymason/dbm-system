@@ -1238,7 +1238,7 @@
         "the dot is half the circle, a value the code derives with a percentage, so it is drawn at that size and unbound, and scales with the circle (SCALE constraints)",
         "the focus ring is a fully round layer 12 px larger than the circle with a 2 px edge, drawn outside it at a 4 px gap",
         "showLabel is off by default as children is, so the set shows the bare circle; the spec frame instances turn it on",
-        "unlike Checkbox, the code adds no 24 px hit area around the circle, so none is implied here",
+        "the invisible 24 px hit area the code adds around a circle smaller than that is not drawn",
         "hover on error or disabled, disabled together with error, and the brand-coloured hover edge of a checked, invalid circle are not drawn"
       ],
       "coverage": {

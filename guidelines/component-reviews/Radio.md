@@ -226,3 +226,16 @@ control's boundary. The resting edge is now `border.neutral-strong` (4.70:1 on t
 ## Post-Finalization follow-up (2026-09-19, at explicit direction) — copy-pasteable "Show code"
 
 Same review as the molecules' and the first seven atoms' (standard: `07-storybook-and-documentation-standards.md` §4.2). Findings: all five generated snippets spelled out defaults and empty placeholders with a no-op `onCheckedChange`, and **"Inside a RadioGroup (preview)" printed Radix internals** — `<React.ForwardRef onValueChange={() => {}}>` around `<React.Context value>` — because the story hand-wired a Radix `RadioGroupPrimitive.Root` and the package's internal `RadioGroupContext`, from before the `RadioGroup` molecule existed. Its own comment said it should be rewritten once `RadioGroup` was built. **That story is now rewritten to use the real `RadioGroup`** (labelled, with the same state), its `(preview)` suffix is dropped from the story name and the Docs heading, and the now-unused Radix and context imports are removed. Every story now sets `parameters.docs.source.code` to a hand-written snippet from the new `Radio.snippets.ts`, and the Playground builds its snippet from the live controls (always writing the `value` a radio means). The snippets and Playground combinations were typechecked against the real types. **Finalized status unchanged** — story-file and docs-only, no component code, props, or tokens touched.
+
+## Post-Finalization follow-up (2026-11-23, at explicit direction) — an invisible hit area of at least 24 × 24px
+
+Found while drawing `Radio` in the Figma library: unlike `Checkbox` (see [Checkbox.md](./Checkbox.md)), whose box got an invisible hit area on 2026-10-17, the circle was
+12, 16 and 20px at `xs`, `sm` and `md`, under the 24 × 24px minimum target (WCAG 2.5.8) that `06-engineering-standards.md` §9 asks for at every size, and with no visible
+label (a card, a table row) nothing widened it. The same fix: `.root` is `position: relative` and carries an `::after` whose insets are `min(0px, calc((100% − space.6) / 2))`, an
+invisible square of the minimum size centred on the circle (`lg` and `xl` get none).
+
+**Finalized status is unchanged.** Three-question test (`06-engineering-standards.md` §9): question 1, does it change the rendered or behavioural output of anything that existed?
+Nothing visible; the circle, its states and its tokens are as they were, and what changed is where a press lands. Question 2, is it correcting a genuine defect? Yes: a target under the
+minimum at three of five sizes failed a requirement that already stood. It stays Finalized. Re-verified: a hidden real-browser check (`HitAreaInteraction`) presses points 11px either side of
+every size's centre and asserts each answers, that each circle still answers at its own centre in a stack, and that the `xs` circle is still 12px. The token (`space.6`) has its row in the
+Docs page. Known cost, as on `Checkbox`: in a stack closer than 24px between centres the two hit areas overlap by a few pixels, and the later one in the document wins there.
