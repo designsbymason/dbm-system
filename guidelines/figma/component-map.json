@@ -1110,9 +1110,9 @@
       },
       "variants": 36,
       "status": {
-        "state": "reviewed",
+        "state": "approved",
         "reviewed": "2026-11-23",
-        "approved": null
+        "approved": "2026-11-23"
       },
       "properties": {
         "size": {
@@ -1256,9 +1256,9 @@
       },
       "variants": 64,
       "status": {
-        "state": "reviewed",
+        "state": "approved",
         "reviewed": "2026-11-23",
-        "approved": null
+        "approved": "2026-11-23"
       },
       "properties": {
         "tone": {
@@ -1419,9 +1419,9 @@
       },
       "variants": 42,
       "status": {
-        "state": "reviewed",
+        "state": "approved",
         "reviewed": "2026-11-23",
-        "approved": null
+        "approved": "2026-11-23"
       },
       "properties": {
         "size": {
@@ -1584,9 +1584,9 @@
       },
       "variants": 210,
       "status": {
-        "state": "reviewed",
+        "state": "approved",
         "reviewed": "2026-11-23",
-        "approved": null
+        "approved": "2026-11-23"
       },
       "properties": {
         "variant": {

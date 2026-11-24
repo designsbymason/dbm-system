@@ -14,11 +14,11 @@ Generated from the map by `pnpm check-figma-map --write`; CI fails when it is st
 | [Badge](./Badge.md) | atom | Data Display | 105 | reviewed | 2026-11-22 | not yet |
 | [Button](./Button.md) | atom | Inputs | 200 | reviewed | 2026-11-22 | not yet |
 | [Checkbox](./Checkbox.md) | atom | Inputs | 54 | approved | 2026-11-23 | 2026-11-23 |
-| [IconButton](./IconButton.md) | atom | Inputs | 210 | reviewed | 2026-11-23 | not yet |
+| [IconButton](./IconButton.md) | atom | Inputs | 210 | approved | 2026-11-23 | 2026-11-23 |
 | [Input](./Input.md) | atom | Inputs | 36 | reviewed | 2026-11-22 | not yet |
-| [Radio](./Radio.md) | atom | Inputs | 36 | reviewed | 2026-11-23 | not yet |
-| [Spinner](./Spinner.md) | atom | Feedback | 64 | reviewed | 2026-11-23 | not yet |
-| [Switch](./Switch.md) | atom | Inputs | 42 | reviewed | 2026-11-23 | not yet |
+| [Radio](./Radio.md) | atom | Inputs | 36 | approved | 2026-11-23 | 2026-11-23 |
+| [Spinner](./Spinner.md) | atom | Feedback | 64 | approved | 2026-11-23 | 2026-11-23 |
+| [Switch](./Switch.md) | atom | Inputs | 42 | approved | 2026-11-23 | 2026-11-23 |
 | [Textarea](./Textarea.md) | atom | Inputs | 36 | approved | 2026-11-23 | 2026-11-23 |
 | [Card](./Card.md) | molecule | Data Display | 72 | reviewed | 2026-11-22 | not yet |
 <!-- figma-status:end -->
