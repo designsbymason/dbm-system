@@ -126,7 +126,9 @@
 }
 
 /* With `tone="white"` the grounding layer is the dark `bg.overlay` (neutral black in every theme), not the light `bg.scrim`: a
-   white icon on a white scrim would vanish in light mode. Same `opacity.40`, so the layer behaves the same. */
+   white icon on a white scrim would vanish in light mode. Same `opacity.40`, so the layer behaves the same. This beats
+   `.hasBackground::before` twice over, by specificity (two classes) and by source order (it comes after), so moving it earlier
+   would not change the result; the real-browser `WhiteTone` check reads the computed colour and fails if it ever loses. */
 .toneWhite.hasBackground::before {
   background-color: var(--dbm-bg-overlay);
 }

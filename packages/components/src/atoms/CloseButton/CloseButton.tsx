@@ -19,13 +19,14 @@ const sizeClass: Record<ButtonSize, string | undefined> = {
  * `aria-label="Close"` (override for context, e.g. "Dismiss notification")
  * and a square-ish shape (pass `rounded` for a circle), with an optional
  * translucent grounding layer (`hasBackground`) for use over unpredictable
- * external content. Styled to match
- * `IconButton`'s own `tertiary` variant exactly (transparent at rest, the
- * same two tones, the same box sizing, and the same `rounded` prop/default):
- * `neutral` (the default) is `icon.default` with a `bg.neutral-subtle` hover
- * fill, `brand` is `icon.brand` with `bg.brand-subtle-hover`, and `white` is `icon.white` for a surface that is dark in
- * every theme — not a
- * context-adaptive control. Reserved for surfaces where a modal-style overlay is involved
+ * external content. Styled to match `IconButton`'s own `tertiary` variant
+ * (transparent at rest, the same box sizing, and the same `rounded`
+ * prop/default), in one of three tones: `neutral` (the default) is
+ * `icon.default` with a `bg.neutral-subtle` hover fill, `brand` is
+ * `icon.brand` with `bg.brand-subtle-hover` (both `IconButton`'s own colours),
+ * and `white` is `icon.white` for a surface that is dark in every theme. Not
+ * a context-adaptive control: the colour comes from `tone`, never from an
+ * ancestor. Reserved for surfaces where a modal-style overlay is involved
  * (Dialog, Drawer, lightbox, and similar cards/panels), which have no local
  * tone of their own to track. A component whose own tone/color varies per
  * instance (Tag, Alert, Toast) implements its own local remove/dismiss

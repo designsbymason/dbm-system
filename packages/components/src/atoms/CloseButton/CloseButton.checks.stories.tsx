@@ -77,6 +77,40 @@ function resolveExpression(value: string) {
   return resolved;
 }
 
+/** Reads any CSS colour as sRGB channels (and alpha), by painting one pixel of it on a canvas. */
+function channels(color: string): [number, number, number, number] {
+  const canvas = document.createElement("canvas");
+  canvas.width = 1;
+  canvas.height = 1;
+  const context = canvas.getContext("2d", { willReadFrequently: true })!;
+  context.clearRect(0, 0, 1, 1);
+  context.fillStyle = color;
+  context.fillRect(0, 0, 1, 1);
+  const [r, g, b, a] = context.getImageData(0, 0, 1, 1).data;
+  return [r!, g!, b!, a!];
+}
+
+/** A translucent colour drawn over an opaque one, as an opaque colour string. */
+function over(top: string, bottom: string): string {
+  const [r, g, b, a] = channels(top);
+  const [br, bg, bb] = channels(bottom);
+  const mix = (front: number, back: number) => Math.round((front * a + back * (255 - a)) / 255);
+  return `rgb(${mix(r, br)}, ${mix(g, bg)}, ${mix(b, bb)})`;
+}
+
+function contrast(foreground: string, background: string): number {
+  const luminance = ([r, g, b]: number[]) => {
+    const channel = (value: number) => {
+      const scaled = value / 255;
+      return scaled <= 0.03928 ? scaled / 12.92 : ((scaled + 0.055) / 1.055) ** 2.4;
+    };
+    return 0.2126 * channel(r!) + 0.7152 * channel(g!) + 0.0722 * channel(b!);
+  };
+  const a = luminance(channels(foreground));
+  const b = luminance(channels(background));
+  return (Math.max(a, b) + 0.05) / (Math.min(a, b) + 0.05);
+}
+
 const tab = async () => {
   for (const type of ["keyDown", "keyUp"]) {
     await send("Input.dispatchKeyEvent", { type, key: "Tab", code: "Tab", windowsVirtualKeyCode: 9 });
@@ -101,8 +135,13 @@ export const WhiteTone: Story = {
     // the grounding layer is the dark overlay, not the light scrim a white icon would vanish on
     expect(getComputedStyle(grounded, "::before").backgroundColor).toBe(resolve("backgroundColor", "--dbm-bg-overlay"));
     expect(getComputedStyle(grounded, "::before").backgroundColor).not.toBe(resolve("backgroundColor", "--dbm-bg-scrim"));
+    // the icon holds 4.5:1 on the surface it is for, and on its own hover fill over that surface
+    const surface = resolve("backgroundColor", "--dbm-bg-overlay");
+    const icon = getComputedStyle(plain).color;
+    expect(contrast(icon, surface)).toBeGreaterThanOrEqual(4.5);
     await pointAt(plain);
     await waitFor(() => expect(getComputedStyle(plain).backgroundColor).toBe(hoverFill), { timeout: 2000 });
+    expect(contrast(icon, over(getComputedStyle(plain).backgroundColor, surface))).toBeGreaterThanOrEqual(4.5);
     await pointAt(null);
     await waitFor(() => expect(getComputedStyle(plain).backgroundColor).toBe("rgba(0, 0, 0, 0)"), { timeout: 2000 });
     // a real Tab key sets :focus-visible, which synthetic events do not

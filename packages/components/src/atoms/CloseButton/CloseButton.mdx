@@ -103,7 +103,7 @@ import { CloseButton } from "@dbm-system/components";
 <Callout tone="success" title="Do">
 
 - Use `CloseButton` for dismiss affordances on modal-style surfaces — Dialog, Drawer, lightbox, and
-  similar cards/panels — where a fixed, brand-colored icon is the right, consistent choice.
+  similar cards/panels — where a fixed-token icon (neutral by default) is the right, consistent choice.
 - Pass `hasBackground` when placing it over unpredictable external content (a photo, a busy hero
   image) so the icon stays grounded regardless of what's behind it.
 - Reach for `rounded` for a circular treatment, matching `IconButton`'s own `rounded` prop and
@@ -153,10 +153,13 @@ import { CloseButton } from "@dbm-system/components";
 - Always has an accessible name: `aria-label` defaults to `"Close"` when omitted, so — unlike
   `IconButton`, whose `aria-label` is required by the type with no fallback — `CloseButton` never
   ships with no accessible name at all.
-- Each tone's icon legibility against a typical `bg.surface` card, and against its own hover fill
-  (`icon.default` on `bg.neutral-subtle`, `icon.brand` on `bg.brand-subtle-hover`), is checked
-  against real WCAG contrast ratios, not assumed — see [Design tokens used](#design-tokens-used)
-  below for the exact tokens.
+- The neutral and brand tones' icon legibility against a typical `bg.surface` card, and against their
+  own hover fill (`icon.default` on `bg.neutral-subtle`, `icon.brand` on `bg.brand-subtle-hover`), is
+  checked against real WCAG contrast ratios, not assumed — see [Design tokens used](#design-tokens-used)
+  below for the exact tokens. The `white` tone has no fixed pairing, since the surface behind it is
+  yours to choose: it is measured on `bg.overlay` only (`icon.white` is 19.8:1 on it, and 11.2:1 on its
+  own hover fill over it), and a real-browser check holds both at 4.5:1 or more, so use it only on a
+  surface that stays dark.
 - `hasBackground`'s translucent layer is purely decorative (`pointer-events: none`) — confirmed
   live, not just from the CSS declaration, that it never intercepts clicks or keyboard focus.
   There's no fixed contrast guarantee for it, since what it composites over is arbitrary by design.
@@ -188,9 +191,11 @@ import { CloseButton } from "@dbm-system/components";
 <TokenRow token="radius.sm" usage="Focus-visible outline corner radius (overrides radius.md while focused)" />
 <TokenRow token="radius.full" usage="rounded variant's corner radius and its own focus-ring radius; also hasBackground's grounding layer when rounded is set" />
 <TokenRow token="border-width.2" usage="Focus ring width" />
+<TokenRow token="space.1" usage="Focus ring offset from the box" />
 <TokenRow token="icon-button.size.xs–icon-button.size.xl" usage="Per-size box height/width (component-layer token, shared with IconButton) — the icon itself uses the plain icon-size.* scale" />
 <TokenRow token="motion.duration.fast" usage="Hover/focus-state transitions" />
 <TokenRow token="motion.easing.standard" usage="Hover/focus-state transitions" />
+<TokenRow token="opacity.20" usage="Hover fill (tone white): icon.white at this opacity, composited over the surface" />
 <TokenRow token="opacity.40" usage="Disabled state; also hasBackground's grounding-layer opacity" />
 
 ## Related components

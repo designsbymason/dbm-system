@@ -153,8 +153,9 @@ export const OnDarkSurface: Story = {
   name: "On a dark surface (tone white)",
   parameters: { docs: { source: { code: closeButtonSnippets.onDarkSurface } } },
   argTypes: { tone: { control: false }, hasBackground: { control: false }, "aria-label": { control: false } },
-  // bg.overlay is neutral black in every theme: the surface `white` is for. The right-hand pair sits over a busy gradient, where
-  // hasBackground gives the icon its own dark layer.
+  // bg.overlay is neutral black in every theme: the surface `white` is for. The right-hand one sits over a dark gradient that
+  // lightens towards the corner (built from bg.overlay and icon.white, so it is the same in every theme), where hasBackground
+  // gives the icon its own dark layer.
   render: (args) => (
     <div style={{ display: "flex", gap: "var(--dbm-space-4)" }}>
       <div style={{ background: "var(--dbm-bg-overlay)", padding: "var(--dbm-space-4)", borderRadius: "var(--dbm-radius-md)" }}>
@@ -162,7 +163,7 @@ export const OnDarkSurface: Story = {
       </div>
       <div
         style={{
-          background: "linear-gradient(135deg, var(--dbm-bg-overlay), var(--dbm-bg-neutral))",
+          background: "linear-gradient(135deg, var(--dbm-bg-overlay), color-mix(in srgb, var(--dbm-icon-white) 40%, var(--dbm-bg-overlay)))",
           padding: "var(--dbm-space-4)",
           borderRadius: "var(--dbm-radius-md)",
         }}

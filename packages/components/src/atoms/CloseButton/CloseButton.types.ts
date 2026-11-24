@@ -31,8 +31,10 @@ export interface CloseButtonProps extends ComponentPropsWithoutRef<"button"> {
    */
   rounded?: boolean;
   /**
-   * Adds an optional translucent grounding layer behind the icon (white in
-   * light mode, a dark neutral in dark mode) — for a CloseButton placed
+   * Adds an optional translucent grounding layer behind the icon (`bg.scrim`:
+   * white in light mode, a dark neutral in dark mode; with `tone="white"` it
+   * is the dark `bg.overlay` instead, so a white icon is never on a white
+   * layer) — for a CloseButton placed
    * over unpredictable external content (a photo, a busy hero image)
    * where the icon might not otherwise read clearly
    * against whatever's behind it. Purely a visual grounding aid: there's
