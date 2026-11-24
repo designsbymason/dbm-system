@@ -14,7 +14,7 @@ From the repo root, in this order (each stops the run on a failure you can't exp
 3. `pnpm lint` (ESLint, then both type checks)
 4. `pnpm build`
 5. `pnpm check-publish` (packs each public package, then publint, @arethetypeswrong/cli, a look at the packed package.json, the `"use client"` marker on the components package's two entries and the consumer guide's imports and install line; needs the build)
-6. `pnpm check-manifest` (generates the component manifest and fails on a schema problem or anything undocumented, on a stale generated list in `AGENTS.md` or `CLAUDE.md` (`pnpm sync-agents` rewrites them), or on a name `AGENTS.md` uses that does not exist; needs the build)
+6. `pnpm check-manifest` (generates the component manifest and fails on a schema problem or anything undocumented, on a stale generated list in `AGENTS.md` or `CLAUDE.md` (`pnpm sync-agents` rewrites them), or on a name `AGENTS.md` uses that does not exist; needs the build), then `pnpm check-figma-map` (the map from each drawn Figma component to the code matches the built manifest, its status table is current and the coverage rule holds; needs the build)
 7. `pnpm --filter @dbm-system/components check-component-bundle-size`
 8. `pnpm --filter @dbm-system/components check-foundations-token-coverage`
 9. `pnpm --filter @dbm-system/components check-logo` (the Storybook logo files match the tokens)
