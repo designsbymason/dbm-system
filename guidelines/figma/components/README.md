@@ -14,6 +14,7 @@ Generated from the map by `pnpm check-figma-map --write`; CI fails when it is st
 | [Badge](./Badge.md) | atom | Data Display | 105 | reviewed | 2026-11-22 | not yet |
 | [Button](./Button.md) | atom | Inputs | 200 | reviewed | 2026-11-22 | not yet |
 | [Checkbox](./Checkbox.md) | atom | Inputs | 54 | approved | 2026-11-23 | 2026-11-23 |
+| [IconButton](./IconButton.md) | atom | Inputs | 210 | reviewed | 2026-11-23 | not yet |
 | [Input](./Input.md) | atom | Inputs | 36 | reviewed | 2026-11-22 | not yet |
 | [Radio](./Radio.md) | atom | Inputs | 36 | reviewed | 2026-11-23 | not yet |
 | [Spinner](./Spinner.md) | atom | Feedback | 64 | reviewed | 2026-11-23 | not yet |

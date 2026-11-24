@@ -176,7 +176,7 @@ function main() {
     const typesFile = existsSync(dir) ? readdirSync(dir).find((f) => f.endsWith(".types.ts")) : null;
     const ownTypes = typesFile ? readFileSync(join(dir, typesFile), "utf8") : "";
     // a type imported from a sibling component (Spinner's `IconTone` is Icon's) is read from that component's types file
-    const siblingTypes = [...ownTypes.matchAll(/from "\.\.\/(\w+)"/g)]
+    const siblingTypes = [...ownTypes.matchAll(/from "\.\.\/(\w+)(?:\/[\w.]+)?"/g)]
       .map((m) => join(dir, "..", m[1]))
       .filter((d) => existsSync(d))
       .map((d) => {
