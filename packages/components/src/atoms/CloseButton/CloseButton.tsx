@@ -23,7 +23,8 @@ const sizeClass: Record<ButtonSize, string | undefined> = {
  * `IconButton`'s own `tertiary` variant exactly (transparent at rest, the
  * same two tones, the same box sizing, and the same `rounded` prop/default):
  * `neutral` (the default) is `icon.default` with a `bg.neutral-subtle` hover
- * fill, and `brand` is `icon.brand` with `bg.brand-subtle-hover` — not a
+ * fill, `brand` is `icon.brand` with `bg.brand-subtle-hover`, and `white` is `icon.white` for a surface that is dark in
+ * every theme — not a
  * context-adaptive control. Reserved for surfaces where a modal-style overlay is involved
  * (Dialog, Drawer, lightbox, and similar cards/panels), which have no local
  * tone of their own to track. A component whose own tone/color varies per
@@ -38,6 +39,7 @@ const sizeClass: Record<ButtonSize, string | undefined> = {
  * <CloseButton onClick={() => setOpen(false)} />
  * <CloseButton size="sm" aria-label="Dismiss notification" onClick={onDismiss} />
  * <CloseButton tone="brand" aria-label="Close" onClick={() => setOpen(false)} />
+ * <CloseButton tone="white" aria-label="Close" onClick={() => setOpen(false)} />
  * <CloseButton rounded aria-label="Close" onClick={() => setOpen(false)} />
  * <CloseButton hasBackground aria-label="Close" onClick={() => setOpen(false)} />
  * ```
@@ -64,6 +66,7 @@ export const CloseButton = forwardRef<HTMLButtonElement, CloseButtonProps>(
         styles.root,
         sizeClass[size],
         tone === "brand" && styles.toneBrand,
+        tone === "white" && styles.toneWhite,
         rounded && styles.rounded,
         hasBackground && styles.hasBackground,
         className,

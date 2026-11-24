@@ -21,9 +21,9 @@ const meta: Meta<typeof CloseButton> = {
     },
     tone: {
       control: "select",
-      options: ["neutral", "brand"],
+      options: ["neutral", "brand", "white"],
       description:
-        "The colour family of the icon and its hover fill: neutral (the default) or brand. Both are IconButton's own tertiary colours at the same tone.",
+        "The colour family of the icon and its hover fill: neutral (the default) or brand, which are IconButton's own tertiary colours at the same tone, or white, for a surface that is dark in every theme (icon.white, a translucent white hover, and with hasBackground a dark grounding layer).",
     },
     rounded: {
       control: "boolean",
@@ -145,6 +145,30 @@ export const Tones: Story = {
     <div style={{ display: "flex", gap: "var(--dbm-space-3)", alignItems: "center" }}>
       <CloseButton {...args} aria-label="Close (neutral)" tone="neutral" />
       <CloseButton {...args} aria-label="Close (brand)" tone="brand" />
+    </div>
+  ),
+};
+
+export const OnDarkSurface: Story = {
+  name: "On a dark surface (tone white)",
+  parameters: { docs: { source: { code: closeButtonSnippets.onDarkSurface } } },
+  argTypes: { tone: { control: false }, hasBackground: { control: false }, "aria-label": { control: false } },
+  // bg.overlay is neutral black in every theme: the surface `white` is for. The right-hand pair sits over a busy gradient, where
+  // hasBackground gives the icon its own dark layer.
+  render: (args) => (
+    <div style={{ display: "flex", gap: "var(--dbm-space-4)" }}>
+      <div style={{ background: "var(--dbm-bg-overlay)", padding: "var(--dbm-space-4)", borderRadius: "var(--dbm-radius-md)" }}>
+        <CloseButton {...args} aria-label="Close (white, on dark)" tone="white" />
+      </div>
+      <div
+        style={{
+          background: "linear-gradient(135deg, var(--dbm-bg-overlay), var(--dbm-bg-neutral))",
+          padding: "var(--dbm-space-4)",
+          borderRadius: "var(--dbm-radius-md)",
+        }}
+      >
+        <CloseButton {...args} aria-label="Close (white, with hasBackground)" tone="white" hasBackground />
+      </div>
     </div>
   ),
 };

@@ -176,7 +176,7 @@ Conventional Commits format (`feat(button): add loading state`) — this is what
 
 ## 10. `CloseButton` vs. a local, component-specific remove control
 
-`CloseButton` is a fixed-token dismiss control (`tone` `neutral` by default, or `brand`), reserved for modal-style overlay surfaces (Dialog, Drawer, lightbox) — not a context-adaptive one. Any component whose own tone/color varies per instance (`Tag`, `Alert`, `Toast`) implements its own local, self-contained remove control instead. Default to the local implementation unless `CloseButton` is explicitly requested. See `guidelines/adr/0008` for the reasoning, the conflict that produced this rule, and alternatives considered.
+`CloseButton` is a fixed-token dismiss control (`tone` `neutral` by default, `brand`, or `white` for a surface that is dark in every theme), reserved for modal-style overlay surfaces (Dialog, Drawer, lightbox) — not a context-adaptive one. Any component whose own tone/color varies per instance (`Tag`, `Alert`, `Toast`) implements its own local, self-contained remove control instead. Default to the local implementation unless `CloseButton` is explicitly requested. See `guidelines/adr/0008` for the reasoning, the conflict that produced this rule, and alternatives considered.
 
 ## Related documents
 - `04-component-inventory.md` — what to build, in what order

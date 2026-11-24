@@ -63,6 +63,25 @@ describe("CloseButton", () => {
     expect(screen.getByRole("button").className).toMatch(/toneBrand/);
   });
 
+  it("uses the fixed icon.white token when tone is white, regardless of an ancestor's own color", () => {
+    const { container } = render(
+      <div style={{ color: "rgb(255, 0, 0)" }}>
+        <CloseButton tone="white" />
+      </div>,
+    );
+    expect(container.querySelector("button")).toHaveStyle({
+      color: "var(--dbm-icon-white)",
+    });
+  });
+
+  it("sets the white class only for tone white", () => {
+    const { rerender } = render(<CloseButton aria-label="x" tone="white" />);
+    expect(screen.getByRole("button").className).toMatch(/toneWhite/);
+    expect(screen.getByRole("button").className).not.toMatch(/toneBrand/);
+    rerender(<CloseButton aria-label="x" tone="brand" />);
+    expect(screen.getByRole("button").className).not.toMatch(/toneWhite/);
+  });
+
   it("is disabled when disabled is set", () => {
     render(<CloseButton disabled />);
     expect(screen.getByRole("button", { name: "Close" })).toBeDisabled();
@@ -163,6 +182,11 @@ describe("CloseButton", () => {
 
   it("has no accessibility violations when tone is brand", async () => {
     const { container } = render(<CloseButton tone="brand" />);
+    expect(await axe(container)).toHaveNoViolations();
+  });
+
+  it("has no accessibility violations when tone is white", async () => {
+    const { container } = render(<CloseButton tone="white" hasBackground />);
     expect(await axe(container)).toHaveNoViolations();
   });
 

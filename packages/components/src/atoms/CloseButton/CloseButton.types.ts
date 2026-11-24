@@ -1,6 +1,9 @@
 import type { ComponentPropsWithoutRef, CSSProperties, MouseEventHandler } from "react";
 import type { ButtonSize, ButtonTone } from "../Button/Button.types";
 
+/** The colour families a `CloseButton` can take: `IconButton`'s two (`neutral`, `brand`), plus `white` for a surface that is dark in every theme. */
+export type CloseButtonTone = ButtonTone | "white";
+
 export interface CloseButtonProps extends ComponentPropsWithoutRef<"button"> {
   /**
    * Controls the button's clickable box and its glyph together, as one
@@ -12,10 +15,14 @@ export interface CloseButtonProps extends ComponentPropsWithoutRef<"button"> {
   /**
    * The colour family of the icon and its hover fill: `neutral` (the default) draws the icon in `icon.default` and fills
    * `bg.neutral-subtle` on hover, and `brand` draws it in `icon.brand` and fills `bg.brand-subtle-hover`. Both are
-   * `IconButton`'s own `tertiary` colours at the same tone, and neither adapts to an ancestor's colour.
+   * `IconButton`'s own `tertiary` colours at the same tone, and neither adapts to an ancestor's colour. `white` is for a
+   * surface that is dark in every theme (a lightbox, a video, a dark banner): the icon is `icon.white` in every theme and
+   * mode, the hover fill is `icon.white` at `opacity.20`, the focus ring is `border.white`, and with `hasBackground` the
+   * grounding layer is `bg.overlay` instead of `bg.scrim`, so the icon never sits on a white layer. It has no fixed
+   * contrast pairing, because what is behind it is yours to choose: use it only on a surface that stays dark.
    * @default 'neutral'
    */
-  tone?: ButtonTone;
+  tone?: CloseButtonTone;
   /**
    * Renders as a circle instead of the standard rounded-corner shape —
    * matches `IconButton`'s own `rounded` prop exactly, including its

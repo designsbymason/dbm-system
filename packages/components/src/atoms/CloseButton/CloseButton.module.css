@@ -32,6 +32,19 @@
   background-color: var(--dbm-bg-brand-subtle-hover);
 }
 
+/* `tone="white"`, for a surface that is dark in every theme (a lightbox, a video, a dark banner). `icon.white` is white in all four
+   themes and both modes, so the icon does not flip dark on a dark surface. The hover fill is the same white at `opacity.20`
+   (composited here, the way ImageViewer composites `bg.overlay`), a light veil that reads on dark where `bg.neutral-subtle`
+   would not. The focus ring is `border.white` for the same reason (`border.focus` is themed). No fixed contrast pairing: what
+   is behind it is the caller's choice. */
+.toneWhite {
+  color: var(--dbm-icon-white);
+}
+
+.toneWhite:hover:not(:disabled) {
+  background-color: color-mix(in srgb, var(--dbm-icon-white) calc(var(--dbm-opacity-20) * 100%), transparent);
+}
+
 /* `border-radius` here deliberately overrides `.root`'s own
    `--dbm-radius-md` — the standardized `sm` focus-ring radius
    (`05-component-api-conventions.md` §6) applies to every square-ish
@@ -105,6 +118,17 @@
   pointer-events: none;
   position: absolute;
   z-index: -1;
+}
+
+/* After `.root:focus-visible`, whose `outline` shorthand would otherwise reset the colour. */
+.toneWhite:focus-visible {
+  outline-color: var(--dbm-border-white);
+}
+
+/* With `tone="white"` the grounding layer is the dark `bg.overlay` (neutral black in every theme), not the light `bg.scrim`: a
+   white icon on a white scrim would vanish in light mode. Same `opacity.40`, so the layer behaves the same. */
+.toneWhite.hasBackground::before {
+  background-color: var(--dbm-bg-overlay);
 }
 
 /* Sizes — box dimensions matched to IconButton's own real rendered size at

@@ -31,7 +31,7 @@ export const propOrder = [
 <ComponentHeader title="CloseButton" tier="Atom" />
 
 A dedicated dismiss control — a small, icon-only button with a fixed-token icon (neutral by default,
-`tone="brand"` for the brand colour) and a default `aria-label` of "Close". Styled to match
+`tone="brand"` for the brand colour, `tone="white"` for a surface that is dark in every theme) and a default `aria-label` of "Close". Styled to match
 `IconButton`'s own `tertiary` variant exactly (transparent at rest, `icon.default` icon color and a
 `bg.neutral-subtle` hover fill, or `icon.brand` and `bg.brand-subtle-hover` with `tone="brand"`, the
 same box sizing), not a context-adaptive one. **Reserved for surfaces where a modal-style overlay is
@@ -73,6 +73,17 @@ import { CloseButton } from "@dbm-system/components";
 ### All sizes
 
 <Canvas of={CloseButtonStories.AllSizes} />
+
+### Tones
+
+<Canvas of={CloseButtonStories.Tones} />
+
+### On a dark surface (tone white)
+
+`tone="white"` is for a surface that stays dark in every theme. With `hasBackground` its grounding layer is
+`bg.overlay`, not the light `bg.scrim`, so a white icon is never on a white layer.
+
+<Canvas of={CloseButtonStories.OnDarkSurface} />
 
 ### Rounded (circular)
 
@@ -168,6 +179,9 @@ import { CloseButton } from "@dbm-system/components";
 <TokenRow token="bg.neutral-subtle" usage="Hover-state fill (tone neutral)" />
 <TokenRow token="icon.brand" usage="Icon color, at rest (tone brand)" />
 <TokenRow token="bg.brand-subtle-hover" usage="Hover-state fill (tone brand)" />
+<TokenRow token="icon.white" usage="Icon colour (tone white), and the hover fill at opacity.20 composited over the surface" />
+<TokenRow token="border.white" usage="Focus ring (tone white), since border.focus is themed" />
+<TokenRow token="bg.overlay" usage="Grounding layer with hasBackground (tone white), at opacity.40, in place of bg.scrim" />
 <TokenRow token="bg.scrim" usage="hasBackground's translucent grounding layer — white in light mode, gray.800 in dark mode" />
 <TokenRow token="border.focus" usage="Focus-visible outline" />
 <TokenRow token="radius.md" usage="Default corner radius" />

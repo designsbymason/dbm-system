@@ -12,9 +12,16 @@ export const closeButtonSnippets = {
   allSizes: `{/* size: "xs" | "sm" | "md" (default) | "lg" | "xl" */}
 <CloseButton aria-label="Close" size="lg" />`,
 
-  tones: `{/* tone: "neutral" (default) | "brand" */}
+  tones: `{/* tone: "neutral" (default) | "brand" | "white" (see On a dark surface) */}
 <CloseButton aria-label="Close" />
 <CloseButton aria-label="Close" tone="brand" />`,
+
+  onDarkSurface: `{/* tone="white": a white icon in every theme, for a surface that stays dark (a lightbox, a video, a dark banner).
+    With hasBackground the grounding layer is dark too, so the icon reads over a photo */}
+<div style={{ background: "var(--dbm-bg-overlay)" }}>
+  <CloseButton aria-label="Close" tone="white" />
+  <CloseButton aria-label="Close" tone="white" hasBackground />
+</div>`,
 
   onBusyBackground: `{/* hasBackground gives the button a backing fill of its own, so it stays legible over content you
     don't control — an image, a gradient */}

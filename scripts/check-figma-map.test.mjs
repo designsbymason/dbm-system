@@ -33,6 +33,11 @@ describe("literalsOf", () => {
     assert.equal(literalsOf("ReactNode", typesText), null);
     assert.deepEqual(literalsOf("Responsive<Size>", typesText), ["sm", "md"]);
   });
+  it("follows a named type in a union that also has a literal (CloseButton's tone is ButtonTone plus white)", () => {
+    const text = 'export type ButtonTone = "brand" | "neutral";\nexport type CloseButtonTone = ButtonTone | "white";';
+    assert.deepEqual(literalsOf("CloseButtonTone", text), ["brand", "neutral", "white"]);
+    assert.equal(literalsOf("Loop", "export type Loop = Loop | Other;"), null);
+  });
 });
 
 describe("validateEntry", () => {

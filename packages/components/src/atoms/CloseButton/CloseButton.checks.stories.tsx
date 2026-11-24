@@ -66,3 +66,49 @@ export const ToneColours: Story = {
     }
   },
 };
+
+/** Resolves any CSS colour expression the way the browser computes it, on a probe element. */
+function resolveExpression(value: string) {
+  const probe = document.createElement("div");
+  probe.style.backgroundColor = value;
+  document.body.append(probe);
+  const resolved = getComputedStyle(probe).backgroundColor;
+  probe.remove();
+  return resolved;
+}
+
+const tab = async () => {
+  for (const type of ["keyDown", "keyUp"]) {
+    await send("Input.dispatchKeyEvent", { type, key: "Tab", code: "Tab", windowsVirtualKeyCode: 9 });
+  }
+};
+
+export const WhiteTone: Story = {
+  name: "tone white: the icon, the translucent hover fill, the dark grounding layer and the white focus ring",
+  render: () => (
+    <div style={{ display: "flex", gap: "var(--dbm-space-6)", background: "var(--dbm-bg-overlay)", padding: "var(--dbm-space-6)" }}>
+      <CloseButton aria-label="White" tone="white" />
+      <CloseButton aria-label="White grounded" tone="white" hasBackground />
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const plain = canvas.getByRole("button", { name: "White" });
+    const grounded = canvas.getByRole("button", { name: "White grounded" });
+    const hoverFill = resolveExpression("color-mix(in srgb, var(--dbm-icon-white) calc(var(--dbm-opacity-20) * 100%), transparent)");
+    expect(getComputedStyle(plain).color).toBe(resolve("color", "--dbm-icon-white"));
+    expect(getComputedStyle(plain).backgroundColor).toBe("rgba(0, 0, 0, 0)");
+    // the grounding layer is the dark overlay, not the light scrim a white icon would vanish on
+    expect(getComputedStyle(grounded, "::before").backgroundColor).toBe(resolve("backgroundColor", "--dbm-bg-overlay"));
+    expect(getComputedStyle(grounded, "::before").backgroundColor).not.toBe(resolve("backgroundColor", "--dbm-bg-scrim"));
+    await pointAt(plain);
+    await waitFor(() => expect(getComputedStyle(plain).backgroundColor).toBe(hoverFill), { timeout: 2000 });
+    await pointAt(null);
+    await waitFor(() => expect(getComputedStyle(plain).backgroundColor).toBe("rgba(0, 0, 0, 0)"), { timeout: 2000 });
+    // a real Tab key sets :focus-visible, which synthetic events do not
+    (document.activeElement as HTMLElement | null)?.blur();
+    await tab();
+    await waitFor(() => expect(plain).toHaveFocus(), { timeout: 2000 });
+    expect(getComputedStyle(plain).outlineColor).toBe(resolve("color", "--dbm-border-white"));
+  },
+};

@@ -29,13 +29,23 @@ const END = "<!-- figma-status:end -->";
 const unquote = (s) => String(s).trim().replace(/^['"]|['"]$/g, "");
 
 /** The string literals a type allows: an inline union in the manifest's type text, or an alias declared in the types file. */
-export function literalsOf(type, typesText = "") {
+export function literalsOf(type, typesText = "", depth = 0) {
   const inner = /^\w+<(\w+)>$/.exec(type);
   if (inner) type = inner[1];
   const fromText = (text) => [...text.matchAll(/"([^"]*)"|'([^']*)'/g)].map((m) => m[1] ?? m[2]);
   if (/["']/.test(type)) return fromText(type);
   const alias = new RegExp(`export type ${type.replace(/\W/g, "")}\\s*=\\s*([^;]+);`).exec(typesText);
-  return alias && /["']/.test(alias[1]) ? fromText(alias[1]) : null;
+  if (!alias) return null;
+  // a union may mix literals with named types (`ButtonTone | "white"`): each name is read the same way, from the same text
+  const out = [];
+  for (const part of alias[1].split("|").map((x) => x.trim())) {
+    if (/["']/.test(part)) out.push(...fromText(part));
+    else if (/^\w+$/.test(part) && depth < 3) {
+      const named = literalsOf(part, typesText, depth + 1);
+      if (named) out.push(...named);
+    }
+  }
+  return out.length ? [...new Set(out)] : null;
 }
 
 /** Every problem with one component's entry; `ctx` is { manifest, catalog, storyId, typesText, hasDecisionsFile }. */

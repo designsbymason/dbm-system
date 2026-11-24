@@ -1814,6 +1814,12 @@
                 "tone": "brand"
               },
               "recipe": "Same layout; the icon in tone brand (icon/brand) and the hover fill bg/brand-subtle-hover; name the instance CloseButton (tone=brand)"
+            },
+            "white": {
+              "props": {
+                "tone": "white"
+              },
+              "recipe": "Same layout on a dark surface; the icon in tone white (icon/white), the hover fill icon/white at 20% opacity, the focus ring border/white, and with hasBackground the Scrim filled bg/overlay; name the instance CloseButton (tone=white)"
             }
           }
         },
@@ -1912,7 +1918,7 @@
         "type"
       ],
       "deviations": [
-        "only the neutral tone, the code's default, is drawn; the brand tone is in undrawn.tone",
+        "only the neutral tone, the code's default, is drawn; the brand and white tones are in undrawn.tone",
         "the box is a fixed square bound to the icon-button size variables, the same as IconButton's at each size",
         "hasBackground is a boolean that shows a Scrim layer above the hover fill and below the icon, as the code's ::before is painted; the scrim takes the box's own radius",
         "the focus variants drop the box's corner radius to sm (full when rounded) and draw the ring 6 px outside at radius lg, as the code does",
@@ -1920,7 +1926,7 @@
         "hover on disabled is not drawn: the code excludes it"
       ],
       "coverage": {
-        "note": "Narrowed to the neutral tone, the code's default: sizes sm, md and lg, every state at every size with rounded off and on (3 x 4 x 2 = 24); the brand tone is undrawn, with a recipe."
+        "note": "Narrowed to the neutral tone, the code's default: sizes sm, md and lg, every state at every size with rounded off and on (3 x 4 x 2 = 24); the brand and white tones are undrawn, with a recipe."
       }
     }
   }
