@@ -174,12 +174,22 @@ function main() {
     const manifest = JSON.parse(readFileSync(manifestFile, "utf8"));
     const dir = dirname(join(root, "packages", "components", manifest.source ?? ""));
     const typesFile = existsSync(dir) ? readdirSync(dir).find((f) => f.endsWith(".types.ts")) : null;
+    const ownTypes = typesFile ? readFileSync(join(dir, typesFile), "utf8") : "";
+    // a type imported from a sibling component (Spinner's `IconTone` is Icon's) is read from that component's types file
+    const siblingTypes = [...ownTypes.matchAll(/from "\.\.\/(\w+)"/g)]
+      .map((m) => join(dir, "..", m[1]))
+      .filter((d) => existsSync(d))
+      .map((d) => {
+        const f = readdirSync(d).find((name) => name.endsWith(".types.ts"));
+        return f ? readFileSync(join(d, f), "utf8") : "";
+      })
+      .join("\n");
     errors.push(
       ...validateEntry(name, entry, {
         manifest,
         catalog: catalog[name],
         storyId: storyIdOf(name),
-        typesText: typesFile ? readFileSync(join(dir, typesFile), "utf8") : "",
+        typesText: `${ownTypes}\n${siblingTypes}`,
         hasDecisionsFile: existsSync(join(root, "guidelines", "figma", "components", `${name}.md`)),
       }),
     );

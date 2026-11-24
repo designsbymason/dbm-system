@@ -33,6 +33,7 @@ Lessons already paid for, so don't repeat them:
 - A block moved between parents keeps its old fixed height: set blocks to hug. Frames clip by default, which cuts a focus ring: turn clipping off on test frames and matrix cells.
 - Nested instance children are not available from another page until loaded; an override on them is lost when a property is bound, so set variant properties, not fills.
 - Load every font a script writes to, including ones the text already uses.
+- A ring or arc is drawn as a stroked open path in a square frame, not an ellipse with `arcData`: its render ignored the angles, its inner radius cannot be bound, and a path's stroke width binds to a variable (Spinner).
 
 When it is built, run `/review-figma-component` on it and report; the component is not done until that review is clean and I say so.
 
