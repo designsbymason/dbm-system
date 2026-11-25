@@ -300,6 +300,7 @@ const ROLES = [
   { role: "Control", group: "Components", family: "primary", weight: "semibold", lh: "tight", ls: "normal", sizes: ["xs", "sm", "base", "md", "lg"], note: "Buttons and other controls in Nunito, with the tight line height the components use" },
   { role: "Field", group: "Components", family: "primary", weight: "regular", lh: "tight", ls: "normal", sizes: ["xs", "sm", "base", "md", "lg"], note: "The text inside a text field in Nunito, regular weight with the tight line height the components use" },
   { role: "Textarea", group: "Components", family: "primary", weight: "regular", lh: "auto", ls: "normal", sizes: ["xs", "sm", "base", "md", "lg"], note: "The text inside a multi-line field in Nunito, regular weight with the browser's own normal line height, which a textarea falls back to when no line height is set" },
+  { role: "Tag", group: "Components", family: "primary", weight: "medium", lh: "tight", ls: "normal", sizes: ["xs", "sm", "base"], note: "The label of a tag in Nunito, medium weight with the tight line height the component uses" },
   { role: "FieldLabel", group: "Components", family: "primary", weight: "medium", lh: "normal", ls: "normal", sizes: ["xs", "sm", "base", "md", "lg"], note: "The label above a form field in Nunito, medium weight with the normal line height the component uses" },
   { role: "IconButton", group: "Components", family: "primary", weight: "medium", lh: "tight", ls: "normal", sizes: ["xs", "sm"], note: "The caption under an icon button's icon in Nunito, medium weight with the tight line height" },
   { role: "IconButtonPressed", group: "Components", family: "primary", weight: "bold", lh: "tight", ls: "normal", sizes: ["xs", "sm"], note: "The caption under a pressed icon button's icon in Nunito, bold, so the same box holds it" },
@@ -487,7 +488,7 @@ return { made: made.length, ids: made };
 // `tone` variant on every icon set (ADR-0238): each icon set also has one variant per icon tone, so a component can set an icon's
 // colour as a variant property, and the colour survives swapping the icon. Run after the 07 payloads; it skips a set that already has
 // its tones. START and END pick which sets (sorted by name) a call handles, to keep each call short.
-const ICON_TONES = ["default", "secondary", "disabled", "brand", "danger", "warning", "success", "info", "highlight", "on-brand", "on-danger", "on-warning", "on-success", "on-info", "on-highlight", "white"];
+const ICON_TONES = ["default", "secondary", "disabled", "brand", "danger", "warning", "success", "info", "highlight", "on-brand", "on-danger", "on-warning", "on-success", "on-info", "on-highlight", "on-neutral", "white"];
 writeFileSync(
   join(outDir, "08-icon-tones.js"),
   `const START = 0, END = 20;

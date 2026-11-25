@@ -23,6 +23,7 @@ Generated from the map by `pnpm check-figma-map --write`; CI fails when it is st
 | [Radio](./Radio.md) | atom | Inputs | 36 | approved | 2026-11-23 | 2026-11-23 |
 | [Spinner](./Spinner.md) | atom | Feedback | 64 | approved | 2026-11-23 | 2026-11-23 |
 | [Switch](./Switch.md) | atom | Inputs | 42 | approved | 2026-11-23 | 2026-11-23 |
+| [Tag](./Tag.md) | atom | Data Display | 315 | approved | 2026-11-25 | 2026-11-25 |
 | [Textarea](./Textarea.md) | atom | Inputs | 36 | approved | 2026-11-23 | 2026-11-23 |
 | [Card](./Card.md) | molecule | Data Display | 72 | approved | 2026-11-22 | 2026-11-23 |
 <!-- figma-status:end -->

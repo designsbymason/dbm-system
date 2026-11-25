@@ -2138,6 +2138,212 @@
       "coverage": {
         "note": "The code has no size or tone prop, so the one axis is state, default and disabled (2); the icon is a boolean, not multiplied. Nothing is undrawn."
       }
+    },
+    "Tag": {
+      "tier": "atom",
+      "category": "Data Display",
+      "storybook": "atoms-data-display-tag",
+      "figma": {
+        "set": "Tag",
+        "spec": "Spec: Tag",
+        "page": "Data Display"
+      },
+      "variants": 315,
+      "status": {
+        "state": "approved",
+        "reviewed": "2026-11-25",
+        "approved": "2026-11-25"
+      },
+      "properties": {
+        "variant": {
+          "kind": "variant",
+          "default": "subtle",
+          "values": {
+            "subtle": {
+              "props": {
+                "variant": "subtle"
+              }
+            },
+            "solid": {
+              "props": {
+                "variant": "solid"
+              }
+            },
+            "outlined": {
+              "props": {
+                "variant": "outlined"
+              }
+            }
+          }
+        },
+        "tone": {
+          "kind": "variant",
+          "default": "brand",
+          "values": {
+            "brand": {
+              "props": {
+                "tone": "brand"
+              }
+            },
+            "neutral": {
+              "props": {
+                "tone": "neutral"
+              }
+            },
+            "info": {
+              "props": {
+                "tone": "info"
+              }
+            },
+            "success": {
+              "props": {
+                "tone": "success"
+              }
+            },
+            "warning": {
+              "props": {
+                "tone": "warning"
+              }
+            },
+            "highlight": {
+              "props": {
+                "tone": "highlight"
+              }
+            },
+            "danger": {
+              "props": {
+                "tone": "danger"
+              }
+            }
+          }
+        },
+        "size": {
+          "kind": "variant",
+          "default": "md",
+          "values": {
+            "md": {
+              "props": {
+                "size": "md"
+              }
+            },
+            "sm": {
+              "props": {
+                "size": "sm"
+              }
+            },
+            "lg": {
+              "props": {
+                "size": "lg"
+              }
+            }
+          },
+          "undrawn": {
+            "xs": {
+              "props": {
+                "size": "xs"
+              },
+              "recipe": "Font size xs (Components/Tag/xs), padding space/1 by space/2, icons icon-size/xs; name the instance Tag (size=xs)"
+            },
+            "xl": {
+              "props": {
+                "size": "xl"
+              },
+              "recipe": "Font size base (Components/Tag/base), padding space/2 by space/3, icons icon-size/md; name the instance Tag (size=xl)"
+            }
+          }
+        },
+        "state": {
+          "kind": "variant",
+          "default": "default",
+          "values": {
+            "default": {
+              "props": {}
+            },
+            "hover": {
+              "props": {},
+              "note": "CSS :hover on an interactive tag, no prop"
+            },
+            "focus": {
+              "props": {},
+              "note": "CSS :focus-visible on an interactive tag, no prop"
+            },
+            "selected": {
+              "props": {
+                "selected": true
+              },
+              "note": "also defaultSelected; the tag is then interactive"
+            },
+            "disabled": {
+              "props": {
+                "disabled": true
+              },
+              "note": "only meaningful on an interactive tag"
+            }
+          },
+          "also": [
+            "defaultSelected"
+          ]
+        },
+        "leadingIcon": {
+          "kind": "boolean",
+          "default": false,
+          "on": {
+            "props": {
+              "leadingIcon": "<provided>"
+            },
+            "note": "an icon swapped in place on the nested instance"
+          }
+        },
+        "trailingIcon": {
+          "kind": "boolean",
+          "default": false,
+          "on": {
+            "props": {
+              "trailingIcon": "<provided>"
+            },
+            "note": "an icon swapped in place on the nested instance"
+          }
+        },
+        "removable": {
+          "kind": "boolean",
+          "default": false,
+          "on": {
+            "props": {
+              "removable": true
+            },
+            "note": "the remove glyph, a nested Icon/X"
+          }
+        },
+        "label": {
+          "kind": "text",
+          "default": "Tag",
+          "maps": "children"
+        }
+      },
+      "notModelled": [
+        "aria-label",
+        "aria-labelledby",
+        "className",
+        "data-testid",
+        "id",
+        "onClick",
+        "onRemove",
+        "onSelectedChange",
+        "removeLabel",
+        "removeTabStop",
+        "style"
+      ],
+      "deviations": [
+        "hover and focus are states with no prop of their own: they are CSS on a tag that is interactive through onClick, selected, defaultSelected or onSelectedChange",
+        "the remove glyph's frame is 4 px narrower than its icon, which stands for the code's negative end margin that pulls the glyph in",
+        "the highlight tone's icon uses the highlight tone, where the code leaves it to inherit text/highlight, which is darker in the light themes",
+        "a subtle or outlined tag has a 1 px edge that counts in its size and a solid tag has none, so a solid tag is 2 px shorter, as in the code",
+        "a selected solid tag's halo is two ring layers drawn outside the tag, standing for the code's two box-shadow layers",
+        "hover on a selected tag, a disabled selected tag, the remove glyph's own hover and focus, and the mount and press motion are not drawn"
+      ],
+      "coverage": {
+        "exception": "All three looks, all seven tones, sizes sm, md and lg and all five states are drawn: a tag's tone is a feedback colour, as a badge's is, and every state is drawn at every size and tone, so the set is not sparse (3 x 7 x 3 x 5 = 315). The icon and remove booleans and the label are not multiplied. xs and xl are undrawn, with a recipe."
+      }
     }
   }
 }
