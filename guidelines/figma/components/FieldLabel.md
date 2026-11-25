@@ -21,4 +21,4 @@ See `deviations` in the map: the marker's colour when disabled, the marker as a 
 
 ## Review
 
-Not yet reviewed.
+2026-11-25: reviewed with no findings. Checked: all 6 combinations and the axis order, the default `size=md, state=default` as the top-left cell, every text on a `Components/FieldLabel` style and every text fill, gap and padding bound (12 text layers and 30 spacing values, none unbound), the heights (24, 20 and 29 px) against the 150% line height at each font size, the property bindings in all 6 variants, the spec frame (instance of the master, every slot filled, 12 matrix instances of this set, Tokens used equal to what the set binds, "5 of 9 props in code" against the manifest, both links), the set's description and documentation link, the Section fill and the Components row, and the Code Connect mapping read back (path and name). Not checked: a dark theme render. Approved by the maintainer 2026-11-25.

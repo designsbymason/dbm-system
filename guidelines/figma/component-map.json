@@ -1940,7 +1940,9 @@
       },
       "variants": 6,
       "status": {
-        "state": "drawn"
+        "state": "approved",
+        "reviewed": "2026-11-25",
+        "approved": "2026-11-25"
       },
       "properties": {
         "size": {
@@ -2023,6 +2025,56 @@
       ],
       "coverage": {
         "note": "Default coverage: sizes sm, md and lg, both states at every size (3 x 2 = 6); required is a boolean, not multiplied. xs and xl are undrawn, with a recipe."
+      }
+    },
+    "FieldHelperText": {
+      "tier": "atom",
+      "category": "Inputs",
+      "storybook": "atoms-inputs-fieldhelpertext",
+      "figma": {
+        "set": "FieldHelperText",
+        "spec": "Spec: FieldHelperText",
+        "page": "Inputs"
+      },
+      "variants": 2,
+      "status": {
+        "state": "approved",
+        "reviewed": "2026-11-25",
+        "approved": "2026-11-25"
+      },
+      "properties": {
+        "state": {
+          "kind": "variant",
+          "default": "default",
+          "values": {
+            "default": {
+              "props": {}
+            },
+            "disabled": {
+              "props": {
+                "disabled": true
+              }
+            }
+          }
+        },
+        "text": {
+          "kind": "text",
+          "default": "Helper text",
+          "maps": "children"
+        }
+      },
+      "notModelled": [
+        "className",
+        "data-testid",
+        "id",
+        "style"
+      ],
+      "deviations": [
+        "the set hugs its text, while the code is a block that fills its parent; an instance set to fill, with the text set to wrap, matches it",
+        "the code has no hover, focus or error style, so none is drawn"
+      ],
+      "coverage": {
+        "note": "The code has no size or tone prop, so the one axis is state, default and disabled (2); nothing is undrawn."
       }
     }
   }
