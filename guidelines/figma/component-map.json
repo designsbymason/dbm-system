@@ -1928,6 +1928,102 @@
       "coverage": {
         "note": "Narrowed to the neutral tone, the code's default: sizes sm, md and lg, every state at every size with rounded off and on (3 x 4 x 2 = 24); the brand and white tones are undrawn, with a recipe."
       }
+    },
+    "FieldLabel": {
+      "tier": "atom",
+      "category": "Inputs",
+      "storybook": "atoms-inputs-fieldlabel",
+      "figma": {
+        "set": "FieldLabel",
+        "spec": "Spec: FieldLabel",
+        "page": "Inputs"
+      },
+      "variants": 6,
+      "status": {
+        "state": "drawn"
+      },
+      "properties": {
+        "size": {
+          "kind": "variant",
+          "default": "md",
+          "values": {
+            "md": {
+              "props": {
+                "size": "md"
+              }
+            },
+            "sm": {
+              "props": {
+                "size": "sm"
+              }
+            },
+            "lg": {
+              "props": {
+                "size": "lg"
+              }
+            }
+          },
+          "undrawn": {
+            "xs": {
+              "props": {
+                "size": "xs"
+              },
+              "recipe": "Apply the Components/FieldLabel/xs text style (font-size/xs) to the label and the marker of an sm instance; name the instance FieldLabel (size=xs)"
+            },
+            "xl": {
+              "props": {
+                "size": "xl"
+              },
+              "recipe": "Apply the Components/FieldLabel/lg text style (font-size/lg) to the label and the marker of an lg instance; name the instance FieldLabel (size=xl)"
+            }
+          }
+        },
+        "state": {
+          "kind": "variant",
+          "default": "default",
+          "values": {
+            "default": {
+              "props": {}
+            },
+            "disabled": {
+              "props": {
+                "disabled": true
+              }
+            }
+          }
+        },
+        "required": {
+          "kind": "boolean",
+          "default": false,
+          "on": {
+            "props": {
+              "required": true
+            },
+            "note": "a space and an asterisk in text/danger after the label; decorative and hidden from assistive technology in the code"
+          }
+        },
+        "label": {
+          "kind": "text",
+          "default": "Label",
+          "maps": "children"
+        }
+      },
+      "notModelled": [
+        "className",
+        "data-testid",
+        "htmlFor",
+        "id",
+        "style"
+      ],
+      "deviations": [
+        "the asterisk keeps text/danger when the label is disabled, as the code does, because its own colour rule overrides the inherited one",
+        "the marker is a second text layer holding a space and an asterisk, so it takes the same style and no unbound gap is needed",
+        "the label hugs its text, as the inline-block does; an instance is not fixed to a width",
+        "the code has no hover, focus or pressed style, so none is drawn"
+      ],
+      "coverage": {
+        "note": "Default coverage: sizes sm, md and lg, both states at every size (3 x 2 = 6); required is a boolean, not multiplied. xs and xl are undrawn, with a recipe."
+      }
     }
   }
 }
