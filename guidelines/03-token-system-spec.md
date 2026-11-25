@@ -75,22 +75,22 @@ Dark mode's representative background, `bg.surface`, and several dependent token
 | `danger` | `red.600` | `red.300` | vs `bg.surface`: 5.10:1 / 7.94:1 | AA |
 | `danger-hover` | `red.700` | `red.200` | `text.on-danger`: — / 10.68:1 | AA |
 | `danger-subtle` | `red.50` | `red.950` | `text.danger`: 4.86:1 / 10.32:1 | AA light, AAA dark ([ADR-0178](adr/0178-light-mode-error-text-stays-at-aa-on-red-600-over-splitting-the-text-token-to-reach-the-aaa-target.md)) |
-| `danger-subtle-hover` | `red.100` | `red.900` | `text.danger`: **4.44:1** / 8.22:1 | Light is under the 4.5:1 floor for `text.danger` text; components keep `text.danger` off this fill (`IconButton`'s labelled destructive toggle). Dark clears AAA |
+| `danger-subtle-hover` | `red.100` | `red.900` | `text.danger`: **4.44:1** / 8.22:1 | Light is under the 4.5:1 floor for `text.danger` text; a label on this fill takes `text.danger-hover` (6.43:1 / 8.22:1, [ADR-0245](adr/0245-a-tags-hover-label-takes-three-semantic-hover-text-tokens-over-darkening-the-status-text-tokens-or-changing-the-hover-treatment.md)); `IconButton`'s labelled destructive toggle keeps its pressed fill under the pointer instead. Dark clears AAA |
 | `on-danger` | `neutral.white` | `red.900` | label (`text.danger`): 5.10:1 / 8.22:1; vs `bg.danger`: 5.10:1 / 8.22:1 | AA |
 | `warning` | `amber.600` | `amber.300` | vs `bg.surface`: 4.78:1 / 8.12:1 | AA |
 | `warning-hover` | `amber.700` | `amber.200` | `text.on-warning`: 6.96:1 / 10.54:1 | AA |
-| `warning-subtle` | `amber.50` | `amber.950` | `text.warning`: 9.74:1 / 10.44:1 | AAA |
-| `warning-subtle-hover` | `amber.100` | `amber.900` | `text.warning`: 8.90:1 / 8.19:1 | AAA |
+| `warning-subtle` | `amber.50` | `amber.950` | `text.warning`: 4.59:1 / 10.44:1 | AA light, AAA dark |
+| `warning-subtle-hover` | `amber.100` | `amber.900` | `text.warning`: **4.20:1** / 8.19:1; `text.warning-hover`: 6.11:1 / 8.19:1 | Light is under the 4.5:1 floor for `text.warning` text, so a label on this fill takes `text.warning-hover` ([ADR-0245](adr/0245-a-tags-hover-label-takes-three-semantic-hover-text-tokens-over-darkening-the-status-text-tokens-or-changing-the-hover-treatment.md)). Dark clears AAA |
 | `on-warning` | `neutral.white` | `amber.900` | label (`text.warning`): 4.78:1 / 8.19:1; vs `bg.warning`: 4.78:1 / 8.19:1 | AA |
 | `success` | `green.700` | `green.300` | vs `bg.surface`: 6.50:1 / 8.42:1 | AA (approaching AAA) |
 | `success-hover` | `green.800` | `green.200` | `text.on-success`: 9.56:1 / 10.32:1 | AAA |
-| `success-subtle` | `green.50` | `green.950` | `text.success`: 9.15:1 / 10.68:1 | AAA |
-| `success-subtle-hover` | `green.100` | `green.900` | `text.success`: 8.42:1 / 8.19:1 | AAA |
+| `success-subtle` | `green.50` | `green.950` | `text.success`: 6.22:1 / 10.68:1 | AA light, AAA dark |
+| `success-subtle-hover` | `green.100` | `green.900` | `text.success`: 5.72:1 / 8.19:1 | AA light, AAA dark |
 | `on-success` | `neutral.white` | `green.900` | label (`text.success`): 6.50:1 / 8.19:1; vs `bg.success`: 6.50:1 / 8.19:1 | AA |
 | `info` | `blue.600` | `blue.300` | vs `bg.surface`: 4.71:1 / 8.20:1 | AA |
 | `info-hover` | `blue.700` | `blue.200` | `text.on-info`: 6.93:1 / 10.46:1 | AA |
 | `info-subtle` | `blue.50` | `blue.950` | `text.info`: **4.5068:1 (tightest margin in the system)** / 10.51:1 | AA light (razor-thin, flagged — revisit if the primitive scale is ever regenerated), AAA dark |
-| `info-subtle-hover` | `blue.100` | `blue.900` | `text.info`: 6.10:1 / 8.20:1 | AA |
+| `info-subtle-hover` | `blue.100` | `blue.900` | `text.info`: **4.15:1** / 8.20:1; `text.info-hover`: 6.10:1 / 8.20:1 | Light is under the 4.5:1 floor for `text.info` text, so a label on this fill takes `text.info-hover` ([ADR-0245](adr/0245-a-tags-hover-label-takes-three-semantic-hover-text-tokens-over-darkening-the-status-text-tokens-or-changing-the-hover-treatment.md)). Dark clears AAA |
 | `on-info` | `neutral.white` | `blue.900` | label (`text.info`): 4.71:1 / 8.20:1; vs `bg.info`: 4.71:1 / 8.20:1 | AA |
 | `highlight` | `yellow.700` | `yellow.300` | vs `bg.surface`: 4.67:1 / 8.97:1; `text.on-highlight`: 4.67:1 / 6.42:1 | AA. The general highlight and accent colour (not a status tone), shared across both brands. Light is `yellow.700`, not the scale's `yellow.600` anchor, because white on 600 is only 3.23:1 |
 | `highlight-hover` | `yellow.800` | `yellow.200` | `text.on-highlight`: 6.89:1 / 7.63:1 | AA |
@@ -138,9 +138,12 @@ Dark mode's representative background, `bg.surface`, and several dependent token
 | `link` | `blue.600` (shared both brands) | `blue.300` (shared both brands) | vs `bg.surface`: 4.71:1 / 8.20:1 | AA. Identical across all 4 themes, not brand-coloured. **Never place `text.link` on `bg.canvas`, light or dark** — it measures 4.15:1 (light) / 4.00:1 (dark) there, under the 4.5:1 text floor. `bg.canvas` is reserved for special containers; the ordinary page background is `bg.surface`, which `text.link` is verified against (above), and it is also verified on `bg.neutral-subtle` and `bg.brand-subtle` in light mode (see those rows). Where a link has to sit on the canvas, use a neutral-toned link (`text.secondary`, 6.05:1 / 5.10:1 there). Enforced by convention, not a different token, like `text.tertiary` above. An underline doesn't help (it satisfies WCAG 1.4.1, not the 1.4.3 floor), and moving light mode to `blue.700` (6.09:1 on the canvas) was considered and not done |
 | `brand` | `purple.600` / `emerald.700` | `purple.300` / `emerald.400` | vs `bg.surface`: 7.37:1 (purple) / 6.08:1 (emerald) light; 7.45:1 (purple) / 6.49:1 (emerald) dark | AA/AAA |
 | `danger` | `red.600` | `red.300` | vs `bg.surface`: 5.10:1 / 7.94:1 | AA |
+| `danger-hover` | `red.700` | `red.300` (same as `danger`) | vs `bg.danger-subtle-hover`: 6.43:1 / 8.22:1 | AA light, AAA dark. The label of a hovered subtle or outlined `Tag`; `text.danger` itself is 4.44:1 on that fill in light ([ADR-0245](adr/0245-a-tags-hover-label-takes-three-semantic-hover-text-tokens-over-darkening-the-status-text-tokens-or-changing-the-hover-treatment.md)) |
 | `warning` | `amber.600` | `amber.300` | vs `bg.surface`: 4.78:1 / 8.12:1 | AA |
+| `warning-hover` | `amber.700` | `amber.300` (same as `warning`) | vs `bg.warning-subtle-hover`: 6.11:1 / 8.19:1 | AA light, AAA dark. The label of a hovered subtle or outlined `Tag`; `text.warning` itself is 4.20:1 on that fill in light ([ADR-0245](adr/0245-a-tags-hover-label-takes-three-semantic-hover-text-tokens-over-darkening-the-status-text-tokens-or-changing-the-hover-treatment.md)) |
 | `success` | `green.700` | `green.300` | vs `bg.surface`: 6.50:1 / 8.42:1 | AA, approaching AAA |
 | `info` | `blue.600` | `blue.300` | vs `bg.surface`: 4.71:1 / 8.20:1; vs `bg.info-subtle`: **4.5068:1 light (tightest margin in the system)** | AA |
+| `info-hover` | `blue.700` | `blue.300` (same as `info`) | vs `bg.info-subtle-hover`: 6.10:1 / 8.20:1 | AA light, AAA dark. The label of a hovered subtle or outlined `Tag`; `text.info` itself is 4.15:1 on that fill in light ([ADR-0245](adr/0245-a-tags-hover-label-takes-three-semantic-hover-text-tokens-over-darkening-the-status-text-tokens-or-changing-the-hover-treatment.md)) |
 | `highlight` | `yellow.800` | `yellow.300` | vs `bg.surface`: 6.89:1 / 8.97:1; vs `bg.highlight-subtle`: 6.64:1 / 9.08:1; vs `bg.highlight-subtle-hover`: 6.13:1 / 6.42:1; vs `bg.canvas`: 6.06:1 (light) | AA. Light is `yellow.800`, not `yellow.700`: 700 is 4.67:1 on the surface, 4.50:1 on `bg.highlight-subtle` and only 4.16:1 on its hover |
 | `syntax-keyword` | `purple.700` | `purple.300` | the lower of `bg.code-block` and `bg.code-highlight`: 9.4:1 / 5.3:1 | AA |
 | `syntax-string` | `green.800` | `green.300` | the lower of `bg.code-block` and `bg.code-highlight`: 8.4:1 / 6.0:1 | AA |

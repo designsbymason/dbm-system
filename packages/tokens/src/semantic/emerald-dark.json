@@ -290,10 +290,20 @@
       "$value": "{color.red.300}",
       "$description": "Unchanged by the 2026-08-20 danger token consolidation (already red.300) — now also the shared value bg.danger, border.danger, and icon.danger resolve to in dark mode. See purple-light.json's own text.danger description for the consolidation this is part of."
     },
+    "danger-hover": {
+      "$type": "color",
+      "$value": "{color.red.300}",
+      "$description": "The label colour of a subtle or outlined tag while the pointer is over it; dark mode already clears 4.5:1 on `bg.danger-subtle-hover`, so it is the same colour as `text.danger`."
+    },
     "warning": {
       "$type": "color",
       "$value": "{color.amber.300}",
       "$description": "Unchanged by the 2026-08-20 warning token consolidation (already amber.300) — now also the shared value bg.warning, border.warning, and icon.warning resolve to in dark mode. See purple-light.json's own text.warning description for the consolidation this is part of."
+    },
+    "warning-hover": {
+      "$type": "color",
+      "$value": "{color.amber.300}",
+      "$description": "The label colour of a subtle or outlined tag while the pointer is over it; dark mode already clears 4.5:1 on `bg.warning-subtle-hover`, so it is the same colour as `text.warning`."
     },
     "success": {
       "$type": "color",
@@ -304,6 +314,11 @@
       "$type": "color",
       "$value": "{color.blue.300}",
       "$description": "Unchanged by the 2026-08-20 info token consolidation (already blue.300) — now also the shared value bg.info, border.info, and icon.info resolve to in dark mode. See purple-light.json's own text.info description for the consolidation this is part of."
+    },
+    "info-hover": {
+      "$type": "color",
+      "$value": "{color.blue.300}",
+      "$description": "The label colour of a subtle or outlined tag while the pointer is over it; dark mode already clears 4.5:1 on `bg.info-subtle-hover`, so it is the same colour as `text.info`."
     },
     "highlight": {
       "$type": "color",

@@ -294,7 +294,10 @@
   outline-offset: var(--dbm-space-1);
 }
 
-/* One hover rule per tone × variant combo, mirroring Tag.tsx's own
+/* The `info`, `warning` and `danger` hover rules of `subtle` and unselected `outlined` also set the label to `text.{tone}-hover`: `text.{tone}` is under
+   4.5:1 on that tone's `-subtle-hover` fill in the light themes (ADR-0245).
+
+   One hover rule per tone × variant combo, mirroring Tag.tsx's own
    `classFor` pairing — each reuses that combo's dedicated `*-hover`/
    `*-subtle-hover` token (see guidelines/03-token-system-spec.md Phase 19
    for `bg.neutral-subtle-hover`/`bg.neutral-strong-hover`, added alongside
@@ -325,6 +328,7 @@
 
 .interactive.subtleInfo:hover:not(.disabled) {
   background-color: var(--dbm-bg-info-subtle-hover);
+  color: var(--dbm-text-info-hover);
 }
 
 .interactive.subtleSuccess:hover:not(.disabled) {
@@ -333,6 +337,7 @@
 
 .interactive.subtleWarning:hover:not(.disabled) {
   background-color: var(--dbm-bg-warning-subtle-hover);
+  color: var(--dbm-text-warning-hover);
 }
 
 .interactive.subtleHighlight:hover:not(.disabled) {
@@ -341,6 +346,7 @@
 
 .interactive.subtleDanger:hover:not(.disabled) {
   background-color: var(--dbm-bg-danger-subtle-hover);
+  color: var(--dbm-text-danger-hover);
 }
 
 .interactive.solidNeutral:hover:not(.disabled) {
@@ -385,6 +391,7 @@
 
 .interactive.outlinedInfo:hover:not(.disabled):not(.selected) {
   background-color: var(--dbm-bg-info-subtle-hover);
+  color: var(--dbm-text-info-hover);
 }
 
 .interactive.outlinedSuccess:hover:not(.disabled):not(.selected) {
@@ -393,6 +400,7 @@
 
 .interactive.outlinedWarning:hover:not(.disabled):not(.selected) {
   background-color: var(--dbm-bg-warning-subtle-hover);
+  color: var(--dbm-text-warning-hover);
 }
 
 .interactive.outlinedHighlight:hover:not(.disabled):not(.selected) {
@@ -401,6 +409,7 @@
 
 .interactive.outlinedDanger:hover:not(.disabled):not(.selected) {
   background-color: var(--dbm-bg-danger-subtle-hover);
+  color: var(--dbm-text-danger-hover);
 }
 
 /* `outlined`'s own *selected* hover — a separate rule, not just dropping

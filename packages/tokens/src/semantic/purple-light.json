@@ -289,10 +289,20 @@
       "$value": "{color.red.600}",
       "$description": "Token consolidation (2026-08-20) — moved from red.700 to red.600, so text.danger now shares the same primitive step as bg.danger/border.danger/icon.danger in light mode. red.600 vs bg.surface (white) = 5.10:1, still comfortably passes AA (was 7.39:1). See guidelines/03-token-system-spec.md's token-consolidation phase for the full rationale and contrast table."
     },
+    "danger-hover": {
+      "$type": "color",
+      "$value": "{color.red.700}",
+      "$description": "The label colour of a subtle or outlined tag while the pointer is over it, one step darker than `text.danger` so it keeps 4.5:1 on `bg.danger-subtle-hover`."
+    },
     "warning": {
       "$type": "color",
       "$value": "{color.amber.600}",
       "$description": "Token consolidation (2026-08-20) — moved from amber.800 to amber.600, so text.warning now shares the same primitive step as bg.warning/border.warning/icon.warning in light mode. amber.600 vs bg.surface (white) = 4.78:1, still passes AA (was 10.14:1) — a bigger margin drop than danger's own equivalent move, since amber.800 sat unusually high on the scale to begin with; still a real, deliberate pass, not a near-miss. See guidelines/03-token-system-spec.md's token-consolidation phase for the full rationale and contrast table."
+    },
+    "warning-hover": {
+      "$type": "color",
+      "$value": "{color.amber.700}",
+      "$description": "The label colour of a subtle or outlined tag while the pointer is over it, one step darker than `text.warning` so it keeps 4.5:1 on `bg.warning-subtle-hover`."
     },
     "success": {
       "$type": "color",
@@ -303,6 +313,11 @@
       "$type": "color",
       "$value": "{color.blue.600}",
       "$description": "Token consolidation (2026-08-20) — moved from blue.700 to blue.600, so text.info now shares the same primitive step as bg.info/border.info/icon.info in light mode. blue.600 vs bg.surface (white) = 4.71:1, still comfortably passes AA (was 6.93:1). Against bg.info-subtle specifically, this measures only 4.5068:1 — the tightest margin found across this whole family of consolidations; see bg.info-subtle's own description for the full note. See guidelines/03-token-system-spec.md's token-consolidation phase for the full rationale and contrast table."
+    },
+    "info-hover": {
+      "$type": "color",
+      "$value": "{color.blue.700}",
+      "$description": "The label colour of a subtle or outlined tag while the pointer is over it, one step darker than `text.info` so it keeps 4.5:1 on `bg.info-subtle-hover`."
     },
     "highlight": {
       "$type": "color",
