@@ -2076,6 +2076,68 @@
       "coverage": {
         "note": "The code has no size or tone prop, so the one axis is state, default and disabled (2); nothing is undrawn."
       }
+    },
+    "FieldError": {
+      "tier": "atom",
+      "category": "Inputs",
+      "storybook": "atoms-inputs-fielderror",
+      "figma": {
+        "set": "FieldError",
+        "spec": "Spec: FieldError",
+        "page": "Inputs"
+      },
+      "variants": 2,
+      "status": {
+        "state": "approved",
+        "reviewed": "2026-11-25",
+        "approved": "2026-11-25"
+      },
+      "properties": {
+        "state": {
+          "kind": "variant",
+          "default": "default",
+          "values": {
+            "default": {
+              "props": {}
+            },
+            "disabled": {
+              "props": {
+                "disabled": true
+              }
+            }
+          }
+        },
+        "icon": {
+          "kind": "boolean",
+          "default": true,
+          "on": {
+            "props": {
+              "icon": true
+            },
+            "note": "the nested warning icon, bold, 12 px, tone danger (disabled when disabled); a custom glyph is swapped in place on the nested instance"
+          }
+        },
+        "text": {
+          "kind": "text",
+          "default": "Error message",
+          "maps": "children"
+        }
+      },
+      "notModelled": [
+        "className",
+        "data-testid",
+        "id",
+        "style"
+      ],
+      "deviations": [
+        "the set hugs its content, as the inline-flex does; an instance set to fill, with the text set to wrap, matches a message that wraps",
+        "the icon takes its colour from its tone variant (danger, or disabled when disabled), where the code gives it the text colour through currentColor",
+        "a custom icon glyph is swapped in place on the nested icon, not drawn as a variant",
+        "the one-shot fade and slide on mount is not drawn, and the code has no hover, focus or pressed style"
+      ],
+      "coverage": {
+        "note": "The code has no size or tone prop, so the one axis is state, default and disabled (2); the icon is a boolean, not multiplied. Nothing is undrawn."
+      }
     }
   }
 }
