@@ -92,3 +92,8 @@ Chips that filled a line (three at the Playground's width) left an empty row und
 
 ## Reads the nearest DirectionProvider (2026-11-06)
 Additive, at explicit direction ([ADR-0177](../adr/0177-an-optional-direction-provider-sets-the-text-direction-for-a-subtree-over-reading-the-page-direction-automatically.md), [ADR-0182](../adr/0182-appshell-grows-a-busy-main-a-whole-page-state-and-a-layer-ladder-and-direction-reaches-the-shell-sidebar-and-navbar-through-a-provider.md)): `dir` left out now follows the nearest `DirectionProvider`, else left to right, as before; the prop and its own value are unchanged. The `dir` JSDoc, the Controls description and the Docs line say so. Covered by `DirectionProvider.consumers.test.tsx`. Finalized status is unchanged: no behaviour changes without a provider, and the existing right-to-left checks were re-run.
+
+## Chip label through `Tag`'s `labelRef`, 2026-11-25 (no change to what is drawn; stays Finalized)
+
+The "+N more", "Show less" and summary tags drew their text in `TagsInput`'s `.chipLabel` span; with `Tag` shortening its own label that span is gone and they give plain text, and the chips read the label through `Tag`'s `labelRef` (see [TagsInput](./TagsInput.md)). `MultiSelect`'s tests pass unchanged.
+

@@ -690,6 +690,19 @@ describe("Tag", () => {
       expect(label.parentElement).toBe(screen.getByTestId("tag"));
     });
 
+    it("hands the label element to labelRef, and null for an icon-only tag", () => {
+      const withLabel = createRef<HTMLSpanElement>();
+      const iconOnly = createRef<HTMLSpanElement>();
+      render(
+        <>
+          <Tag labelRef={withLabel}>Design</Tag>
+          <Tag labelRef={iconOnly} leadingIcon={TagIcon} aria-label="Tagged" />
+        </>,
+      );
+      expect(withLabel.current).toBe(screen.getByText("Design"));
+      expect(iconOnly.current).toBeNull();
+    });
+
     it("draws no label box, and so no extra gap, for an icon-only tag", () => {
       render(<Tag data-testid="tag" leadingIcon={TagIcon} aria-label="Tagged" />);
       expect(screen.getByTestId("tag").children).toHaveLength(1);

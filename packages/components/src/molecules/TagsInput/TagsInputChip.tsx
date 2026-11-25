@@ -67,10 +67,9 @@ export function TagsInputChip({
           removeTabStop={false}
           removeLabel={removeLabel}
           onRemove={onRemove}
+          labelRef={labelRef}
         >
-          <span ref={labelRef} className={styles.chipLabel}>
-            {content ?? tag}
-          </span>
+          {content ?? tag}
           {reason ? <VisuallyHidden>{`, ${reason}`}</VisuallyHidden> : null}
           {note ? <VisuallyHidden>{`, ${note}`}</VisuallyHidden> : null}
         </Tag>

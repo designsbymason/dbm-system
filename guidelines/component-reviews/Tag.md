@@ -88,3 +88,11 @@ A full `06` §9 review found six things; every one is fixed and held by a test t
 
 **Finalized status unchanged** under the three-question test (`06` §9): 1 and 2 are defect fixes; 3 to 5 are stories and docs only; 6 changes the DOM (a label `span`) but corrects a broken responsive layout, a defect, and leaves every tag that fits as it was. Re-verified: baseline correctness, accessibility (the new tests), responsiveness, the Docs page and the unit and real-browser runs. A consumer test that reached a tag through `getByText` now gets the label `span` and should use the role or a test id; `Tag`'s own tests did.
 
+## Post-Finalization addition (2026-11-25, at the maintainer's direction) — `labelRef`
+
+`TagsInput` and `MultiSelect` drew a truncating span of their own inside every `Tag` so they could measure whether a chip's text was cut (to show the whole text in a tooltip only then), which, once `Tag` shortened its own label, drew the ellipsis twice.
+
+- **`labelRef?: Ref<HTMLSpanElement>`:** the ref goes on the label `span` the tag already draws, and is `null` for an icon-only tag. Purely additive (nothing that existed changes, no default), so **stays Finalized**; scoped pass: JSDoc, a Controls entry (`control: false`) and the Docs page's `propOrder`, a unit test (the ref is the label, and `null` without one), and a changeset.
+- **Callers:** the chip, the "+N more", "Show less" and summary tags of `TagsInput` and `MultiSelect` now give plain text and read the label through `labelRef`; their own `.chipLabel` span and its stylesheet rule are gone. Their real-browser checks (the narrow box's ellipsis, the tooltip for a cut chip only) pass unchanged, and the tooltip check fails without the ref.
+- **Figma:** `labelRef` is in the map's `notModelled`, and the spec frame says "12 of 22 props in code".
+

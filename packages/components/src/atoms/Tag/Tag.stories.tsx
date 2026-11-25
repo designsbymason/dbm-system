@@ -136,6 +136,11 @@ const meta: Meta<typeof Tag> = {
       description:
         "Disables interaction — blocks onClick/selection toggling and (when removable) the remove affordance. Only has an effect once the tag is interactive; Tag warns once in development otherwise. Demo via the \"Disabled\" story below.",
     },
+    labelRef: {
+      control: false,
+      description:
+        "A ref to the element that holds the label, for a caller that needs to measure it (whether the text is cut by the container). `null` when the tag has no label.",
+    },
     "aria-label": {
       control: "text",
       description:

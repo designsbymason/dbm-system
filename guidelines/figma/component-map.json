@@ -2326,6 +2326,7 @@
         "className",
         "data-testid",
         "id",
+        "labelRef",
         "onClick",
         "onRemove",
         "onSelectedChange",

@@ -197,12 +197,12 @@ Foundational components first (prove the template before mass-applying it), then
 | FieldError | Atom | Inputs & Forms | ✅ | ✅ 2026-08-28 | [FieldError.md](component-reviews/FieldError.md) |
 | FieldHelperText | Atom | Inputs & Forms | ✅ | ✅ 2026-08-29 | [FieldHelperText.md](component-reviews/FieldHelperText.md) |
 | FieldLabel | Atom | Inputs & Forms | ✅ | ✅ 2026-08-29 | [FieldLabel.md](component-reviews/FieldLabel.md) |
-| Input | Atom | Inputs & Forms | ✅ | ✅ 2026-08-29 (focus ring moved onto the field's own edge 2026-10-11; re-verified: functional verification, Docs) | [Input.md](component-reviews/Input.md) |
+| Input | Atom | Inputs & Forms | ✅ | ✅ 2026-08-29 (focus ring moved onto the field's own edge 2026-10-11; re-verified: functional verification, Docs; chip label measured through `Tag`'s `labelRef` 2026-11-25, re-verified: functional verification, responsiveness) | [Input.md](component-reviews/Input.md) |
 | Textarea | Atom | Inputs & Forms | ✅ | ✅ 2026-08-30 (focus ring moved onto the field's own edge 2026-10-11; re-verified: functional verification, Docs) | [Textarea.md](component-reviews/Textarea.md) |
 | Switch | Atom | Inputs & Forms | ✅ | ✅ 2026-08-30 (track/hover colors revised 2026-09-15) | [Switch.md](component-reviews/Switch.md) |
 | Avatar | Atom | Data Display | ✅ | ✅ 2026-08-16 | [Avatar.md](component-reviews/Avatar.md) |
 | Badge | Atom | Data Display | ✅ | ✅ 2026-08-16 | [Badge.md](component-reviews/Badge.md) |
-| Tag | Atom | Data Display | ✅ | ✅ 2026-08-22 (variant `outline` renamed `outlined` 2026-09-21; re-verified: types, stories, Docs, tests; `highlight` tone added and default tone set to `brand` 2026-10-10, re-verified: design quality, theming, Docs, tests; `removeTabStop` added 2026-10-10; hover label tokens, six review fixes and a shortened long label 2026-11-25, re-verified: accessibility, responsiveness, Docs, tests) | [Tag.md](component-reviews/Tag.md) |
+| Tag | Atom | Data Display | ✅ | ✅ 2026-08-22 (variant `outline` renamed `outlined` 2026-09-21; re-verified: types, stories, Docs, tests; `highlight` tone added and default tone set to `brand` 2026-10-10, re-verified: design quality, theming, Docs, tests; `removeTabStop` added 2026-10-10; hover label tokens, six review fixes, a shortened long label and `labelRef` 2026-11-25, re-verified: accessibility, responsiveness, Docs, tests) | [Tag.md](component-reviews/Tag.md) |
 | Skeleton | Atom | Data Display | ✅ | ✅ 2026-08-16 | [Skeleton.md](component-reviews/Skeleton.md) |
 | ProgressBar | Atom | Feedback | ✅ | ✅ 2026-08-22 | [ProgressBar.md](component-reviews/ProgressBar.md) |
 | ProgressCircle | Atom | Feedback | ✅ | ✅ 2026-08-23 | [ProgressCircle.md](component-reviews/ProgressCircle.md) |
@@ -290,7 +290,7 @@ Foundational components first (prove the template before mass-applying it), then
 | Sidebar | Organism | Navigation | ✅ | ✅ 2026-10-21 (final review: section-heading padding, focus kept on a resize, account scaling, section `value`) | [Sidebar.md](component-reviews/Sidebar.md) |
 | FileUpload | Organism | Inputs & Forms | ✅ | ✅ 2026-10-24 | [FileUpload.md](component-reviews/FileUpload.md) |
 | ContextMenu | Organism | Overlay | ✅ | ✅ 2026-10-24 (shortcut hints written with `mod` drawn for the platform 2026-11-01; additive) | [ContextMenu.md](component-reviews/ContextMenu.md) |
-| MultiSelect | Organism | Inputs & Forms | ✅ | ✅ 2026-10-25 | [MultiSelect.md](component-reviews/MultiSelect.md) |
+| MultiSelect | Organism | Inputs & Forms | ✅ | ✅ 2026-10-25 (chip label read through `Tag`'s `labelRef` 2026-11-25, re-verified: functional verification) | [MultiSelect.md](component-reviews/MultiSelect.md) |
 | DateRangePicker | Organism | Inputs & Forms | ✅ | ✅ 2026-10-25 | [DateRangePicker.md](component-reviews/DateRangePicker.md) |
 | CommandPalette | Organism | Navigation | ✅ | ✅ 2026-10-26 | [CommandPalette.md](component-reviews/CommandPalette.md) |
 | Stepper | Organism | Navigation | ✅ | ✅ 2026-10-27 | [Stepper.md](component-reviews/Stepper.md) |

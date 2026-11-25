@@ -1,5 +1,5 @@
 import type { Icon as PhosphorIcon } from "@dbm-system/icons";
-import type { ComponentPropsWithoutRef, CSSProperties, ReactNode } from "react";
+import type { ComponentPropsWithoutRef, CSSProperties, ReactNode, Ref } from "react";
 
 /** Feedback-type coloring, kept separate from visual `variant` per this system's conventions. `brand` and `highlight` are the non-status tones — the system's own identity color, and its general highlight and accent color — matching Badge's own tone scale (which Tag otherwise mirrors) rather than a status. */
 export type TagTone = "brand" | "neutral" | "info" | "success" | "warning" | "highlight" | "danger";
@@ -127,6 +127,13 @@ export interface TagProps extends ComponentPropsWithoutRef<"span"> {
    * @default false
    */
   disabled?: boolean;
+  /**
+   * A ref to the element that holds the label, for a caller that needs to
+   * measure it: whether the text is cut by the container (its `scrollWidth`
+   * is wider than its `clientWidth`), to show the whole text in a tooltip
+   * only then. `null` when the tag has no label (an icon-only tag).
+   */
+  labelRef?: Ref<HTMLSpanElement>;
   /**
    * Explicit accessible-name override for the tag's interactive role,
    * once it has one (`onClick`/`selected`/`defaultSelected`/

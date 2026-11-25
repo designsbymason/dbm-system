@@ -1046,7 +1046,7 @@ export const MultiSelect = forwardRef<HTMLInputElement, MultiSelectProps>(
                     aria-expanded={false}
                     onClick={() => chips.setExpanded(true)}
                   >
-                    <span className={chipStyles.chipLabel}>{labels.more(chips.hiddenCount)}</span>
+                    {labels.more(chips.hiddenCount)}
                   </Tag>
                 )}
                 {!summaryMode && !chips.collapsed && chips.expanded && chips.overflowing && (
@@ -1058,12 +1058,12 @@ export const MultiSelect = forwardRef<HTMLInputElement, MultiSelectProps>(
                     aria-expanded={true}
                     onClick={() => chips.setExpanded(false)}
                   >
-                    <span className={chipStyles.chipLabel}>{labels.less}</span>
+                    {labels.less}
                   </Tag>
                 )}
                 {summaryMode && values.length > 0 && (
                   <Tag id={summaryId} tone={tone} variant={variant} size={tagSize}>
-                    <span className={chipStyles.chipLabel}>{labels.summary(values.length)}</span>
+                    {labels.summary(values.length)}
                   </Tag>
                 )}
                 <div className={chipStyles.entryItem}>

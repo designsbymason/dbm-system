@@ -583,7 +583,7 @@ export const TagsInput = forwardRef<HTMLInputElement, TagsInputProps>(
               aria-expanded={false}
               onClick={() => setExpanded(true)}
             >
-              <span className={styles.chipLabel}>{labels.more(hiddenCount)}</span>
+              {labels.more(hiddenCount)}
             </Tag>
           )}
           {!collapsed && expanded && overflowing && (
@@ -595,7 +595,7 @@ export const TagsInput = forwardRef<HTMLInputElement, TagsInputProps>(
               aria-expanded={true}
               onClick={() => setExpanded(false)}
             >
-              <span className={styles.chipLabel}>{labels.less}</span>
+              {labels.less}
             </Tag>
           )}
           <div className={styles.entryItem}>

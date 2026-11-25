@@ -148,6 +148,7 @@ export const Tag = forwardRef<HTMLSpanElement, TagProps>(
       removeTabStop = true,
       onClick,
       onKeyDown,
+      labelRef,
       selected,
       defaultSelected,
       onSelectedChange,
@@ -302,7 +303,11 @@ export const Tag = forwardRef<HTMLSpanElement, TagProps>(
         {leadingIcon && (
           <Icon icon={leadingIcon} size={iconSizeForTagSize[size]} tone={iconTone} className={styles.icon} />
         )}
-        {hasLabel && <span className={styles.label}>{children}</span>}
+        {hasLabel && (
+          <span ref={labelRef} className={styles.label}>
+            {children}
+          </span>
+        )}
         {trailingIcon && (
           <Icon icon={trailingIcon} size={iconSizeForTagSize[size]} tone={iconTone} className={styles.icon} />
         )}

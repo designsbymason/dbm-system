@@ -72,20 +72,10 @@
   min-inline-size: 0;
 }
 
-/* A chip never grows past the box: the tag may shrink, its label ends in an ellipsis (the whole text is in its
-   `title`), and the remove button, outside the label, always stays in view. */
+/* A chip never grows past the box: the tag shrinks (`min-inline-size: 0` lets a flex item do that), its own label ends in an
+   ellipsis (the whole text is in the tooltip), and the remove button, outside the label, always stays in view. */
 .chipTag {
-  max-inline-size: 100%;
   min-inline-size: 0;
-}
-
-.chipLabel {
-  /* A block, since `Tag` draws its children inside a label box of its own: an inline span there would not be cut. */
-  display: block;
-  min-inline-size: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
 }
 
 /* The typing area takes what the row has left and drops beneath the chips rather than shrinking past the
