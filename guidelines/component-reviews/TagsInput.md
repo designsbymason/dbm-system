@@ -70,3 +70,8 @@ At explicit direction, following `Input`'s own change (see [Input](Input.md)): t
 ## Chip in its own file, 2026-10-25 (code move, no change; stays Finalized)
 
 The chip (a `Tag` in a list item with the cut-text tooltip) moved unchanged into `TagsInputChip.tsx`, so `MultiSelect` draws the same chip ([ADR-0123](../adr/0123-the-floating-option-list-is-shared-by-combobox-and-multiselect-through-internal-and-multiselect-draws-tagsinputs-box-and-chip-over-copying-them-or-adding-a-multiple-prop-to-combobox.md)). It is not exported from the package. Nothing `TagsInput` renders or does changed, and its tests pass as written.
+
+## Chip label stays a block inside `Tag`'s label box, 2026-11-25 (no change to what is drawn; stays Finalized)
+
+`Tag` now draws its children in a `span` of its own, so a long label is cut inside any container. The chip's own `.chipLabel` span sat directly in the tag's flex row and was cut there; inside the new box it would have been inline and never cut, so it is `display: block`. The two real-browser checks that hold the ellipsis (the narrow box and the cut chip's tooltip) failed until it was and pass now. The ellipsis is still drawn twice, once by the chip's span and once by the tag's, because the chip measures its own span to decide when to show the tooltip.
+

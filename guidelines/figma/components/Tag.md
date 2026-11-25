@@ -12,7 +12,7 @@
 - **Icons set the tone on each variant.** The tone follows the fill: the tone icon on subtle and unselected outlined, the on-tone icon on solid and selected outlined. Sizes are `icon-size/xs`, `sm` and `md` for `sm`, `md` and `lg`.
 - **The remove glyph's frame is 4 px narrower than its icon,** which draws the code's negative end margin.
 
-- **Hover label tokens.** The `subtle` and `outlined` hover variants of `info`, `warning` and `danger` (18) bind their label to `text/info-hover`, `text/warning-hover` and `text/danger-hover`, the semantic tokens that [ADR-0245](../../adr/0245-a-tags-hover-label-takes-three-semantic-hover-text-tokens-over-darkening-the-status-text-tokens-or-changing-the-hover-treatment.md) added so the label keeps 4.5:1 on the hover fill in the light themes. The variables were created in the Semantic collection by hand, so they sit at its end.
+- **Hover label tokens.** The `subtle` and `outlined` hover variants of `info`, `warning` and `danger` (18) bind their label to `text/info-hover`, `text/warning-hover` and `text/danger-hover`, the semantic tokens that [ADR-0245](../../adr/0245-a-tags-hover-label-takes-three-semantic-hover-text-tokens-over-darkening-the-status-text-tokens-or-changing-the-hover-treatment.md) added so the label keeps 4.5:1 on the hover fill in the light themes. The variables were created in the Semantic collection by hand and sit beside their base tokens, so the collection is still in the order the sync script writes.
 
 ## Differences from the code
 

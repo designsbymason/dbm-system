@@ -202,7 +202,7 @@ Foundational components first (prove the template before mass-applying it), then
 | Switch | Atom | Inputs & Forms | ✅ | ✅ 2026-08-30 (track/hover colors revised 2026-09-15) | [Switch.md](component-reviews/Switch.md) |
 | Avatar | Atom | Data Display | ✅ | ✅ 2026-08-16 | [Avatar.md](component-reviews/Avatar.md) |
 | Badge | Atom | Data Display | ✅ | ✅ 2026-08-16 | [Badge.md](component-reviews/Badge.md) |
-| Tag | Atom | Data Display | ✅ | ✅ 2026-08-22 (variant `outline` renamed `outlined` 2026-09-21; re-verified: types, stories, Docs, tests; `highlight` tone added and default tone set to `brand` 2026-10-10, re-verified: design quality, theming, Docs, tests; `removeTabStop` added 2026-10-10) | [Tag.md](component-reviews/Tag.md) |
+| Tag | Atom | Data Display | ✅ | ✅ 2026-08-22 (variant `outline` renamed `outlined` 2026-09-21; re-verified: types, stories, Docs, tests; `highlight` tone added and default tone set to `brand` 2026-10-10, re-verified: design quality, theming, Docs, tests; `removeTabStop` added 2026-10-10; hover label tokens, six review fixes and a shortened long label 2026-11-25, re-verified: accessibility, responsiveness, Docs, tests) | [Tag.md](component-reviews/Tag.md) |
 | Skeleton | Atom | Data Display | ✅ | ✅ 2026-08-16 | [Skeleton.md](component-reviews/Skeleton.md) |
 | ProgressBar | Atom | Feedback | ✅ | ✅ 2026-08-22 | [ProgressBar.md](component-reviews/ProgressBar.md) |
 | ProgressCircle | Atom | Feedback | ✅ | ✅ 2026-08-23 | [ProgressCircle.md](component-reviews/ProgressCircle.md) |

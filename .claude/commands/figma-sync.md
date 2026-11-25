@@ -10,7 +10,7 @@ With no argument, sync everything below in order. With one, sync only that group
 1. Run `node scripts/figma-sync.mjs`. It reads `packages/tokens`, `packages/components/src/componentCatalog.json` and the manifest and writes the payloads to `.local/figma/payloads/`. If it fails (an icon group that drifted from the source, a missing manifest), stop and report; do not hand-edit a payload.
 2. Compare the new payloads with what was last sent (the file's `90-verify.js` result is the reference): say which groups changed and why, and wait for my go-ahead before the first write.
 3. Read the file key, call `create_session` once, load `figma-use` and `figma-generate-library`, and put both in every `use_figma` call's `skillNames`. Send the payloads one call at a time, in this order, returning counts from each:
-   - **tokens:** `01-primitives`, `02-viewport`, `03-component`, `04-semantic`, then `95-reorder`
+   - **tokens:** `01-primitives`, `02-viewport`, `03-component`, `04-semantic`. **Skip `95-reorder`** unless `90-verify.js` reports a collection out of order *and* nothing in the file is bound to its variables yet: it copies every variable, deletes the old ones and so gives each a new id, which unbinds every fill, stroke and text style that used one. A token added after components exist is created in place (a new semantic variable lands beside its base token), so the order check stays clean without it
    - **styles:** `06-styles`
    - **icons:** `07-icons-1` to `07-icons-5`, then `08-icon-tones`
    - **components:** `09-components-page`

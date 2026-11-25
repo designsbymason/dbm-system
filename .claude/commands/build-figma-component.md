@@ -34,6 +34,13 @@ Lessons already paid for, so don't repeat them:
 - Nested instance children are not available from another page until loaded; an override on them is lost when a property is bound, so set variant properties, not fills.
 - Load every font a script writes to, including ones the text already uses.
 - A ring or arc is drawn as a stroked open path in a square frame, not an ellipse with `arcData`: its render ignored the angles, its inner radius cannot be bound, and a path's stroke width binds to a variable (Spinner).
+- A border that counts in the size (a CSS border on a `box-sizing: border-box` element with an auto height) is an inside stroke with `strokesIncludedInLayout = true`, so the frame is as tall as the code's; an inside stroke alone is not part of the layout.
+- A variable's web syntax is set with `setVariableCodeSyntax("WEB", ...)`; assigning `codeSyntax` throws. A call that throws leaves none of its changes (checked on the Tag batches), so a retry needs no cleanup, but keep skipping names that exist.
+- Cloning a neighbouring component's spec frame (`instance.clone()`) and rewriting its slots is quicker than building one. Add the new matrix rows first and remove the old ones after, rename its text properties, and repoint every hyperlink it carries.
+- A fixed-width instance wraps its text only when the nested text has `textAutoResize = "HEIGHT"` and `layoutSizingHorizontal = "FILL"` (set on the instance's child) and the instance is set to a fixed width.
+- Reuse an existing text style whose values equal the stylesheet's (`Body/sm` for a small helper text) before adding a role; a new role goes in `scripts/figma-sync.mjs`, and only its own styles need sending.
+- If the code allows an icon tone the Icon sets lack (`IconTone` against the sets' `tone` options; `on-neutral` was one), add it to the script's tone list and send `08-icon-tones` before drawing, instead of using a stand-in.
+- The Components page row can be patched in place (the name's and the status's link to the new spec frame, "Drawn", the count) instead of regenerating the page, which keeps its Section id and leaves nothing to repoint.
 
 When it is built, run `/review-figma-component` on it and report; the component is not done until that review is clean and I say so.
 

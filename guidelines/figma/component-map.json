@@ -1405,7 +1405,7 @@
         "label (the status role and accessible name) has no visual and is not modelled"
       ],
       "coverage": {
-        "exception": "Widened: all 16 tones the Icon set draws, because a spinner takes its colour from where it sits (Switch uses secondary, a filled Button on-brand) and not from a status; and size xs besides sm, md and lg, because the sm Switch nests a 12 px spinner. 16 x 4 = 64 variants, well under the budget."
+        "exception": "Widened: 16 of the Icon set's 17 tones (all but on-neutral), because a spinner takes its colour from where it sits (Switch uses secondary, a filled Button on-brand) and not from a status; and size xs besides sm, md and lg, because the sm Switch nests a 12 px spinner. 16 x 4 = 64 variants, well under the budget."
       }
     },
     "Switch": {
