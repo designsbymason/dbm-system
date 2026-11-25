@@ -80,6 +80,8 @@
 }
 
 .chipLabel {
+  /* A block, since `Tag` draws its children inside a label box of its own: an inline span there would not be cut. */
+  display: block;
   min-inline-size: 0;
   overflow: hidden;
   text-overflow: ellipsis;

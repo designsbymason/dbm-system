@@ -2,6 +2,8 @@
   align-items: center;
   border-radius: var(--dbm-radius-full);
   display: inline-flex;
+  /* A tag never grows past the room it is in: its label shortens with an ellipsis (`.label`) and the icons and remove glyph keep their size. */
+  max-inline-size: 100%;
   font-family: var(--dbm-font-family-primary);
   font-weight: var(--dbm-font-weight-medium);
   gap: var(--dbm-space-1);
@@ -679,4 +681,15 @@
   font-size: var(--dbm-font-size-base);
   padding-block: var(--dbm-space-2);
   padding-inline: var(--dbm-space-3);
+}
+
+/* The label's own box, so a long label can be shortened inside a tag that is as wide as its container. The icons beside it never shrink. */
+.label {
+  min-inline-size: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.icon {
+  flex-shrink: 0;
 }

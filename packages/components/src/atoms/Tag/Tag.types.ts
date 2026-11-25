@@ -55,7 +55,10 @@ export interface TagProps extends ComponentPropsWithoutRef<"span"> {
    */
   onRemove?: () => void;
   /**
-   * Accessible label for the remove button.
+   * Accessible label for the remove button. Left out or empty, it is
+   * "Remove" followed by the plain text of `children` (the pieces of
+   * `Status: {value}` and the text inside an element are joined), or just
+   * "Remove" when there is none.
    * @default `Remove ${children}`
    */
   removeLabel?: string;
@@ -101,7 +104,11 @@ export interface TagProps extends ComponentPropsWithoutRef<"span"> {
    * (uncontrolled), which tracks state internally regardless.
    */
   onSelectedChange?: (selected: boolean) => void;
-  /** Tag content — usually a short label. */
+  /**
+   * Tag content — usually a short label. A label wider than the room the tag
+   * is in is shortened with an ellipsis; the tag never grows past its
+   * container.
+   */
   children?: ReactNode;
   /**
    * Disables interaction — blocks `onClick`, selection toggling, and (when

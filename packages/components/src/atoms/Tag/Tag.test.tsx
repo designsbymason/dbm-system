@@ -1,5 +1,5 @@
 import { TagIcon } from "@dbm-system/icons";
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { axe } from "jest-axe";
 import { createRef } from "react";
@@ -98,8 +98,12 @@ describe("Tag", () => {
   });
 
   it("applies className", () => {
-    render(<Tag className="custom">Design</Tag>);
-    expect(screen.getByText("Design").closest("span")).toHaveClass("custom");
+    render(
+      <Tag className="custom" data-testid="tag">
+        Design
+      </Tag>,
+    );
+    expect(screen.getByTestId("tag")).toHaveClass("custom");
   });
 
   it("defaults to the brand tone and subtle variant", () => {
@@ -276,8 +280,8 @@ describe("Tag", () => {
 
   describe("clickable/selectable mode", () => {
     it("is not focusable or interactive by default", () => {
-      render(<Tag>Design</Tag>);
-      const tag = screen.getByText("Design");
+      render(<Tag data-testid="tag">Design</Tag>);
+      const tag = screen.getByTestId("tag");
       expect(tag).not.toHaveAttribute("role");
       expect(tag).not.toHaveAttribute("tabindex");
       expect(tag).not.toHaveAttribute("aria-pressed");
@@ -437,8 +441,12 @@ describe("Tag", () => {
     });
 
     it("ignores disabled when the tag isn't interactive", () => {
-      render(<Tag disabled>Design</Tag>);
-      const tag = screen.getByText("Design");
+      render(
+        <Tag disabled data-testid="tag">
+          Design
+        </Tag>,
+      );
+      const tag = screen.getByTestId("tag");
       expect(tag).not.toHaveAttribute("aria-disabled");
       expect(tag).not.toHaveAttribute("role");
     });
@@ -559,6 +567,132 @@ describe("Tag", () => {
       );
       const results = await axe(container);
       expect(results).toHaveNoViolations();
+    });
+  });
+
+  describe("what the tag computes can't be replaced by a prop (06 §9)", () => {
+    it("keeps its own role, tab stop, pressed state and disabled state over the same-named props", () => {
+      render(
+        <>
+          <Tag data-testid="clickable" onClick={() => {}} role="link" tabIndex={-1}>
+            Design
+          </Tag>
+          <Tag data-testid="selected" selected onSelectedChange={() => {}} aria-pressed={false}>
+            Design
+          </Tag>
+          <Tag data-testid="disabled" onClick={() => {}} disabled aria-disabled={false}>
+            Design
+          </Tag>
+          <Tag data-testid="removable" onClick={() => {}} removable onRemove={() => {}} aria-keyshortcuts="x">
+            Design
+          </Tag>
+        </>,
+      );
+      expect(screen.getByTestId("clickable")).toHaveAttribute("role", "button");
+      expect(screen.getByTestId("clickable")).toHaveAttribute("tabindex", "0");
+      expect(screen.getByTestId("selected")).toHaveAttribute("aria-pressed", "true");
+      expect(screen.getByTestId("disabled")).toHaveAttribute("aria-disabled", "true");
+      expect(screen.getByTestId("removable")).toHaveAttribute("aria-keyshortcuts", "Delete Backspace");
+    });
+
+    it("lets a plain tag take a role and a tab index from the caller", () => {
+      render(
+        <Tag data-testid="tag" role="status" tabIndex={-1}>
+          Design
+        </Tag>,
+      );
+      expect(screen.getByTestId("tag")).toHaveAttribute("role", "status");
+      expect(screen.getByTestId("tag")).toHaveAttribute("tabindex", "-1");
+    });
+
+    it("runs a caller's onKeyDown first, and Enter still activates", () => {
+      const onKeyDown = vi.fn();
+      const onClick = vi.fn();
+      render(
+        <Tag data-testid="tag" onClick={onClick} onKeyDown={onKeyDown}>
+          Design
+        </Tag>,
+      );
+      fireEvent.keyDown(screen.getByTestId("tag"), { key: "Enter" });
+      expect(onKeyDown).toHaveBeenCalledTimes(1);
+      expect(onClick).toHaveBeenCalledTimes(1);
+    });
+
+    it("lets a caller's onKeyDown claim a key with preventDefault", () => {
+      const onClick = vi.fn();
+      render(
+        <Tag data-testid="tag" onClick={onClick} onKeyDown={(event) => event.preventDefault()}>
+          Design
+        </Tag>,
+      );
+      fireEvent.keyDown(screen.getByTestId("tag"), { key: "Enter" });
+      expect(onClick).not.toHaveBeenCalled();
+    });
+
+    it("passes a caller's onKeyDown to a tag that isn't interactive", () => {
+      const onKeyDown = vi.fn();
+      render(
+        <Tag data-testid="tag" onKeyDown={onKeyDown}>
+          Design
+        </Tag>,
+      );
+      fireEvent.keyDown(screen.getByTestId("tag"), { key: "a" });
+      expect(onKeyDown).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe("the remove button's name", () => {
+    it("joins the pieces of interpolated children", () => {
+      const value = "Active";
+      render(
+        <Tag removable onRemove={() => {}}>
+          Status: {value}
+        </Tag>,
+      );
+      expect(screen.getByRole("button", { name: "Remove Status: Active" })).toBeInTheDocument();
+    });
+
+    it("reads the text inside an element, never [object Object]", () => {
+      render(
+        <Tag removable onRemove={() => {}}>
+          <b>Beta</b>
+        </Tag>,
+      );
+      expect(screen.getByRole("button", { name: "Remove Beta" })).toBeInTheDocument();
+    });
+
+    it("is just Remove when there is no text", () => {
+      render(<Tag removable onRemove={() => {}} leadingIcon={TagIcon} />);
+      expect(screen.getByRole("button", { name: "Remove" })).toBeInTheDocument();
+    });
+
+    it("takes removeLabel when it has text, and the default when it is empty", () => {
+      const { rerender } = render(
+        <Tag removable onRemove={() => {}} removeLabel="Clear filter">
+          Design
+        </Tag>,
+      );
+      expect(screen.getByRole("button", { name: "Clear filter" })).toBeInTheDocument();
+      rerender(
+        <Tag removable onRemove={() => {}} removeLabel="">
+          Design
+        </Tag>,
+      );
+      expect(screen.getByRole("button", { name: "Remove Design" })).toBeInTheDocument();
+    });
+  });
+
+  describe("the label box", () => {
+    it("draws the label in a span of its own inside the tag", () => {
+      render(<Tag data-testid="tag">Design</Tag>);
+      const label = screen.getByText("Design");
+      expect(label.tagName).toBe("SPAN");
+      expect(label.parentElement).toBe(screen.getByTestId("tag"));
+    });
+
+    it("draws no label box, and so no extra gap, for an icon-only tag", () => {
+      render(<Tag data-testid="tag" leadingIcon={TagIcon} aria-label="Tagged" />);
+      expect(screen.getByTestId("tag").children).toHaveLength(1);
     });
   });
 });

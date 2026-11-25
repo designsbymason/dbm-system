@@ -1,7 +1,7 @@
 import { XIcon } from "@dbm-system/icons";
 import { cx } from "@dbm-system/utils";
-import { forwardRef, useRef, useState } from "react";
-import type { KeyboardEvent, MouseEvent } from "react";
+import { forwardRef, isValidElement, useRef, useState } from "react";
+import type { HTMLAttributes, KeyboardEvent, MouseEvent, ReactNode } from "react";
 import { Icon } from "../Icon";
 import type { IconTone } from "../Icon";
 import styles from "./Tag.module.css";
@@ -106,6 +106,17 @@ const removeButtonSizeClass: Record<"xs" | "sm" | "md", string | undefined> = {
 };
 
 /**
+ * The plain text of some children: strings and numbers joined in order, through elements and arrays. `children.toString()` gave
+ * "Status: ,Active" for the two pieces of `Status: {value}` and "[object Object]" for an element, which became the remove button's name.
+ */
+function textOf(node: ReactNode): string {
+  if (typeof node === "string" || typeof node === "number") return String(node);
+  if (Array.isArray(node)) return node.map(textOf).join("");
+  if (isValidElement(node)) return textOf((node.props as { children?: ReactNode }).children);
+  return "";
+}
+
+/**
  * A labeled pill for categorization or active filters, with an optional
  * leading/trailing icon, an optional removable ("×") affordance, and an
  * optional clickable/selectable mode. Shares `Badge`'s tone scale but at
@@ -136,6 +147,7 @@ export const Tag = forwardRef<HTMLSpanElement, TagProps>(
       removeLabel,
       removeTabStop = true,
       onClick,
+      onKeyDown,
       selected,
       defaultSelected,
       onSelectedChange,
@@ -214,7 +226,11 @@ export const Tag = forwardRef<HTMLSpanElement, TagProps>(
     // the same guard: the remove button's own click handler below already
     // calls `stopPropagation`, which fully prevents a click from bubbling
     // here in the first place.
+    // The caller's own `onKeyDown` runs first and can claim a key with `preventDefault()`; spreading `{...props}` over this
+    // handler dropped it, so a tag given an `onKeyDown` stopped activating on Enter and Space.
     const handleKeyDown = (event: KeyboardEvent<HTMLSpanElement>) => {
+      onKeyDown?.(event);
+      if (event.defaultPrevented) return;
       if (event.target !== event.currentTarget) return;
       if (event.key === "Enter" || event.key === " ") {
         event.preventDefault();
@@ -251,22 +267,28 @@ export const Tag = forwardRef<HTMLSpanElement, TagProps>(
       onRemove?.();
     };
 
+    // Computed attributes go after the caller's `props`, so a same-named prop can't replace them (`06` §9; a `role`, `tabIndex`,
+    // `aria-pressed` or `aria-disabled` passed in used to win). An attribute the tag has no opinion on is left out of this object
+    // rather than set to `undefined`, so a plain tag still takes a caller's `role` and the caller's `onKeyDown` still reaches it.
+    const computed: HTMLAttributes<HTMLSpanElement> = {
+      ...(isInteractive
+        ? { role: "button", tabIndex: 0, onClick: handleActivate, onKeyDown: handleKeyDown }
+        : { onKeyDown }),
+      ...(isSelectable ? { "aria-pressed": isSelected } : null),
+      // Screen-reader-discoverable annotation for the Delete/Backspace path in `handleKeyDown` — only relevant in the combined
+      // mode, where the remove affordance can't be its own separately-focusable control (see that branch's own comment).
+      ...(isInteractive && removable ? { "aria-keyshortcuts": "Delete Backspace" } : null),
+      ...(isDisabled ? { "aria-disabled": true } : null),
+    };
+    const removeText = textOf(children).trim();
+    // The label gets a box of its own only when there is one, so an icon-only tag has no empty item (and no extra gap) beside its icon.
+    const hasLabel = children !== undefined && children !== null && children !== false && children !== "";
+
     return (
       <span
         ref={ref}
-        role={isInteractive ? "button" : undefined}
-        tabIndex={isInteractive ? 0 : undefined}
-        aria-pressed={isSelectable ? isSelected : undefined}
-        // Screen-reader-discoverable annotation for the Delete/Backspace
-        // path below — only relevant in the combined mode, where the
-        // remove affordance can't be its own separately-focusable control
-        // (see that branch's own comment for why).
-        aria-keyshortcuts={
-          isInteractive && removable ? "Delete Backspace" : undefined
-        }
-        aria-disabled={isDisabled || undefined}
-        onClick={isInteractive ? handleActivate : undefined}
-        onKeyDown={isInteractive ? handleKeyDown : undefined}
+        {...props}
+        {...computed}
         className={cx(
           styles.root,
           classFor[variant][tone],
@@ -276,14 +298,13 @@ export const Tag = forwardRef<HTMLSpanElement, TagProps>(
           isDisabled && styles.disabled,
           className,
         )}
-        {...props}
       >
         {leadingIcon && (
-          <Icon icon={leadingIcon} size={iconSizeForTagSize[size]} tone={iconTone} />
+          <Icon icon={leadingIcon} size={iconSizeForTagSize[size]} tone={iconTone} className={styles.icon} />
         )}
-        {children}
+        {hasLabel && <span className={styles.label}>{children}</span>}
         {trailingIcon && (
-          <Icon icon={trailingIcon} size={iconSizeForTagSize[size]} tone={iconTone} />
+          <Icon icon={trailingIcon} size={iconSizeForTagSize[size]} tone={iconTone} className={styles.icon} />
         )}
         {removable &&
           (isInteractive ? (
@@ -321,7 +342,7 @@ export const Tag = forwardRef<HTMLSpanElement, TagProps>(
             // case for a nested real button to conflict with.
             <button
               type="button"
-              aria-label={removeLabel ?? `Remove ${children?.toString() ?? ""}`}
+              aria-label={removeLabel || (removeText ? `Remove ${removeText}` : "Remove")}
               tabIndex={removeTabStop ? undefined : -1}
               className={cx(
                 styles.remove,

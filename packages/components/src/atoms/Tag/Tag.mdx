@@ -182,6 +182,9 @@ passthrough.
 - `outlined`'s selected state deliberately reuses the exact `solid`-fill tokens `variant="solid"`
   itself uses — treat outline-selected and solid as visually equivalent "committed" states, not two
   different looks that happen to look similar.
+- Keep a label short. One longer than the room the tag is in is shortened with an ellipsis (a tag
+  never grows past its container, and its icons and remove glyph keep their size); the full text
+  stays in the page for assistive technology. Text that has to be read in full is not a tag.
 
 ## Accessibility
 
@@ -214,6 +217,13 @@ passthrough.
   it focusable and perceivable to assistive tech instead of silently vanishing from Tab order,
   matching WAI-ARIA's own recommended pattern for a custom-role disabled control. Only has an
   effect once the tag is interactive; Tag warns once in development otherwise.
+- **The remove button's name is "Remove" plus the plain text of the label** — the pieces of
+  `Status: {value}` are joined and the text inside an element is read — or just "Remove" when there
+  is none. `removeLabel` replaces it when it has text; an empty `removeLabel` means the default.
+- **Props can't replace what the tag computes.** The `role`, `tabIndex`, `aria-pressed`,
+  `aria-disabled` and `aria-keyshortcuts` it works out win over the same names passed in (a plain
+  tag still takes a `role` you give it). A caller's `onKeyDown` runs first and can claim a key with
+  `preventDefault()`; otherwise Enter, Space and Delete/Backspace still act.
 - **Focus ring** uses the shared `border.focus` token at a `radius.full` outline, matching the
   pill's own shape, offset outward rather than overlapping the fill.
 - Every `tone` × `variant` × state background/text/icon/border pairing is contrast-verified per
@@ -315,8 +325,12 @@ passthrough.
 <TokenRow token="border-width.1" usage="subtle & outlined variants' own border width" />
 <TokenRow token="border-width.2" usage="focus ring width; also both rings of the solid variant's selected-state offset halo" />
 <TokenRow token="space.1" usage="gap between leading icon/label/trailing icon/remove; also the remove button's own negative inline-end margin (optical alignment)" />
+<TokenRow token="space.2" usage="block padding from `sm` up, and inline padding at `xs` and `sm`" />
+<TokenRow token="space.3" usage="inline padding from `md` up" />
+<TokenRow token="space.6" usage="the remove button's invisible hit area, at least 24 × 24px (WCAG 2.5.8) however small the glyph is drawn" />
+<TokenRow token="icon-size.xs–icon-size.md" usage="the remove button's box, and the icons beside the label: `xs` for the `xs` and `sm` tags, `sm` for `md`, `md` for `lg` and `xl`" />
 <TokenRow token="font-family.primary" usage="tag text" />
-<TokenRow token="font-size.xs–font-size.base" usage="per-size type scale" />
+<TokenRow token="font-size.xs–font-size.base" usage="per-size type scale: `xs` for the `xs` and `sm` tags, `sm` for `md` and `lg`, `base` for `xl`" />
 <TokenRow token="font-weight.medium" usage="default text weight" />
 <TokenRow token="font-weight.semibold" usage="selected-state text weight" />
 <TokenRow token="line-height.tight" usage="tag text line-height" />

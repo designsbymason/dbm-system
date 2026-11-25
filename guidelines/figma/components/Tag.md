@@ -16,7 +16,7 @@
 
 ## Differences from the code
 
-See `deviations` in the map. Two are worth knowing: the highlight tone's icon is the lighter `icon/highlight` in the light themes, where the code inherits the darker `text/highlight`; and hover and focus have no prop.
+See `deviations` in the map. Three are worth knowing: a long label is shortened with an ellipsis in code and the set has no maximum width, so none is drawn; the highlight tone's icon is the lighter `icon/highlight` in the light themes, where the code inherits the darker `text/highlight`; and hover and focus have no prop.
 
 ## Not drawn
 

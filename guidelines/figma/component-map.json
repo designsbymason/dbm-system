@@ -2339,7 +2339,8 @@
         "the highlight tone's icon uses the highlight tone, where the code leaves it to inherit text/highlight, which is darker in the light themes",
         "a subtle or outlined tag has a 1 px edge that counts in its size and a solid tag has none, so a solid tag is 2 px shorter, as in the code",
         "a selected solid tag's halo is two ring layers drawn outside the tag, standing for the code's two box-shadow layers",
-        "hover on a selected tag, a disabled selected tag, the remove glyph's own hover and focus, and the mount and press motion are not drawn"
+        "hover on a selected tag, a disabled selected tag, the remove glyph's own hover and focus, and the mount and press motion are not drawn",
+        "a label longer than the room the tag is in is shortened with an ellipsis in code (the tag has a maximum width of its container); the set hugs its text and has no maximum width, so no shortening is drawn"
       ],
       "coverage": {
         "exception": "All three looks, all seven tones, sizes sm, md and lg and all five states are drawn: a tag's tone is a feedback colour, as a badge's is, and every state is drawn at every size and tone, so the set is not sparse (3 x 7 x 3 x 5 = 315). The icon and remove booleans and the label are not multiplied. xs and xl are undrawn, with a recipe."

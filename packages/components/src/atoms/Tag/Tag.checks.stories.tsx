@@ -1,10 +1,12 @@
+import { TagIcon } from "@dbm-system/icons";
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { expect, waitFor, within } from "storybook/test";
 import { send } from "../../molecules/CodeBlock/browserProtocol";
 import { Tag } from "./Tag";
 
 // The checks only a real browser can make, run as stories but hidden from the sidebar and the Docs page (`!dev`, as ADR-0013
-// keeps a sub-part's documentation out of the sidebar): the label colour of a hovered tag and its contrast on the hover fill.
+// keeps a sub-part's documentation out of the sidebar): the label colour of a hovered tag and its contrast on the hover fill, and what a
+// label longer than its container does.
 const meta: Meta = {
   title: "Components/Tag/Checks",
   id: "atoms-data-display-tag-checks",
@@ -97,5 +99,50 @@ export const HoverLabelContrast: Story = {
         await waitFor(() => expect(getComputedStyle(tag).color).toBe(resting), { timeout: 2000 });
       }
     }
+  },
+};
+
+/** Resolves a length token to the pixels the browser computes for it, on a probe element. */
+function lengthOf(token: string) {
+  const probe = document.createElement("div");
+  probe.style.inlineSize = `var(${token})`;
+  document.body.append(probe);
+  const value = probe.getBoundingClientRect().width;
+  probe.remove();
+  return value;
+}
+
+export const LongLabel: Story = {
+  name: "a label longer than its container is shortened with an ellipsis, and the tag never outgrows the container",
+  render: () => (
+    <div data-testid="box" style={{ inlineSize: "12rem", display: "flex", flexDirection: "column", gap: "var(--dbm-space-4)", alignItems: "flex-start" }}>
+      <Tag data-testid="long" leadingIcon={TagIcon} removable onRemove={() => {}}>
+        A deliberately long label that a real filter might show, well past the room it has
+      </Tag>
+      <Tag data-testid="short" leadingIcon={TagIcon}>
+        Design
+      </Tag>
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const box = canvas.getByTestId("box").getBoundingClientRect();
+    const long = canvas.getByTestId("long");
+    const label = long.querySelector("span") as HTMLElement;
+    // the tag stops at its container, and the text inside is what gives way
+    expect(long.getBoundingClientRect().width).toBeLessThanOrEqual(box.width + 0.5);
+    expect(label.scrollWidth).toBeGreaterThan(label.clientWidth);
+    expect(getComputedStyle(label).textOverflow).toBe("ellipsis");
+    // the icon and the remove button keep their size, and the remove button stays inside the tag
+    const icon = long.querySelector("svg") as SVGElement;
+    const remove = canvas.getByRole("button", { name: /^Remove A deliberately long label/ });
+    expect(icon.getBoundingClientRect().width).toBeCloseTo(lengthOf("--dbm-icon-size-sm"), 0);
+    expect(remove.getBoundingClientRect().width).toBeCloseTo(lengthOf("--dbm-icon-size-sm"), 0);
+    expect(remove.getBoundingClientRect().right).toBeLessThanOrEqual(long.getBoundingClientRect().right + 0.5);
+    // a short label still hugs its text and is not shortened
+    const short = canvas.getByTestId("short");
+    expect(short.getBoundingClientRect().width).toBeLessThan(box.width / 2);
+    const shortLabel = short.querySelector("span") as HTMLElement;
+    expect(shortLabel.scrollWidth).toBeLessThanOrEqual(shortLabel.clientWidth);
   },
 };

@@ -48,7 +48,7 @@ const meta: Meta<typeof Tag> = {
       options: ["brand", "neutral", "info", "success", "warning", "highlight", "danger"],
       description:
         "Feedback-type coloring, independent of `variant`. `brand` and `highlight` are the system's own identity color and its general highlight and accent color, rather than statuses.",
-      table: { defaultValue: { summary: "brand" } },
+      table: { defaultValue: { summary: '"brand"' } },
     },
     variant: {
       control: "select",
@@ -90,7 +90,8 @@ const meta: Meta<typeof Tag> = {
     removeLabel: {
       control: "text",
       description:
-        "Accessible label for the remove button. Defaults to `Remove ${children}`.",
+        "Accessible label for the remove button. Defaults to `Remove ${children}` (the plain text of the label); an empty value uses that default.",
+      table: { defaultValue: { summary: "`Remove ${children}`" } },
     },
     removeTabStop: {
       control: "boolean",
@@ -121,6 +122,7 @@ const meta: Meta<typeof Tag> = {
     },
     defaultSelected: {
       control: false,
+      table: { defaultValue: { summary: "false" } },
       description:
         'Initial selected state for uncontrolled usage — ignored once `selected` is provided. Demo via the Playground\'s "Interaction mode" control (select "Selectable") or the dedicated "Selectable" story below.',
     },
@@ -173,13 +175,8 @@ const meta: Meta<typeof Tag> = {
   // component default — an arg left `undefined` renders as an inert "Set
   // string"/"Set boolean" placeholder instead of a live, interactive
   // control (see guidelines/07-storybook-and-documentation-standards.md §5).
-  // `removeLabel` has no true default (it's computed from `children` when
-  // omitted) — given a real, non-blank demo value rather than `""`, since
-  // Tag.tsx's own `removeLabel ?? ...` fallback chain would otherwise let
-  // an explicit empty string win over the intended computed default (the
-  // same class of `??`-vs-`||` bug already found once on Avatar — flagged,
-  // not fixed here, since it's a Tag.tsx behavior change outside this
-  // story-only task).
+  // `removeLabel` has no true default (it's computed from `children` when omitted), so its arg is `""`, which Tag treats as "use the
+  // default": the remove button's name then follows the `children` control instead of staying on a fixed demo string.
   args: {
     children: "Design",
     tone: "brand",
@@ -190,7 +187,7 @@ const meta: Meta<typeof Tag> = {
     removable: false,
     removeTabStop: true,
     onRemove: fn(),
-    removeLabel: "Remove Design",
+    removeLabel: "",
     disabled: false,
     "aria-label": "",
   },
