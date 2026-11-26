@@ -41,10 +41,10 @@ The component manifest (`@dbm-system/components/manifest.json`) lists every prop
 1. It is named as the prop is (`variant`, `size`, `tone`, `state`), and its values are the code's values.
 2. Its default is the code's default (`variant=primary`, `size=md`).
 3. A value the code has and the file does not draw is said in the spec frame (for example, an icon's `weight` has `thin`, `light` and `duotone` in code, and bold, regular and fill here).
-- A text that carries a link (a component's name on the Components page, a Storybook link in a spec frame) is filled with the `text/link` variable; set it when the link is added.
 4. A prop that is not modelled is named in the spec frame, with a link to the component's Props table in Storybook, which stays the full reference.
 5. The component set's own configuration holds a **description** (a short plain-text summary taken from the manifest's summary, naming what is drawn and what is not) and a **documentation link** to its Storybook Docs page, `https://dbm-system.com/storybook/?path=/docs/<id>--docs`. The `<id>` is the `id` in the component's stories file (`atoms-inputs-button`), never built from the name by guessing; `scripts/figma-sync.mjs` reads it, and the Components page links use it. Dev Mode shows both. Figma allows one documentation link per set, so the Icon sets link to the Storybook Icon page (their description credits Phosphor) and the Spec frame master to the repository.
 6. **Every link in the file is checked** with `/figma-drift`: an external one answers 200 (the npm page refuses scripted requests, so `npm view` stands in), a Storybook one names an id in the published `index.json`, and an internal one resolves to a node. A rebuilt frame or set gets a new id, so a page that links to it (Getting started, the Foundations "Go to" links, the Components index) is repointed in the same step.
+7. **A text that carries a link** (a component's name on the Components page, a Storybook link in a spec frame) is filled with the `text/link` variable; set it when the link is added.
 
 ## 3. Coverage: what is drawn
 
