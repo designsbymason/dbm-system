@@ -3223,6 +3223,145 @@
       "coverage": {
         "exception": "The radii none, xs, sm, md, lg and full are drawn and xl, 2xl and 3xl are recipes, as agreed at plan time, because the nine radii are one property and the six cover the steps in use; both contents are drawn at each (12 variants)."
       }
+    },
+    "Indicators": {
+      "tier": "atom",
+      "category": "Media",
+      "storybook": "atoms-media-indicators",
+      "figma": {
+        "set": "Indicators",
+        "spec": "Spec: Indicators",
+        "page": "Media"
+      },
+      "variants": 54,
+      "status": {
+        "state": "approved",
+        "reviewed": "2026-11-26",
+        "approved": "2026-11-26"
+      },
+      "properties": {
+        "variant": {
+          "kind": "variant",
+          "default": "dots",
+          "values": {
+            "dots": {
+              "props": {
+                "variant": "dots"
+              }
+            },
+            "outlined": {
+              "props": {
+                "variant": "outlined"
+              }
+            },
+            "bars": {
+              "props": {
+                "variant": "bars"
+              }
+            }
+          }
+        },
+        "size": {
+          "kind": "variant",
+          "default": "md",
+          "values": {
+            "sm": {
+              "props": {
+                "size": "sm"
+              }
+            },
+            "md": {
+              "props": {
+                "size": "md"
+              }
+            },
+            "lg": {
+              "props": {
+                "size": "lg"
+              }
+            }
+          },
+          "undrawn": {
+            "xs": {
+              "props": {
+                "size": "xs"
+              },
+              "recipe": "Set the steps to indicators/size/xs (4 px) and the active step to three times that length; name the instance Indicators (size=xs)"
+            },
+            "xl": {
+              "props": {
+                "size": "xl"
+              },
+              "recipe": "Set the steps to indicators/size/xl (12 px) and the active step to three times that length; name the instance Indicators (size=xl)"
+            }
+          }
+        },
+        "state": {
+          "kind": "variant",
+          "default": "default",
+          "values": {
+            "default": {
+              "props": {}
+            },
+            "hover": {
+              "props": {},
+              "note": "CSS :hover on an inactive step (the second is drawn), no prop"
+            },
+            "focus": {
+              "props": {},
+              "note": "CSS :focus-visible on the active step, where the roving tabindex puts focus, no prop"
+            }
+          }
+        },
+        "orientation": {
+          "kind": "variant",
+          "default": "horizontal",
+          "values": {
+            "horizontal": {
+              "props": {
+                "orientation": "horizontal"
+              }
+            },
+            "vertical": {
+              "props": {
+                "orientation": "vertical"
+              }
+            }
+          }
+        },
+        "showLabel": {
+          "kind": "boolean",
+          "default": false,
+          "on": {
+            "props": {
+              "showLabel": true
+            }
+          }
+        },
+        "label": {
+          "kind": "text",
+          "default": "1/5",
+          "maps": "formatLabel"
+        }
+      },
+      "notModelled": [
+        "activeIndex",
+        "aria-label",
+        "className",
+        "count",
+        "data-testid",
+        "getLabel",
+        "id",
+        "onIndexChange",
+        "style"
+      ],
+      "deviations": [
+        "the group is drawn with five steps and the first active: count and activeIndex are recipes (duplicate or delete a Step, move the active look)",
+        "hover and focus are states of one step, not of the group: hover is the second, inactive step and focus is the ring on the active step, where the roving tabindex puts it",
+        "the label's tabular numerals (font-variant-numeric) have no equivalent in Figma",
+        "the active step's three times length, the bars' three times length and an inactive bar's half thickness are calc() results in the code, drawn as numbers; the focus ring's size (the step plus a 4 px offset and a 2 px edge) is a number too",
+        "the inactive fill bg/track-strong is 1.72:1 on bg/surface in the light themes, below the 3:1 non-text floor, and 3.00:1 in the dark ones; the code has the same value (the bg.track-strong row of the token spec)"
+      ]
     }
   }
 }
