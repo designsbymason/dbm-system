@@ -4,6 +4,7 @@ import { forwardRef, useRef, useState } from "react";
 import type {
   ComponentPropsWithRef,
   ElementType,
+  HTMLAttributes,
   MouseEvent,
   ReactElement,
 } from "react";
@@ -302,21 +303,30 @@ const AvatarImpl = forwardRef<HTMLElement, AvatarProps<ElementType>>(
     // it's valid on (and useful for) any element.
     const canUseImgRole = !isInteractive;
 
+    // What the avatar computes goes after the caller's `props`, so a same-named prop can't replace it (`06` §9: a `role="presentation"`
+    // dropped the name, and `aria-disabled={false}` re-enabled a disabled link avatar). An attribute the avatar has no opinion on is
+    // left out of this object rather than set to `undefined`, so a plain avatar still takes a caller's `role` or `aria-disabled`.
+    //
+    // Native `disabled` only applies where the DOM actually supports
+    // it — `as="button"` specifically. Every other interactive `as`
+    // (an `<a>`, a router `Link`, ...) relies on `aria-disabled` plus
+    // `handleClick`'s own guard instead, mirroring `Button`'s
+    // `asChild`-disabled handling for the same underlying reason: you
+    // can't rely on a native attribute an arbitrary element might not
+    // support.
+    const computed: HTMLAttributes<HTMLElement> & { disabled?: boolean } = {
+      ...(hasAccessibleName && canUseImgRole ? { role: "img" } : {}),
+      ...(hasAccessibleName ? { "aria-label": combinedLabel } : {}),
+      ...(as === "button" ? { disabled: isDisabled } : {}),
+      ...(isDisabled ? { "aria-disabled": true } : {}),
+      ...(isInteractive ? { onClick: handleClick } : {}),
+    };
+
     return (
       <Component
         ref={ref}
-        role={hasAccessibleName && canUseImgRole ? "img" : undefined}
-        aria-label={hasAccessibleName ? combinedLabel : undefined}
-        // Native `disabled` only applies where the DOM actually supports
-        // it — `as="button"` specifically. Every other interactive `as`
-        // (an `<a>`, a router `Link`, ...) relies on `aria-disabled` plus
-        // `handleClick`'s own guard instead, mirroring `Button`'s
-        // `asChild`-disabled handling for the same underlying reason: you
-        // can't rely on a native attribute an arbitrary element might not
-        // support.
-        disabled={as === "button" ? isDisabled : undefined}
-        aria-disabled={isDisabled || undefined}
-        onClick={isInteractive ? handleClick : undefined}
+        {...props}
+        {...computed}
         className={cx(
           styles.root,
           shape === "square" && styles.rootSquare,
@@ -342,7 +352,6 @@ const AvatarImpl = forwardRef<HTMLElement, AvatarProps<ElementType>>(
           ),
           ...style,
         }}
-        {...props}
       >
         {/*
           The circular/square clip lives here, one level in from `root` —

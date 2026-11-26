@@ -494,6 +494,35 @@ describe("Avatar", () => {
     expect(screen.getByTestId("avatar")).toHaveClass("custom");
   });
 
+  describe("what the avatar computes can't be replaced by a prop (06 §9)", () => {
+    it("keeps role=img and the name over a same-named role", () => {
+      render(<Avatar alt="Jane Doe" role="presentation" data-testid="avatar" />);
+      const avatar = screen.getByTestId("avatar");
+      expect(avatar).toHaveAttribute("role", "img");
+      expect(avatar).toHaveAttribute("aria-label", "Jane Doe");
+    });
+
+    it("keeps a disabled link avatar disabled over aria-disabled={false}", () => {
+      render(<Avatar as="a" href="#top" alt="Jane Doe" disabled aria-disabled={false} data-testid="avatar" />);
+      expect(screen.getByTestId("avatar")).toHaveAttribute("aria-disabled", "true");
+    });
+
+    it("keeps a disabled button avatar natively disabled", () => {
+      render(<Avatar as="button" alt="Jane Doe" disabled data-testid="avatar" />);
+      expect(screen.getByTestId("avatar")).toBeDisabled();
+    });
+
+    it("lets a plain avatar with no name take a role from the caller", () => {
+      render(<Avatar initials="JD" role="status" data-testid="avatar" />);
+      expect(screen.getByTestId("avatar")).toHaveAttribute("role", "status");
+    });
+
+    it("lets an avatar that is not disabled take an aria-disabled from the caller", () => {
+      render(<Avatar initials="JD" aria-disabled="true" data-testid="avatar" />);
+      expect(screen.getByTestId("avatar")).toHaveAttribute("aria-disabled", "true");
+    });
+  });
+
   it("has no accessibility violations, with an image, initials, or the icon fallback", async () => {
     const { container, rerender } = render(
       <Avatar src="/user.jpg" alt="Jane Doe" initials="JD" />,

@@ -198,6 +198,9 @@ below for why it's gated on `as` being interactive.
   — overriding a `<button>`'s own role with `img` is an "aria-allowed-role" violation (confirmed
   via a live `axe` run), since it would hide the element's real interactive semantics from
   assistive tech. `aria-label` still applies regardless of `as`.
+- **Props can't replace what the avatar computes.** The `role="img"`, the `aria-disabled` and the
+  native `disabled` it works out win over the same names passed in (a plain avatar with no name
+  still takes a `role` or `aria-disabled` you give it).
 - **`disabled`** applies the native `disabled` attribute when `as="button"` specifically (the one
   case a real HTML disabled state exists); every other interactive `as` relies on `aria-disabled`
   plus a click-blocking handler instead, the same pattern `Button`'s own `asChild` mode uses.
@@ -228,6 +231,8 @@ below for why it's gated on `as` being interactive.
 
 ## Design tokens used
 
+<TokenRow token="avatar.size.xs–avatar.size.xl" usage="the box's width and height at each size (36 to 52 px)" />
+<TokenRow token="avatar.status-size.xs–avatar.status-size.xl" usage="the status dot's diameter at each size (10 to 14 px)" />
 <TokenRow token="bg.brand-subtle" usage="default (non-colorful) fill" />
 <TokenRow token="bg.brand-subtle-hover" usage="default fill's hover state (as-driven interactive mode)" />
 <TokenRow token="text.brand" usage="default fill's initials color" />
@@ -262,6 +267,7 @@ below for why it's gated on `as` being interactive.
 <TokenRow token="bg.neutral" usage="status='offline' dot color" />
 <TokenRow token="bg.surface" usage="status dot's ring (border color)" />
 <TokenRow token="border.focus" usage="focus-visible outline (as-driven interactive mode)" />
+<TokenRow token="space.1" usage="focus-visible outline offset (as-driven interactive mode)" />
 <TokenRow token="radius.full" usage="circle shape, and the round focus ring" />
 <TokenRow token="radius.md" usage="square shape's visible corners" />
 <TokenRow token="radius.sm" usage="square shape's focus-ring corners (standardized, independent of radius.md)" />
@@ -269,6 +275,7 @@ below for why it's gated on `as` being interactive.
 <TokenRow token="border-width.2" usage="status dot's ring width" />
 <TokenRow token="opacity.40" usage="disabled state" />
 <TokenRow token="font-size.sm–font-size.xl" usage="per-size initials type scale" />
+<TokenRow token="font-family.primary" usage="initials typeface" />
 <TokenRow token="font-weight.semibold" usage="initials weight" />
 <TokenRow token="motion.duration.fast" usage="hover background-color transition" />
 <TokenRow token="motion.easing.standard" usage="hover background-color transition" />
