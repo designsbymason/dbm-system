@@ -84,7 +84,8 @@ export function validateEntry(name, entry, ctx) {
   const checkDefault = (propsObj, where) => {
     for (const [prop, value] of Object.entries(propsObj)) {
       const p = props.get(prop);
-      if (!p || p.default == null || p.default === "None") continue;
+      // A default of "inherited" is no value at all (Link's size, which a link takes from the text around it), so any drawn value may be the default.
+      if (!p || p.default == null || p.default === "None" || p.default === "inherited") continue;
       const def = unquote(p.default);
       if (String(value) !== def && value !== PROVIDED) fail(`${where}: the default maps ${prop} to ${value}, the code's default is ${def}`);
     }

@@ -64,6 +64,12 @@ describe("validateEntry", () => {
     bad.properties.size.default = "sm";
     assert.match(validateEntry("X", bad, ctx).join("\n"), /default maps size to sm, the code's default is md/);
   });
+  it("accepts any drawn default for a prop whose code default is inherited", () => {
+    const m = { props: [...manifest.props.filter((p) => p.name !== "size"), { name: "size", type: "Size", default: "inherited" }] };
+    const e = structuredClone(good);
+    e.properties.size.default = "sm";
+    assert.deepEqual(validateEntry("X", e, { ...ctx, manifest: m }), []);
+  });
   it("flags a prop neither mapped nor in notModelled, and one that is both", () => {
     const missing = structuredClone(good);
     missing.notModelled = [];

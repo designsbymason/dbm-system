@@ -326,6 +326,7 @@ const ROLES = [
   { role: "FieldLabel", group: "Components", family: "primary", weight: "medium", lh: "normal", ls: "normal", sizes: ["xs", "sm", "base", "md", "lg"], note: "The label above a form field in Nunito, medium weight with the normal line height the component uses" },
   { role: "Avatar", group: "Components", family: "primary", weight: "semibold", lh: "auto", ls: "normal", sizes: ["sm", "base", "md", "lg", "xl"], note: "The initials of an avatar in Nunito, semibold, with the browser's own normal line height, which the component inherits since it sets none" },
   { role: "ProgressBar", group: "Components", family: "primary", weight: "semibold", lh: "auto", ls: "normal", sizes: ["xs"], note: "The value label of a progress bar in Nunito, semibold, with the browser's own normal line height, which the component inherits since it sets none" },
+  { role: "Link", group: "Components", family: "primary", weight: "regular", lh: "normal", ls: "normal", sizes: ["sm", "base", "md", "lg"], decoration: "underline", note: "The label of a link in Nunito, regular weight with the normal line height, underlined as a link is by default" },
   { role: "IconButton", group: "Components", family: "primary", weight: "medium", lh: "tight", ls: "normal", sizes: ["xs", "sm"], note: "The caption under an icon button's icon in Nunito, medium weight with the tight line height" },
   { role: "IconButtonPressed", group: "Components", family: "primary", weight: "bold", lh: "tight", ls: "normal", sizes: ["xs", "sm"], note: "The caption under a pressed icon button's icon in Nunito, bold, so the same box holds it" },
   { role: "Overline", family: "primary", weight: "semibold", lh: "snug", ls: "wide", sizes: ["sm", "xs"], upper: true, note: "Small upper-case captions and table headings in Nunito" },
@@ -344,6 +345,7 @@ const textStyles = ROLES.flatMap((r) =>
     lh: r.lh === "auto" ? "AUTO" : Math.round(ratio("line-height", r.lh) * 100),
     ls: Math.round(Number.parseFloat(tokens.find((t) => t.name === `${PREFIX}letter-spacing-${r.ls}`).value) * 10000) / 100,
     upper: Boolean(r.upper),
+    underline: r.decoration === "underline",
     d: `${r.note}. Size ${size}, line height ${r.lh}.`,
   })),
 );
@@ -400,6 +402,7 @@ for (const t of D.text) {
   s.lineHeight = t.lh === "AUTO" ? { unit: "AUTO" } : { unit: "PERCENT", value: t.lh };
   s.letterSpacing = { unit: "PERCENT", value: t.ls };
   s.textCase = t.upper ? "UPPER" : "ORIGINAL";
+  s.textDecoration = t.underline ? "UNDERLINE" : "NONE";
   for (const [field, name, coll] of [["fontSize", t.sizeVar, "Viewport"], ["fontFamily", t.famVar, "Primitives"], ["fontWeight", t.weightVar, "Primitives"]]) {
     try { s.setBoundVariable(field, V(coll, name)); out.boundFields[field] = (out.boundFields[field] || 0) + 1; } catch (e) { if (out.errors.length < 4) out.errors.push(t.n + " " + field + ": " + String(e.message || e).slice(0, 120)); }
   }

@@ -3463,6 +3463,154 @@
         "the arrow's 10 by 5 px size is Radix's default, drawn as numbers, as is the 16 px offset",
         "hideArrow is a boolean named showArrow, because a Figma boolean shows a layer: on is hideArrow off"
       ]
+    },
+    "Link": {
+      "tier": "atom",
+      "category": "Typography",
+      "storybook": "atoms-typography-link",
+      "figma": {
+        "set": "Link",
+        "spec": "Spec: Link",
+        "page": "Typography"
+      },
+      "variants": 16,
+      "status": {
+        "state": "approved",
+        "reviewed": "2026-11-26",
+        "approved": "2026-11-26"
+      },
+      "properties": {
+        "size": {
+          "kind": "variant",
+          "default": "base",
+          "values": {
+            "base": {
+              "props": {
+                "size": "base"
+              }
+            },
+            "sm": {
+              "props": {
+                "size": "sm"
+              }
+            },
+            "md": {
+              "props": {
+                "size": "md"
+              }
+            },
+            "lg": {
+              "props": {
+                "size": "lg"
+              }
+            }
+          },
+          "undrawn": {
+            "xs": {
+              "props": {
+                "size": "xs"
+              },
+              "recipe": "Apply the Body or Heading style of that size to the label and set the icon to the same font size (font-size/xs); name the instance Link (size=xs)"
+            },
+            "xl": {
+              "props": {
+                "size": "xl"
+              },
+              "recipe": "Apply the Body or Heading style of that size to the label and set the icon to the same font size (font-size/xl); name the instance Link (size=xl)"
+            },
+            "2xl": {
+              "props": {
+                "size": "2xl"
+              },
+              "recipe": "Apply the Body or Heading style of that size to the label and set the icon to the same font size (font-size/2xl); name the instance Link (size=2xl)"
+            },
+            "3xl": {
+              "props": {
+                "size": "3xl"
+              },
+              "recipe": "Apply the Body or Heading style of that size to the label and set the icon to the same font size (font-size/3xl); name the instance Link (size=3xl)"
+            },
+            "4xl": {
+              "props": {
+                "size": "4xl"
+              },
+              "recipe": "Apply the Body or Heading style of that size to the label and set the icon to the same font size (font-size/4xl); name the instance Link (size=4xl)"
+            },
+            "5xl": {
+              "props": {
+                "size": "5xl"
+              },
+              "recipe": "Apply the Body or Heading style of that size to the label and set the icon to the same font size (font-size/5xl); name the instance Link (size=5xl)"
+            },
+            "6xl": {
+              "props": {
+                "size": "6xl"
+              },
+              "recipe": "Apply the Body or Heading style of that size to the label and set the icon to the same font size (font-size/6xl); name the instance Link (size=6xl)"
+            }
+          }
+        },
+        "state": {
+          "kind": "variant",
+          "default": "default",
+          "values": {
+            "default": {
+              "props": {}
+            },
+            "hover": {
+              "props": {},
+              "note": "CSS :hover; it changes the look only when underline is hover, which shows the underline"
+            },
+            "focus": {
+              "props": {},
+              "note": "CSS :focus-visible, no prop"
+            },
+            "disabled": {
+              "props": {
+                "disabled": true
+              }
+            }
+          }
+        },
+        "external": {
+          "kind": "boolean",
+          "default": false,
+          "on": {
+            "props": {
+              "external": true
+            },
+            "note": "the trailing Icon/ArrowSquareOut, one em square; the code also adds a visually hidden (opens in a new tab) cue and a new-tab target"
+          }
+        },
+        "label": {
+          "kind": "text",
+          "default": "Link",
+          "maps": "children"
+        }
+      },
+      "notModelled": [
+        "aria-label",
+        "aria-labelledby",
+        "asChild",
+        "className",
+        "data-testid",
+        "download",
+        "href",
+        "id",
+        "rel",
+        "style",
+        "target",
+        "underline"
+      ],
+      "deviations": [
+        "size is unset by default in the code, so a link takes the size of the text around it; the set draws base as the default and sm, md and lg, and the others are recipes",
+        "only underline=always, the code's default, is drawn, as the text's own underline in the Components/Link text styles; hover (the underline only on hover) and none are recipes: turn the underline off in the text's type settings, in every state but hover for hover and in every state for none",
+        "the underline fade on hover is a transition and is not drawn",
+        "the icon takes its colour from its tone variant (info, the same colour as text/link in all four themes), where the code gives it the text colour through currentColor",
+        "the icon's gap (a quarter of the font size) is drawn as numbers, and its vertical nudge of an eighth of the font size is not drawn: the icon is centred on the line",
+        "the focus ring's size (the link plus a 4 px offset and a 2 px edge) is a number; the code's outline has no corner radius, and neither has the ring",
+        "a visited link looks the same as an unvisited one, so it is not drawn"
+      ]
     }
   }
 }

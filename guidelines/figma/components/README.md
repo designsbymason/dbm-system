@@ -25,6 +25,7 @@ Generated from the map by `pnpm check-figma-map --write`; CI fails when it is st
 | [Image](./Image.md) | atom | Media | 12 | approved | 2026-11-26 | 2026-11-26 |
 | [Indicators](./Indicators.md) | atom | Media | 54 | approved | 2026-11-26 | 2026-11-26 |
 | [Input](./Input.md) | atom | Inputs | 36 | approved | 2026-11-22 | 2026-11-23 |
+| [Link](./Link.md) | atom | Typography | 16 | approved | 2026-11-26 | 2026-11-26 |
 | [ProgressBar](./ProgressBar.md) | atom | Feedback | 12 | approved | 2026-11-26 | 2026-11-26 |
 | [ProgressCircle](./ProgressCircle.md) | atom | Feedback | 12 | approved | 2026-11-26 | 2026-11-26 |
 | [Radio](./Radio.md) | atom | Inputs | 36 | approved | 2026-11-23 | 2026-11-23 |
