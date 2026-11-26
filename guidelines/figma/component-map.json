@@ -3697,6 +3697,127 @@
         "the font is Roboto Mono, a stand-in for the system monospace stack (ui-monospace, SFMono-Regular, Menlo, Consolas, Liberation Mono), which Figma has no font for; the Components/Code text styles bind their size and weight but not font-family/mono (ADR-0249)",
         "the chip's height is the font's own content height plus the padding and the edge, which differs by a pixel or two from the browser's, because the stand-in's metrics are not the system font's"
       ]
+    },
+    "Highlight": {
+      "tier": "atom",
+      "category": "Typography",
+      "storybook": "atoms-typography-highlight",
+      "figma": {
+        "set": "Highlight",
+        "spec": "Spec: Highlight",
+        "page": "Typography"
+      },
+      "variants": 20,
+      "status": {
+        "state": "approved",
+        "reviewed": "2026-11-26",
+        "approved": "2026-11-26"
+      },
+      "properties": {
+        "tone": {
+          "kind": "variant",
+          "default": "warning",
+          "values": {
+            "warning": {
+              "props": {
+                "tone": "warning"
+              }
+            },
+            "highlight": {
+              "props": {
+                "tone": "highlight"
+              }
+            },
+            "success": {
+              "props": {
+                "tone": "success"
+              }
+            },
+            "info": {
+              "props": {
+                "tone": "info"
+              }
+            },
+            "danger": {
+              "props": {
+                "tone": "danger"
+              }
+            }
+          }
+        },
+        "size": {
+          "kind": "variant",
+          "default": "base",
+          "values": {
+            "base": {
+              "props": {},
+              "note": "the code has no size prop: it inherits the font size of the text around it"
+            },
+            "sm": {
+              "props": {},
+              "note": "the code has no size prop: it inherits the font size of the text around it"
+            },
+            "md": {
+              "props": {},
+              "note": "the code has no size prop: it inherits the font size of the text around it"
+            },
+            "lg": {
+              "props": {},
+              "note": "the code has no size prop: it inherits the font size of the text around it"
+            }
+          },
+          "undrawn": {
+            "xs": {
+              "props": {},
+              "recipe": "Apply the Components/Textarea style or a Body style of that size to the text (Nunito Regular, the line height auto) and keep the padding; name the instance Highlight (size=xs)"
+            },
+            "xl": {
+              "props": {},
+              "recipe": "Apply the Components/Textarea style or a Body style of that size to the text (Nunito Regular, the line height auto) and keep the padding; name the instance Highlight (size=xl)"
+            },
+            "2xl": {
+              "props": {},
+              "recipe": "Apply the Components/Textarea style or a Body style of that size to the text (Nunito Regular, the line height auto) and keep the padding; name the instance Highlight (size=2xl)"
+            },
+            "3xl": {
+              "props": {},
+              "recipe": "Apply the Components/Textarea style or a Body style of that size to the text (Nunito Regular, the line height auto) and keep the padding; name the instance Highlight (size=3xl)"
+            },
+            "4xl": {
+              "props": {},
+              "recipe": "Apply the Components/Textarea style or a Body style of that size to the text (Nunito Regular, the line height auto) and keep the padding; name the instance Highlight (size=4xl)"
+            },
+            "5xl": {
+              "props": {},
+              "recipe": "Apply the Components/Textarea style or a Body style of that size to the text (Nunito Regular, the line height auto) and keep the padding; name the instance Highlight (size=5xl)"
+            },
+            "6xl": {
+              "props": {},
+              "recipe": "Apply the Components/Textarea style or a Body style of that size to the text (Nunito Regular, the line height auto) and keep the padding; name the instance Highlight (size=6xl)"
+            }
+          }
+        },
+        "text": {
+          "kind": "text",
+          "default": "highlighted text",
+          "maps": "children"
+        }
+      },
+      "notModelled": [
+        "caseSensitive",
+        "className",
+        "data-testid",
+        "id",
+        "query",
+        "style"
+      ],
+      "deviations": [
+        "size is not a prop: the code inherits the font size of the surrounding text, so the set draws the chip at four steps of the type scale; the other sizes are recipes",
+        "a highlight inside a sentence cannot be drawn, because Figma has no background for part of a text layer; the chip is standalone, and the recipe is a wrapping auto layout of text and chips",
+        "query, which wraps every match of a string, is not modelled: it produces the same chip once per match",
+        "the weight is inherited in the code; the set draws regular",
+        "the text uses the Components/Textarea styles (Nunito Regular, the line height auto), whose values equal what font: inherit gives at each size; the name is the other component's"
+      ]
     }
   }
 }
