@@ -3818,6 +3818,44 @@
         "the weight is inherited in the code; the set draws regular",
         "the text uses the Components/Textarea styles (Nunito Regular, the line height auto), whose values equal what font: inherit gives at each size; the name is the other component's"
       ]
+    },
+    "Kbd": {
+      "tier": "atom",
+      "category": "Typography",
+      "storybook": "atoms-typography-kbd",
+      "figma": {
+        "set": "Kbd",
+        "spec": "Spec: Kbd",
+        "page": "Typography"
+      },
+      "variants": 1,
+      "status": {
+        "state": "approved",
+        "reviewed": "2026-11-26",
+        "approved": "2026-11-26"
+      },
+      "properties": {
+        "key": {
+          "kind": "text",
+          "default": "Esc",
+          "maps": "children"
+        }
+      },
+      "notModelled": [
+        "aria-label",
+        "className",
+        "data-testid",
+        "id",
+        "keys",
+        "style"
+      ],
+      "deviations": [
+        "Kbd is one component with no set, because the code has no variant, size or state: it is a single keycap",
+        "keys, which draws a combination for the platform (one keycap per key, with a plus between them off Apple platforms), is not a property: the spec frame shows both arrangements composed from instances of the keycap, and a recipe says how to build a longer one",
+        "the font is Roboto Mono, a stand-in for the system monospace stack, and the Components/Kbd/xs style binds its size and weight but not font-family/mono (ADR-0249)",
+        "the keycap's bottom edge is a drop shadow, 2 px down with no blur, coloured by the border/neutral variable; the offset is a number",
+        "the weight is inherited in the code; the set draws regular"
+      ]
     }
   }
 }

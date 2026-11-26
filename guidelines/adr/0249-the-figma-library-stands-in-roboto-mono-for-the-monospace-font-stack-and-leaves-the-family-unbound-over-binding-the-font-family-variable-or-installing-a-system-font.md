@@ -14,7 +14,7 @@ The mono text styles (`Components/Code/*` now, `Kbd` and `CodeBlock` later) use 
 - **JetBrains Mono or Source Code Pro** (also open source). Not chosen: Roboto Mono's width matches the system fonts, and any of them is replaced the same way.
 
 ## Consequences
-- The file has 62 text styles, four of them `Components/Code/*`.
+- The file has 62 text styles, four of them `Components/Code/*`, and 63 once `Components/Kbd/xs` is added.
 - A user who wants another monospace font changes the family in those styles, which the spec frame says.
 - The measured height of a mono chip differs by a pixel or two from the browser's, because the stand-in's metrics are not the system font's.
 
