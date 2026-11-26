@@ -2678,6 +2678,122 @@
       "coverage": {
         "exception": "Sizes sm, md and lg and only the brand tone are drawn: tone means a status here, which would draw all five by default, but the other four fills are a recipe in the spec frame, as agreed at plan time, and xs and xl are recipes too. The value is drawn as the indeterminate still and the values 0, 50 and 100 (12 variants)."
       }
+    },
+    "ProgressCircle": {
+      "tier": "atom",
+      "category": "Feedback",
+      "storybook": "atoms-feedback-progresscircle",
+      "figma": {
+        "set": "ProgressCircle",
+        "spec": "Spec: ProgressCircle",
+        "page": "Feedback"
+      },
+      "variants": 12,
+      "status": {
+        "state": "approved",
+        "reviewed": "2026-11-26",
+        "approved": "2026-11-26"
+      },
+      "properties": {
+        "progress": {
+          "kind": "variant",
+          "default": "indeterminate",
+          "values": {
+            "indeterminate": {
+              "props": {},
+              "note": "no value: the spinning arc, drawn as a still of a quarter ring from the top"
+            },
+            "0": {
+              "props": {
+                "value": "<provided>"
+              },
+              "note": "a value of 0; no fill is drawn"
+            },
+            "50": {
+              "props": {
+                "value": "<provided>"
+              },
+              "note": "a value of 50 with the default max of 100"
+            },
+            "100": {
+              "props": {
+                "value": "<provided>"
+              },
+              "note": "a value of 100 with the default max of 100"
+            }
+          }
+        },
+        "size": {
+          "kind": "variant",
+          "default": "md",
+          "values": {
+            "md": {
+              "props": {
+                "size": "md"
+              }
+            },
+            "sm": {
+              "props": {
+                "size": "sm"
+              }
+            },
+            "lg": {
+              "props": {
+                "size": "lg"
+              }
+            }
+          },
+          "undrawn": {
+            "xs": {
+              "props": {
+                "size": "xs"
+              },
+              "recipe": "Resize the frame to 32 px (icon-size/xl) and set the stroke width of both rings to 3.2 px; name the instance ProgressCircle (size=xs)"
+            },
+            "xl": {
+              "props": {
+                "size": "xl"
+              },
+              "recipe": "Resize the frame to 96 px (twice icon-size/3xl) and set the stroke width of both rings to 9.6 px; name the instance ProgressCircle (size=xl)"
+            }
+          }
+        },
+        "showValueLabel": {
+          "kind": "boolean",
+          "default": false,
+          "on": {
+            "props": {
+              "showValueLabel": true
+            },
+            "note": "the code draws no label on an indeterminate ring, so only the determinate variants have one"
+          }
+        }
+      },
+      "notModelled": [
+        "aria-labelledby",
+        "aria-valuetext",
+        "className",
+        "data-testid",
+        "formatValueLabel",
+        "id",
+        "label",
+        "max",
+        "style",
+        "tone"
+      ],
+      "deviations": [
+        "progress is a variant property of indeterminate, 0, 50 and 100: the code's value is a number, and an omitted value is the indeterminate ring, which is the default",
+        "the indeterminate ring is drawn as a still of its spinning arc (a quarter ring from the top); the spin is not drawn",
+        "only the brand tone is drawn: tone is not modelled, and the info, success, warning and danger arcs are a recipe in the spec frame",
+        "the lg frame is 72 px, drawn as a number, because the code derives it as 1.5 times icon-size.3xl; the stroke widths (10% of the frame: 4, 4.8 and 7.2 px) are derived from the size and are numbers too",
+        "the fill is a stroked open path of one or two Bezier segments from the top, clockwise, with round caps, because an ellipse arc does not render its angles and a dash pattern restarts on each segment; a value other than 0, 50 and 100 is a recipe",
+        "the value label's text is typed per variant (0%, 50% and 100%) where the code derives it from value and max, and formatValueLabel is not modelled: the text is edited on the instance",
+        "the label reuses three text styles whose values equal the stylesheet's (Components/ProgressBar/xs, Components/Avatar/sm and Components/Avatar/base) instead of adding styles of its own",
+        "the empty track, bg/track, is the code's documented low-contrast exception"
+      ],
+      "coverage": {
+        "exception": "Sizes sm, md and lg and only the brand tone are drawn, as for ProgressBar: tone means a status here, which would draw all five by default, but the other four strokes are a recipe in the spec frame, and xs and xl are recipes too. The value is drawn as the indeterminate still and the values 0, 50 and 100 (12 variants)."
+      }
     }
   }
 }
