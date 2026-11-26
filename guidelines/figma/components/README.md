@@ -33,6 +33,7 @@ Generated from the map by `pnpm check-figma-map --write`; CI fails when it is st
 | [Switch](./Switch.md) | atom | Inputs | 42 | approved | 2026-11-23 | 2026-11-23 |
 | [Tag](./Tag.md) | atom | Data Display | 315 | approved | 2026-11-25 | 2026-11-25 |
 | [Textarea](./Textarea.md) | atom | Inputs | 36 | approved | 2026-11-23 | 2026-11-23 |
+| [Tooltip](./Tooltip.md) | atom | Overlay | 12 | approved | 2026-11-26 | 2026-11-26 |
 | [Card](./Card.md) | molecule | Data Display | 72 | approved | 2026-11-22 | 2026-11-23 |
 <!-- figma-status:end -->
 

@@ -3362,6 +3362,107 @@
         "the active step's three times length, the bars' three times length and an inactive bar's half thickness are calc() results in the code, drawn as numbers; the focus ring's size (the step plus a 4 px offset and a 2 px edge) is a number too",
         "the inactive fill bg/track-strong is 1.72:1 on bg/surface in the light themes, below the 3:1 non-text floor, and 3.00:1 in the dark ones; the code has the same value (the bg.track-strong row of the token spec)"
       ]
+    },
+    "Tooltip": {
+      "tier": "atom",
+      "category": "Overlay",
+      "storybook": "atoms-overlay-tooltip",
+      "figma": {
+        "set": "Tooltip",
+        "spec": "Spec: Tooltip",
+        "page": "Overlay"
+      },
+      "variants": 12,
+      "status": {
+        "state": "approved",
+        "reviewed": "2026-11-26",
+        "approved": "2026-11-26"
+      },
+      "properties": {
+        "side": {
+          "kind": "variant",
+          "default": "top",
+          "values": {
+            "top": {
+              "props": {
+                "side": "top"
+              }
+            },
+            "right": {
+              "props": {
+                "side": "right"
+              }
+            },
+            "bottom": {
+              "props": {
+                "side": "bottom"
+              }
+            },
+            "left": {
+              "props": {
+                "side": "left"
+              }
+            }
+          }
+        },
+        "align": {
+          "kind": "variant",
+          "default": "center",
+          "values": {
+            "center": {
+              "props": {
+                "align": "center"
+              }
+            },
+            "start": {
+              "props": {
+                "align": "start"
+              }
+            },
+            "end": {
+              "props": {
+                "align": "end"
+              }
+            }
+          }
+        },
+        "showArrow": {
+          "kind": "boolean",
+          "default": true,
+          "on": {
+            "props": {
+              "hideArrow": false
+            },
+            "note": "the arrow is on; off is hideArrow, the one prop drawn as a boolean that shows a layer"
+          }
+        },
+        "content": {
+          "kind": "text",
+          "default": "Save your changes",
+          "maps": "content"
+        }
+      },
+      "notModelled": [
+        "aria-label",
+        "children",
+        "className",
+        "data-testid",
+        "defaultOpen",
+        "delayDuration",
+        "disableHoverableContent",
+        "id",
+        "onOpenChange",
+        "open",
+        "style"
+      ],
+      "deviations": [
+        "the tooltip is drawn in its open state only: open, defaultOpen and onOpenChange are behaviour, and the fade and scale animation is not drawn",
+        "the trigger (children) is not drawn; the spec frame says to place the instance 8 px from it, where the code's sideOffset puts the bubble",
+        "the arrow lies outside the bubble, in that 8 px gap, so the instance is the bubble's size",
+        "under align start and end the code keeps the arrow at the trigger's centre, which depends on the trigger's width; here it sits 16 px in from the edge",
+        "the arrow's 10 by 5 px size is Radix's default, drawn as numbers, as is the 16 px offset",
+        "hideArrow is a boolean named showArrow, because a Figma boolean shows a layer: on is hideArrow off"
+      ]
     }
   }
 }
