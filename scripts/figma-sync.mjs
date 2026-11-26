@@ -602,6 +602,7 @@ const NOT_DRAWN = {
   Spacer: ["Layout primitive", "Auto layout spacing does this in Figma."],
   Collapse: ["Behaviour", "It animates a height change and has no visual of its own."],
   SkipLink: ["Behaviour", "It shows only while it has keyboard focus, as a plain link in a pill, so it has no state worth a component."],
+  BackToTop: ["Behaviour", "A fixed-position IconButton that fades in once the page is scrolled past a threshold: use an IconButton instance with rounded on and the size and variant you want, swap its icon to Icon/ArrowUp, and place it space/6 (24 px) from the bottom and end edges of the screen or scroll container, drawn in its visible state."],
   Backdrop: ["Figma style", "Provided as styles instead: the paint styles Backdrop/20, 40, 60 (the default) and 80, bound to bg/overlay-20, -40, -60 and -80, and the effect style Backdrop/blur."],
 };
 const gone = Object.keys(NOT_DRAWN).filter((n) => !(n in catalog));

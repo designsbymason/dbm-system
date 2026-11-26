@@ -5,7 +5,7 @@ argument-hint: <ComponentName, e.g. Input>
 
 Plan how this DBM System component is drawn in the Figma library: $ARGUMENTS
 
-If no component is given, ask for one. This is a planning step: write nothing in Figma or the repository, and run no payload. If the component is not in `packages/components/src/componentCatalog.json`, or is on the not-drawn list in `scripts/figma-sync.mjs` (templates, non-visual utilities, layout primitives, `Collapse`, `SkipLink`, and `Backdrop`, which is provided as Figma styles), say so and stop.
+If no component is given, ask for one. This is a planning step: write nothing in Figma or the repository, and run no payload. If the component is not in `packages/components/src/componentCatalog.json`, or is on the not-drawn list in `scripts/figma-sync.mjs` (templates, non-visual utilities, layout primitives, `Collapse`, `SkipLink`, `BackToTop`, and `Backdrop`, which is provided as Figma styles), say so and stop.
 
 1. Read `guidelines/figma/02-component-rules.md` in full and `guidelines/figma/01-plan.md` §4 to §6. Read ADR-0242 (what is drawn: the coverage rule), ADR-0238 (the icon tone, and why an icon has no swap property) and ADR-0235 (the spec frame).
 2. Read the component in the built manifest (`packages/components/dist/manifest/components/<Name>.json`, or `manifest.json`): tier, category, summary, every prop with its type, default and description, and its parts. If the manifest is not built, run `pnpm --filter @dbm-system/components build` first.
