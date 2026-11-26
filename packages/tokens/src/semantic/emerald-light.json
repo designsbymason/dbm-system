@@ -292,7 +292,7 @@
     "danger-hover": {
       "$type": "color",
       "$value": "{color.red.700}",
-      "$description": "The label colour of a subtle or outlined tag while the pointer is over it, one step darker than `text.danger` so it keeps 4.5:1 on `bg.danger-subtle-hover`."
+      "$description": "The label colour of a subtle or outlined tag, or the initials of an interactive colorful avatar, while the pointer is over it, one step darker than `text.danger` so it keeps 4.5:1 on `bg.danger-subtle-hover`."
     },
     "warning": {
       "$type": "color",
@@ -302,7 +302,7 @@
     "warning-hover": {
       "$type": "color",
       "$value": "{color.amber.700}",
-      "$description": "The label colour of a subtle or outlined tag while the pointer is over it, one step darker than `text.warning` so it keeps 4.5:1 on `bg.warning-subtle-hover`."
+      "$description": "The label colour of a subtle or outlined tag, or the initials of an interactive colorful avatar, while the pointer is over it, one step darker than `text.warning` so it keeps 4.5:1 on `bg.warning-subtle-hover`."
     },
     "success": {
       "$type": "color",
@@ -317,7 +317,7 @@
     "info-hover": {
       "$type": "color",
       "$value": "{color.blue.700}",
-      "$description": "The label colour of a subtle or outlined tag while the pointer is over it, one step darker than `text.info` so it keeps 4.5:1 on `bg.info-subtle-hover`."
+      "$description": "The label colour of a subtle or outlined tag, or the initials of an interactive colorful avatar, while the pointer is over it, one step darker than `text.info` so it keeps 4.5:1 on `bg.info-subtle-hover`."
     },
     "highlight": {
       "$type": "color",

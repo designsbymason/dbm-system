@@ -491,13 +491,21 @@
 /* `colorful`'s own hover step, one per family — `.content.colorX` (two
    classes) so each outranks the default `.content`-only hover rule above
    regardless of source order, not just because it happens to be declared
-   later. */
+   later.
+
+   The danger, warning and info hover rules also set the initials to
+   `text.{family}-hover`: `text.{family}` is under 4.5:1 on that family's
+   `-subtle-hover` fill in the light themes (4.44:1, 4.2:1 and 4.15:1), and
+   the dedicated token holds 4.5:1 (ADR-0245). Brand and success already
+   clear it, so they keep their own text color. */
 .interactive:hover:not(:disabled):not(.disabled) > .content.colorDanger {
   background-color: var(--dbm-bg-danger-subtle-hover);
+  color: var(--dbm-text-danger-hover);
 }
 
 .interactive:hover:not(:disabled):not(.disabled) > .content.colorWarning {
   background-color: var(--dbm-bg-warning-subtle-hover);
+  color: var(--dbm-text-warning-hover);
 }
 
 .interactive:hover:not(:disabled):not(.disabled) > .content.colorSuccess {
@@ -506,6 +514,7 @@
 
 .interactive:hover:not(:disabled):not(.disabled) > .content.colorInfo {
   background-color: var(--dbm-bg-info-subtle-hover);
+  color: var(--dbm-text-info-hover);
 }
 
 .status {

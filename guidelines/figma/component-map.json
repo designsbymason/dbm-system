@@ -2346,6 +2346,202 @@
       "coverage": {
         "exception": "All three looks, all seven tones, sizes sm, md and lg and all five states are drawn: a tag's tone is a feedback colour, as a badge's is, and every state is drawn at every size and tone, so the set is not sparse (3 x 7 x 3 x 5 = 315). The icon and remove booleans and the label are not multiplied. xs and xl are undrawn, with a recipe."
       }
+    },
+    "Avatar": {
+      "tier": "atom",
+      "category": "Data Display",
+      "storybook": "atoms-data-display-avatar",
+      "figma": {
+        "set": "Avatar",
+        "spec": "Spec: Avatar",
+        "page": "Data Display"
+      },
+      "variants": 128,
+      "status": {
+        "state": "reviewed",
+        "reviewed": "2026-11-25"
+      },
+      "properties": {
+        "content": {
+          "kind": "variant",
+          "default": "icon",
+          "values": {
+            "icon": {
+              "props": {},
+              "note": "none of src, initials or name is set, so the generic person icon is drawn"
+            },
+            "initials": {
+              "props": {
+                "initials": "<provided>"
+              },
+              "note": "initials, or name, which the code turns into initials"
+            },
+            "image": {
+              "props": {
+                "src": "<provided>"
+              },
+              "note": "a flat placeholder to be replaced with a picture; the code shows the image and falls back to initials, then the icon"
+            }
+          },
+          "also": [
+            "name"
+          ]
+        },
+        "tone": {
+          "kind": "variant",
+          "default": "brand",
+          "values": {
+            "brand": {
+              "props": {
+                "colorful": false
+              },
+              "note": "the default family, and one of the five colorful can pick"
+            },
+            "danger": {
+              "props": {
+                "colorful": true
+              },
+              "note": "colorful picks the family from a hash of name, alt or initials"
+            },
+            "warning": {
+              "props": {
+                "colorful": true
+              },
+              "note": "colorful picks the family from a hash of name, alt or initials"
+            },
+            "success": {
+              "props": {
+                "colorful": true
+              },
+              "note": "colorful picks the family from a hash of name, alt or initials"
+            },
+            "info": {
+              "props": {
+                "colorful": true
+              },
+              "note": "colorful picks the family from a hash of name, alt or initials"
+            }
+          }
+        },
+        "size": {
+          "kind": "variant",
+          "default": "md",
+          "values": {
+            "md": {
+              "props": {
+                "size": "md"
+              }
+            },
+            "xs": {
+              "props": {
+                "size": "xs"
+              }
+            },
+            "sm": {
+              "props": {
+                "size": "sm"
+              }
+            },
+            "lg": {
+              "props": {
+                "size": "lg"
+              }
+            }
+          },
+          "undrawn": {
+            "xl": {
+              "props": {
+                "size": "xl"
+              },
+              "recipe": "52 px (avatar/size/xl), status dot avatar/status-size/xl, initials Components/Avatar/xl, icon icon-size/xl; name the instance Avatar (size=xl)"
+            }
+          }
+        },
+        "state": {
+          "kind": "variant",
+          "default": "default",
+          "values": {
+            "default": {
+              "props": {}
+            },
+            "hover": {
+              "props": {},
+              "note": "CSS :hover on an interactive avatar (as and onClick), no prop"
+            },
+            "focus": {
+              "props": {},
+              "note": "CSS :focus-visible on an interactive avatar, no prop"
+            },
+            "disabled": {
+              "props": {
+                "disabled": true
+              },
+              "note": "only meaningful on an interactive avatar"
+            }
+          }
+        },
+        "status": {
+          "kind": "variant",
+          "default": "none",
+          "values": {
+            "none": {
+              "props": {}
+            },
+            "online": {
+              "props": {
+                "status": "online"
+              }
+            },
+            "offline": {
+              "props": {
+                "status": "offline"
+              }
+            },
+            "busy": {
+              "props": {
+                "status": "busy"
+              }
+            },
+            "away": {
+              "props": {
+                "status": "away"
+              }
+            }
+          }
+        },
+        "initials": {
+          "kind": "text",
+          "default": "JD",
+          "maps": "initials"
+        }
+      },
+      "notModelled": [
+        "alt",
+        "aria-label",
+        "as",
+        "className",
+        "data-testid",
+        "id",
+        "loading",
+        "onClick",
+        "onError",
+        "shape",
+        "style"
+      ],
+      "deviations": [
+        "content is one variant property of icon, initials and image, where the code has no such prop: it is which of src, initials or name is set, and the icon is what an avatar with none of them draws",
+        "tone stands for colorful and for the family its hash picks from name, alt or initials; the code has no tone prop",
+        "hover and focus are states with no prop of their own: they are CSS on an avatar that is interactive through as and onClick",
+        "shape is not a Figma property: only the circle is drawn, and the square is a recipe in the spec frame",
+        "the nested icon of the 16 icon variants uses icon/brand, where the code inherits text/brand: the two are equal in the purple themes and icon/brand is lighter in the emerald ones (#2e8a7d against #1a6e63 in emerald-light), and it is at least 3.99:1 on the fill",
+        "the image is a flat bg/neutral-subtle rectangle to be replaced with a picture; src is not modelled",
+        "the status dot sits at the bottom right, as in left-to-right text; the code puts it at the inline end",
+        "a status dot is drawn at the default state only, so a status with hover, focus or disabled is not drawn",
+        "the focus ring is the box plus 4 px outside it, drawn as a literal size and offset, not a bound variable"
+      ],
+      "coverage": {
+        "exception": "Sizes xs, sm, md and lg are drawn, one beyond the default, because xs (36 px) is the size AvatarGroup and dense menus use; xl is undrawn with a recipe. The five tones are the code's colorful palette, not status tones: all five for initials, and brand only for icon and image. Shape is drawn as the circle only and the square is a recipe. Every state is drawn at every size on the circle, and a status dot is drawn at the default state only (128 variants)."
+      }
     }
   }
 }

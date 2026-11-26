@@ -16,7 +16,7 @@ Add three semantic tokens, `text.info-hover`, `text.warning-hover` and `text.dan
 ## Consequences
 - Three new semantic tokens in all four theme files, listed in the `text.*` table of `03-token-system-spec.md`, which also corrects the contrast figures of the `info`, `warning` and `success` subtle rows it had wrong.
 - `Tag` changes only in the hover colour of six combinations; a real-browser check holds each to 4.5:1.
-- Only `Tag` reads the new tokens. Another component that puts a status text colour on a `-subtle-hover` fill should use them too, and `IconButton`'s labelled destructive toggle may now do so instead of keeping its pressed fill under the pointer.
+- `Tag` read the new tokens first; `Avatar`'s hovered colorful initials use them too *(amended 2026-11-25: the Avatar's `danger`, `warning` and `info` families had the same three shortfalls, found when the Avatar was drawn in the Figma library)*. Another component that puts a status text colour on a `-subtle-hover` fill should use them too, and `IconButton`'s labelled destructive toggle may now do so instead of keeping its pressed fill under the pointer.
 - The Figma library gains the three variables and redraws the 18 affected hover variants.
 
 ## Related

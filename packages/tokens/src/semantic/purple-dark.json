@@ -293,7 +293,7 @@
     "danger-hover": {
       "$type": "color",
       "$value": "{color.red.300}",
-      "$description": "The label colour of a subtle or outlined tag while the pointer is over it; dark mode already clears 4.5:1 on `bg.danger-subtle-hover`, so it is the same colour as `text.danger`."
+      "$description": "The label colour of a subtle or outlined tag, or the initials of an interactive colorful avatar, while the pointer is over it; dark mode already clears 4.5:1 on `bg.danger-subtle-hover`, so it is the same colour as `text.danger`."
     },
     "warning": {
       "$type": "color",
@@ -303,7 +303,7 @@
     "warning-hover": {
       "$type": "color",
       "$value": "{color.amber.300}",
-      "$description": "The label colour of a subtle or outlined tag while the pointer is over it; dark mode already clears 4.5:1 on `bg.warning-subtle-hover`, so it is the same colour as `text.warning`."
+      "$description": "The label colour of a subtle or outlined tag, or the initials of an interactive colorful avatar, while the pointer is over it; dark mode already clears 4.5:1 on `bg.warning-subtle-hover`, so it is the same colour as `text.warning`."
     },
     "success": {
       "$type": "color",
@@ -318,7 +318,7 @@
     "info-hover": {
       "$type": "color",
       "$value": "{color.blue.300}",
-      "$description": "The label colour of a subtle or outlined tag while the pointer is over it; dark mode already clears 4.5:1 on `bg.info-subtle-hover`, so it is the same colour as `text.info`."
+      "$description": "The label colour of a subtle or outlined tag, or the initials of an interactive colorful avatar, while the pointer is over it; dark mode already clears 4.5:1 on `bg.info-subtle-hover`, so it is the same colour as `text.info`."
     },
     "highlight": {
       "$type": "color",
