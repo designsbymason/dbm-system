@@ -98,7 +98,24 @@ const base = (token, type, scopes) => ({
   ...(token.purpose ? { d: token.purpose } : {}),
 });
 
+// `bg.overlay` is not one Figma variable: it is four, `bg/overlay-20`, `-40`, `-60` and `-80`, each an alias of the colour's
+// primitive with an opacity, which the Backdrop paint styles bind to (ADR-0246). A colour variable with an opacity can be made in
+// Figma's own screen and not through the plugin API, so the Semantic payloads skip them (and fail if they are missing) and the
+// check compares them. They sit after `bg/scrim`, where the order puts them.
+const OVERLAY_OPACITIES = [20, 40, 60, 80];
 for (const token of tokens) {
+  if (token.layer === "semantic" && token.name === `${PREFIX}bg-overlay`) {
+    for (const o of OVERLAY_OPACITIES) {
+      add("Semantic", {
+        ...base(token, "COLOR", SEMANTIC_SCOPES[token.group]),
+        n: `bg/overlay-${o}`,
+        a: themes.map((mode) => figmaName(tokens.find((p) => p.name === token.aliases[mode]))),
+        v: token.values,
+        h: o,
+      });
+    }
+    continue;
+  }
   if (token.layer === "semantic") {
     add("Semantic", {
       ...base(token, "COLOR", SEMANTIC_SCOPES[token.group]),
@@ -161,7 +178,7 @@ const SPECIAL = {
 const TONES = ["brand", "neutral", "info", "success", "warning", "danger", "highlight"];
 const VARIANTS = ["base", "hover", "subtle", "subtle-hover", "strong", "on"];
 const SEMANTIC = {
-  bg: { lead: ["surface", "canvas", "scrim", "overlay", "track", "track-strong", "skeleton"], trail: ["code", "code-block", "code-highlight"] },
+  bg: { lead: ["surface", "canvas", "scrim", "overlay-20", "overlay-40", "overlay-60", "overlay-80", "track", "track-strong", "skeleton"], trail: ["code", "code-block", "code-highlight"] },
   text: { lead: ["primary", "secondary", "tertiary", "disabled", "link", "white"], trail: [] },
   border: { lead: ["default", "strong", "focus", "white", "black"], trail: ["code"] },
   icon: { lead: ["default", "secondary", "disabled", "white"], trail: [] },
@@ -234,6 +251,10 @@ if (D.aliasCollection) {
 }
 let created = 0, updated = 0;
 for (const e of D.items) {
+  if (e.h) {
+    if (!mine.get(e.n)) throw new Error(e.n + " is made by hand: a colour variable that aliases " + e.a[0] + " with an opacity of " + e.h + ", which the plugin API cannot write (ADR-0246)");
+    continue;
+  }
   let v = mine.get(e.n);
   if (!v) { v = figma.variables.createVariable(e.n, col, e.t); mine.set(e.n, v); created++; }
   else { if (v.resolvedType !== e.t) throw new Error("Type changed for " + e.n); updated++; }
@@ -272,6 +293,7 @@ function chunks(items) {
   return out;
 }
 
+if (!collections.Semantic.items.some((e) => e.h)) throw new Error("bg.overlay was not turned into its opacity variables");
 rmSync(outDir, { recursive: true, force: true });
 mkdirSync(outDir, { recursive: true });
 let step = 1;
@@ -303,6 +325,7 @@ const ROLES = [
   { role: "Tag", group: "Components", family: "primary", weight: "medium", lh: "tight", ls: "normal", sizes: ["xs", "sm", "base"], note: "The label of a tag in Nunito, medium weight with the tight line height the component uses" },
   { role: "FieldLabel", group: "Components", family: "primary", weight: "medium", lh: "normal", ls: "normal", sizes: ["xs", "sm", "base", "md", "lg"], note: "The label above a form field in Nunito, medium weight with the normal line height the component uses" },
   { role: "Avatar", group: "Components", family: "primary", weight: "semibold", lh: "auto", ls: "normal", sizes: ["sm", "base", "md", "lg", "xl"], note: "The initials of an avatar in Nunito, semibold, with the browser's own normal line height, which the component inherits since it sets none" },
+  { role: "ProgressBar", group: "Components", family: "primary", weight: "semibold", lh: "auto", ls: "normal", sizes: ["xs"], note: "The value label of a progress bar in Nunito, semibold, with the browser's own normal line height, which the component inherits since it sets none" },
   { role: "IconButton", group: "Components", family: "primary", weight: "medium", lh: "tight", ls: "normal", sizes: ["xs", "sm"], note: "The caption under an icon button's icon in Nunito, medium weight with the tight line height" },
   { role: "IconButtonPressed", group: "Components", family: "primary", weight: "bold", lh: "tight", ls: "normal", sizes: ["xs", "sm"], note: "The caption under a pressed icon button's icon in Nunito, bold, so the same box holds it" },
   { role: "Overline", family: "primary", weight: "semibold", lh: "snug", ls: "wide", sizes: ["sm", "xs"], upper: true, note: "Small upper-case captions and table headings in Nunito" },
@@ -340,21 +363,14 @@ const effectStyles = ["light", "dark"].flatMap((theme) =>
 );
 // The Backdrop atom is drawn as styles, not a component: its scrim is `bg.overlay` at an opacity of the `opacity.*` scale, and its
 // optional blur is `blur(space.1)`. The paint styles cover the opacities a scrim is used at (the atom also takes 0, 5, 10, 90 and 100,
-// which a designer sets on the fill by hand). A paint whose colour is bound to a variable does not carry its own opacity in a style
-// (Figma shows it at full opacity), so the styles hold the colour as a literal, read from the token here and refused if the four themes
-// disagree: `bg.overlay` is one colour in every theme, and a mode-specific one would need styles of its own (ADR-0246). Figma's
-// background blur radius is twice the CSS blur radius, so the blur style is 8 where the stylesheet says 4px.
-const overlay = tokens.find((t) => t.name === `${PREFIX}bg-overlay`);
-const overlayHexes = new Set(themes.map((theme) => overlay.values[theme].toLowerCase()));
-if (overlayHexes.size !== 1) throw new Error(`bg.overlay differs by theme (${[...overlayHexes].join(", ")}): the Backdrop paint styles hold one literal colour and need a decision (ADR-0246)`);
-const overlayHex = [...overlayHexes][0];
-if (!/^#[0-9a-f]{6}$/.test(overlayHex)) throw new Error(`bg.overlay is ${overlayHex}, not an opaque colour the Backdrop styles can hold`);
-const overlayRgb = [1, 3, 5].map((i) => Number.parseInt(overlayHex.slice(i, i + 2), 16) / 255);
+// which a designer sets on the fill by hand). Each binds to the Semantic variable `bg/overlay-N`, the colour of `bg.overlay` with that
+// opacity (a variable-bound paint does not carry an opacity of its own in a style, so the opacity is in the variable; ADR-0246).
+// Figma's background blur radius is twice the CSS blur radius, so the blur style is 8 where the stylesheet says 4px.
 const backdropStyles = [20, 40, 60, 80].map((o) => ({
   n: `Backdrop/${o}`,
-  rgb: overlayRgb,
+  v: `bg/overlay-${o}`,
   opacity: o / 100,
-  d: `The scrim behind an overlay: the colour of bg/overlay (${overlayHex}, the same in every theme) at ${o}% opacity${o === 60 ? ", the Backdrop's default" : ""}. The colour is a literal because a variable-bound paint does not keep its opacity in a style; the sync script reads it from the token.`,
+  d: `The scrim behind an overlay: bg/overlay-${o}, the colour of bg.overlay at ${o}% opacity${o === 60 ? ", the Backdrop default" : ""}.`,
 }));
 effectStyles.push({
   n: "Backdrop/blur",
@@ -399,7 +415,10 @@ const paintById = new Map((await figma.getLocalPaintStylesAsync()).map((s) => [s
 for (const p of D.paint) {
   const s = paintById.get(p.n) ?? figma.createPaintStyle();
   s.name = p.n; s.description = p.d;
-  s.paints = [{ type: "SOLID", color: { r: p.rgb[0], g: p.rgb[1], b: p.rgb[2] }, opacity: p.opacity }];
+  const variable = V("Semantic", p.v);
+  if (!variable) throw new Error(p.v + " is missing: make it by hand, as the alias of the overlay colour with an opacity (ADR-0246)");
+  const base = figma.variables.setBoundVariableForPaint({ type: "SOLID", color: { r: 0, g: 0, b: 0 } }, "color", variable);
+  s.paints = [Object.assign({}, base, { opacity: p.opacity })];
   out.paint++;
 }
 for (const g of D.grid) {
@@ -583,7 +602,7 @@ const NOT_DRAWN = {
   Spacer: ["Layout primitive", "Auto layout spacing does this in Figma."],
   Collapse: ["Behaviour", "It animates a height change and has no visual of its own."],
   SkipLink: ["Behaviour", "It shows only while it has keyboard focus, as a plain link in a pill, so it has no state worth a component."],
-  Backdrop: ["Figma style", "Provided as styles instead: the paint styles Backdrop/20, 40, 60 (the default) and 80, in the colour of bg/overlay, and the effect style Backdrop/blur."],
+  Backdrop: ["Figma style", "Provided as styles instead: the paint styles Backdrop/20, 40, 60 (the default) and 80, bound to bg/overlay-20, -40, -60 and -80, and the effect style Backdrop/blur."],
 };
 const gone = Object.keys(NOT_DRAWN).filter((n) => !(n in catalog));
 if (gone.length) throw new Error(`NOT_DRAWN names components that no longer exist: ${gone.join(", ")}`);
@@ -756,14 +775,21 @@ const expectedStyles = {
   effect: effectStyles.map((e) => e.n),
   grid: gridStyles.map((g) => g.n),
 };
+// The hand-made overlay variables: their opacity and the code syntax they keep (the colour's own, since the opacity is applied by the
+// component in code), and the Backdrop paint styles that bind to them.
+const handMade = Object.fromEntries(collections.Semantic.items.filter((e) => e.h).map((e) => [e.n, { o: e.h, web: `var(--dbm-bg-overlay)` }]));
+const expectedPaint = backdropStyles.map((b) => ({ n: b.n, v: `bg/overlay-${Math.round(b.opacity * 100)}` }));
 const verify = `const X = ${JSON.stringify(expected)};
 const ST = ${JSON.stringify(expectedStyles)};
+const HM = ${JSON.stringify(handMade)};
+const PS = ${JSON.stringify(expectedPaint)};
 const all = await figma.variables.getLocalVariablesAsync();
 const colls = await figma.variables.getLocalVariableCollectionsAsync();
 const byId = new Map(all.map((v) => [v.id, v]));
 const hexOf = (c) => "#" + [c.r, c.g, c.b].map((n) => Math.round(n * 255).toString(16).padStart(2, "0")).join("");
 const finalValue = (v, modeId) => {
   let val = v.valuesByMode[modeId];
+  if (val && val.color) val = val.color;
   while (val && val.type === "VARIABLE_ALIAS") { const t = byId.get(val.id); val = t.valuesByMode[Object.keys(t.valuesByMode)[0]]; }
   return val;
 };
@@ -778,7 +804,8 @@ for (const [name, spec] of Object.entries(X)) {
     for (const [n, vals] of Object.entries(spec.x)) {
       const v = mine.get(n);
       if (!v) { out.bad.push(n + ": missing"); continue; }
-      if (v.codeSyntax.WEB !== "var(--dbm-" + n.replace(/\\//g, "-") + ")") out.bad.push(n + ": code syntax");
+      if (v.codeSyntax.WEB !== (HM[n] ? HM[n].web : "var(--dbm-" + n.replace(/\\//g, "-") + ")")) out.bad.push(n + ": code syntax");
+      if (HM[n]) for (const m of col.modes) { const raw = v.valuesByMode[m.modeId]; if (!raw || !raw.color || raw.opacity !== HM[n].o) out.bad.push(n + " [" + m.name + "]: opacity " + (raw && raw.opacity) + " != " + HM[n].o); }
       if (v.scopes.includes("ALL_SCOPES")) out.bad.push(n + ": all scopes");
       spec.m.forEach((mode, i) => {
         const got = finalValue(v, col.modes.find((m) => m.name === mode).modeId);
@@ -806,6 +833,15 @@ for (const e of ST.text) {
 for (const n of ST.effect) if (!eHave.has(n)) styleReport.missing.push(n);
 for (const n of ST.grid) if (!gHave.has(n)) styleReport.missing.push(n);
 for (const [have, want] of [[tHave, ST.text.map((e) => e.n)], [eHave, ST.effect], [gHave, ST.grid]]) for (const n of have.keys()) if (!want.includes(n)) styleReport.extra.push(n);
+const pHave = new Map((await figma.getLocalPaintStylesAsync()).map((s) => [s.name, s]));
+for (const e of PS) {
+  const s = pHave.get(e.n);
+  if (!s) { styleReport.missing.push(e.n); continue; }
+  const bound = s.paints[0] && s.paints[0].boundVariables && s.paints[0].boundVariables.color;
+  const vn = bound && byId.get(bound.id) ? byId.get(bound.id).name : null;
+  if (vn !== e.v) styleReport.wrong.push(e.n + ": colour bound to " + vn + " != " + e.v);
+}
+for (const n of pHave.keys()) if (!PS.some((e) => e.n === n)) styleReport.extra.push(n);
 report.styles = { expected: ST.text.length + ST.effect.length + ST.grid.length, missing: styleReport.missing, wrong: styleReport.wrong, extra: styleReport.extra };
 return report;
 `;
