@@ -326,19 +326,22 @@ const ROLES = [
   { role: "FieldLabel", group: "Components", family: "primary", weight: "medium", lh: "normal", ls: "normal", sizes: ["xs", "sm", "base", "md", "lg"], note: "The label above a form field in Nunito, medium weight with the normal line height the component uses" },
   { role: "Avatar", group: "Components", family: "primary", weight: "semibold", lh: "auto", ls: "normal", sizes: ["sm", "base", "md", "lg", "xl"], note: "The initials of an avatar in Nunito, semibold, with the browser's own normal line height, which the component inherits since it sets none" },
   { role: "ProgressBar", group: "Components", family: "primary", weight: "semibold", lh: "auto", ls: "normal", sizes: ["xs"], note: "The value label of a progress bar in Nunito, semibold, with the browser's own normal line height, which the component inherits since it sets none" },
+  { role: "Code", group: "Components", family: "mono", weight: "medium", lh: "auto", ls: "normal", sizes: ["sm", "base", "md", "lg"], note: "The text of an inline code snippet in the mono stand-in (Roboto Mono), medium weight with the browser's own normal line height, which the component sets none of; the family is not bound, because the token is a system font stack" },
   { role: "Link", group: "Components", family: "primary", weight: "regular", lh: "normal", ls: "normal", sizes: ["sm", "base", "md", "lg"], decoration: "underline", note: "The label of a link in Nunito, regular weight with the normal line height, underlined as a link is by default" },
   { role: "IconButton", group: "Components", family: "primary", weight: "medium", lh: "tight", ls: "normal", sizes: ["xs", "sm"], note: "The caption under an icon button's icon in Nunito, medium weight with the tight line height" },
   { role: "IconButtonPressed", group: "Components", family: "primary", weight: "bold", lh: "tight", ls: "normal", sizes: ["xs", "sm"], note: "The caption under a pressed icon button's icon in Nunito, bold, so the same box holds it" },
   { role: "Overline", family: "primary", weight: "semibold", lh: "snug", ls: "wide", sizes: ["sm", "xs"], upper: true, note: "Small upper-case captions and table headings in Nunito" },
 ];
-const FAMILY_NAME = { primary: "Nunito", secondary: "Lora" };
+// The mono token is a system font stack (ui-monospace, Menlo, Consolas...) that Figma has no font for, so its text styles use Roboto Mono as a
+// stand-in and leave the family unbound (ADR-0249).
+const FAMILY_NAME = { primary: "Nunito", secondary: "Lora", mono: "Roboto Mono" };
 const WEIGHT_STYLE = { regular: "Regular", medium: "Medium", semibold: "SemiBold", bold: "Bold" };
 const ratio = (group, name) => Number(tokens.find((t) => t.name === `${PREFIX}${group}-${name}`).value);
 const textStyles = ROLES.flatMap((r) =>
   r.sizes.map((size) => ({
     n: `${r.group ? `${r.group}/` : ""}${r.role}/${size}`,
     fam: FAMILY_NAME[r.family],
-    famVar: `font-family/${r.family}`,
+    famVar: r.family === "mono" ? null : `font-family/${r.family}`,
     style: WEIGHT_STYLE[r.weight],
     weightVar: `font-weight/${r.weight}`,
     sizeVar: `font-size/${size}`,
@@ -404,6 +407,7 @@ for (const t of D.text) {
   s.textCase = t.upper ? "UPPER" : "ORIGINAL";
   s.textDecoration = t.underline ? "UNDERLINE" : "NONE";
   for (const [field, name, coll] of [["fontSize", t.sizeVar, "Viewport"], ["fontFamily", t.famVar, "Primitives"], ["fontWeight", t.weightVar, "Primitives"]]) {
+    if (!name) continue;
     try { s.setBoundVariable(field, V(coll, name)); out.boundFields[field] = (out.boundFields[field] || 0) + 1; } catch (e) { if (out.errors.length < 4) out.errors.push(t.n + " " + field + ": " + String(e.message || e).slice(0, 120)); }
   }
   out.text++;

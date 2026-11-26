@@ -3611,6 +3611,92 @@
         "the focus ring's size (the link plus a 4 px offset and a 2 px edge) is a number; the code's outline has no corner radius, and neither has the ring",
         "a visited link looks the same as an unvisited one, so it is not drawn"
       ]
+    },
+    "Code": {
+      "tier": "atom",
+      "category": "Typography",
+      "storybook": "atoms-typography-code",
+      "figma": {
+        "set": "Code",
+        "spec": "Spec: Code",
+        "page": "Typography"
+      },
+      "variants": 4,
+      "status": {
+        "state": "approved",
+        "reviewed": "2026-11-26",
+        "approved": "2026-11-26"
+      },
+      "properties": {
+        "size": {
+          "kind": "variant",
+          "default": "base",
+          "values": {
+            "base": {
+              "props": {},
+              "note": "the code has no size prop: it inherits the font size of the text around it"
+            },
+            "sm": {
+              "props": {},
+              "note": "the code has no size prop: it inherits the font size of the text around it"
+            },
+            "md": {
+              "props": {},
+              "note": "the code has no size prop: it inherits the font size of the text around it"
+            },
+            "lg": {
+              "props": {},
+              "note": "the code has no size prop: it inherits the font size of the text around it"
+            }
+          },
+          "undrawn": {
+            "xs": {
+              "props": {},
+              "recipe": "Duplicate a Components/Code text style at that size: Roboto Mono Medium, the font size bound to font-size/xs, the line height auto; name the instance Code (size=xs)"
+            },
+            "xl": {
+              "props": {},
+              "recipe": "Duplicate a Components/Code text style at that size: Roboto Mono Medium, the font size bound to font-size/xl, the line height auto; name the instance Code (size=xl)"
+            },
+            "2xl": {
+              "props": {},
+              "recipe": "Duplicate a Components/Code text style at that size: Roboto Mono Medium, the font size bound to font-size/2xl, the line height auto; name the instance Code (size=2xl)"
+            },
+            "3xl": {
+              "props": {},
+              "recipe": "Duplicate a Components/Code text style at that size: Roboto Mono Medium, the font size bound to font-size/3xl, the line height auto; name the instance Code (size=3xl)"
+            },
+            "4xl": {
+              "props": {},
+              "recipe": "Duplicate a Components/Code text style at that size: Roboto Mono Medium, the font size bound to font-size/4xl, the line height auto; name the instance Code (size=4xl)"
+            },
+            "5xl": {
+              "props": {},
+              "recipe": "Duplicate a Components/Code text style at that size: Roboto Mono Medium, the font size bound to font-size/5xl, the line height auto; name the instance Code (size=5xl)"
+            },
+            "6xl": {
+              "props": {},
+              "recipe": "Duplicate a Components/Code text style at that size: Roboto Mono Medium, the font size bound to font-size/6xl, the line height auto; name the instance Code (size=6xl)"
+            }
+          }
+        },
+        "text": {
+          "kind": "text",
+          "default": "pnpm install",
+          "maps": "children"
+        }
+      },
+      "notModelled": [
+        "className",
+        "data-testid",
+        "id",
+        "style"
+      ],
+      "deviations": [
+        "size is not a prop: the code inherits the font size of the surrounding text, so the set draws the chip at four steps of the type scale to place it in text; the other sizes are recipes",
+        "the font is Roboto Mono, a stand-in for the system monospace stack (ui-monospace, SFMono-Regular, Menlo, Consolas, Liberation Mono), which Figma has no font for; the Components/Code text styles bind their size and weight but not font-family/mono (ADR-0249)",
+        "the chip's height is the font's own content height plus the padding and the edge, which differs by a pixel or two from the browser's, because the stand-in's metrics are not the system font's"
+      ]
     }
   }
 }
