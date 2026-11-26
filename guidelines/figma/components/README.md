@@ -13,6 +13,7 @@ Generated from the map by `pnpm check-figma-map --write`; CI fails when it is st
 |---|---|---|---|---|---|---|
 | [Avatar](./Avatar.md) | atom | Data Display | 48 | approved | 2026-11-26 | 2026-11-26 |
 | [Badge](./Badge.md) | atom | Data Display | 105 | approved | 2026-11-22 | 2026-11-23 |
+| [Blockquote](./Blockquote.md) | atom | Typography | 2 | approved | 2026-11-26 | 2026-11-26 |
 | [Button](./Button.md) | atom | Inputs | 200 | approved | 2026-11-22 | 2026-11-23 |
 | [Checkbox](./Checkbox.md) | atom | Inputs | 54 | approved | 2026-11-23 | 2026-11-23 |
 | [CloseButton](./CloseButton.md) | atom | Inputs | 24 | approved | 2026-11-23 | 2026-11-23 |

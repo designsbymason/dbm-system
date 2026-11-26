@@ -3856,6 +3856,75 @@
         "the keycap's bottom edge is a drop shadow, 2 px down with no blur, coloured by the border/neutral variable; the offset is a number",
         "the weight is inherited in the code; the set draws regular"
       ]
+    },
+    "Blockquote": {
+      "tier": "atom",
+      "category": "Typography",
+      "storybook": "atoms-typography-blockquote",
+      "figma": {
+        "set": "Blockquote",
+        "spec": "Spec: Blockquote",
+        "page": "Typography"
+      },
+      "variants": 2,
+      "status": {
+        "state": "approved",
+        "reviewed": "2026-11-26",
+        "approved": "2026-11-26"
+      },
+      "properties": {
+        "variant": {
+          "kind": "variant",
+          "default": "default",
+          "values": {
+            "default": {
+              "props": {
+                "variant": "default"
+              }
+            },
+            "pull-quote": {
+              "props": {
+                "variant": "pull-quote"
+              }
+            }
+          }
+        },
+        "showAttribution": {
+          "kind": "boolean",
+          "default": false,
+          "on": {
+            "props": {
+              "attribution": "<provided>"
+            },
+            "note": "the footer: a dash and the citation, shown when attribution is set"
+          }
+        },
+        "quote": {
+          "kind": "text",
+          "default": "Design is not just what it looks like \u2014 design is how it works.",
+          "maps": "children"
+        },
+        "attribution": {
+          "kind": "text",
+          "default": "Jane Doe, CEO of Acme",
+          "maps": "attribution"
+        }
+      },
+      "notModelled": [
+        "cite",
+        "className",
+        "data-testid",
+        "id",
+        "style"
+      ],
+      "deviations": [
+        "a block takes the width of its parent in the code; the set draws the default at 480 px and the pull quote at 640 px, and an instance is resized",
+        "the attribution is a dash layer and a citation layer in a row, so a long citation wraps inside its own box and not under the dash, where the code wraps them as one line of text",
+        "the quote's two styles are italic, which no variable holds, so Components/Blockquote/md and 2xl bind their size and family but not their weight",
+        "the quote mark overlaps the text by 8 px through a negative gap, drawn as a number because a negative of a variable cannot be bound",
+        "the quote mark's line height of 1 has no token, so Components/BlockquoteMark/6xl sets it as 100%",
+        "the text/brand quote mark is below 3:1 on the dark canvas (3.16:1 and 3.63:1), as decoration that is aria-hidden"
+      ]
     }
   }
 }
