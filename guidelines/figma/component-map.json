@@ -3104,6 +3104,125 @@
       "coverage": {
         "exception": "Each of the 58 sets has 51 variants (bold, regular and fill at 17 tones), 2,958 in all, far over the budget; ADR-0238 accepted it. Size is an instance resize and not a property, and the thin, light and duotone weights are recipes."
       }
+    },
+    "Image": {
+      "tier": "atom",
+      "category": "Media",
+      "storybook": "atoms-media-image",
+      "figma": {
+        "set": "Image",
+        "spec": "Spec: Image",
+        "page": "Media"
+      },
+      "variants": 12,
+      "status": {
+        "state": "approved",
+        "reviewed": "2026-11-26",
+        "approved": "2026-11-26"
+      },
+      "properties": {
+        "content": {
+          "kind": "variant",
+          "default": "fallback",
+          "values": {
+            "fallback": {
+              "props": {
+                "fallback": "<provided>"
+              },
+              "note": "the fallback shown when src is missing or fails to load: a generic image icon on bg/neutral-subtle, or your own content"
+            },
+            "image": {
+              "props": {
+                "src": "<provided>"
+              },
+              "note": "a flat placeholder for the picture, to be replaced by changing its fill"
+            }
+          }
+        },
+        "radius": {
+          "kind": "variant",
+          "default": "none",
+          "values": {
+            "none": {
+              "props": {
+                "radius": "none"
+              }
+            },
+            "xs": {
+              "props": {
+                "radius": "xs"
+              }
+            },
+            "sm": {
+              "props": {
+                "radius": "sm"
+              }
+            },
+            "md": {
+              "props": {
+                "radius": "md"
+              }
+            },
+            "lg": {
+              "props": {
+                "radius": "lg"
+              }
+            },
+            "full": {
+              "props": {
+                "radius": "full"
+              }
+            }
+          },
+          "undrawn": {
+            "xl": {
+              "props": {
+                "radius": "xl"
+              },
+              "recipe": "Set the frame's corner radius to radius/xl (16 px); name the instance Image (radius=xl)"
+            },
+            "2xl": {
+              "props": {
+                "radius": "2xl"
+              },
+              "recipe": "Set the frame's corner radius to radius/2xl (24 px); name the instance Image (radius=2xl)"
+            },
+            "3xl": {
+              "props": {
+                "radius": "3xl"
+              },
+              "recipe": "Set the frame's corner radius to radius/3xl (32 px); name the instance Image (radius=3xl)"
+            }
+          }
+        }
+      },
+      "notModelled": [
+        "alt",
+        "aspectRatio",
+        "className",
+        "data-testid",
+        "decoding",
+        "height",
+        "id",
+        "loading",
+        "objectFit",
+        "onError",
+        "position",
+        "sizes",
+        "srcSet",
+        "style",
+        "width"
+      ],
+      "deviations": [
+        "content=image is a flat bg/neutral rectangle: no picture ships with the library, so the picture is the layer's fill, replaced in the design",
+        "content=fallback is the look of an Image with no src and is the default content here",
+        "a fallback with your own content is a recipe: the nested Icon/Image instance is replaced",
+        "objectFit and position are the picture fill's scale mode and crop handles in Figma, not properties",
+        "width, height and aspectRatio are the instance's size; the drawn 320 by 180 px frame is a placeholder for a size the code does not set"
+      ],
+      "coverage": {
+        "exception": "The radii none, xs, sm, md, lg and full are drawn and xl, 2xl and 3xl are recipes, as agreed at plan time, because the nine radii are one property and the six cover the steps in use; both contents are drawn at each (12 variants)."
+      }
     }
   }
 }

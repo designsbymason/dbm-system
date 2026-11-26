@@ -41,6 +41,7 @@ Lessons already paid for, so don't repeat them:
 - Reuse an existing text style whose values equal the stylesheet's (`Body/sm` for a small helper text) before adding a role; a new role goes in `scripts/figma-sync.mjs`, and only its own styles need sending.
 - If the code allows an icon tone the Icon sets lack (`IconTone` against the sets' `tone` options; `on-neutral` was one), add it to the script's tone list and send `08-icon-tones` before drawing, instead of using a stand-in.
 - The Components page row can be patched in place (the name's and the status's link to the new spec frame, "Drawn", the count) instead of regenerating the page, which keeps its Section id and leaves nothing to repoint.
+- A text with a link (a name on the Components page, a Storybook link in a spec frame) is filled with the `text/link` variable, not left in the body colour; set it when the link is added.
 
 When it is built, run `/review-figma-component` on it and report; the component is not done until that review is clean and I say so.
 
