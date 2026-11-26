@@ -30,6 +30,7 @@ Generated from the map by `pnpm check-figma-map --write`; CI fails when it is st
 | [Input](./Input.md) | atom | Inputs | 36 | approved | 2026-11-22 | 2026-11-23 |
 | [Kbd](./Kbd.md) | atom | Typography | 1 | approved | 2026-11-26 | 2026-11-26 |
 | [Link](./Link.md) | atom | Typography | 16 | approved | 2026-11-26 | 2026-11-26 |
+| [ListItem](./ListItem.md) | atom | Typography | 6 | approved | 2026-11-26 | 2026-11-26 |
 | [ProgressBar](./ProgressBar.md) | atom | Feedback | 12 | approved | 2026-11-26 | 2026-11-26 |
 | [ProgressCircle](./ProgressCircle.md) | atom | Feedback | 12 | approved | 2026-11-26 | 2026-11-26 |
 | [Radio](./Radio.md) | atom | Inputs | 36 | approved | 2026-11-23 | 2026-11-23 |

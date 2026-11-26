@@ -3925,6 +3925,110 @@
         "the quote mark's line height of 1 has no token, so Components/BlockquoteMark/6xl sets it as 100%",
         "the text/brand quote mark is below 3:1 on the dark canvas (3.16:1 and 3.63:1), as decoration that is aria-hidden"
       ]
+    },
+    "ListItem": {
+      "tier": "atom",
+      "category": "Typography",
+      "storybook": "atoms-typography-listitem",
+      "figma": {
+        "set": "ListItem",
+        "spec": "Spec: ListItem",
+        "page": "Typography"
+      },
+      "variants": 6,
+      "status": {
+        "state": "approved",
+        "reviewed": "2026-11-26",
+        "approved": "2026-11-26"
+      },
+      "properties": {
+        "interactive": {
+          "kind": "variant",
+          "default": "false",
+          "values": {
+            "false": {
+              "props": {
+                "interactive": false
+              }
+            },
+            "true": {
+              "props": {
+                "interactive": true
+              }
+            }
+          }
+        },
+        "state": {
+          "kind": "variant",
+          "default": "default",
+          "values": {
+            "default": {
+              "props": {}
+            },
+            "hover": {
+              "props": {},
+              "note": "CSS :hover on an interactive item, no prop; a selected item keeps its fill"
+            },
+            "focus": {
+              "props": {},
+              "note": "CSS :focus-visible on an interactive item, no prop"
+            },
+            "selected": {
+              "props": {
+                "selected": true
+              }
+            },
+            "disabled": {
+              "props": {
+                "disabled": true
+              }
+            }
+          }
+        },
+        "icon": {
+          "kind": "boolean",
+          "default": false,
+          "on": {
+            "props": {
+              "icon": "<provided>"
+            },
+            "note": "the leading Icon/Check, bold, tone default, at icon-size/sm; it replaces the marker the List draws"
+          }
+        },
+        "trailing": {
+          "kind": "boolean",
+          "default": false,
+          "on": {
+            "props": {
+              "trailing": "<provided>"
+            },
+            "note": "shows the trailing slot, which holds a Badge as an example"
+          }
+        },
+        "label": {
+          "kind": "text",
+          "default": "List item",
+          "maps": "children"
+        }
+      },
+      "notModelled": [
+        "aria-label",
+        "aria-labelledby",
+        "className",
+        "data-testid",
+        "id",
+        "style",
+        "value"
+      ],
+      "deviations": [
+        "a plain item is drawn at the default state only, because the code gives hover, focus, selected and disabled styling to an interactive item only; selected with disabled, or with focus, is a recipe",
+        "the bullet or number is the List's, not the item's, so it is not drawn; the List molecule is not drawn yet",
+        "the text size is inherited in the code; the set draws Body/base, and other sizes are a recipe",
+        "the icon takes its colour from the tone default (icon/default), where the code draws it in the text's colour through currentColor, which no icon tone matches",
+        "the row is drawn 280 px wide; in the code it takes the width of its list",
+        "the focus ring's size (the row plus a 4 px offset and a 2 px edge) is a number, at radius/lg as the Button's is, where the code's outline follows the row's own radius",
+        "the selected row's semibold text needs its own style, Components/ListItemSelected/base, because Label/base has a tighter line height"
+      ]
     }
   }
 }
