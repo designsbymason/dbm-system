@@ -2575,8 +2575,9 @@
       },
       "variants": 12,
       "status": {
-        "state": "reviewed",
-        "reviewed": "2026-11-26"
+        "state": "approved",
+        "reviewed": "2026-11-26",
+        "approved": "2026-11-26"
       },
       "properties": {
         "progress": {
