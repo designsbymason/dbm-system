@@ -1,5 +1,12 @@
 # @dbm-system/components
 
+## 0.3.2
+
+### Patch Changes
+
+- 3f04063: `Avatar`: the `role`, `aria-disabled` and native `disabled` it works out can no longer be replaced by props of the same name (a `role="presentation"` used to drop an avatar's name, and `aria-disabled={false}` re-enabled a disabled link avatar). A plain avatar with no name, or one that is not disabled, still takes a `role` or `aria-disabled` you pass. Nothing else changes.
+- 34a8fb8: `Avatar`: the initials of a hovered interactive `colorful` avatar in the `danger`, `warning` or `info` family now hold 4.5:1 on their hover fill in the light themes (they were 4.44:1, 4.2:1 and 4.15:1), using the `text.danger-hover`, `text.warning-hover` and `text.info-hover` tokens `Tag` already uses. Only those three hover states change, in the light themes; the dark themes, the brand and success families and every resting state are as they were. The three tokens' descriptions now name the avatar as well as the tag.
+
 ## 0.3.1
 
 ### Patch Changes
