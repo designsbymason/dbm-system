@@ -367,7 +367,9 @@ redesigned.
 **Finalized 2026-09-05** — per `06-engineering-standards.md` §9's own note, don't make further changes
 to Indicators (code, stories, docs, or its tokens) without asking first.
 
-## ⚠️ Unresolved: shared-token change may have dropped the inactive dot below the 3:1 floor (2026-09-15)
+## Accepted: shared-token change dropped the inactive dot below the 3:1 floor (flagged 2026-09-15, accepted 2026-11-26)
+
+**Accepted by the maintainer 2026-11-26 as an informed exception: the fill stays `bg.track-strong` (1.72:1 light, 3.00:1 dark against `bg.surface`).** The Docs page's Contrast note, which said the fill was verified at 3:1, was corrected the same day to state the measured values and the reasons the exception holds. The text below is the 2026-09-15 finding, kept as history.
 
 `bg.track-strong` — the token this component's own inactive-dot fill uses, chosen above specifically
 *because* it was the compliant (≥3:1) alternative for "a real, clickable dot a user needs to

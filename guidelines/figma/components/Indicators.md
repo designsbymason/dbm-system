@@ -14,7 +14,7 @@
 
 ## Differences from the code
 
-See `deviations` in the map. The one that matters: the inactive fill `bg/track-strong` is 1.72:1 on `bg/surface` in the light themes (3.00:1 in the dark ones), below the 3:1 non-text floor. The code uses the same token, and the token spec's `track-strong` row already says so; the component's Docs page and its review file still say it is verified at 3:1, which the numbers do not support (open item).
+See `deviations` in the map. The one that matters: the inactive fill `bg/track-strong` is 1.72:1 on `bg/surface` in the light themes (3.00:1 in the dark ones), below the 3:1 non-text floor. The code uses the same token, and the token spec's `track-strong` row already says so; the component's Docs page and its review file still say it is verified at 3:1, which the numbers do not support. The maintainer accepted the value as it is on 2026-11-26.
 
 ## Not drawn
 

@@ -10,6 +10,8 @@
 - **All four states at every size.** The focus ring is a layer 4 px outside the link, and disabled is the whole link at the `opacity/40` variable.
 - **The icon is `Icon/ArrowSquareOut`** (bold, tone `info`) one em square, its width and height bound to the `font-size/<size>` Viewport variable, so it scales with the type as the code's `1em` does. `icon/info` is the same colour as `text/link` in all four themes, so no new icon tone was needed.
 
+- **A link is not placed on `bg/canvas`.** `text/link` is 4.15:1 (light) and 4.00:1 (dark) there, under 4.5:1, and the token spec already says never to put it on the canvas; links go on `bg/surface` (4.71:1 and 8.20:1). The spec frame says so.
+
 ## Differences from the code
 
 See `deviations` in the map: the unset size, the underline modes drawn as recipes, the underline fade, the icon's tone, its gap and nudge, the focus ring's size, and the visited look.

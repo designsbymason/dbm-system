@@ -3360,7 +3360,7 @@
         "hover and focus are states of one step, not of the group: hover is the second, inactive step and focus is the ring on the active step, where the roving tabindex puts it",
         "the label's tabular numerals (font-variant-numeric) have no equivalent in Figma",
         "the active step's three times length, the bars' three times length and an inactive bar's half thickness are calc() results in the code, drawn as numbers; the focus ring's size (the step plus a 4 px offset and a 2 px edge) is a number too",
-        "the inactive fill bg/track-strong is 1.72:1 on bg/surface in the light themes, below the 3:1 non-text floor, and 3.00:1 in the dark ones; the code has the same value (the bg.track-strong row of the token spec)"
+        "the inactive fill bg/track-strong is 1.72:1 on bg/surface in the light themes, below the 3:1 non-text floor, and 3.00:1 in the dark ones; the code has the same value (the bg.track-strong row of the token spec), which the maintainer accepted on 2026-11-26"
       ]
     },
     "Tooltip": {

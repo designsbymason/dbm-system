@@ -178,10 +178,15 @@ as in a real consuming app.
   and a check in the real browser fails if they stop. **Used on its own, you provide that control**: a
   previous and a next button of your own, or `variant="bars"` from `sm` up. A larger invisible hit area would
   not help: at these spacings each area would cover the centre of its neighbour.
-- **Contrast:** the inactive dot's fill (`bg.track-strong`) and the active dot's fill (`bg.brand`)
-  are both verified against `bg.surface` at the WCAG 1.4.11 3:1 non-text floor, across every brand
-  and mode combination — see Design tokens used below. `variant="outlined"`'s ring (`border.neutral-
-  strong`, hover `border.strong`) is verified to the same floor.
+- **Contrast:** the active dot's fill (`bg.brand`) is 6.08:1 to 8.51:1 against `bg.surface`, and the
+  `variant="outlined"` ring (`border.neutral-strong` at rest, `border.strong` on hover) is 4.70:1 to 6.08:1
+  or more, across every brand and mode, all above the WCAG 1.4.11 3:1 non-text floor. **The inactive
+  dot's fill (`bg.track-strong`) is below it in the light themes: 1.72:1 against `bg.surface` (3.00:1 in the
+  dark themes).** That is an accepted exception, not a verified pass. The active step is longer (or, for
+  `bars`, thicker), so the position does not rest on the inactive dots' colour, and inside a `Carousel`
+  the previous and next buttons and the optional `showLabel` text give the same information. Used on
+  its own, provide your own previous and next buttons, or use `variant="outlined"`, whose ring clears the
+  floor.
 
 </Callout>
 
