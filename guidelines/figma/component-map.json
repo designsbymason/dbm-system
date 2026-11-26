@@ -2509,6 +2509,60 @@
       "coverage": {
         "exception": "Sizes xs, sm, md and lg are drawn, one beyond the default, because xs (36 px) is the size AvatarGroup and dense menus use; xl is undrawn with a recipe. Only the brand tone is drawn, so the colorful families are a recipe. Status is a boolean for the online dot on every content, state and size, with the other statuses as recipes. Shape is drawn as the circle only and the square is a recipe. Every state is drawn at every size (48 variants)."
       }
+    },
+    "Skeleton": {
+      "tier": "atom",
+      "category": "Data Display",
+      "storybook": "atoms-data-display-skeleton",
+      "figma": {
+        "set": "Skeleton",
+        "spec": "Spec: Skeleton",
+        "page": "Data Display"
+      },
+      "variants": 3,
+      "status": {
+        "state": "approved",
+        "reviewed": "2026-11-26",
+        "approved": "2026-11-26"
+      },
+      "properties": {
+        "variant": {
+          "kind": "variant",
+          "default": "text",
+          "values": {
+            "text": {
+              "props": {
+                "variant": "text"
+              }
+            },
+            "circular": {
+              "props": {
+                "variant": "circular"
+              }
+            },
+            "rectangular": {
+              "props": {
+                "variant": "rectangular"
+              }
+            }
+          }
+        }
+      },
+      "notModelled": [
+        "animation",
+        "className",
+        "data-testid",
+        "height",
+        "id",
+        "style",
+        "width"
+      ],
+      "deviations": [
+        "the text variant is 16 px tall where the code's height is 1em: no variable holds a height of that kind, so it is drawn as Body/base's size on desktop and the spec frame gives the recipe for another font size",
+        "the text and rectangular variants are 240 px wide, a placeholder for the code's width, which fills its container; no variable has that value",
+        "the pulse and wave animations are not drawn: the shape is the still look, and the spec frame gives a recipe for each",
+        "width and height are set by resizing the instance, not by properties"
+      ]
     }
   }
 }

@@ -22,6 +22,7 @@ Generated from the map by `pnpm check-figma-map --write`; CI fails when it is st
 | [IconButton](./IconButton.md) | atom | Inputs | 210 | approved | 2026-11-23 | 2026-11-23 |
 | [Input](./Input.md) | atom | Inputs | 36 | approved | 2026-11-22 | 2026-11-23 |
 | [Radio](./Radio.md) | atom | Inputs | 36 | approved | 2026-11-23 | 2026-11-23 |
+| [Skeleton](./Skeleton.md) | atom | Data Display | 3 | approved | 2026-11-26 | 2026-11-26 |
 | [Spinner](./Spinner.md) | atom | Feedback | 64 | approved | 2026-11-23 | 2026-11-23 |
 | [Switch](./Switch.md) | atom | Inputs | 42 | approved | 2026-11-23 | 2026-11-23 |
 | [Tag](./Tag.md) | atom | Data Display | 315 | approved | 2026-11-25 | 2026-11-25 |
