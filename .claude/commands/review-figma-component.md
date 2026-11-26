@@ -8,7 +8,7 @@ Review this component in the Figma library: $ARGUMENTS
 If no component is given, ask for one. This reads the file and the repository and makes no edits. Read the file key from `.local/figma.json` (never repeat it in the repository), call `create_session`, load `figma-use`, and put it in every `use_figma` call's `skillNames`; every call here is read-only.
 
 1. Read `guidelines/figma/02-component-rules.md` and, for the component, its row on the Components page and its manifest entry (`packages/components/dist/manifest/components/<Name>.json`). If it is not drawn yet, say so and stop.
-2. In the file, find its component set and spec frame. Measure and return only counts, names and ids, never whole property bundles:
+2. In the file, find its component set (or the component itself, when it has no variant property) and spec frame. Measure and return only counts, names and ids, never whole property bundles:
    - **Binding:** every fill, stroke, spacing, radius, size and opacity on every layer is bound to a variable (an icon instance's own layers excepted), and every text uses a text style. Report counts and a few examples.
    - **Properties:** each Figma property is named as the code's prop, its values are the code's values, its default is the code's default, and none is a prop the rules say not to model. List any prop in code that the spec frame neither maps nor names as not modelled.
    - **Defaults and layout:** each variant property's default equals the code's (size is md), the set is a labelled grid with the default as its top-left cell, and the spec frame's matrix has a header row.

@@ -51,10 +51,10 @@ Code Connect links a Figma component to a code component with a prop mapping, so
 ## Order of work
 
 1. Done: Card is drawn and the pilot review gate is held (2026-11-22).
-2. Done: the file is published to the team library, the MCP route is refused, the Code Connect UI saves mappings that MCP reads, and a file that uses the library shows them (above). All four drawn components (Button, Input, Badge, Card) are mapped by path and name (2026-11-22); a new component is mapped the same way when it is drawn.
+2. Done: the file is published to the team library, the MCP route is refused, the Code Connect UI saves mappings that MCP reads, and a file that uses the library shows them (above). Every drawn component is mapped by path and name (all 30, each read back with `get_code_connect_map` when it was approved); a new component is mapped the same way when it is drawn.
 3. Done: ADR-0243 supersedes ADR-0241 (no `/figma-connect`; mappings are entered by hand), and ADR-0244 decides that the map ships in the components package and the MCP server serves it.
 4. Build what ADR-0244 decides (copy the map into the package at build, export it, add the MCP tool, with docs, tests and a changeset) at Phase 8, in the same release as the first complete library publish and after the atoms have settled the map's shape: until the library is public no one outside the team can use it.
-5. Phase 5, the atoms.
+5. Done: Phase 5, the atoms. Next: Phase 6, the molecules.
 6. The Phase 8 publication decisions: private working file with snapshots, library mode, the licence.
 
 ## Related

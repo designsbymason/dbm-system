@@ -6,13 +6,14 @@ How things are named, so an agent can find them without a search. The structure 
 |---|---|---|
 | Page | An emoji and the plain name; a category page starts with `↳ `; a divider page is `---` | `🧩 Components`, `↳ Data Display` |
 | A component's Section | The component's name, filled with `bg/canvas` | `Badge` |
-| A component set | The component's name exactly as in code | `Input` |
+| A component set | The component's name exactly as in code; a component with no variant property stays a plain component of that name | `Input`, `Kbd` |
 | A spec frame | `Spec: ` and the component's name, an instance of the Spec frame master, itself named `.Spec frame` so a library publish leaves it out | `Spec: Input` |
 | The grid's headings | A frame named `Matrix labels` beside the set | |
 | A variant | `property=value` pairs in the axis order, comma separated | `size=md, state=error, filled=true` |
 | A variant property | The code prop's name, or the name of what it shows when no single prop says so | `variant`, `filled`, `ring` |
 | An instance that uses a value the file does not draw | The component's name and the pairs in brackets | `Button (size=xs)`, `Card (tone=danger, size=lg)` |
-| A boolean property | The prop, shown or hidden | `prefix`, `clearable` |
+| A boolean property | The prop, shown or hidden; named for what it shows when the code's prop hides it | `prefix`, `clearable`, `showArrow` (the code's `hideArrow`) |
+| A slot | What it holds | `Trailing` |
 | A text property | What the text is | `label`, `placeholder`, `value` |
 | Layers in a component | A short role name, `Label`, `Ring`, `Prefix`, `Clear` | |
 | An icon set | `Icon/` and the Phosphor name; properties `weight` and `tone` | `Icon/MagnifyingGlass` |

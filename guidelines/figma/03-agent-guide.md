@@ -15,11 +15,11 @@ Two agents can meet at this library without meeting each other: one designs a sc
 3. **Bind everything to variables and styles.** No raw colour, spacing, radius or type value. A variable's name is its token (`bg/brand-hover` is `--dbm-bg-brand-hover`), and its code syntax says so.
 4. **Pick the Semantic mode and the Viewport mode on the frame, not on the parts.** A theme is a mode, not a second set of colours.
 5. **Leave the spec frames and the "Matrix labels" frames alone.** They document the library; they are not part of a design.
-6. **A component that is not drawn** (listed on the Components page, or absent from the map) can be named in a design but not drawn from the library: use a labelled placeholder and note the code component by its Storybook name.
+6. **A component that is not drawn** (listed on the Components page's table of what is not drawn, or absent from the map) is not an instance: build it from its recipe in that table, with the drawn parts it names or a plain frame, and note the code component by its Storybook name. A component that is only planned has no recipe yet: use a labelled placeholder.
 
 ## Building from a design
 
-1. **Find the component.** The instance's main component is a set named exactly as the code component (`Badge`, `Input`). Look it up in `components` in the map.
+1. **Find the component.** The instance's main component is a set named exactly as the code component (`Badge`, `Input`), or the component itself when it has no variant property (`Kbd`). Look it up in `components` in the map.
 2. **Translate its properties with the map,** not by guessing. Each Figma property lists its values and, for each, the code props it means. A value with `"props": {}` is a CSS state with no prop (hover, focus). A value `"<provided>"` is something the code needs from the app: an icon, a handler, a value.
 3. **Take what the Figma properties do not carry from the manifest and Storybook:** accessibility props (`aria-label` is required on a Badge dot), behaviour props (`maxLength`, `onChange`), and anything in `notModelled`.
 4. **Use the library's component.** Do not rebuild its styles from the layers. Use tokens (`var(--dbm-…)`, from the variables' code syntax) only for the layout around components.
