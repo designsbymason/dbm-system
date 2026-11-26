@@ -16,6 +16,7 @@ Generated from the map by `pnpm check-figma-map --write`; CI fails when it is st
 | [Button](./Button.md) | atom | Inputs | 200 | approved | 2026-11-22 | 2026-11-23 |
 | [Checkbox](./Checkbox.md) | atom | Inputs | 54 | approved | 2026-11-23 | 2026-11-23 |
 | [CloseButton](./CloseButton.md) | atom | Inputs | 24 | approved | 2026-11-23 | 2026-11-23 |
+| [Divider](./Divider.md) | atom | Layout | 48 | approved | 2026-11-26 | 2026-11-26 |
 | [FieldError](./FieldError.md) | atom | Inputs | 2 | approved | 2026-11-25 | 2026-11-25 |
 | [FieldHelperText](./FieldHelperText.md) | atom | Inputs | 2 | approved | 2026-11-25 | 2026-11-25 |
 | [FieldLabel](./FieldLabel.md) | atom | Inputs | 6 | approved | 2026-11-25 | 2026-11-25 |

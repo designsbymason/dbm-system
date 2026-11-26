@@ -2794,6 +2794,142 @@
       "coverage": {
         "exception": "Sizes sm, md and lg and only the brand tone are drawn, as for ProgressBar: tone means a status here, which would draw all five by default, but the other four strokes are a recipe in the spec frame, and xs and xl are recipes too. The value is drawn as the indeterminate still and the values 0, 50 and 100 (12 variants)."
       }
+    },
+    "Divider": {
+      "tier": "atom",
+      "category": "Layout",
+      "storybook": "atoms-layout-divider",
+      "figma": {
+        "set": "Divider",
+        "spec": "Spec: Divider",
+        "page": "Layout"
+      },
+      "variants": 48,
+      "status": {
+        "state": "approved",
+        "reviewed": "2026-11-26",
+        "approved": "2026-11-26"
+      },
+      "properties": {
+        "variant": {
+          "kind": "variant",
+          "default": "solid",
+          "values": {
+            "solid": {
+              "props": {
+                "variant": "solid"
+              }
+            },
+            "dashed": {
+              "props": {
+                "variant": "dashed"
+              }
+            },
+            "dotted": {
+              "props": {
+                "variant": "dotted"
+              }
+            },
+            "double": {
+              "props": {
+                "variant": "double"
+              }
+            }
+          }
+        },
+        "emphasis": {
+          "kind": "variant",
+          "default": "none",
+          "values": {
+            "none": {
+              "props": {
+                "emphasis": "none"
+              }
+            },
+            "start": {
+              "props": {
+                "emphasis": "start"
+              }
+            },
+            "end": {
+              "props": {
+                "emphasis": "end"
+              }
+            }
+          }
+        },
+        "orientation": {
+          "kind": "variant",
+          "default": "horizontal",
+          "values": {
+            "horizontal": {
+              "props": {
+                "orientation": "horizontal"
+              }
+            },
+            "vertical": {
+              "props": {
+                "orientation": "vertical"
+              }
+            }
+          }
+        },
+        "label": {
+          "kind": "variant",
+          "default": "none",
+          "values": {
+            "none": {
+              "props": {}
+            },
+            "start": {
+              "props": {
+                "label": "<provided>",
+                "align": "start"
+              },
+              "note": "the line before the label is short"
+            },
+            "center": {
+              "props": {
+                "label": "<provided>",
+                "align": "center"
+              }
+            },
+            "end": {
+              "props": {
+                "label": "<provided>",
+                "align": "end"
+              },
+              "note": "the line after the label is short"
+            }
+          }
+        },
+        "labelText": {
+          "kind": "text",
+          "default": "OR",
+          "maps": "label"
+        }
+      },
+      "notModelled": [
+        "aria-label",
+        "className",
+        "data-testid",
+        "id",
+        "style",
+        "thickness",
+        "tone"
+      ],
+      "deviations": [
+        "label is one variant property of none, start, center and end, which stands for label being given and align; the text is the labelText property",
+        "only the thin weight and the default tone are drawn: thickness and tone are not modelled, and their values are recipes in the spec frame",
+        "the dashed and dotted patterns are numbers (3 on and 2 off, and 1 on and 1 off at 1 px), measured from Chromium, because the browser draws them",
+        "the responsive map of orientation is not drawn: orientation is the two single values",
+        "the forced-colors line, drawn in CanvasText, is not drawn",
+        "the horizontal frame is 240 px wide and the vertical one 160 px tall, placeholders for a divider that fills its container (a width and height of 100% in code)",
+        "a double line's emphasis steps a bar from 1 px to 2 px at the thin weight; the steps at the other weights are a recipe"
+      ],
+      "coverage": {
+        "exception": "Only the thin weight and the default tone are drawn, a departure from drawing every look variant and the default and brand tones, as agreed at plan time: the weights would triple the set to 144 and the tone is a colour, so both are recipes. Every other value is drawn: four variants with the double emphasis cases, both orientations, and no label or a label at the start, centre or end (48 variants)."
+      }
     }
   }
 }
