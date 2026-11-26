@@ -338,12 +338,35 @@ const effectStyles = ["light", "dark"].flatMap((theme) =>
     d: `The shadow-${theme}-${size} token, for a surface in ${theme} mode.`,
   })),
 );
+// The Backdrop atom is drawn as styles, not a component: its scrim is `bg.overlay` at an opacity of the `opacity.*` scale, and its
+// optional blur is `blur(space.1)`. The paint styles cover the opacities a scrim is used at (the atom also takes 0, 5, 10, 90 and 100,
+// which a designer sets on the fill by hand). A paint whose colour is bound to a variable does not carry its own opacity in a style
+// (Figma shows it at full opacity), so the styles hold the colour as a literal, read from the token here and refused if the four themes
+// disagree: `bg.overlay` is one colour in every theme, and a mode-specific one would need styles of its own (ADR-0246). Figma's
+// background blur radius is twice the CSS blur radius, so the blur style is 8 where the stylesheet says 4px.
+const overlay = tokens.find((t) => t.name === `${PREFIX}bg-overlay`);
+const overlayHexes = new Set(themes.map((theme) => overlay.values[theme].toLowerCase()));
+if (overlayHexes.size !== 1) throw new Error(`bg.overlay differs by theme (${[...overlayHexes].join(", ")}): the Backdrop paint styles hold one literal colour and need a decision (ADR-0246)`);
+const overlayHex = [...overlayHexes][0];
+if (!/^#[0-9a-f]{6}$/.test(overlayHex)) throw new Error(`bg.overlay is ${overlayHex}, not an opaque colour the Backdrop styles can hold`);
+const overlayRgb = [1, 3, 5].map((i) => Number.parseInt(overlayHex.slice(i, i + 2), 16) / 255);
+const backdropStyles = [20, 40, 60, 80].map((o) => ({
+  n: `Backdrop/${o}`,
+  rgb: overlayRgb,
+  opacity: o / 100,
+  d: `The scrim behind an overlay: the colour of bg/overlay (${overlayHex}, the same in every theme) at ${o}% opacity${o === 60 ? ", the Backdrop's default" : ""}. The colour is a literal because a variable-bound paint does not keep its opacity in a style; the sync script reads it from the token.`,
+}));
+effectStyles.push({
+  n: "Backdrop/blur",
+  bgBlur: 2 * toPixels(tokens.find((t) => t.name === `${PREFIX}space-1`).value),
+  d: "The optional blur of a Backdrop: a background blur, 8 in Figma for the stylesheet's blur(space.1) of 4px, since Figma's radius is twice the CSS one. Put it on the layer that carries a Backdrop paint style.",
+});
 const gridStyles = [
   { n: "Grid/mobile", count: 4, gutter: 16, offset: 16, d: "Four columns for a phone, 16 px gutters and margins." },
   { n: "Grid/tablet", count: 8, gutter: 24, offset: 32, d: "Eight columns for a tablet, 24 px gutters, 32 px margins." },
   { n: "Grid/desktop", count: 12, gutter: 24, offset: 48, d: "Twelve columns for a desktop, 24 px gutters, 48 px margins." },
 ];
-const stylesPayload = `const D = ${JSON.stringify({ text: textStyles, effect: effectStyles, grid: gridStyles })};
+const stylesPayload = `const D = ${JSON.stringify({ text: textStyles, effect: effectStyles, paint: backdropStyles, grid: gridStyles })};
 const colls = await figma.variables.getLocalVariableCollectionsAsync();
 const vars = await figma.variables.getLocalVariablesAsync();
 const V = (c, n) => vars.find((v) => v.variableCollectionId === colls.find((x) => x.name === c).id && v.name === n);
@@ -352,7 +375,7 @@ const desktop = colls.find((c) => c.name === "Viewport").modes.find((m) => m.nam
 const textById = new Map((await figma.getLocalTextStylesAsync()).map((s) => [s.name, s]));
 const effectById = new Map((await figma.getLocalEffectStylesAsync()).map((s) => [s.name, s]));
 const gridById = new Map((await figma.getLocalGridStylesAsync()).map((s) => [s.name, s]));
-const out = { text: 0, effect: 0, grid: 0, boundFields: {}, errors: [] };
+const out = { text: 0, effect: 0, paint: 0, grid: 0, boundFields: {}, errors: [] };
 for (const t of D.text) {
   const s = textById.get(t.n) ?? figma.createTextStyle();
   s.name = t.n; s.description = t.d;
@@ -369,8 +392,15 @@ for (const t of D.text) {
 for (const e of D.effect) {
   const s = effectById.get(e.n) ?? figma.createEffectStyle();
   s.name = e.n; s.description = e.d;
-  s.effects = e.layers.map((l) => ({ type: "DROP_SHADOW", color: { r: l.r, g: l.g, b: l.b, a: l.a }, offset: { x: l.x, y: l.y }, radius: l.blur, spread: 0, visible: true, blendMode: "NORMAL" }));
+  s.effects = e.bgBlur ? [{ type: "BACKGROUND_BLUR", radius: e.bgBlur, visible: true }] : e.layers.map((l) => ({ type: "DROP_SHADOW", color: { r: l.r, g: l.g, b: l.b, a: l.a }, offset: { x: l.x, y: l.y }, radius: l.blur, spread: 0, visible: true, blendMode: "NORMAL" }));
   out.effect++;
+}
+const paintById = new Map((await figma.getLocalPaintStylesAsync()).map((s) => [s.name, s]));
+for (const p of D.paint) {
+  const s = paintById.get(p.n) ?? figma.createPaintStyle();
+  s.name = p.n; s.description = p.d;
+  s.paints = [{ type: "SOLID", color: { r: p.rgb[0], g: p.rgb[1], b: p.rgb[2] }, opacity: p.opacity }];
+  out.paint++;
 }
 for (const g of D.grid) {
   const s = gridById.get(g.n) ?? figma.createGridStyle();
@@ -381,7 +411,7 @@ for (const g of D.grid) {
 return out;
 `;
 writeFileSync(join(outDir, "06-styles.js"), stylesPayload);
-written.push(`06-styles.js (${textStyles.length} text, ${effectStyles.length} effect, ${gridStyles.length} grid styles, ${stylesPayload.length} characters)`);
+written.push(`06-styles.js (${textStyles.length} text, ${effectStyles.length} effect, ${backdropStyles.length} paint, ${gridStyles.length} grid styles, ${stylesPayload.length} characters)`);
 
 // ---- Icons (Phase 3) -----------------------------------------------------------------------------------------------
 // The icons the component source imports from `@dbm-system/icons`, drawn from the installed Phosphor package (MIT) in three
@@ -552,6 +582,8 @@ const NOT_DRAWN = {
   AspectRatio: ["Layout primitive", "Aspect-ratio lock does this in Figma."],
   Spacer: ["Layout primitive", "Auto layout spacing does this in Figma."],
   Collapse: ["Behaviour", "It animates a height change and has no visual of its own."],
+  SkipLink: ["Behaviour", "It shows only while it has keyboard focus, as a plain link in a pill, so it has no state worth a component."],
+  Backdrop: ["Figma style", "Provided as styles instead: the paint styles Backdrop/20, 40, 60 (the default) and 80, in the colour of bg/overlay, and the effect style Backdrop/blur."],
 };
 const gone = Object.keys(NOT_DRAWN).filter((n) => !(n in catalog));
 if (gone.length) throw new Error(`NOT_DRAWN names components that no longer exist: ${gone.join(", ")}`);

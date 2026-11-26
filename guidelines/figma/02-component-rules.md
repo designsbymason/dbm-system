@@ -6,17 +6,18 @@ The rules every component in the Figma library follows. They are standing rules:
 
 ## 1. Which components are drawn
 
-A component is drawn when it has something to see: **101 of the 120 components** in `packages/components/src/componentCatalog.json` (34 atoms, 40 molecules, 27 organisms), built in tier order, atoms then molecules then organisms, one review gate per category.
+A component is drawn when it has something to see: **99 of the 120 components** in `packages/components/src/componentCatalog.json` (32 atoms, 40 molecules, 27 organisms), built in tier order, atoms then molecules then organisms, one review gate per category.
 
 Not drawn, and listed on the Components page's table of what is not drawn, with the reason:
 
 - **Templates:** `AppShell` and `PageShell`.
 - **Non-visual utilities:** `ClientOnly`, `DirectionProvider`, `FocusTrap`, `Portal`, `ThemeProvider`, `VisuallyHidden`.
 - **Layout primitives:** `Box`, `Stack`, `Grid`, `GridItem`, `Center`, `Container`, `Bleed`, `Affix`, `AspectRatio`, `Spacer`. Figma expresses these as auto layout, so the Layout page explains them as patterns.
-- **Behaviour only:** `Collapse`.
+- **Behaviour only:** `Collapse` and `SkipLink` (a link that shows only while it has keyboard focus).
+- **Provided as styles:** `Backdrop`, as the paint styles `Backdrop/20`, `40`, `60` and `80` and the effect style `Backdrop/blur` ([ADR-0246](../adr/0246-skiplink-is-not-drawn-and-backdrop-is-provided-as-figma-styles-over-drawing-either-as-a-component.md)).
 - **Hooks and functions:** nothing to draw.
 
-`Backdrop`, `SkipLink` and `BackToTop` are drawn only if they have a visual state worth drawing, decided when their category is reached ([01-plan.md](./01-plan.md) §8). An overlay (`Dialog`, `Drawer`, `Popover`, `Tooltip`, `Toast`, `Tour`) is drawn as a static open state, because Figma cannot hold a live overlay.
+`BackToTop` is drawn only if it has a visual state worth drawing, decided when its category is reached ([01-plan.md](./01-plan.md) §8). An overlay (`Dialog`, `Drawer`, `Popover`, `Tooltip`, `Toast`, `Tour`) is drawn as a static open state, because Figma cannot hold a live overlay.
 
 ## 2. Which props become Figma properties
 
