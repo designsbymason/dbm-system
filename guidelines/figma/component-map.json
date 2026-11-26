@@ -2930,6 +2930,180 @@
       "coverage": {
         "exception": "Only the thin weight and the default tone are drawn, a departure from drawing every look variant and the default and brand tones, as agreed at plan time: the weights would triple the set to 144 and the tone is a colour, so both are recipes. Every other value is drawn: four variants with the double emphasis cases, both orientations, and no label or a label at the start, centre or end (48 variants)."
       }
+    },
+    "Icon": {
+      "tier": "atom",
+      "category": "Media",
+      "storybook": "atoms-media-icon",
+      "figma": {
+        "set": "Icon",
+        "spec": "Spec: Icon",
+        "page": "Media"
+      },
+      "variants": 2958,
+      "status": {
+        "state": "approved",
+        "reviewed": "2026-11-26",
+        "approved": "2026-11-26"
+      },
+      "properties": {
+        "weight": {
+          "kind": "variant",
+          "default": "bold",
+          "values": {
+            "bold": {
+              "props": {
+                "weight": "<provided>"
+              },
+              "note": "weight bold (IconWeight comes from the icons package, so the checker cannot list its values)"
+            },
+            "regular": {
+              "props": {
+                "weight": "<provided>"
+              },
+              "note": "weight regular (IconWeight comes from the icons package, so the checker cannot list its values)"
+            },
+            "fill": {
+              "props": {
+                "weight": "<provided>"
+              },
+              "note": "weight fill (IconWeight comes from the icons package, so the checker cannot list its values)"
+            }
+          },
+          "undrawn": {
+            "thin": {
+              "props": {
+                "weight": "<provided>"
+              },
+              "recipe": "Take the glyph from Phosphor, which the Icons page links, and add it as a variant of the set with the same tone variants; name the instance Icon (weight=thin)"
+            },
+            "light": {
+              "props": {
+                "weight": "<provided>"
+              },
+              "recipe": "Take the glyph from Phosphor and add it as a variant of the set with the same tone variants; name the instance Icon (weight=light)"
+            },
+            "duotone": {
+              "props": {
+                "weight": "<provided>"
+              },
+              "recipe": "Take the glyph from Phosphor and add it as a variant of the set with the same tone variants; name the instance Icon (weight=duotone)"
+            }
+          }
+        },
+        "tone": {
+          "kind": "variant",
+          "default": "default",
+          "values": {
+            "default": {
+              "props": {
+                "tone": "default"
+              }
+            },
+            "secondary": {
+              "props": {
+                "tone": "secondary"
+              }
+            },
+            "disabled": {
+              "props": {
+                "tone": "disabled"
+              }
+            },
+            "brand": {
+              "props": {
+                "tone": "brand"
+              }
+            },
+            "danger": {
+              "props": {
+                "tone": "danger"
+              }
+            },
+            "warning": {
+              "props": {
+                "tone": "warning"
+              }
+            },
+            "success": {
+              "props": {
+                "tone": "success"
+              }
+            },
+            "info": {
+              "props": {
+                "tone": "info"
+              }
+            },
+            "highlight": {
+              "props": {
+                "tone": "highlight"
+              }
+            },
+            "on-brand": {
+              "props": {
+                "tone": "on-brand"
+              }
+            },
+            "on-danger": {
+              "props": {
+                "tone": "on-danger"
+              }
+            },
+            "on-warning": {
+              "props": {
+                "tone": "on-warning"
+              }
+            },
+            "on-success": {
+              "props": {
+                "tone": "on-success"
+              }
+            },
+            "on-info": {
+              "props": {
+                "tone": "on-info"
+              }
+            },
+            "on-highlight": {
+              "props": {
+                "tone": "on-highlight"
+              }
+            },
+            "white": {
+              "props": {
+                "tone": "white"
+              }
+            },
+            "on-neutral": {
+              "props": {
+                "tone": "on-neutral"
+              }
+            }
+          }
+        }
+      },
+      "notModelled": [
+        "className",
+        "data-testid",
+        "icon",
+        "id",
+        "label",
+        "mirrored",
+        "size",
+        "style"
+      ],
+      "deviations": [
+        "an icon is drawn per glyph, as a component set named Icon/Name (58 of them, on the Icons page): figma.set names the family, and the spec frame is on the Media page",
+        "tone=default is the file's drawing of an icon with no tone, which in code inherits the surrounding text colour",
+        "size is not a property: the instance is resized and its width and height are bound to an icon-size variable, because seven sizes across 58 sets would be about 20,000 variants",
+        "mirrored is a horizontal flip of the instance, not a property",
+        "the icon prop is which set is used, swapped in place on the instance, with no swap property (ADR-0238)",
+        "only the 58 glyphs the components use are drawn"
+      ],
+      "coverage": {
+        "exception": "Each of the 58 sets has 51 variants (bold, regular and fill at 17 tones), 2,958 in all, far over the budget; ADR-0238 accepted it. Size is an instance resize and not a property, and the thin, light and duotone weights are recipes."
+      }
     }
   }
 }
