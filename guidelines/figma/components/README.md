@@ -11,7 +11,7 @@ Generated from the map by `pnpm check-figma-map --write`; CI fails when it is st
 <!-- figma-status:start -->
 | Component | Tier | Category | Variants | State | Reviewed | Approved |
 |---|---|---|---|---|---|---|
-| [Avatar](./Avatar.md) | atom | Data Display | 128 | reviewed | 2026-11-25 | not yet |
+| [Avatar](./Avatar.md) | atom | Data Display | 48 | approved | 2026-11-26 | 2026-11-26 |
 | [Badge](./Badge.md) | atom | Data Display | 105 | approved | 2026-11-22 | 2026-11-23 |
 | [Button](./Button.md) | atom | Inputs | 200 | approved | 2026-11-22 | 2026-11-23 |
 | [Checkbox](./Checkbox.md) | atom | Inputs | 54 | approved | 2026-11-23 | 2026-11-23 |

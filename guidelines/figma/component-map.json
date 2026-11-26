@@ -2356,10 +2356,11 @@
         "spec": "Spec: Avatar",
         "page": "Data Display"
       },
-      "variants": 128,
+      "variants": 48,
       "status": {
-        "state": "reviewed",
-        "reviewed": "2026-11-25"
+        "state": "approved",
+        "reviewed": "2026-11-26",
+        "approved": "2026-11-26"
       },
       "properties": {
         "content": {
@@ -2386,42 +2387,6 @@
           "also": [
             "name"
           ]
-        },
-        "tone": {
-          "kind": "variant",
-          "default": "brand",
-          "values": {
-            "brand": {
-              "props": {
-                "colorful": false
-              },
-              "note": "the default family, and one of the five colorful can pick"
-            },
-            "danger": {
-              "props": {
-                "colorful": true
-              },
-              "note": "colorful picks the family from a hash of name, alt or initials"
-            },
-            "warning": {
-              "props": {
-                "colorful": true
-              },
-              "note": "colorful picks the family from a hash of name, alt or initials"
-            },
-            "success": {
-              "props": {
-                "colorful": true
-              },
-              "note": "colorful picks the family from a hash of name, alt or initials"
-            },
-            "info": {
-              "props": {
-                "colorful": true
-              },
-              "note": "colorful picks the family from a hash of name, alt or initials"
-            }
-          }
         },
         "size": {
           "kind": "variant",
@@ -2481,31 +2446,32 @@
           }
         },
         "status": {
-          "kind": "variant",
-          "default": "none",
-          "values": {
-            "none": {
-              "props": {}
+          "kind": "boolean",
+          "default": false,
+          "on": {
+            "props": {
+              "status": "online"
             },
-            "online": {
-              "props": {
-                "status": "online"
-              }
-            },
+            "note": "shows the online dot, on any content, state and size"
+          },
+          "undrawn": {
             "offline": {
               "props": {
                 "status": "offline"
-              }
+              },
+              "recipe": "Turn status on, select the Status layer and bind its fill to bg/neutral; name the instance Avatar (status=offline)"
             },
             "busy": {
               "props": {
                 "status": "busy"
-              }
+              },
+              "recipe": "Turn status on, select the Status layer and bind its fill to bg/danger; name the instance Avatar (status=busy)"
             },
             "away": {
               "props": {
                 "status": "away"
-              }
+              },
+              "recipe": "Turn status on, select the Status layer and bind its fill to bg/warning; name the instance Avatar (status=away)"
             }
           }
         },
@@ -2520,6 +2486,7 @@
         "aria-label",
         "as",
         "className",
+        "colorful",
         "data-testid",
         "id",
         "loading",
@@ -2530,17 +2497,17 @@
       ],
       "deviations": [
         "content is one variant property of icon, initials and image, where the code has no such prop: it is which of src, initials or name is set, and the icon is what an avatar with none of them draws",
-        "tone stands for colorful and for the family its hash picks from name, alt or initials; the code has no tone prop",
+        "status is a boolean that shows the online dot, where the code's status takes online, offline, busy or away: offline, busy and away are recipes in the spec frame",
+        "only the brand tone is drawn: colorful, which picks one of five families from a hash of name, alt or initials, is not modelled, and the other four families are a recipe in the spec frame",
         "hover and focus are states with no prop of their own: they are CSS on an avatar that is interactive through as and onClick",
-        "shape is not a Figma property: only the circle is drawn, and the square is a recipe in the spec frame",
         "the nested icon of the 16 icon variants uses icon/brand, where the code inherits text/brand: the two are equal in the purple themes and icon/brand is lighter in the emerald ones (#2e8a7d against #1a6e63 in emerald-light), and it is at least 3.99:1 on the fill",
+        "shape is not a Figma property: only the circle is drawn, and the square is a recipe in the spec frame",
         "the image is a flat bg/neutral-subtle rectangle to be replaced with a picture; src is not modelled",
         "the status dot sits at the bottom right, as in left-to-right text; the code puts it at the inline end",
-        "a status dot is drawn at the default state only, so a status with hover, focus or disabled is not drawn",
         "the focus ring is the box plus 4 px outside it, drawn as a literal size and offset, not a bound variable"
       ],
       "coverage": {
-        "exception": "Sizes xs, sm, md and lg are drawn, one beyond the default, because xs (36 px) is the size AvatarGroup and dense menus use; xl is undrawn with a recipe. The five tones are the code's colorful palette, not status tones: all five for initials, and brand only for icon and image. Shape is drawn as the circle only and the square is a recipe. Every state is drawn at every size on the circle, and a status dot is drawn at the default state only (128 variants)."
+        "exception": "Sizes xs, sm, md and lg are drawn, one beyond the default, because xs (36 px) is the size AvatarGroup and dense menus use; xl is undrawn with a recipe. Only the brand tone is drawn, so the colorful families are a recipe. Status is a boolean for the online dot on every content, state and size, with the other statuses as recipes. Shape is drawn as the circle only and the square is a recipe. Every state is drawn at every size (48 variants)."
       }
     }
   }
