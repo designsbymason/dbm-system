@@ -6,7 +6,7 @@ The rules every component in the Figma library follows. They are standing rules:
 
 ## 1. Which components are drawn
 
-A component is drawn when it has something to see: **97 of the 120 components** in `packages/components/src/componentCatalog.json` (30 atoms, 40 molecules, 27 organisms), built in tier order, atoms then molecules then organisms, one review gate per category.
+A component is drawn when it has something to see: **96 of the 120 components** in `packages/components/src/componentCatalog.json` (29 atoms, 40 molecules, 27 organisms), built in tier order, atoms then molecules then organisms, one review gate per category.
 
 Not drawn, and listed on the Components page's table of what is not drawn, with the reason:
 
@@ -15,7 +15,7 @@ Not drawn, and listed on the Components page's table of what is not drawn, with 
 - **Layout primitives:** `Box`, `Stack`, `Grid`, `GridItem`, `Center`, `Container`, `Bleed`, `Affix`, `AspectRatio`, `Spacer`. Figma expresses these as auto layout, so the Layout page explains them as patterns.
 - **Behaviour only:** `Collapse`, `SkipLink` (a link that shows only while it has keyboard focus) and `BackToTop` (a rounded `IconButton` with an up arrow, fixed to a corner and shown once the page is scrolled; its recipe is in the table, [ADR-0247](../adr/0247-backtotop-is-not-drawn-and-is-a-rounded-iconbutton-with-an-up-arrow-over-drawing-it-as-a-component.md)).
 - **Provided as styles:** `Backdrop`, as the paint styles `Backdrop/20`, `40`, `60` and `80` and the effect style `Backdrop/blur` ([ADR-0246](../adr/0246-skiplink-is-not-drawn-and-backdrop-is-provided-as-figma-styles-over-drawing-either-as-a-component.md)).
-- **Provided as text styles:** `Text`, which is a text layer with a Body, Label, Heading or Display text style and a `text/*` colour variable ([ADR-0248](../adr/0248-text-is-not-drawn-and-is-a-text-layer-with-a-text-style-and-a-colour-variable-over-drawing-it-as-a-component.md)).
+- **Provided as text styles:** `Text` and `Heading`, which are a text layer with a Body, Label, Heading or Display text style and a `text/*` colour variable ([ADR-0248](../adr/0248-text-is-not-drawn-and-is-a-text-layer-with-a-text-style-and-a-colour-variable-over-drawing-it-as-a-component.md), amended).
 - **Hooks and functions:** nothing to draw.
 
 An overlay (`Dialog`, `Drawer`, `Popover`, `Tooltip`, `Toast`, `Tour`) is drawn as a static open state, because Figma cannot hold a live overlay.
